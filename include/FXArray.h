@@ -3,30 +3,30 @@
 *                          G e n e r i c   A r r a y                            *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997 by Jeroen van der Zijp.   All Rights Reserved.             *
+* Copyright (C) 1997,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
-* modify it under the terms of the GNU Library General Public                   *
+* modify it under the terms of the GNU Lesser General Public                    *
 * License as published by the Free Software Foundation; either                  *
-* version 2 of the License, or (at your option) any later version.              *
+* version 2.1 of the License, or (at your option) any later version.            *
 *                                                                               *
 * This library is distributed in the hope that it will be useful,               *
 * but WITHOUT ANY WARRANTY; without even the implied warranty of                *
 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU             *
-* Library General Public License for more details.                              *
+* Lesser General Public License for more details.                               *
 *                                                                               *
-* You should have received a copy of the GNU Library General Public             *
-* License along with this library; if not, write to the Free                    *
-* Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.            *
+* You should have received a copy of the GNU Lesser General Public              *
+* License along with this library; if not, write to the Free Software           *
+* Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXArray.h,v 1.5 1998/07/15 01:23:13 jeroen Exp $                         *
+* $Id: FXArray.h,v 1.11 2002/01/18 22:46:41 jeroen Exp $                        *
 ********************************************************************************/
 #ifndef FXARRAY_H
 #define FXARRAY_H
 
 
 
-/*************************  D e f i n i t i o n  *****************************/
+/*************************  D e f i n i t i o n  *******************************/
 
 
 template<class TYPE>
@@ -37,22 +37,25 @@ class FXArray {
   FXint   grow;                // Grow amount
 public:
   FXArray();
-  FXint no() const;
-  TYPE* data() const;
-  FXint size() const;
-  void size(const FXint n);
+  FXArray(const FXArray<TYPE>& orig);
+  FXArray<TYPE>& operator=(const FXArray<TYPE> &orig);
+  inline FXint no() const;
+  inline TYPE* data() const;
+  inline FXint size() const;
+  void size(FXint n);
   FXint inc() const;
-  void inc(const FXint n);
-  const TYPE& operator[](const FXint i) const;
-  TYPE& operator[](const FXint i);
-  void insert(const FXint pos,const TYPE& p);
+  void inc(FXint n);
+  inline const TYPE& operator [](FXint i) const;
+  inline TYPE& operator [](FXint i);
+  void insert(FXint pos,const TYPE& p);
   void append(const TYPE& p);
-  void remove(const FXint pos);
+  void prepend(const TYPE& p);
+  void remove(FXint pos);
   void extract(const TYPE& p);
   FXint find(const TYPE& p);
   void trunc();
   void clear();
-  void save(FXStream& store);
+  void save(FXStream& store) const;
   void load(FXStream& store);
  ~FXArray();
   };
@@ -71,9 +74,21 @@ FXArray<TYPE>::FXArray(){
   }
 
 
+// Copy construct
+template<class TYPE>
+FXArray<TYPE>::FXArray(const FXArray<TYPE>& orig){
+  number=orig.number;
+  total=orig.total;
+  grow=orig.grow;
+  allocElms(list,total);
+  constructElms(list,number);
+  copyElms(list,orig.list,number);
+  }
+
+
 // Return number of elements
 template<class TYPE>
-int FXArray<TYPE>::no() const {
+FXint FXArray<TYPE>::no() const {
   return number;
   }
 
@@ -87,45 +102,62 @@ TYPE* FXArray<TYPE>::data() const {
 
 // Return size of list
 template<class TYPE>
-int FXArray<TYPE>::size() const {
-  return total; 
+FXint FXArray<TYPE>::size() const {
+  return total;
   }
 
 
 // Return grow delta
 template<class TYPE>
-int FXArray<TYPE>::inc() const {
+FXint FXArray<TYPE>::inc() const {
   return grow;
   }
 
 
 // Set grow delta
 template<class TYPE>
-void FXArray<TYPE>::inc(const int g){
+void FXArray<TYPE>::inc(FXint g){
   FXASSERT(g>=0);
-  gw=g;
+  grow=g;
   }
 
 
 // Return element rvalue
 template<class TYPE>
-const TYPE& FXArray<TYPE>::operator[](const int i) const {
-  FXASSERT(0<=i&&i<number); 
-  return list[i]; 
+const TYPE& FXArray<TYPE>::operator[](FXint i) const {
+  FXASSERT(0<=i&&i<number);
+  return list[i];
   }
 
 
 // Return element lvalue
 template<class TYPE>
-TYPE& FXArray<TYPE>::operator[](const int i){ 
-  FXASSERT(0<=i&&i<number); 
-  return list[i]; 
+TYPE& FXArray<TYPE>::operator[](FXint i){
+  FXASSERT(0<=i&&i<number);
+  return list[i];
+  }
+
+
+// Assign an array
+template<class TYPE>
+FXArray<TYPE>& FXArray<TYPE>::operator=(const FXArray<TYPE>& orig){
+  if(this!=&orig){
+    destructElms(list,number);
+    freeElms(list);
+    number=orig.number;
+    total=orig.total;
+    grow=orig.grow;
+    allocElms(list,total);
+    constructElms(list,number);
+    copyElms(list,orig.list,number);
+    }
+  return *this;
   }
 
 
 // Set new size
 template<class TYPE>
-void FXArray<TYPE>::size(const FXint n){
+void FXArray<TYPE>::size(FXint n){
   FXASSERT(n>=0);
   if(n!=number){
     if(n<number){
@@ -138,7 +170,7 @@ void FXArray<TYPE>::size(const FXint n){
     else{
       if(n>total){
         TYPE *ptr;
-        int s=total+grow;
+        FXint s=total+grow;
         if(grow==0) s=total+total;
         if(s<n) s=n;
         allocElms(ptr,s);
@@ -155,32 +187,42 @@ void FXArray<TYPE>::size(const FXint n){
     number=n;
     }
   }
-      
+
 
 // Insert element anywhere
 template<class TYPE>
-void FXArray<TYPE>::insert(const FXint pos,const TYPE& p){
-  int s=number-pos;
+void FXArray<TYPE>::insert(FXint pos,const TYPE& p){
+  FXint s=number-pos;
   size(number+1);
   moveElms(&list[pos+1],&list[pos],s);
   list[pos]=p;
   }
-  
- 
+
+
 // Append element at end
 template<class TYPE>
 void FXArray<TYPE>::append(const TYPE& p){
-  int s=number;
-  size(s+1);
+  FXint s=number;
+  size(number+1);
   list[s]=p;
+  }
+
+
+// Prepend element at begin
+template<class TYPE>
+void FXArray<TYPE>::prepend(const TYPE& p){
+  FXint s=number;
+  size(number+1);
+  moveElms(&list[1],&list[0],s);
+  list[0]=p;
   }
 
 
 // Remove element at pos
 template<class TYPE>
-void FXArray<TYPE>::remove(const FXint pos){
-  int s=number;
-  moveElms(&list[pos],&list[pos+1],s-pos);            // Uses assignment operator
+void FXArray<TYPE>::remove(FXint pos){
+  FXint s=number;
+  moveElms(&list[pos],&list[pos+1],s-pos-1);          // Uses assignment operator
   size(s-1);
   }
 
@@ -188,7 +230,7 @@ void FXArray<TYPE>::remove(const FXint pos){
 // Find element, -1 if not found
 template<class TYPE>
 FXint FXArray<TYPE>::find(const TYPE& p){
-  int s=number;
+  FXint s=number;
   while(s!=0 && !(list[s-1]==p)) s--;
   return s-1;
   }
@@ -210,21 +252,21 @@ void FXArray<TYPE>::extract(const TYPE& p){
 
 // Trunc excess
 template<class TYPE>
-void FXArray<TYPE>::trunc(){ 
-  size(number); 
+void FXArray<TYPE>::trunc(){
+  size(number);
   }
 
 
 // Clear the list
 template<class TYPE>
-void FXArray<TYPE>::clear(){ 
-  size(0); 
+void FXArray<TYPE>::clear(){
+  size(0);
   }
 
 
 // Save operator
 template<class TYPE>
-void FXArray<TYPE>::save(FXStream& store){
+void FXArray<TYPE>::save(FXStream& store) const {
   store << number << total << grow;
   saveElms(store,list,number);                        // Uses save operator
   }
@@ -239,8 +281,8 @@ void FXArray<TYPE>::load(FXStream& store){
   allocElms(list,total);
   constructElms(list,number);                         // Fresh elements
   loadElms(store,list,number);                        // Uses load operator
-  } 
-  
+  }
+
 
 // Destruct list
 template<class TYPE>

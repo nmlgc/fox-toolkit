@@ -6,20 +6,20 @@
 * Copyright (C) 1998 by Jeroen van der Zijp.   All Rights Reserved.             *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
-* modify it under the terms of the GNU Library General Public                   *
+* modify it under the terms of the GNU Lesser General Public                    *
 * License as published by the Free Software Foundation; either                  *
-* version 2 of the License, or (at your option) any later version.              *
+* version 2.1 of the License, or (at your option) any later version.            *
 *                                                                               *
 * This library is distributed in the hope that it will be useful,               *
 * but WITHOUT ANY WARRANTY; without even the implied warranty of                *
 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU             *
-* Library General Public License for more details.                              *
+* Lesser General Public License for more details.                               *
 *                                                                               *
-* You should have received a copy of the GNU Library General Public             *
-* License along with this library; if not, write to the Free                    *
-* Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.            *
+* You should have received a copy of the GNU Lesser General Public              *
+* License along with this library; if not, write to the Free Software           *
+* Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: reswrap.cpp,v 1.8 1998/09/25 23:23:44 jvz Exp $                        *
+* $Id: reswrap.cpp,v 1.3 2001/01/25 19:48:40 jeroen Exp $                       *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxdefs.h"
@@ -324,10 +324,19 @@ int main(int argc,char **argv){
       first=1;
       
       /* Get file name */
+#ifndef WIN32
       if((filename=strrchr(argv[i],PATHSEP))!=0) 
         filename=filename+1; 
       else 
         filename=argv[i];
+#else
+      if((filename=strrchr(argv[i],'\\'))!=0) 
+        filename=filename+1;
+      else if((filename=strrchr(argv[i],'/'))!=0) // For CYGWIN bash
+	filename=filename+1;
+      else 
+        filename=argv[i];
+#endif
       
       /* Output header */
       if(header){
@@ -425,6 +434,7 @@ int main(int argc,char **argv){
       override=0;
       }
     }
+  return 0;
   }
 
 

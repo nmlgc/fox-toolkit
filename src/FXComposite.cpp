@@ -3,40 +3,40 @@
 *                C o m p o s i t e   W i n d o w   O b j e c t                  *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997 by Jeroen van der Zijp.   All Rights Reserved.             *
+* Copyright (C) 1997,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
-* modify it under the terms of the GNU Library General Public                   *
+* modify it under the terms of the GNU Lesser General Public                    *
 * License as published by the Free Software Foundation; either                  *
-* version 2 of the License, or (at your option) any later version.              *
+* version 2.1 of the License, or (at your option) any later version.            *
 *                                                                               *
 * This library is distributed in the hope that it will be useful,               *
 * but WITHOUT ANY WARRANTY; without even the implied warranty of                *
 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU             *
-* Library General Public License for more details.                              *
+* Lesser General Public License for more details.                               *
 *                                                                               *
-* You should have received a copy of the GNU Library General Public             *
-* License along with this library; if not, write to the Free                    *
-* Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.            *
+* You should have received a copy of the GNU Lesser General Public              *
+* License along with this library; if not, write to the Free Software           *
+* Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXComposite.cpp,v 1.16 1998/09/22 20:33:45 jvz Exp $                   *
+* $Id: FXComposite.cpp,v 1.30 2002/01/18 22:42:59 jeroen Exp $                  *
 ********************************************************************************/
 #include "xincs.h"
+#include "fxver.h"
 #include "fxdefs.h"
+#include "fxkeys.h"
 #include "FXStream.h"
 #include "FXString.h"
-#include "FXObject.h"
+#include "FXSize.h"
+#include "FXPoint.h"
+#include "FXRectangle.h"
+#include "FXSettings.h"
+#include "FXRegistry.h"
 #include "FXAccelTable.h"
-#include "FXObjectList.h"
 #include "FXApp.h"
-#include "FXId.h"
-#include "FXDrawable.h"
-#include "FXWindow.h"
-#include "FXFrame.h"
 #include "FXComposite.h"
-#include "FXShell.h"
 
-  
+
 /*
   Notes:
   - Rather a slim class.
@@ -46,12 +46,15 @@
 
 // Map
 FXDEFMAP(FXComposite) FXCompositeMap[]={
+  FXMAPFUNC(SEL_KEYPRESS,0,FXComposite::onKeyPress),
+  FXMAPFUNC(SEL_KEYRELEASE,0,FXComposite::onKeyRelease),
   FXMAPFUNC(SEL_FOCUS_NEXT,0,FXComposite::onFocusNext),
   FXMAPFUNC(SEL_FOCUS_PREV,0,FXComposite::onFocusPrev),
   FXMAPFUNC(SEL_FOCUS_UP,0,FXComposite::onFocusPrev),
   FXMAPFUNC(SEL_FOCUS_DOWN,0,FXComposite::onFocusNext),
   FXMAPFUNC(SEL_FOCUS_LEFT,0,FXComposite::onFocusPrev),
   FXMAPFUNC(SEL_FOCUS_RIGHT,0,FXComposite::onFocusNext),
+  FXMAPFUNC(SEL_COMMAND,FXComposite::ID_UPDATE,FXComposite::onCmdUpdate),
   };
 
 
@@ -60,14 +63,13 @@ FXIMPLEMENT(FXComposite,FXWindow,FXCompositeMap,ARRAYNUMBER(FXCompositeMap))
 
 
 // Only used for Root Window
-FXComposite::FXComposite(FXApp* a):
-  FXWindow(a){
+FXComposite::FXComposite(FXApp* a,FXVisual *vis):FXWindow(a,vis){
   }
 
 
 // Only used for Shell Window
-FXComposite::FXComposite(FXApp* a,FXuint opts,FXint x,FXint y,FXint w,FXint h):
-  FXWindow(a,opts,x,y,w,h){
+FXComposite::FXComposite(FXApp* a,FXWindow* own,FXuint opts,FXint x,FXint y,FXint w,FXint h):
+  FXWindow(a,own,opts,x,y,w,h){
   }
 
 
@@ -77,14 +79,27 @@ FXComposite::FXComposite(FXComposite* p,FXuint opts,FXint x,FXint y,FXint w,FXin
   }
 
 
-// Create X window
+// Is widget a composite
+FXbool FXComposite::isComposite() const {
+  return 1;
+  }
+
+
+// Create window
 void FXComposite::create(){
   FXWindow::create();
   for(FXWindow *c=getFirst(); c; c=c->getNext()) c->create();
   }
 
 
-// Destroy X window
+// Detach window
+void FXComposite::detach(){
+  for(FXWindow *c=getFirst(); c; c=c->getNext()) c->detach();
+  FXWindow::detach();
+  }
+
+
+// Destroy window
 void FXComposite::destroy(){
   for(FXWindow *c=getFirst(); c; c=c->getNext()) c->destroy();
   FXWindow::destroy();
@@ -93,8 +108,9 @@ void FXComposite::destroy(){
 
 // Get width
 FXint FXComposite::getDefaultWidth(){
+  register FXWindow *child;
   FXint t,w=0;
-  for(FXWindow* child=getFirst(); child; child=child->getNext()){
+  for(child=getFirst(); child; child=child->getNext()){
     if(child->shown()){
       t=child->getX()+child->getWidth();
       if(w<t) w=t;
@@ -106,8 +122,9 @@ FXint FXComposite::getDefaultWidth(){
 
 // Get height
 FXint FXComposite::getDefaultHeight(){
+  register FXWindow *child;
   FXint t,h=0;
-  for(FXWindow* child=getFirst(); child; child=child->getNext()){
+  for(child=getFirst(); child; child=child->getNext()){
     if(child->shown()){
       t=child->getY()+child->getHeight();
       if(h<t) h=t;
@@ -153,29 +170,42 @@ FXint FXComposite::maxChildHeight() const {
 
 // Just tell server where the windows are!
 void FXComposite::layout(){
-  for(FXWindow *c=getFirst(); c; c=c->getNext()){
-    if(c->shown()){
-      c->position(c->getX(),c->getY(),c->getWidth(),c->getHeight());
+  register FXWindow *child;
+  for(child=getFirst(); child; child=child->getNext()){
+    if(child->shown()){
+      child->position(child->getX(),child->getY(),child->getWidth(),child->getHeight());
       }
     }
   flags&=~FLAG_DIRTY;
   }
 
 
+// Update all subwindows
+long FXComposite::onCmdUpdate(FXObject* sender,FXSelector,void* ptr){
+  register FXWindow *child;
+  update();
+  for(child=getFirst(); child; child=child->getNext()){
+    if(child->shown()) child->handle(sender,MKUINT(ID_UPDATE,SEL_COMMAND),ptr);
+    }
+  return 1;
+  }
+
+
 // Focus moved to next
 long FXComposite::onFocusNext(FXObject*,FXSelector sel,void* ptr){
   FXWindow *child;
-//fprintf(stderr,"%s::onFocusNext\n",getClassName());
   if(getFocus())
     child=getFocus()->getNext();
   else
     child=getFirst();
   while(child){
-    if(child->isEnabled() && child->canFocus()){
-      child->setFocus();
-      return 1;
+    if(child->shown()){
+      if(child->isEnabled() && child->canFocus()){
+        child->handle(this,MKUINT(0,SEL_FOCUS_SELF),ptr);
+        return 1;
+        }
+      if(child->isComposite() && child->handle(this,sel,ptr)) return 1;
       }
-    if(child->isComposite() && child->handle(this,sel,ptr)) return 1;
     child=child->getNext();
     }
   return 0;
@@ -185,30 +215,81 @@ long FXComposite::onFocusNext(FXObject*,FXSelector sel,void* ptr){
 // Focus moved to previous
 long FXComposite::onFocusPrev(FXObject*,FXSelector sel,void* ptr){
   FXWindow *child;
-//fprintf(stderr,"%s::onFocusPrev\n",getClassName());
   if(getFocus())
     child=getFocus()->getPrev();
   else
     child=getLast();
   while(child){
-    if(child->isEnabled() && child->canFocus()){
-      child->setFocus();
-      return 1;
+    if(child->shown()){
+      if(child->isEnabled() && child->canFocus()){
+        child->handle(this,MKUINT(0,SEL_FOCUS_SELF),ptr);
+        return 1;
+        }
+      if(child->isComposite() && child->handle(this,sel,ptr)) return 1;
       }
-    if(child->isComposite() && child->handle(this,sel,ptr)) return 1;
     child=child->getPrev();
     }
   return 0;
   }
 
 
-// Is widget a composite
-FXbool FXComposite::isComposite() const { return 1; }
+// Keyboard press
+long FXComposite::onKeyPress(FXObject* sender,FXSelector sel,void* ptr){
+
+  // Bounce to focus widget
+  if(getFocus() && getFocus()->handle(sender,sel,ptr)) return 1;
+
+  // Try target first
+  if(isEnabled() && target && target->handle(this,MKUINT(message,SEL_KEYPRESS),ptr)) return 1;
+
+  // Check the accelerators
+  if(getAccelTable() && getAccelTable()->handle(this,sel,ptr)) return 1;
+
+  // Otherwise, perform the default keyboard processing
+  switch(((FXEvent*)ptr)->code){
+    case KEY_Tab:
+      if(((FXEvent*)ptr)->state&SHIFTMASK) goto prv;
+    case KEY_Next:
+      return handle(this,MKUINT(0,SEL_FOCUS_NEXT),ptr);
+    case KEY_Prior:
+    case KEY_ISO_Left_Tab:
+prv:  return handle(this,MKUINT(0,SEL_FOCUS_PREV),ptr);
+    case KEY_Up:
+    case KEY_KP_Up:
+      return handle(this,MKUINT(0,SEL_FOCUS_UP),ptr);
+    case KEY_Down:
+    case KEY_KP_Down:
+      return handle(this,MKUINT(0,SEL_FOCUS_DOWN),ptr);
+    case KEY_Left:
+    case KEY_KP_Left:
+      return handle(this,MKUINT(0,SEL_FOCUS_LEFT),ptr);
+    case KEY_Right:
+    case KEY_KP_Right:
+      return handle(this,MKUINT(0,SEL_FOCUS_RIGHT),ptr);
+    }
+  return 0;
+  }
+
+
+// Keyboard release
+long FXComposite::onKeyRelease(FXObject* sender,FXSelector sel,void* ptr){
+
+  // Bounce to focus widget
+  if(getFocus() && getFocus()->handle(sender,sel,ptr)) return 1;
+
+  // Try target first
+  if(isEnabled() && target && target->handle(this,MKUINT(message,SEL_KEYRELEASE),ptr)) return 1;
+
+  // Check the accelerators
+  if(getAccelTable() && getAccelTable()->handle(this,sel,ptr)) return 1;
+
+  return 0;
+  }
 
 
 // Dispose of all the children
 FXComposite::~FXComposite(){
-  while(getLast()){ delete getLast(); }
+  while(getFirst()){ delete getFirst(); }
   }
 
 

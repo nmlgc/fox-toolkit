@@ -1,231 +1,320 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
-<HTML>
-<HEAD>
-   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
-   <META NAME="Author" CONTENT="Jeroen van der Zijp">
-   <META NAME="GENERATOR" CONTENT="Mozilla/4.06 [en] (X11; I; Linux 2.0.35 i586) [Netscape]">
-   <META NAME="Description" CONTENT="Widget Updating">
-   <META NAME="Keywords" CONTENT="FOX, GUI, Toolkit, C++ Class Library">
-   <TITLE>Messages</TITLE>
-</HEAD>
-<BODY TEXT="#000000" BGCOLOR="#FFFFFF" LINK="#0000EE" VLINK="#551A8B" ALINK="#FF0000" BACKGROUND="foxback.gif">
+<html>
+<head>
+<LINK REL="stylesheet" HREF="styles.css" TYPE="text/css">
+<title>FOX-Toolkit</title>
+<!-- HTML Copyright 2001 Paul Laufer -->
+</head>
 
-<CENTER><U><FONT COLOR="#990000"><FONT SIZE=+4>Serialization of Data and
-Objects</FONT></FONT></U></CENTER>
+<body bgcolor=#ffffff link=#990033 vlink=#4a73ad alink=#ed004f text=#000000>
 
-<P><A NAME="SERIALIZATION"></A><U><FONT COLOR="#990000"><FONT SIZE=+4>What
-is Serialization?</FONT></FONT></U>
-<P>Often, your application needs to save and load data in a machine-independent,
+<!--header-->
+<table align=center border=0 cellpadding=0 cellspacing=0 width=100% >
+  <tr><td bgcolor=silver colspan=5 align=right height=50><img src=art/oul_grey.gif align=left valign=top width=8 height=8><img src=art/foxlogo.png valign=bottom alt="FOX Toolkit" height=50 width=500 border=0 ></td>
+  	<td bgcolor=#557faa valign=top align=right><img src=art/our.gif width=8 height=8></td>
+  </tr>
+<!-- end header -->
+  <tr>
+    <td bgcolor=#557faa colspan=2 valign=top align=left>&nbsp;</td>
+    <td bgcolor=#557faa colspan=3><font color=#ffffff size=+1><center>
+<!-- Page Title -->
+Documentation: Serialization of Data and Objects
+<!-- End Page Title -->
+    </center></font></td>
+    <td bgcolor=#557faa valign=top align=right>&nbsp;</td>
+  </tr>
+  <tr>
+    <td bgcolor=#557faa colspan=2>&nbsp;</td>
+    <td bgcolor=#ffffff valign=top align=left><img src=art/iul.gif width=8 height=8></td>
+    <td bgcolor=#ffffff>&nbsp;</td>
+    <td bgcolor=#ffffff valign=top align=right><img src=art/iur.gif width=8 height=8></td>
+    <td bgcolor=#557faa width=15>&nbsp;</td>
+  </tr>
+  <tr>
+    <td width=8 bgcolor=#557faa>&nbsp;</td>
+    <td valign=top bgcolor=#557faa link=#ffffff width=150>
+
+<!-- start navbar content -->
+
+	<a href=fox.html><font color=#ffffff>Home</font></a><br>
+	<a href=news.html><font color=#ffffff>News</font></a><br>
+	<a href=download.html><font color=#ffffff>Download</font></a><br>
+	<a href=goals.html><font color=#ffffff>Goals & Approach</font></a><br>
+	<a href=doc.html><font color=#ffffff>Documentation</font></a><br>
+	<a href=faq.html><font color=#ffffff>FAQ</font></a><br>
+	<a href=rex.html><font color=#ffffff>FXRex</font></a><br>
+	<a href=screenshots.html><font color=#ffffff>Screenshots</font></a><br>
+	<br>
+	<a href=adie.html><font color=#ffffff>Adie</font></a><br>
+	<a href=pathfinder.html><font color=#ffffff>PathFinder</font></a><br>
+	<a href=calc.html><font color=#ffffff>FOX Calculator</font></a><br>
+	<br>
+	<a href=projects.html><font color=#ffffff>Projects</font></a><br>
+	<br>
+	<a href='http://fxpy.sourceforge.net'><font color=#ffffff>FXPy</font></a><br>
+	<a href='http://fxruby.sourceforge.net'><font color=#ffffff>FXRuby</font></a><br>
+	<a href='http://eiffelfox.sourceforge.net'><font color=#ffffff>EiffelFox</font></a><br>
+        <a href='http://eevolved.com/foxhole/'><font color=#ffffff>The FOX Hole</font></a><br>
+        <a href='http://takahr.dhis.portside.net/cgi-bin/rwiki.cgi?cmd=view;name=FOX+FAQ'><font color=#ffffff>Japanese Docs</font></a><br>
+	<br>
+	<center>
+	<a href="http://www.eff.org/br"><img SRC="art/freespeach.gif" border=0></a>
+	<p>
+	<a href="http://www.slashdot.org"><img SRC="art/slingerzbutton1.gif" border=0></a>
+	</center>
+
+
+
+<!-- end navbar content -->
+
+    </td>
+    <td bgcolor=#ffffff>&nbsp;</td>
+    <td valign=top>
+
+<!-- start main window content -->
+<center><img src='art/foxstart.png'>
+<BR><B>Documentation: Serialization of Data and Objects</B>
+</center>
+<p>
+<p>
+<b>What is Serialization?</b>
+<hr>
+Often, your application needs to save and load data in a machine-independent,
 binary format.&nbsp; This data may be very simple, such as an array of
 numbers, or it may be a complex networks of objects arranged in some application-defined
 data structure.
-<P>FOX offers some tools to make implementation of such basic save and
-load facilities in an application fairly straighforward: <B>Serialization</B>
+<p>FOX offers some tools to make implementation of such basic save and
+load facilities in an application fairly straighforward: <b>Serialization</b>
 and
-<B>Deserialization</B>.&nbsp;&nbsp; Serialization refers to the process
+<b>Deserialization</b>.&nbsp;&nbsp; Serialization refers to the process
 of taking a network of objects and their member data, and turning it into
 a linear byte stream; deserialization of course refers to the opposite.&nbsp;
-This process is also sometimes referred to as <I>streaming</I>, <I>flattening</I>,
-or more prosaically, <I>pickling</I>.
-<P>Once code for an object's serialization has been written, this streaming
+This process is also sometimes referred to as <i>streaming</i>, <i>flattening</i>,
+or more prosaically, <i>pickling</i>.
+<p>The <b>FXStream</b> classes support streaming of objects and data in
+a type-safe and architecture-neutral manner;&nbsp; this means that a) your
+data will be read in the way you wrote it out, and b) streaming works as
+efficient on little-endian machines as it does on big-endian ones:- there
+is no byte-order preference.
+<p>The FXStream class are extremely flexible, in that you may subclass
+them ad libitum to implement esoteric applications ranging from compression
+to encryption, BSD sockets, UNIX pipes,&nbsp; clipboard, drag &amp; drop,
+and what have you.&nbsp; Code you write to serialize your data may be reused
+to perform any of these functions simply by substituting the FXStream class
+upon which they operate.
+<p>Once code for an object's serialization has been written, this streaming
 capability can be used for a variety of purposes:
-<BR>&nbsp;
-<UL>
-<LI>
-Saving or loading from <B><I>files</I></B>, in a machine-independent manner.</LI>
+<br>&nbsp;
+<ul>
+<li>
+Saving or loading from <b><i>files</i></b>, in a machine-independent manner.</li>
 
-<LI>
-Saving into <B><I>memory buffers</I></B>, or loading back from memory buffers.</LI>
+<li>
+Saving into <b><i>memory buffers</i></b>, or loading back from memory buffers.</li>
 
-<LI>
-Loading of <B><I>resources</I></B> compiled into the application using
-<B><I><A HREF="icons.html#RESWRAPDOC">reswrap</A></I></B>.</LI>
+<li>
+Loading of <b><i>resources</i></b> compiled into the application using
+<b><i><a href="icons.html#RESWRAPDOC">reswrap</a></i></b>.</li>
 
-<LI>
-Exchanging objects and data between applications using <B><I><A HREF="draganddrop.html#DRAGNDROP">Drag
-and Drop</A></I></B> techniques.</LI>
+<li>
+Exchanging objects and data between applications using <b><i><a href="draganddrop.html#DRAGNDROP">Drag
+and Drop</a></i></b> techniques.</li>
 
-<LI>
-Just <B><I>counting the bytes</I></B>, e.g. to determine buffer sizes.</LI>
+<li>
+Just <b><i>counting the bytes</i></b>, e.g. to determine buffer sizes.</li>
 
-<LI>
-Transfer objects and data over the network, e.g. via <B><I>sockets</I></B>,
-<B><I>pipes</I></B>,
-<B><I>PVM</I></B>, <B><I>MPI</I></B>, etc.</LI>
-</UL>
+<li>
+Transfer objects and data over the network, e.g. via <b><i>sockets</i></b>,
+<b><i>pipes</i></b>,
+<b><i>PVM</i></b>,
+<b><i>MPI</i></b>,
+etc.</li>
+</ul>
 
-<P><BR><U><FONT COLOR="#990000"><FONT SIZE=+4>Philosophy in FOX Serialization.</FONT></FONT></U>
-<P>The FOX Stream classes have been designed with a number of goals in
+<p>
+<p>
+<b>Philosophy in FOX Serialization</b>
+<hr>
+The FOX Stream classes have been designed with a number of goals in
 mind:
-<BR>&nbsp;
-<UL>
-<LI>
-<B>Speed</B>.&nbsp; The serialization and deserialization should be very
+<br>&nbsp;
+<ul>
+<li>
+<b>Speed</b>.&nbsp; The serialization and deserialization should be very
 fast.&nbsp; Thus, a minimal amount of computing overhead is required; also,
-I/O should be minimized.</LI>
+I/O should be minimized.</li>
 
-<BR>&nbsp;
-<LI>
-<B>Flexibility</B>.&nbsp; At some small expense in speed, all I/O eventually
+<br>&nbsp;
+<li>
+<b>Flexibility</b>.&nbsp; At some small expense in speed, all I/O eventually
 boils down to a few basic virtual I/O functions; thus, it is possible to
 derive subclasses and serialize data into byte streams with different destinations
 or sources:- not just files, but also memory buffers, sockets, or perhaps
-shared memory segments or mapped files.</LI>
+shared memory segments or mapped files.</li>
 
-<BR>&nbsp;
-<LI>
-<B>Type Safety</B>.&nbsp; In order to make sure that the number of bytes
+<br>&nbsp;
+<li>
+<b>Type Safety</b>.&nbsp; In order to make sure that the number of bytes
 saved exactly matches the number of bytes loaded, all stream insertion/extraction
-operators are defined for all basic machine types, and these <I>types </I>are<I>
-guaranteed </I>to be the<I> same size </I>on all FOX implementations.</LI>
+operators are defined for all basic machine types, and these <i>types </i>are<i>
+guaranteed </i>to be the<i> same size </i>on all FOX implementations.</li>
 
-<BR>&nbsp;
-<LI>
-<B>Byte Swapping</B>.&nbsp; Since the types are known, the FOX Stream class
+<br>&nbsp;
+<li>
+<b>Byte Swapping</b>.&nbsp; Since the types are known, the FOX Stream class
 is able to swap bytes upon stream deserialization.&nbsp; The FOX Stream
-does NOT swap bytes on <I>saving</I>, but only on <I>loading</I>.&nbsp;
-This is for the following reasons:</LI>
+does NOT swap bytes on <i>saving</i>, but only on <i>loading</i>.&nbsp;
+This is for the following reasons:</li>
 
-<BR>&nbsp;
-<UL>
-<LI>
+<br>&nbsp;
+<ul>
+<li>
 It is faster to serialize in a machine-natural order, so that as long as
 one works on machines of the same architecture, no cost is incurred with
 swapping bytes at all.&nbsp; Loading and saving on the same type of machine
-is expected to be a very, very common case.</LI>
+is expected to be a very, very common case.</li>
 
-<BR>&nbsp;
-<LI>
-By byte swapping on the receiving end, an <I>in-situ</I> swap can be performed,
+<br>&nbsp;
+<li>
+By byte swapping on the receiving end, an <i>in-situ</i> swap can be performed,
 which will lead to much better caching, and eliminates the need to temporary
-buffers etc.</LI>
+buffers etc.</li>
 
-<BR>&nbsp;</UL>
+<br>&nbsp;</ul>
 
-<LI>
-<B>Predictability</B>.&nbsp; With the exception of serialization of FOX
+<li>
+<b>Predictability</b>.&nbsp; With the exception of serialization of FOX
 Objects, the FOX Stream class serializes exactly as many bytes as it is
 given by the application.&nbsp; This has a number of interesting benefits:-
 for example, the FOX GIF Image loading routine works based on a FOX Stream,
-permitting it to read both from files as well as memory data arrays; this
-makes handling of compiled-in or embedded resources (e.g. by using <A HREF="icons.html#RESWRAPDOC">reswrap</A>)
-very simple indeed.</LI>
+permitting it to read both from files as well as from memory data arrays;
+this makes handling of compiled-in or embedded resources (e.g. by using
+<a href="icons.html#RESWRAPDOC">reswrap</a>)
+very simple indeed.</li>
 
-<BR>&nbsp;
-<LI>
-<B>Future expansion</B>.&nbsp; An escape tag is prepended for serialized
+<br>&nbsp;
+<li>
+<b>Future expansion</b>.&nbsp; An escape tag is prepended for serialized
 FOX Objects.&nbsp; This will in the [near] future allow deserialization
-of FOX Objects that are available in <I>dynamic link libraries (DLL's).&nbsp;
-</I>Currently, FOX can only deserialize objects that have been compiled
-into the application code.</LI>
-</UL>
+of FOX Objects that are available in <i>dynamic link libraries (DLL's).
+</i>Currently, FOX can only deserialize objects that have been compiled
+into the application code.</li>
+</ul>
 
-<P><BR><U><FONT COLOR="#990000"><FONT SIZE=+4>So How Does It Work?</FONT></FONT></U>
-<P>From the application programmer's point of view, it works very simply:
-<BLOCKQUOTE><FONT FACE="Courier New,Courier"></FONT>&nbsp;
-<BR><FONT FACE="Courier New,Courier">FXuint data[100],numdata;</FONT><FONT FACE="Courier New,Courier"></FONT>
-<P><FONT FACE="Courier New,Courier">// Save my stuff to a stream</FONT>
-<BR><FONT FACE="Courier New,Courier">void savemystuff(FXStream&amp; stream){</FONT>
-<BR><FONT FACE="Courier New,Courier">&nbsp; stream &lt;&lt; numdata;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-// Save the number of data values</FONT>
-<BR><FONT FACE="Courier New,Courier">&nbsp; steam.save(data,100);&nbsp;&nbsp;&nbsp;&nbsp;
-// Save the data</FONT>
-<BR><FONT FACE="Courier New,Courier">&nbsp; }</FONT>
-<BR><FONT FACE="Courier New,Courier"></FONT>&nbsp;<FONT FACE="Courier New,Courier"></FONT>
-<P><FONT FACE="Courier New,Courier">// Save stuff to a FILE stream</FONT>
-<BR><FONT FACE="Courier New,Courier">FXFileStream&nbsp; stream;</FONT>
-<BR><FONT FACE="Courier New,Courier">stream.open("datafile.dat",FXStreamSave);</FONT>
-<BR><FONT FACE="Courier New,Courier">savemystuff(stream);</FONT>
-<BR><FONT FACE="Courier New,Courier">...</FONT>
-<BR><FONT FACE="Courier New,Courier">stream.close();</FONT></BLOCKQUOTE>
+<p>
+<p>
+<b>So How Does It Work?</b>
+<hr>
+From the application programmer's point of view, it works very simply:
+<blockquote>&nbsp;
+<center><table BORDER CELLSPACING=0 COLS=1 WIDTH="90%" BGCOLOR="#FFF8E1" NOSAVE >
+<tr>
+<td><tt>FXuint data[100],numdata;</tt>
+<p><tt>// Save my stuff to a stream</tt>
+<br><tt>void savemystuff(FXStream&amp; stream){</tt>
+<br><tt>&nbsp; stream &lt;&lt; numdata;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// Save the number of data values</tt>
+<br><tt>&nbsp; steam.save(data,numdata);&nbsp; // Save the data</tt>
+<br><tt>&nbsp; }</tt>
+<br>&nbsp;
+<p><tt>// Save stuff to a FILE stream</tt>
+<br><tt>FXFileStream&nbsp; stream;</tt>
+<br><tt>stream.open("datafile.dat",FXStreamSave);</tt>
+<br><tt>savemystuff(stream);</tt>
+<br><tt>stream.close();</tt></td>
+</tr>
+</table></center>
+</blockquote>
 As you see, this is pretty simple. Note that the code fragment doing the
 actual serialization does not depend on the type of FXStream being used;
 I recommend simply passing in an FXStream&amp;, so that the same code may
 be used to serialize to FXFileStreams, FXMemoryStreams or other stream
 classes as yet to be invented.
-<BR>&nbsp;
-<P>From the stream's point of view, things are a bit more complicated.&nbsp;
+<br>&nbsp;
+<p>From the stream's point of view, things are a bit more complicated.&nbsp;
 Saving basic types (FXchar, FXshort, etc) into an FXStream is done by C++-tradional
-insertion and extraction operators <B>&lt;&lt;</B> and <B>>></B>.&nbsp;
-Note that all operators take a <I>reference</I>, rather than a value.&nbsp;
+insertion and extraction operators <b>&lt;&lt;</b> and <b>>></b>.&nbsp;
+Note that all operators take a <i>reference</i>, rather than a value.&nbsp;
 If we would save a value, regular C++ type promotions might be silenty
 invoked, and more bytes might be saved than expected;&nbsp; by taking reference
-arguments, one has to first store a value into a variable of <I>known type</I>,
+arguments, one has to first store a value into a variable of <i>known type</i>,
 then call the insertion operator.
-<P>For <I>arrays</I> of basic types, the FXStream class supplies a few
+<p>For <i>arrays</i> of basic types, the FXStream class supplies a few
 regular member functions called save() and load(), one for each basic type.&nbsp;
 Note that FOX may support a type FXlong on certain machines; FXlong is
 always 64 bits, or 8 bytes, if supported by the system.&nbsp; If 64 bit
 numbers can not be supported, FXlong is NOT defined.
-<P>For FOX Objects, things are a more complex.&nbsp; A network of objects
+<p>For FOX Objects, things are a more complex.&nbsp; A network of objects
 can be saved into a stream, and should be restored upon a load.&nbsp; Of
 course, upon load not all objects will occupy the same address as where
 they were initially stored from.&nbsp; Also, objects may refer to each
 other;&nbsp; despite that, each object should be saved at most once.
-<P>FOX currently implements the object save by means of a hash table to
+<p>FOX currently implements the object save by means of a hash table to
 translate object pointers into reference numbers and vice versa.&nbsp;
-In a nutshell, here's how it works:<U></U>
-<P><U>To save an object-pointer to the stream:</U>
-<BR>&nbsp;
-<OL>
-<LI>
-If the pointer is NULL, save the speciall <B>null</B> tag.<BR>
-<BR></LI>
+In a nutshell, here's how it works:
+<p><u>To save an object-pointer to the stream:</u>
+<br>&nbsp;
+<ol>
+<li>
+If the pointer is NULL, save the speciall <b>null</b> tag.</li>
 
-<LI>
+<br>&nbsp;
+<li>
 Consult the hash table to see if the object pointer has been saved before.&nbsp;
 If the object has been encountered previously, its data must already have
-been saved, and the <B>reference</B> tag found in the hash table is saved
-to the stream.<BR>
-<BR></LI>
+been saved, and the <b>reference</b> tag found in the hash table is saved
+to the stream.</li>
 
-<LI>
+<br>&nbsp;
+<li>
 If the object has never been encountered before, generate a new reference
 tag, and add the object pointer and the reference tag to the hash table.&nbsp;
-Subsequently, a <B>class</B> tag, an <B>escape</B> code [0 for now], and
-the object's <B>class name</B> is saved to the stream.&nbsp; Then the object's
-<B>member data</B> are saved by calling the object's overloaded <B>save()</B>
-member function.</LI>
-</OL>
+Subsequently, a <b>class</b> tag, an <b>escape</b> code [0 for now], and
+the object's <b>class name</b> is saved to the stream.&nbsp; Then the object's
+<b>member
+data</b> are saved by calling the object's overloaded <b>save()</b> member
+function.</li>
+</ol>
+<u>To load an object-pointer from the stream:</u>
+<br>&nbsp;
+<ol>
+<li>
+Read the tag.&nbsp; If the tag was the <b>null</b> tag, the pointer was
+NULL, and a NULL is returned.</li>
 
-<P><U>To load an object-pointer from the stream:</U>
-<BR>&nbsp;
-<OL>
-<LI>
-Read the tag.&nbsp; If the tag was the <B>null</B> tag, the pointer was
-NULL, and a NULL is returned.<BR>
-<BR></LI>
+<br>&nbsp;
+<li>
+If the tag was the <b>reference</b> tag, the object has already been loaded,
+and the hash table is consulted to return the object-pointer.</li>
 
-<LI>
-If the tag was the <B>reference</B> tag, the object has already been loaded,
-and the hash table is consulted to return the object-pointer.&nbsp;<BR>
-<BR></LI>
-
-<LI>
-If the tag was the <B>class</B> tag, the <B>escape</B> tag is read and
+<br>&nbsp;
+<li>
+If the tag was the <b>class</b> tag, the <b>escape</b> tag is read and
 [for now] discarded, and subsequently the classname is read.&nbsp; The
-<B>FXMetaClass</B> is localized from the class name, and a new object is
-constructed by means of its <B>makeInstance() </B>function<B>.&nbsp; </B>The
-a new reference number is generated and the reference number and the object-pointer
-are stored into the hash table.&nbsp; Then the object member data are loaded
-by calling the object's overloaded <B>load() </B>member function.</LI>
-</OL>
+<b>FXMetaClass</b>
+is localized from the class name, and a new object is constructed by means
+of its <b>makeInstance() </b>function<b>.&nbsp; </b>The a new reference
+number is generated and the reference number and the object-pointer are
+stored into the hash table.&nbsp; Then the object member data are loaded
+by calling the object's overloaded <b>load() </b>member function.</li>
+</ol>
 
-<P><BR>In the current implementation, only those objects whose implementation
+<p><br>In the current implementation, only those objects whose implementation
 has been compiled into the application can be [de-] serialized.
-<P>Future versions of FOX will use the <B>escape</B> code information for
-additional methods to localize the <B>FXMetaClass</B> objects.&nbsp; In
+<p>Future versions of FOX will use the <b>escape</b> code information for
+additional methods to localize the <b>FXMetaClass</b> objects.&nbsp; In
 particular, the thinking is that certain object-implementations may live
 in DLL's (Dynamic Link Libraries) and the escape code will help localize
 the DLL and pull it in to provide the object implementation.&nbsp; It is
 clear that this will be a very powerful mechanism, enabling for example
 drag and drop of objects whose implementations are not a-priori known at
 the time the application is compiled.
-<P><FONT COLOR="#000000">I added the escape code so as to <B>not</B> break
-people's streamed object files when this capability will be introduced.</FONT>
-<BR>&nbsp;
-<P><U><FONT COLOR="#990000"><FONT SIZE=+4>Future FOX uses of Serialization.</FONT></FONT></U>
-<P>Serialization is not only intended for features such as saving/restoring
+<p><font color="#000000">I added the escape code so as to <b>not</b> break
+people's streamed object files when this capability will be introduced.</font>
+<p>
+<p>
+<b>Future FOX uses of Serialization</b>
+<hr>
+Serialization is not only intended for features such as saving/restoring
 from files, and drag-and-drop of objects.&nbsp; Future versions of FOX
 will also allow FOX GUI Widgets to be serialized or deserialized; in fact,
 it is with this in mind that the two-step [Construct/Create] sequence is
@@ -233,77 +322,118 @@ so religiously carried out throughout the Library. Once FOX Widgets have
 been deserialized from either an external file or perhaps from a compiled-in
 [reswrapped] resource, a GUI can be created in one fell swoop with a single
 call to FXApp::create().
-<P>A FOX GUI Builder will be a program that builds a nice-looking GUI,
+<p>A FOX GUI Builder will be a program that builds a nice-looking GUI,
 and then serializes it for incorporation into an application [using reswrap].&nbsp;
 Using the escape-code mechanism, the FOX GUI builder will be able to build
 GUI's that contain Custom Controls or Widgets written by third parties.
-<BR>&nbsp;
-<P><U><FONT COLOR="#990000"><FONT SIZE=+4>Tips and Hints for Serialization.</FONT></FONT></U>
-<P><U><FONT COLOR="#990000">Byte Swapping.</FONT></U>
-<P>Proper use of the serialization mechanism will allow serialized data
+<br>&nbsp;
+<p>
+<p>
+<b>Tips and Hints for Serialization: Byte Swapping</b>
+<hr>
+Proper use of the serialization mechanism will allow serialized data
 to be read across different machines, with different byte orders.&nbsp;
 In the scope of ``predictability,'' FOX's stream mechanism does NOT contain
 any tags or markers, nor does it contain things like byte order and such,
 with the exception of course being the saving of object-pointers.
-<P>It <I>does</I> however try to help:
-<BLOCKQUOTE><FONT FACE="Courier New,Courier"></FONT>&nbsp;
-<BR><FONT FACE="Courier New,Courier">FXbool FXStream::<B>isLittleEndian</B>();</FONT></BLOCKQUOTE>
+<p>It <i>does</i> however try to help:
+<blockquote>&nbsp;
+<br><font face="Courier New,Courier">FXbool FXStream::<b>isLittleEndian</b>();</font></blockquote>
 
-<P><BR>returns <I>TRUE</I> for Little Endian machines [e.g. i386 and Alpha
-CPU's] and <I>FALSE</I> for Big Endian machines [e.g. 68k, SPARC CPU's].
-<BR>Note that <B>FXbool</B> is defined as <B>FXuchar</B>, NOT as C++ <B>bool</B>.&nbsp;
+<p><br>returns <i>TRUE</i> for Little Endian machines [e.g. i386 and Alpha
+CPU's] and <i>FALSE</i> for Big Endian machines [e.g. 68k, SPARC CPU's].
+<br>Note that <b>FXbool</b> is defined as <b>FXuchar</b>, NOT as C++ <b>bool</b>.&nbsp;
 [I've never been able to find a statement that says how big the standard
-type <B>bool</B> is, but I'm pretty sure a char is 1 byte!].
-<P>Thus, the following chunk of code may be executed before saving any
+type <b>bool</b> is, but I'm pretty sure a char is 1 byte!].
+<p>Thus, the following chunk of code may be executed before saving any
 actual application data:
-<BR>&nbsp;
-<BLOCKQUOTE><FONT FACE="Courier New,Courier">FXbool endianness=FXStream::isLittleEndian();</FONT>
-<BR><FONT FACE="Courier New,Courier">stream &lt;&lt; endianness;</FONT>
-<BR><FONT FACE="Courier New,Courier">....</FONT>
-<BR><I><FONT FACE="Courier New,Courier">save the data</FONT></I>
-<BR><FONT FACE="Courier New,Courier">....</FONT>
-<BR><FONT FACE="Courier New,Courier"></FONT>&nbsp;</BLOCKQUOTE>
-Then upon loading:
-<BR>&nbsp;
-<BLOCKQUOTE><FONT FACE="Courier New,Courier">FXbool endianness;</FONT>
-<BR><FONT FACE="Courier New,Courier">stream >> endianness;</FONT>
-<BR><FONT FACE="Courier New,Courier">stream.swapBytes(endianness!=FXStream::isLittleEndian());</FONT>
-<BR><FONT FACE="Courier New,Courier">....</FONT>
-<BR><I><FONT FACE="Courier New,Courier">load the data</FONT></I>
-<BR><FONT FACE="Courier New,Courier">....</FONT></BLOCKQUOTE>
-In other words, the bytes are swapped on input, if and only if<I> </I>the
-byte order of the saving application <I>differs</I> from the loading one.
-<BR>&nbsp;
-<P><U><FONT COLOR="#990000">Container Object.</FONT></U>
-<P>Many applications have one so-called <B>container</B> object, which
+<br>&nbsp;
+<center><table BORDER CELLSPACING=0 COLS=1 WIDTH="90%" BGCOLOR="#FFF8E1" NOSAVE >
+<tr>
+<td><tt>FXbool endianness=FXStream::isLittleEndian();</tt>
+<br><tt>stream &lt;&lt; endianness;</tt>
+<br><tt>....</tt>
+<br><i><tt>save the data</tt></i>
+<br><tt>....</tt></td>
+</tr>
+</table></center>
+
+<p>Then upon loading:
+<br>&nbsp;
+<br>&nbsp;
+<center><table BORDER CELLSPACING=0 COLS=1 WIDTH="90%" BGCOLOR="#FFF8E1" NOSAVE >
+<tr>
+<td><tt>FXbool endianness;</tt>
+<br><tt>stream >> endianness;</tt>
+<br><tt>stream.swapBytes(endianness!=FXStream::isLittleEndian());</tt>
+<br><tt>....</tt>
+<br><i><tt>load the data</tt></i>
+<br><tt>....</tt></td>
+</tr>
+</table></center>
+
+<p>In other words, the bytes are swapped <b><i>on input</i></b>, if and
+only if<i> </i>the byte order of the saving application <i>differs</i>
+from the loading one.
+<p>
+<p>
+<b>Tips and Hints for Serialization: Container Object</b>
+<hr>
+Many applications have one so-called <b>container</b> object, which
 may not itself participate in serialization for one reason or another.&nbsp;
 For example, the FOX FXApp object is normally created by the main startup
 routine of an application, and will probably never be serialized [although
 its member data may be].
-<P>In order to accomodate references to such an object without saving it,
-the FXStream class allows you to specify a <B>container</B> object.&nbsp;
+<p>In order to accomodate references to such an object without saving it,
+the FXStream class allows you to specify a <b>container</b> object.&nbsp;
 During serialization, when a pointer to the container object is encountered,
 only a reference tag is saved to the stream; likewise, on deserialization
 a reference to the container object is translated into the pointer passed
 in with the FXStream constructor.
-<BR>&nbsp;
-<P><U><FONT COLOR="#990000">Use FX Types.</FONT></U>
-<P>FOX defines a number of typedefs for the basic types, such as FXchar,
-FXshort, and so on.&nbsp; The idea is that the size of these types is <I>fixed</I>,
-and the <I>same</I> on all implementations; there is an FXASSERT somewhere
+<p>
+<p>
+<b>Tips and Hints for Serialization: Use FX Types</b>
+<hr>
+FOX defines a number of typedefs for the basic types, such as FXchar,
+FXshort, and so on.&nbsp; The idea is that the size of these types is <i>fixed</i>,
+and the <i>same</i> on all implementations; there is an FXASSERT somewhere
 that will trip if this is not true.
-<P>Writing applications that should work on heterogeneous mixes of hardware
+<p>Writing applications that should work on heterogeneous mixes of hardware
 becomes simpler if variables you intend to serialize are defined in terms
 of these basic types; for loop variables and such ephemeral things, you
 may want to use the ``suggested'' system-specific types, as these may be
 faster.
-<P>The type <B>FXlong</B> may NOT be available on all platforms.&nbsp;
+<p>The type <b>FXlong</b> may NOT be available on all platforms.&nbsp;
 It represents a 64 bit integer type.&nbsp; You use this at your own risk
 of potential portability loss.
-<BR>&nbsp;
-<P>
-<HR WIDTH="100%">
-<BR><FONT SIZE=-1>Copyright &copy; 1998 <A HREF="mailto:jvz@cfdrc.com">Jeroen
-van der Zijp</A>, all rights reserved.</FONT>
-</BODY>
-</HTML>
+<br>&nbsp;
+<p>
+
+<!-- end main window content -->
+
+    </td>
+    <td bgcolor=#ffffff>&nbsp;</td>
+    <td bgcolor=#557faa width=15>&nbsp;</td>
+  </tr>
+  <tr>
+    <td colspan=2 bgcolor="#557faa" align=center>&nbsp;
+     </td>
+    <td bgcolor=#ffffff valign=bottom align=left><img src=art/ill.gif width=8 height=8></td>
+    <td bgcolor=#ffffff>&nbsp;</td>
+    <td bgcolor=#ffffff valign=bottom align=right><img src=art/ilr.gif width=8 height=8></td>
+    <td bgcolor=#557faa width=15>&nbsp;</td>
+  </tr>
+  <tr>
+    <td valign=bottom align=left bgcolor=#557faa><img src=art/oll.gif width=8 height=8></td>
+    <td colspan=4 bgcolor=#557faa>&nbsp;</td>
+    <td valign=bottom align=right bgcolor=#557faa><img src=art/olr.gif width=8 height=8></td>
+  </tr>
+</table>
+
+<address>Copyright 1997-2002 <a href=mailto:jeroen@fox-toolkit.org>Jeroen van der Zijp</a></address>
+<!-- Created: Mon Apr 10 11:20:32 CEST 2000 -->
+<!-- hhmts start -->
+
+<!-- hhmts end -->
+</body>
+</html>

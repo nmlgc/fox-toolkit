@@ -3,75 +3,76 @@
 *                           C o l o r   D i a l o g                             *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998 by Jeroen van der Zijp.   All Rights Reserved.             *
+* Copyright (C) 1998,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
-* modify it under the terms of the GNU Library General Public                   *
+* modify it under the terms of the GNU Lesser General Public                    *
 * License as published by the Free Software Foundation; either                  *
-* version 2 of the License, or (at your option) any later version.              *
+* version 2.1 of the License, or (at your option) any later version.            *
 *                                                                               *
 * This library is distributed in the hope that it will be useful,               *
 * but WITHOUT ANY WARRANTY; without even the implied warranty of                *
 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU             *
-* Library General Public License for more details.                              *
+* Lesser General Public License for more details.                               *
 *                                                                               *
-* You should have received a copy of the GNU Library General Public             *
-* License along with this library; if not, write to the Free                    *
-* Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.            *
+* You should have received a copy of the GNU Lesser General Public              *
+* License along with this library; if not, write to the Free Software           *
+* Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXColorDialog.cpp,v 1.8 1998/09/03 05:01:25 jeroen Exp $                  *
+* $Id: FXColorDialog.cpp,v 1.15 2002/01/18 22:42:58 jeroen Exp $                *
 ********************************************************************************/
 #include "xincs.h"
+#include "fxver.h"
 #include "fxdefs.h"
 #include "fxkeys.h"
 #include "FXStream.h"
 #include "FXString.h"
-#include "FXObject.h"
-#include "FXAccelTable.h"
-#include "FXObjectList.h"
+#include "FXSize.h"
+#include "FXPoint.h"
+#include "FXRectangle.h"
+#include "FXSettings.h"
+#include "FXRegistry.h"
 #include "FXApp.h"
 #include "FXId.h"
-#include "FXFont.h"
 #include "FXDrawable.h"
-#include "FXImage.h"
-#include "FXIcon.h"
-#include "FXGIFIcon.h"
 #include "FXWindow.h"
 #include "FXFrame.h"
 #include "FXLabel.h"
-#include "FXColorWell.h"
 #include "FXButton.h"
 #include "FXComposite.h"
 #include "FXPacker.h"
-#include "FXCanvas.h"
 #include "FXShell.h"
 #include "FXTopWindow.h"
 #include "FXDialogBox.h"
-#include "FXScrollbar.h"
-#include "FXScrollWindow.h"
-#include "FXList.h"
-#include "FXTextField.h"
-#include "FXSlider.h"
 #include "FXColorSelector.h"
 #include "FXColorDialog.h"
 
 
 /*
-  To do:
-  - Should we also have a color selector?
+  Notes:
+  - Need shared instance of this dialog to pop up when double-clicking
+    on a color well.
 */
 
 
 /*******************************************************************************/
 
+// Map
+FXDEFMAP(FXColorDialog) FXColorDialogMap[]={
+  FXMAPFUNC(SEL_CHANGED,FXColorDialog::ID_COLORSELECTOR,FXColorDialog::onChgColor),
+  FXMAPFUNC(SEL_COMMAND,FXColorDialog::ID_COLORSELECTOR,FXColorDialog::onCmdColor),
+  };
+
+
 // Object implementation
-FXIMPLEMENT(FXColorDialog,FXDialogBox,NULL,0)
+FXIMPLEMENT(FXColorDialog,FXDialogBox,FXColorDialogMap,ARRAYNUMBER(FXColorDialogMap))
+
 
 
 // Separator item
-FXColorDialog::FXColorDialog(FXApp* a,const char* name,FXuint opts,FXint x,FXint y,FXint w,FXint h):
-  FXDialogBox(a,name,opts|DECOR_TITLE|DECOR_BORDER|DECOR_RESIZE,x,y,w,h,4,4){
-  colorbox=new FXColorSelector(this,NULL,0,LAYOUT_FILL_X|LAYOUT_FILL_Y);
+FXColorDialog::FXColorDialog(FXWindow* owner,const FXString& name,FXuint opts,FXint x,FXint y,FXint w,FXint h):
+  FXDialogBox(owner,name,opts|DECOR_TITLE|DECOR_BORDER|DECOR_RESIZE,x,y,w,h,0,0,0,0,4,4){
+  colorbox=new FXColorSelector(this,this,ID_COLORSELECTOR,LAYOUT_FILL_X|LAYOUT_FILL_Y);
   colorbox->acceptButton()->setTarget(this);
   colorbox->acceptButton()->setSelector(FXDialogBox::ID_ACCEPT);
   colorbox->cancelButton()->setTarget(this);
@@ -79,7 +80,7 @@ FXColorDialog::FXColorDialog(FXApp* a,const char* name,FXuint opts,FXint x,FXint
   }
 
 
-// Change RGBA color 
+// Change RGBA color
 void FXColorDialog::setRGBA(FXColor clr){
   colorbox->setRGBA(clr);
   }
@@ -89,6 +90,47 @@ void FXColorDialog::setRGBA(FXColor clr){
 FXColor FXColorDialog::getRGBA() const {
   return colorbox->getRGBA();
   }
+
+
+// Forward ColorSelector color change to target [a color well]
+long FXColorDialog::onChgColor(FXObject*,FXSelector,void* ptr){
+  if(target) target->handle(this,MKUINT(message,SEL_CHANGED),ptr);
+  return 1;
+  }
+
+
+// Forward ColorSelector color command to target [a color well]
+long FXColorDialog::onCmdColor(FXObject*,FXSelector,void* ptr){
+  if(target) target->handle(this,MKUINT(message,SEL_COMMAND),ptr);
+  return 1;
+  }
+
+
+// Return true if only opaque colors allowed
+FXbool FXColorDialog::isOpaqueOnly() const {
+  return colorbox->isOpaqueOnly();
+  }
+
+
+// Change opaque only mode
+void FXColorDialog::setOpaqueOnly(FXbool forceopaque){
+  colorbox->setOpaqueOnly(forceopaque);
+  }
+
+
+// Save data
+void FXColorDialog::save(FXStream& store) const {
+  FXDialogBox::save(store);
+  store << colorbox;
+  }
+
+
+// Load data
+void FXColorDialog::load(FXStream& store){
+  FXDialogBox::load(store);
+  store >> colorbox;
+  }
+
 
 // Cleanup
 FXColorDialog::~FXColorDialog(){

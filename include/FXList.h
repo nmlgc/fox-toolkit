@@ -1,155 +1,396 @@
 /********************************************************************************
 *                                                                               *
-*                            L i s t   O b j e c t                              *
+*                            L i s t   W i d g e t                              *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997 by Jeroen van der Zijp.   All Rights Reserved.             *
+* Copyright (C) 1997,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
-* modify it under the terms of the GNU Library General Public                   *
+* modify it under the terms of the GNU Lesser General Public                    *
 * License as published by the Free Software Foundation; either                  *
-* version 2 of the License, or (at your option) any later version.              *
+* version 2.1 of the License, or (at your option) any later version.            *
 *                                                                               *
 * This library is distributed in the hope that it will be useful,               *
 * but WITHOUT ANY WARRANTY; without even the implied warranty of                *
 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU             *
-* Library General Public License for more details.                              *
+* Lesser General Public License for more details.                               *
 *                                                                               *
-* You should have received a copy of the GNU Library General Public             *
-* License along with this library; if not, write to the Free                    *
-* Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.            *
+* You should have received a copy of the GNU Lesser General Public              *
+* License along with this library; if not, write to the Free Software           *
+* Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXList.h,v 1.41 1998/10/19 16:23:21 jvz Exp $                         *
+* $Id: FXList.h,v 1.51 2002/01/18 22:42:53 jeroen Exp $                         *
 ********************************************************************************/
 #ifndef FXLIST_H
 #define FXLIST_H
 
+#ifndef FXSCROLLAREA_H
+#include "FXScrollArea.h"
+#endif
 
-// List options
-enum FXListStyle {
-  LIST_EXTENDEDSELECT = 0,                // Extended selection mode
-  LIST_SINGLESELECT   = 0x00100000,       // At most one selected item
-  LIST_BROWSESELECT   = 0x00200000,       // Always exactly one selected item
-  LIST_MULTIPLESELECT = LIST_SINGLESELECT|LIST_BROWSESELECT,  // Multiple selection mode
-  LIST_AUTOSELECT     = 0x00400000,       // Automatically select under cursor
-  LIST_WANTSELECTION  = 0x00800000,       // Claim the selection
-  LIST_MASK           = LIST_SINGLESELECT|LIST_BROWSESELECT|LIST_AUTOSELECT|LIST_WANTSELECTION
+
+
+/// List styles
+enum {
+  LIST_EXTENDEDSELECT    = 0,             /// Extended selection mode allows for drag-selection of ranges of items
+  LIST_SINGLESELECT      = 0x00100000,    /// Single selection mode allows up to one item to be selected
+  LIST_BROWSESELECT      = 0x00200000,    /// Browse selection mode enforces one single item to be selected at all times
+  LIST_MULTIPLESELECT    = 0x00300000,    /// Multiple selection mode is used for selection of individual items
+  LIST_AUTOSELECT        = 0x00400000,    /// Automatically select under cursor
+  LIST_NORMAL            = LIST_EXTENDEDSELECT
   };
 
 
-// Opaque item type
-struct FXListItem;
+class FXIcon;
+class FXFont;
+class FXList;
+struct FXTimer;
 
 
+/// List item
+class FXAPI FXListItem : public FXObject {
+  FXDECLARE(FXListItem)
+  friend class FXList;
+protected:
+  FXString  label;
+  FXIcon   *icon;
+  void     *data;
+  FXuint    state;
+  FXint     x,y;
+protected:
+  FXListItem():icon(NULL),data(NULL),state(0),x(0),y(0){}
+  virtual void draw(const FXList* list,FXDC& dc,FXint x,FXint y,FXint w,FXint h);
+  virtual FXint hitItem(const FXList* list,FXint x,FXint y) const;
+protected:
+  enum {
+    SELECTED  = 1,
+    FOCUS     = 2,
+    DISABLED  = 4,
+    DRAGGABLE = 8,
+    ICONOWNED = 16
+    };
+public:
+  FXListItem(const FXString& text,FXIcon* ic=NULL,void* ptr=NULL):label(text),icon(ic),data(ptr),state(0),x(0),y(0){}
+  virtual void setText(const FXString& txt){ label=txt; }
+  FXString getText() const { return label; }
+  virtual void setIcon(FXIcon* icn){ icon=icn; }
+  FXIcon* getIcon() const { return icon; }
+  void setData(void* ptr){ data=ptr; }
+  void* getData() const { return data; }
+  virtual void setFocus(FXbool focus);
+  FXbool hasFocus() const { return (state&FOCUS)!=0; }
+  virtual void setSelected(FXbool selected);
+  FXbool isSelected() const { return (state&SELECTED)!=0; }
+  virtual void setEnabled(FXbool enabled);
+  FXbool isEnabled() const { return (state&DISABLED)==0; }
+  virtual void setDraggable(FXbool draggable);
+  FXbool isDraggable() const { return (state&DRAGGABLE)!=0; }
+  virtual void setIconOwned(FXuint owned=ICONOWNED);
+  FXuint isIconOwned() const { return (state&ICONOWNED); }
+  virtual FXint getWidth(const FXList* list) const;
+  virtual FXint getHeight(const FXList* list) const;
+  virtual void create();
+  virtual void detach();
+  virtual void destroy();
+  virtual void save(FXStream& store) const;
+  virtual void load(FXStream& store);
+  virtual ~FXListItem();
+  };
 
-// Base of list
-class FXList : public FXScrollArea {
+
+/// List item collate function
+typedef FXint (*FXListSortFunc)(const FXListItem*,const FXListItem*);
+
+
+/// List Widget
+class FXAPI FXList : public FXScrollArea {
   FXDECLARE(FXList)
 protected:
-  FXListItem    *firstitem;
-  FXListItem    *lastitem;
-  FXListItem    *anchoritem;
-  FXListItem    *currentitem;
-  FXFont        *font;
-  FXItemSortFunc sortfunc;
-  FXPixel        textColor;
-  FXPixel        selbackColor;
-  FXPixel        seltextColor;
-  FXint          totalWidth;
-  FXint          totalHeight;
+  FXListItem   **items;             // Item list
+  FXint          nitems;            // Number of items
+  FXint          anchor;            // Anchor item
+  FXint          current;           // Current item
+  FXint          extent;            // Extent item
+  FXint          cursor;            // Cursor item
+  FXFont        *font;              // Font
+  FXColor        textColor;         // Text color
+  FXColor        selbackColor;      // Selected back color
+  FXColor        seltextColor;      // Selected text color
+  FXint          listWidth;         // List width
+  FXint          listHeight;        // List height
+  FXint          visible;           // Number of rows high
+  FXString       help;              // Help text
+  FXListSortFunc sortfunc;          // Item sort function
+  FXint          grabx;             // Grab point x
+  FXint          graby;             // Grab point y
+  FXString       lookup;            // Lookup string
+  FXTimer       *timer;             // Tip hover timer
+  FXTimer       *lookuptimer;       // Lookup timer
+  FXbool         state;             // State of item
 protected:
   FXList();
-  FXList(const FXList&){}
-  static FXbool before(FXListItem* a,FXListItem* b);
-  void drawFocusRectangle(FXint x,FXint y,FXint w,FXint h);
-  virtual FXListItem* createItem();
   virtual void layout();
   void recompute();
+  virtual FXListItem *createItem(const FXString& text,FXIcon* icon,void* ptr);
+private:
+  FXList(const FXList&);
+  FXList &operator=(const FXList&);
 public:
   long onPaint(FXObject*,FXSelector,void*);
+  long onEnter(FXObject*,FXSelector,void*);
+  long onLeave(FXObject*,FXSelector,void*);
+  long onUngrabbed(FXObject*,FXSelector,void*);
   long onKeyPress(FXObject*,FXSelector,void*);
   long onKeyRelease(FXObject*,FXSelector,void*);
   long onLeftBtnPress(FXObject*,FXSelector,void*);
   long onLeftBtnRelease(FXObject*,FXSelector,void*);
+  long onRightBtnPress(FXObject*,FXSelector,void*);
+  long onRightBtnRelease(FXObject*,FXSelector,void*);
   long onMotion(FXObject*,FXSelector,void*);
-  long onActivate(FXObject*,FXSelector,void*);
-  long onDeactivate(FXObject*,FXSelector,void*);
   long onFocusIn(FXObject*,FXSelector,void*);
   long onFocusOut(FXObject*,FXSelector,void*);
-  long onSelectionLost(FXObject*,FXSelector,void*);
-  long onSelectionGained(FXObject*,FXSelector,void*);
-  long onChanged(FXObject*,FXSelector,void*);
   long onAutoScroll(FXObject*,FXSelector,void*);
   long onClicked(FXObject*,FXSelector,void*);
   long onDoubleClicked(FXObject*,FXSelector,void*);
   long onTripleClicked(FXObject*,FXSelector,void*);
-  long onSelected(FXObject*,FXSelector,void*);
-  long onDeselected(FXObject*,FXSelector,void*);
+  long onCommand(FXObject*,FXSelector,void*);
+  long onQueryTip(FXObject*,FXSelector,void*);
+  long onQueryHelp(FXObject*,FXSelector,void*);
+  long onTipTimer(FXObject*,FXSelector,void*);
+  long onLookupTimer(FXObject*,FXSelector,void*);
+  long onCmdSetValue(FXObject*,FXSelector,void*);public:
+  long onCmdGetIntValue(FXObject*,FXSelector,void*);
+  long onCmdSetIntValue(FXObject*,FXSelector,void*);
 public:
-  FXList(FXComposite *p,FXObject* tgt=NULL,FXSelector sel=0,FXuint opts=0,FXint x=0,FXint y=0,FXint w=0,FXint h=0);
+  static FXint ascending(const FXListItem* a,const FXListItem* b);
+  static FXint descending(const FXListItem* a,const FXListItem* b);
+public:
+  enum {
+    ID_TIPTIMER=FXScrollArea::ID_LAST,
+    ID_LOOKUPTIMER,
+    ID_LAST
+    };
+public:
+
+  /// Construct a list with nvis visible items; the list is initially empty
+  FXList(FXComposite *p,FXint nvis,FXObject* tgt=NULL,FXSelector sel=0,FXuint opts=LIST_NORMAL,FXint x=0,FXint y=0,FXint w=0,FXint h=0);
+
+  /// Create server-side resources
   virtual void create();
-  virtual void recalc();
+
+  /// Detach server-side resources
+  virtual void detach();
+
+  /// Return default width
+  virtual FXint getDefaultWidth();
+
+  /// Return default height
+  virtual FXint getDefaultHeight();
+
+  /// Compute and return content width
   virtual FXint getContentWidth();
+
+  /// Return content height
   virtual FXint getContentHeight();
+
+  /// Recalculate layout
+  virtual void recalc();
+
+  /// List widget can receive focus
   virtual FXbool canFocus() const;
-  FXint getNumItems() const;
-  FXint getNumSelectedItems() const;
-  FXListItem** getSelectedItems() const;
-  FXListItem* getFirstItem() const { return firstitem; }
-  FXListItem* getLastItem() const { return lastitem; }
-  FXListItem* getNextItem(const FXListItem* item) const;
-  FXListItem* getPrevItem(const FXListItem* item) const;
-  virtual FXListItem* addItemFirst(const char* text,void* ptr=NULL);
-  virtual FXListItem* addItemLast(const char* text,void* ptr=NULL);
-  virtual FXListItem* addItemAfter(FXListItem* other,const char* text,void* ptr=NULL);
-  virtual FXListItem* addItemBefore(FXListItem* other,const char* text,void* ptr=NULL);
-  virtual void removeItem(FXListItem* item);
-  virtual void removeItems(FXListItem* fm,FXListItem* to);
-  virtual void removeAllItems();
-  virtual FXListItem* getItemAt(FXint x,FXint y) const;
-  virtual FXint getItemX(const FXListItem* item) const;
-  virtual FXint getItemY(const FXListItem* item) const;
-  virtual FXint getItemWidth(const FXListItem* item) const;
-  virtual FXint getItemHeight(const FXListItem* item) const;
-  void updateItem(FXListItem* item);
-  void makeItemVisible(FXListItem* item);
-  FXbool isItemSelected(const FXListItem* item) const;
-  FXbool isItemCurrent(const FXListItem* item) const;
-  FXbool isItemVisible(const FXListItem* item) const;
-  void markItems();
-  FXbool selectItemRange(FXListItem* beg,FXListItem* end);
-  FXbool deselectItemRange(FXListItem* beg,FXListItem* end);
-  FXbool toggleItemRange(FXListItem* beg,FXListItem* end);
-  FXbool restoreItemRange(FXListItem* beg,FXListItem* end);
-  FXbool selectItem(FXListItem* item);
-  FXbool deselectItem(FXListItem* item);
-  FXbool toggleItem(FXListItem* item);
-  FXbool restoreItem(FXListItem* item);
+
+  /// Move the focus to this window
+  virtual void setFocus();
+
+  /// Remove the focus from this window
+  virtual void killFocus();
+
+  /// Return the number of items in the list
+  FXint getNumItems() const { return nitems; }
+
+  /// Return number of visible items
+  FXint getNumVisible() const { return visible; }
+
+  /// Change the number of visible items
+  void setNumVisible(FXint nvis);
+
+  /// Return the item at the given index
+  FXListItem *retrieveItem(FXint index) const;
+
+  /// Replace the item with a [possibly subclassed] item
+  FXint replaceItem(FXint index,FXListItem* item,FXbool notify=FALSE);
+
+  /// Replace items text, icon, and user-data pointer
+  FXint replaceItem(FXint index,const FXString& text,FXIcon *icon=NULL,void* ptr=NULL,FXbool notify=FALSE);
+
+  /// Insert a new [possibly subclassed] item at the give index
+  FXint insertItem(FXint index,FXListItem* item,FXbool notify=FALSE);
+
+  /// Insert item at index with given text, icon, and user-data pointer
+  FXint insertItem(FXint index,const FXString& text,FXIcon *icon=NULL,void* ptr=NULL,FXbool notify=FALSE);
+
+  /// Append a [possibly subclassed] item to the list
+  FXint appendItem(FXListItem* item,FXbool notify=FALSE);
+
+  /// Append new item with given text and optional icon, and user-data pointer
+  FXint appendItem(const FXString& text,FXIcon *icon=NULL,void* ptr=NULL,FXbool notify=FALSE);
+
+  /// Prepend a [possibly subclassed] item to the list
+  FXint prependItem(FXListItem* item,FXbool notify=FALSE);
+
+  /// Prepend new item with given text and optional icon, and user-data pointer
+  FXint prependItem(const FXString& text,FXIcon *icon=NULL,void* ptr=NULL,FXbool notify=FALSE);
+
+  /// Remove item from list
+  void removeItem(FXint index,FXbool notify=FALSE);
+
+  /// Remove all items from list
+  void clearItems(FXbool notify=FALSE);
+
+  /// Return item width
+  FXint getItemWidth(FXint index) const;
+
+  /// Return item height
+  FXint getItemHeight(FXint index) const;
+
+  /// Return index of item at x,y, if any
+  FXint getItemAt(FXint x,FXint y) const;
+
+  /// Return item hit code: 0 no hit; 1 hit the icon; 2 hit the text
+  FXint hitItem(FXint index,FXint x,FXint y) const;
+
+  /**
+  * Search items for item by name, starting from start item; the
+  * flags argument controls the search direction, and case sensitivity.
+  */
+  FXint findItem(const FXString& text,FXint start=-1,FXuint flags=SEARCH_FORWARD|SEARCH_WRAP) const;
+
+  /// Scroll to bring item into view
+  void makeItemVisible(FXint index);
+
+  /// Change item text
+  void setItemText(FXint index,const FXString& text);
+
+  /// Return item text
+  FXString getItemText(FXint index) const;
+
+  /// Change item icon
+  void setItemIcon(FXint index,FXIcon* icon);
+
+  /// Return item icon, if any
+  FXIcon* getItemIcon(FXint index) const;
+
+  /// Change item user-data pointer
+  void setItemData(FXint index,void* ptr);
+
+  /// Return item user-data pointer
+  void* getItemData(FXint index) const;
+
+  /// Return TRUE if item is selected
+  FXbool isItemSelected(FXint index) const;
+
+  /// Return TRUE if item is current
+  FXbool isItemCurrent(FXint index) const;
+
+  /// Return TRUE if item is visible
+  FXbool isItemVisible(FXint index) const;
+
+  /// Return TRUE if item is enabled
+  FXbool isItemEnabled(FXint index) const;
+
+  /// Repaint item
+  void updateItem(FXint index);
+
+  /// Enable item
+  FXbool enableItem(FXint index);
+
+  /// Disable item
+  FXbool disableItem(FXint index);
+
+  /// Select item
+  FXbool selectItem(FXint index,FXbool notify=FALSE);
+
+  /// Deselect item
+  FXbool deselectItem(FXint index,FXbool notify=FALSE);
+
+  /// Toggle item selection state
+  FXbool toggleItem(FXint index,FXbool notify=FALSE);
+
+  /// Change current item
+  void setCurrentItem(FXint index,FXbool notify=FALSE);
+
+  /// Return current item, if any
+  FXint getCurrentItem() const { return current; }
+
+  /// Change anchor item
+  void setAnchorItem(FXint index);
+
+  /// Return anchor item, if any
+  FXint getAnchorItem() const { return anchor; }
+
+  /// Get item under the cursor, if any
+  FXint getCursorItem() const { return cursor; }
+
+  /// Extend selection from anchor item to index
+  FXbool extendSelection(FXint index,FXbool notify=FALSE);
+
+  /// Deselect all items
+  FXbool killSelection(FXbool notify=FALSE);
+
+  /// Sort items using current sort function
   void sortItems();
-  void setCurrentItem(FXListItem* item);
-  FXListItem* getCurrentItem() const { return currentitem; }
-  void setAnchorItem(FXListItem* item);
-  FXListItem* getAnchorItem() const { return anchoritem; }
-  FXbool extendSelection(FXListItem* item);
-  void setItemText(FXListItem* item,const char* text);
-  const char* getItemText(const FXListItem* item) const;
-  void setItemData(FXListItem* item,void* ptr) const;
-  void* getItemData(const FXListItem* item) const;
+
+  /// Change text font
   void setFont(FXFont* fnt);
+
+  /// Return text font
   FXFont* getFont() const { return font; }
-  FXPixel getTextColor() const { return textColor; }
-  void setTextColor(FXPixel clr);
-  FXPixel getSelBackColor() const { return selbackColor; }
-  void setSelBackColor(FXPixel clr);
-  FXPixel getSelTextColor() const { return seltextColor; }
-  void setSelTextColor(FXPixel clr);
-  FXItemSortFunc getSortFunc() const { return sortfunc; }
-  void setSortFunc(FXItemSortFunc func){ sortfunc=func; }
+
+  /// Return normal text color
+  FXColor getTextColor() const { return textColor; }
+
+  /// Change normal text color
+  void setTextColor(FXColor clr);
+
+  /// Return selected text background
+  FXColor getSelBackColor() const { return selbackColor; }
+
+  /// Change selected text background
+  void setSelBackColor(FXColor clr);
+
+  /// Return selected text color
+  FXColor getSelTextColor() const { return seltextColor; }
+
+  /// Change selected text color
+  void setSelTextColor(FXColor clr);
+
+  /// Return sort function
+  FXListSortFunc getSortFunc() const { return sortfunc; }
+
+  /// Change sort function
+  void setSortFunc(FXListSortFunc func){ sortfunc=func; }
+
+  /// Return list style
   FXuint getListStyle() const;
+
+  /// Change list style
   void setListStyle(FXuint style);
+
+  /// Set the status line help text for this list
+  void setHelpText(const FXString& text);
+
+  /// Get the status line help text for this list
+  FXString getHelpText() const { return help; }
+
+  /// Save list to a stream
+  virtual void save(FXStream& store) const;
+
+  /// Load list from a stream
+  virtual void load(FXStream& store);
+
+  /// Destructor
   virtual ~FXList();
   };
-
 
 
 #endif

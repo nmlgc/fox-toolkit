@@ -3,23 +3,23 @@
 *                           Generic Element Handling                            *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997 by Jeroen van der Zijp.   All Rights Reserved.             *
+* Copyright (C) 1997,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
-* modify it under the terms of the GNU Library General Public                   *
+* modify it under the terms of the GNU Lesser General Public                    *
 * License as published by the Free Software Foundation; either                  *
-* version 2 of the License, or (at your option) any later version.              *
+* version 2.1 of the License, or (at your option) any later version.            *
 *                                                                               *
 * This library is distributed in the hope that it will be useful,               *
 * but WITHOUT ANY WARRANTY; without even the implied warranty of                *
 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU             *
-* Library General Public License for more details.                              *
+* Lesser General Public License for more details.                               *
 *                                                                               *
-* You should have received a copy of the GNU Library General Public             *
-* License along with this library; if not, write to the Free                    *
-* Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.            *
+* You should have received a copy of the GNU Lesser General Public              *
+* License along with this library; if not, write to the Free Software           *
+* Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXElement.h,v 1.3 1998/02/27 04:30:36 jeroen Exp $                       *
+* $Id: FXElement.h,v 1.4 2002/01/18 22:42:52 jeroen Exp $                       *
 ********************************************************************************/
 #ifndef FXELEMENT_H
 #define FXELEMENT_H
@@ -54,20 +54,20 @@ inline void copyElms(TYPE* dst,const TYPE* src,unsigned int n){
 // Move some elements from overlapping place to another
 template<class TYPE>
 inline void moveElms(TYPE* dst,const TYPE* src,unsigned int n){
-  if(src>dst){ 
-    while(n--){ *dst++ = *src++; } 
+  if(src>dst){
+    while(n--){ *dst++ = *src++; }
     }
-  else if(dst>src){  
-    dst+=n; 
-    src+=n; 
-    while(n--){ *--dst = *--src; } 
+  else if(dst>src){
+    dst+=n;
+    src+=n;
+    while(n--){ *--dst = *--src; }
     }
   }
 
 
 // Save some elements to persistent store
 template<class TYPE>
-inline void saveElms(FXStream& store,TYPE* ptr,unsigned int n){
+inline void saveElms(FXStream& store,const TYPE* ptr,unsigned int n){
   while(n--){ store << *ptr; ptr++; }
   }
 
@@ -102,7 +102,7 @@ inline void resizeElms(TYPE*& ptr,unsigned int n){
 
 // Free array of elements, without destruction
 template<class TYPE>
-inline void freeElms(TYPE*& ptr){ 
+inline void freeElms(TYPE*& ptr){
   fxfree((void**)&ptr);
   }
 
@@ -157,14 +157,14 @@ inline void moveElms(FXdouble* dst,const FXdouble* src,unsigned int n){ memmove(
 inline void moveElms(void** dst,const void** src,unsigned int n){ memmove(dst,src,n<<2); }
 
 // Type-safe save for basic types
-inline void saveElms(FXStream& store,FXuchar* ptr,unsigned int n){ store.save(ptr,n); }
-inline void saveElms(FXStream& store,FXchar* ptr,unsigned int n){ store.save(ptr,n); }
-inline void saveElms(FXStream& store,FXushort* ptr,unsigned int n){ store.save(ptr,n); }
-inline void saveElms(FXStream& store,FXshort* ptr,unsigned int n){ store.save(ptr,n); }
-inline void saveElms(FXStream& store,FXuint* ptr,unsigned int n){ store.save(ptr,n); }
-inline void saveElms(FXStream& store,FXint* ptr,unsigned int n){ store.save(ptr,n); }
-inline void saveElms(FXStream& store,FXfloat* ptr,unsigned int n){ store.save(ptr,n); }
-inline void saveElms(FXStream& store,FXdouble* ptr,unsigned int n){ store.save(ptr,n); }
+inline void saveElms(FXStream& store,const FXuchar* ptr,unsigned int n){ store.save(ptr,n); }
+inline void saveElms(FXStream& store,const FXchar* ptr,unsigned int n){ store.save(ptr,n); }
+inline void saveElms(FXStream& store,const FXushort* ptr,unsigned int n){ store.save(ptr,n); }
+inline void saveElms(FXStream& store,const FXshort* ptr,unsigned int n){ store.save(ptr,n); }
+inline void saveElms(FXStream& store,const FXuint* ptr,unsigned int n){ store.save(ptr,n); }
+inline void saveElms(FXStream& store,const FXint* ptr,unsigned int n){ store.save(ptr,n); }
+inline void saveElms(FXStream& store,const FXfloat* ptr,unsigned int n){ store.save(ptr,n); }
+inline void saveElms(FXStream& store,const FXdouble* ptr,unsigned int n){ store.save(ptr,n); }
 
 // Type-safe load for basic types
 inline void loadElms(FXStream& store,FXuchar* ptr,unsigned int n){ store.load(ptr,n); }

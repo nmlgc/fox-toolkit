@@ -3,47 +3,65 @@
 *                         Persistent Storage Stream                             *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997 by Jeroen van der Zijp.   All Rights Reserved.             *
+* Copyright (C) 1997,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
-* modify it under the terms of the GNU Library General Public                   *
+* modify it under the terms of the GNU Lesser General Public                    *
 * License as published by the Free Software Foundation; either                  *
-* version 2 of the License, or (at your option) any later version.              *
+* version 2.1 of the License, or (at your option) any later version.            *
 *                                                                               *
 * This library is distributed in the hope that it will be useful,               *
 * but WITHOUT ANY WARRANTY; without even the implied warranty of                *
 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU             *
-* Library General Public License for more details.                              *
+* Lesser General Public License for more details.                               *
 *                                                                               *
-* You should have received a copy of the GNU Library General Public             *
-* License along with this library; if not, write to the Free                    *
-* Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.            *
+* You should have received a copy of the GNU Lesser General Public              *
+* License along with this library; if not, write to the Free Software           *
+* Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXStream.h,v 1.9 1998/09/18 17:51:51 jvz Exp $                        *
+* $Id: FXStream.h,v 1.12 2002/01/18 22:42:55 jeroen Exp $                       *
 ********************************************************************************/
 #ifndef FXSTREAM_H
 #define FXSTREAM_H
 
 
 
-// Stream data flow direction
-enum FXStreamDirection { 
-  FXStreamDead=0,
-  FXStreamSave=1,
-  FXStreamLoad=2
+/// Stream data flow direction
+enum FXStreamDirection {
+  FXStreamDead=0,               // Unopened stream
+  FXStreamSave=1,               // Saving stuff to stream
+  FXStreamLoad=2                // Loading stuff from stream
   };
-  
-  
+
+
+/// Stream status codes
+enum FXStreamStatus {
+  FXStreamOK=0,                 // OK
+  FXStreamEnd=1,                // Try read past end of stream
+  FXStreamFull=2,               // Filled up stream buffer or disk full
+  FXStreamNoWrite=3,            // Unable to open for write
+  FXStreamNoRead=4,             // Unable to open for read
+  FXStreamFormat=5,             // Stream format error
+  FXStreamUnknown=6,            // Trying to read unknown class
+  FXStreamAlloc=7,              // Alloc failed
+  FXStreamFailure=8             // General failure
+  };
+
+
 // Hash table entry
-struct FXStreamHashEntry { 
-  FXuint    ref;
-  FXObject* obj;
+struct FXStreamHashEntry {
+  FXuint    ref;                // Object reference number
+  FXObject* obj;                // Pointer to object
   };
 
 
-/************************  Persisten Store Definition  *************************/
+class FXString;
 
-class FXStream {
+
+/************************  Persistent Store Definition  *************************/
+
+/// Persistent store definition
+class FXAPI FXStream {
 
   FXStreamHashEntry* table;     // Hash table
   FXuint             ntable;    // Amount of table that is filled
@@ -52,58 +70,68 @@ class FXStream {
   FXbool             swap;      // Swap bytes on readin
   const FXObject*    parent;    // Parent object
   void               grow();    // Enlarge the table
-  
+
 protected:
   FXStreamDirection  dir;       // Direction of current transfer
-  FXuint             pos;       // Position
-  
+  FXStreamStatus     code;      // Status code
+  unsigned long      pos;       // Position
+
 protected:
 
-  // Save bunch of items
+  /// Save bunch of items
   virtual void saveItems(const void *buf,FXuint n);
 
-  // Load bunch of items
+  /// Load bunch of items
   virtual void loadItems(void *buf,FXuint n);
 
 public:
 
-  // Constructor
+  /// Constructor
   FXStream(const FXObject* cont=NULL);
 
-  // Open archive return TRUE if OK
-  int open(FXStreamDirection save_or_load);
+  /// Open archive return TRUE if OK
+  FXbool open(FXStreamDirection save_or_load);
 
-  // Close; return TRUE if OK
-  int close();
+  /// Close; return TRUE if OK
+  FXbool close();
 
-  // Obtain direction
+  /// Get status code
+  FXStreamStatus status() const { return code; }
+
+  /// Set status code
+  void setError(FXStreamStatus err);
+
+  /// Obtain direction
   FXStreamDirection direction() const { return dir; }
 
-  // Get parent object
+  /// Get parent object
   const FXObject* container() const { return parent; }
 
-  // Get position
-  FXuint position() const { return pos; }
+  /// Get position
+  unsigned long position() const { return pos; }
 
-  // Change swap bytes flag
+  /// Move to position
+  virtual FXbool position(unsigned long p);
+
+  /// Change swap bytes flag
   void swapBytes(FXbool s){ swap=s; }
 
-  // Get swap bytes flag
+  /// Get swap bytes flag
   FXbool swapBytes() const { return swap; }
 
-  // Return implementation's endianness
-  static FXbool isLittleEndian(){ FXuint end=0x00000001; return (FXbool) *((FXuchar*)&end); }
-  
-  // Save to stream
-  FXStream& operator<<(const FXuchar& v);
-  FXStream& operator<<(const FXchar& v);
+  /// Return implementation's endianness
+  static FXbool isLittleEndian(){ return !FOX_BIGENDIAN; }
+
+  /// Save to stream
+  virtual FXStream& operator<<(const FXuchar& v);
+  virtual FXStream& operator<<(const FXchar& v);
   FXStream& operator<<(const FXushort& v);
   FXStream& operator<<(const FXshort& v);
   FXStream& operator<<(const FXuint& v);
   FXStream& operator<<(const FXint& v);
   FXStream& operator<<(const FXfloat& v);
   FXStream& operator<<(const FXdouble& v);
-  
+
 #ifdef FX_LONG
   FXStream& operator<<(const FXlong& v);
   FXStream& operator<<(const FXulong& v);
@@ -117,25 +145,25 @@ public:
   FXStream& save(const FXint* p,FXuint n);
   FXStream& save(const FXfloat* p,FXuint n);
   FXStream& save(const FXdouble* p,FXuint n);
-  
+
 #ifdef FX_LONG
   FXStream& save(const FXlong* p,FXuint n);
   FXStream& save(const FXulong* p,FXuint n);
 #endif
 
-  // Save object
-  FXStream& saveObject(const FXObject *const& v);
-  
-  // Load from stream
-  FXStream& operator>>(FXuchar& v);
-  FXStream& operator>>(FXchar& v);
+  /// Save object
+  FXStream& saveObject(const FXObject* v);
+
+  /// Load from stream
+  virtual FXStream& operator>>(FXuchar& v);
+  virtual FXStream& operator>>(FXchar& v);
   FXStream& operator>>(FXushort& v);
   FXStream& operator>>(FXshort& v);
   FXStream& operator>>(FXuint& v);
   FXStream& operator>>(FXint& v);
   FXStream& operator>>(FXfloat& v);
   FXStream& operator>>(FXdouble& v);
-  
+
 #ifdef FX_LONG
   FXStream& operator>>(FXlong& v);
   FXStream& operator>>(FXulong& v);
@@ -149,16 +177,16 @@ public:
   FXStream& load(FXint* p,FXuint n);
   FXStream& load(FXfloat* p,FXuint n);
   FXStream& load(FXdouble* p,FXuint n);
-  
+
 #ifdef FX_LONG
   FXStream& load(FXlong* p,FXuint n);
   FXStream& load(FXulong* p,FXuint n);
 #endif
 
-  // Load object
+  /// Load object
   FXStream& loadObject(FXObject*& v);
-  
-  // Destructor
+
+  /// Destructor
   virtual ~FXStream();
   };
 
@@ -166,7 +194,8 @@ public:
 
 /***************************  File Store Definition  ***************************/
 
-class FXFileStream : public FXStream {
+/// File Store Definition
+class FXAPI FXFileStream : public FXStream {
   void* file;               // File being dealt with
 protected:
   virtual void saveItems(const void *buf,FXuint n);
@@ -174,22 +203,35 @@ protected:
 
 public:
 
-  // Create file store
+  /// Create file store
   FXFileStream(const FXObject* cont=NULL);
 
-  // Open file store
-  int open(const char* filename,FXStreamDirection save_or_load);
+  /// Open file store
+  FXbool open(const FXString& filename,FXStreamDirection save_or_load);
 
-  // Close file store
-  int close();
+  /// Close file store
+  FXbool close();
 
+  /// Move to position
+  virtual FXbool position(unsigned long p);
+
+  /// Save to stream
+  virtual FXStream& operator<<(const FXuchar& v);
+  virtual FXStream& operator<<(const FXchar& v);
+
+  /// Load from stream
+  virtual FXStream& operator>>(FXuchar& v);
+  virtual FXStream& operator>>(FXchar& v);
+
+  /// Destructor
   virtual ~FXFileStream();
   };
 
-  
+
 /**************************  Memory Store Definition  **************************/
 
-class FXMemoryStream : public FXStream {
+/// Memory Store Definition
+class FXAPI FXMemoryStream : public FXStream {
   FXuchar *ptr;             // Memory pointer
   FXuint   space;           // Space in buffer
   FXbool   owns;            // Owns the data array
@@ -199,29 +241,43 @@ protected:
 
 public:
 
-  // Create memory store
+  /// Create memory store
   FXMemoryStream(const FXObject* cont=NULL);
 
-  // Open file store
-  int open(FXuchar* data,FXStreamDirection save_or_load);
-  
-  // Open file store
-  int open(FXuchar* data,FXuint sp,FXStreamDirection save_or_load);
+  /// Open file store
+  FXbool open(FXuchar* data,FXStreamDirection save_or_load);
 
-  // Get available space
+  /// Open memory store
+  FXbool open(FXuchar* data,FXuint sp,FXStreamDirection save_or_load);
+
+  /// Get available space
   FXuint getSpace() const { return space; }
 
-  // Set available space
+  /// Set available space
   void setSpace(FXuint sp);
-  
-  // Take buffer away from stream
+
+  /// Take buffer away from stream
   void takeBuffer(FXuchar*& buffer,FXuint& sp);
-  
-  // Give buffer to stream
+
+  /// Give buffer to stream
   void giveBuffer(FXuchar *buffer,FXuint sp);
-  
-  // Close file store
-  int close();
+
+  /// Close memory store
+  FXbool close();
+
+  /// Move to position
+  virtual FXbool position(unsigned long p);
+
+  /// Save to stream
+  virtual FXStream& operator<<(const FXuchar& v);
+  virtual FXStream& operator<<(const FXchar& v);
+
+  /// Load from stream
+  virtual FXStream& operator>>(FXuchar& v);
+  virtual FXStream& operator>>(FXchar& v);
+
+  /// Destructor
+  virtual ~FXMemoryStream();
   };
 
 

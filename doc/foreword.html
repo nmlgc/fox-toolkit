@@ -1,25 +1,86 @@
-<HTML>
-<HEAD>
-   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
-   <META NAME="GENERATOR" CONTENT="Mozilla/4.04 [en] (X11; I; Linux 2.0.33 i586) [Netscape]">
-   <META NAME="Author" CONTENT="Jeroen van der Zijp">
-   <TITLE>Foreword</TITLE>
-</HEAD>
-<BODY TEXT="#000000" BGCOLOR="#FFEDED" LINK="#0000EF" VLINK="#51188E" ALINK="#FF0000" BACKGROUND="foxback.gif">
+<html>
+<head>
+<LINK REL="stylesheet" HREF="styles.css" TYPE="text/css">
+<title>FOX-Toolkit</title>
+<!-- HTML Copyright 2001 Paul Laufer -->
+</head>
 
-<CENTER><U><FONT COLOR="#990000"><FONT SIZE=+4>The FOX Toolkit</FONT></FONT></U></CENTER>
+<body bgcolor=#ffffff link=#990033 vlink=#4a73ad alink=#ed004f text=#000000>
 
-<CENTER>&nbsp;</CENTER>
-<A NAME="FOREWORD"></A><U><FONT COLOR="#990000"><FONT SIZE=+4>Foreword.</FONT></FONT></U>
+<!--header-->
+<table align=center border=0 cellpadding=0 cellspacing=0 width=100% >
+  <tr><td bgcolor=silver colspan=5 align=right height=50><img src=art/oul_grey.gif align=left valign=top width=8 height=8><img src=art/foxlogo.png valign=bottom alt="FOX Toolkit" height=50 width=500 border=0 ></td>
+  	<td bgcolor=#557faa valign=top align=right><img src=art/our.gif width=8 height=8></td>
+  </tr>
+<!-- end header -->
+  <tr>
+    <td bgcolor=#557faa colspan=2 valign=top align=left>&nbsp;</td>
+    <td bgcolor=#557faa colspan=3><font color=#ffffff size=+1><center>
+<!-- Page Title -->
+Documentation: Foreword
+<!-- End Page Title -->
+    </center></font></td>
+    <td bgcolor=#557faa valign=top align=right>&nbsp;</td>
+  </tr>
+  <tr>
+    <td bgcolor=#557faa colspan=2>&nbsp;</td>
+    <td bgcolor=#ffffff valign=top align=left><img src=art/iul.gif width=8 height=8></td>
+    <td bgcolor=#ffffff>&nbsp;</td>
+    <td bgcolor=#ffffff valign=top align=right><img src=art/iur.gif width=8 height=8></td>
+    <td bgcolor=#557faa width=15>&nbsp;</td>
+  </tr>
+  <tr>
+    <td width=8 bgcolor=#557faa>&nbsp;</td>
+    <td valign=top bgcolor=#557faa link=#ffffff width=150>
 
-<P>FOX stands for Free Objects for X.&nbsp; It is a C++ based class library
+<!-- start navbar content -->
+
+	<a href=fox.html><font color=#ffffff>Home</font></a><br>
+	<a href=news.html><font color=#ffffff>News</font></a><br>
+	<a href=download.html><font color=#ffffff>Download</font></a><br>
+	<a href=goals.html><font color=#ffffff>Goals & Approach</font></a><br>
+	<a href=doc.html><font color=#ffffff>Documentation</font></a><br>
+	<a href=faq.html><font color=#ffffff>FAQ</font></a><br>
+	<a href=rex.html><font color=#ffffff>FXRex</font></a><br>
+	<a href=screenshots.html><font color=#ffffff>Screenshots</font></a><br>
+	<br>
+	<a href=adie.html><font color=#ffffff>Adie</font></a><br>
+	<a href=pathfinder.html><font color=#ffffff>PathFinder</font></a><br>
+	<a href=calc.html><font color=#ffffff>FOX Calculator</font></a><br>
+	<br>
+	<a href=projects.html><font color=#ffffff>Projects</font></a><br>
+	<br>
+	<a href='http://fxpy.sourceforge.net'><font color=#ffffff>FXPy</font></a><br>
+	<a href='http://fxruby.sourceforge.net'><font color=#ffffff>FXRuby</font></a><br>
+	<a href='http://eiffelfox.sourceforge.net'><font color=#ffffff>EiffelFox</font></a><br>
+        <a href='http://eevolved.com/foxhole/'><font color=#ffffff>The FOX Hole</font></a><br>
+        <a href='http://takahr.dhis.portside.net/cgi-bin/rwiki.cgi?cmd=view;name=FOX+FAQ'><font color=#ffffff>Japanese Docs</font></a><br>
+	<br>
+	<center>
+	<a href="http://www.eff.org/br"><img SRC="art/freespeach.gif" border=0></a>
+	<p>
+	<a href="http://www.slashdot.org"><img SRC="art/slingerzbutton1.gif" border=0></a>
+	</center>
+
+
+
+<!-- end navbar content -->
+
+    </td>
+    <td bgcolor=#ffffff>&nbsp;</td>
+    <td valign=top>
+
+<!-- start main window content -->
+<center><img src='art/foxstart.png'>
+<BR><B>Documentation: Foreword</B>
+</center>
+<p><P>FOX stands for Free Objects for X.&nbsp; It is a C++ based class library
 for building Graphical User Interfaces.&nbsp; Initially, it was developed
 for <A HREF="http://www.redhat.com">LINUX</A>, but the scope of this project
 has in the course of time become somewhat more ambitious.&nbsp; Current
 aims are to make FOX completely platform independent, and thus programs
 written against the FOX library will be only a compile away from running
 on a variety of platforms.
-
 <P>The idea of designing and implementing something like FOX started in
 spring '97.&nbsp; In the course of using several different systems, ranging
 from OSF Motif, NeXTstep,&nbsp; MS Windows,&nbsp; and Intergraph's System
@@ -29,7 +90,6 @@ experimentation with various ideas under different platforms, FOX was born.
 <BR>Because it draws from so many sources, most experienced GUI programmers
 will probably recognize a few of the underlying concepts; but only FOX
 brings all these together in one integrated system.
-
 <P>Some of the ideas and concepts underlying the FOX system are listed
 below:
 <BR>&nbsp;
@@ -63,12 +123,13 @@ behaviour of each Widget makes the system much more easy to learn.</LI>
 <UL>
 <LI>
 <B>Conciseness</B>.&nbsp; <I>Every line of code <B>not</B> written is a
-<B>correct</B> one</I>.&nbsp; So minimizing the number of lines of code
-to accomplish the job is a Good Thing.&nbsp; FOX helps with this by being
-able to create and initialize most Widgets with a single line of code.&nbsp;
-The C++ capability for default parameters to arguments is heavily used,
-and a lot of glue code to cement Widgets to each other is eliminated completely
-by the ability of FOX Widgets to send messages to each other.</LI>
+<B>correct</B>
+one</I>.&nbsp; So minimizing the number of lines of code to accomplish
+the job is a Good Thing.&nbsp; FOX helps with this by being able to create
+and initialize most Widgets with a single line of code.&nbsp; The C++ capability
+for default parameters to arguments is heavily used, and a lot of glue
+code to cement Widgets to each other is eliminated completely by the ability
+of FOX Widgets to send messages to each other.</LI>
 </UL>
 </UL>
 
@@ -101,6 +162,12 @@ and parcel of current GUI development:</LI>
 creating icons and images.&nbsp; Resources such as Icons and Images can
 be compiled into the application, and may be instantiated as needed.&nbsp;
 FOX supports both GIF and BMP image formats.</LI>
+
+<BR>&nbsp;
+<LI>
+A <B>Registry</B>, or persistent settings database whereby applications&nbsp;
+can save certain parameters such as recent file list, customizations, and
+so on.</LI>
 </UL>
 </UL>
 
@@ -156,18 +223,18 @@ applications, by providing convenient Widget sets for this purpose.</LI>
 <UL>
 <UL>
 <LI>
-<B>3D OpenGL Widgets.&nbsp;</B> FOX supports simple, as well as advanced
-3D Widgets which make it easy for developers to get started writing 3D
-enabled applications.</LI>
+<B>3D <A HREF="http://www.opengl.org/">OpenGL</A> Widgets.&nbsp;</B> FOX
+supports simple, as well as advanced 3D Widgets which make it easy for
+developers to get started writing 3D enabled applications.</LI>
 </UL>
 </UL>
 
 <UL>
 <UL>
 <LI>
-<B>Drag and Drop.</B>&nbsp; FOX supports Drag and Drop using <A HREF="http://www.cco.caltech.edu/~jafl/xdnd/">XDND.</A>&nbsp;
-Using drag-and-drop, a user can move data objects from one Widget to another,
-even between applications running on different machines.</LI>
+<B>Drag and Drop.</B>&nbsp; FOX supports Drag and Drop using <A HREF="http://www.newplanetsoftware.com/xdnd/">XDND.</A>&nbsp;
+Using <B><I>drag &amp; drop</I></B>, a user can move data objects from
+one Widget to another, even between applications running on different machines.</LI>
 </UL>
 </UL>
 
@@ -176,6 +243,11 @@ even between applications running on different machines.</LI>
 <LI>
 <B>Selection.&nbsp;</B> FOX supports the transfer of data between Widgets
 (possibly in different applications) through the X Selection mechanism.</LI>
+
+<LI>
+<B>Clipboard Support</B>. Ability to transfer arbitrary data structures
+between programs via <B><I>cut &amp; paste</I></B>, even between programs
+running on different machines.</LI>
 </UL>
 </UL>
 
@@ -185,7 +257,18 @@ even between applications running on different machines.</LI>
 <B>Timers, Idle Processing.&nbsp;</B> FOX supports both scheduled timers,
 i.e. pseudo-events that will cause some action to happen in the future,
 as well as Idle Processing, or background actions that execute while no
-activity is performed by the user.</LI>
+activity is performed by the user.<BR>
+<BR></LI>
+
+<LI>
+<B>WYSIWYG</B> Rendering. FOX's <B>device context</B> classes provide abstract
+rendering facilities which allow a single rendering code to produce output
+to an [user extensible] variety of output devices.<BR>
+<BR></LI>
+
+<LI>
+<B>Facilities</B> to watch network <B>sockets</B>, <B>pipes</B>, and other
+i/o channels.</LI>
 </UL>
 </UL>
 
@@ -218,11 +301,35 @@ header files!!), such applications will be easily ported to other platforms,
 simply by recompiling.</LI>
 </UL>
 
+<P><BR>
 
-<P>&nbsp;
-<BR>
-<HR WIDTH="100%">
-<BR><FONT SIZE=-1>Copyright &copy; 1998 Jeroen van der Zijp, all rights
-reserved.</FONT>
-</BODY>
-</HTML>
+
+
+<!-- end main window content -->
+
+    </td>
+    <td bgcolor=#ffffff>&nbsp;</td>
+    <td bgcolor=#557faa width=15>&nbsp;</td>
+  </tr>
+  <tr>
+    <td colspan=2 bgcolor="#557faa" align=center>&nbsp;
+     </td>
+    <td bgcolor=#ffffff valign=bottom align=left><img src=art/ill.gif width=8 height=8></td>
+    <td bgcolor=#ffffff>&nbsp;</td>
+    <td bgcolor=#ffffff valign=bottom align=right><img src=art/ilr.gif width=8 height=8></td>
+    <td bgcolor=#557faa width=15>&nbsp;</td>
+  </tr>
+  <tr>
+    <td valign=bottom align=left bgcolor=#557faa><img src=art/oll.gif width=8 height=8></td>
+    <td colspan=4 bgcolor=#557faa>&nbsp;</td>
+    <td valign=bottom align=right bgcolor=#557faa><img src=art/olr.gif width=8 height=8></td>
+  </tr>
+</table>
+
+<address>Copyright 1997-2002 <a href=mailto:jeroen@fox-toolkit.org>Jeroen van der Zijp</a></address>
+<!-- Created: Mon Apr 10 11:20:32 CEST 2000 -->
+<!-- hhmts start -->
+
+<!-- hhmts end -->
+</body>
+</html>

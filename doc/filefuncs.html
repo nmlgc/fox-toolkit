@@ -1,0 +1,488 @@
+<html>
+<head>
+<LINK REL="stylesheet" HREF="styles.css" TYPE="text/css">
+<title>FOX-Toolkit</title>
+<!-- HTML Copyright 2001 Paul Laufer -->
+</head>
+
+<body bgcolor=#ffffff link=#990033 vlink=#4a73ad alink=#ed004f text=#000000>
+
+<!--header-->
+<table align=center border=0 cellpadding=0 cellspacing=0 width=100% >
+  <tr><td bgcolor=silver colspan=5 align=right height=50><img src=art/oul_grey.gif align=left valign=top width=8 height=8><img src=art/foxlogo.png valign=bottom alt="FOX Toolkit" height=50 width=500 border=0 ></td>
+  	<td bgcolor=#557faa valign=top align=right><img src=art/our.gif width=8 height=8></td>
+  </tr>
+<!-- end header -->
+  <tr>
+    <td bgcolor=#557faa colspan=2 valign=top align=left>&nbsp;</td>
+    <td bgcolor=#557faa colspan=3><font color=#ffffff size=+1><center>
+<!-- Page Title -->
+Documentation: File Manipulation
+<!-- End Page Title -->
+    </center></font></td>
+    <td bgcolor=#557faa valign=top align=right>&nbsp;</td>
+  </tr>
+  <tr>
+    <td bgcolor=#557faa colspan=2>&nbsp;</td>
+    <td bgcolor=#ffffff valign=top align=left><img src=art/iul.gif width=8 height=8></td>
+    <td bgcolor=#ffffff>&nbsp;</td>
+    <td bgcolor=#ffffff valign=top align=right><img src=art/iur.gif width=8 height=8></td>
+    <td bgcolor=#557faa width=15>&nbsp;</td>
+  </tr>
+  <tr>
+    <td width=8 bgcolor=#557faa>&nbsp;</td>
+    <td valign=top bgcolor=#557faa link=#ffffff width=150>
+
+<!-- start navbar content -->
+
+	<a href=fox.html><font color=#ffffff>Home</font></a><br>
+	<a href=news.html><font color=#ffffff>News</font></a><br>
+	<a href=download.html><font color=#ffffff>Download</font></a><br>
+	<a href=goals.html><font color=#ffffff>Goals & Approach</font></a><br>
+	<a href=doc.html><font color=#ffffff>Documentation</font></a><br>
+	<a href=faq.html><font color=#ffffff>FAQ</font></a><br>
+	<a href=rex.html><font color=#ffffff>FXRex</font></a><br>
+	<a href=screenshots.html><font color=#ffffff>Screenshots</font></a><br>
+	<br>
+	<a href=adie.html><font color=#ffffff>Adie</font></a><br>
+	<a href=pathfinder.html><font color=#ffffff>PathFinder</font></a><br>
+	<a href=calc.html><font color=#ffffff>FOX Calculator</font></a><br>
+	<br>
+	<a href=projects.html><font color=#ffffff>Projects</font></a><br>
+	<br>
+	<a href='http://fxpy.sourceforge.net'><font color=#ffffff>FXPy</font></a><br>
+	<a href='http://fxruby.sourceforge.net'><font color=#ffffff>FXRuby</font></a><br>
+	<a href='http://eiffelfox.sourceforge.net'><font color=#ffffff>EiffelFox</font></a><br>
+        <a href='http://eevolved.com/foxhole/'><font color=#ffffff>The FOX Hole</font></a><br>
+        <a href='http://takahr.dhis.portside.net/cgi-bin/rwiki.cgi?cmd=view;name=FOX+FAQ'><font color=#ffffff>Japanese Docs</font></a><br>
+	<br>
+	<center>
+	<a href="http://www.eff.org/br"><img SRC="art/freespeach.gif" border=0></a>
+	<p>
+	<a href="http://www.slashdot.org"><img SRC="art/slingerzbutton1.gif" border=0></a>
+	</center>
+
+
+
+<!-- end navbar content -->
+
+    </td>
+    <td bgcolor=#ffffff>&nbsp;</td>
+    <td valign=top>
+
+<!-- start main window content -->
+<center><img src='art/foxstart.png'>
+<BR><B>Documentation: File Manipulation</B>
+</center>
+<p>
+<p>
+<b>File Manipulation Functions</b>
+<hr>
+Almost all applications will eventually be faced with the need to manipulate
+file, and directories, and access the underlying operating system's file system.&nbsp;
+In FOX, a large collection of
+useful filename and directory name manipulation functions is provided with which you
+can perform these tasks easily.
+<br>Moreover, th FOX file manipulations are aware of platform specific
+idiosyncracies, such as UNC under MS-Windows and escaping sequences under
+UNIX.
+
+<p>
+<p>
+<b>Finding Special Directories</b>
+<hr>
+Certain directories in the file system are special, like the applications current working
+directory, the users home directory, and so on.  FOX supplies the following functions
+for this purpose:
+
+<P><BR>FXString<B> getEnvironment</B>(const FXString& <B><I>name</I></B>)
+<BLOCKQUOTE>This function obtains the environment variable <B><I>name</I></B>
+from the environment.  It returns the empty string if not found.</BLOCKQUOTE>
+
+<P><BR>FXString<B> getHomeDirectory</B>()
+<BLOCKQUOTE>Returns the current user's home directory.</BLOCKQUOTE>
+
+<P><BR>FXString<B> getUserDirectory</B>(const FXString& <B><I>user</I></B>)
+<BLOCKQUOTE>Returns the home directory of the named <B><I>user</I></B>, or the current
+user's home directory if the parameter <B><I>user</I></B> is empty.</BLOCKQUOTE>
+
+<P><BR>FXString<B> setCurrentDirectory</B>(const FXString& <B><I>path</I></B>)
+<BLOCKQUOTE>Change the application's current working directory to <B><I>path</I></B></BLOCKQUOTE>
+
+<P><BR>FXString<B> getCurrentDirectory</B>()
+<BLOCKQUOTE>Returns the current working directory of the application.</BLOCKQUOTE>
+
+<P><BR>FXString<B> setCurrentDrive</B>(const FXString& <B><I>prefix</I></B>)
+<BLOCKQUOTE>Change the application's current drive letter to <B><I>prefix</I></B>,
+where <B><I>prefix</I></B> is the drive letter, like "a:", "b:", and so on.
+This function of course has no effect on UNIX systems.</BLOCKQUOTE>
+
+<P><BR>FXString<B> getCurrentDrive</B>()
+<BLOCKQUOTE>Returns the current drive letter of the application.
+This function of course has no effect on UNIX systems.</BLOCKQUOTE>
+
+<P><BR>FXString<B> getExecPath</B>()
+<BLOCKQUOTE>Returns the path along which the systems shell usually locates executable
+programs, or "$PATH".  The returned path string is a sequence of directories separated
+by <B><I>PATHLISTSEP</I></B>.</BLOCKQUOTE>
+
+<p>
+<p>
+<b>Filename Manipulation</b>
+<hr>
+Manipulating filenames is done with the following functions:
+
+<P><BR>FXString<B> directory</B>(const FXString& <B><I>file</I></B>)
+<BLOCKQUOTE>Return the directory part of <B><I>file</I></B>.
+Note that <B>directory</B>("/bla/bla/") yields "/bla/bla" and NOT "/bla".
+However, <B>directory</B>("/bla/bla") yields "/bla" as we expect!</BLOCKQUOTE>
+
+<P><BR>FXString<B> name</B>(const FXString& <B><I>file</I></B>)
+<BLOCKQUOTE>Return name and extension part of <B><I>file</I></B>.
+Note that <B>name</B>("/bla/bla/") yields "" and NOT "bla".
+However, <B>name</B>("/bla/bla") yields "bla" as we expect.</BLOCKQUOTE>
+
+<P><BR>FXString<B> title</B>(const FXString& <B><I>file</I></B>)
+<BLOCKQUOTE>Return title part of <B><I>file</I></B>.
+This is the name of the document with the directory part and the extension part
+removed.</BLOCKQUOTE>
+
+<P><BR>FXString<B> extension</B>(const FXString& <B><I>file</I></B>)
+<BLOCKQUOTE>Return extension part of <B><I>file</I></B>.</BLOCKQUOTE>
+
+<P><BR>FXString<B> stripExtension</B>(const FXString& <B><I>file</I></B>)
+<BLOCKQUOTE>Strip the extension part of <B><I>file</I></B>.</BLOCKQUOTE>
+
+<P><BR>FXString<B> drive</B>(const FXString& <B><I>file</I></B>)
+<BLOCKQUOTE>Return the drive letter part of <B><I>file</I></B>.
+Of course, on UNIX systems this will return the empty string.</BLOCKQUOTE>
+
+<P><BR>FXString<B> expand</B>(const FXString& <B><I>file</I></B>)
+<BLOCKQUOTE>Expand meta-characters in <B><I>file</I></B>.
+On UNIX systems, "~" is expanded into the current user's home directory,
+"~user" into the given user's home directory, via <B>getUserDirectory</B>().
+Also, "$VARIABLE", "${VARIABLE}", or "$(VARIABLE)" will be expanded into the
+environment variable VARIABLE, via <B>getEnvironment</B>().
+On MS-Windows, environment variables of the form "%VARIABLE%" are expanded
+similarly.</BLOCKQUOTE>
+
+<P><BR>FXString<B> simplify</B>(const FXString& <B><I>file</I></B>)
+<BLOCKQUOTE>Return the simplest pathname representation of  <B><I>file</I></B>.
+The path will remain relative if it was relative, or absolute if it was absolute.
+Also, a trailing "/" will be preserved as this is important in other functions.
+For example, simplify("..//aaa/./bbb//../c/") yields "../aaa/c/".</BLOCKQUOTE>
+
+<P><BR>FXString<B> absolute</B>(const FXString& <B><I>file</I></B>)
+<BLOCKQUOTE>Return the absolute path to the <B><I>file</I></B>,
+given the current working directory and drive letter.</BLOCKQUOTE>
+
+<P><BR>FXString<B> absolute</B>(const FXString& <B><I>base</I></B>,const FXString& <B><I>file</I></B>)
+<BLOCKQUOTE>Build the absolute path to the <B><I>file</I></B>,
+from the given <B><I>base</I></B> directory and <B><I>file</I></B>.</BLOCKQUOTE>
+
+<P><BR>FXString<B> relative</B>(const FXString& <B><I>file</I></B>)
+<BLOCKQUOTE>Return the path to <B><I>file</I></B>, relative to the current working directory.</BLOCKQUOTE>
+
+<P><BR>FXString<B> relative</B>(const FXString& <B><I>base</I></B>,const FXString& <B><I>file</I></B>)
+<BLOCKQUOTE>Return the path to <B><I>file</I></B>, relative to the directory <B><I>base</I></B>.</BLOCKQUOTE>
+
+<P><BR>FXString<B> enquote</B>(const FXString& <B><I>file</I></B>,FXbool <B><I>forcequotes</I></B>=FALSE)
+<BLOCKQUOTE>Enquote <B><I>file</I></B> to make safe for shell.  Normally, quotes
+are only generated when necessary, but if <B><I>forcequotes</I></B> is TRUE quotes are always generated
+regarless of necessity.<br>
+Files with special characters need to be quoted before they may be passed to bash, ksh, csh (UNIX)
+or cmd (MS-Windows).</BLOCKQUOTE>
+
+<P><BR>FXString<B> dequote</B>(const FXString& <B><I>file</I></B>)
+<BLOCKQUOTE>Dequote <B><I>file</I></B> to yield the original again.</BLOCKQUOTE>
+
+<P><BR>FXString<B> unique</B>(const FXString& <B><I>file</I></B>)
+<BLOCKQUOTE>Generate unique filename of the form "pathnameXXX.ext", where
+pathname.ext is the original input <B><I>file</I></B>, and XXX is a number,
+possibly empty, that makes the file unique.</BLOCKQUOTE>
+
+<P><BR>FXString<B> search</B>(const FXString& <B><I>pathlist</I></B>,const FXString& <B><I>file</I></B>)
+<BLOCKQUOTE>Search <B><I>pathlist</I></B> for this <B><I>file</I></B>, return full path
+name for first occurrence.  The <B><I>pathlist</I></B> is a <B><I>PATHLISTSEP</I></B> separated
+list of directories, such as returned by <B>getExecPath</B>.</BLOCKQUOTE>
+
+<P><BR>FXString<B> upLevel</B>(const FXString& <B><I>file</I></B>)
+<BLOCKQUOTE>Return path to directory above input directory <B><I>file</I></B>.</BLOCKQUOTE>
+
+<p>
+<p>
+<b>Obtaining information about files</b>
+<hr>
+A number of functions are also available to obtain various kinds of information about files
+or directories:
+
+<P><BR>FXbool<B> isAbsolute</B>(const FXString& <B><I>file</I></B>)
+<BLOCKQUOTE>Return true if <B><I>file</I></B> is an absolute pathname.</BLOCKQUOTE>
+
+<P><BR>FXbool<B> isTopDirectory</B>(const FXString& <B><I>file</I></B>)
+<BLOCKQUOTE>Return true if input <B><I>file</I></B> is a top-level directory.</BLOCKQUOTE>
+
+<P><BR>FXbool<B> isFile</B>(const FXString& <B><I>file</I></B>)
+<BLOCKQUOTE>Return true if input <B><I>file</I></B> is a file name.</BLOCKQUOTE>
+
+<P><BR>FXbool<B> isLink</B>(const FXString& <B><I>file</I></B>)
+<BLOCKQUOTE>Return true if input <B><I>file</I></B> is a link.</BLOCKQUOTE>
+
+<P><BR>FXbool<B> isDirectory</B>(const FXString& <B><I>file</I></B>)
+<BLOCKQUOTE>Return true if input <B><I>file</I></B> is a directory.</BLOCKQUOTE>
+
+<P><BR>FXbool<B> isReadable</B>(const FXString& <B><I>file</I></B>)
+<BLOCKQUOTE>Return true if input <B><I>file</I></B> is readable.</BLOCKQUOTE>
+
+<P><BR>FXbool<B> isWritable</B>(const FXString& <B><I>file</I></B>)
+<BLOCKQUOTE>Return true if input <B><I>file</I></B> is writable.</BLOCKQUOTE>
+
+<P><BR>FXbool<B> isExecutable</B>(const FXString& <B><I>file</I></B>)
+<BLOCKQUOTE>Return true if input <B><I>file</I></B> is executable.</BLOCKQUOTE>
+
+<P><BR>FXbool<B> isOwnerReadWriteExecute</B>(const FXString& <B><I>file</I></B>)
+<BLOCKQUOTE>Return true if owner has read-write-execute permissions.</BLOCKQUOTE>
+
+<P><BR>FXbool<B> isOwnerReadable</B>(const FXString& <B><I>file</I></B>)
+<BLOCKQUOTE>Return true if owner has read permissions.</BLOCKQUOTE>
+
+<P><BR>FXbool<B> isOwnerWritable</B>(const FXString& <B><I>file</I></B>)
+<BLOCKQUOTE>Return true if owner has write permissions.</BLOCKQUOTE>
+
+<P><BR>FXbool<B> isOwnerExecutable</B>(const FXString& <B><I>file</I></B>)
+<BLOCKQUOTE>Return true if owner has execute permissions.</BLOCKQUOTE>
+
+<P><BR>FXbool<B> isGroupReadWriteExecute</B>(const FXString& <B><I>file</I></B>)
+<BLOCKQUOTE>Return true if group has read-write-execute permissions.</BLOCKQUOTE>
+
+<P><BR>FXbool<B> isGroupReadable</B>(const FXString& <B><I>file</I></B>)
+<BLOCKQUOTE>Return true if group has read permissions.</BLOCKQUOTE>
+
+<P><BR>FXbool<B> isGroupWritable</B>(const FXString& <B><I>file</I></B>)
+<BLOCKQUOTE>Return true if group has write permissions.</BLOCKQUOTE>
+
+<P><BR>FXbool<B> isGroupExecutable</B>(const FXString& <B><I>file</I></B>)
+<BLOCKQUOTE>Return true if group has execute permissions.</BLOCKQUOTE>
+
+<P><BR>FXbool<B> isOtherReadWriteExecute</B>(const FXString& <B><I>file</I></B>)
+<BLOCKQUOTE>Return true if others have read-write-execute permissions.</BLOCKQUOTE>
+
+<P><BR>FXbool<B> isOtherReadable</B>(const FXString& <B><I>file</I></B>)
+<BLOCKQUOTE>Return true if others have read permissions.</BLOCKQUOTE>
+
+<P><BR>FXbool<B> isOtherWritable</B>(const FXString& <B><I>file</I></B>)
+<BLOCKQUOTE>Return true if others have write permissions.</BLOCKQUOTE>
+
+<P><BR>FXbool<B> isOtherExecutable</B>(const FXString& <B><I>file</I></B>)
+<BLOCKQUOTE>Return true if others have execute permissions.</BLOCKQUOTE>
+
+<P><BR>FXbool<B> isSetUid</B>(const FXString& <B><I>file</I></B>)
+<BLOCKQUOTE>Return true if the <B><I>file</I></B> sets the user id on execution.</BLOCKQUOTE>
+
+<P><BR>FXbool<B> isSetGid</B>(const FXString& <B><I>file</I></B>)
+<BLOCKQUOTE>Return true if the <B><I>file</I></B> sets the group id on execution.</BLOCKQUOTE>
+
+<P><BR>FXbool<B> isSetSticky</B>(const FXString& <B><I>file</I></B>)
+<BLOCKQUOTE>Return true if the <B><I>file</I></B> has the sticky bit set.</BLOCKQUOTE>
+
+<P><BR>FXString<B> owner</B>(const FXString& <B><I>file</I></B>)
+<BLOCKQUOTE>Return owner name of <B><I>file</I></B>, if available; otherwise "user".</BLOCKQUOTE>
+
+<P><BR>FXString<B> group</B>(const FXString& <B><I>file</I></B>)
+<BLOCKQUOTE>Return group name of <B><I>file</I></B>, if available; otherwise "group".</BLOCKQUOTE>
+
+<P><BR>unsigned long<B> size</B>(const FXString& <B><I>file</I></B>)
+<BLOCKQUOTE>Return size of <B><I>file</I></B> in bytes</BLOCKQUOTE>
+
+<P><BR>FXTime<B> modified</B>(const FXString& <B><I>file</I></B>)
+<BLOCKQUOTE>Return last modified time of <B><I>file</I></B>.</BLOCKQUOTE>
+
+<P><BR>FXTime<B> accessed</B>(const FXString& <B><I>file</I></B>)
+<BLOCKQUOTE>Return last accessed time of <B><I>file</I></B>.</BLOCKQUOTE>
+
+<P><BR>FXTime<B> created</B>(const FXString& <B><I>file</I></B>)
+<BLOCKQUOTE>Return create-time of <B><I>file</I></B>.</BLOCKQUOTE>
+
+<P><BR>FXTime<B> touched</B>(const FXString& <B><I>file</I></B>)
+<BLOCKQUOTE>Return touched time of <B><I>file</I></B>.</BLOCKQUOTE>
+
+
+<p>
+<p>
+<b>Copying, Moving, Linking Files</b>
+<hr>
+The following operations are available on files:
+
+<P><BR>FXbool<B> createDirectory</B>(const FXString& <B><I>path</I></B>,FXuint <B><I>mode</I></B>)
+<BLOCKQUOTE>Create new directory <B><I>path</I></B>, with permissions set to <B><I>mode</I></B>.</BLOCKQUOTE>
+
+<P><BR>FXbool<B> createFile</B>(const FXString& <B><I>file</I></B>,FXuint <B><I>mode</I></B>)
+<BLOCKQUOTE>Create new empty <B><I>file</I></B>, with permissions set to <B><I>mode</I></B>.</BLOCKQUOTE>
+
+<P><BR>FXbool<B> concatenate</B>(const FXString& <B><I>srcfile1</I></B>,const FXString& <B><I>srcfile2</I></B>,const FXString& <B><I>dstfile</I></B>,FXbool <B><I>overwrite</I></B>=FALSE)
+<BLOCKQUOTE>Concatenate <B><I>srcfile1</I></B> and <B><I>srcfile2</I></B> to a <B><I>dstfile</I></B>.
+If <B><I>overwrite</I></B> is true, then the operation fails if <B><I>dstfile</I></B> already exists.
+<B><I>srcfile1</I></B> and <B><I>srcfile2</I></B> should not be the same as <B><I>dstfile</I></B>.</BLOCKQUOTE>
+
+<P><BR>FXbool<B> remove</B>(const FXString& <B><I>file</I></B>)
+<BLOCKQUOTE>Remove <B><I>file</I></B> or directory, recursively.</BLOCKQUOTE>
+
+<P><BR>FXbool<B> copy</B>(const FXString& <B><I>srcfile</I></B>,const FXString& <B><I>dstfile</I></B>,FXbool <B><I>overwrite</I></B>=FALSE)
+<BLOCKQUOTE>Copy <B><I>srcfile</I></B> to a <B><I>dstfile</I></B>, recursively if <B><I>srcfile</I></B>
+is a directory.
+If <B><I>overwrite</I></B> is true, then the operation fails if <B><I>dstfile</I></B> or a file inside <B><I>dstfile</I></B>
+already exists.</BLOCKQUOTE>
+
+<P><BR>FXbool<B> move</B>(const FXString& <B><I>srcfile</I></B>,const FXString& <B><I>dstfile</I></B>,FXbool <B><I>overwrite</I></B>=FALSE)
+<BLOCKQUOTE>Move <B><I>srcfile</I></B> to a <B><I>dstfile</I></B>, recursively if <B><I>srcfile</I></B>
+is a directory.
+If <B><I>overwrite</I></B> is true, then the operation fails if <B><I>dstfile</I></B> or a file inside <B><I>dstfile</I></B>
+already exists.
+If <B><I>srcfile</I></B> and <B><I>dstfile</I></B> are on the same file system, the files are moved;
+if <B><I>srcfile</I></B> and <B><I>dstfile</I></B> are on different file systems, the files are copied
+and the original <B><I>srcfile</I></B> is removed only after all files have been copied successfully.</BLOCKQUOTE>
+
+<P><BR>FXbool<B> link</B>(const FXString& <B><I>srcfile</I></B>,const FXString& <B><I>dstfile</I></B>,FXbool <B><I>overwrite</I></B>=FALSE)
+<BLOCKQUOTE>Link <B><I>dstfile</I></B> to <B><I>srcfile</I></B>.
+If <B><I>overwrite</I></B> is true, then the operation fails if <B><I>dstfile</I></B>already exists.
+If <B><I>srcfile</I></B> and <B><I>dstfile</I></B> are on different filesystems, the operation will fail.
+</BLOCKQUOTE>
+
+<P><BR>FXbool<B> symlink</B>(const FXString& <B><I>srcfile</I></B>,const FXString& <B><I>dstfile</I></B>,FXbool <B><I>overwrite</I></B>=FALSE)
+<BLOCKQUOTE>Make a symbolic link from <B><I>dstfile</I></B> to <B><I>srcfile</I></B>.
+If <B><I>overwrite</I></B> is true, then the operation fails if <B><I>dstfile</I></B>already exists.
+</BLOCKQUOTE>
+
+<P><BR>FXString<B> symlink</B>(const FXString& <B><I>file</I></B>)
+<BLOCKQUOTE>Return the destination of the symlink <B><I>file</I></B>.
+</BLOCKQUOTE>
+
+
+<p>
+<p>
+<b>Other File Operations</b>
+<hr>
+Finally, some operations which don't fit in any easy categories:
+
+<P><BR>FXbool<B> match</B>(const FXString& <B><I>pattern</I></B>,const FXString& <B><I>file</I></B>,FXuint <B><I>flags</I></B>=(FILEMATCH_NOESCAPE|FILEMATCH_FILE_NAME))
+<BLOCKQUOTE>Perform wildcard match of <B><I>file</I></B> against the <B><I>pattern</I></B>.
+The pattern may contain special wild-card characters:
+
+<p>
+<TABLE>
+<TR><TD>?</TD><TD>Matches single character.</TD></TR>
+<TR><TD>*</TD><TD>Matches zero or more characters.</TD></TR>
+<TR><TD>[abc]</TD><TD>Matches a single character, which must be a, b, or c.</TD></TR>
+<TR><TD>[^abc]</TD><TD>Matches a single character, which must be anything other than a, b, or c.</TD></TR>
+<TR><TD>[!abc]</TD><TD>Ditto.</TD></TR>
+<TR><TD>[a-zA-Z]</TD><TD>Matches single character, which must be one of a-z or A-Z.</TD></TR>
+<TR><TD>[^a-zA-Z]</TD><TD>Matches single character, which must be anything other than a-z or A-Z.</TD></TR>
+<TR><TD>[!a-zA-Z]</TD><TD>Ditto.</TD></TR>
+<TR><TD>pat1|pat2</TD><TD>Matches either pat1 or pat2.</TD></TR>
+<TR><TD>pat1,pat2</TD><TD>Ditto.</TD></TR>
+<TR><TD>(pat1|pat2)</TD><TD>Matches either pat1 or pat2; patterns may be nested.</TD></TR>
+<TR><TD>(pat1,pat2)</TD><TD>Ditto.</TD></TR>
+</TABLE>
+<p>
+Matching can be influenced using the flags as follows:
+
+<p>
+<TABLE>
+<TR><TD>FILEMATCH_FILE_NAME</TD><TD>No wildcard can ever match "/" (or "\","/" under Windows).</TD></TR>
+<TR><TD>FILEMATCH_NOESCAPE</TD><TD>Backslashes don't quote special chars ("\" is treated as "\").</TD></TR>
+<TR><TD>FILEMATCH_PERIOD</TD><TD>Leading "." is matched only explicitly (Useful to match hidden files on Unix).</TD></TR>
+<TR><TD>FILEMATCH_LEADING_DIR</TD><TD>Ignore "/..." after a match.</TD></TR>
+<TR><TD>FILEMATCH_CASEFOLD</TD><TD>Compare without regard to case.</TD></TR>
+</TABLE>
+
+<p>
+For example,
+<p>
+<TABLE>
+<TR><TD>*.cpp|*.cc|*.cxx|*.C</TD><TD>Matches some common extensions for C++ source files.</TD></TR>
+<TR><TD>image.(bmp,gif,jpg)</TD><TD>Matches a file called image given as either bmp, gif, or jpg.</TD></TR>
+<TR><TD>*.[^o]</TD><TD>Matches any file except object files.</TD></TR>
+</TABLE>
+</BLOCKQUOTE>
+
+<P><BR>FXint<B> listFiles</B>(FXString*& <B><I>list</I></B>,const FXString& <B><I>path</I></B>,const FXString& <B><I>pattern</I></B>="*",FXuint <B><I>flags</I></B>=LIST_MATCHING_FILES|LIST_MATCHING_DIRS)
+<BLOCKQUOTE>List files matching <B><I>pattern</I></B> in the directory given by <B><I>path</I></B>.
+Returns the number of files in the string-array <B><I>list</I></B> which matched the pattern
+or satisfied the <B><I>flag</I></B> conditions.
+The flags parameter can be a combination of the following:
+
+<p>
+<TABLE>
+<TR><TD>LIST_MATCHING_FILES</TD><TD>Match files (default).</TD></TR>
+<TR><TD>LIST_MATCHING_DIRS</TD><TD>Match directories (default).</TD></TR>
+<TR><TD>LIST_NO_FILES</TD><TD>Do not match any files.</TD></TR>
+<TR><TD>LIST_NO_DIRS</TD><TD>Do not match any directories.</TD></TR>
+<TR><TD>LIST_ALL_FILES</TD><TD>Match all files.</TD></TR>
+<TR><TD>LIST_ALL_DIRS</TD><TD>Match all directories.</TD></TR>
+<TR><TD>LIST_HIDDEN_FILES</TD><TD>Match hidden files also.</TD></TR>
+<TR><TD>LIST_HIDDEN_DIRS</TD><TD>Match hidden directories also.</TD></TR>
+<TR><TD>LIST_NO_PARENT</TD><TD>Do not match "..".</TD></TR>
+<TR><TD>LIST_CASEFOLD</TD><TD>Perform case insensitive matching.</TD></TR>
+</TABLE>
+</BLOCKQUOTE>
+
+<P><BR>FXTime<B> now</B>()
+<BLOCKQUOTE>Return current time.</BLOCKQUOTE>
+
+<P><BR>FXString<B> time</B>(FXTime <B><I>filetime</I></B>)
+<BLOCKQUOTE>Convert <B><I>filetime</I></B> to date-string.</BLOCKQUOTE>
+
+<P><BR>FXString<B> time</B>(const FXchar *<B><I>format</I></B>,FXTime <B><I>filetime</I></B>)
+<BLOCKQUOTE>Convert file time to date-string as per <B>strftime(3)</B>.
+Format characters supported by most systems are:
+<p>
+<BLOCKQUOTE>%a %A %b %B %c %d %H %I %j %m %M %p %S %U %w %W %x %X %y %Y %Z %%</BLOCKQUOTE>
+<p>
+Some systems support additional conversions.
+</BLOCKQUOTE>
+
+<P><BR>FXbool<B> info</B>(const FXString& <B><I>file</I></B>,struct stat& <B><I>info</I></B>)
+<BLOCKQUOTE>Return <B><I>info</I></B> of <B><I>file</I></B> as reported by system stat(2) function.</BLOCKQUOTE>
+
+<P><BR>FXbool<B> exists</B>(const FXString& <B><I>file</I></B>)
+<BLOCKQUOTE>Return true if <B><I>file</I></B> exists.</BLOCKQUOTE>
+
+<P><BR>FXbool<B> identical</B>(const FXString& <B><I>file1</I></B>,const FXString& <B><I>file2</I></B>)
+<BLOCKQUOTE>Return true if <B><I>file1</I></B> and <B><I>file2</I></B> are identical, i.e. refer to
+the same inode.</BLOCKQUOTE>
+
+<P><BR>FXuint<B> mode</B>(const FXString& <B><I>file</I></B>)
+<BLOCKQUOTE>Return the permissions of <B><I>file</I></B>.</BLOCKQUOTE>
+
+<P><BR>FXbool<B> mode</B>(const FXString& <B><I>file</I></B>,FXuint <B><I>mode</I></B>)
+<BLOCKQUOTE>Change the permission of <B><I>file</I></B> to <B><I>mode</I></B>.</BLOCKQUOTE>
+
+<p>
+<!-- end main window content -->
+
+    </td>
+    <td bgcolor=#ffffff>&nbsp;</td>
+    <td bgcolor=#557faa width=15>&nbsp;</td>
+  </tr>
+  <tr>
+    <td colspan=2 bgcolor="#557faa" align=center>&nbsp;
+     </td>
+    <td bgcolor=#ffffff valign=bottom align=left><img src=art/ill.gif width=8 height=8></td>
+    <td bgcolor=#ffffff>&nbsp;</td>
+    <td bgcolor=#ffffff valign=bottom align=right><img src=art/ilr.gif width=8 height=8></td>
+    <td bgcolor=#557faa width=15>&nbsp;</td>
+  </tr>
+  <tr>
+    <td valign=bottom align=left bgcolor=#557faa><img src=art/oll.gif width=8 height=8></td>
+    <td colspan=4 bgcolor=#557faa>&nbsp;</td>
+    <td valign=bottom align=right bgcolor=#557faa><img src=art/olr.gif width=8 height=8></td>
+  </tr>
+</table>
+
+<address>Copyright 1997-2002 <a href=mailto:jeroen@fox-toolkit.org>Jeroen van der Zijp</a></address>
+<!-- Created: Mon Apr 10 11:20:32 CEST 2000 -->
+<!-- hhmts start -->
+
+<!-- hhmts end -->
+</body>
+</html>

@@ -1,0 +1,274 @@
+<html>
+<head>
+<LINK REL="stylesheet" HREF="styles.css" TYPE="text/css">
+<title>FOX-Toolkit</title>
+<!-- HTML Copyright 2001 Paul Laufer -->
+</head>
+
+<body bgcolor=#ffffff link=#990033 vlink=#4a73ad alink=#ed004f text=#000000>
+
+<!--header-->
+<table align=center border=0 cellpadding=0 cellspacing=0 width=100% >
+  <tr><td bgcolor=silver colspan=5 align=right height=50><img src=art/oul_grey.gif align=left valign=top width=8 height=8><img src=art/foxlogo.png valign=bottom alt="FOX Toolkit" height=50 width=500 border=0 ></td>
+  	<td bgcolor=#557faa valign=top align=right><img src=art/our.gif width=8 height=8></td>
+  </tr>
+<!-- end header -->
+  <tr>
+    <td bgcolor=#557faa colspan=2 valign=top align=left>&nbsp;</td>
+    <td bgcolor=#557faa colspan=3><font color=#ffffff size=+1><center>
+<!-- Page Title -->
+FOX Calculator
+<!-- End Page Title -->
+    </center></font></td>
+    <td bgcolor=#557faa valign=top align=right>&nbsp;</td>
+  </tr>
+  <tr>
+    <td bgcolor=#557faa colspan=2>&nbsp;</td>
+    <td bgcolor=#ffffff valign=top align=left><img src=art/iul.gif width=8 height=8></td>
+    <td bgcolor=#ffffff>&nbsp;</td>
+    <td bgcolor=#ffffff valign=top align=right><img src=art/iur.gif width=8 height=8></td>
+    <td bgcolor=#557faa width=15>&nbsp;</td>
+  </tr>
+  <tr>
+    <td width=8 bgcolor=#557faa>&nbsp;</td>
+    <td valign=top bgcolor=#557faa link=#ffffff width=150>
+
+<!-- start navbar content -->
+
+	<a href=fox.html><font color=#ffffff>Home</font></a><br>
+	<a href=news.html><font color=#ffffff>News</font></a><br>
+	<a href=download.html><font color=#ffffff>Download</font></a><br>
+	<a href=goals.html><font color=#ffffff>Goals & Approach</font></a><br>
+	<a href=doc.html><font color=#ffffff>Documentation</font></a><br>
+	<a href=faq.html><font color=#ffffff>FAQ</font></a><br>
+	<a href=rex.html><font color=#ffffff>FXRex</font></a><br>
+	<a href=screenshots.html><font color=#ffffff>Screenshots</font></a><br>
+	<br>
+	<a href=adie.html><font color=#ffffff>Adie</font></a><br>
+	<a href=pathfinder.html><font color=#ffffff>PathFinder</font></a><br>
+	<a href=calc.html><font color=#ffffff>FOX Calculator</font></a><br>
+	<br>
+	<a href=projects.html><font color=#ffffff>Projects</font></a><br>
+	<br>
+	<a href='http://fxpy.sourceforge.net'><font color=#ffffff>FXPy</font></a><br>
+	<a href='http://fxruby.sourceforge.net'><font color=#ffffff>FXRuby</font></a><br>
+	<a href='http://eiffelfox.sourceforge.net'><font color=#ffffff>EiffelFox</font></a><br>
+        <a href='http://eevolved.com/foxhole/'><font color=#ffffff>The FOX Hole</font></a><br>
+        <a href='http://takahr.dhis.portside.net/cgi-bin/rwiki.cgi?cmd=view;name=FOX+FAQ'><font color=#ffffff>Japanese Docs</font></a><br>
+	<br>
+	<center>
+	<a href="http://www.eff.org/br"><img SRC="art/freespeach.gif" border=0></a>
+	<p>
+	<a href="http://www.slashdot.org"><img SRC="art/slingerzbutton1.gif" border=0></a>
+	</center>
+
+
+
+<!-- end navbar content -->
+
+    </td>
+    <td bgcolor=#ffffff>&nbsp;</td>
+    <td valign=top>
+
+<!-- start main window content -->
+<TABLE>
+<TR>
+<TD valign=top><IMG src='screenshots/foxcalc.jpg' alt='foxcalc'></TD>
+<TD  width='100%' >
+Latest Version: 1.1.0 <BR>
+Release Date: Oct, 16, 2001 <BR>
+Author: Jeroen van der Zijp<BR>
+License: GPL<BR>
+Supported Platforms: Linux,Unix,Windows 95/98/ME/NT/2000<BR><BR>
+<A CLASS='PAGEMENULINK' href='#intro'>Introduction</A><BR>
+<A CLASS='PAGEMENULINK' href='#config'>Configuration</A><BR>
+<A CLASS='PAGEMENULINK' href='#number'>Entering Numbers</A><BR>
+<A CLASS='PAGEMENULINK' href='#oper'>Operators</A><BR>
+<A CLASS='PAGEMENULINK' href='#tri'>Trigonometric Functions</A><BR>
+<A CLASS='PAGEMENULINK' href='#other'>Other Functions</A><BR>
+<A CLASS='PAGEMENULINK' href='#limits'>Limits</A><BR>
+<A CLASS='PAGEMENULINK' href='download.html#calculator'>Download</A><BR>
+</TD>
+
+</TR>
+</TABLE>
+<BR>
+
+<HR>
+<BR>
+<B><A name='intro'>Introduction.</A></B><P>
+<DIV CLASS='NEWSSECTION'>
+
+The FOX Calculator is a simple desktop calculator geared toward the programmer.  It supports not only a full complement scientific functions, but also common operations that programmers need, such as bitwise operations, bitwise shifting, and base-2 logarithm and exponents, and numeric conversion between hexadecimal, octal, binary, and decimal.<BR>
+The FOX Calculator implements correct operator precedences, so expressions like 2+3*5 yield the correct result, which is 17, and not 25.<BR>
+Also featured is a constant memory, which permanently stores its value even if you exit the calculator and restart it later.<BR>
+</DIV>
+<P>
+
+<B><A name='config'>Configuration</A></B><P>
+<DIV CLASS='NEWSSECTION'>
+Pressing on the calculator icon brings up the Calculator Preferences dialog.  The Calculator Preferences dialog comprises three settings:
+<P>
+<UL>
+<LI>Settings for the calculator itself</LI>
+<LI>Color settings of the button groups</LI>
+<LI>Information about the calculator </LI>
+</UL>
+<P>
+<IMG src='screenshots/foxcalc_prefdialog_01_small.jpg' border=0 alt='pref dialog' align=right>
+In the Calculator settings panel, you can change font used for the display, by pressing the "Set..." button to bring up the standard Font Selection Dialog.<BR>
+You can change the way numbers are printed as well.  Checking "Always show exponent" will cause the calculator display always to display the number in exponential notation.<BR>
+Checking "Never show exponent" will cause the calculator to render the number in simple dot notation. The precision can be set by means of the spin button; the default precision is set to 16.<BR>
+Finally, the calculator can be set to beep when errors occur.
+<BR clear=all>
+<P>
+<IMG src='screenshots/foxcalc_prefdialog_02_small.jpg' border=0 alt='pref dialog' align=right>
+In the Color settings panel, you can change the colors of the various button groups.
+The buttons are grouped by function; the numbers are in one group, and the operators are in another, and so on.
+<BR clear=all>
+<P>
+<IMG src='screenshots/foxcalc_prefdialog_03_small.jpg' border=0 alt='pref dialog' align=right>
+In the About panel, some information is presented about the calculator, like version number and author's contact.
+<BR clear=all>
+</DIV>
+
+<P>
+<B><A name='number'>Entering Numbers</A></B><P>
+<DIV CLASS='NEWSSECTION'>
+
+You can enter a number by clicking on the digit buttons, or simply hit the right digit on the keyboard.  Numbers in exponential notation are entered by entering the mantissa first, then hitting the "EXP" button, and then entering the exponent. Up to 3 digits may be entered for the exponent; entering more than 3 will cause the digits to shift, i.e. the first digit entered will be dropped and replaced by the second, the second digit will be replaced by the third, and the third will be replaced by the new input.
+Changing the sign of the exponent is accomplished by hittin the "+/-" button.
+At any time, you can hit the Backspace key to delete the last digit entered.
+Two numbers, pi and e (euler's number) may be entered with a single button:
+<P>
+<UL>
+<LI>pi&#09;Enters the number 3.1415926535897932384626433833</LI>
+<LI>e&#09;Enters the number 2.7182818284590452353602874713 (hit the "inv" button first)</LI>
+</UL>
+</DIV>
+<P>
+<B><A name='oper'> Operators</A></B><P>
+<DIV CLASS='NEWSSECTION'>
+
+The operators in the FOX Calculator are the usual suspects:
+<P>
+<UL>
+<LI>+&#09;Addition </LI>
+<LI>-&#09;Substraction</LI>
+<LI>*&#09;Multiplication</LI>
+<LI>/&#09;Floating point division </LI>
+</UL>
+<P>
+In addition, FOX Calculator also includes bitwise operators, such as:
+<P>
+<UL>
+<LI>AND&#09;Bit-wise logical and </LI>
+<LI>OR&#09;Bit-wise logical or </LI>
+<LI>XOR&#09;Bit-wise logical exclusive or </LI>
+<LI>NOT&#09;Bit-wise logical not </LI>
+<LI>SHL&#09;Bit-wise shift left </LI>
+<LI>SHR&#09;Bit-wise shift right </LI>
+<LI>SAR&#09;Bit-wise signed shift right (hit the "inv" button first) </LI>
+</UL>
+<P>
+Also nice for programmers is the inclusion of integer operations:
+<P>
+<UL>
+<LI>mod&#09;Integer modulo </LI>
+<LI>div&#09;Integer division (hit the "inv" button first)</LI>
+</UL>
+<P>
+All the operators have certain precedence relations with each other, so that an expression is evaluated correctly.
+</DIV>
+
+<P>
+
+<B><A name='tri'>Trigonometric Functions</A></B><P>
+<DIV CLASS='NEWSSECTION'>
+<P>
+The Calculator incorporates the usual trigonometric functions:
+<UL>
+<LI>sin&#09;Sine</LI>
+<LI>cos&#09;Cosine</LI>
+<LI>tan&#09;Tangent</LI>
+<LI>asin&#09;Inverse sine or arc sine (hit the "inv" button first)</LI>
+<LI>acos&#09;Inverse cosine</LI>
+<LI>atan&#09;Inverse tangent</LI>
+<LI>sinh&#09;Hyperbolic sine (hit the "hyp" button first)</LI>
+<LI>cosh&#09;Hyperbolic cosine</LI>
+<LI>tanh&#09;Hyperbolic tangent</LI>
+<LI>asinh&#09;Inverse hyperbolic sine (hit the "hyp" and "inv"buttons first)</LI>
+<LI>acosh&#09;Inverse hyperbolic cosine</LI>
+<LI>atanh&#09;Inverse hyperbolic tangent</LI>
+</UL
+<P>
+For the first 6 functions, the angle mode determines whether the argument is specified in terms of degrees, radians, or grad.  Note that the angle mode is preserved across invocations of the Calculator.
+</DIV>
+<P>
+
+<B><A name='other'>Other Functions</A></B><P>
+<DIV CLASS='NEWSSECTION'>
+Other functions supported by the calculator are the following:
+<P>
+<UL>
+<LI>log&#09;Base 10 logarithm </LI>
+<LI>ln&#09;Natural logarithm</LI>
+<LI>2log&#09;Base 2 logarithm</LI>
+<LI>x!&#09;Factorial</LI>
+<LI>nPr&#09;Permutations</LI>
+<LI>nCr&#09;Combinations</LI>
+<LI>sqrt&#09;Square root</LI>
+<LI>x^y&#09;X raised to the power y</LI>
+<LI>1/x&#09;Reciprocal</LI>
+<LI>10^x&#09;Base 10 exponentiation (hit the "inv" button first)</LI>
+<LI>e^x&#09;Exponentiation</LI>
+<LI>2^x&#09;Base 2 exponentiation</LI>
+<LI>x^1/y&#09;X raised to the power 1/y</LI>
+<LI>x^2&#09;X squared</LI>
+</UL>
+</DIV>
+<P>
+<B><A name='limits'>Limits</A></B><P>
+<DIV CLASS='NEWSSECTION'>
+
+
+The calculator works in IEEE 746 double precision mode; for bit-wise operations, it uses 32 bit integers.  Thus, the numeric limits are as follows:
+<P>
+<UL>
+<LI>Smallest real number:&#09;2.2250738585072010e-308</LI>
+<LI>Largest real number:&#09;1.7976931348623158e+308</LI>
+<LI>Smallest integer number:&#09;0</LI>
+<LI>Largest integer number:&#09;4294967295</LI>
+</UL>
+<P>
+</DIV>
+
+
+<!-- end main window content -->
+
+    </td>
+    <td bgcolor=#ffffff>&nbsp;</td>
+    <td bgcolor=#557faa width=15>&nbsp;</td>
+  </tr>
+  <tr>
+    <td colspan=2 bgcolor="#557faa" align=center>&nbsp;
+     </td>
+    <td bgcolor=#ffffff valign=bottom align=left><img src=art/ill.gif width=8 height=8></td>
+    <td bgcolor=#ffffff>&nbsp;</td>
+    <td bgcolor=#ffffff valign=bottom align=right><img src=art/ilr.gif width=8 height=8></td>
+    <td bgcolor=#557faa width=15>&nbsp;</td>
+  </tr>
+  <tr>
+    <td valign=bottom align=left bgcolor=#557faa><img src=art/oll.gif width=8 height=8></td>
+    <td colspan=4 bgcolor=#557faa>&nbsp;</td>
+    <td valign=bottom align=right bgcolor=#557faa><img src=art/olr.gif width=8 height=8></td>
+  </tr>
+</table>
+
+<address>Copyright 1997-2002 <a href=mailto:jeroen@fox-toolkit.org>Jeroen van der Zijp</a></address>
+<!-- Created: Mon Apr 10 11:20:32 CEST 2000 -->
+<!-- hhmts start -->
+
+<!-- hhmts end -->
+</body>
+</html>

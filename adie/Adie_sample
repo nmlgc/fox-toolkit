@@ -1,0 +1,87 @@
+# Sample syntax file
+# Put this file in "$HOME/.foxrc/Adie" or in the global registry file "/usr/lib/foxrc/Adie"
+# or in "/usr/local/lib/foxrc/Adie", or in "$PATH/foxrc/Adie"
+# 
+# If you have patterns for other languages, or improvements to the patterns
+# listed below, please mail them to: foxgui-users@lists.sourceforge.net
+
+
+#
+# Styles
+#
+# Format is as follows:
+#
+# index=name,normalfg,normalbg,selectfg,selectbg,hilitefg,hilitebg,activebg,flags
+#
+# For the flags, 0=normal, 1=underline, 2=strikeout, 3=underline+strikeout
+# A color of None means fall back to the default color for that particular item.
+# Colors can be specified by name, e.g. "red" or in hex notation, e.g. "#ff0000".
+#
+[STYLES]
+1=Comment,#008c00,None,None,None,None,None,None,0
+2=Format,#c03e19,None,None,None,None,None,None,0
+3=Keyword,#940000,None,None,None,None,None,None,0
+4=Preprocessor,#772c5f,None,None,None,None,None,None,0
+5="String constant,#1900da,None,None,None,None,None,None,0"
+6=Number,#b600b6,None,None,None,None,None,None,0
+7="Type name,#b78817,None,None,None,None,None,None,0"
+8=Style,Cyan,None,None,None,None,None,None,0
+9="FOX Macro,#ac8100,None,None,None,None,None,None,0"
+10=FIXME,#ff00ea,None,None,None,None,None,None,0
+11=Escape,#d24fff,None,None,None,None,None,None,0
+12=Operator,#3c51b5,None,None,None,None,None,None,0
+
+#
+# Languages
+#
+# Format is as follows:
+#
+# index=name,extensions
+#
+# Where extensions is a wildcard expression as in "*.c,*.h", for the extended
+# wildcard matcher as implemented in FOX library.
+#
+[LANGUAGES]
+1=C++,*.cpp,*.cc,*.cxx,*.c++,*.hpp,*.hh,*.h++,*.h
+2=C,*.c,*.h
+
+# Patterns
+#
+# Format is as follows:
+#
+# index=name,style,priority,parent,context,pattern
+# 
+# Note that parent pattern number should be less than index.
+# Note also that certain characters must be escaped as stored in this file.
+# The patterns are PERL-compatible regular expressions, interpreted by the
+# FOX regular expression matcher.
+#
+[C++]
+1="String constant,5,7,0,0,\"(\\\\\\\\|\\\\\"|.)*?\""
+2="Format string,2,0,1,0,%[#0 +-]?\\d*(\\.(\\*|\\d*))?l?[diouxXeEfFgGaAcsp]"
+3="Escape1,11,0,1,0,\\\\(n|r|a|t|\\\\|\\d+)"
+4="Preprocessor,4,8,0,0,^\\s*#.*?$"
+5="C comment,1,0,0,0,/\\*.*?\\*/"
+6="C++ comment,1,1,0,0,//.*?$"
+7="Fixme1,10,0,5,0,\\<(?iFIXME)\\>"
+8="Fixme2,10,0,6,0,\\<(?iFIXME)\\>"
+9="Number,6,2,0,0,\\<((0[xX][0-9a-fA-F]+)|((\\d+\\.?\\d*)|(\\.\\d+))([eE](\\+|-)?\\d+)?)(L|l|UL|ul|u|U|F|f)?\\>"
+10="Type name,7,4,0,0,\\<(unsigned|signed|int|char|wchar_t|short|long|float|double|bool|void)\\>"
+11="Char constant,5,5,0,0,\\'(\\\\\\\\|\\\\'|.)+?\\'"
+12="Keyword,3,6,0,0,\\<(friend|typename|explicit|typeid|for|while|if|else|try|catch|new|delete|do|namespace|class|struct|enum|union|public|private|protected|template|switch|case|default|this|return|throw|using|break|continue|goto|static|volatile|const|virtual|mutable|operator|auto|register|overload|inline|extern|and|or|xor|not|compl|and_eq|xor_eq|const_cast|dynamic_cast|true|false|not_eq|sizeof|bitor|bitand|reinterpret_cast|static_cast)\\>"
+13="Escape2,11,0,11,0,\\\\(n|r|a|t|\\\\|\\d+)"
+14="Operator,12,7,0,0,(\\+\\+|\\+=|\\+|--|-=|-|==|=|&&|&=|&|\\|\\||\\|=|\\||^=|^|<<=|<<|<=|<|>>=|>>|>=|>|!=|!=|!|~=|~|\\*=|\\*|/=|/|%=|%|->\\*|->)"
+
+[C]
+1="String constant,5,7,0,0,\"(\\\\\\\\|\\\\\"|.)*?\""
+2="Format string,2,0,1,0,%[#0 +-]?\\d*(\\.(\\*|\\d*))?l?[diouxXeEfFgGaAcsp]"
+3="Escape1,11,0,1,0,\\\\(n|r|a|t|\\\\|\\d+)"
+4="Preprocessor,4,8,0,0,^\\s*#.*?$"
+5="C comment,1,0,0,0,/\\*.*?\\*/"
+6="Fixme1,10,0,5,0,\\<(?iFIXME)\\>"
+7="Number,6,2,0,0,\\<((0[xX][0-9a-fA-F]+)|((\\d+\\.?\\d*)|(\\.\\d+))([eE](\\+|-)?\\d+)?)(L|l|UL|ul|u|U|F|f)?\\>"
+8="Type name,7,4,0,0,\\<(unsigned|signed|int|char|wchar_t|short|long|float|double|bool|void)\\>"
+9="Char constant,5,5,0,0,\\'(\\\\\\\\|\\\\'|.)+?\\'"
+10="Keyword,3,6,0,0,\\<(for|while|if|else|do|struct|enum|union|switch|case|default|return|break|continue|goto|static|volatile|const|auto|register|inline|extern|sizeof)\\>"
+11="Escape2,11,0,9,0,\\\\(n|r|a|t|\\\\|\\d+)"
+12="Operator,12,7,0,0,(\\+\\+|\\+=|\\+|--|-=|-|==|=|&&|&=|&|\\|\\||\\|=|\\||^=|^|<<=|<<|<=|<|>>=|>>|>=|>|!=|!=|!|~=|~|\\*=|\\*|/=|/|%=|%|->)"

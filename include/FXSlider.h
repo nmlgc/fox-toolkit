@@ -1,95 +1,98 @@
 /********************************************************************************
 *                                                                               *
-*                             S l i d e r   O b j e c t s                       *
+*                           S l i d e r   W i d g e t                           *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997 by Jeroen van der Zijp.   All Rights Reserved.             *
+* Copyright (C) 1997,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
-* modify it under the terms of the GNU Library General Public                   *
+* modify it under the terms of the GNU Lesser General Public                    *
 * License as published by the Free Software Foundation; either                  *
-* version 2 of the License, or (at your option) any later version.              *
+* version 2.1 of the License, or (at your option) any later version.            *
 *                                                                               *
 * This library is distributed in the hope that it will be useful,               *
 * but WITHOUT ANY WARRANTY; without even the implied warranty of                *
 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU             *
-* Library General Public License for more details.                              *
+* Lesser General Public License for more details.                               *
 *                                                                               *
-* You should have received a copy of the GNU Library General Public             *
-* License along with this library; if not, write to the Free                    *
-* Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.            *
+* You should have received a copy of the GNU Lesser General Public              *
+* License along with this library; if not, write to the Free Software           *
+* Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXSlider.h,v 1.10 1998/10/29 07:42:21 jeroen Exp $                        *
+* $Id: FXSlider.h,v 1.25 2002/01/18 22:42:54 jeroen Exp $                       *
 ********************************************************************************/
 #ifndef FXSLIDER_H
 #define FXSLIDER_H
 
+#ifndef FXFRAME_H
+#include "FXFrame.h"
+#endif
 
-// Default sizes looks nice
-#define SLIDERBAR_SIZE   5
-#define SLIDERHEAD_SIZE  7
+
+struct FXTimer;
 
 
-// Sliderbar options
-enum FXSliderStyle {
- SLIDER_HORIZONTAL  = 0,
- SLIDER_VERTICAL    = 0x00008000,
- SLIDER_ARROW_UP    = 0x00010000,
- SLIDER_ARROW_DOWN  = 0x00020000,
- SLIDER_ARROW_LEFT  = SLIDER_ARROW_UP,
- SLIDER_ARROW_RIGHT = SLIDER_ARROW_DOWN,
- SLIDER_INSIDE_BAR  = 0x00040000,
- SLIDER_MASK        = SLIDER_VERTICAL|SLIDER_ARROW_UP|SLIDER_ARROW_DOWN|SLIDER_INSIDE_BAR
- };
- 
- 
-  
-// Slider head item
-class FXSliderHead : public FXFrame {
-  FXDECLARE(FXSliderHead)
-protected:
-  FXSliderHead(){}
-  FXSliderHead(const FXSliderHead&){}
-public:
-  long onPaint(FXObject*,FXSelector,void*);
-public:
-  FXSliderHead(FXComposite* p,FXuint opts=0);
-  virtual void create();
-  virtual FXint getDefaultWidth();
-  virtual FXint getDefaultHeight();
+/// Slider Control styles
+enum {
+  SLIDER_HORIZONTAL   = 0,                        /// Slider shown horizontally
+  SLIDER_VERTICAL     = 0x00008000,               /// Slider shown vertically
+  SLIDER_ARROW_UP     = 0x00010000,               /// Slider has arrow head pointing up
+  SLIDER_ARROW_DOWN   = 0x00020000,               /// Slider has arrow head pointing down
+  SLIDER_ARROW_LEFT   = SLIDER_ARROW_UP,          /// Slider has arrow head pointing left
+  SLIDER_ARROW_RIGHT  = SLIDER_ARROW_DOWN,        /// Slider has arrow head pointing right
+  SLIDER_INSIDE_BAR   = 0x00040000,               /// Slider is inside the slot rather than overhanging
+  SLIDER_TICKS_TOP    = 0x00080000,               /// Ticks on the top of horizontal slider
+  SLIDER_TICKS_BOTTOM = 0x00100000,               /// Ticks on the bottom of horizontal slider
+  SLIDER_TICKS_LEFT   = SLIDER_TICKS_TOP,         /// Ticks on the left of vertical slider
+  SLIDER_TICKS_RIGHT  = SLIDER_TICKS_BOTTOM,      /// Ticks on the right of vertical slider
+  SLIDER_NORMAL       = SLIDER_HORIZONTAL
   };
 
 
 
-// Scroll bar
-class FXSlider : public FXComposite {
+/**
+* The slider widget is a valuator widget which provides simple linear value range.
+* Two visual appearances are supported:- the sunken look, which is enabled with
+* the SLIDER_INSIDE_BAR option and the regular look.  The latter may have optional
+* arrows on the slider thumb.
+* While being moved, the slider sends a SEL_CHANGED message to its target;
+* at the end of the interaction, a SEL_COMMAND message is sent.
+* The message data represents the current slider value, of type FXint.
+*/
+class FXAPI FXSlider : public FXFrame {
   FXDECLARE(FXSlider)
 protected:
-  FXSliderHead *head;
-  FXTimer      *timer;
-  FXint         range[2];
-  FXPixel       slotColor;
-  FXPixel       baseColor;
-  FXPixel       hiliteColor;
-  FXPixel       shadowColor;
-  FXPixel       borderColor;
-  FXint         headpos;
-  FXint         headsize;
-  FXint         slotsize;
-  FXint         dragpoint;
-  FXint         incr;
-  FXint         pos;
+  FXint         range[2];                 // Reported data range
+  FXint         pos;                      // Reported data position
+  FXint         incr;                     // Increment when auto-sliding
+  FXint         delta;                    // Interval between ticks
+  FXint         headpos;                  // Head position
+  FXint         headsize;                 // Head size
+  FXint         slotsize;                 // Slot size
+  FXColor       slotColor;                // Color of slot the head moves in
+  FXTimer      *timer;                    // Timer for auto-sliding
+  FXint         dragpoint;                // Where the head is grabbed
+  FXString      help;                     // Help string
+  FXString      tip;                      // Tip string
 protected:
-  FXSlider(){}
-  FXSlider(const FXSlider&){}
+  FXSlider();
   virtual void layout();
-  void drawDoubleSunkenRectangle(FXint x,FXint y,FXint w,FXint h);
+  FXint headPos(FXint v) const;
+  FXint headVal(FXint p) const;
+  void drawSliderHead(FXDCWindow& dc,FXint x,FXint y,FXint w,FXint h);
+  void drawHorzTicks(FXDCWindow& dc,FXint x,FXint y,FXint w,FXint h);
+  void drawVertTicks(FXDCWindow& dc,FXint x,FXint y,FXint w,FXint h);
+private:
+  FXSlider(const FXSlider&);
+  FXSlider &operator=(const FXSlider&);
 public:
   long onPaint(FXObject*,FXSelector,void*);
   long onLeftBtnPress(FXObject*,FXSelector,void*);
+  long onLeftBtnRelease(FXObject*,FXSelector,void*);
   long onMiddleBtnPress(FXObject*,FXSelector,void*);
+  long onMiddleBtnRelease(FXObject*,FXSelector,void*);
+  long onUngrabbed(FXObject*,FXSelector,void*);
   long onMotion(FXObject*,FXSelector,void*);
-  long onAnyBtnRelease(FXObject*,FXSelector,void*);
   long onTimeInc(FXObject*,FXSelector,void*);
   long onTimeDec(FXObject*,FXSelector,void*);
   long onCmdSetValue(FXObject*,FXSelector,void*);
@@ -97,41 +100,104 @@ public:
   long onCmdGetIntValue(FXObject*,FXSelector,void*);
   long onCmdSetRealValue(FXObject*,FXSelector,void*);
   long onCmdGetRealValue(FXObject*,FXSelector,void*);
+  long onCmdSetIntRange(FXObject*,FXSelector,void*);
+  long onCmdGetIntRange(FXObject*,FXSelector,void*);
+  long onCmdSetRealRange(FXObject*,FXSelector,void*);
+  long onCmdGetRealRange(FXObject*,FXSelector,void*);
+  long onQueryHelp(FXObject*,FXSelector,void*);
+  long onQueryTip(FXObject*,FXSelector,void*);
 public:
-  FXSlider(FXComposite* p,FXObject* tgt=NULL,FXSelector sel=0,FXuint opts=0,FXint x=0,FXint y=0,FXint w=0,FXint h=0);
+  enum{
+    ID_AUTOINC=FXFrame::ID_LAST,
+    ID_AUTODEC,
+    ID_LAST
+    };
+public:
+
+  /// Construct a slider widget
+  FXSlider(FXComposite* p,FXObject* tgt=NULL,FXSelector sel=0,FXuint opts=SLIDER_NORMAL,FXint x=0,FXint y=0,FXint w=0,FXint h=0,FXint pl=0,FXint pr=0,FXint pt=0,FXint pb=0);
+
+  /// Return default width
   virtual FXint getDefaultWidth();
+
+  /// Return default height
   virtual FXint getDefaultHeight();
-  virtual void create();
+
+  /// Enable the slider
   virtual void enable();
+
+  /// Disable the slider
   virtual void disable();
-  virtual FXbool canFocus() const;
-  FXSliderHead* sliderHead() const { return head; }
+
+  /// Change slider value
+  void setValue(FXint value);
+
+  /// Return slider value
+  FXint getValue() const { return pos; }
+
+  /// Change the slider's range
   void setRange(FXint lo,FXint hi);
+
+  /// Get the slider's current range
   void getRange(FXint& lo,FXint& hi) const { lo=range[0]; hi=range[1]; }
-  void setPosition(FXint p);
-  FXint getPosition() const { return pos; }
+
+  /// Change the slider style
   FXuint getSliderStyle() const;
-  void setSliderStyle(FXuint opts);
+
+  /// Get the current slider style
+  void setSliderStyle(FXuint style);
+
+  /// Get the slider's head size
   FXint getHeadSize() const { return headsize; }
+
+  /// Change the slider's head size
   void setHeadSize(FXint hs);
+
+  /// Get the slider's current slot size
   FXint getSlotSize() const { return slotsize; }
+
+  /// Change the slider's slot size
   void setSlotSize(FXint bs);
-  FXPixel getSlotColor() const { return slotColor; }
-  FXPixel getHiliteColor() const { return hiliteColor; }
-  FXPixel getShadowColor() const { return shadowColor; }
-  FXPixel getBorderColor() const { return borderColor; }
-  FXPixel getBaseColor() const { return baseColor; }
-  void setSlotColor(FXPixel clr);
-  void setHiliteColor(FXPixel clr);
-  void setShadowColor(FXPixel clr);
-  void setBorderColor(FXPixel clr);
-  void setBaseColor(FXPixel clr);
-  void autoSlideInc();
-  void autoSlideDec();
-  void stopAutoSlide();
-  FXbool isAutoSliding();
+
+  /// Get the slider's auto-increment/decrement value
+  FXint getIncrement() const { return incr; }
+
+  /// Change the slider's auto-increment/decrement value
+  void setIncrement(FXint inc);
+
+  /// Change the delta between ticks
+  void setTickDelta(FXint dist);
+
+  /// Get delta between ticks
+  FXint getTickDelta() const { return delta; }
+
+  /// Change the color of the slot the slider head moves in
+  void setSlotColor(FXColor clr);
+
+  /// Get the current slot color
+  FXColor getSlotColor() const { return slotColor; }
+
+  /// Set the help text to be displayed on the status line
+  void setHelpText(const FXString& text);
+
+  /// Get the current help text
+  FXString getHelpText() const { return help; }
+
+  /// Set the tip text to be displayed in the tooltip
+  void setTipText(const FXString& text);
+
+  /// Get the current tooltip text value
+  FXString getTipText() const { return tip; }
+
+  /// Save to stream
+  virtual void save(FXStream& store) const;
+
+  /// Load from stream
+  virtual void load(FXStream& store);
+
+  /// Destroy the slider
   virtual ~FXSlider();
   };
 
-  
+
 #endif

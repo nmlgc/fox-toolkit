@@ -3,25 +3,26 @@
 *                         T o p l e v el   O b j e c t                          *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997 by Jeroen van der Zijp.   All Rights Reserved.             *
+* Copyright (C) 1997,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
-* modify it under the terms of the GNU Library General Public                   *
+* modify it under the terms of the GNU Lesser General Public                    *
 * License as published by the Free Software Foundation; either                  *
-* version 2 of the License, or (at your option) any later version.              *
+* version 2.1 of the License, or (at your option) any later version.            *
 *                                                                               *
 * This library is distributed in the hope that it will be useful,               *
 * but WITHOUT ANY WARRANTY; without even the implied warranty of                *
 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU             *
-* Library General Public License for more details.                              *
+* Lesser General Public License for more details.                               *
 *                                                                               *
-* You should have received a copy of the GNU Library General Public             *
-* License along with this library; if not, write to the Free                    *
-* Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.            *
+* You should have received a copy of the GNU Lesser General Public              *
+* License along with this library; if not, write to the Free Software           *
+* Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXObject.cpp,v 1.22 1998/10/21 05:17:14 jeroen Exp $                      *
+* $Id: FXObject.cpp,v 1.12 2002/01/18 22:43:01 jeroen Exp $                     *
 ********************************************************************************/
 #include "xincs.h"
+#include "fxver.h"
 #include "fxdefs.h"
 #include "FXStream.h"
 #include "FXObject.h"
@@ -29,7 +30,7 @@
 
 /*
   Notes:
-  
+
   - We have to use extern "C" for the metaClass names, as in some compilers,
     e.g. MS VC++, mangled C++ names are no longer legal identifiers in C or C++.
   - Perhaps hash metaclasses into table at run-time, by giving FXMetaClass a constructor...
@@ -71,13 +72,13 @@ __FXMETACLASSINITIALIZER__::__FXMETACLASSINITIALIZER__(const FXMetaClass* meta){
   register FXuint h=hashstring(meta->className);
   register FXuint p,x,i,n;
 //fprintf(stderr,"hash for %s = %d\n",meta->className,h);
-  
+
   // First time?
   if(nmetaClassTable==0){
     nmetaClassTable=8;
     FXCALLOC(&metaClassTable,FXMetaClass*,nmetaClassTable);
     }
-  
+
   // Find hash slot
   p=HASH1(h,nmetaClassTable);
   x=HASH2(h,nmetaClassTable);
@@ -85,11 +86,11 @@ __FXMETACLASSINITIALIZER__::__FXMETACLASSINITIALIZER__(const FXMetaClass* meta){
     FXASSERT(metaClassTable[p]!=meta);
     p=(p+x)%nmetaClassTable;
     }
-  
+
   // Place in table
   metaClassTable[p]=meta;
   nmetaClasses++;
-  
+
   // Grow table if needed
   if((100*nmetaClasses)>=(80*nmetaClassTable)){
     n=nmetaClassTable*2;
@@ -130,12 +131,12 @@ const FXMetaClass* FXMetaClass::getMetaClassFromName(const FXchar* name){
 
 
 // Test if subclass
-int FXMetaClass::isSubClassOf(const FXMetaClass* metaclass) const {
-  const FXMetaClass* cls;
+FXbool FXMetaClass::isSubClassOf(const FXMetaClass* metaclass) const {
+  register const FXMetaClass* cls;
   for(cls=this; cls; cls=cls->baseClass){
-    if(cls==metaclass) return 1;
+    if(cls==metaclass) return TRUE;
     }
-  return 0;
+  return FALSE;
   }
 
 
@@ -145,81 +146,58 @@ FXObject* FXMetaClass::makeInstance() const {
   }
 
 
+// Find function
+const void* FXMetaClass::search(FXSelector key) const {
+  register const FXObject::FXMapEntry* lst=(const FXObject::FXMapEntry*)assoc;
+  register FXuint n=nassocs;
+  while(n--){
+    if(lst->keylo<=key && key<=lst->keyhi) return lst;
+    lst=(const FXObject::FXMapEntry*) (((const FXchar*)lst)+assocsz);
+    }
+  return NULL;
+  }
+
+
 
 /***************************  FXObject Implementation  *************************/
 
 // Have to do this one `by hand' as it has no base class
-const FXMetaClass FXObject::metaClass={"FXObject",FXObject::manufacture,NULL,NULL,0,sizeof("FXObject")};
+const FXMetaClass FXObject::metaClass={"FXObject",FXObject::manufacture,NULL,NULL,0,0,sizeof("FXObject")};
 
 
 // Manual initializer
 __FXMETACLASSINITIALIZER__ FXObjectInitializer(&FXObject::metaClass);
 
 
-// Get object's metaclass 
-const FXMetaClass* FXObject::getMetaClass() const {return &FXObject::metaClass;}
-
-
 // Build an object
 FXObject* FXObject::manufacture(){return new FXObject;}
 
 
-// No association found
-FXSelFunction FXObject::null=&FXObject::onDefault;
-
-
 // Get class name of object
-const char* FXObject::getClassName() const { return getMetaClass()->getClassName(); }
+const FXchar* FXObject::getClassName() const { return getMetaClass()->getClassName(); }
 
 
 // Check if object belongs to a class
-int FXObject::isMemberOf(const FXMetaClass* metaclass) const {
-  const FXMetaClass* cls;
-  for(cls=getMetaClass(); cls; cls=cls->baseClass){
-    FXASSERT(cls!=cls->baseClass);
-    if(cls==metaclass) return 1;
-    }
-  return 0;
+FXbool FXObject::isMemberOf(const FXMetaClass* metaclass) const {
+  return getMetaClass()->isSubClassOf(metaclass);
   }
 
 
-// Check if we're saving as expected
-void FXObject::save(FXStream& store) const { 
-  FXASSERT(store.direction()==FXStreamSave); 
-  }
+// Save to stream
+void FXObject::save(FXStream&) const { }
 
 
-// Check if we're loading as expected
-void FXObject::load(FXStream& store){ 
-  FXASSERT(store.direction()==FXStreamLoad); 
-  }
+// Load from stream
+void FXObject::load(FXStream&){ }
 
 
 // Unhandled function
 long FXObject::onDefault(FXObject*,FXSelector,void*){ return 0; }
 
 
-// Find function
-FXSelFunction FXObject::assoc(FXSelector key) const {
-  struct FXMAP { FXSelector keylo; FXSelector keyhi; FXSelFunction func; };
-  register const FXMetaClass* cls=getMetaClass();
-  while(cls){
-    register FXMAP* lst=(FXMAP*)cls->assoc;
-    register unsigned int n=cls->nassocs;
-    FXASSERT(cls!=cls->baseClass);
-    while(n--){
-      if(lst->keylo<=key && key<=lst->keyhi) return lst->func;
-      lst++;
-      }
-    cls=cls->baseClass;
-    }
-  return FXObject::null;
-  }
-
-
 // Handle message
-long FXObject::handle(FXObject* sender,FXSelector key,void* data){
-  return (this->* assoc(key))(sender,key,data);
+long FXObject::handle(FXObject* sender,FXSelector sel,void* ptr){
+  return onDefault(sender,sel,ptr);
   }
 
 

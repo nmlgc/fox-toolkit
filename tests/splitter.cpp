@@ -5,16 +5,11 @@
 *********************************************************************************
 * Copyright (C) 1997 by Jeroen van der Zijp.   All Rights Reserved.             *
 *********************************************************************************
-* $Id: splitter.cpp,v 1.12 1998/09/21 18:45:55 jvz Exp $                      *
+* $Id: splitter.cpp,v 1.16 2001/11/02 06:07:19 jeroen Exp $                     *
 ********************************************************************************/
 #include "fx.h"
 #include <stdio.h>
 #include <stdlib.h>
-
-
-// Message ids
-#define ID_QUIT      1
-#define ID_ZAP       2
 
 
 /*******************************************************************************/
@@ -57,85 +52,121 @@ const unsigned char minifolderclosed[]={
 
 
 // Mini application object
-class SplitterApp : public FXApp {
-  FXDECLARE(SplitterApp)
-public:
-  long onQuit(FXObject*,FXSelector,void*);
-  long onZap(FXObject*,FXSelector,void*);
+class SplitterWindow : public FXMainWindow {
+  FXDECLARE(SplitterWindow)
 protected:
-  FXMainWindow*      mainwindow;
-  FXMenuBar*         menubar;
-  FXMenuPane*        filemenu;
-  FXSplitter*        splitter;
+  FXMenubar         *menubar;
+  FXMenuPane        *filemenu;
+  FXMenuPane        *modemenu;
+  FXSplitter        *splitter;
+  FXStatusbar       *status;
   FXVerticalFrame*   group1;
   FXVerticalFrame*   group2;
   FXVerticalFrame*   group3;
-  FXVerticalFrame*   group4;
-  FXVerticalFrame*   group5;
+  
+protected:
+  SplitterWindow(){}
+
 public:
-  SplitterApp();
-  void create();
-  void start();
+  long onCmdReverse(FXObject*,FXSelector,void*);
+  long onCmdNormal(FXObject*,FXSelector,void*);
+  long onCmdHorizontal(FXObject*,FXSelector,void*);
+  long onCmdVectical(FXObject*,FXSelector,void*);
+  long onCmdTracking(FXObject*,FXSelector,void*);
+  long onUpdTracking(FXObject*,FXSelector,void*);
+  
+public:
+  enum {
+    ID_REVERSE=FXMainWindow::ID_LAST,
+    ID_NORMAL,
+    ID_HORIZONTAL,
+    ID_VERTICAL,
+    ID_TRACKING,
+    ID_LAST
+    };
+    
+public:
+  SplitterWindow(FXApp* a);
+  virtual void create();
+  virtual ~SplitterWindow();
   };
 
 
-  
+
 /*******************************************************************************/
   
 // Map
-FXDEFMAP(SplitterApp) SplitterAppMap[]={
-  FXMAPFUNC(SEL_COMMAND,      ID_QUIT,      SplitterApp::onQuit),
-  FXMAPFUNC(SEL_COMMAND,      ID_ZAP,       SplitterApp::onZap),
+FXDEFMAP(SplitterWindow) SplitterWindowMap[]={
+  FXMAPFUNC(SEL_COMMAND,  SplitterWindow::ID_REVERSE,   SplitterWindow::onCmdReverse),
+  FXMAPFUNC(SEL_COMMAND,  SplitterWindow::ID_NORMAL,    SplitterWindow::onCmdNormal),
+  FXMAPFUNC(SEL_COMMAND,  SplitterWindow::ID_HORIZONTAL,SplitterWindow::onCmdHorizontal),
+  FXMAPFUNC(SEL_COMMAND,  SplitterWindow::ID_VERTICAL,  SplitterWindow::onCmdVectical),
+  FXMAPFUNC(SEL_COMMAND,  SplitterWindow::ID_TRACKING,  SplitterWindow::onCmdTracking),
+  FXMAPFUNC(SEL_UPDATE,   SplitterWindow::ID_TRACKING,  SplitterWindow::onUpdTracking),
   };
 
 
 // Object implementation
-FXIMPLEMENT(SplitterApp,FXApp,SplitterAppMap,ARRAYNUMBER(SplitterAppMap))
+FXIMPLEMENT(SplitterWindow,FXMainWindow,SplitterWindowMap,ARRAYNUMBER(SplitterWindowMap))
 
 
 // Make some windows
-SplitterApp::SplitterApp(){
+SplitterWindow::SplitterWindow(FXApp* a):FXMainWindow(a,"Splitter Test",NULL,NULL,DECOR_ALL,0,0,800,600){
   FXGIFIcon *folder_open;
   FXGIFIcon *folder_closed;
   FXGIFIcon *doc;
   int i;
   
   // Folder open icon
-  folder_open=new FXGIFIcon(this,minifolderopen);
+  folder_open=new FXGIFIcon(getApp(),minifolderopen);
   
   // Folder closed icon
-  folder_closed=new FXGIFIcon(this,minifolderclosed);
+  folder_closed=new FXGIFIcon(getApp(),minifolderclosed);
 
   // Document icon
-  doc=new FXGIFIcon(this,minidoc1);
-
-  // Main window
-  mainwindow=new FXMainWindow(this,"Group Box Test",DECOR_ALL,0,0,800,600);
+  doc=new FXGIFIcon(getApp(),minidoc1);
   
   // Menu bar
-  menubar=new FXMenuBar(mainwindow,LAYOUT_SIDE_TOP|LAYOUT_FILL_X);
+  menubar=new FXMenubar(this,LAYOUT_SIDE_TOP|LAYOUT_FILL_X);
+  
+  // Status bar
+  status=new FXStatusbar(this,LAYOUT_SIDE_BOTTOM|LAYOUT_FILL_X|STATUSBAR_WITH_DRAGCORNER);
   
   // File menu
   filemenu=new FXMenuPane(this);
-  new FXMenuCommand(filemenu,"Quit",this,ID_QUIT,MENU_DEFAULT);
-  new FXMenuTitle(menubar,"File",filemenu);
-    
+  new FXMenuCommand(filemenu,"Quit\tCtl-Q",NULL,getApp(),FXApp::ID_QUIT);
+  new FXMenuTitle(menubar,"&File",NULL,filemenu);
+  
   // Main window interior
-  splitter=new FXSplitter(mainwindow,LAYOUT_SIDE_TOP|LAYOUT_FILL_X|LAYOUT_FILL_Y|SPLITTER_REVERSED);
+  splitter=new FXSplitter(this,LAYOUT_SIDE_TOP|LAYOUT_FILL_X|LAYOUT_FILL_Y|SPLITTER_REVERSED|SPLITTER_TRACKING);
   group1=new FXVerticalFrame(splitter,FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_FILL_Y, 0,0,0,0, 0,0,0,0);
-  group2=new FXVerticalFrame(splitter,FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_FILL_Y);
+  group2=new FXVerticalFrame(splitter,FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_FILL_Y|LAYOUT_FIX_WIDTH);
   group3=new FXVerticalFrame(splitter,FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_FILL_Y);
-  group4=new FXVerticalFrame(splitter,FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_FILL_Y);
-  group5=new FXVerticalFrame(splitter,FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_FILL_Y);
 
-  FXTreeList *tree=new FXTreeList(group1,NULL,0,FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_FILL_Y|LAYOUT_TOP|LAYOUT_RIGHT|TREELIST_SHOWS_LINES|TREELIST_SHOWS_BOXES);
+  // Mode menu
+  modemenu=new FXMenuPane(this);
+  new FXMenuCommand(modemenu,"Reverse\t\tReverse split order",NULL,this,ID_REVERSE);
+  new FXMenuCommand(modemenu,"Normal\t\tNormal split order",NULL,this,ID_NORMAL);
+  new FXMenuCommand(modemenu,"Horizontal\t\tHorizontal split",NULL,this,ID_HORIZONTAL);
+  new FXMenuCommand(modemenu,"Vertical\t\tVertical split",NULL,this,ID_VERTICAL);
+  new FXMenuCommand(modemenu,"Tracking\t\tToggle continuous tracking mode",NULL,this,ID_TRACKING);
+  new FXMenuCommand(modemenu,"Toggle pane 1",NULL,group1,FXWindow::ID_TOGGLESHOWN);
+  new FXMenuCommand(modemenu,"Toggle pane 2",NULL,group2,FXWindow::ID_TOGGLESHOWN);
+  new FXMenuCommand(modemenu,"Toggle pane 3",NULL,group3,FXWindow::ID_TOGGLESHOWN);
+  
+  new FXMenuTitle(menubar,"&Mode",NULL,modemenu);
+    
+  FXTreeList *tree=new FXTreeList(group1,0,NULL,0,FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_FILL_Y|LAYOUT_TOP|LAYOUT_RIGHT|TREELIST_SHOWS_LINES|TREELIST_SHOWS_BOXES|TREELIST_ROOT_BOXES|TREELIST_EXTENDEDSELECT);
+  //FXTreeList *tree=new FXTreeList(group1,0,NULL,0,FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_FILL_Y|LAYOUT_TOP|LAYOUT_RIGHT|TREELIST_SHOWS_LINES|TREELIST_SHOWS_BOXES|TREELIST_ROOT_BOXES|TREELIST_BROWSESELECT);
   FXTreeItem *branch,*twig,*leaf,*topmost;
 
   topmost=tree->addItemLast(0,"Top",folder_open,folder_closed);
+  tree->expandTree(topmost);
     tree->addItemLast(topmost,"First",doc,doc);
     tree->addItemLast(topmost,"Second",doc,doc);
     tree->addItemLast(topmost,"Third",doc,doc);
     branch=tree->addItemLast(topmost,"Fourth",folder_open,folder_closed);
+    tree->expandTree(branch);
       tree->addItemLast(branch,"Fourth-First",doc,doc);
       tree->addItemLast(branch,"Fourth-Second",doc,doc);
       twig=tree->addItemLast(branch,"Fourth-Third",folder_open,folder_closed);
@@ -143,6 +174,7 @@ SplitterApp::SplitterApp(){
         tree->addItemLast(twig,"Fourth-Third-Second",doc,doc);
         tree->addItemLast(twig,"Fourth-Third-Third",doc,doc);
         leaf=tree->addItemLast(twig,"Fourth-Third-Fourth",folder_open,folder_closed);
+        leaf->setEnabled(FALSE);
           tree->addItemLast(leaf,"Fourth-Third-Fourth-First",doc,doc);
           tree->addItemLast(leaf,"Fourth-Third-Fourth-Second",doc,doc);
           tree->addItemLast(leaf,"Fourth-Third-Fourth-Third",doc,doc);
@@ -156,6 +188,7 @@ SplitterApp::SplitterApp(){
           tree->addItemLast(twig,name,doc,doc);
           }
       twig=tree->addItemLast(branch,"Fourth-Fifth",folder_open,folder_closed);
+      tree->expandTree(twig);
         tree->addItemLast(twig,"Fourth-Fifth-First",doc,doc);
         tree->addItemLast(twig,"Fourth-Fifth-Second",doc,doc);
         tree->addItemLast(twig,"Fourth-Fifth-Third",doc,doc);
@@ -173,56 +206,89 @@ SplitterApp::SplitterApp(){
     tree->addItemLast(topmost,"Eighth",doc,doc);
     
   
-  new FXLabel(group2,"Text Label");
-  new FXButton(group2,"Drukknop\tGereedschap tipje\tHulp voor status regel.");
-  new FXButton(group2,"Button\tTooltip\tHelp for status.");
-
-  new FXLabel(group3,"Tekstje");
-  new FXButton(group3,"Knopje");
+  new FXLabel(group2,"Matrix",NULL,LAYOUT_CENTER_X);
+  new FXHorizontalSeparator(group2,SEPARATOR_GROOVE|LAYOUT_FILL_X);
+  FXMatrix* matrix=new FXMatrix(group2,2,MATRIX_BY_COLUMNS|LAYOUT_FILL_X);
   
-  new FXButton(group4,"Drukknop\tGereedschap tipje\tHulp voor status regel.");
-  new FXButton(group4,"Button\tTooltip\tHelp for status.");
-
-  new FXLabel(group5,"Tekstje");
-  new FXButton(group5,"Drukknop\tGereedschap tipje\tHulp voor status regel.");
-  new FXButton(group5,"Button\tTooltip\tHelp for status.");
-
-  new FXButton(group5,"Remove all but one group",NULL,this,ID_ZAP,FRAME_RAISED|FRAME_THICK);
+  new FXLabel(matrix,"Alpha:",NULL,JUSTIFY_RIGHT|LAYOUT_FILL_X|LAYOUT_CENTER_Y);
+  new FXTextField(matrix,2,NULL,0,FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_CENTER_Y|LAYOUT_FILL_COLUMN);
+  new FXLabel(matrix,"Beta:",NULL,JUSTIFY_RIGHT|LAYOUT_FILL_X|LAYOUT_CENTER_Y);
+  new FXTextField(matrix,2,NULL,0,FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_CENTER_Y|LAYOUT_FILL_COLUMN);
+  new FXLabel(matrix,"Gamma:",NULL,JUSTIFY_RIGHT|LAYOUT_FILL_X|LAYOUT_CENTER_Y);
+  new FXTextField(matrix,2,NULL,0,FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_CENTER_Y|LAYOUT_FILL_COLUMN);
+  
+  new FXCheckButton(group2,"Continuous Tracking\tSplitter continuously tracks split changes",this,ID_TRACKING);
+  
+  new FXLabel(group3,"Quite a Stretch",NULL,LAYOUT_CENTER_X);
+  new FXHorizontalSeparator(group3,SEPARATOR_GROOVE|LAYOUT_FILL_X);
+  FXMatrix* mat=new FXMatrix(group3,3,LAYOUT_FILL_X|LAYOUT_FILL_Y);
+  
+  new FXButton(mat,"One\nStretch the row\nStretch in Y\nStretch in X\tThe possibilities are endless..",NULL,NULL,0,FRAME_RAISED|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_FILL_Y|LAYOUT_FILL_ROW);
+  new FXButton(mat,"Two\nStretch in X\tThe possibilities are endless..",NULL,NULL,0,FRAME_RAISED|FRAME_THICK|LAYOUT_FILL_X);
+  new FXButton(mat,"Three\nStretch the row\nStretch in Y\nStretch in X\tThe possibilities are endless..",NULL,NULL,0,FRAME_RAISED|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_FILL_Y|LAYOUT_FILL_ROW);
+  
+  new FXButton(mat,"Four\nStretch the column\nStretch the row\nStretch in Y\nStretch in X\tThe possibilities are endless..",NULL,NULL,0,FRAME_RAISED|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_FILL_Y|LAYOUT_FILL_ROW|LAYOUT_FILL_COLUMN);
+  new FXButton(mat,"Five\nStretch the column\nStretch in Y\nStretch in X\tThe possibilities are endless..",NULL,NULL,0,FRAME_RAISED|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_FILL_Y|LAYOUT_FILL_COLUMN);
+  new FXButton(mat,"Six\nStretch the column\nStretch the row\nStretch in Y\nStretch in X\tThe possibilities are endless..",NULL,NULL,0,FRAME_RAISED|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_FILL_Y|LAYOUT_FILL_COLUMN|LAYOUT_FILL_ROW);
+  
+  new FXButton(mat,"Seven\nStretch the column\nStretch the row\nCenter in Y\nCenter in X\tThe possibilities are endless..",NULL,NULL,0,FRAME_RAISED|FRAME_THICK|LAYOUT_CENTER_Y|LAYOUT_CENTER_X|LAYOUT_FILL_ROW|LAYOUT_FILL_COLUMN);
+  new FXButton(mat,"Eight\nStretch the column\tThe possibilities are endless..",NULL,NULL,0,FRAME_RAISED|FRAME_THICK|LAYOUT_FILL_COLUMN);
+  new FXButton(mat,"Nine\nStretch the column\nStretch the row\nStretch in Y\tThe possibilities are endless..",NULL,NULL,0,FRAME_RAISED|FRAME_THICK|LAYOUT_RIGHT|LAYOUT_FILL_Y|LAYOUT_FILL_ROW|LAYOUT_FILL_COLUMN);
   
   // Make a tool tip
-  new FXTooltip(this,0);
+  new FXTooltip(getApp(),0);
   }
-  
 
-// Handle quitting
-long SplitterApp::onQuit(FXObject*,FXSelector,void*){
-//   if(MBOX_CLICKED_YES==showModalQuestionBox(MBOX_YES_NO,"Quiting Splitter Application","Do you really want to quit the Splitter Application?")){
-    exit(0);
-//     }
+
+// Clean up  
+SplitterWindow::~SplitterWindow(){
+  delete filemenu;
+  delete modemenu;
+  }
+
+
+long SplitterWindow::onCmdReverse(FXObject*,FXSelector,void*){
+  splitter->setSplitterStyle(splitter->getSplitterStyle()|SPLITTER_REVERSED);
   return 1;
   }
 
 
-// Zap
-long SplitterApp::onZap(FXObject*,FXSelector,void*){
-  delete group2;
-  delete group3;
-  delete group4;
-  delete group5;
+long SplitterWindow::onCmdNormal(FXObject*,FXSelector,void*){
+  splitter->setSplitterStyle(splitter->getSplitterStyle()&~SPLITTER_REVERSED);
   return 1;
   }
 
-
-void SplitterApp::create(){
-  FXApp::create();
+long SplitterWindow::onCmdHorizontal(FXObject*,FXSelector,void*){
+  splitter->setSplitterStyle(splitter->getSplitterStyle()&~SPLITTER_VERTICAL);
+  return 1;
   }
+
+long SplitterWindow::onCmdVectical(FXObject*,FXSelector,void*){
+  splitter->setSplitterStyle(splitter->getSplitterStyle()|SPLITTER_VERTICAL);
+  return 1;
+  }
+
+long SplitterWindow::onCmdTracking(FXObject*,FXSelector,void*){
+  splitter->setSplitterStyle(splitter->getSplitterStyle()^SPLITTER_TRACKING);
+  return 1;
+  }
+
+long SplitterWindow::onUpdTracking(FXObject* sender,FXSelector,void*){
+  if(splitter->getSplitterStyle()&SPLITTER_TRACKING){
+    sender->handle(this,MKUINT(ID_CHECK,SEL_COMMAND),NULL);
+    }
+  else{
+    sender->handle(this,MKUINT(ID_UNCHECK,SEL_COMMAND),NULL);
+    }
+  return 1;
+  }
+
 
 
 // Start
-void SplitterApp::start(){
-  create();
-  mainwindow->show();
-  run();
+void SplitterWindow::create(){
+  FXMainWindow::create();
+  show(PLACEMENT_SCREEN);
   }
 
 
@@ -231,9 +297,12 @@ void SplitterApp::start(){
 
 // Start the whole thing
 int main(int argc,char *argv[]){
-  SplitterApp* application=new SplitterApp;
-  application->init(argc,argv);
-  application->start();
+  FXApp  application("Splitter","FoxTest");
+  application.init(argc,argv);
+  SplitterWindow* mainwindow=new SplitterWindow(&application);
+  application.create();
+  mainwindow->show();
+  return application.run();
   }
 
 

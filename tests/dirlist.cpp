@@ -5,13 +5,15 @@
 *********************************************************************************
 * Copyright (C) 1998 by Jeroen van der Zijp.   All Rights Reserved.             *
 *********************************************************************************
-* $Id: dirlist.cpp,v 1.4 1998/08/31 23:32:55 jvz Exp $                       *
+* $Id: dirlist.cpp,v 1.11 2001/11/02 06:07:19 jeroen Exp $                      *
 ********************************************************************************/
 #include "fx.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
+#ifndef WIN32
 #include <unistd.h>
+#endif
 
 
 
@@ -19,25 +21,28 @@
 /*******************************************************************************/
 
 
-// Mini application object
-class FXDirListApp : public FXApp {
-  FXDECLARE(FXDirListApp)
+// Main Window
+class DirListWindow : public FXMainWindow {
+  FXDECLARE(DirListWindow)
 protected:
-  FXMainWindow*      mainwindow;
-  FXMenuBar*         menubar;
+  FXMenubar*         menubar;
   FXMenuPane*        filemenu;
   FXMenuPane*        helpmenu;
   FXDirList*         contents;
+  FXTextField*       text;
+protected:
+  DirListWindow(){}
 public:
   long onCmdAbout(FXObject*,FXSelector,void*);
 public:
   enum{
-    ID_ABOUT=FXApp::ID_LAST,
+    ID_ABOUT=FXMainWindow::ID_LAST,
     ID_LAST
     };
 public:
-  FXDirListApp();
-  void create();
+  DirListWindow(FXApp* a);
+  virtual void create();
+  virtual ~DirListWindow();
   };
 
 
@@ -45,48 +50,55 @@ public:
 /*******************************************************************************/
   
 // Map
-FXDEFMAP(FXDirListApp) FXDirListAppMap[]={
-  FXMAPFUNC(SEL_COMMAND, FXDirListApp::ID_ABOUT, FXDirListApp::onCmdAbout),
+FXDEFMAP(DirListWindow) DirListWindowMap[]={
+  FXMAPFUNC(SEL_COMMAND, DirListWindow::ID_ABOUT, DirListWindow::onCmdAbout),
   };
 
 
 // Object implementation
-FXIMPLEMENT(FXDirListApp,FXApp,FXDirListAppMap,ARRAYNUMBER(FXDirListAppMap))
+FXIMPLEMENT(DirListWindow,FXMainWindow,DirListWindowMap,ARRAYNUMBER(DirListWindowMap))
 
 
 // Make some windows
-FXDirListApp::FXDirListApp(){
-  
-  // Make main window
-  mainwindow=new FXMainWindow(this,"Directory List",DECOR_ALL,0,0,800,600);
+DirListWindow::DirListWindow(FXApp* a):FXMainWindow(a,"Directory List",NULL,NULL,DECOR_ALL,0,0,800,600){
   
   // Make menu bar
-  menubar=new FXMenuBar(mainwindow,LAYOUT_FILL_X);
+  menubar=new FXMenubar(this,LAYOUT_FILL_X);
   filemenu=new FXMenuPane(this);
-    new FXMenuCommand(filemenu,"&Quit",this,ID_QUIT,MENU_DEFAULT);
-    new FXMenuTitle(menubar,"&File",filemenu);
+    new FXMenuCommand(filemenu,"&Quit\tCtl-Q",NULL,getApp(),FXApp::ID_QUIT);
+    new FXMenuTitle(menubar,"&File",NULL,filemenu);
   helpmenu=new FXMenuPane(this);
-    new FXMenuCommand(helpmenu,"&About FOX...",this,ID_ABOUT,0);
-    new FXMenuTitle(menubar,"&Help",helpmenu,LAYOUT_RIGHT);
+    new FXMenuCommand(helpmenu,"&About FOX...",NULL,this,ID_ABOUT,0);
+    new FXMenuTitle(menubar,"&Help",NULL,helpmenu,LAYOUT_RIGHT);
 
+  // Text field at bottom
+  text=new FXTextField(this,10,NULL,0,LAYOUT_SIDE_BOTTOM|LAYOUT_FILL_X|FRAME_SUNKEN|FRAME_THICK);
+  
   // Make contents
-  contents=new FXDirList(mainwindow,NULL,0,HSCROLLING_OFF|TREELIST_ROOT_BOXES|TREELIST_SHOWS_LINES|TREELIST_SHOWS_BOXES|FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_FILL_Y,0,0,0,0);
+  contents=new FXDirList(this,0,NULL,0,HSCROLLING_OFF|TREELIST_SHOWS_LINES|TREELIST_SHOWS_BOXES|FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_FILL_Y,0,0,0,0);
   
+  text->setTarget(contents);
+  text->setSelector(FXWindow::ID_SETVALUE);
   }
-  
+
+
+DirListWindow::~DirListWindow(){
+  delete filemenu;
+  delete helpmenu;
+  }
 
 
 // About
-long FXDirListApp::onCmdAbout(FXObject*,FXSelector,void*){
-  showModalInformationBox(MBOX_OK,"About FOX","FOX is a really, really cool C++ library!");
+long DirListWindow::onCmdAbout(FXObject*,FXSelector,void*){
+  FXMessageBox::information(this,MBOX_OK,"About FOX","FOX is a really, really cool C++ library!");
   return 1;
   }
 
 
 // Start
-void FXDirListApp::create(){
-  FXApp::create();
-  mainwindow->show();
+void DirListWindow::create(){
+  FXMainWindow::create();
+  show(PLACEMENT_SCREEN);
   }
 
 
@@ -97,16 +109,19 @@ void FXDirListApp::create(){
 int main(int argc,char *argv[]){
 
   // Make application
-  FXDirListApp* application=new FXDirListApp;
+  FXApp application("DirList","FoxTest");
   
   // Open display
-  application->init(argc,argv);
+  application.init(argc,argv);
 
+  // Make window
+  new DirListWindow(&application);
+  
   // Create app  
-  application->create();
+  application.create();
   
   // Run
-  application->run();
+  return application.run();
   }
 
 

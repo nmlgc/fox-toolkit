@@ -1,6 +1,103 @@
-Hello,
 
 
+There are several ways we currently move the focus around:
+
+
+	1) Move the focus to the widget you clicked on.
+
+	2) Use Alt-L to move the focus to the control AFTER a label with
+	   name &Label.
+
+	3) Using arrow keys.  The arrow keys currently inspect the geometry
+	   of the GUI to determine the next control; I believe this works
+	   pretty well [each layout manager needs its own code for the arrow
+	   navigation as different layout managers obviously have different
+	   layout patterns].
+
+	4) Using TAB or BACK TAB.  Here we simply move to the next sibling,
+	   or if that sibling is a composite, to that composite's first child.
+	   At the toplevel widget we loop around so we visit all widgets eventually
+	   tabbing around.
+
+
+So how does it work?
+
+
+              top
+               |
+               |
+               v
+              composite#1
+               |       |
+               |       v
+            child#1   composite#2
+                       |       |
+                       |       |
+                   composite#3 |
+                               v
+                              child#2
+
+
+
+Each widget may have a focus child; keyboard events are delivered to the toplevel
+widget (top).  
+
+The concept of "focus chain" is the delivery of keyboard events from the top
+down to a specific control [in the diagram above this could be:
+
+	top->composite#1->composite#2->child#2
+
+for example.
+
+setFocus() puts a widget into the focus chain.  If the toplevel widget had the
+REAL focus from the window system [the window manager only assigns keyboard
+focus to a toplevel window], then setFocus() generates a SEL_FOCUSIN message;
+note that in the process of child->setFocus(), the whole chain is built up
+by upward recursion, and the child does not become switched into the focus
+chain until the parent is also.
+
+The recursion stops when we either reach the toplevel widget or we find a
+widget which was already in the focus chain.  Of course widgets which
+leave the focus chain by means of killFocus(), which works very similarly.
+
+
+So if we had a focus chain:
+
+	top->composite#1->child#1
+
+and assign the focus to child#2, and if the toplevel widget had windowmanager's
+focus already, we will see events like:
+
+	child#1      SEL_FOCUSOUT
+	composite#2  SEL_FOCUSIN
+	child#2      SEL_FOCUSIN
+
+
+If we click on another toplevel window, we get:
+
+	child#2	     SEL_FOCUSOUT
+	composite#2  SEL_FOCUSOUT
+	composite#1  SEL_FOCUSOUT
+	top          SEL_FOCUSOUT
+
+These messages permit the application to provide visual cues as to where the
+focus is.
+
+
+If a widget has a focus child, then first an attempt is made to forward the keyboard 
+event to that focus child. If the child handles the keyboard event then it returns 1 
+and we're done.  
+
+If a child is itself a composite, it will in turn try its focus child.
+
+If the focus child of a composite did not handle the keyboard event then the composite
+will try to interpret the navigation keys (Tab/Backtab/Arrows).  These are translated
+into SEL_FOCUS_NEXT, SEL_FOCUS_PREV, SEL_FOCUS_RIGHT, SEL_FOCUS_LEFT, SEL_FOCUS_DOWN,
+and SEL_FOCUS_UP messages, respectively.
+
+If a composite successfully interprets the navigation key, i.e. manages to find a
+successor widget to set the focus on, then it returns 1.  Otherwise it returns 0 and
+the next composite higher up can have a shot at interpreting the navigation keys.
 
 I got the focus movement basically working (the mechanism); run groupbox and
 tab/backtab your way between all the buttons.  Hitting space or return with
@@ -91,7 +188,7 @@ your way between all the buttons.
 Hitting space or return with focus on a button will now invoke it just as if you had used the
 mouse.
 
-Not all widgets properly cooperate with it yes.  [Widgets which can accept the focus should 
+Not all widgets properly cooperate with it yes.  [Widgets which can accept the focus should
 return TRUE in their overload of canFocus() ].
 
 The dispatch of keyboard events is now implemented.  Here's how it works:
@@ -123,16 +220,16 @@ In a nutshell, when you add/remove items to/from List or TreeLists, when you add
 children to/from Composites, flags will be set that indicate that a recalc() may
 be needed.
 
-When the idle processing starts, this will then happen.  Thus, you can add 1000's of items 
-w/o any noticable slowdown. (It seems to improve performance by 2-3 orders of magnitude; 
+When the idle processing starts, this will then happen.  Thus, you can add 1000's of items
+w/o any noticable slowdown. (It seems to improve performance by 2-3 orders of magnitude;
 previously, adding elements caused a torrent of events.
 
-With the new system, recalc()'s are put off till the last minute.  Unfortunately, this new 
+With the new system, recalc()'s are put off till the last minute.  Unfortunately, this new
 mechanism can not stand alone.  A similar mechanism is needed for repainting.
 In future, when you call update(), it will add a repaint rectangle or union the
 old repaint rectangle with the new one.  Then it will repaint during idle processing.
 So it's a bit chaotic right now, but it should become VERY SPEEDY when it's all done.
 
 Also, I'm afraid the messagebox is broken right now. This is due to the class hierarchy changes,
-and the new layout of FXTopWindow.  CWW had some nice suggestions for improvements, but those 
+and the new layout of FXTopWindow.  CWW had some nice suggestions for improvements, but those
 have not yet been implemented.

@@ -5,7 +5,7 @@
 *********************************************************************************
 * Copyright (C) 1998 by Jeroen van der Zijp.   All Rights Reserved.             *
 *********************************************************************************
-* $Id: mditest.cpp,v 1.9 1998/09/21 18:45:55 jvz Exp $                        *
+* $Id: mditest.cpp,v 1.11 2001/02/21 21:05:40 jeroen Exp $                      *
 ********************************************************************************/
 #include "fx.h"
 #include <stdio.h>
@@ -17,23 +17,28 @@
 
 
 // Mini application object
-class FXMDIApp : public FXApp {
-  FXDECLARE(FXMDIApp)
+class MDITestWindow : public FXMainWindow {
+  FXDECLARE(MDITestWindow)
     
 protected:
-  FXMainWindow      *mainwindow;
-  FXMenuBar         *menubar;
+  FXMenubar         *menubar;
   FXMDIClient       *mdiclient;               // MDI Client area
   FXMDIMenu         *mdimenu;                 // MDI Window Menu
   FXGIFIcon         *mdiicon;                 // MDI Icon
+  FXMenuPane        *filemenu;
+  FXMenuPane        *windowmenu;
+  FXMenuPane        *helpmenu;
+  FXFont            *font;
+protected:
+  MDITestWindow(){}
   
 public:
   
   // We define additional ID's, starting from the last one used by the base class+1.
   // This way, we know the ID's are all unique for this particular target.
   enum {
-    ID_ABOUT=FXApp::ID_LAST,
-    ID_NEW,
+    ID_ABOUT=FXMainWindow::ID_LAST,
+    ID_NEW
     };
     
   // Message handlers
@@ -41,8 +46,9 @@ public:
   long onCmdNew(FXObject*,FXSelector,void*);
   
 public:
-  FXMDIApp();
-  void create();
+  MDITestWindow(FXApp* a);
+  virtual void create();
+  virtual ~MDITestWindow();
   };
 
 
@@ -63,115 +69,186 @@ const unsigned char penguin[]={
   };
 
 
+static const FXchar tyger[]=
+  "The Tyger\n\n"
+  "Tyger! Tyger! burning bright\n"
+  "In the forests of the night\n"
+  "What immortal hand or eye\n"
+  "Could frame thy fearful symmetry?\n\n"
+  "In what distant deeps or skies\n"
+  "Burnt the fire of thine eyes?\n"
+  "On what wings dare he aspire?\n"
+  "What the hand dare seize the fire?\n\n"
+  "And what shoulder, and what art,\n"
+  "Could twist the sinews of thy heart,\n"
+  "And when thy heart began to beat,\n"
+  "What dread hand? and what dread feet?\n\n"
+  "What the hammer? what the chain?\n"
+  "In what furnace was thy brain?\n"
+  "What the anvil? what dread grasp\n"
+  "Dare its deadly terrors clasp?\n\n"
+  "When the stars threw down their spears,\n"
+  "And water'd heaven with their tears,\n"
+  "Did he smile his work to see?\n"
+  "Did he who made the Lamb make thee?\n\n"
+  "Tyger! Tyger! burning bright\n"
+  "In the forests of the night,\n"
+  "What immortal hand or eye,\n"
+  "Dare frame thy fearful symmetry?\n\n\n\n"
+  "               - William Blake\n\n";
+
+
 // Map
-FXDEFMAP(FXMDIApp) FXMDIAppMap[]={
-  //__Message_Type_____________ID________________________Message_Handler_____
-  FXMAPFUNC(SEL_COMMAND,  FXMDIApp::ID_ABOUT,          FXMDIApp::onCmdAbout),
-  FXMAPFUNC(SEL_COMMAND,  FXMDIApp::ID_NEW,            FXMDIApp::onCmdNew),
+FXDEFMAP(MDITestWindow) MDITestWindowMap[]={
+  //________Message_Type____________ID___________________Message_Handler________
+  FXMAPFUNC(SEL_COMMAND,  MDITestWindow::ID_ABOUT,    MDITestWindow::onCmdAbout),
+  FXMAPFUNC(SEL_COMMAND,  MDITestWindow::ID_NEW,      MDITestWindow::onCmdNew),
   };
 
 
 // Object implementation
-FXIMPLEMENT(FXMDIApp,FXApp,FXMDIAppMap,ARRAYNUMBER(FXMDIAppMap))
+FXIMPLEMENT(MDITestWindow,FXMainWindow,MDITestWindowMap,ARRAYNUMBER(MDITestWindowMap))
 
 
 // Make some windows
-FXMDIApp::FXMDIApp(){
+MDITestWindow::MDITestWindow(FXApp* a):FXMainWindow(a,"MDI Widget Test",NULL,NULL,DECOR_ALL,0,0,800,600){
   FXMDIChild *mdichild;
-  
-  // Main window
-  mainwindow=new FXMainWindow(this,"MDI Widget Test",DECOR_ALL,0,0,800,600);
+  FXScrollWindow *scrollwindow;
+  FXButton *btn;
+    
+  font=new FXFont(getApp(),"courier",15,FONTWEIGHT_BOLD);
   
   // Menubar
-  menubar=new FXMenuBar(mainwindow,LAYOUT_SIDE_TOP|LAYOUT_FILL_X);
+  menubar=new FXMenubar(this,LAYOUT_SIDE_TOP|LAYOUT_FILL_X);
   
   // Status bar
-  new FXStatusbar(mainwindow,LAYOUT_SIDE_BOTTOM|LAYOUT_FILL_X|STATUSBAR_WITH_DRAGCORNER);
+  new FXStatusbar(this,LAYOUT_SIDE_BOTTOM|LAYOUT_FILL_X|STATUSBAR_WITH_DRAGCORNER);
   
   // MDI Client
-  mdiclient=new FXMDIClient(mainwindow,menubar,LAYOUT_FILL_X|LAYOUT_FILL_Y);
+  mdiclient=new FXMDIClient(this,LAYOUT_FILL_X|LAYOUT_FILL_Y);
   
   // Icon for MDI Child
-  mdiicon=new FXGIFIcon(this,penguin);
+  mdiicon=new FXGIFIcon(getApp(),penguin);
 
   // Make MDI Menu
   mdimenu=new FXMDIMenu(this,mdiclient);
   
-  // Test
-  mdichild=new FXMDIChild(mdiclient,"TEST1",mdiicon,mdimenu,LAYOUT_FIX_X|LAYOUT_FIX_Y,10,10,300,200);
-  new FXScrollWindow(mdichild,HSCROLLER_ALWAYS|VSCROLLER_ALWAYS);
+  // MDI buttons in menu:- note the message ID's!!!!!
+  // Normally, MDI commands are simply sensitized or desensitized;
+  // Under the menubar, however, they're hidden if the MDI Client is
+  // not maximized.  To do this, they must have different ID's.
+  new FXMDIWindowButton(menubar,mdiclient,FXMDIClient::ID_MDI_MENUWINDOW,LAYOUT_LEFT);
+  new FXMDIDeleteButton(menubar,mdiclient,FXMDIClient::ID_MDI_MENUCLOSE,FRAME_RAISED|LAYOUT_RIGHT);
+  new FXMDIRestoreButton(menubar,mdiclient,FXMDIClient::ID_MDI_MENURESTORE,FRAME_RAISED|LAYOUT_RIGHT);
+  new FXMDIMinimizeButton(menubar,mdiclient,FXMDIClient::ID_MDI_MENUMINIMIZE,FRAME_RAISED|LAYOUT_RIGHT);
   
-  mdichild=new FXMDIChild(mdiclient,"TEST2",mdiicon,mdimenu,LAYOUT_FIX_X|LAYOUT_FIX_Y,20,20,300,200);
-  new FXScrollWindow(mdichild,HSCROLLER_ALWAYS|VSCROLLER_ALWAYS);
-  
-  mdichild=new FXMDIChild(mdiclient,"TEST3",mdiicon,mdimenu,LAYOUT_FIX_X|LAYOUT_FIX_Y,30,30,300,200);
-  new FXButton(mdichild,"Hello",NULL,NULL,0,FRAME_THICK|FRAME_RAISED|JUSTIFY_CENTER_X|JUSTIFY_CENTER_Y);
-  
+  // Test window #1
+  mdichild=new FXMDIChild(mdiclient,"Child",mdiicon,mdimenu,0,10,10,400,300);
+  scrollwindow=new FXScrollWindow(mdichild,0);
+  btn=new FXButton(scrollwindow,tyger,NULL,NULL,0,LAYOUT_FIX_WIDTH|LAYOUT_FIX_HEIGHT,0,0,600,1000);
+  btn->setBackColor(FXRGB(255,255,255));
+  btn->setFont(font);
+  mdiclient->setActiveChild(mdichild);
+
+  // Test window #2
+  mdichild=new FXMDIChild(mdiclient,"Child",mdiicon,mdimenu,0,20,20,400,300);
+  scrollwindow=new FXScrollWindow(mdichild,0);
+  btn=new FXButton(scrollwindow,tyger,NULL,NULL,0,LAYOUT_FIX_WIDTH|LAYOUT_FIX_HEIGHT,0,0,600,1000);
+  btn->setFont(font);
+  btn->setBackColor(FXRGB(255,255,255));
+
+  // Test window #3
+  mdichild=new FXMDIChild(mdiclient,"Child",mdiicon,mdimenu,0,30,30,400,300);
+  scrollwindow=new FXScrollWindow(mdichild,0);
+  btn=new FXButton(scrollwindow,tyger,NULL,NULL,0,LAYOUT_FIX_WIDTH|LAYOUT_FIX_HEIGHT,0,0,600,1000);
+  btn->setFont(font);
+  btn->setBackColor(FXRGB(255,255,255));
+
   // File menu
-  FXMenuPane *filemenu=new FXMenuPane(this);
-  new FXMenuCommand(filemenu,"&New\t\tCreate new document.",this,ID_NEW);
-  new FXMenuCommand(filemenu,"&Open\t\tOpen document.",NULL,0);
-  new FXMenuCommand(filemenu,"&Quit\t\tQuit application.",this,ID_QUIT,0);
-  new FXMenuTitle(menubar,"&File",filemenu);
+  filemenu=new FXMenuPane(this);
+  new FXMenuCommand(filemenu,"&New\tCtl-N\tCreate new document.",NULL,this,ID_NEW);
+  new FXMenuCommand(filemenu,"&Open\tCtl-O\tOpen document.");
+  new FXMenuCommand(filemenu,"&Quit\tCtl-Q\tQuit application.",NULL,getApp(),FXApp::ID_QUIT,0);
+  new FXMenuTitle(menubar,"&File",NULL,filemenu);
     
   // Window menu
-  FXMenuPane *windowmenu=new FXMenuPane(this);
-  new FXMenuCommand(windowmenu,"Tile &Horizontally",mdiclient,FXWindow::ID_TILE_HORIZONTAL);
-  new FXMenuCommand(windowmenu,"Tile &Vertically",mdiclient,FXWindow::ID_TILE_VERTICAL);
-  new FXMenuCommand(windowmenu,"C&ascade",mdiclient,FXWindow::ID_CASCADE);
-  new FXMenuCommand(windowmenu,"&Close",mdiclient,FXWindow::ID_DELETE);
-  new FXMenuTitle(menubar,"&Window",windowmenu);
+  windowmenu=new FXMenuPane(this);
+  new FXMenuCommand(windowmenu,"Tile &Horizontally",NULL,mdiclient,FXMDIClient::ID_MDI_TILEHORIZONTAL);
+  new FXMenuCommand(windowmenu,"Tile &Vertically",NULL,mdiclient,FXMDIClient::ID_MDI_TILEVERTICAL);
+  new FXMenuCommand(windowmenu,"C&ascade",NULL,mdiclient,FXMDIClient::ID_MDI_CASCADE);
+  new FXMenuCommand(windowmenu,"&Close",NULL,mdiclient,FXMDIClient::ID_MDI_CLOSE);
+  new FXMenuCommand(windowmenu,"Close &All",NULL,mdiclient,FXMDIClient::ID_CLOSE_ALL_DOCUMENTS);
+  FXMenuSeparator* sep1=new FXMenuSeparator(windowmenu);
+  sep1->setTarget(mdiclient);
+  sep1->setSelector(FXMDIClient::ID_MDI_ANY);
+  new FXMenuCommand(windowmenu,NULL,NULL,mdiclient,FXMDIClient::ID_MDI_1);
+  new FXMenuCommand(windowmenu,NULL,NULL,mdiclient,FXMDIClient::ID_MDI_2);
+  new FXMenuCommand(windowmenu,NULL,NULL,mdiclient,FXMDIClient::ID_MDI_3);
+  new FXMenuCommand(windowmenu,NULL,NULL,mdiclient,FXMDIClient::ID_MDI_4);
+  new FXMenuTitle(menubar,"&Window",NULL,windowmenu);
   
   // Help menu
-  FXMenuPane *helpmenu=new FXMenuPane(this);
-  new FXMenuCommand(helpmenu,"&About FOX...",this,ID_ABOUT,0);
-  new FXMenuTitle(menubar,"&Help",helpmenu,LAYOUT_RIGHT);
-  }
+  helpmenu=new FXMenuPane(this);
+  new FXMenuCommand(helpmenu,"&About FOX...",NULL,this,ID_ABOUT,0);
+  new FXMenuTitle(menubar,"&Help",NULL,helpmenu,LAYOUT_RIGHT);
   
+  }
+
+
+// Clean up  
+MDITestWindow::~MDITestWindow(){
+  delete filemenu;
+  delete windowmenu;
+  delete helpmenu;
+  delete font;
+  }
+
 
 // About
-long FXMDIApp::onCmdAbout(FXObject*,FXSelector,void*){
-  showModalInformationBox(MBOX_OK,"About MDI Test","Test of the FOX MDI Widgets\nWritten by Jeroen van der Zijp");
+long MDITestWindow::onCmdAbout(FXObject*,FXSelector,void*){
+  FXMessageBox::information(this,MBOX_OK,"About MDI Test","Test of the FOX MDI Widgets\nWritten by Jeroen van der Zijp");
   return 1;
   }
 
 
 // New
-long FXMDIApp::onCmdNew(FXObject*,FXSelector,void*){
-  FXMDIChild *mdichild=new FXMDIChild(mdiclient,"Child",mdiicon,mdimenu,LAYOUT_FIX_X|LAYOUT_FIX_Y,20,20,300,200);
-  new FXScrollWindow(mdichild,HSCROLLER_ALWAYS|VSCROLLER_ALWAYS);
+long MDITestWindow::onCmdNew(FXObject*,FXSelector,void*){
+  FXMDIChild *mdichild=new FXMDIChild(mdiclient,"Child",mdiicon,mdimenu,0,20,20,300,200);
+  FXScrollWindow *scrollwindow=new FXScrollWindow(mdichild,0);
+  FXButton* btn=new FXButton(scrollwindow,tyger,NULL,NULL,0,LAYOUT_FIX_WIDTH|LAYOUT_FIX_HEIGHT,0,0,600,1000);
+  btn->setBackColor(FXRGB(255,255,255));
   mdichild->create();
   return 1;
   }
 
 
 // Start
-void FXMDIApp::create(){
-  FXApp::create();
-  mainwindow->show();
+void MDITestWindow::create(){
+  FXMainWindow::create();
+  show(PLACEMENT_SCREEN);
   }
 
 
 /*******************************************************************************/
 
-//extern char foxclasses[];
 
 // Start the whole thing
 int main(int argc,char *argv[]){
-
-//  fprintf(stderr,"foxclasses = %lx\n",foxclasses);
   
   // Make application
-  FXMDIApp* application=new FXMDIApp;
+  FXApp application("MDIApp","FoxTest");
   
   // Open display
-  application->init(argc,argv);
+  application.init(argc,argv);
+  
+  // Make window
+  new MDITestWindow(&application);
   
   // Create app
-  application->create();
+  application.create();
   
   // Run
-  application->run();
+  return application.run();
   }
 
 

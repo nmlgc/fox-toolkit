@@ -1,3 +1,0 @@
-clstab.o: clstab.cpp ../include/xincs.h ../include/fxdefs.h
-reswrap.o: reswrap.cpp ../include/xincs.h ../include/fxdefs.h
-uuidgen.o: uuidgen.cpp ../include/xincs.h ../include/fxdefs.h

@@ -3,48 +3,44 @@
 *                           T o o l t i p   W i d g e t                         *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998 by Jeroen van der Zijp.   All Rights Reserved.             *
+* Copyright (C) 1998,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
-* modify it under the terms of the GNU Library General Public                   *
+* modify it under the terms of the GNU Lesser General Public                    *
 * License as published by the Free Software Foundation; either                  *
-* version 2 of the License, or (at your option) any later version.              *
+* version 2.1 of the License, or (at your option) any later version.            *
 *                                                                               *
 * This library is distributed in the hope that it will be useful,               *
 * but WITHOUT ANY WARRANTY; without even the implied warranty of                *
 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU             *
-* Library General Public License for more details.                              *
+* Lesser General Public License for more details.                               *
 *                                                                               *
-* You should have received a copy of the GNU Library General Public             *
-* License along with this library; if not, write to the Free                    *
-* Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.            *
+* You should have received a copy of the GNU Lesser General Public              *
+* License along with this library; if not, write to the Free Software           *
+* Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXTooltip.cpp,v 1.23 1998/10/31 00:00:32 jvz Exp $                     *
+* $Id: FXTooltip.cpp,v 1.22 2002/01/18 22:43:07 jeroen Exp $                    *
 ********************************************************************************/
 #include "xincs.h"
+#include "fxver.h"
 #include "fxdefs.h"
 #include "FXStream.h"
 #include "FXString.h"
-#include "FXObject.h"
+#include "FXSize.h"
+#include "FXPoint.h"
+#include "FXRectangle.h"
+#include "FXRegistry.h"
 #include "FXAccelTable.h"
-#include "FXObjectList.h"
 #include "FXApp.h"
-#include "FXId.h"
+#include "FXDCWindow.h"
 #include "FXFont.h"
 #include "FXCursor.h"
-#include "FXDrawable.h"
-#include "FXWindow.h"
-#include "FXFrame.h"
-#include "FXComposite.h"
-#include "FXRootWindow.h"
-#include "FXShell.h"
 #include "FXTooltip.h"
 
 /*
-  To do:
-  - Need hide-timer, perhaps, to hide it again after a while.
-  - Tip briefly flashes, dont know why.
-  - Need to make sure tooltip positioned inside screen.
+  Notes:
+  - Initial colors are now obtained from FXApp and therefore
+    from the system registry.
 */
 
 #define HSPACE  4
@@ -67,46 +63,55 @@ FXDEFMAP(FXTooltip) FXTooltipMap[]={
 // Object implementation
 FXIMPLEMENT(FXTooltip,FXShell,FXTooltipMap,ARRAYNUMBER(FXTooltipMap))
 
-  
+
 // Deserialization
 FXTooltip::FXTooltip(){
   font=NULL;
   textColor=0;
   timer=NULL;
+  popped=FALSE;
   }
 
 // Create a toplevel window
 FXTooltip::FXTooltip(FXApp* a,FXuint opts,FXint x,FXint y,FXint w,FXint h):
   FXShell(a,opts,x,y,w,h),label("Tooltip"){
-  font=getApp()->normalFont;
-  textColor=0;
+  font=getApp()->getNormalFont();
+  textColor=getApp()->getTipforeColor();
+  backColor=getApp()->getTipbackColor();
   timer=NULL;
+  popped=FALSE;
   }
 
 
 // Tooltips do override-redirect
-FXbool FXTooltip::doesOverrideRedirect() const { return 1; }
+FXbool FXTooltip::doesOverrideRedirect() const { return TRUE; }
 
 
 // Tooltips do save-unders
-FXbool FXTooltip::doesSaveUnder() const { return 1; }
+FXbool FXTooltip::doesSaveUnder() const { return TRUE; }
 
 
-// Create X window
+#ifdef WIN32
+const char* FXTooltip::GetClass() const { return "FXPopup"; }
+#endif
+
+
+// Create window
 void FXTooltip::create(){
   FXShell::create();
-  textColor=acquireColor(getApp()->foreColor);
-  setBackColor(acquireColor(FXRGB(255,255,192)));
   font->create();
   }
 
 
+// Detach window
+void FXTooltip::detach(){
+  FXShell::detach();
+  font->detach();
+  }
+
+
+// Show window
 void FXTooltip::show(){
-//   FXint x,y; FXuint state;
-//   getRoot()->getCursorPosition(x,y,state);
-//   position(x+10,y+10,getDefaultWidth(),getDefaultHeight());
-//   FXShell::show();
-//   raise();
   FXShell::show();
   raise();
   }
@@ -116,7 +121,7 @@ void FXTooltip::show(){
 FXint FXTooltip::getDefaultWidth(){
   const FXchar *beg,*end;
   FXint w,tw=0;
-  beg=label.text(); 
+  beg=label.text();
   if(beg){
     do{
       end=beg;
@@ -148,14 +153,17 @@ FXint FXTooltip::getDefaultHeight(){
   }
 
 
-// Handle repaint 
-long FXTooltip::onPaint(FXObject* sender,FXSelector sel,void* ptr){
+// Handle repaint
+long FXTooltip::onPaint(FXObject*,FXSelector,void* ptr){
+  FXEvent *ev=(FXEvent*)ptr;
+  FXDCWindow dc(this,ev);
   const FXchar *beg,*end;
   FXint tx,ty;
-  FXShell::onPaint(sender,sel,ptr);
-  setForeground(textColor);
-  setTextFont(font);
-  drawRectangle(0,0,width-1,height-1);
+  dc.setForeground(backColor);
+  dc.fillRectangle(ev->rect.x,ev->rect.y,ev->rect.w,ev->rect.h);
+  dc.setForeground(textColor);
+  dc.setTextFont(font);
+  dc.drawRectangle(0,0,width-1,height-1);
   beg=label.text();
   if(beg){
     tx=1+HSPACE;
@@ -163,7 +171,7 @@ long FXTooltip::onPaint(FXObject* sender,FXSelector sel,void* ptr){
     do{
       end=beg;
       while(*end!='\0' && *end!='\n') end++;
-      drawText(tx,ty,beg,end-beg);
+      dc.drawText(tx,ty,beg,end-beg);
       ty+=font->getFontHeight();
       beg=end+1;
       }
@@ -180,10 +188,10 @@ void FXTooltip::place(FXint x,FXint y){
   FXint w=getDefaultWidth();
   FXint h=getDefaultHeight();
   FXint px,py;
-  px=x-w/3;
-  py=y+10;
+  px=x+16-w/3;
+  py=y+20;
   if(px+w>rw) px=rw-w;
-  if(px<0) px=0; 
+  if(px<0) px=0;
   if(py+h>rh){ py=rh-h; if(py<=y && y<py+h) py=y-h-10; }
   if(py<0) py=0;
   position(px,py,w,h);
@@ -202,22 +210,40 @@ void FXTooltip::autoplace(){
 long FXTooltip::onUpdate(FXObject* sender,FXSelector sel,void* ptr){
   FXWindow *helpsource=getApp()->getCursorWindow();
   FXWindow::onUpdate(sender,sel,ptr);
-  if(!helpsource || !helpsource->handle(this,MKUINT(FXWindow::ID_QUERY_TIP,SEL_UPDATE),ptr)){
-    if(timer){getApp()->removeTimeout(timer);timer=NULL;}
-    label=0;
-    hide();
+  if(helpsource && helpsource->handle(this,MKUINT(FXWindow::ID_QUERY_TIP,SEL_UPDATE),ptr)){
+    if(!popped){
+      popped=TRUE;
+      if(!shown()){
+        if(timer) getApp()->removeTimeout(timer);
+        timer=getApp()->addTimeout(getApp()->getTooltipPause(),this,ID_TIP_SHOW);
+        return 1;
+        }
+      autoplace();
+      }
+    return 1;
     }
+  if(timer){getApp()->removeTimeout(timer);timer=NULL;}
+  popped=FALSE;
+  hide();
   return 1;
   }
-////////////// Tooltips should be popped/unpopped differently...
+
 
 // Pop the tool tip now
 long FXTooltip::onTipShow(FXObject*,FXSelector,void*){
   timer=NULL;
-  autoplace();
-  show();
-  if(!(options&TOOLTIP_PERMANENT)){
-    timer=getApp()->addTimeout(getApp()->tooltipTime,this,ID_TIP_HIDE);
+  if(!label.empty()){
+    autoplace();
+    show();
+    if(!(options&TOOLTIP_PERMANENT)){
+      FXint timeoutms=getApp()->getTooltipTime();
+      // Text length dependent tooltip display time;
+      // Contributed by: leonard@hipgraphics.com
+      if(options&TOOLTIP_VARIABLE){
+        timeoutms=timeoutms/4+(timeoutms*label.length())/64;
+        }
+      timer=getApp()->addTimeout(timeoutms,this,ID_TIP_HIDE);
+      }
     }
   return 1;
   }
@@ -231,34 +257,29 @@ long FXTooltip::onTipHide(FXObject*,FXSelector,void*){
   }
 
 
-// Update value from a message
+// Change value
 long FXTooltip::onCmdSetStringValue(FXObject*,FXSelector,void* ptr){
-  if(ptr){ setText(*((FXString*)ptr)); }
+  if(ptr==NULL){ fxerror("%s::onCmdSetStringValue: NULL pointer.\n",getClassName()); }
+  setText(*((FXString*)ptr));
   return 1;
   }
 
 
-// Obtain value from text field
+// Obtain value
 long FXTooltip::onCmdGetStringValue(FXObject*,FXSelector,void* ptr){
-  if(ptr){ *((FXString*)ptr) = getText(); }
+  if(ptr==NULL){ fxerror("%s::onCmdGetStringValue: NULL pointer.\n",getClassName()); }
+  *((FXString*)ptr)=getText();
   return 1;
   }
-
 
 
 // Change text
-void FXTooltip::setText(const FXchar* text){
+void FXTooltip::setText(const FXString& text){
   if(label!=text){
     label=text;
-    if(!shown()){
-      if(timer) getApp()->removeTimeout(timer);
-      timer=getApp()->addTimeout(getApp()->tooltipPause,this,ID_TIP_SHOW);
-      }
-    else{
-      autoplace();
-      }
     recalc();
-    update(0,0,width,height);
+    popped=FALSE;       // If text changes, pop it up again
+    update();
     }
   }
 
@@ -266,16 +287,38 @@ void FXTooltip::setText(const FXchar* text){
 // Change the font
 void FXTooltip::setFont(FXFont *fnt){
   if(!fnt){ fxerror("%s::setFont: NULL font specified.\n",getClassName()); }
-  font=fnt;
-  recalc();
-  update(0,0,width,height);
+  if(font!=fnt){
+    font=fnt;
+    recalc();
+    update();
+    }
   }
 
 
 // Set text color
-void FXTooltip::setTextColor(FXPixel clr){
-  textColor=clr;
-  update(0,0,width,height);
+void FXTooltip::setTextColor(FXColor clr){
+  if(clr!=textColor){
+    textColor=clr;
+    update();
+    }
+  }
+
+
+// Save data
+void FXTooltip::save(FXStream& store) const {
+  FXShell::save(store);
+  store << label;
+  store << font;
+  store << textColor;
+  }
+
+
+// Load data
+void FXTooltip::load(FXStream& store){
+  FXShell::load(store);
+  store >> label;
+  store >> font;
+  store >> textColor;
   }
 
 

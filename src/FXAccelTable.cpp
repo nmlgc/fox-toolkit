@@ -3,34 +3,42 @@
 *                   A c c e l e r a t o r   T a b l e   C l a s s               *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998 by Jeroen van der Zijp.   All Rights Reserved.             *
+* Copyright (C) 1998,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
-* modify it under the terms of the GNU Library General Public                   *
+* modify it under the terms of the GNU Lesser General Public                    *
 * License as published by the Free Software Foundation; either                  *
-* version 2 of the License, or (at your option) any later version.              *
+* version 2.1 of the License, or (at your option) any later version.            *
 *                                                                               *
 * This library is distributed in the hope that it will be useful,               *
 * but WITHOUT ANY WARRANTY; without even the implied warranty of                *
 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU             *
-* Library General Public License for more details.                              *
+* Lesser General Public License for more details.                               *
 *                                                                               *
-* You should have received a copy of the GNU Library General Public             *
-* License along with this library; if not, write to the Free                    *
-* Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.            *
+* You should have received a copy of the GNU Lesser General Public              *
+* License along with this library; if not, write to the Free Software           *
+* Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXAccelTable.cpp,v 1.11 1998/10/27 04:57:43 jeroen Exp $                  *
+* $Id: FXAccelTable.cpp,v 1.11 2002/01/18 22:42:57 jeroen Exp $                 *
 ********************************************************************************/
 #include "xincs.h"
+#include "fxver.h"
 #include "fxdefs.h"
 #include "FXStream.h"
+#include "FXString.h"
+#include "FXSize.h"
+#include "FXPoint.h"
+#include "FXRectangle.h"
 #include "FXObject.h"
+#include "FXSettings.h"
+#include "FXRegistry.h"
+#include "FXApp.h"
 #include "FXAccelTable.h"
 
-  
+
 /*
   Notes:
-  - Mostly complete
+  - Mostly complete.
 */
 
 #define DEF_HASH_SIZE      16           // Initial table size (MUST be power of 2)
@@ -67,11 +75,11 @@ FXIMPLEMENT(FXAccelTable,FXObject,FXAccelTableMap,ARRAYNUMBER(FXAccelTableMap))
 
 // Make empty accelerator table
 FXAccelTable::FXAccelTable(){
+  FXTRACE((100,"%p->FXAccelTable::FXAccelTable\n",this));
   nkey=DEF_HASH_SIZE;
   FXMALLOC(&key,FXAccelKey,nkey);
   for(FXuint i=0; i<nkey; i++) key[i].code=UNUSEDSLOT;
   num=0;
-//fprintf(stderr,"construct Table[%08x]\n",this);
   }
 
 
@@ -96,13 +104,13 @@ void FXAccelTable::grow(){
   key=k;
   nkey=n;
   }
-        
+
 
 // Add (or replace) accelerator
 void FXAccelTable::addAccel(FXHotKey hotkey,FXObject* target,FXSelector seldn,FXSelector selup){
   if(hotkey){
     register FXuint p,i,x,c;
-//fprintf(stderr,"addAccel[%08x]: code=%04x state=%04x\n",this,(FXushort)hotkey,(FXushort)(hotkey>>16));
+    FXTRACE((150,"%p->FXAccelTable::addAccel: code=%04x state=%04x\n",this,(FXushort)hotkey,(FXushort)(hotkey>>16)));
     FXASSERT(hotkey!=UNUSEDSLOT);
     FXASSERT(hotkey!=EMPTYSLOT);
     p=HASH1(hotkey,nkey);
@@ -136,7 +144,7 @@ void FXAccelTable::addAccel(FXHotKey hotkey,FXObject* target,FXSelector seldn,FX
 void FXAccelTable::removeAccel(FXHotKey hotkey){
   if(hotkey){
     register FXuint p,x,c;
-//fprintf(stderr,"removeAccel[%08x]: code=%04x state=%04x\n",this,(FXushort)hotkey,(FXushort)(hotkey>>16));
+    FXTRACE((150,"%p->FXAccelTable::removeAccel: code=%04x state=%04x\n",this,(FXushort)hotkey,(FXushort)(hotkey>>16)));
     FXASSERT(hotkey!=UNUSEDSLOT);
     FXASSERT(hotkey!=EMPTYSLOT);
     p=HASH1(hotkey,nkey);
@@ -177,12 +185,31 @@ FXbool FXAccelTable::hasAccel(FXHotKey hotkey) const {
   }
 
 
+// Return target object of the given accelerator
+FXObject* FXAccelTable::targetOfAccel(FXHotKey hotkey) const {
+  if(hotkey){
+    register FXuint p,x,c;
+    FXASSERT(hotkey!=UNUSEDSLOT);
+    FXASSERT(hotkey!=EMPTYSLOT);
+    p=HASH1(hotkey,nkey);
+    FXASSERT(p<nkey);
+    x=HASH2(hotkey,nkey);
+    FXASSERT(1<=x && x<nkey);
+    while((c=key[p].code)!=UNUSEDSLOT){
+      if(c==hotkey) return key[p].target;
+      p=(p+x)%nkey;
+      }
+    }
+  return NULL;
+  }
+
+
 // Keyboard press; forward to focus child
 long FXAccelTable::onKeyPress(FXObject* sender,FXSelector,void* ptr){
   FXEvent* event=(FXEvent*)ptr;
   FXuint p,x,code,c;
-//fprintf(stderr,"%s::onKeyPress keysym=0x%04x\n",getClassName(),event->code);
-  code=MKUINT(event->code,event->state);
+  FXTRACE((200,"%p->FXAccelTable::onKeyPress keysym=0x%04x state=%04x\n",this,event->code,event->state));
+  code=MKUINT(event->code,event->state&(SHIFTMASK|CONTROLMASK|ALTMASK));
   FXASSERT(code!=UNUSEDSLOT);
   FXASSERT(code!=EMPTYSLOT);
   p=HASH1(code,nkey);
@@ -190,7 +217,7 @@ long FXAccelTable::onKeyPress(FXObject* sender,FXSelector,void* ptr){
   x=HASH2(code,nkey);
   FXASSERT(1<=x && x<nkey);
   while((c=key[p].code)!=UNUSEDSLOT){
-    if(c==code){ 
+    if(c==code){
       if(key[p].target && key[p].messagedn){
         key[p].target->handle(sender,key[p].messagedn,ptr);
         }
@@ -206,8 +233,8 @@ long FXAccelTable::onKeyPress(FXObject* sender,FXSelector,void* ptr){
 long FXAccelTable::onKeyRelease(FXObject* sender,FXSelector,void* ptr){
   FXEvent* event=(FXEvent*)ptr;
   FXuint p,x,code,c;
-//fprintf(stderr,"%s::onKeyRelease keysym=0x%04x\n",getClassName(),event->code);
-  code=MKUINT(event->code,event->state);
+  FXTRACE((200,"%p->FXAccelTable::onKeyRelease keysym=0x%04x state=%04x\n",this,event->code,event->state));
+  code=MKUINT(event->code,event->state&(SHIFTMASK|CONTROLMASK|ALTMASK));
   FXASSERT(code!=UNUSEDSLOT);
   FXASSERT(code!=EMPTYSLOT);
   p=HASH1(code,nkey);
@@ -215,7 +242,7 @@ long FXAccelTable::onKeyRelease(FXObject* sender,FXSelector,void* ptr){
   x=HASH2(code,nkey);
   FXASSERT(1<=x && x<nkey);
   while((c=key[p].code)!=UNUSEDSLOT){
-    if(c==code){ 
+    if(c==code){
       if(key[p].target && key[p].messageup){
         key[p].target->handle(sender,key[p].messageup,ptr);
         }
@@ -229,7 +256,7 @@ long FXAccelTable::onKeyRelease(FXObject* sender,FXSelector,void* ptr){
 
 // Save data
 void FXAccelTable::save(FXStream& store) const {
-  register FXint i;
+  register FXuint i;
   FXObject::save(store);
   store << nkey;
   store << num;
@@ -244,7 +271,7 @@ void FXAccelTable::save(FXStream& store) const {
 
 // Load data
 void FXAccelTable::load(FXStream& store){
-  register FXint i;
+  register FXuint i;
   FXObject::load(store);
   store >> nkey;
   store >> num;
@@ -260,7 +287,7 @@ void FXAccelTable::load(FXStream& store){
 
 // Destroy table
 FXAccelTable::~FXAccelTable(){
-//fprintf(stderr,"destruct Table[%08x]\n",this);
+  FXTRACE((100,"%p->FXAccelTable::~FXAccelTable\n",this));
   FXFREE(&key);
   key=(FXAccelKey*)-1;
   }

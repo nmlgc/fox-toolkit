@@ -3,45 +3,48 @@
 *                        F r a m e   W i n d o w   O b j e c t                  *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997 by Jeroen van der Zijp.   All Rights Reserved.             *
+* Copyright (C) 1997,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
-* modify it under the terms of the GNU Library General Public                   *
+* modify it under the terms of the GNU Lesser General Public                    *
 * License as published by the Free Software Foundation; either                  *
-* version 2 of the License, or (at your option) any later version.              *
+* version 2.1 of the License, or (at your option) any later version.            *
 *                                                                               *
 * This library is distributed in the hope that it will be useful,               *
 * but WITHOUT ANY WARRANTY; without even the implied warranty of                *
 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU             *
-* Library General Public License for more details.                              *
+* Lesser General Public License for more details.                               *
 *                                                                               *
-* You should have received a copy of the GNU Library General Public             *
-* License along with this library; if not, write to the Free                    *
-* Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.            *
+* You should have received a copy of the GNU Lesser General Public              *
+* License along with this library; if not, write to the Free Software           *
+* Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXFrame.cpp,v 1.13 1998/10/23 06:20:09 jeroen Exp $                      *
+* $Id: FXFrame.cpp,v 1.23 2002/02/02 03:58:46 fox Exp $                         *
 ********************************************************************************/
+#include "xincs.h"
+#include "fxver.h"
 #include "fxdefs.h"
 #include "FXStream.h"
 #include "FXString.h"
-#include "FXObject.h"
-#include "FXAccelTable.h"
-#include "FXObjectList.h"
+#include "FXSize.h"
+#include "FXPoint.h"
+#include "FXRectangle.h"
+#include "FXSettings.h"
+#include "FXRegistry.h"
 #include "FXApp.h"
-#include "FXId.h"
-#include "FXCursor.h"
-#include "FXDrawable.h"
-#include "FXWindow.h"
+#include "FXDCWindow.h"
 #include "FXFrame.h"
-#include "FXComposite.h"
-#include "FXShell.h"
 
 /*
-  To do:
-  - FXGLCanvas should just derive straight from FXWindow
-  - FXCanvas too, btw.
-  - pad stuff should move down to FXLabel
+  Notes:
+  - This really should become the base class for everything that has
+    a border.
 */
+
+
+// Frame styles
+#define FRAME_MASK        (FRAME_SUNKEN|FRAME_RAISED|FRAME_THICK)
+
 
 /*******************************************************************************/
 
@@ -57,159 +60,150 @@ FXIMPLEMENT(FXFrame,FXWindow,FXFrameMap,ARRAYNUMBER(FXFrameMap))
 
 // Deserialization
 FXFrame::FXFrame(){
+  flags|=FLAG_SHOWN;
   baseColor=0;
   hiliteColor=0;
   shadowColor=0;
   borderColor=0;
   border=0;
   }
-  
+
 
 // Create child frame window
-FXFrame::FXFrame(FXComposite* p,FXuint opts,FXint x,FXint y,FXint w,FXint h):
+FXFrame::FXFrame(FXComposite* p,FXuint opts,FXint x,FXint y,FXint w,FXint h,FXint pl,FXint pr,FXint pt,FXint pb):
   FXWindow(p,opts,x,y,w,h){
-  baseColor=0;
-  hiliteColor=0;
-  shadowColor=0;
-  borderColor=0;
+  flags|=FLAG_SHOWN;
+  backColor=getApp()->getBaseColor();
+  baseColor=getApp()->getBaseColor();
+  hiliteColor=getApp()->getHiliteColor();
+  shadowColor=getApp()->getShadowColor();
+  borderColor=getApp()->getBorderColor();
+  padtop=pt;
+  padbottom=pb;
+  padleft=pl;
+  padright=pr;
   border=(options&FRAME_THICK)?2:(options&(FRAME_SUNKEN|FRAME_RAISED))?1:0;
   }
 
 
-// Create window
-void FXFrame::create(){
-  FXWindow::create();
-  baseColor=acquireColor(getApp()->backColor);
-  hiliteColor=acquireColor(getApp()->hiliteColor);
-  shadowColor=acquireColor(getApp()->shadowColor);
-  borderColor=acquireColor(getApp()->borderColor);
-  show();
+// Get default width
+FXint FXFrame::getDefaultWidth(){
+  return padleft+padright+(border<<1);
   }
 
 
-void FXFrame::drawBorderRectangle(FXint x,FXint y,FXint w,FXint h){
-  FXASSERT(xid);
-  setForeground(borderColor);
-  drawRectangle(x,y,w,h);
+// Get default height
+FXint FXFrame::getDefaultHeight(){
+  return padtop+padbottom+(border<<1);
   }
 
 
-void FXFrame::drawRaisedRectangle(FXint x,FXint y,FXint w,FXint h){
-  FXASSERT(xid);
-  setForeground(shadowColor);
-  drawLine(x,y+h-1,x+w-1,y+h-1);
-  drawLine(x+w-1,y,x+w-1,y+h-1);
-  setForeground(hiliteColor);
-  drawLine(x,y,x+w-1,y);
-  drawLine(x,y,x,y+h-1);
-  }
-
-void FXFrame::drawSunkenRectangle(FXint x,FXint y,FXint w,FXint h){
-  FXASSERT(xid);
-  setForeground(shadowColor);
-  drawLine(x,y,x+w-2,y);
-  drawLine(x,y,x,y+h-2);
-  setForeground(hiliteColor);
-  drawLine(x,y+h-1,x+w-1,y+h-1);
-  drawLine(x+w-1,y,x+w-1,y+h-1);
-  }
-
-void FXFrame::drawRidgeRectangle(FXint x,FXint y,FXint w,FXint h){
-  FXASSERT(xid);
-  setForeground(hiliteColor);
-  drawLine(x,y,x+w-1,y);
-  drawLine(x,y,x,y+h-1);
-  drawLine(x+1,y+h-2,x+w-2,y+h-2);
-  drawLine(x+w-2,y+1,x+w-2,y+h-2);
-  setForeground(shadowColor);
-  drawLine(x+1,y+1,x+w-3,y+1);
-  drawLine(x+1,y+1,x+1,y+h-3);
-  drawLine(x,y+h-1,x+w-1,y+h-1);
-  drawLine(x+w-1,y,x+w-1,y+h-1);
-  }
-
-void FXFrame::drawGrooveRectangle(FXint x,FXint y,FXint w,FXint h){
-  FXASSERT(xid);
-  setForeground(shadowColor);
-  drawLine(x,y,x+w-1,y);
-  drawLine(x,y,x,y+h-1);
-  drawLine(x+1,y+h-2,x+w-2,y+h-2);
-  drawLine(x+w-2,y+1,x+w-2,y+h-2);
-  setForeground(hiliteColor);
-  drawLine(x+1,y+1,x+w-2,y+1);
-  drawLine(x+1,y+1,x+1,y+h-2);
-  drawLine(x+1,y+h-1,x+w-1,y+h-1);
-  drawLine(x+w-1,y+1,x+w-1,y+h-1);
+void FXFrame::drawBorderRectangle(FXDCWindow& dc,FXint x,FXint y,FXint w,FXint h){
+  dc.setForeground(borderColor);
+  dc.drawRectangle(x,y,w-1,h-1);
   }
 
 
-void FXFrame::drawDoubleRaisedRectangle(FXint x,FXint y,FXint w,FXint h){
-  FXASSERT(xid);
-  setForeground(hiliteColor);
-  drawLine(x,y,x+w-2,y);
-  drawLine(x,y,x,y+h-2);
-  setForeground(baseColor);
-  drawLine(x+1,y+1,x+w-3,y+1);
-  drawLine(x+1,y+1,x+1,y+h-3);
-  setForeground(shadowColor);
-  drawLine(x+1,y+h-2,x+w-2,y+h-2);
-  drawLine(x+w-2,y+h-2,x+w-2,y+1);
-  setForeground(borderColor);
-  drawLine(x,y+h-1,x+w-1,y+h-1);
-  drawLine(x+w-1,y,x+w-1,y+h-1);
-  }
-
-void FXFrame::drawDoubleSunkenRectangle(FXint x,FXint y,FXint w,FXint h){
-  FXASSERT(xid);
-  setForeground(shadowColor);
-  drawLine(x,y,x+w-1,y);
-  drawLine(x,y,x,y+h-1);
-  setForeground(borderColor);
-  drawLine(x+1,y+1,x+w-2,y+1);
-  drawLine(x+1,y+1,x+1,y+h-2);
-  setForeground(hiliteColor);
-  drawLine(x+1,y+h-1,x+w-1,y+h-1);
-  drawLine(x+w-1,y+h-1,x+w-1,y+1);
-  setForeground(baseColor);
-  drawLine(x+2,y+h-2,x+w-2,y+h-2);
-  drawLine(x+w-2,y+2,x+w-2,y+h-2);
+void FXFrame::drawRaisedRectangle(FXDCWindow& dc,FXint x,FXint y,FXint w,FXint h){
+  dc.setForeground(shadowColor);
+  dc.fillRectangle(x,y+h-1,w,1);
+  dc.fillRectangle(x+w-1,y,1,h);
+  dc.setForeground(hiliteColor);
+  dc.fillRectangle(x,y,w,1);
+  dc.fillRectangle(x,y,1,h);
   }
 
 
-// Draw dashed focus rectangle
-void FXFrame::drawFocusRectangle(FXint x,FXint y,FXint w,FXint h){
-  static const char onoff[]={1,2};
-  FXASSERT(xid);
-  setForeground(borderColor);
-  setDashes(0,onoff,2);
-  setLineAttributes(0,LINE_ONOFF_DASH,CAP_BUTT,JOIN_MITER);
-  drawLine(x,y,x+w-1,y);
-  drawLine(x,y,x,y+h-1);
-  drawLine(x,y+h-1,x+w-1,y+h-1);
-  drawLine(x+w-1,y,x+w-1,y+h-1);
-  setLineAttributes(0,LINE_SOLID,CAP_BUTT,JOIN_MITER);
+void FXFrame::drawSunkenRectangle(FXDCWindow& dc,FXint x,FXint y,FXint w,FXint h){
+  dc.setForeground(shadowColor);
+  dc.fillRectangle(x,y,w,1);
+  dc.fillRectangle(x,y,1,h);
+  dc.setForeground(hiliteColor);
+  dc.fillRectangle(x,y+h-1,w,1);
+  dc.fillRectangle(x+w-1,y,1,h);
   }
-  
+
+
+void FXFrame::drawRidgeRectangle(FXDCWindow& dc,FXint x,FXint y,FXint w,FXint h){
+  dc.setForeground(hiliteColor);
+  dc.fillRectangle(x,y,w,1);
+  dc.fillRectangle(x,y,1,h);
+  dc.fillRectangle(x+1,y+h-2,w-2,1);
+  dc.fillRectangle(x+w-2,y+1,1,h-2);
+  dc.setForeground(shadowColor);
+  dc.fillRectangle(x+1,y+1,w-3,1);
+  dc.fillRectangle(x+1,y+1,1,h-3);
+  dc.fillRectangle(x,y+h-1,w,1);
+  dc.fillRectangle(x+w-1,y,1,h);
+  }
+
+
+void FXFrame::drawGrooveRectangle(FXDCWindow& dc,FXint x,FXint y,FXint w,FXint h){
+  dc.setForeground(shadowColor);
+  dc.fillRectangle(x,y,w,1);
+  dc.fillRectangle(x,y,1,h);
+  dc.fillRectangle(x+1,y+h-2,w-2,1);
+  dc.fillRectangle(x+w-2,y+1,1,h-2);
+  dc.setForeground(hiliteColor);
+  dc.fillRectangle(x+1,y+1,w-3,1);
+  dc.fillRectangle(x+1,y+1,1,h-3);
+  dc.fillRectangle(x,y+h-1,w,1);
+  dc.fillRectangle(x+w-1,y,1,h);
+  }
+
+
+void FXFrame::drawDoubleRaisedRectangle(FXDCWindow& dc,FXint x,FXint y,FXint w,FXint h){
+  dc.setForeground(hiliteColor);
+  dc.fillRectangle(x,y,w-1,1);
+  dc.fillRectangle(x,y,1,h-1);
+  dc.setForeground(baseColor);
+  dc.fillRectangle(x+1,y+1,w-2,1);
+  dc.fillRectangle(x+1,y+1,1,h-2);
+  dc.setForeground(shadowColor);
+  dc.fillRectangle(x+1,y+h-2,w-2,1);
+  dc.fillRectangle(x+w-2,y+1,1,h-1);
+  dc.setForeground(borderColor);
+  dc.fillRectangle(x,y+h-1,w,1);
+  dc.fillRectangle(x+w-1,y,1,h);
+  }
+
+void FXFrame::drawDoubleSunkenRectangle(FXDCWindow& dc,FXint x,FXint y,FXint w,FXint h){
+  dc.setForeground(shadowColor);
+  dc.fillRectangle(x,y,w-1,1);
+  dc.fillRectangle(x,y,1,h-1);
+  dc.setForeground(borderColor);
+  dc.fillRectangle(x+1,y+1,w-3,1);
+  dc.fillRectangle(x+1,y+1,1,h-3);
+  dc.setForeground(hiliteColor);
+  dc.fillRectangle(x,y+h-1,w,1);
+  dc.fillRectangle(x+w-1,y,1,h);
+  dc.setForeground(baseColor);
+  dc.fillRectangle(x+1,y+h-2,w-2,1);
+  dc.fillRectangle(x+w-2,y+1,1,h-2);
+  }
 
 
 // Draw border
-void FXFrame::drawFrame(FXint x,FXint y,FXint w,FXint h){
-  switch(options&FRAME_MASK) {
-    case FRAME_LINE: drawBorderRectangle(x,y,w,h); break;
-    case FRAME_SUNKEN: drawSunkenRectangle(x,y,w,h); break;
-    case FRAME_RAISED: drawRaisedRectangle(x,y,w,h); break;
-    case FRAME_GROOVE: drawGrooveRectangle(x,y,w,h); break;
-    case FRAME_RIDGE: drawRidgeRectangle(x,y,w,h); break;
-    case FRAME_SUNKEN|FRAME_THICK: drawDoubleSunkenRectangle(x,y,w,h); break;
-    case FRAME_RAISED|FRAME_THICK: drawDoubleRaisedRectangle(x,y,w,h); break;
+void FXFrame::drawFrame(FXDCWindow& dc,FXint x,FXint y,FXint w,FXint h){
+  switch(options&FRAME_MASK){
+    case FRAME_LINE: drawBorderRectangle(dc,x,y,w,h); break;
+    case FRAME_SUNKEN: drawSunkenRectangle(dc,x,y,w,h); break;
+    case FRAME_RAISED: drawRaisedRectangle(dc,x,y,w,h); break;
+    case FRAME_GROOVE: drawGrooveRectangle(dc,x,y,w,h); break;
+    case FRAME_RIDGE: drawRidgeRectangle(dc,x,y,w,h); break;
+    case FRAME_SUNKEN|FRAME_THICK: drawDoubleSunkenRectangle(dc,x,y,w,h); break;
+    case FRAME_RAISED|FRAME_THICK: drawDoubleRaisedRectangle(dc,x,y,w,h); break;
     }
   }
 
 
-// Handle repaint 
-long FXFrame::onPaint(FXObject* sender,FXSelector sel,void* ptr){
-  FXWindow::onPaint(sender,sel,ptr);
-  drawFrame(0,0,width,height);
+// Handle repaint
+long FXFrame::onPaint(FXObject*,FXSelector,void* ptr){
+  FXEvent *ev=(FXEvent*)ptr;
+  FXDCWindow dc(this,ev);
+  dc.setForeground(backColor);
+  dc.fillRectangle(border,border,width-(border<<1),height-(border<<1));
+  drawFrame(dc,0,0,width,height);
   return 1;
   }
 
@@ -224,52 +218,125 @@ void FXFrame::setFrameStyle(FXuint style){
       border=b;
       recalc();
       }
-    update(0,0,width,height);
+    update();
     }
   }
 
 
 // Get frame style
-FXuint FXFrame::getFrameStyle() const { 
-  return (options&FRAME_MASK); 
+FXuint FXFrame::getFrameStyle() const {
+  return (options&FRAME_MASK);
   }
 
 
 // Set base color
-void FXFrame::setBaseColor(FXPixel clr){
-  baseColor=clr;
-  update(0,0,width,height);
+void FXFrame::setBaseColor(FXColor clr){
+  if(clr!=baseColor){
+    baseColor=clr;
+    update();
+    }
   }
 
 
 // Set highlight color
-void FXFrame::setHiliteColor(FXPixel clr){
-  hiliteColor=clr;
-  update(0,0,width,height);
+void FXFrame::setHiliteColor(FXColor clr){
+  if(clr!=hiliteColor){
+    hiliteColor=clr;
+    update();
+    }
   }
 
 
 // Set shadow color
-void FXFrame::setShadowColor(FXPixel clr){
-  shadowColor=clr;
-  update(0,0,width,height);
+void FXFrame::setShadowColor(FXColor clr){
+  if(clr!=shadowColor){
+    shadowColor=clr;
+    update();
+    }
   }
 
 
 // Set border color
-void FXFrame::setBorderColor(FXPixel clr){
-  borderColor=clr;
-  update(0,0,width,height);
+void FXFrame::setBorderColor(FXColor clr){
+  if(clr!=borderColor){
+    borderColor=clr;
+    update();
+    }
   }
 
 
-// Get default width
-FXint FXFrame::getDefaultWidth(){ 
-  return (border<<1); 
+// Change top padding
+void FXFrame::setPadTop(FXint pt){
+  if(padtop!=pt){
+    padtop=pt;
+    recalc();
+    update();
+    }
   }
 
 
-// Get default height
-FXint FXFrame::getDefaultHeight(){ 
-  return (border<<1); 
+// Change bottom padding
+void FXFrame::setPadBottom(FXint pb){
+  if(padbottom!=pb){
+    padbottom=pb;
+    recalc();
+    update();
+    }
   }
+
+
+// Change left padding
+void FXFrame::setPadLeft(FXint pl){
+  if(padleft!=pl){
+    padleft=pl;
+    recalc();
+    update();
+    }
+  }
+
+
+// Change right padding
+void FXFrame::setPadRight(FXint pr){
+  if(padright!=pr){
+    padright=pr;
+    recalc();
+    update();
+    }
+  }
+
+
+// Save data
+void FXFrame::save(FXStream& store) const {
+  FXWindow::save(store);
+  store << baseColor;
+  store << hiliteColor;
+  store << shadowColor;
+  store << borderColor;
+  store << padtop;
+  store << padbottom;
+  store << padleft;
+  store << padright;
+  store << border;
+  }
+
+
+// Load data
+void FXFrame::load(FXStream& store){
+  FXWindow::load(store);
+  store >> baseColor;
+  store >> hiliteColor;
+  store >> shadowColor;
+  store >> borderColor;
+  store >> padtop;
+  store >> padbottom;
+  store >> padleft;
+  store >> padright;
+  store >> border;
+  }
+
+
+// Destructor
+FXFrame::~FXFrame(){
+  }
+
+

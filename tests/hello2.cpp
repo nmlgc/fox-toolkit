@@ -5,8 +5,7 @@
   This is the ``Cadillac'' version of the classical "Hello World" example.
   It has not only an icon, but also a tooltip, and an accelerator.
   
-  Icons are compiled into programs as BMP or GIF images (other
-  formats such as XPM will be supported in the near future).
+  Icons are compiled into programs as GIF,BMP,XPM,PNG, or JPG images.
   Suppose you have an image, e.g. FRONT.GIF as in this case;
   running the program "reswrap" provided in the utilities directory
   will turn this into a C data array. (Like const unsigned char FRONT[]={...}
@@ -504,14 +503,13 @@ const unsigned char FRONT[]={
 
 
 int main(int argc,char **argv){
-  FXApp *app=new FXApp;
-  app->init(argc,argv);
-  FXMainWindow *main=new FXMainWindow(app,"Hello",DECOR_ALL);
-  FXIcon *icon=new FXGIFIcon(app,FRONT);
-  new FXButton(main,"&Hello, World!\tWow, FOX is really cool!\nClick on the icon to quit the application.",icon,app,FXApp::ID_QUIT,ICON_UNDER_TEXT|JUSTIFY_BOTTOM);
-  new FXTooltip(app);
-  app->create();
-  main->show();
-  app->run();
-  return 0;
+  FXApp application("Hello2","FoxTest");
+  application.init(argc,argv);
+  FXMainWindow *main=new FXMainWindow(&application,"Hello",NULL,NULL,DECOR_ALL);
+  FXIcon *icon=new FXGIFIcon(&application,FRONT,0,IMAGE_KEEP);
+  new FXButton(main,"&Hello, World!\tWow, FOX is really cool!\nClick on the icon to quit the application.",icon,&application,FXApp::ID_QUIT,ICON_UNDER_TEXT|JUSTIFY_BOTTOM);
+  new FXTooltip(&application);
+  application.create();
+  main->show(PLACEMENT_SCREEN);
+  return application.run();
   }

@@ -3,29 +3,44 @@
 *                 D o u b l e - V e c t o r   O p e r a t i o n s               *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1994 by Jeroen van der Zijp.   All Rights Reserved.             *
+* Copyright (C) 1994,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
-* modify it under the terms of the GNU Library General Public                   *
+* modify it under the terms of the GNU Lesser General Public                    *
 * License as published by the Free Software Foundation; either                  *
-* version 2 of the License, or (at your option) any later version.              *
+* version 2.1 of the License, or (at your option) any later version.            *
 *                                                                               *
 * This library is distributed in the hope that it will be useful,               *
 * but WITHOUT ANY WARRANTY; without even the implied warranty of                *
 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU             *
-* Library General Public License for more details.                              *
+* Lesser General Public License for more details.                               *
 *                                                                               *
-* You should have received a copy of the GNU Library General Public             *
-* License along with this library; if not, write to the Free                    *
-* Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.            *
+* You should have received a copy of the GNU Lesser General Public              *
+* License along with this library; if not, write to the Free Software           *
+* Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXDVec.cpp,v 1.3 1998/07/06 22:44:44 jeroen Exp $                         *
+* $Id: FXDVec.cpp,v 1.5 2002/01/18 22:42:59 jeroen Exp $                        *
 ********************************************************************************/
 #include "xincs.h"
+#include "fxver.h"
 #include "fxdefs.h"
 #include "FXStream.h"
 #include "FXObject.h"
 #include "FXDVec.h"
+
+FXDVec::FXDVec(FXColor color){
+  v[0]=0.003921568627*FXREDVAL(color);
+  v[1]=0.003921568627*FXGREENVAL(color);
+  v[2]=0.003921568627*FXBLUEVAL(color);
+  }
+
+
+FXDVec& FXDVec::operator=(FXColor color){
+  v[0]=0.003921568627*FXREDVAL(color);
+  v[1]=0.003921568627*FXGREENVAL(color);
+  v[2]=0.003921568627*FXBLUEVAL(color);
+  return *this;
+  }
 
 
 FXDVec::operator FXColor() const {

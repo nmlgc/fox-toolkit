@@ -1,68 +1,131 @@
 /********************************************************************************
 *                                                                               *
-*                S p l i t t e r   W i n d o w   O b j e c t                    *
+*                S p l i t t e r   W i n d o w   W i d g e t                    *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997 by Jeroen van der Zijp.   All Rights Reserved.             *
+* Copyright (C) 1997,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
-* modify it under the terms of the GNU Library General Public                   *
+* modify it under the terms of the GNU Lesser General Public                    *
 * License as published by the Free Software Foundation; either                  *
-* version 2 of the License, or (at your option) any later version.              *
+* version 2.1 of the License, or (at your option) any later version.            *
 *                                                                               *
 * This library is distributed in the hope that it will be useful,               *
 * but WITHOUT ANY WARRANTY; without even the implied warranty of                *
 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU             *
-* Library General Public License for more details.                              *
+* Lesser General Public License for more details.                               *
 *                                                                               *
-* You should have received a copy of the GNU Library General Public             *
-* License along with this library; if not, write to the Free                    *
-* Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.            *
+* You should have received a copy of the GNU Lesser General Public              *
+* License along with this library; if not, write to the Free Software           *
+* Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXSplitter.h,v 1.4 1998/08/26 07:41:13 jeroen Exp $                      *
+* $Id: FXSplitter.h,v 1.19 2002/01/18 22:42:54 jeroen Exp $                     *
 ********************************************************************************/
 #ifndef FXSPLITTER_H
 #define FXSPLITTER_H
 
+#ifndef FXCOMPOSITE_H
+#include "FXComposite.h"
+#endif
 
 
-// Splitter options
-enum FXSplitterStyle {
-  SPLITTER_HORIZONTAL = 0,
-  SPLITTER_VERTICAL   = 0x00008000,
-  SPLITTER_REVERSED   = 0x00010000
+
+/// Splitter options
+enum {
+  SPLITTER_HORIZONTAL = 0,                  /// Split horizontally
+  SPLITTER_VERTICAL   = 0x00008000,         /// Split vertically
+  SPLITTER_REVERSED   = 0x00010000,         /// Reverse-anchored
+  SPLITTER_TRACKING   = 0x00020000,         /// Track continuous during split
+  SPLITTER_NORMAL     = SPLITTER_HORIZONTAL
   };
 
 
 
-// Splitter window 
-class FXSplitter : public FXComposite {
+/**
+* Splitter window is used to interactively repartition
+* two or more subpanes.
+* Space may be subdivided horizontally or vertically.
+* When the splitter is itself resized, the right-most (bottom-most)
+* child window will be resized unless the splitter window is reversed;
+* if the splitter is reversed, the left-most (top-most) child window
+* will be resized instead.
+* The splitter widget sends a SEL_CHANGED to its target
+* during the resizing of the panes; at the end of the resize interaction,
+* it sends a SEL_COMMAND to signify that the resize operation is complete.
+* Normally, children are resizable from 0 upwards; however, if the child
+* in a horizontally oriented splitter has LAYOUT_FILL_X in combination with
+* LAYOUT_FIX_WIDTH, it will not be made smaller than its default width,
+* except when the child is the last visible widget (or first when the option
+* SPLITTER_REVERSED has been passed to the splitter).
+* In a vertically oriented splitter, children with LAYOUT_FILL_Y and
+* LAYOUT_FIX_HEIGHT behave analogously.
+* These options only affect interactive resizing.
+*/
+class FXAPI FXSplitter : public FXComposite {
   FXDECLARE(FXSplitter)
 private:
-  FXWindow *win;
-  FXint     split;
-  FXint     off;
+  FXWindow *window;         // Window being resized
+  FXint     split;          // Split value
+  FXint     offset;         // Mouse offset
+  FXint     barsize;        // Size of the splitter bar
 protected:
   FXSplitter();
-  FXSplitter(const FXSplitter&){}
-  FXWindow* findHSplit(FXint pos);
-  FXWindow* findVSplit(FXint pos);
+  virtual void layout();
+  void adjustHLayout();
+  void adjustVLayout();
   void moveHSplit(FXint amount);
   void moveVSplit(FXint amount);
   void drawHSplit(FXint pos);
   void drawVSplit(FXint pos);
-  void adjustHLayout();
-  void adjustVLayout();
-  virtual void layout();
+  FXWindow* findHSplit(FXint pos);
+  FXWindow* findVSplit(FXint pos);
+private:
+  FXSplitter(const FXSplitter&);
+  FXSplitter& operator=(const FXSplitter&);
 public:
-  long onLButtonPress(FXObject*,FXSelector,void*);
-  long onLButtonRelease(FXObject*,FXSelector,void*);
+  long onLeftBtnPress(FXObject*,FXSelector,void*);
+  long onLeftBtnRelease(FXObject*,FXSelector,void*);
   long onMotion(FXObject*,FXSelector,void*);
+  long onFocusNext(FXObject*,FXSelector,void*);
+  long onFocusPrev(FXObject*,FXSelector,void*);
+  long onFocusUp(FXObject*,FXSelector,void*);
+  long onFocusDown(FXObject*,FXSelector,void*);
+  long onFocusLeft(FXObject*,FXSelector,void*);
+  long onFocusRight(FXObject*,FXSelector,void*);
 public:
-  FXSplitter(FXComposite* p,FXuint opts=SPLITTER_HORIZONTAL,FXint x=0,FXint y=0,FXint w=0,FXint h=0);
-  virtual void create();
+
+  /// Construct new splitter widget
+  FXSplitter(FXComposite* p,FXuint opts=SPLITTER_NORMAL,FXint x=0,FXint y=0,FXint w=0,FXint h=0);
+
+  /// Construct new splitter widget, which will notify target about size changes
+  FXSplitter(FXComposite* p,FXObject* tgt,FXSelector sel,FXuint opts=SPLITTER_NORMAL,FXint x=0,FXint y=0,FXint w=0,FXint h=0);
+
+  /// Get default width
   virtual FXint getDefaultWidth();
+
+  /// Get default height
   virtual FXint getDefaultHeight();
+
+  /// Change splitter style
+  void setSplitterStyle(FXuint style);
+
+  /// Return current splitter style
+  FXuint getSplitterStyle() const;
+
+  /// Change splitter bar size
+  void setBarSize(FXint bs);
+
+  /// Return current bar size
+  FXint getBarSize() const { return barsize; }
+
+  /// Save to stream
+  virtual void save(FXStream& store) const;
+
+  /// Load from stream
+  virtual void load(FXStream& store);
+
+  /// Destroy splitter
+  virtual ~FXSplitter();
   };
 
 

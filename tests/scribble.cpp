@@ -7,26 +7,29 @@
 
 
 
-// Event Handler Object
-class ScribbleApp : public FXApp {
+// Main Window
+class ScribbleWindow : public FXMainWindow {
 
   // Macro for class hierarchy declarations
-  FXDECLARE(ScribbleApp)
+  FXDECLARE(ScribbleWindow)
 
 private:
 
-  FXMainWindow      *main;                    // Main window
   FXHorizontalFrame *contents;                // Content frame
   FXVerticalFrame   *canvasFrame;             // Canvas frame
   FXVerticalFrame   *buttonFrame;             // Button frame
   FXCanvas          *canvas;                  // Canvas to draw into
   int                mdflag;                  // Mouse button down?
   int                dirty;                   // Canvas has been painted?
-  FXPixel            drawColor;               // Color for the line
+  FXColor            drawColor;               // Color for the line
   
+protected:
+  ScribbleWindow(){}
+
 public:
 
   // Message handlers
+  long onPaint(FXObject*,FXSelector,void*);
   long onMouseDown(FXObject*,FXSelector,void*);
   long onMouseUp(FXObject*,FXSelector,void*);
   long onMouseMove(FXObject*,FXSelector,void*);
@@ -37,15 +40,15 @@ public:
   
   // Messages for our class
   enum{
-    ID_MOUSE=FXApp::ID_LAST,
+    ID_CANVAS=FXMainWindow::ID_LAST,
     ID_CLEAR,
     ID_LAST
     };
     
 public:
 
-  // ScribbleApp constructor
-  ScribbleApp();
+  // ScribbleWindow's constructor
+  ScribbleWindow(FXApp* a);
   
   // Initialize
   virtual void create();
@@ -53,32 +56,30 @@ public:
 
 
 
-// Message Map for the Scribble App class
-FXDEFMAP(ScribbleApp) ScribbleAppMap[]={
+// Message Map for the Scribble Window class
+FXDEFMAP(ScribbleWindow) ScribbleWindowMap[]={
 
   //________Message_Type_____________________ID____________Message_Handler_______
-  FXMAPFUNC(SEL_LEFTBUTTONPRESS,   ScribbleApp::ID_MOUSE,  ScribbleApp::onMouseDown),
-  FXMAPFUNC(SEL_LEFTBUTTONRELEASE, ScribbleApp::ID_MOUSE,  ScribbleApp::onMouseUp),
-  FXMAPFUNC(SEL_MOTION,            ScribbleApp::ID_MOUSE,  ScribbleApp::onMouseMove),
-  FXMAPFUNC(SEL_COMMAND,           ScribbleApp::ID_CLEAR,  ScribbleApp::onCmdClear),
-  FXMAPFUNC(SEL_UPDATE,            ScribbleApp::ID_CLEAR,  ScribbleApp::onUpdClear),
+  FXMAPFUNC(SEL_PAINT,             ScribbleWindow::ID_CANVAS, ScribbleWindow::onPaint),
+  FXMAPFUNC(SEL_LEFTBUTTONPRESS,   ScribbleWindow::ID_CANVAS, ScribbleWindow::onMouseDown),
+  FXMAPFUNC(SEL_LEFTBUTTONRELEASE, ScribbleWindow::ID_CANVAS, ScribbleWindow::onMouseUp),
+  FXMAPFUNC(SEL_MOTION,            ScribbleWindow::ID_CANVAS, ScribbleWindow::onMouseMove),
+  FXMAPFUNC(SEL_COMMAND,           ScribbleWindow::ID_CLEAR,  ScribbleWindow::onCmdClear),
+  FXMAPFUNC(SEL_UPDATE,            ScribbleWindow::ID_CLEAR,  ScribbleWindow::onUpdClear),
   
   };
 
 
 
 // Macro for the ScribbleApp class hierarchy implementation
-FXIMPLEMENT(ScribbleApp,FXApp,ScribbleAppMap,ARRAYNUMBER(ScribbleAppMap))
+FXIMPLEMENT(ScribbleWindow,FXMainWindow,ScribbleWindowMap,ARRAYNUMBER(ScribbleWindowMap))
 
 
 
-// Construct a ScribbleApp
-ScribbleApp::ScribbleApp(){
-
-    // Make my own main window
-  main=new FXMainWindow(this,"Scribble Application",DECOR_ALL,0,0,800,600);
+// Construct a ScribbleWindow
+ScribbleWindow::ScribbleWindow(FXApp *a):FXMainWindow(a,"Scribble Application",NULL,NULL,DECOR_ALL,0,0,800,600){
   
-  contents=new FXHorizontalFrame(main,LAYOUT_SIDE_TOP|LAYOUT_FILL_X|LAYOUT_FILL_Y,0,0,0,0, 0,0,0,0);
+  contents=new FXHorizontalFrame(this,LAYOUT_SIDE_TOP|LAYOUT_FILL_X|LAYOUT_FILL_Y,0,0,0,0, 0,0,0,0);
   
   // LEFT pane to contain the canvas
   canvasFrame=new FXVerticalFrame(contents,FRAME_SUNKEN|LAYOUT_FILL_X|LAYOUT_FILL_Y|LAYOUT_TOP|LAYOUT_LEFT,0,0,0,0,10,10,10,10);
@@ -90,8 +91,7 @@ ScribbleApp::ScribbleApp(){
     new FXHorizontalSeparator(canvasFrame,SEPARATOR_GROOVE|LAYOUT_FILL_X);
 
     // Drawing canvas
-    canvas=new FXCanvas(canvasFrame,this,ID_MOUSE,FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_FILL_Y|LAYOUT_TOP|LAYOUT_LEFT);
-
+    canvas=new FXCanvas(canvasFrame,this,ID_CANVAS,FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_FILL_Y|LAYOUT_TOP|LAYOUT_LEFT);
 
   // RIGHT pane for the buttons
   buttonFrame=new FXVerticalFrame(contents,FRAME_SUNKEN|LAYOUT_FILL_Y|LAYOUT_TOP|LAYOUT_LEFT,0,0,0,0,10,10,10,10);
@@ -106,10 +106,10 @@ ScribbleApp::ScribbleApp(){
     new FXButton(buttonFrame,"&Clear",NULL,this,ID_CLEAR,FRAME_THICK|FRAME_RAISED|LAYOUT_FILL_X|LAYOUT_TOP|LAYOUT_LEFT,0,0,0,0,10,10,5,5);
 
     // Exit button
-    new FXButton(buttonFrame,"&Exit",NULL,this,ID_QUIT,FRAME_THICK|FRAME_RAISED|LAYOUT_FILL_X|LAYOUT_TOP|LAYOUT_LEFT,0,0,0,0,10,10,5,5);
+    new FXButton(buttonFrame,"&Exit",NULL,getApp(),FXApp::ID_QUIT,FRAME_THICK|FRAME_RAISED|LAYOUT_FILL_X|LAYOUT_TOP|LAYOUT_LEFT,0,0,0,0,10,10,5,5);
 
   // Initialize private variables
-  drawColor=0;
+  drawColor=FXRGB(255,0,0);
   mdflag=0;
   dirty=0;    
   }
@@ -117,22 +117,20 @@ ScribbleApp::ScribbleApp(){
  
 
 // Create and initialize 
-void ScribbleApp::create(){
+void ScribbleWindow::create(){
 
   // Create the windows
-  FXApp::create();
-  
-  // Get color
-  drawColor=main->acquireColor(FXRGB(255,0,0));
+  FXMainWindow::create();
   
   // Make the main window appear
-  main->show();
+  show(PLACEMENT_SCREEN);
   }
 
 
 
 // Mouse button was pressed somewhere
-long ScribbleApp::onMouseDown(FXObject*,FXSelector,void*){
+long ScribbleWindow::onMouseDown(FXObject*,FXSelector,void*){
+  canvas->grab();
 
   // While the mouse is down, we'll draw lines
   mdflag=1;
@@ -143,12 +141,18 @@ long ScribbleApp::onMouseDown(FXObject*,FXSelector,void*){
 
 
 // The mouse has moved, draw a line
-long ScribbleApp::onMouseMove(FXObject*, FXSelector, void* ptr){
+long ScribbleWindow::onMouseMove(FXObject*, FXSelector, void* ptr){
   FXEvent *ev=(FXEvent*)ptr;
   if(mdflag){
     
-    canvas->setForeground(drawColor);
-    canvas->drawLine(ev->last_x, ev->last_y, ev->win_x, ev->win_y);
+    // Get DC for the canvas
+    FXDCWindow dc(canvas);
+    
+    // Set foreground color
+    dc.setForeground(drawColor);
+    
+    // Draw line
+    dc.drawLine(ev->last_x, ev->last_y, ev->win_x, ev->win_y);
     
     // We have drawn something, so now the canvas is dirty
     dirty=1;
@@ -158,12 +162,14 @@ long ScribbleApp::onMouseMove(FXObject*, FXSelector, void* ptr){
 
 
 // The mouse button was released again
-long ScribbleApp::onMouseUp(FXObject*,FXSelector,void* ptr){
+long ScribbleWindow::onMouseUp(FXObject*,FXSelector,void* ptr){
   FXEvent *ev=(FXEvent*) ptr;
+  canvas->ungrab();
   if(mdflag){
+    FXDCWindow dc(canvas);
     
-    canvas->setForeground(drawColor);
-    canvas->drawLine(ev->last_x, ev->last_y, ev->win_x, ev->win_y);
+    dc.setForeground(drawColor);
+    dc.drawLine(ev->last_x, ev->last_y, ev->win_x, ev->win_y);
     
     // We have drawn something, so now the canvas is dirty
     dirty=1;
@@ -175,14 +181,22 @@ long ScribbleApp::onMouseUp(FXObject*,FXSelector,void* ptr){
   }
 
 
-// Handle the clear message
-long ScribbleApp::onCmdClear(FXObject*,FXSelector,void*){
+// Paint the canvas
+long ScribbleWindow::onPaint(FXObject*,FXSelector,void* ptr){
+  FXEvent *ev=(FXEvent*)ptr;
+  FXDCWindow dc(canvas,ev);
+  dc.setForeground(canvas->getBackColor());
+  dc.fillRectangle(ev->rect.x,ev->rect.y,ev->rect.w,ev->rect.h);
+  return 1;
+  }
+  
 
-  // Erase the canvas
-  canvas->clearWindow();
-  
+// Handle the clear message
+long ScribbleWindow::onCmdClear(FXObject*,FXSelector,void*){
+  FXDCWindow dc(canvas);
+  dc.setForeground(canvas->getBackColor());
+  dc.fillRectangle(0,0,canvas->getWidth(),canvas->getHeight());
   dirty=0;
-  
   return 1;
   }
 
@@ -195,11 +209,12 @@ long ScribbleApp::onCmdClear(FXObject*,FXSelector,void*){
 // In this case, we desensitize the sender (the clear button) when
 // the canvas has already been cleared, and sensitize it when it has
 // been painted (as indicated by the dirty flag).
-long ScribbleApp::onUpdClear(FXObject* sender,FXSelector,void*){
-  FXButton* button=(FXButton*)sender;
-  
-  // Button is available when canvas is dirty only
-  dirty ? button->enable() : button->disable(); 
+long ScribbleWindow::onUpdClear(FXObject* sender,FXSelector,void*){
+
+  if(dirty)
+    sender->handle(this,MKUINT(FXWindow::ID_ENABLE,SEL_COMMAND),NULL);
+  else
+    sender->handle(this,MKUINT(FXWindow::ID_DISABLE,SEL_COMMAND),NULL);
 
   return 1;
   }
@@ -209,18 +224,19 @@ long ScribbleApp::onUpdClear(FXObject* sender,FXSelector,void*){
 int main(int argc,char *argv[]){
 
   // Make application
-  ScribbleApp* application=new ScribbleApp;
+  FXApp application("Scribble","FoxTest");
   
   // Start app
-  application->init(argc,argv);
+  application.init(argc,argv);
 
+  // Scribble window
+  new ScribbleWindow(&application);
+  
   // Create the application's windows
-  application->create();
+  application.create();
   
   // Run the application
-  application->run();
-  
-  return 0;
+  return application.run();
   }
 
 

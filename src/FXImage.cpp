@@ -3,99 +3,170 @@
 *                             I m a g e    O b j e c t                          *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997 by Jeroen van der Zijp.   All Rights Reserved.             *
+* Copyright (C) 1997,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
-* modify it under the terms of the GNU Library General Public                   *
+* modify it under the terms of the GNU Lesser General Public                    *
 * License as published by the Free Software Foundation; either                  *
-* version 2 of the License, or (at your option) any later version.              *
+* version 2.1 of the License, or (at your option) any later version.            *
 *                                                                               *
 * This library is distributed in the hope that it will be useful,               *
 * but WITHOUT ANY WARRANTY; without even the implied warranty of                *
 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU             *
-* Library General Public License for more details.                              *
+* Lesser General Public License for more details.                               *
 *                                                                               *
-* You should have received a copy of the GNU Library General Public             *
-* License along with this library; if not, write to the Free                    *
-* Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.            *
+* You should have received a copy of the GNU Lesser General Public              *
+* License along with this library; if not, write to the Free Software           *
+* Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXImage.cpp,v 1.32 1998/10/28 15:09:53 jvz Exp $                      *
+* $Id: FXImage.cpp,v 1.67 2002/01/18 22:43:00 jeroen Exp $                      *
 ********************************************************************************/
 #include "xincs.h"
+#include "fxver.h"
 #include "fxdefs.h"
 #include "FXStream.h"
 #include "FXString.h"
-#include "FXObject.h"
-#include "FXObjectList.h"
+#include "FXSize.h"
+#include "FXPoint.h"
+#include "FXRectangle.h"
+#include "FXRegistry.h"
 #include "FXApp.h"
-#include "FXId.h"
-#include "FXDrawable.h"
+#include "FXVisual.h"
 #include "FXImage.h"
-
+#include "FXDCWindow.h"
 
 
 /*
-  To do:
-  - Need a class for 1-bit images (bitmaps)
-  - Need API's to set/clear clipping bitmaps ``masks''
-  - Need API's for tiling and stippling
-  
-  - FXImage::create() renders rgb[a] data into X image
-  - FXIcon::create() ditto, and also into X shape bitmap
-  
-  - Subclasses read in from particular format; like
-     
-      FXGIFImage(FXApp*,const FXuchar pixels,...)
-      
-    So you can:
-    
-      new FXLabel(dialog,NULL,new FXGIFImage(app,doc_icon),LAYOUT_FILL_X,...)
-      
-    Which should be much easier to use.
-    
-  - Use XSHM just added
+  Notes:
+  - FXImage::create() renders rgb[a] data into X/GDI resident, device
+    dependent pixmap.
+  - Need to be able to re-render subpart of image.
+  - We should implement shared pixmaps.
+  - If IMAGE_KEEP, repeated rendering is usually desired; should we
+    hang on to XImage, and the shared memory segment in that case?
+    How about shared pixmaps...
+  - Slight change in interpretation of IMAGE_OWNED flag:- if passed, the
+    FXImage will own client-side pixel buffer, otherwise it will not; if
+    no pixel-buffer has been passed and IMAGE_OWNED *is* passed, a pixel
+    buffer will be allocated [and cleared to zero].
+    No pixel buffer will be allocated if neither IMAGE_OWNED nor pixels
+    are passed.
+  - When using shared image/pixmaps, if IMAGE_KEEP is set, hang on to pixel buffer.
+  - Need resize, rotate member functions.
+  - We need to speed up 16/15 bpp true color.
+  - We need dither tables with 3bit and 2bit rounding for 5,6,5/5,5,5 modes
+  - We need dither tables with 5bit, 6bit rounding for 3,3,2 mode.
+  - We need to split true color from direct color, because direct color
+    has random mapping, true has not.
+  - Just because I always forget:
 
+      StaticGray   0
+      GrayScale    1
+      StaticColor  2
+      PseudoColor  3
+      TrueColor    4
+      DirectColor  5
+
+  - An unowned data array should be considered read-only; so an image
+    operation will cause a copy of the array, even if the size does not
+    change.
+
+  - The smooth scaling algorithm is based on the idea of keeping track which
+    pixels of the source are contributing to each pixel in the destination.
+
+    The smallest fraction of a pixel of interest is 1/(w*w'), where w is
+    the old width, and w' is the new one.
+
+    Consider scaling from 3->7 pixels, with 1/(w*w') being 1/21:
+
+      Source Pixel 2 --------------+        Source Pixel is 7/21 units wide
+      Source Pixel 1 --------+     |
+      Source Pixel 0 -+      |     |
+                      |      |     |
+                      v      v     v
+      Original:    000000011111112222222
+      Scaled:      000111222333444555666
+                    ^  ^  ^  ^  ^  ^  ^
+                    |  |  |  |  |  |  |
+      Dest Pixel 0 -+  |  |  |  |  |  |
+      Dest Pixel 1 ----+  |  |  |  |  |
+      Dest Pixel 2 -------+  |  |  |  |
+      Dest Pixel 3 ----------+  |  |  |
+      Dest Pixel 4 -------------+  |  |
+      Dest Pixel 5 ----------------+  |
+      Dest Pixel 6 -------------------+     Dest Pixel is 3/21 units wide
+
+    As can be seen from the picture above, destination pixel 2 is comprised
+    of 1/3 times source pixel 0, and 2/3 times source pixel 1.  Splitting
+    into the individual fragments yields 9 fragments total:
+
+      Fragment     0   1 2  3   4  5 6   7   8
+      ========================================
+      Original:  000 000 0 11 111 11 2 222 222
+      Scaled:    000 111 2 22 333 44 4 555 666
+
+    Note no fragment can be smaller than one unit, or 1/(w*w').
+
+    The algorithm iterates over fragments; and for each fragment, it adds
+    the source pixel multiplied by the length of the fragment.  It repeats
+    until enough fragments have been collected to make one output pixel:
+
+      fin  = w';                        The fractions fin and fout have
+      fout = w;                         been multiplied by w*w'
+      in   = 0;
+      out  = 0;
+      acc  = 0;
+      while out < w' do
+        if fin < fout then
+          acc = acc + fin*source[in];   Add fin units of source pixel
+          fout = fout - fin;
+          fin = outw;
+          in = in + 1;
+        else
+          acc = acc + fout*source[in];  Add fout (the remaining unfilled fraction) of source pixel
+          dest[out] = acc / w;          Output one pixel
+          acc = 0;
+          fin = fin - fout;
+          fout = inw;
+          out = out + 1;
+        end if
+      end while
+
+    Remember, you saw it here first!!!!
+
+  - When compositing, out-of-image data behaves as if clear (0,0,0,0)
+  - Absence of data behaves as if clear
+  - Operations work on subrectangle of an image
+  - Images and regions are at least 1x1 pixels
+  - Operations of the form a = a op b, or a = op a.
+  - Fast blend (0..255) colors
+            blue  = (ALPHA * (sb - db) >> 8) + db;
+            green = (ALPHA * (sg - dg) >> 8) + dg;
+            red   = (ALPHA * (sr - dr) >> 8) + dr;
+  - Need to change FXImage/FXIcon implementation so it ALWAYS has alpha channel.
 */
 
-/*******************************************************************************/
 
-/*
-// Bit-reversal
-static const FXuchar reverse_byte[256]={
-  0x00, 0x80, 0x40, 0xc0, 0x20, 0xa0, 0x60, 0xe0,
-  0x10, 0x90, 0x50, 0xd0, 0x30, 0xb0, 0x70, 0xf0,
-  0x08, 0x88, 0x48, 0xc8, 0x28, 0xa8, 0x68, 0xe8,
-  0x18, 0x98, 0x58, 0xd8, 0x38, 0xb8, 0x78, 0xf8,
-  0x04, 0x84, 0x44, 0xc4, 0x24, 0xa4, 0x64, 0xe4,
-  0x14, 0x94, 0x54, 0xd4, 0x34, 0xb4, 0x74, 0xf4,
-  0x0c, 0x8c, 0x4c, 0xcc, 0x2c, 0xac, 0x6c, 0xec,
-  0x1c, 0x9c, 0x5c, 0xdc, 0x3c, 0xbc, 0x7c, 0xfc,
-  0x02, 0x82, 0x42, 0xc2, 0x22, 0xa2, 0x62, 0xe2,
-  0x12, 0x92, 0x52, 0xd2, 0x32, 0xb2, 0x72, 0xf2,
-  0x0a, 0x8a, 0x4a, 0xca, 0x2a, 0xaa, 0x6a, 0xea,
-  0x1a, 0x9a, 0x5a, 0xda, 0x3a, 0xba, 0x7a, 0xfa,
-  0x06, 0x86, 0x46, 0xc6, 0x26, 0xa6, 0x66, 0xe6,
-  0x16, 0x96, 0x56, 0xd6, 0x36, 0xb6, 0x76, 0xf6,
-  0x0e, 0x8e, 0x4e, 0xce, 0x2e, 0xae, 0x6e, 0xee,
-  0x1e, 0x9e, 0x5e, 0xde, 0x3e, 0xbe, 0x7e, 0xfe,
-  0x01, 0x81, 0x41, 0xc1, 0x21, 0xa1, 0x61, 0xe1,
-  0x11, 0x91, 0x51, 0xd1, 0x31, 0xb1, 0x71, 0xf1,
-  0x09, 0x89, 0x49, 0xc9, 0x29, 0xa9, 0x69, 0xe9,
-  0x19, 0x99, 0x59, 0xd9, 0x39, 0xb9, 0x79, 0xf9,
-  0x05, 0x85, 0x45, 0xc5, 0x25, 0xa5, 0x65, 0xe5,
-  0x15, 0x95, 0x55, 0xd5, 0x35, 0xb5, 0x75, 0xf5,
-  0x0d, 0x8d, 0x4d, 0xcd, 0x2d, 0xad, 0x6d, 0xed,
-  0x1d, 0x9d, 0x5d, 0xdd, 0x3d, 0xbd, 0x7d, 0xfd,
-  0x03, 0x83, 0x43, 0xc3, 0x23, 0xa3, 0x63, 0xe3,
-  0x13, 0x93, 0x53, 0xd3, 0x33, 0xb3, 0x73, 0xf3,
-  0x0b, 0x8b, 0x4b, 0xcb, 0x2b, 0xab, 0x6b, 0xeb,
-  0x1b, 0x9b, 0x5b, 0xdb, 0x3b, 0xbb, 0x7b, 0xfb,
-  0x07, 0x87, 0x47, 0xc7, 0x27, 0xa7, 0x67, 0xe7,
-  0x17, 0x97, 0x57, 0xd7, 0x37, 0xb7, 0x77, 0xf7,
-  0x0f, 0x8f, 0x4f, 0xcf, 0x2f, 0xaf, 0x6f, 0xef,
-  0x1f, 0x9f, 0x5f, 0xdf, 0x3f, 0xbf, 0x7f, 0xff
+// RGB Ordering code
+enum {
+  RGB = 7,   // RGB 111      > | R  G  B
+  BGR = 0,   // BGR 000      --+--------
+  RBG = 6,   // RBG 110      R | x  4  2
+  GBR = 1,   // GBR 001      G |    x  1
+  BRG = 4,   // BRG 100      B |       x
+  GRB = 3    // GRB 011
   };
-*/
+
+#define DISPLAY(app) ((Display*)((app)->display))
+
+
+// Maximum size of the colormap; for high-end graphics systems
+// you may want to define HIGHENDGRAPHICS to allow for large colormaps
+#ifdef HIGHENDGRAPHICS
+#define MAX_MAPSIZE 4096
+#else
+#define MAX_MAPSIZE 256
+#endif
 
 
 /*******************************************************************************/
@@ -108,13 +179,18 @@ FXIMPLEMENT(FXImage,FXDrawable,NULL,0)
 FXImage::FXImage(){
   data=NULL;
   options=0;
+  channels=4;
   }
 
 
 // Initialize
-FXImage::FXImage(FXApp* a,const void *pix,FXuint opts,FXint w,FXint h):FXDrawable(a,w,h,0){
-  if(pix) opts&=~IMAGE_OWNED;
-  //opts|=(IMAGE_SHMI|IMAGE_SHMP);
+FXImage::FXImage(FXApp* a,const void *pix,FXuint opts,FXint w,FXint h):FXDrawable(a,w,h){
+  FXTRACE((100,"FXImage::FXImage %p\n",this));
+  visual=getApp()->getDefaultVisual();
+  if(opts&IMAGE_ALPHA) channels=4; else channels=3;
+  if(!pix && (opts&IMAGE_OWNED)){
+    FXCALLOC(&pix,FXuchar,width*height*channels);
+    }
   data=(FXuchar*)pix;
   options=opts;
   }
@@ -123,25 +199,50 @@ FXImage::FXImage(FXApp* a,const void *pix,FXuint opts,FXint w,FXint h):FXDrawabl
 // Create image
 void FXImage::create(){
   if(!xid){
-    
-    // App should exist
-    if(!getApp()->display){ fxerror("%s::create: trying to create image before opening display.\n",getClassName()); }
-  
-    // Get depth
-    depth=DefaultDepth(getApp()->display,DefaultScreen(getApp()->display));
-    
-    // Make pixmap
-    xid=XCreatePixmap(getApp()->display,XDefaultRootWindow(getApp()->display),width,height,depth);
-    if(!xid){ fxerror("%s::create: unable to create image.\n",getClassName()); }
-  
-    // Render pixels
-    render();
-    
-    // Zap data 
-    if(!(options&IMAGE_KEEP) && (options&IMAGE_OWNED)){
-      options&=~IMAGE_OWNED;
-      FXFREE(&data);
+    if(getApp()->initialized){
+      FXTRACE((100,"%s::create %p\n",getClassName(),this));
+#ifndef WIN32
+
+      // Initialize visual
+      visual->create();
+
+      // Get depth (should use visual!!)
+      int dd=visual->getDepth();
+
+      // Make pixmap
+      xid=XCreatePixmap(DISPLAY(getApp()),XDefaultRootWindow(DISPLAY(getApp())),width,height,dd);
+      if(!xid){ fxerror("%s::create: unable to create image.\n",getClassName()); }
+#else
+
+      // Initialize visual
+      visual->create();
+
+      // Create a bitmap compatible with current display
+      HDC hdc=::GetDC(GetDesktopWindow());
+      xid=CreateCompatibleBitmap(hdc,width,height);
+      ::ReleaseDC(GetDesktopWindow(),hdc);
+      if(!xid){ fxerror("%s::create: unable to create image.\n",getClassName()); }
+#endif
+
+      // Render pixels
+      render();
+
+      // Zap data
+      if(!(options&IMAGE_KEEP) && (options&IMAGE_OWNED)){
+        options&=~IMAGE_OWNED;
+        FXFREE(&data);
+        }
       }
+    }
+  }
+
+
+// Detach image
+void FXImage::detach(){
+  visual->detach();
+  if(xid){
+    FXTRACE((100,"%s::detach %p\n",getClassName(),this));
+    xid=0;
     }
   }
 
@@ -149,1120 +250,2009 @@ void FXImage::create(){
 // Destroy image
 void FXImage::destroy(){
   if(xid){
-    XFreePixmap(getApp()->display,xid);
+    if(getApp()->initialized){
+      FXTRACE((100,"%s::destroy %p\n",getClassName(),this));
+#ifndef WIN32
+
+      // Delete pixmap
+      XFreePixmap(DISPLAY(getApp()),xid);
+#else
+
+      // Delete bitmap
+      DeleteObject(xid);
+#endif
+      }
     xid=0;
     }
   }
 
 
-// // Restore image from drawable
-// int FXImage::restore(){
-//   if(xid){
-//     if(image) XDestroyImage(image); 
-//     image=XGetImage(getDisplay(),xid,0,0,width,height,AllPlanes,ZPixmap);
-//     }
-//   return image!=0;
-//   }
+#ifndef WIN32
 
-
-// Get shift
-FXuint getshift(FXuint mask){
+// Find shift amount
+static inline FXuint findshift(unsigned long mask){
   register FXuint sh=0;
-  while(!(mask&0x80000000) && mask){ mask<<=1; sh++; }
+  while(!(mask&(1<<sh))) sh++;
   return sh;
   }
 
-/*
 
-       >  R  G  B
-       R  x  4  2
-       G     x  1
-       B        x
-
-*/
+// Find low bit in mask
+static inline FXPixel lowbit(FXPixel mask){
+  return (~mask+1)&mask;
+  }
 
 
-enum {
-  RGB = 7,   // RGB 111
-  BGR = 0,   // BGR 000
-  RBG = 6,   // RBG 110
-  GBR = 1,   // GBR 001
-  BRG = 4,   // BRG 100
-  GRB = 3    // GRB 011
-  };
- 
+// Restore client-side pixel buffer from image
+void FXImage::restore(){
+  if(xid){
+    register FXPixel red,green,blue;
+    register FXPixel red1,green1,blue1;
+    register FXPixel pixel;
+    register FXuint  redshift,greenshift,blueshift;
+    register FXPixel redmask,greenmask,bluemask;
+    register int size,dd,i;
+    register FXbool shmi=FALSE;
+    register XImage *xim=NULL;
+    register Visual *vis;
+    register FXint x,y;
+    register FXuchar *img;
+    register FXuint r,g,b;
+    FXuchar rtab[MAX_MAPSIZE];
+    FXuchar gtab[MAX_MAPSIZE];
+    FXuchar btab[MAX_MAPSIZE];
+#ifdef HAVE_XSHM
+    XShmSegmentInfo shminfo;
+#endif
 
-// True color
-void FXImage::render_true(XImage *xim,FXuchar *img,FXuint step){
-  register FXuint rmsk,gmsk,bmsk,rsh,gsh,bsh,val,r,g,b,jmp,rgborder;
-  register FXuchar *pix;
-  register FXint w,h;
-  Visual *visual;
-  FXuint bits;
-  visual=DefaultVisual(getApp()->display,DefaultScreen(getApp()->display));
-  rmsk=visual->red_mask;
-  gmsk=visual->green_mask;
-  bmsk=visual->blue_mask;
-  rgborder=0;
-  if(rmsk>gmsk) rgborder|=4;
-  if(rmsk>bmsk) rgborder|=2;
-  if(gmsk>bmsk) rgborder|=1;
-  pix=(FXuchar*)xim->data;
-  bits=xim->bits_per_pixel;
-  if(xim->byte_order==MSBFirst) bits|=0x80; 
-  switch(bits){
-    
-    case 0x08:
-    case 0x88:                                        // MSB/LSB 8-bit true color (rare)
-      jmp=xim->bytes_per_line-width;
-      rsh=getshift(rmsk)-24;
-      gsh=getshift(gmsk)-24;
-      bsh=getshift(bmsk)-24;
-      h=height-1;
-      do{
-        w=width-1;
-        do{
-          r=img[0]; g=img[1]; b=img[2]; img+=step;
-          val=((r>>rsh)&rmsk)|((g>>gsh)&gmsk)|((b>>bsh)&bmsk);
-          *pix++=(FXuchar)val;
+    FXTRACE((100,"%s::restore image %p\n",getClassName(),this));
+
+    // Check for legal size
+    if(width<1 || height<1){ fxerror("%s::restore: illegal image size %dx%d.\n",getClassName(),width,height); }
+
+    // Get Visual
+    vis=(Visual*)visual->visual;
+    dd=visual->getDepth();
+    redmask=vis->red_mask;
+    greenmask=vis->green_mask;
+    bluemask=vis->blue_mask;
+    redshift=findshift(redmask);
+    greenshift=findshift(greenmask);
+    blueshift=findshift(bluemask);
+
+    // Just in case you're on a high-end system
+    FXASSERT(vis->map_entries<=MAX_MAPSIZE);
+
+    // Make array for data if needed
+    if(!data || !(options&IMAGE_OWNED)){
+      size=width*height*channels;
+      FXMALLOC(&data,FXuchar,size);
+      options|=IMAGE_OWNED;
+      }
+
+    // Got local buffer to receive into
+    if(data){
+
+      // Turn it on iff both supported and desired
+#ifdef HAVE_XSHM
+      if(options&IMAGE_SHMI) shmi=getApp()->shmi;
+#endif
+
+      // First try XShm
+#ifdef HAVE_XSHM
+      if(shmi){
+        xim=XShmCreateImage(DISPLAY(getApp()),vis,dd,(dd==1)?XYPixmap:ZPixmap,NULL,&shminfo,width,height);
+        if(!xim){ shmi=0; }
+        if(shmi){
+          shminfo.shmid=shmget(IPC_PRIVATE,xim->bytes_per_line*xim->height,IPC_CREAT|0777);
+          if(shminfo.shmid==-1){ xim->data=NULL; XDestroyImage(xim); xim=NULL; shmi=0; }
+          if(shmi){
+            shminfo.shmaddr=xim->data=(char*)shmat(shminfo.shmid,0,0);
+            shminfo.readOnly=FALSE;
+            XShmAttach(DISPLAY(getApp()),&shminfo);
+            FXTRACE((150,"RGBPixmap XSHM attached at memory=%p (%d bytes)\n",xim->data,xim->bytes_per_line*xim->height));
+            XShmGetImage(DISPLAY(getApp()),xid,xim,0,0,AllPlanes);
+            XSync(DISPLAY(getApp()),False);
+            }
           }
-        while(--w>=0);
-        pix+=jmp;
         }
-      while(--h>=0);
-      break;
+#endif
 
-    case 0x8f:                                        // MSB 15-bit true color (5,5,5)
-      jmp=xim->bytes_per_line-(width<<1);
-      switch(rgborder){
-        case RGB:
-          h=height-1;
-          do{
-            w=width-1;
-            do{
-              r=img[0]; g=img[1]; b=img[2]; img+=step;
-              val = ((r&0xf8)<<7) | ((g&0xf8)<<2) | ((b&0xf8)>>3);
-              pix[0]=(FXuchar)(val>>8); pix[1]=(FXuchar)val; pix+=2;
-              }
-            while(--w>=0);
-            pix+=jmp;
-            }
-          while(--h>=0);
-          break;
-        case BGR:
-          h=height-1;
-          do{
-            w=width-1;
-            do{
-              r=img[0]; g=img[1]; b=img[2]; img+=step;
-              val = ((b&0xf8)<<7) | ((g&0xf8)<<2) | ((r&0xf8)>>3);
-              pix[0]=(FXuchar)(val>>8); pix[1]=(FXuchar)val; pix+=2;
-              }
-            while(--w>=0);
-            pix+=jmp;
-            }
-          while(--h>=0);
-          break;
-        case RBG:
-          h=height-1;
-          do{
-            w=width-1;
-            do{
-              r=img[0]; g=img[1]; b=img[2]; img+=step;
-              val = ((r&0xf8)<<7) | ((b&0xf8)<<2) | ((g&0xf8)>>3);
-              pix[0]=(FXuchar)(val>>8); pix[1]=(FXuchar)val; pix+=2;
-              }
-            while(--w>=0);
-            pix+=jmp;
-            }
-          while(--h>=0);
-          break;
-        case GBR:
-          h=height-1;
-          do{
-            w=width-1;
-            do{
-              r=img[0]; g=img[1]; b=img[2]; img+=step;
-              val = ((g&0xf8)<<7) | ((b&0xf8)<<2) | ((r&0xf8)>>3);
-              pix[0]=(FXuchar)(val>>8); pix[1]=(FXuchar)val; pix+=2;
-              }
-            while(--w>=0);
-            pix+=jmp;
-            }
-          while(--h>=0);
-          break;
-        case BRG:
-          h=height-1;
-          do{
-            w=width-1;
-            do{
-              r=img[0]; g=img[1]; b=img[2]; img+=step;
-              val = ((b&0xf8)<<7) | ((r&0xf8)<<2) | ((g&0xf8)>>3);
-              pix[0]=(FXuchar)(val>>8); pix[1]=(FXuchar)val; pix+=2;
-              }
-            while(--w>=0);
-            pix+=jmp;
-            }
-          while(--h>=0);
-          break;
-        case GRB:
-          h=height-1;
-          do{
-            w=width-1;
-            do{
-              r=img[0]; g=img[1]; b=img[2]; img+=step;
-              val = ((g&0xf8)<<7) | ((r&0xf8)<<2) | ((b&0xf8)>>3);
-              pix[0]=(FXuchar)(val>>8); pix[1]=(FXuchar)val; pix+=2;
-              }
-            while(--w>=0);
-            pix+=jmp;
-            }
-          while(--h>=0);
-          break;
+      // Try the old fashioned way
+      if(!shmi){
+        xim=XGetImage(DISPLAY(getApp()),xid,0,0,width,height,AllPlanes,ZPixmap);
+        if(!xim){ fxerror("%s::restore: unable to restore image.\n",getClassName()); }
         }
-      break;
 
-    case 0x90:                                        // MSB 16-bit true color (5,6,5)
-      jmp=xim->bytes_per_line-(width<<1);
-      switch(rgborder){
-        case RGB:
-          h=height-1;
-          do{
-            w=width-1;
-            do{
-              r=img[0]; g=img[1]; b=img[2]; img+=step;
-              val = ((r&0xf8)<<8) | ((g&0xfc)<<3) | ((b&0xf8)>>3);
-              pix[0]=(FXuchar)(val>>8); pix[1]=(FXuchar)val; pix+=2;
-              }
-            while(--w>=0);
-            pix+=jmp;
-            }
-          while(--h>=0);
-          break;
-        case BGR:
-          h=height-1;
-          do{
-            w=width-1;
-            do{
-              r=img[0]; g=img[1]; b=img[2]; img+=step;
-              val = ((b&0xf8)<<8) | ((g&0xfc)<<3) | ((r&0xf8)>>3);
-              pix[0]=(FXuchar)(val>>8); pix[1]=(FXuchar)val; pix+=2;
-              }
-            while(--w>=0);
-            pix+=jmp;
-            }
-          while(--h>=0);
-          break;
-        case RBG:
-          h=height-1;
-          do{
-            w=width-1;
-            do{
-              r=img[0]; g=img[1]; b=img[2]; img+=step;
-              val = ((r&0xf8)<<8) | ((b&0xf8)<<3) | ((g&0xfc)>>2);
-              pix[0]=(FXuchar)(val>>8); pix[1]=(FXuchar)val; pix+=2;
-              }
-            while(--w>=0);
-            pix+=jmp;
-            }
-          while(--h>=0);
-          break;
-        case GBR:
-          h=height-1;
-          do{
-            w=width-1;
-            do{
-              r=img[0]; g=img[1]; b=img[2]; img+=step;
-              val = ((g&0xfc)<<8) | ((b&0xf8)<<2) | ((r&0xf8)>>3);
-              pix[0]=(FXuchar)(val>>8); pix[1]=(FXuchar)val; pix+=2;
-              }
-            while(--w>=0);
-            pix+=jmp;
-            }
-          while(--h>=0);
-          break;
-        case BRG:
-          h=height-1;
-          do{
-            w=width-1;
-            do{
-              r=img[0]; g=img[1]; b=img[2]; img+=step;
-              val = ((b&0xf8)<<8) | ((r&0xf8)<<3) | ((g&0xfc)>>2);
-              pix[0]=(FXuchar)(val>>8); pix[1]=(FXuchar)val; pix+=2;
-              }
-            while(--w>=0);
-            pix+=jmp;
-            }
-          while(--h>=0);
-          break;
-        case GRB:
-          h=height-1;
-          do{
-            w=width-1;
-            do{
-              r=img[0]; g=img[1]; b=img[2]; img+=step;
-              val = ((g&0xfc)<<8) | ((r&0xf8)<<2) | ((b&0xf8)>>3);
-              pix[0]=(FXuchar)(val>>8); pix[1]=(FXuchar)val; pix+=2;
-              }
-            while(--w>=0);
-            pix+=jmp;
-            }
-          while(--h>=0);
-          break;
-        }
-      break;
-/*
-    case 0x8f:                                        // MSB 15-bit true color
-    case 0x90:                                        // MSB 16-bit true color
-      jmp=xim->bytes_per_line-(width<<1);
-      rsh=getshift(rmsk)-16;
-      gsh=getshift(gmsk)-16;
-      bsh=getshift(bmsk)-16;
-      h=height-1;
-      do{
-        w=width-1;
-        do{
-          r=img[0]; g=img[1]; b=img[2]; img+=step;
-          val=(((r<<8)>>rsh)&rmsk)|(((g<<8)>>gsh)&gmsk)|(((b<<8)>>bsh)&bmsk);
-          pix[0]=(FXuchar)(val>>8); pix[1]=(FXuchar)val; pix+=2;
-          }
-        while(--w>=0);
-        pix+=jmp;
-        }
-      while(--h>=0);
-      break;
-*/
-      
-    case 0x0f:                                        // LSB 15-bit true color (5,5,5)
-      jmp=xim->bytes_per_line-(width<<1);
-      switch(rgborder){
-        case RGB:
-          h=height-1;
-          do{
-            w=width-1;
-            do{
-              r=img[0]; g=img[1]; b=img[2]; img+=step;
-              val = ((r&0xf8)<<7) | ((g&0xf8)<<2) | ((b&0xf8)>>3);
-              pix[0]=(FXuchar)val; pix[1]=(FXuchar)(val>>8); pix+=2;
-              }
-            while(--w>=0);
-            pix+=jmp;
-            }
-          while(--h>=0);
-          break;
-        case BGR:
-          h=height-1;
-          do{
-            w=width-1;
-            do{
-              r=img[0]; g=img[1]; b=img[2]; img+=step;
-              val = ((b&0xf8)<<7) | ((g&0xf8)<<2) | ((r&0xf8)>>3);
-              pix[0]=(FXuchar)val; pix[1]=(FXuchar)(val>>8); pix+=2;
-              }
-            while(--w>=0);
-            pix+=jmp;
-            }
-          while(--h>=0);
-          break;
-        case RBG:
-          h=height-1;
-          do{
-            w=width-1;
-            do{
-              r=img[0]; g=img[1]; b=img[2]; img+=step;
-              val = ((r&0xf8)<<7) | ((b&0xf8)<<2) | ((g&0xf8)>>3);
-              pix[0]=(FXuchar)val; pix[1]=(FXuchar)(val>>8); pix+=2;
-              }
-            while(--w>=0);
-            pix+=jmp;
-            }
-          while(--h>=0);
-          break;
-        case GBR:
-          h=height-1;
-          do{
-            w=width-1;
-            do{
-              r=img[0]; g=img[1]; b=img[2]; img+=step;
-              val = ((g&0xf8)<<7) | ((b&0xf8)<<2) | ((r&0xf8)>>3);
-              pix[0]=(FXuchar)val; pix[1]=(FXuchar)(val>>8); pix+=2;
-              }
-            while(--w>=0);
-            pix+=jmp;
-            }
-          while(--h>=0);
-          break;
-        case BRG:
-          h=height-1;
-          do{
-            w=width-1;
-            do{
-              r=img[0]; g=img[1]; b=img[2]; img+=step;
-              val = ((b&0xf8)<<7) | ((r&0xf8)<<2) | ((g&0xf8)>>3);
-              pix[0]=(FXuchar)val; pix[1]=(FXuchar)(val>>8); pix+=2;
-              }
-            while(--w>=0);
-            pix+=jmp;
-            }
-          while(--h>=0);
-          break;
-        case GRB:
-          h=height-1;
-          do{
-            w=width-1;
-            do{
-              r=img[0]; g=img[1]; b=img[2]; img+=step;
-              val = ((g&0xf8)<<7) | ((r&0xf8)<<2) | ((b&0xf8)>>3);
-              pix[0]=(FXuchar)val; pix[1]=(FXuchar)(val>>8); pix+=2;
-              }
-            while(--w>=0);
-            pix+=jmp;
-            }
-          while(--h>=0);
-          break;
-        }
-      break;
+      // Should have succeeded
+      FXASSERT(xim);
 
-    case 0x10:                                        // LSB 16-bit true color (5,6,5) (very common!)
-      jmp=xim->bytes_per_line-(width<<1);
-      switch(rgborder){
-        case RGB:                             // This one is two ops less; do this everywhere!
-          h=height-1;
-          do{
-            w=width-1;
-            do{
-              r=img[0]; g=img[1]; b=img[2]; img+=step;
-              pix[0]=(FXuchar)(((g&0xfc)<<3)|(b>>3)); pix[1]=(FXuchar)((r&0xf8)|(g>>5)); pix+=2;
-              }
-            while(--w>=0);
-            pix+=jmp;
-            }
-          while(--h>=0);
-          break;
-        case BGR:
-          h=height-1;
-          do{
-            w=width-1;
-            do{
-              r=img[0]; g=img[1]; b=img[2]; img+=step;
-              val = ((b&0xf8)<<8) | ((g&0xfc)<<3) | ((r&0xf8)>>3);
-              pix[0]=(FXuchar)val; pix[1]=(FXuchar)(val>>8); pix+=2;
-              }
-            while(--w>=0);
-            pix+=jmp;
-            }
-          while(--h>=0);
-          break;
-        case RBG:
-          h=height-1;
-          do{
-            w=width-1;
-            do{
-              r=img[0]; g=img[1]; b=img[2]; img+=step;
-              val = ((r&0xf8)<<8) | ((b&0xf8)<<3) | ((g&0xfc)>>2);
-              pix[0]=(FXuchar)val; pix[1]=(FXuchar)(val>>8); pix+=2;
-              }
-            while(--w>=0);
-            pix+=jmp;
-            }
-          while(--h>=0);
-          break;
-        case GBR:
-          h=height-1;
-          do{
-            w=width-1;
-            do{
-              r=img[0]; g=img[1]; b=img[2]; img+=step;
-              val = ((g&0xfc)<<8) | ((b&0xf8)<<2) | ((r&0xf8)>>3);
-              pix[0]=(FXuchar)val; pix[1]=(FXuchar)(val>>8); pix+=2;
-              }
-            while(--w>=0);
-            pix+=jmp;
-            }
-          while(--h>=0);
-          break;
-        case BRG:
-          h=height-1;
-          do{
-            w=width-1;
-            do{
-              r=img[0]; g=img[1]; b=img[2]; img+=step;
-              val = ((b&0xf8)<<8) | ((r&0xf8)<<3) | ((g&0xfc)>>2);
-              pix[0]=(FXuchar)val; pix[1]=(FXuchar)(val>>8); pix+=2;
-              }
-            while(--w>=0);
-            pix+=jmp;
-            }
-          while(--h>=0);
-          break;
-        case GRB:
-          h=height-1;
-          do{
-            w=width-1;
-            do{
-              r=img[0]; g=img[1]; b=img[2]; img+=step;
-              val = ((g&0xfc)<<8) | ((r&0xf8)<<2) | ((b&0xf8)>>3);
-              pix[0]=(FXuchar)val; pix[1]=(FXuchar)(val>>8); pix+=2;
-              }
-            while(--w>=0);
-            pix+=jmp;
-            }
-          while(--h>=0);
-          break;
-        }
-      break;
-/*
-    case 0x0f:                                        // LSB 15-bit true color
-    case 0x10:                                        // LSB 16-bit true color
-      jmp=xim->bytes_per_line-(width<<1);
-      rsh=getshift(rmsk)-16;
-      gsh=getshift(gmsk)-16;
-      bsh=getshift(bmsk)-16;
-      h=height-1;
-      do{
-        w=width-1;
-        do{
-          r=img[0]; g=img[1]; b=img[2]; img+=step;
-          val=(((r<<8)>>rsh)&rmsk)|(((g<<8)>>gsh)&gmsk)|(((b<<8)>>bsh)&bmsk);
-          pix[0]=(FXuchar)val; pix[1]=(FXuchar)(val>>8); pix+=2;
-          }
-        while(--w>=0);
-        pix+=jmp;
-        }
-      while(--h>=0);
-      break;
-*/
+      FXTRACE((150,"im width = %d\n",xim->width));
+      FXTRACE((150,"im height = %d\n",xim->height));
+      FXTRACE((150,"im format = %s\n",xim->format==XYBitmap?"XYBitmap":xim->format==XYPixmap?"XYPixmap":"ZPixmap"));
+      FXTRACE((150,"im byte_order = %s\n",(xim->byte_order==MSBFirst)?"MSBFirst":"LSBFirst"));
+      FXTRACE((150,"im bitmap_unit = %d\n",xim->bitmap_unit));
+      FXTRACE((150,"im bitmap_bit_order = %s\n",(xim->bitmap_bit_order==MSBFirst)?"MSBFirst":"LSBFirst"));
+      FXTRACE((150,"im bitmap_pad = %d\n",xim->bitmap_pad));
+      FXTRACE((150,"im bitmap_unit = %d\n",xim->bitmap_unit));
+      FXTRACE((150,"im depth = %d\n",xim->depth));
+      FXTRACE((150,"im bytes_per_line = %d\n",xim->bytes_per_line));
+      FXTRACE((150,"im bits_per_pixel = %d\n",xim->bits_per_pixel));
 
-    case 0x18:                                        // LSB 24-bit true color
-      rgborder^=7;
-    case 0x98:                                        // MSB 24-bit true color
-//fprintf(stderr,"new 24bpp render\n");
-      jmp=xim->bytes_per_line-(width*3);
-      switch(rgborder){
-        case RGB:
-          h=height-1;
-          do{
-            w=width-1;
-            do{
-              r=img[0]; g=img[1]; b=img[2]; img+=step;
-              pix[0]=r; pix[1]=g; pix[2]=b; pix+=3;
-              }
-            while(--w>=0);
-            pix+=jmp;
-            }
-          while(--h>=0);
-          break;
-        case BGR:
-          h=height-1;
-          do{
-            w=width-1;
-            do{
-              r=img[0]; g=img[1]; b=img[2]; img+=step;
-              pix[0]=b; pix[1]=g; pix[2]=r; pix+=3;
-              }
-            while(--w>=0);
-            pix+=jmp;
-            }
-          while(--h>=0);
-          break;
-        case RBG:
-          h=height-1;
-          do{
-            w=width-1;
-            do{
-              r=img[0]; g=img[1]; b=img[2]; img+=step;
-              pix[0]=r; pix[1]=b; pix[2]=g; pix+=3;
-              }
-            while(--w>=0);
-            pix+=jmp;
-            }
-          while(--h>=0);
-          break;
-        case GBR:
-          h=height-1;
-          do{
-            w=width-1;
-            do{
-              r=img[0]; g=img[1]; b=img[2]; img+=step;
-              pix[0]=g; pix[1]=b; pix[2]=r; pix+=3;
-              }
-            while(--w>=0);
-            pix+=jmp;
-            }
-          while(--h>=0);
-          break;
-        case BRG:
-          h=height-1;
-          do{
-            w=width-1;
-            do{
-              r=img[0]; g=img[1]; b=img[2]; img+=step;
-              pix[0]=b; pix[1]=r; pix[2]=g; pix+=3;
-              }
-            while(--w>=0);
-            pix+=jmp;
-            }
-          while(--h>=0);
-          break;
-        case GRB:
-          h=height-1;
-          do{
-            w=width-1;
-            do{
-              r=img[0]; g=img[1]; b=img[2]; img+=step;
-              pix[0]=g; pix[1]=r; pix[2]=b; pix+=3;
-              }
-            while(--w>=0);
-            pix+=jmp;
-            }
-          while(--h>=0);
-          break;
-        }
-      break;
-/*
-    case 0x98:                                        // MSB 24-bit true color
-      jmp=xim->bytes_per_line-(width*3);
-      rsh=getshift(rmsk)-8;
-      gsh=getshift(gmsk)-8;
-      bsh=getshift(bmsk)-8;
-      h=height-1;
-      do{
-        w=width-1;
-        do{
-          r=img[0]; g=img[1]; b=img[2]; img+=step;
-          val=(((r<<16)>>rsh)&rmsk)|(((g<<16)>>gsh)&gmsk)|(((b<<16)>>bsh)&bmsk);
-          pix[0]=(FXuchar)(val>>16); pix[1]=(FXuchar)(val>>8); pix[2]=(FXuchar)val; pix+=3;
-          }
-        while(--w>=0);
-        pix+=jmp;
-        }
-      while(--h>=0);
-      break;
 
-    case 0x18:                                        // LSB 24-bit true color
-      jmp=xim->bytes_per_line-(width*3);
-      rsh=getshift(rmsk)-8;
-      gsh=getshift(gmsk)-8;
-      bsh=getshift(bmsk)-8;
-      h=height-1;
-      do{
-        w=width-1;
-        do{
-          r=img[0]; g=img[1]; b=img[2]; img+=step;
-          val=(((r<<16)>>rsh)&rmsk)|(((g<<16)>>gsh)&gmsk)|(((b<<16)>>bsh)&bmsk);
-          pix[0]=(FXuchar)val; pix[1]=(FXuchar)(val>>8); pix[2]=(FXuchar)(val>>16); pix+=3;
-          }
-        while(--w>=0);
-        pix+=jmp;
-        }
-      while(--h>=0);
-      break;
-*/
-    case 0x20:                                        // LSB 32-bit true color
-//fprintf(stderr,"new LSB 32bpp render\n");
-      jmp=xim->bytes_per_line-(width<<2);
-      switch(rgborder){
-        case RGB:
-          h=height-1;
-          do{
-            w=width-1;
-            do{
-              r=img[0]; g=img[1]; b=img[2]; img+=step;
-              pix[0]=b; pix[1]=g; pix[2]=r; pix+=4;
-              }
-            while(--w>=0);
-            pix+=jmp;
-            }
-          while(--h>=0);
-          break;
-        case BGR:
-          h=height-1;
-          do{
-            w=width-1;
-            do{
-              r=img[0]; g=img[1]; b=img[2]; img+=step;
-              pix[0]=r; pix[1]=g; pix[2]=b; pix+=4;
-              }
-            while(--w>=0);
-            pix+=jmp;
-            }
-          while(--h>=0);
-          break;
-        case RBG:
-          h=height-1;
-          do{
-            w=width-1;
-            do{
-              r=img[0]; g=img[1]; b=img[2]; img+=step;
-              pix[0]=g; pix[1]=b; pix[2]=r; pix+=4;
-              }
-            while(--w>=0);
-            pix+=jmp;
-            }
-          while(--h>=0);
-          break;
-        case GBR:
-          h=height-1;
-          do{
-            w=width-1;
-            do{
-              r=img[0]; g=img[1]; b=img[2]; img+=step;
-              pix[0]=r; pix[1]=b; pix[2]=g; pix+=4;
-              }
-            while(--w>=0);
-            pix+=jmp;
-            }
-          while(--h>=0);
-          break;
-        case BRG:
-          h=height-1;
-          do{
-            w=width-1;
-            do{
-              r=img[0]; g=img[1]; b=img[2]; img+=step;
-              pix[0]=g; pix[1]=r; pix[2]=b; pix+=4;
-              }
-            while(--w>=0);
-            pix+=jmp;
-            }
-          while(--h>=0);
-          break;
-        case GRB:
-          h=height-1;
-          do{
-            w=width-1;
-            do{
-              r=img[0]; g=img[1]; b=img[2]; img+=step;
-              pix[0]=b; pix[1]=r; pix[2]=g; pix+=4;
-              }
-            while(--w>=0);
-            pix+=jmp;
-            }
-          while(--h>=0);
-          break;
-        }
-      break;
-      
-    case 0xa0:                                        // MSB 32-bit true color
-//fprintf(stderr,"new MSB 32bpp render\n");
-      jmp=xim->bytes_per_line-(width<<2);
-      switch(rgborder){
-        case RGB:
-          h=height-1;
-          do{
-            w=width-1;
-            do{
-              r=img[0]; g=img[1]; b=img[2]; img+=step;
-              pix[1]=r; pix[2]=g; pix[3]=b; pix+=4;
-              }
-            while(--w>=0);
-            pix+=jmp;
-            }
-          while(--h>=0);
-          break;
-        case BGR:
-          h=height-1;
-          do{
-            w=width-1;
-            do{
-              r=img[0]; g=img[1]; b=img[2]; img+=step;
-              pix[1]=b; pix[2]=g; pix[3]=r; pix+=4;
-              }
-            while(--w>=0);
-            pix+=jmp;
-            }
-          while(--h>=0);
-          break;
-        case RBG:
-          h=height-1;
-          do{
-            w=width-1;
-            do{
-              r=img[0]; g=img[1]; b=img[2]; img+=step;
-              pix[1]=r; pix[2]=b; pix[3]=g; pix+=4;
-              }
-            while(--w>=0);
-            pix+=jmp;
-            }
-          while(--h>=0);
-          break;
-        case GBR:
-          h=height-1;
-          do{
-            w=width-1;
-            do{
-              r=img[0]; g=img[1]; b=img[2]; img+=step;
-              pix[1]=g; pix[2]=b; pix[3]=r; pix+=4;
-              }
-            while(--w>=0);
-            pix+=jmp;
-            }
-          while(--h>=0);
-          break;
-        case BRG:
-          h=height-1;
-          do{
-            w=width-1;
-            do{
-              r=img[0]; g=img[1]; b=img[2]; img+=step;
-              pix[1]=b; pix[2]=r; pix[3]=g; pix+=4;
-              }
-            while(--w>=0);
-            pix+=jmp;
-            }
-          while(--h>=0);
-          break;
-        case GRB:
-          h=height-1;
-          do{
-            w=width-1;
-            do{
-              r=img[0]; g=img[1]; b=img[2]; img+=step;
-              pix[1]=g; pix[2]=r; pix[3]=b; pix+=4;
-              }
-            while(--w>=0);
-            pix+=jmp;
-            }
-          while(--h>=0);
-          break;
-        }
-      break;
-/*
-    case 0xa0:                                        // MSB 32-bit true color
-      jmp=xim->bytes_per_line-(width<<2);
-      rsh=getshift(rmsk);
-      gsh=getshift(gmsk);
-      bsh=getshift(bmsk);
-      h=height-1;
-      do{
-        w=width-1;
-        do{
-          r=img[0]; g=img[1]; b=img[2]; img+=step;
-          val=(((r<<24)>>rsh)&rmsk)|(((g<<24)>>gsh)&gmsk)|(((b<<24)>>bsh)&bmsk);
-          pix[0]=(FXuchar)(val>>24); pix[1]=(FXuchar)(val>>16); pix[2]=(FXuchar)(val>>8); pix[3]=(FXuchar)val; pix+=4;
-          }
-        while(--w>=0);
-        pix+=jmp;
-        }
-      while(--h>=0);
-      break;
-      
-    case 0x20:                                        // LSB 32-bit true color
-      jmp=xim->bytes_per_line-(width<<2);
-      rsh=getshift(rmsk);
-      gsh=getshift(gmsk);
-      bsh=getshift(bmsk);
-      h=height-1;
-      do{
-        w=width-1;
-        do{
-          r=img[0]; g=img[1]; b=img[2]; img+=step;
-          val=(((r<<24)>>rsh)&rmsk)|(((g<<24)>>gsh)&gmsk)|(((b<<24)>>bsh)&bmsk);
-          pix[0]=(FXuchar)val; pix[1]=(FXuchar)(val>>8); pix[2]=(FXuchar)(val>>16); pix[3]=(FXuchar)(val>>24); pix+=4;
-          }
-        while(--w>=0);
-        pix+=jmp;
-        }
-      while(--h>=0);
-      break;
-*/
+      {
+      XColor colors[MAX_MAPSIZE];
 
-    default:                                          // Unsupported mode
-      fxerror("%s::render: unimplemented true-color mode: %dbpp.\n",xim->bits_per_pixel,getClassName());
-      break;
+      // Read back the colormap and convert to more usable form
+      if(vis->c_class!=TrueColor && vis->c_class!=DirectColor){
+        for(i=0 ; i<vis->map_entries; i++){
+          colors[i].pixel=i;
+          colors[i].flags=DoRed|DoGreen|DoBlue;
+          }
+        }
+      else{
+        red=green=blue=0;
+        red1=lowbit(vis->red_mask);
+        green1=lowbit(vis->green_mask);
+        blue1=lowbit(vis->blue_mask);
+        for(i=0; i<vis->map_entries; i++){
+          colors[i].pixel=red|green|blue;
+          colors[i].flags=DoRed|DoGreen|DoBlue;
+          if(red<vis->red_mask) red+=red1;
+          if(green<vis->green_mask) green+=green1;
+          if(blue<vis->blue_mask) blue+=blue1;
+          }
+        }
+      XQueryColors(DISPLAY(getApp()),visual->colormap,colors,vis->map_entries);
+      for(i=0; i<vis->map_entries; i++){
+        rtab[i]=colors[i].red >> 8;
+        gtab[i]=colors[i].green >> 8;
+        btab[i]=colors[i].blue >> 8;
+        }
+      }
+
+      // Now we convert the pixels back to color
+      img=data;
+      switch(xim->bits_per_pixel){
+        case 0:
+        case 1:
+        case 2:
+        case 3:
+        case 4:
+        case 5:
+        case 6:
+        case 7:
+        case 8:
+          for(y=0; y<height; y++){
+            for(x=0; x<width; x++){
+              pixel=XGetPixel(xim,x,y);
+              img[0]=rtab[pixel];
+              img[1]=gtab[pixel];
+              img[2]=btab[pixel];
+              img+=channels;
+              }
+            }
+          break;
+        case 15:
+        case 16:
+        case 24:
+        case 32:
+        default:
+          FXASSERT(vis->c_class==TrueColor || vis->c_class==DirectColor);
+          for(y=0; y<height; y++){
+            for(x=0; x<width; x++){
+              pixel=XGetPixel(xim,x,y);
+              r=(pixel&redmask)>>redshift;
+              g=(pixel&greenmask)>>greenshift;
+              b=(pixel&bluemask)>>blueshift;
+              img[0]=rtab[r];
+              img[1]=gtab[g];
+              img[2]=btab[b];
+              img+=channels;
+              }
+            }
+          break;
+        }
+
+      // Destroy image
+#ifdef HAVE_XSHM
+      if(shmi){
+        FXTRACE((150,"RGBPixmap XSHM detached at memory=%p (%d bytes)\n",xim->data,xim->bytes_per_line*xim->height));
+        XShmDetach(DISPLAY(getApp()),&shminfo);
+        XDestroyImage(xim);
+        shmdt(shminfo.shmaddr);
+        shmctl(shminfo.shmid,IPC_RMID,0);
+        }
+#endif
+
+      // Destroy image
+      if(!shmi){
+        XDestroyImage(xim);
+        }
+      }
     }
   }
 
 
-// Render index-color mode
-void FXImage::render_index(XImage *xim,FXuchar *img,FXuint step){
-  register FXuint val,jmp,half;
-  register FXuchar *pix;
-  register FXint w,h;
-  Visual *visual;
-  FXuint bits;
-  visual=DefaultVisual(getApp()->display,DefaultScreen(getApp()->display));
-  pix=(FXuchar*)xim->data;
-  bits=xim->bits_per_pixel;
-  if(xim->byte_order==MSBFirst) bits|=0x80;
-  switch(bits){
+#else
 
-    case 0x08:                                        // MSB/LSB 8-bit pseudocolor
-    case 0x88:
-      jmp=xim->bytes_per_line-width;
-      h=height-1;
-      do{
-        w=width-1;
-        do{
-          val=getApp()->matchColor(img[0],img[1],img[2]); img+=step;
-          *pix++=(FXuchar)val;
-          }
-        while(--w>=0);
-        pix+=jmp;
+
+// Restore client-side pixel buffer from image
+void FXImage::restore(){
+  if(xid){
+    register FXint size,bytes_per_line,skip;
+    register FXint x,y;
+    register FXuchar *pixels,*pix,*img;
+    BITMAPINFO bmi;
+    HDC hdcmem;
+
+    FXTRACE((100,"%s::restore image %p\n",getClassName(),this));
+
+    // Check for legal size
+    if(width<1 || height<1){ fxerror("%s::restore: illegal image size %dx%d.\n",getClassName(),width,height); }
+
+    // Make array for data if needed
+    if(!data || !(options&IMAGE_OWNED)){
+      size=width*height*channels;
+      FXMALLOC(&data,FXuchar,size);
+      options|=IMAGE_OWNED;
+      }
+
+    // Got local buffer to receive into
+    if(data){
+
+      // Set up the bitmap info
+      bytes_per_line=(width*3+3)/4*4;
+      skip=bytes_per_line-width*3;
+
+      bmi.bmiHeader.biSize=sizeof(BITMAPINFOHEADER);
+      bmi.bmiHeader.biWidth=width;
+      bmi.bmiHeader.biHeight=-height; // Negative heights means upside down!
+      bmi.bmiHeader.biPlanes=1;
+      bmi.bmiHeader.biBitCount=24;
+      bmi.bmiHeader.biCompression=BI_RGB;
+      bmi.bmiHeader.biSizeImage=0;
+      bmi.bmiHeader.biXPelsPerMeter=0;
+      bmi.bmiHeader.biYPelsPerMeter=0;
+      bmi.bmiHeader.biClrUsed=0;
+      bmi.bmiHeader.biClrImportant=0;
+
+      // DIB format pads to multiples of 4 bytes...
+      FXMALLOC(&pixels,FXuchar,bytes_per_line*height);
+
+      // Make device context
+      hdcmem=::CreateCompatibleDC(NULL);
+      if(!GetDIBits(hdcmem,(HBITMAP)xid,0,height,pixels,&bmi,DIB_RGB_COLORS)){
+        fxerror("%s::render: unable to restore pixels\n",getClassName());
         }
-      while(--h>=0);
-      break;
 
-    case 0x84:                                        // MSB 4-bit pseudocolor 
-      jmp=xim->bytes_per_line-width;
-      half=0;
-      h=height-1;
-      do{
-        w=width-1;
-        half=0;
-        do{
-          val=0x0f&getApp()->matchColor(img[0],img[1],img[2]); img+=step;
-          if(half){ *pix++|=val; } else { *pix=val<<4; }
-          half^=1;
+      // Stuff it into our own data structure
+      img=data;
+      pix=pixels;
+      for(y=0; y<height; y++){
+        for(x=0; x<width; x++){
+          img[0]=pix[2];
+          img[1]=pix[1];
+          img[2]=pix[0];
+          img+=channels;
+          pix+=3;
           }
-        while(--w>=0);
-        pix+=jmp;
+        pix+=skip;
         }
-      while(--h>=0);
-      break;
-
-    case 0x04:                                        // LSB 4-bit pseudocolor 
-      jmp=xim->bytes_per_line-width;
-      half=0;
-      h=height-1;
-      do{
-        w=width-1;
-        half=0;
-        do{
-          val=0x0f&getApp()->matchColor(img[0],img[1],img[2]); img+=step;
-          if(half){ *pix++|=val<<4; } else { *pix=val; }
-          half^=1;
-          }
-        while(--w>=0);
-        pix+=jmp;
-        }
-      while(--h>=0);
-      break;
-
-    case 0x82:                                        // MSB 2-bit pseudocolor
-      jmp=xim->bytes_per_line-width;
-      h=height-1;
-      do{
-        w=width-1;
-        half=0;
-        do{
-          val=0x03&getApp()->matchColor(img[0],img[1],img[2]); img+=step;
-          if(half==0){ *pix=val<<6; } else if(half==1){ *pix|=val<<4; } else if(half==2){ *pix|=val<<2; } else { *pix++|=val; }
-          half=(half+1)&3;
-          }
-        while(--w>=0);
-        pix+=jmp;
-        }
-      while(--h>=0);
-      break;
-      
-    case 0x02:                                        // LSB 2-bit pseudocolor
-      jmp=xim->bytes_per_line-width;
-      h=height-1;
-      do{
-        w=width-1;
-        half=0;
-        do{
-          val=0x03&getApp()->matchColor(img[0],img[1],img[2]); img+=step;
-          if(half==0){ *pix=val; } else if(half==1){ *pix|=val<<2; } else if(half==2){ *pix|=val<<4; } else { *pix++|=val<<6; }
-          half=(half+1)&3;
-          }
-        while(--w>=0);
-        pix+=jmp;
-        }
-      while(--h>=0);
-      break;
-
-    default:
-      fxerror("%s::render: unimplemented pseudo-color depth: %dbpp.\n",xim->bits_per_pixel,getClassName());
-      break;
-    } 
-  }
-
-
-// Render gray mode
-void FXImage::render_gray(XImage *xim,FXuchar *img,FXuint step){
-  register FXuint val,r,g,b,jmp;
-  register FXuchar *pix;
-  register FXint w,h;
-  Visual *visual;
-  FXuint bits;
-  visual=DefaultVisual(getApp()->display,DefaultScreen(getApp()->display));
-  pix=(FXuchar*)xim->data;
-  bits=xim->bits_per_pixel;
-  if(xim->byte_order==MSBFirst) bits|=0x80; 
-  switch(bits){
-    
-    case 0x08:
-    case 0x88:                                        // MSB/LSB 8-bit gray color (works!)
-      jmp=xim->bytes_per_line-width;
-      h=height-1;
-      do{
-        w=width-1;
-        do{
-          r=img[0]; g=img[1]; b=img[2]; img+=step;
-          val=(255*(77*r+152*g+28*b))/65535;
-          *pix++=(FXuchar)val;
-          }
-        while(--w>=0);
-        pix+=jmp;
-        }
-      while(--h>=0);
-      break;
-      
-    default:
-      fxerror("%s::render: unimplemented gray-color depth: %dbpp.\n",xim->bits_per_pixel,getClassName());
-      break;
+      FXFREE(&pixels);
+      ::DeleteDC(hdcmem);
+      }
     }
   }
+
+
+#endif
+
+#if 0
+/*************************************************************************
+ *
+ * BitmapToDIB()
+ *
+ * Parameters:
+ *
+ * HBITMAP hBitmap  - specifies the bitmap to convert
+ *
+ * HPALETTE hPal    - specifies the palette to use with the bitmap
+ *
+ * Return Value:
+ *
+ * HDIB             - identifies the device-dependent bitmap
+ *
+ * Description:
+ *
+ * This function creates a DIB from a bitmap using the specified palette.
+ *
+ ************************************************************************/
+
+HDIB BitmapToDIB(HBITMAP hBitmap, HPALETTE hPal)
+{
+    BITMAP              bm;         // bitmap structure
+    BITMAPINFOHEADER    bi;         // bitmap header
+    LPBITMAPINFOHEADER  lpbi;       // pointer to BITMAPINFOHEADER
+    DWORD               dwLen;      // size of memory block
+    HANDLE              hDIB, h;    // handle to DIB, temp handle
+    HDC                 hDC;        // handle to DC
+    WORD                biBits;     // bits per pixel
+
+    // check if bitmap handle is valid
+
+    if (!hBitmap)
+        return NULL;
+
+    // fill in BITMAP structure, return NULL if it didn't work
+
+    if (!GetObject(hBitmap, sizeof(bm), (LPSTR)&bm))
+        return NULL;
+
+    // if no palette is specified, use default palette
+
+    if (hPal == NULL)
+        hPal = GetStockObject(DEFAULT_PALETTE);
+
+    // calculate bits per pixel
+
+    biBits = bm.bmPlanes * bm.bmBitsPixel;
+
+    // make sure bits per pixel is valid
+
+    if (biBits <= 1)
+        biBits = 1;
+    else if (biBits <= 4)
+        biBits = 4;
+    else if (biBits <= 8)
+        biBits = 8;
+    else // if greater than 8-bit, force to 24-bit
+        biBits = 24;
+
+    // initialize BITMAPINFOHEADER
+
+    bi.biSize = sizeof(BITMAPINFOHEADER);
+    bi.biWidth = bm.bmWidth;
+    bi.biHeight = bm.bmHeight;
+    bi.biPlanes = 1;
+    bi.biBitCount = biBits;
+    bi.biCompression = BI_RGB;
+    bi.biSizeImage = 0;
+    bi.biXPelsPerMeter = 0;
+    bi.biYPelsPerMeter = 0;
+    bi.biClrUsed = 0;
+    bi.biClrImportant = 0;
+
+    // calculate size of memory block required to store BITMAPINFO
+
+    dwLen = bi.biSize + PaletteSize((LPSTR)&bi);
+
+    // get a DC
+
+    hDC = GetDC(NULL);
+
+    // select and realize our palette
+
+    hPal = SelectPalette(hDC, hPal, FALSE);
+    RealizePalette(hDC);
+
+    // alloc memory block to store our bitmap
+
+    hDIB = GlobalAlloc(GHND, dwLen);
+
+    // if we couldn't get memory block
+
+    if (!hDIB)
+    {
+      // clean up and return NULL
+
+      SelectPalette(hDC, hPal, TRUE);
+      RealizePalette(hDC);
+      ReleaseDC(NULL, hDC);
+      return NULL;
+    }
+
+    // lock memory and get pointer to it
+
+    lpbi = (LPBITMAPINFOHEADER)GlobalLock(hDIB);
+
+    /// use our bitmap info. to fill BITMAPINFOHEADER
+
+    *lpbi = bi;
+
+    // call GetDIBits with a NULL lpBits param, so it will calculate the
+    // biSizeImage field for us
+
+    GetDIBits(hDC, hBitmap, 0, (UINT)bi.biHeight, NULL, (LPBITMAPINFO)lpbi,
+        DIB_RGB_COLORS);
+
+    // get the info. returned by GetDIBits and unlock memory block
+
+    bi = *lpbi;
+    GlobalUnlock(hDIB);
+
+    // if the driver did not fill in the biSizeImage field, make one up
+    if (bi.biSizeImage == 0)
+        bi.biSizeImage = WIDTHBYTES((DWORD)bm.bmWidth * biBits) * bm.bmHeight;
+
+    // realloc the buffer big enough to hold all the bits
+
+    dwLen = bi.biSize + PaletteSize((LPSTR)&bi) + bi.biSizeImage;
+
+    if (h = GlobalReAlloc(hDIB, dwLen, 0))
+        hDIB = h;
+    else
+    {
+        // clean up and return NULL
+
+        GlobalFree(hDIB);
+        hDIB = NULL;
+        SelectPalette(hDC, hPal, TRUE);
+        RealizePalette(hDC);
+        ReleaseDC(NULL, hDC);
+        return NULL;
+    }
+
+    // lock memory block and get pointer to it */
+
+    lpbi = (LPBITMAPINFOHEADER)GlobalLock(hDIB);
+
+    // call GetDIBits with a NON-NULL lpBits param, and actualy get the
+    // bits this time
+
+    if (GetDIBits(hDC, hBitmap, 0, (UINT)bi.biHeight, (LPSTR)lpbi +
+            (WORD)lpbi->biSize + PaletteSize((LPSTR)lpbi), (LPBITMAPINFO)lpbi,
+            DIB_RGB_COLORS) == 0)
+    {
+        // clean up and return NULL
+
+        GlobalUnlock(hDIB);
+        hDIB = NULL;
+        SelectPalette(hDC, hPal, TRUE);
+        RealizePalette(hDC);
+        ReleaseDC(NULL, hDC);
+        return NULL;
+    }
+
+    bi = *lpbi;
+
+    // clean up
+    GlobalUnlock(hDIB);
+    SelectPalette(hDC, hPal, TRUE);
+    RealizePalette(hDC);
+    ReleaseDC(NULL, hDC);
+
+    // return handle to the DIB
+    return hDIB;
+}
+#endif
+
+
+
+
+#ifndef WIN32
+
+
+
+// True generic mode
+void FXImage::render_true_N_fast(void *xim,FXuchar *img){
+  register FXint x,y;
+  FXTRACE((150,"True MSB/LSB N bpp render nearest\n"));
+  y=0;
+  do{
+    x=0;
+    do{
+      XPutPixel(((XImage*)xim),x,y,visual->rpix[1][img[0]] | visual->gpix[1][img[1]] | visual->bpix[1][img[2]]);
+      img+=channels;
+      }
+    while(++x<width);
+    }
+  while(++y<height);
+  }
+
+
+
+// True generic mode
+void FXImage::render_true_N_dither(void *xim,FXuchar *img){
+  register FXint x,y,d;
+  FXTRACE((150,"True MSB/LSB N bpp render dither\n"));
+  y=0;
+  do{
+    x=0;
+    do{
+      d=((y&3)<<2)|(x&3);
+      XPutPixel(((XImage*)xim),x,y,visual->rpix[d][img[0]] | visual->gpix[d][img[1]] | visual->bpix[d][img[2]]);
+      img+=channels;
+      }
+    while(++x<width);
+    }
+  while(++y<height);
+  }
+
+
+
+// True 24 bit color
+void FXImage::render_true_24(void *xim,FXuchar *img){
+  register FXuint jmp=((XImage*)xim)->bytes_per_line-(width*3);
+  register FXuchar *pix=(FXuchar*)((XImage*)xim)->data;
+  register FXPixel val;
+  register FXint w,h;
+  if(((XImage*)xim)->byte_order==MSBFirst){    // MSB
+    FXTRACE((150,"True MSB 24bpp render\n"));
+    h=height-1;
+    do{
+      w=width-1;
+      do{
+        val=visual->rpix[1][img[0]] | visual->gpix[1][img[1]] | visual->bpix[1][img[2]];
+        pix[0]=(FXuchar)(val>>16);
+        pix[1]=(FXuchar)(val>>8);
+        pix[2]=(FXuchar)val;
+        img+=channels;
+        pix+=3;
+        }
+      while(--w>=0);
+      pix+=jmp;
+      }
+    while(--h>=0);
+    }
+  else{                             // LSB
+    FXTRACE((150,"True LSB 24bpp render\n"));
+    h=height-1;
+    do{
+      w=width-1;
+      do{
+        val=visual->rpix[1][img[0]] | visual->gpix[1][img[1]] | visual->bpix[1][img[2]];
+        pix[0]=(FXuchar)val;
+        pix[1]=(FXuchar)(val>>8);
+        pix[2]=(FXuchar)(val>>16);
+        img+=channels;
+        pix+=3;
+        }
+      while(--w>=0);
+      pix+=jmp;
+      }
+    while(--h>=0);
+    }
+  }
+
+
+
+// True 32 bit color
+void FXImage::render_true_32(void *xim,FXuchar *img){
+  register FXuchar *pix=(FXuchar*)((XImage*)xim)->data;
+  register FXuint jmp=((XImage*)xim)->bytes_per_line-(width<<2);
+  register FXPixel val;
+  register FXint w,h;
+
+  // Byte order matches
+  if(((XImage*)xim)->byte_order == FOX_BIGENDIAN){
+    FXTRACE((150,"True MSB/LSB 32bpp render\n"));
+    h=height-1;
+    do{
+      w=width-1;
+      do{
+        *((FXuint*)pix)=visual->rpix[1][img[0]] | visual->gpix[1][img[1]] | visual->bpix[1][img[2]];
+        img+=channels;
+        pix+=4;
+        }
+      while(--w>=0);
+      pix+=jmp;
+      }
+    while(--h>=0);
+    }
+
+  // MSB Byte order
+  else if(((XImage*)xim)->byte_order==MSBFirst){
+    FXTRACE((150,"True MSB 32bpp render\n"));
+    h=height-1;
+    do{
+      w=width-1;
+      do{
+        val=visual->rpix[1][img[0]] | visual->gpix[1][img[1]] | visual->bpix[1][img[2]];
+        pix[0]=(FXuchar)(val>>24);
+        pix[1]=(FXuchar)(val>>16);
+        pix[2]=(FXuchar)(val>>8);
+        pix[3]=(FXuchar)val;
+        img+=channels;
+        pix+=4;
+        }
+      while(--w>=0);
+      pix+=jmp;
+      }
+    while(--h>=0);
+    }
+
+  // LSB Byte order
+  else{
+    FXTRACE((150,"True LSB 32bpp render\n"));
+    h=height-1;
+    do{
+      w=width-1;
+      do{
+        val=visual->rpix[1][img[0]] | visual->gpix[1][img[1]] | visual->bpix[1][img[2]];
+        pix[0]=(FXuchar)val;
+        pix[1]=(FXuchar)(val>>8);
+        pix[2]=(FXuchar)(val>>16);
+        pix[3]=(FXuchar)(val>>24);
+        img+=channels;
+        pix+=4;
+        }
+      while(--w>=0);
+      pix+=jmp;
+      }
+    while(--h>=0);
+    }
+  }
+
+
+
+// True 16 bit color
+void FXImage::render_true_16_fast(void *xim,FXuchar *img){
+  register FXuint jmp=((XImage*)xim)->bytes_per_line-(width<<1);
+  register FXuchar *pix=(FXuchar*)((XImage*)xim)->data;
+  register FXPixel val;
+  register FXint w,h;
+
+  // Byte order matches
+  if(((XImage*)xim)->byte_order == FOX_BIGENDIAN){
+    FXTRACE((150,"True MSB/LSB 16bpp 5,6,5/5,5,5 render nearest\n"));
+    h=height-1;
+    do{
+      w=width-1;
+      do{
+        *((FXushort*)pix)=visual->rpix[1][img[0]] | visual->gpix[1][img[1]] | visual->bpix[1][img[2]];
+        img+=channels;
+        pix+=2;
+        }
+      while(--w>=0);
+      pix+=jmp;
+      }
+    while(--h>=0);
+    }
+
+  // MSB Byte order
+  else if(((XImage*)xim)->byte_order==MSBFirst){
+    FXTRACE((150,"True MSB 16bpp 5,6,5/5,5,5 render nearest\n"));
+    h=height-1;
+    do{
+      w=width-1;
+      do{
+        val=visual->rpix[1][img[0]] | visual->gpix[1][img[1]] | visual->bpix[1][img[2]];
+        pix[0]=(FXuchar)(val>>8);
+        pix[1]=(FXuchar)val;
+        img+=channels;
+        pix+=2;
+        }
+      while(--w>=0);
+      pix+=jmp;
+      }
+    while(--h>=0);
+    }
+
+  // LSB Byte order
+  else{
+    FXTRACE((150,"True LSB 16bpp 5,6,5/5,5,5 render nearest\n"));
+    h=height-1;
+    do{
+      w=width-1;
+      do{
+        val=visual->rpix[1][img[0]] | visual->gpix[1][img[1]] | visual->bpix[1][img[2]];
+        pix[0]=(FXuchar)val;
+        pix[1]=(FXuchar)(val>>8);
+        img+=channels;
+        pix+=2;
+        }
+      while(--w>=0);
+      pix+=jmp;
+      }
+    while(--h>=0);
+    }
+  }
+
+
+// True 16 bit color, dithered
+void FXImage::render_true_16_dither(void *xim,FXuchar *img){
+  register FXuint jmp=((XImage*)xim)->bytes_per_line-(width<<1);
+  register FXuchar *pix=(FXuchar*)((XImage*)xim)->data;
+  register FXPixel val;
+  register FXint w,h,d;
+
+  // Byte order matches
+  if(((XImage*)xim)->byte_order == FOX_BIGENDIAN){
+    FXTRACE((150,"True MSB/LSB 16bpp 5,6,5/5,5,5 render dither\n"));
+    h=height-1;
+    do{
+      w=width-1;
+      do{
+        d=((h&3)<<2)|(w&3);
+        *((FXushort*)pix)=visual->rpix[d][img[0]] | visual->gpix[d][img[1]] | visual->bpix[d][img[2]];
+        img+=channels;
+        pix+=2;
+        }
+      while(--w>=0);
+      pix+=jmp;
+      }
+    while(--h>=0);
+    }
+
+  // MSB Byte order
+  else if(((XImage*)xim)->byte_order==MSBFirst){
+    FXTRACE((150,"True MSB 16bpp 5,6,5/5,5,5 render dither\n"));
+    h=height-1;
+    do{
+      w=width-1;
+      do{
+        d=((h&3)<<2)|(w&3);
+        val=visual->rpix[d][img[0]] | visual->gpix[d][img[1]] | visual->bpix[d][img[2]];
+        pix[0]=(FXuchar)(val>>8);
+        pix[1]=(FXuchar)val;
+        img+=channels;
+        pix+=2;
+        }
+      while(--w>=0);
+      pix+=jmp;
+      }
+    while(--h>=0);
+    }
+
+  // LSB Byte order
+  else{
+    FXTRACE((150,"True LSB 16bpp 5,6,5/5,5,5 render dither\n"));
+    h=height-1;
+    do{
+      w=width-1;
+      do{
+        d=((h&3)<<2)|(w&3);
+        val=visual->rpix[d][img[0]] | visual->gpix[d][img[1]] | visual->bpix[d][img[2]];
+        pix[0]=(FXuchar)val;
+        pix[1]=(FXuchar)(val>>8);
+        img+=channels;
+        pix+=2;
+        }
+      while(--w>=0);
+      pix+=jmp;
+      }
+    while(--h>=0);
+    }
+  }
+
+
+
+// True 8 bit color
+void FXImage::render_true_8_fast(void *xim,FXuchar *img){
+  register FXuint jmp=((XImage*)xim)->bytes_per_line-width;
+  register FXuchar *pix=(FXuchar*)((XImage*)xim)->data;
+  register FXint w,h;
+  FXTRACE((150,"True MSB/LSB 8bpp render nearest\n"));
+  h=height-1;
+  do{
+    w=width-1;
+    do{
+      *pix=visual->rpix[1][img[0]] | visual->gpix[1][img[1]] | visual->bpix[1][img[2]];
+      img+=channels;
+      pix++;
+      }
+    while(--w>=0);
+    pix+=jmp;
+    }
+  while(--h>=0);
+  }
+
+
+
+// True 8 bit color, dithered
+void FXImage::render_true_8_dither(void *xim,FXuchar *img){
+  register FXuint jmp=((XImage*)xim)->bytes_per_line-width;
+  register FXuchar *pix=(FXuchar*)((XImage*)xim)->data;
+  register FXint w,h,d;
+  FXTRACE((150,"True MSB/LSB 8bpp render dither\n"));
+  h=height-1;
+  do{
+    w=width-1;
+    do{
+      d=((h&3)<<2)|(w&3);
+      *pix=visual->rpix[d][img[0]] | visual->gpix[d][img[1]] | visual->bpix[d][img[2]];
+      img+=channels;
+      pix++;
+      }
+    while(--w>=0);
+    pix+=jmp;
+    }
+  while(--h>=0);
+  }
+
+
+
+// Render 4 bit index color mode
+void FXImage::render_index_4_fast(void *xim,FXuchar *img){
+  register FXuchar *pix=(FXuchar*)((XImage*)xim)->data;
+  register FXuint jmp=((XImage*)xim)->bytes_per_line-width;
+  register FXuint val,half;
+  register FXint w,h;
+  if(((XImage*)xim)->byte_order==MSBFirst){    // MSB
+    FXTRACE((150,"Index MSB 4bpp render nearest\n"));
+    h=height-1;
+    do{
+      w=width-1;
+      half=0;
+      do{
+        val=visual->lut[visual->rpix[1][img[0]]+visual->gpix[1][img[1]]+visual->bpix[1][img[2]]];
+        if(half) *pix++|=val;
+        else *pix=val<<4;
+        half^=1;
+        img+=channels;
+        }
+      while(--w>=0);
+      pix+=jmp;
+      }
+    while(--h>=0);
+    }
+  else{                               // LSB
+    FXTRACE((150,"Index LSB 4bpp render nearest\n"));
+    h=height-1;
+    do{
+      w=width-1;
+      half=0;
+      do{
+        val=visual->lut[visual->rpix[1][img[0]]+visual->gpix[1][img[1]]+visual->bpix[1][img[2]]];
+        if(half) *pix++|=val<<4;
+        else *pix=val;
+        half^=1;
+        img+=channels;
+        }
+      while(--w>=0);
+      pix+=jmp;
+      }
+    while(--h>=0);
+    }
+  }
+
+
+
+// Render 4 bit index color mode
+void FXImage::render_index_4_dither(void *xim,FXuchar *img){
+  register FXuchar *pix=(FXuchar*)((XImage*)xim)->data;
+  register FXuint jmp=((XImage*)xim)->bytes_per_line-width;
+  register FXuint val,half,d;
+  register FXint w,h;
+  if(((XImage*)xim)->byte_order==MSBFirst){    // MSB
+    FXTRACE((150,"Index MSB 4bpp render dither\n"));
+    h=height-1;
+    do{
+      w=width-1;
+      half=0;
+      do{
+        d=((h&3)<<2)|(w&3);
+        val=visual->lut[visual->rpix[d][img[0]]+visual->gpix[d][img[1]]+visual->bpix[d][img[2]]];
+        if(half) *pix++|=val;
+        else *pix=val<<4;
+        half^=1;
+        img+=channels;
+        }
+      while(--w>=0);
+      pix+=jmp;
+      }
+    while(--h>=0);
+    }
+  else{                               // LSB
+    FXTRACE((150,"Index LSB 4bpp render dither\n"));
+    h=height-1;
+    do{
+      w=width-1;
+      half=0;
+      do{
+        d=((h&3)<<2)|(w&3);
+        val=visual->lut[visual->rpix[d][img[0]]+visual->gpix[d][img[1]]+visual->bpix[d][img[2]]];
+        if(half) *pix++|=val<<4;
+        else *pix=val;
+        half^=1;
+        img+=channels;
+        }
+      while(--w>=0);
+      pix+=jmp;
+      }
+    while(--h>=0);
+    }
+  }
+
+
+
+// Render 8 bit index color mode
+void FXImage::render_index_8_fast(void *xim,FXuchar *img){
+  register FXuint jmp=((XImage*)xim)->bytes_per_line-width;
+  register FXuchar *pix=(FXuchar*)((XImage*)xim)->data;
+  register FXint w,h;
+  FXTRACE((150,"Index MSB/LSB 8bpp render nearest\n"));
+  h=height-1;
+  do{
+    w=width-1;
+    do{
+      *pix=visual->lut[visual->rpix[1][img[0]]+visual->gpix[1][img[1]]+visual->bpix[1][img[2]]];
+      img+=channels;
+      pix++;
+      }
+    while(--w>=0);
+    pix+=jmp;
+    }
+  while(--h>=0);
+  }
+
+
+
+// Render 8 bit index color mode
+void FXImage::render_index_8_dither(void *xim,FXuchar *img){
+  register FXuint jmp=((XImage*)xim)->bytes_per_line-width;
+  register FXuchar *pix=(FXuchar*)((XImage*)xim)->data;
+  register FXint w,h,d;
+  FXTRACE((150,"Index MSB/LSB 8bpp render dither\n"));
+  h=height-1;
+  do{
+    w=width-1;
+    do{
+      d=((h&3)<<2)|(w&3);
+      *pix=visual->lut[visual->rpix[d][img[0]]+visual->gpix[d][img[1]]+visual->bpix[d][img[2]]];
+      img+=channels;
+      pix++;
+      }
+    while(--w>=0);
+    pix+=jmp;
+    }
+  while(--h>=0);
+  }
+
+
+
+// Render generic N bit index color mode
+void FXImage::render_index_N_fast(void *xim,FXuchar *img){
+  register FXint x,y;
+  FXTRACE((150,"Index MSB/LSB N bpp render nearest\n"));
+  y=0;
+  do{
+    x=0;
+    do{
+      XPutPixel(((XImage*)xim),x,y,visual->lut[visual->rpix[1][img[0]]+visual->gpix[1][img[1]]+visual->bpix[1][img[2]]]);
+      img+=channels;
+      }
+    while(++x<width);
+    }
+  while(++y<height);
+  }
+
+
+
+// Render generic N bit index color mode
+void FXImage::render_index_N_dither(void *xim,FXuchar *img){
+  register FXint x,y,d;
+  FXTRACE((150,"Index MSB/LSB N bpp render dither\n"));
+  y=0;
+  do{
+    x=0;
+    do{
+      d=((y&3)<<2)|(x&3);
+      XPutPixel(((XImage*)xim),x,y,visual->lut[visual->rpix[d][img[0]]+visual->gpix[d][img[1]]+visual->bpix[d][img[2]]]);
+      img+=channels;
+      }
+    while(++x<width);
+    }
+  while(++y<height);
+  }
+
+
+
+// Render 8 bit gray mode
+void FXImage::render_gray_8_fast(void *xim,FXuchar *img){
+  register FXuchar *pix=(FXuchar*)((XImage*)xim)->data;
+  register FXuint jmp=((XImage*)xim)->bytes_per_line-width;
+  register FXint w,h;
+  FXTRACE((150,"Gray MSB/LSB 8bpp render nearest\n"));
+  h=height-1;
+  do{
+    w=width-1;
+    do{
+      *pix=visual->gpix[1][(77*img[0]+151*img[1]+29*img[2])>>8];
+      img+=channels;
+      pix++;
+      }
+    while(--w>=0);
+    pix+=jmp;
+    }
+  while(--h>=0);
+  }
+
+
+
+// Render 8 bit gray mode
+void FXImage::render_gray_8_dither(void *xim,FXuchar *img){
+  register FXuchar *pix=(FXuchar*)((XImage*)xim)->data;
+  register FXuint jmp=((XImage*)xim)->bytes_per_line-width;
+  register FXint w,h;
+  FXTRACE((150,"Gray MSB/LSB 8bpp render dither\n"));
+  h=height-1;
+  do{
+    w=width-1;
+    do{
+      *pix=visual->gpix[((h&3)<<2)|(w&3)][(77*img[0]+151*img[1]+29*img[2])>>8];
+      img+=channels;
+      pix++;
+      }
+    while(--w>=0);
+    pix+=jmp;
+    }
+  while(--h>=0);
+  }
+
+
+
+// Render generic N bit gray mode
+void FXImage::render_gray_N_fast(void *xim,FXuchar *img){
+  register FXint x,y;
+  FXTRACE((150,"Gray MSB/LSB N bpp render nearest\n"));
+  y=0;
+  do{
+    x=0;
+    do{
+      XPutPixel(((XImage*)xim),x,y,visual->gpix[1][(77*img[0]+151*img[1]+29*img[2])>>8]);
+      img+=channels;
+      }
+    while(++x<width);
+    }
+  while(++y<height);
+  }
+
+
+
+// Render generic N bit gray mode
+void FXImage::render_gray_N_dither(void *xim,FXuchar *img){
+  register FXint x,y;
+  FXTRACE((150,"Gray MSB/LSB N bpp render dither\n"));
+  y=0;
+  do{
+    x=0;
+    do{
+      XPutPixel(((XImage*)xim),x,y,visual->gpix[((y&3)<<2)|(x&3)][(77*img[0]+151*img[1]+29*img[2])>>8]);
+      img+=channels;
+      }
+    while(++x<width);
+    }
+  while(++y<height);
+  }
+
+
+
+
+// Render monochrome mode
+void FXImage::render_mono_1_fast(void *xim,FXuchar *img){
+  register FXint x,y;
+  FXTRACE((150,"Monochrome MSB/LSB 1bpp render nearest\n"));
+  y=0;
+  do{
+    x=0;
+    do{
+      XPutPixel(((XImage*)xim),x,y,visual->gpix[1][(77*img[0]+151*img[1]+29*img[2])>>8]);
+      img+=channels;
+      }
+    while(++x<width);
+    }
+  while(++y<height);
+  }
+
+
+
+// Render monochrome mode
+void FXImage::render_mono_1_dither(void *xim,FXuchar *img){
+  register FXint x,y;
+  FXTRACE((150,"Monochrome MSB/LSB 1bpp render dither\n"));
+  y=0;
+  do{
+    x=0;
+    do{
+      XPutPixel(((XImage*)xim),x,y,visual->gpix[((y&3)<<2)|(x&3)][(77*img[0]+151*img[1]+29*img[2])>>8]);
+      img+=channels;
+      }
+    while(++x<width);
+    }
+  while(++y<height);
+  }
+
+
+
+#endif
+
+
+
+#ifndef WIN32
 
 
 // Render into pixmap
 void FXImage::render(){
+  if(xid){
+    register FXbool shmi=FALSE;
+    register XImage *xim=NULL;
+    register Visual *vis;
+    register int dd;
+    XGCValues values;
+    GC gc;
 #ifdef HAVE_XSHM
-  XShmSegmentInfo shminfo;
+    XShmSegmentInfo shminfo;
 #endif
-  register FXuint step=3;
-  register FXbool shmi=FALSE;
-  register XImage *xim=NULL;
-  register Visual *visual;
-  XGCValues values;
-  GC gc;
 
-  // Can not render before creation
-  if(!xid){ fxerror("%s::render: trying to render image before it has been created.\n",getClassName()); }
+    FXTRACE((100,"%s::render image %p\n",getClassName(),this));
 
-  // Check for legal size
-  if(width<2 || height<2){ fxerror("%s::render: illegal image size.\n",getClassName()); }
+    // Check for legal size
+    if(width<1 || height<1){ fxerror("%s::render: illegal image size %dx%d.\n",getClassName(),width,height); }
 
-  // Just leave if black if no data
-  if(data){
-    
-    // Have alpha?
-    if(options&IMAGE_ALPHA) step=4;
-    
-    // Get Visual
-    visual=DefaultVisual(getApp()->display,DefaultScreen(getApp()->display));
-  
-    // Make GC
-    values.foreground=1;
-    values.background=0;
-    gc=XCreateGC(getDisplay(),xid,GCForeground|GCBackground,&values);
-    
-    // Turn it on iff both supported and desired
+    // Just leave if black if no data
+    if(data){
+
+      // Make GC
+      values.foreground=BlackPixel(DISPLAY(getApp()),DefaultScreen(DISPLAY(getApp())));
+      values.background=WhitePixel(DISPLAY(getApp()),DefaultScreen(DISPLAY(getApp())));
+      gc=XCreateGC(DISPLAY(getApp()),xid,GCForeground|GCBackground,&values);
+
+      // Get Visual
+      vis=(Visual*)visual->visual;
+
+      dd=visual->getDepth();
+
+      // Turn it on iff both supported and desired
 #ifdef HAVE_XSHM
-    if(options&IMAGE_SHMI) shmi=getApp()->shmi;
+      if(options&IMAGE_SHMI) shmi=getApp()->shmi;
 #endif
-    
-    // First try XShm
+
+      // First try XShm
 #ifdef HAVE_XSHM
-    if(shmi){
-      xim=XShmCreateImage(getDisplay(),visual,depth,(depth==1)?XYPixmap:ZPixmap,NULL,&shminfo,width,height);
-      if(!xim){ shmi=0; }
       if(shmi){
-        shminfo.shmid=shmget(IPC_PRIVATE,xim->bytes_per_line*xim->height,IPC_CREAT|0777);
-        if(shminfo.shmid==-1){ XDestroyImage(xim); xim=NULL; shmi=0; }
+        xim=XShmCreateImage(DISPLAY(getApp()),vis,dd,(dd==1)?XYPixmap:ZPixmap,NULL,&shminfo,width,height);
+        if(!xim){ shmi=0; }
         if(shmi){
-          shminfo.shmaddr=xim->data=(char*)shmat(shminfo.shmid,0,0);
-          shminfo.readOnly=FALSE;
-          XShmAttach(getDisplay(),&shminfo);
-//fprintf(stderr,"RGBPixmap XSHM attached at memory=0x%08x (%d bytes)\n",xim->data,xim->bytes_per_line*xim->height);
+          shminfo.shmid=shmget(IPC_PRIVATE,xim->bytes_per_line*xim->height,IPC_CREAT|0777);
+          if(shminfo.shmid==-1){ xim->data=NULL; XDestroyImage(xim); xim=NULL; shmi=0; }
+          if(shmi){
+            shminfo.shmaddr=xim->data=(char*)shmat(shminfo.shmid,0,0);
+            shminfo.readOnly=FALSE;
+            XShmAttach(DISPLAY(getApp()),&shminfo);
+            FXTRACE((150,"RGBPixmap XSHM attached at memory=%p (%d bytes)\n",xim->data,xim->bytes_per_line*xim->height));
+            }
           }
         }
-      }
 #endif
-    
-    // Try the old fashioned way
-    if(!shmi){
-      xim=XCreateImage(getDisplay(),visual,depth,(depth==1)?XYPixmap:ZPixmap,0,NULL,width,height,32,0);
-      if(!xim){ fxerror("%s::render: unable to render image.\n",getClassName()); }
 
-      // Try create temp pixel store
-      xim->data=(char*)malloc(xim->bytes_per_line*height);
+      // Try the old fashioned way
+      if(!shmi){
+        xim=XCreateImage(DISPLAY(getApp()),vis,dd,(dd==1)?XYPixmap:ZPixmap,0,NULL,width,height,32,0);
+        if(!xim){ fxerror("%s::render: unable to render image.\n",getClassName()); }
 
-      // Failed completely
-      if(!xim->data){ fxerror("%s::render: unable to allocate memory.\n",getClassName()); }
-      }
-    
-    // Should have succeeded
-    FXASSERT(xim);
-    
-// fprintf(stderr,"im format = %d\n",xim->format);
-// fprintf(stderr,"im byte_order = %d\n",xim->byte_order);
-// fprintf(stderr,"im bitmap_unit = %d\n",xim->bitmap_unit);
-// fprintf(stderr,"im bitmap_bit_order = %d\n",xim->bitmap_bit_order);
-// fprintf(stderr,"im bitmap_pad = %d\n",xim->bitmap_pad);
-// fprintf(stderr,"im bitmap_unit = %d\n",xim->bitmap_unit);
-// fprintf(stderr,"im depth = %d\n",xim->depth);
-// fprintf(stderr,"im bytes_per_line = %d\n",xim->bytes_per_line);
-// fprintf(stderr,"im bits_per_pixel = %d\n",xim->bits_per_pixel);
-// fprintf(stderr,"vi rmask = %08x\n",visual->red_mask);
-// fprintf(stderr,"vi gmask = %08x\n",visual->green_mask);
-// fprintf(stderr,"vi bmask = %08x\n",visual->blue_mask);
-    
-    // Determine what to do
-    switch(visual->c_class){
+        // Try create temp pixel store
+        if(!FXMALLOC(&xim->data,char,xim->bytes_per_line*height)){ fxerror("%s::render: unable to allocate memory.\n",getClassName()); }
+        }
 
-      // True color
-      case DirectColor:
-      case TrueColor:
-        render_true(xim,data,step);
-        break;
+      // Should have succeeded
+      FXASSERT(xim);
 
-      // Gray ramp
-      case GrayScale:
-      case StaticGray:
-        render_gray(xim,data,step);
-        break;
-        
-      // Pseudo color or gray ramp
-      case StaticColor:
-      case PseudoColor:
-        render_index(xim,data,step);
-        break;
-      }
+      FXTRACE((150,"im width = %d\n",xim->width));
+      FXTRACE((150,"im height = %d\n",xim->height));
+      FXTRACE((150,"im format = %s\n",xim->format==XYBitmap?"XYBitmap":xim->format==XYPixmap?"XYPixmap":"ZPixmap"));
+      FXTRACE((150,"im byte_order = %s\n",(xim->byte_order==MSBFirst)?"MSBFirst":"LSBFirst"));
+      FXTRACE((150,"im bitmap_unit = %d\n",xim->bitmap_unit));
+      FXTRACE((150,"im bitmap_bit_order = %s\n",(xim->bitmap_bit_order==MSBFirst)?"MSBFirst":"LSBFirst"));
+      FXTRACE((150,"im bitmap_pad = %d\n",xim->bitmap_pad));
+      FXTRACE((150,"im bitmap_unit = %d\n",xim->bitmap_unit));
+      FXTRACE((150,"im depth = %d\n",xim->depth));
+      FXTRACE((150,"im bytes_per_line = %d\n",xim->bytes_per_line));
+      FXTRACE((150,"im bits_per_pixel = %d\n",xim->bits_per_pixel));
 
-    // Transfer image with shared memory
+      // Determine what to do
+      switch(visual->getType()){
+        case VISUALTYPE_TRUE:
+          switch(xim->bits_per_pixel){
+            case 32:
+              render_true_32(xim,data);
+              break;
+            case 24:
+              render_true_24(xim,data);
+              break;
+            case 15:
+            case 16:
+              if(options&IMAGE_NEAREST)
+                render_true_16_fast(xim,data);
+              else
+                render_true_16_dither(xim,data);
+              break;
+            case 8:
+              if(options&IMAGE_NEAREST)
+                render_true_8_fast(xim,data);
+              else
+                render_true_8_dither(xim,data);
+              break;
+            default:
+              if(options&IMAGE_NEAREST)
+                render_true_N_fast(xim,data);
+              else
+                render_true_N_dither(xim,data);
+              break;
+            }
+          break;
+        case VISUALTYPE_GRAY:
+          switch(xim->bits_per_pixel){
+            case 1:
+              if(options&IMAGE_NEAREST)
+                render_mono_1_fast(xim,data);
+              else
+                render_mono_1_dither(xim,data);
+              break;
+            case 8:
+              if(options&IMAGE_NEAREST)
+                render_gray_8_fast(xim,data);
+              else
+                render_gray_8_dither(xim,data);
+              break;
+            default:
+              if(options&IMAGE_NEAREST)
+                render_gray_N_fast(xim,data);
+              else
+                render_gray_N_dither(xim,data);
+              break;
+            }
+          break;
+        case VISUALTYPE_INDEX:
+          switch(xim->bits_per_pixel){
+            case 4:
+              if(options&IMAGE_NEAREST)
+                render_index_4_fast(xim,data);
+              else
+                render_index_4_dither(xim,data);
+              break;
+            case 8:
+              if(options&IMAGE_NEAREST)
+                render_index_8_fast(xim,data);
+              else
+                render_index_8_dither(xim,data);
+              break;
+            default:
+              if(options&IMAGE_NEAREST)
+                render_index_N_fast(xim,data);
+              else
+                render_index_N_dither(xim,data);
+              break;
+            }
+          break;
+        case VISUALTYPE_MONO:
+          if(options&IMAGE_NEAREST)
+            render_mono_1_fast(xim,data);
+          else
+            render_mono_1_dither(xim,data);
+        case VISUALTYPE_UNKNOWN:
+          break;
+        }
+
+      // Transfer image with shared memory
 #ifdef HAVE_XSHM
-    if(shmi){
-      XShmPutImage(getDisplay(),xid,gc,xim,0,0,0,0,width,height,False);
-      XSync(getDisplay(),False);
-//fprintf(stderr,"RGBPixmap XSHM detached at memory=0x%08x (%d bytes)\n",xim->data,xim->bytes_per_line*xim->height);
-      XShmDetach(getDisplay(),&shminfo);
-      XDestroyImage(xim);
-      shmdt(shminfo.shmaddr);
-      shmctl(shminfo.shmid,IPC_RMID,0);
-      }
+      if(shmi){
+        XShmPutImage(DISPLAY(getApp()),xid,gc,xim,0,0,0,0,width,height,False);
+        XSync(DISPLAY(getApp()),False);
+        FXTRACE((150,"RGBPixmap XSHM detached at memory=%p (%d bytes)\n",xim->data,xim->bytes_per_line*xim->height));
+        XShmDetach(DISPLAY(getApp()),&shminfo);
+        xim->data=NULL;
+        XDestroyImage(xim);
+        shmdt(shminfo.shmaddr);
+        shmctl(shminfo.shmid,IPC_RMID,0);
+        }
 #endif
-   
-    // Transfer the image old way
-    if(!shmi){
-      XPutImage(getDisplay(),xid,gc,xim,0,0,0,0,width,height);
+
+      // Transfer the image old way
+      if(!shmi){
+        XPutImage(DISPLAY(getApp()),xid,gc,xim,0,0,0,0,width,height);
+        FXFREE(&xim->data);
+        XDestroyImage(xim);
+        }
+      XFreeGC(DISPLAY(getApp()),gc);
+      }
+    }
+  }
+
+
+#else
+
+
+void FXImage::render(){
+  if(xid){
+    register FXuint bytes_per_line,skip;
+    register FXuchar *src,*dst;
+    register FXint h,w;
+    BITMAPINFO bmi;
+    FXuchar *pixels;
+    HDC hdcmem;
+
+    FXTRACE((100,"%s::render %p\n",getClassName(),this));
+
+    // Check for legal size
+    if(width<1 || height<1){ fxerror("%s::render: illegal image size %dx%d.\n",getClassName(),width,height); }
+
+
+    // Just leave if black if no data
+    if(data){
+
+      // Set up the bitmap info
+      bmi.bmiHeader.biSize=sizeof(BITMAPINFOHEADER);
+      bmi.bmiHeader.biWidth=width;
+      bmi.bmiHeader.biHeight=height;
+      bmi.bmiHeader.biPlanes=1;
+      bmi.bmiHeader.biBitCount=24;
+      bmi.bmiHeader.biCompression=BI_RGB;
+      bmi.bmiHeader.biSizeImage=0;
+      bmi.bmiHeader.biXPelsPerMeter=0;
+      bmi.bmiHeader.biYPelsPerMeter=0;
+      bmi.bmiHeader.biClrUsed=0;
+      bmi.bmiHeader.biClrImportant=0;
+
+      // DIB format pads to multiples of 4 bytes...
+      bytes_per_line=(width*3+3)&~3;
+      skip=bytes_per_line+width*3;
+      FXMALLOC(&pixels,FXuchar,bytes_per_line*height);
+      h=height-1;
+      src=data;
+      dst=pixels+h*bytes_per_line;
+      do{
+        w=width-1;
+        do{
+          dst[0]=src[2];
+          dst[1]=src[1];
+          dst[2]=src[0];
+          src+=channels;
+          dst+=3;
+          }
+        while(--w>=0);
+        dst-=skip;
+        }
+      while(--h>=0);
+
+      // The MSDN documentation for SetDIBits() states that "the device context
+      // identified by the (first) parameter is used only if the DIB_PAL_COLORS
+      // constant is set for the (last) parameter". This may be true, but under
+      // Win95 you must pass in a non-NULL hdc for the first parameter; otherwise
+      // this call to SetDIBits() will fail (in contrast, it works fine under
+      // Windows NT if you pass in a NULL hdc).
+      hdcmem=::CreateCompatibleDC(NULL);
+      if(!SetDIBits(hdcmem,(HBITMAP)xid,0,height,pixels,&bmi,DIB_RGB_COLORS)){
+        fxerror("%s::render: unable to render pixels\n",getClassName());
+        }
+      GdiFlush();
+      FXFREE(&pixels);
+      ::DeleteDC(hdcmem);
+      }
+    }
+  }
+
+#endif
+
+
+
+// Get pixel at x,y
+FXColor FXImage::getPixel(FXint x,FXint y) const {
+  return (options&IMAGE_ALPHA) ? ((FXColor*)data)[y*width+x] : FXRGB(data[(y*width+x)*3],data[(y*width+x)*3+1],data[(y*width+x)*3+2]);
+  }
+
+
+// Change pixel at x,y
+void FXImage::setPixel(FXint x,FXint y,FXColor color){
+  if(options&IMAGE_ALPHA){
+    ((FXColor*)data)[y*width+x]=color;
+    }
+  else{
+    data[(y*width+x)*3+0]=FXREDVAL(color);
+    data[(y*width+x)*3+1]=FXGREENVAL(color);
+    data[(y*width+x)*3+2]=FXBLUEVAL(color);
+    }
+  }
+
+
+// Resize pixmap to the specified width and height; the data
+// array is resized also, but its contents will be undefined.
+void FXImage::resize(FXint w,FXint h){
+  FXTRACE((100,"%s::resize(%d,%d) %p\n",getClassName(),w,h,this));
+  if(w<1) w=1;
+  if(h<1) h=1;
+  if(width!=w || height!=h){
+    if(xid){
 #ifndef WIN32
-      //// Need to use something other than malloc for WIN32....
-      XDestroyImage(xim);
+      int dd=visual->getDepth();
+      XFreePixmap(DISPLAY(getApp()),xid);
+      xid=XCreatePixmap(DISPLAY(getApp()),XDefaultRootWindow(DISPLAY(getApp())),w,h,dd);
+      if(!xid){ fxerror("%s::resize: unable to resize image.\n",getClassName()); }
+#else
+      DeleteObject(xid);
+      HDC hdc=::GetDC(GetDesktopWindow());
+      xid=CreateCompatibleBitmap(hdc,w,h);
+      ::ReleaseDC(GetDesktopWindow(),hdc);
+      if(!xid){ fxerror("%s::resize: unable to resize image.\n",getClassName()); }
 #endif
       }
-    
-    // We're done
-    XFreeGC(getDisplay(),gc);
+    if(data){
+      if(!(options&IMAGE_OWNED)){       // Need to own array
+        FXMALLOC(&data,FXuchar,w*h*channels);
+        options|=IMAGE_OWNED;
+        }
+      else if(w*h!=width*height){
+        FXRESIZE(&data,FXuchar,w*h*channels);
+        }
+      }
+    width=w;
+    height=h;
+    }
+  }
+
+
+static void hscalergba(FXuchar *dst,const FXuchar* src,FXint dw,FXint dh,FXint sw,FXint ){
+  register FXint fin,fout,ar,ag,ab,aa;
+  register FXint ss=4*sw;
+  register FXint ds=4*dw;
+  register FXuchar *end=dst+ds*dh;
+  register FXuchar *d;
+  register const FXuchar *s;
+  do{
+    s=src; src+=ss;
+    d=dst; dst+=ds;
+    fin=dw;
+    fout=sw;
+    ar=ag=ab=aa=0;
+    while(1){
+      if(fin<fout){
+        ar+=fin*s[0];
+        ag+=fin*s[1];
+        ab+=fin*s[2];
+        aa+=fin*s[3];
+        fout-=fin;
+        fin=dw;
+        s+=4;
+        }
+      else{
+        ar+=fout*s[0]; d[0]=ar/sw; ar=0;
+        ag+=fout*s[1]; d[1]=ag/sw; ag=0;
+        ab+=fout*s[2]; d[2]=ab/sw; ab=0;
+        aa+=fout*s[3]; d[3]=aa/sw; aa=0;
+        fin-=fout;
+        fout=sw;
+        d+=4;
+        if(d>=dst) break;
+        }
+      }
+    }
+  while(dst<end);
+  }
+
+
+static void hscalergb(FXuchar *dst,const FXuchar* src,FXint dw,FXint dh,FXint sw,FXint){
+  register FXint fin,fout,ar,ag,ab;
+  register FXint ss=3*sw;
+  register FXint ds=3*dw;
+  register FXuchar *end=dst+ds*dh;
+  register FXuchar *d;
+  register const FXuchar *s;
+  do{
+    s=src; src+=ss;
+    d=dst; dst+=ds;
+    fin=dw;
+    fout=sw;
+    ar=ag=ab=0;
+    while(1){
+      if(fin<fout){
+        ar+=fin*s[0];
+        ag+=fin*s[1];
+        ab+=fin*s[2];
+        fout-=fin;
+        fin=dw;
+        s+=3;
+        }
+      else{
+        ar+=fout*s[0]; d[0]=ar/sw; ar=0;
+        ag+=fout*s[1]; d[1]=ag/sw; ag=0;
+        ab+=fout*s[2]; d[2]=ab/sw; ab=0;
+        fin-=fout;
+        fout=sw;
+        d+=3;
+        if(d>=dst) break;
+        }
+      }
+    }
+  while(dst<end);
+  }
+
+
+static void vscalergba(FXuchar *dst,const FXuchar* src,FXint dw,FXint dh,FXint sw,FXint sh){
+  register FXint fin,fout,ar,ag,ab,aa;
+  register FXint ss=4*sw;
+  register FXint ds=4*dw;
+  register FXint dss=ds*dh;
+  register FXuchar *end=dst+ds;
+  register FXuchar *d,*dd;
+  register const FXuchar *s;
+  do{
+    s=src; src+=4;
+    d=dst; dst+=4;
+    dd=d+dss;
+    fin=dh;
+    fout=sh;
+    ar=ag=ab=aa=0;
+    while(1){
+      if(fin<fout){
+        ar+=fin*s[0];
+        ag+=fin*s[1];
+        ab+=fin*s[2];
+        aa+=fin*s[3];
+        fout-=fin;
+        fin=dh;
+        s+=ss;
+        }
+      else{
+        ar+=fout*s[0]; d[0]=ar/sh; ar=0;
+        ag+=fout*s[1]; d[1]=ag/sh; ag=0;
+        ab+=fout*s[2]; d[2]=ab/sh; ab=0;
+        aa+=fout*s[3]; d[3]=aa/sh; aa=0;
+        fin-=fout;
+        fout=sh;
+        d+=ds;
+        if(d>=dd) break;
+        }
+      }
+    }
+  while(dst<end);
+  }
+
+
+static void vscalergb(FXuchar *dst,const FXuchar* src,FXint dw,FXint dh,FXint sw,FXint sh){
+  register FXint fin,fout,ar,ag,ab;
+  register FXint ss=3*sw;
+  register FXint ds=3*dw;
+  register FXint dss=ds*dh;
+  register FXuchar *end=dst+ds;
+  register FXuchar *d,*dd;
+  register const FXuchar *s;
+  do{
+    s=src; src+=3;
+    d=dst; dst+=3;
+    dd=d+dss;
+    fin=dh;
+    fout=sh;
+    ar=ag=ab=0;
+    while(1){
+      if(fin<fout){
+        ar+=fin*s[0];
+        ag+=fin*s[1];
+        ab+=fin*s[2];
+        fout-=fin;
+        fin=dh;
+        s+=ss;
+        }
+      else{
+        ar+=fout*s[0]; d[0]=ar/sh; ar=0;
+        ag+=fout*s[1]; d[1]=ag/sh; ag=0;
+        ab+=fout*s[2]; d[2]=ab/sh; ab=0;
+        fin-=fout;
+        fout=sh;
+        d+=ds;
+        if(d>=dd) break;
+        }
+      }
+    }
+  while(dst<end);
+  }
+
+
+// Resize drawable to the specified width and height
+void FXImage::scale(FXint w,FXint h){
+  if(w<1) w=1;
+  if(h<1) h=1;
+  FXTRACE((100,"%s::scale(%d,%d) %p\n",getClassName(),w,h,this));
+  if(w!=width || h!=height){
+    if(data){
+      register FXint ow=width;
+      register FXint oh=height;
+      FXuchar *interim;
+
+      // Allocate interim buffer
+      FXMALLOC(&interim,FXuchar,w*oh*channels);
+
+      // Scale horizontally first, placing result into interim buffer
+      if(w==ow){
+        memcpy(interim,data,w*oh*channels);
+        }
+      else if(channels==4){
+        hscalergba(interim,data,w,oh,ow,oh);
+        }
+      else{
+        hscalergb(interim,data,w,oh,ow,oh);
+        }
+
+      // Resize the pixmap and target buffer
+      resize(w,h);
+
+      // Scale vertically from the interim buffer into target buffer
+      if(h==oh){
+        memcpy(data,interim,w*h*channels);
+        }
+      else if(channels==4){
+        vscalergba(data,interim,w,h,w,oh);
+        }
+      else{
+        vscalergb(data,interim,w,h,w,oh);
+        }
+
+      // Free interim buffer
+      FXFREE(&interim);
+      render();
+      }
+    else{
+      resize(w,h);
+      }
+    }
+  }
+
+
+// Mirror image horizontally and/or vertically
+void FXImage::mirror(FXbool horizontal,FXbool vertical){
+  FXTRACE((100,"%s::mirror(%d,%d) %p\n",getClassName(),horizontal,vertical,this));
+  if(horizontal || vertical){
+    if(data){
+      register FXuchar *end,*paa,*pa,*pbb,*pb;
+      register FXint nbytes=channels*width;
+      register FXuint size=channels*width*height;
+      FXuchar *olddata=data;
+      FXMALLOC(&data,FXuchar,size);
+      if(vertical && height>1){     // Mirror vertically
+        end=data+nbytes*height;
+        paa=data;
+        pbb=olddata+nbytes*(height-1);
+        if(channels==4){
+          do{
+            pa=paa; paa+=nbytes;
+            pb=pbb; pbb-=nbytes;
+            do{
+              *((FXColor*)pa)=*((FXColor*)pb);
+              pa+=4;
+              pb+=4;
+              }
+            while(pa<paa);
+            }
+          while(paa<end);
+          }
+        else{
+          do{
+            pa=paa; paa+=nbytes;
+            pb=pbb; pbb-=nbytes;
+            do{
+              pa[0]=pb[0]; pa[1]=pb[1]; pa[2]=pb[2];
+              pa+=3;
+              pb+=3;
+              }
+            while(pa<paa);
+            }
+          while(paa<end);
+          }
+        }
+      if(horizontal && width>1){    // Mirror horizontally
+        end=data+nbytes*height;
+        paa=data;
+        pbb=olddata;
+        if(channels==4){
+          do{
+            pa=paa; paa+=nbytes;
+            pbb+=nbytes; pb=pbb;
+            do{
+              pb-=4;
+              *((FXColor*)pa)=*((FXColor*)pb);
+              pa+=4;
+              }
+            while(pa<paa);
+            }
+          while(paa<end);
+          }
+        else{
+          do{
+            pa=paa; paa+=nbytes;
+            pbb+=nbytes; pb=pbb;
+            do{
+              pb-=3;
+              pa[0]=pb[0]; pa[1]=pb[1]; pa[2]=pb[2];
+              pa+=3;
+              }
+            while(pa<paa);
+            }
+          while(paa<end);
+          }
+        }
+      if(options&IMAGE_OWNED){FXFREE(&olddata);}
+      options|=IMAGE_OWNED;
+      render();
+      }
+    }
+  }
+
+
+
+// Rotate image by degrees ccw
+void FXImage::rotate(FXint degrees){
+  FXTRACE((100,"%s::rotate(%d) %p\n",getClassName(),degrees,this));
+  degrees=(degrees+360)%360;
+  if(degrees!=0 && width>1 && height>1){
+    if(data){
+      register FXuchar *paa,*pbb,*end,*pa,*pb;
+      register FXint size=channels*width*height;
+      register FXint nbytesa;
+      register FXint nbytesb;
+      FXuchar *olddata;
+      FXMALLOC(&olddata,FXuchar,size);
+      memcpy(olddata,data,size);
+      switch(degrees){
+        case 90:
+          resize(height,width);
+          nbytesa=channels*width;
+          nbytesb=channels*height;
+          paa=data;
+          pbb=olddata+channels*(height-1);
+          end=data+size;
+          if(channels==4){
+            do{
+              pa=paa; paa+=nbytesa;
+              pb=pbb; pbb-=4;
+              do{
+                *((FXColor*)pa)=*((FXColor*)pb);
+                pa+=4;
+                pb+=nbytesb;
+                }
+              while(pa<paa);
+              }
+            while(paa<end);
+            }
+          else{
+            do{
+              pa=paa; paa+=nbytesa;
+              pb=pbb; pbb-=3;
+              do{
+                pa[0]=pb[0]; pa[1]=pb[1]; pa[2]=pb[2];
+                pa+=3;
+                pb+=nbytesb;
+                }
+              while(pa<paa);
+              }
+            while(paa<end);
+            }
+          break;
+        case 180:
+          resize(width,height);
+          nbytesa=channels*width;
+          nbytesb=channels*width;
+          paa=data;
+          pbb=olddata+size;
+          end=data+size;
+          if(channels==4){
+            do{
+              pa=paa; paa+=nbytesa;
+              pb=pbb; pbb-=nbytesb;
+              do{
+                pb-=4;
+                *((FXColor*)pa)=*((FXColor*)pb);
+                pa+=4;
+                }
+              while(pa<paa);
+              }
+            while(paa<end);
+            }
+          else{
+            do{
+              pa=paa; paa+=nbytesa;
+              pb=pbb; pbb-=nbytesb;
+              do{
+                pb-=3;
+                pa[0]=pb[0]; pa[1]=pb[1]; pa[2]=pb[2];
+                pa+=3;
+                }
+              while(pa<paa);
+              }
+            while(paa<end);
+            }
+          break;
+        case 270:
+          resize(height,width);
+          nbytesa=channels*width;
+          nbytesb=channels*height;
+          paa=data;
+          pbb=olddata+nbytesb*(width-1);
+          end=data+size;
+          if(channels==4){
+            do{
+              pa=paa; paa+=nbytesa;
+              pb=pbb; pbb+=4;
+              do{
+                *((FXColor*)pa)=*((FXColor*)pb);
+                pa+=4;
+                pb-=nbytesb;
+                }
+              while(pa<paa);
+              }
+            while(paa<end);
+            }
+          else{
+            do{
+              pa=paa; paa+=nbytesa;
+              pb=pbb; pbb+=3;
+              do{
+                pa[0]=pb[0]; pa[1]=pb[1]; pa[2]=pb[2];
+                pa+=3;
+                pb-=nbytesb;
+                }
+              while(pa<paa);
+              }
+            while(paa<end);
+            }
+          break;
+        default:
+          fxwarning("%s::rotate: rotation by %d degrees not implemented.\n",getClassName(),degrees);
+          break;
+        }
+      FXFREE(&olddata);
+      render();
+      }
+    else{
+      switch(degrees){
+        case 90:
+          resize(height,width);
+          break;
+        case 180:
+          resize(width,height);
+          break;
+        case 270:
+          resize(height,width);
+          break;
+        default:
+          fxwarning("%s::rotate: rotation by %d degrees not implemented.\n",getClassName(),degrees);
+          break;
+        }
+      }
+    }
+  }
+
+// FXColor ____blend(FXColor fg,FXColor bg){
+//   register FXuint r,g,b,s,t,tmp;
+//   s=FXALPHAVAL(fg);
+//   t=~s;
+//   tmp=FXREDVAL(fg)*s+FXREDVAL(bg)*t+127;     r=(tmp+(tmp>>8))>>8;
+//   tmp=FXGREENVAL(fg)*s+FXGREENVAL(bg)*t+127; g=(tmp+(tmp>>8))>>8;
+//   tmp=FXBLUEVAL(fg)*s+FXBLUEVAL(bg)*t+127;   b=(tmp+(tmp>>8))>>8;
+//   return FXRGB(r,g,b);
+//   }
+
+// Crop image to given rectangle
+void FXImage::crop(FXint x,FXint y,FXint w,FXint h){
+  if(w<1) w=1;
+  if(h<1) h=1;
+  if(x<0 || y<0 || x+w>width || y+h>height){ fxerror("%s::crop: rectangle outside of image.\n",getClassName()); }
+  if(data){
+    register FXuchar *paa,*pbb,*end,*pa,*pb;
+    register FXint size=channels*width*height;
+    register FXint nbytesa;
+    register FXint nbytesb;
+    FXuchar *olddata;
+    FXMALLOC(&olddata,FXuchar,size);
+    memcpy(olddata,data,size);
+    nbytesa=channels*w;
+    nbytesb=channels*width;
+    pbb=olddata+nbytesb*y+channels*x;
+    resize(w,h);
+    paa=data;
+    end=data+channels*w*h;
+    if(channels==4){
+      do{
+        pa=paa; paa+=nbytesa;
+        pb=pbb; pbb+=nbytesb;
+        do{
+          *((FXColor*)pa)=*((FXColor*)pb);
+          pa+=4;
+          pb+=4;
+          }
+        while(pa<paa);
+        }
+      while(paa<end);
+      }
+    else{
+      do{
+        pa=paa; paa+=nbytesa;
+        pb=pbb; pbb+=nbytesb;
+        do{
+          pa[0]=pb[0]; pa[1]=pb[1]; pa[2]=pb[2];
+          pa+=3;
+          pb+=3;
+          }
+        while(pa<paa);
+        }
+      while(paa<end);
+      }
+    FXFREE(&olddata);
+    render();
+    }
+  else{
+    resize(w,h);
+    }
+  }
+
+
+#ifdef WIN32
+
+// Return the device context; the image already selected into it
+FXID FXImage::GetDC() const {
+  HDC hdc=::CreateCompatibleDC(NULL);
+  SelectObject(hdc,(HBITMAP)xid);
+  return hdc;
+  }
+
+
+// Release it (no-op)
+int FXImage::ReleaseDC(FXID hdc) const {
+  return ::DeleteDC((HDC)hdc);
+  }
+
+#endif
+
+
+// Change options
+void FXImage::setOptions(FXuint opts){
+  opts&=~IMAGE_OWNED;
+  if(opts!=options){
+    register FXuchar *pa,*pb,*end;
+    FXuchar *olddata;
+
+    // Had no alpha, but now we do
+    if((opts&IMAGE_ALPHA)&&!(options&IMAGE_ALPHA)){
+      olddata=data;
+      FXMALLOC(&data,FXuchar,width*height*4);
+      pa=data;
+      pb=olddata;
+      end=data+width*height*4;
+      do{
+        pa[0]=pb[0]; pa[1]=pb[1]; pa[2]=pb[2]; pa[3]=255;
+        pa+=4;
+        pb+=3;
+        }
+      while(pa<end);
+      if(options&IMAGE_OWNED){FXFREE(&olddata);}
+      opts|=IMAGE_OWNED;
+      channels=4;
+      }
+
+    // Had alpha, but now we don't
+    else if(!(opts&IMAGE_ALPHA)&&(options&IMAGE_ALPHA)){
+      olddata=data;
+      FXMALLOC(&data,FXuchar,width*height*3);
+      pa=data;
+      pb=olddata;
+      end=data+width*height*3;
+      do{
+        pa[0]=pb[0]; pa[1]=pb[1]; pa[2]=pb[2];
+        pa+=3;
+        pb+=4;
+        }
+      while(pa<end);
+      if(options&IMAGE_OWNED){FXFREE(&olddata);}
+      opts|=IMAGE_OWNED;
+      channels=3;
+      }
+
+    // Set options
+    options=opts;
     }
   }
 
 
 // Save pixel data only
 void FXImage::savePixels(FXStream& store) const {
-  FXuint size=width*height;
-  if(options&IMAGE_ALPHA) size*=4; else size*=3;
+  FXuint size=width*height*channels;
   store.save(data,size);
   }
 
 
 // Load pixel data only
 void FXImage::loadPixels(FXStream& store){
-  FXuint size=width*height;
-  if(options&IMAGE_ALPHA) size*=4; else size*=3;
-  if(options&IMAGE_OWNED) FXFREE(&data);
+  FXuint size=width*height*channels;
+  if(options&IMAGE_OWNED){FXFREE(&data);}
   FXMALLOC(&data,FXuchar,size);
   store.load(data,size);
   options|=IMAGE_OWNED;
@@ -1274,6 +2264,7 @@ void FXImage::save(FXStream& store) const {
   FXuchar haspixels=(data!=NULL);
   FXDrawable::save(store);
   store << options;
+  store << channels;
   store << haspixels;
   if(haspixels) savePixels(store);
   }
@@ -1284,6 +2275,7 @@ void FXImage::load(FXStream& store){
   FXuchar haspixels;
   FXDrawable::load(store);
   store >> options;
+  store >> channels;
   store >> haspixels;
   if(haspixels) loadPixels(store);
   }
@@ -1291,8 +2283,8 @@ void FXImage::load(FXStream& store){
 
 // Clean up
 FXImage::~FXImage(){
-  if(xid){XFreePixmap(getApp()->display,xid);}
+  FXTRACE((100,"FXImage::~FXImage %p\n",this));
+  destroy();
   if(options&IMAGE_OWNED){FXFREE(&data);}
   data=(FXuchar*)-1;
   }
-  

@@ -1,0 +1,67 @@
+
+
+
+List of contributors, in alphabetical order:
+============================================
+    
+
+Johnathan Bush:
+  Progress Bar Widget contributor.
+
+
+Pierre Cyr <pcyr@po-box.mcgill.ca>
+  Contributions to FXTable widget.
+
+
+Janusz Ganczarski <JanuszG@enter.net.pl>:
+  PCX, ICO Image/Icon format contributor.
+  
+  
+Daniel Gehriger <gehriger@linkcad.com>:
+  FXGIFCursor, Multi-lingual keyboard support, and much more.
+  
+  
+Eric Gillet <egillet@ibelgique.com>:
+  TIFF Image support.
+
+  
+Angel-Ventura Mendo Gomez <ventura@labri.u-bordeaux.fr>:
+  OpenGL Shape Objects.
+  
+  
+Sean Hubbell:
+  Initial version of FXFile API's.  
+  
+  
+Sander Jansen <sxj@usa.com>:
+  New web pages, new web layout, many useful suggestions and code.
+
+
+Lyle Johnson <ljohnson@resgen.com>:
+  Windows Port of FOX, Python, Ruby bindings; FXSpinner widget.
+
+
+Torsten Landschoff <torsten@debian.org>
+  FOX automake, and reswrap man page files.
+
+
+René van Paassen <M.M.vanPaassen@lr.tudelft.nl>:
+  FOX RPM spec file.
+
+
+Guoqing Tian:
+  Dial Widget contributor.
+
+
+David Tyree <celer@ipro.lug.usf.edu>:
+  JPEG Image support.
+
+
+Charles W. Warren <cww@cfdrc.com>:
+  Shutter Widgets contributor.
+
+
+Jeroen van der Zijp <jeroen@fox-toolkit.org>:
+  Main FOX Library author.
+  
+  

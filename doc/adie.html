@@ -1,0 +1,559 @@
+<html>
+<head>
+<LINK REL="stylesheet" HREF="styles.css" TYPE="text/css">
+<title>FOX-Toolkit</title>
+<!-- HTML Copyright 2001 Paul Laufer -->
+</head>
+
+<body bgcolor=#ffffff link=#990033 vlink=#4a73ad alink=#ed004f text=#000000>
+
+<!--header-->
+<table align=center border=0 cellpadding=0 cellspacing=0 width=100% >
+  <tr><td bgcolor=silver colspan=5 align=right height=50><img src=art/oul_grey.gif align=left valign=top width=8 height=8><img src=art/foxlogo.png valign=bottom alt="FOX Toolkit" height=50 width=500 border=0 ></td>
+  	<td bgcolor=#557faa valign=top align=right><img src=art/our.gif width=8 height=8></td>
+  </tr>
+<!-- end header -->
+  <tr>
+    <td bgcolor=#557faa colspan=2 valign=top align=left>&nbsp;</td>
+    <td bgcolor=#557faa colspan=3><font color=#ffffff size=+1><center>
+<!-- Page Title -->
+A.D.I.E. - The Advanced Interactive Editor
+<!-- End Page Title -->
+    </center></font></td>
+    <td bgcolor=#557faa valign=top align=right>&nbsp;</td>
+  </tr>
+  <tr>
+    <td bgcolor=#557faa colspan=2>&nbsp;</td>
+    <td bgcolor=#ffffff valign=top align=left><img src=art/iul.gif width=8 height=8></td>
+    <td bgcolor=#ffffff>&nbsp;</td>
+    <td bgcolor=#ffffff valign=top align=right><img src=art/iur.gif width=8 height=8></td>
+    <td bgcolor=#557faa width=15>&nbsp;</td>
+  </tr>
+  <tr>
+    <td width=8 bgcolor=#557faa>&nbsp;</td>
+    <td valign=top bgcolor=#557faa link=#ffffff width=150>
+
+<!-- start navbar content -->
+
+	<a href=fox.html><font color=#ffffff>Home</font></a><br>
+	<a href=news.html><font color=#ffffff>News</font></a><br>
+	<a href=download.html><font color=#ffffff>Download</font></a><br>
+	<a href=goals.html><font color=#ffffff>Goals & Approach</font></a><br>
+	<a href=doc.html><font color=#ffffff>Documentation</font></a><br>
+	<a href=faq.html><font color=#ffffff>FAQ</font></a><br>
+	<a href=rex.html><font color=#ffffff>FXRex</font></a><br>
+	<a href=screenshots.html><font color=#ffffff>Screenshots</font></a><br>
+	<br>
+	<a href=adie.html><font color=#ffffff>Adie</font></a><br>
+	<a href=pathfinder.html><font color=#ffffff>PathFinder</font></a><br>
+	<a href=calc.html><font color=#ffffff>FOX Calculator</font></a><br>
+	<br>
+	<a href=projects.html><font color=#ffffff>Projects</font></a><br>
+	<br>
+	<a href='http://fxpy.sourceforge.net'><font color=#ffffff>FXPy</font></a><br>
+	<a href='http://fxruby.sourceforge.net'><font color=#ffffff>FXRuby</font></a><br>
+	<a href='http://eiffelfox.sourceforge.net'><font color=#ffffff>EiffelFox</font></a><br>
+        <a href='http://eevolved.com/foxhole/'><font color=#ffffff>The FOX Hole</font></a><br>
+        <a href='http://takahr.dhis.portside.net/cgi-bin/rwiki.cgi?cmd=view;name=FOX+FAQ'><font color=#ffffff>Japanese Docs</font></a><br>
+	<br>
+	<center>
+	<a href="http://www.eff.org/br"><img SRC="art/freespeach.gif" border=0></a>
+	<p>
+	<a href="http://www.slashdot.org"><img SRC="art/slingerzbutton1.gif" border=0></a>
+	</center>
+
+
+<!-- end navbar content -->
+
+    </td>
+    <td bgcolor=#ffffff>&nbsp;</td>
+    <td valign=top>
+
+<!-- start main window content -->
+<TABLE>
+<TR>
+<TD valign=top><IMG src='screenshots/adie.jpg' alt='foxcalc'></TD>
+<TD   >
+Latest Version: 1.0 <BR>
+Release Date: October, 2001 <BR>
+Author: Jeroen van der Zijp<BR>
+License: GPL<BR>
+Supported Platforms: Linux, Unix, Windows 95/98/ME/NT/2000<BR><BR>
+<A CLASS='PAGEMENULINK' href='#intro'>Introduction</A><BR>
+<A CLASS='PAGEMENULINK' href='#genfet'>General Features</A><BR>
+<A CLASS='PAGEMENULINK' href='#file'>File Access Features</A><BR>
+<A CLASS='PAGEMENULINK' href='#edit'>Editing Features</A><BR>
+<A CLASS='PAGEMENULINK' href='#docu'>Starting a New Document.</A><BR>
+<A CLASS='PAGEMENULINK' href='#open'>Opening and Saving Files the Old Fashioned Way.</A><BR>
+<A CLASS='PAGEMENULINK' href='#open2'>Opening Files Using the File/Directory Browser.</A><BR>
+<A CLASS='PAGEMENULINK' href='#open3'>Opening Recently Visited Files.</A><BR>
+<A CLASS='PAGEMENULINK' href='#open4'>Opening Files by Drag and Drop.</A><BR>
+<A CLASS='PAGEMENULINK' href='#open5'>Opening a Selected Filename</A><BR>
+<A CLASS='PAGEMENULINK' href='#mouse'>Mouse Selection.</A><BR>
+
+<A CLASS='PAGEMENULINK' href='#scroll'>Scrolling Text.</A><BR>
+<A CLASS='PAGEMENULINK' href='#clip'>The Clipboard.</A><BR>
+<A CLASS='PAGEMENULINK' href='#sel'>The Primary Selection.</A><BR>
+<A CLASS='PAGEMENULINK' href='#drag'>Text Drag and Drop.</A><BR>
+<A CLASS='PAGEMENULINK' href='#undo'>Undo and Redo.</A><BR>
+
+<A CLASS='PAGEMENULINK' href='#binding'>Keyboard Bindings.</A><BR>
+<A CLASS='PAGEMENULINK' href='#font'>Changing Font.</A><BR>
+<A CLASS='PAGEMENULINK' href='#colors'>Changing Colors.</A><BR>
+<A CLASS='PAGEMENULINK' href='#pref'>Changing Preferences.</A><BR>
+<A CLASS='PAGEMENULINK' href='#settings'>Changing Editor Settings.</A><BR>
+<A CLASS='PAGEMENULINK' href='#patterns'>Changing File Patterns.</A><BR>
+
+<A CLASS='PAGEMENULINK' href='#delimiters'>Changing Delimiters.</A><BR>
+<A CLASS='PAGEMENULINK' href='#other'>Other Configuration Issues.</A><BR>
+
+<A CLASS='PAGEMENULINK' href='download.html#adie'>Download</A><BR>
+</TD>
+
+</TR>
+</TABLE>
+<BR>
+
+<HR>
+<BR>
+<B><A name='intro'>Introduction.</A></B><P>
+<DIV CLASS='NEWSSECTION'>
+Adie is an extremely fast and convenient programming text editor written using the FOX Toolkit.<BR>
+Besides being a nice text editor, Adie is also an extremely convenient file viewer, supporting a plethora of methods to move from one file to the next.<BR>
+For each visited file, Adie remembers where in that file you were last looking, and which special places in that file have been bookmarked, so you can quickly return to frequently visited places.<BR>
+Project browsing is made easy by optionally displaying a File/Directory browser side by side with the text so files may be visited by means of a single click.  Files may also be opened simply by highlighting a file name, compiler warning message, or #include directive and hitting a single button; Adie will search for the file in the same directory as an already loaded file, or in a number of predefined directories (like for example include directories).<BR>
+
+</DIV>
+<P>
+
+<B><A name='genfet'>General Features</A></B><P>
+<DIV CLASS='NEWSSECTION'>
+<UL>
+<LI>Preferences are configurable with convenient dialogs.</LI>
+<LI>Text size only limited by available memory.</LI>
+<LI>Persistent bookmarks may be set for each file.</LI>
+<LI>Persistent scroll position is remembered for each visited file.</LI>
+<LI>Wheel mouse scroll support.</LI>
+<LI>Online help built in.</LI>
+</UL>
+<P>
+</DIV>
+
+<P>
+<B><A name='file'>File Access Features</A></B><P>
+<DIV CLASS='NEWSSECTION'>
+<UL>
+<LI>File Dialog supporting bookmarked directories.</LI>
+<LI>Dropping a file into Adie opens the file.</LI>
+<LI>Single-click access to file using File/Directory browser.</LI>
+<LI>Visit recently edited files.</LI>
+<LI>Jump to file and line number of highlighted compiler warnings or errors.</LI>
+<LI>Customizable list of file patterns; show only source files, for example.</LI>
+<LI>Open a file by highlighting a #include directive.</LI>
+<LI>Customizable list of directories to search for header files.</LI>
+<LI>Detect if file changed outside of editor to prevent accidental overwriting.</LI>
+</UL>
+</DIV>
+
+<P>
+<B><A name='edit'>Editing Features</A></B><P>
+<DIV CLASS='NEWSSECTION'>
+<UL>
+<LI>Unlimited undo/redo capability.</LI>
+<LI>Cut and paste to clipboard support.</LI>
+<LI>X11 primary selection support using middle-mouse paste.</LI>
+<LI>Drag-and-drop support for text move or copy.</LI>
+<LI>Brace matching, statement block, and expression block selection.</LI>
+<LI>Up to 10 persistent bookmarks may be set in each file.</LI>
+<LI>Search and replace history is stored persistently.</LI>
+<LI>Auto-indent feature.</LI>
+<LI>Strip trailing spaces, strip carriage-returns for DOS files.</LI>
+<LI>Indent or unindent selected text; clean indentation.</LI>
+<LI>Search for highlighted text.</LI>
+<LI>Goto line number, goto highlighted line number, goto matching brace, goto begin/end of block.</LI>
+<LI>Fixed word wrap column, or continuous word wrap mode.</LI>
+<LI>Mouse wheel or right-mouse scroll support.</LI>
+<LI>Customizable word-delimiters to select words by double-clicks.</LI>
+<LI>Insert files or extract highlighted text to file.</LI>
+</UL>
+</DIV>
+
+<P>
+<B><A name='docu'>Starting a New Document</A></B><P>
+<DIV CLASS='NEWSSECTION'>
+To start a new document, invoke the New menu, or press on the New button on the toolbar.  If the current document has not yet been saved, you will be prompted to either save or abandon the current text.
+</DIV>
+<P>
+
+<B><A name='open'>Opening and Saving Files the Old Fashioned Way</A></B><P>
+<DIV CLASS='NEWSSECTION'>
+To open a file, you can invoke the Open menu, or press on the Open button on the toolbar.  This will bring up the standard File Dialog, which allows you to select a file.<BR>
+To save a file, you can either invoke the Save or the Save As menu option. The former saves the file back to the same filename, while the latter prompts for an alternative filename.<BR>
+You can quickly navigate to the desired file by typing the first few letters of the filename and then pressing Enter (Return); use Backspace to move up one directory level.  Control-H moves to your home directory, Control-W moves back to the current working directory.<BR>
+A nice convenience of the File Dialog is the ability to set bookmarks, so once bookmarked, you can quickly move back to a previously visited directory.<BR>
+</DIV>
+<P>
+
+<B><A name='open2'>Opening Files Using the File/Directory Browser.</A></B><P>
+<DIV CLASS='NEWSSECTION'>
+An alternative method to open files is the File/Directory Browser. You can display the File/Directory Browser by invoking the File Browser option under the View menu.  To open a file using the File/Directory Browser, simply click on the file. If there are many files, you may want to limit the number of files displayed by specifying a file pattern in the Filter typein field.<BR>
+The pattern is can be any regular file wildcard expression such as "*.cpp".  By default, the File/Directory Browser shows all files, i.e. the pattern is "*".<BR>
+You can switch patterns by means of the combo box under file File Browser; additional patterns for the combo box (and File Dialog) can be specified in the Preferences Dialog.<BR>
+</DIV>
+<P>
+
+<B><A name='open3'>Opening Recently Visited Files</A></B><P>
+<DIV CLASS='NEWSSECTION'>
+The recent file menu shows files which have been recently visited.  You can quickly get back to a file you've been editing simply by selecting one of these recent files.<BR>
+</DIV>
+<P>
+
+<B><A name='open4'>Opening Files by Drag and Drop</A></B><P>
+<DIV CLASS='NEWSSECTION'>
+Using a file browser such as PathFinder or other Konqueror or other XDND compatible file browsers, you can simply drop a file into the text pane and have Adie read this file.<BR>
+Of course, the File/Directory browser supports drag and drop also, so you can also drag a file from the File/Directory browser into the Text Window.<BR>
+</DIV>
+<P>
+
+
+<B><A name='open5'>Opening a Selected Filename</A></B><P>
+<DIV CLASS='NEWSSECTION'>
+Selecting any filename, possibly in another application, and invoking the "Open Selected" option causes Adie to open the selected file. When the selected filename is of the form:<P>
+<code>
+   #include "filname.h"
+</code>
+<P>
+or:
+<P>
+<code>
+   #include  &lt;filename.h&gt;
+</code>
+<P>
+then Adie will search for this file in a sequence of include directories, otherwise it will search in the same directory as the currently loaded file.  You can specify the list of include directories to search with the "Include Path" option.
+When the selected filename is of the form:<P>
+<code>
+   filename.cpp:177
+</code>
+<P>
+then Adie will not only load the filename, but also jump to the given line number.  If this file has already been loaded, Adie will simply jump to the given line number in the current file.  This option is very useful when fixing compiler errors.
+</DIV>
+<P>
+
+<B><A name='mouse'>Mouse Selection</A></B><P>
+<DIV CLASS='NEWSSECTION'>
+You can move the cursor by simply clicking on the desired location with the left mouse button. To highlight some text, press the mouse and drag the mouse while holding the left button. To select text a word at a time, you can double-click and drag; to select text a line at a time, you can triple-click and drag.<BR>
+Performing a shift-click extends the selection from the last cursor location to the current one.<BR>
+When selecting words, words are considered to extend from the clicked position up to a blank or word-delimiting character.  The latter may depend on the programming language, and so Adie offers a way to change the set of delimiter characters.<BR>
+</DIV>
+<P>
+
+<B><A name='scroll'>Scrolling Text</A></B><P>
+<DIV CLASS='NEWSSECTION'>
+Using the right mouse button, you can grab the text and scroll it. a right mouse drag is a very convenient way to scroll the text buffer by small amount as the scrolling is exactly proportional to the mouse movement.<BR>
+You can of course also use the scroll bars.  Because scrolling becomes awkward when dealing with large amounts of text, you can do a fine scroll or vernier-scroll by holding the shift or control keys while moving the scroll bars.<BR>
+Adie can also take advantage of a wheel mouse; simply point the mouse inside the text area and use the wheel to scroll it up and down.  Holding the Control-key while operating the wheel makes the scrolling go faster, by smoothly scrolling one page at a time.  To scroll horizontally, simply point the mouse at the horizontal scroll bar.<BR>
+In fact, any scrollable control (including the File/Directory Browser), can be scrolled by simply pointing the cursor over it and using the mouse wheel.<BR>
+You can adjust the number of lines scrolled for each wheel notch by means of the Preferences dialog.<BR>
+</DIV>
+<P>
+
+<B><A name='clip'>The Clipboard</A></B><P>
+<DIV CLASS='NEWSSECTION'>
+After selecting some text, you can cut or copy this text to the clipboard. A subsequent paste operation will then insert the contents of the clipboard at the current cursor location.<BR>
+If some text has been selected in another application, then you can paste this text by placing the cursor at the right spot in your text and invoking the paste command.<BR>
+</DIV>
+<P>
+
+<B><A name='sel'>The Primary Selection</A></B><P>
+<DIV CLASS='NEWSSECTION'>
+When text is selected anywhere (possibly in another application), Adie can paste this text into the current text buffer by means of the middle mouse button or by pressing the wheel-button if you have a wheel mouse.  Note that while holding the button, the insertion point can be moved by moving the mouse:- Adie will only insert the text when you release the button.<BR>
+</DIV>
+<P>
+
+
+<B><A name='drag'>Text Drag and Drop</A></B><P>
+<DIV CLASS='NEWSSECTION'>
+After selecting some text, you can drag this text to another location by pressing the middle mouse button; because Adie is fully drag and drop enabled, you can not only drag a selection from one place to another inside the text buffer, but also between different Adie applications, or even from Adie to another drag and drop enabled application or vice-versa.<BR>
+Within the same text window, the drag defaults to a text-movement.  You can change this to a text copy by holding down the Control key while you're dragging.<BR>
+Between one text window and another, the drag defaults to a copy operation you can change this to a text movement by holding down the Shift key while dragging.<BR>
+</DIV>
+
+<P>
+
+<B><A name='undo'>Undo and Redo</A></B><P>
+<DIV CLASS='NEWSSECTION'>
+Adie support unlimited (well, the limit is large...) undo and redo capability.  Each time you insert, remove, or replace some text, Adie remembers what you did.<BR>
+If you make a mistake, you can undo the last command, and the one before that, and so on. Having invoked undo many times, it is sometimes desirable to invoke the redo command, i.e. to perform the original editing operation again.  Thus, you can move backward or forward in time.<BR>
+However if, after undoing several commands, you decide edit the buffer in a different way, then you will no longer be able to redo the undone commands:- you have now taken a different path.<BR>
+When you first load a file, or just after you save it, Adie remembers that this version of the text was special; while subsequent editing commands can be undone individually, you can always quickly return to this special version of the text by means of the revert command.<BR>
+</DIV>
+<P>
+
+
+<B><A name='binding'>Keyboard Bindings.</A></B><P>
+<DIV CLASS='NEWSSECTION'>
+The following table lists the keyboard bindings.
+<P>
+
+<TABLE border=0 class='NEWSSECTION'>
+<TR><TH>Key</TH><TH>Action</TH></TR>
+<TR><TD>Shift+Up</TD><TD>Move cursor up and extend selection.</TD></TR>
+<TR><TD>Down</TD><TD>Move cursor down.</TD></TR>
+<TR><TD>Shift+Down</TD><TD>Move cursor down and extend selection.</TD></TR>
+<TR><TD>Left</TD><TD>Move cursor left.</TD></TR>
+<TR><TD>Shift+Left</TD><TD>Move cursor left and extend selection.</TD></TR>
+<TR><TD>Right</TD><TD>Move cursor right.</TD></TR>
+<TR><TD>Shift+Right</TD><TD>Move cursor right and extend selection.</TD></TR>
+<TR><TD>Home</TD><TD>Move cursor to begin of line.</TD></TR>
+<TR><TD>Shift+Home</TD><TD>Move cursor to begin of line and extend selection.</TD></TR>
+<TR><TD>Ctrl+Home</TD><TD>Move cursor to top of text.</TD></TR>
+<TR><TD>End</TD><TD>Move cursor to end of line.</TD></TR>
+<TR><TD>Ctrl+End</TD><TD>Move cursor to bottom of text.</TD></TR>
+<TR><TD>Shift+End</TD><TD>Move cursor to end of line and extend selection.</TD></TR>
+<TR><TD>Page Up</TD><TD>Move cursor up one page.</TD></TR>
+<TR><TD>Shift+Page Up</TD><TD>Move cursor up one page and extend selection.</TD></TR>
+<TR><TD>Page Down</TD><TD>Move cursor down one page.</TD></TR>
+<TR><TD>Shift+Page Down</TD><TD>Move cursor down one page and extend selection.</TD></TR>
+<TR><TD>Insert</TD><TD>Toggle between insert mode and overstrike mode.</TD></TR>
+<TR><TD>Delete</TD><TD>Delete character after cursor, or text selection.</TD></TR>
+<TR><TD>Backspace</TD><TD>Delete character before cursor, or text selection.</TD></TR>
+<TR><TD>Ctrl+A</TD><TD>Select all text.</TD></TR>
+<TR><TD>Ctrl+X</TD><TD>Cut selected text to clipboard.</TD></TR>
+<TR><TD>Ctrl+C</TD><TD>Copy selected text to clipboard.</TD></TR>
+<TR><TD>Ctrl+V</TD><TD>Paste text from clipboard.</TD></TR>
+<TR><TD>Ctrl+F</TD><TD>Search</TD></TR>
+<TR><TD>Ctrl+R</TD><TD>Replace</TD></TR>
+<TR><TD>Ctrl+O</TD><TD>Open</TD></TR>
+<TR><TD>Ctrl+E</TD><TD>Open Selected</TD></TR>
+<TR><TD>Ctrl+N</TD><TD>New</TD></TR>
+<TR><TD>Ctrl+S</TD><TD>Save</TD></TR>
+<TR><TD>Ctrl+P</TD><TD>Print</TD></TR>
+<TR><TD>Ctrl+Z</TD><TD>Undo</TD></TR>
+<TR><TD>Ctrl+Y</TD><TD>Redo</TD></TR>
+<TR><TD>Ctrl+6</TD><TD>Convert selected text to lower case</TD></TR>
+<TR><TD>Shift+Ctrl+^</TD><TD>Convert selected text to upper case</TD></TR>
+<TR><TD>Ctrl+9</TD><TD>Shift text left</TD></TR>
+<TR><TD>Ctrl+0</TD><TD>Shift text right</TD></TR>
+<TR><TD>Ctrl+G</TD><TD>Goto line...</TD></TR>
+<TR><TD>Ctrl+L</TD><TD>Goto selected text</TD></TR>
+<TR><TD>Shift+Ctrl+{</TD><TD>Goto {</TD></TR>
+<TR><TD>Shift+Ctrl+}</TD><TD>Goto }</TD></TR>
+<TR><TD>Shift+Ctrl+(</TD><TD>Goto (</TD></TR>
+<TR><TD>Shift+Ctrl+)</TD><TD>Goto )</TD></TR>
+<TR><TD>Ctrl+M</TD><TD>Goto matching (..)</TD></TR>
+<TR><TD>Ctrl+Alt+0-9</TD><TD>Set bookmark</TD></TR>
+<TR><TD>Alt+0-9</TD><TD>Goto bookmark</TD></TR>
+<TR><TD>Shift+Ctrl+M </TD><TD>Select matching (..)</TD></TR>
+<TR><TD>Shift+Alt+{</TD><TD>Select block {...}</TD></TR>
+<TR><TD>Shift+Alt+}</TD><TD>Select block {...}</TD></TR>
+<TR><TD>Shift+Alt+(</TD><TD>Select expression (...)</TD></TR>
+<TR><TD>Shift+Alt+)</TD><TD>Select expression (...)</TD></TR>
+<TR><TD>Ctrl+H</TD><TD>Search selection forward</TD></TR>
+<TR><TD>Shift+Ctrl+H</TD><TD>Search selection backward</TD></TR>
+</TABLE>
+</DIV>
+<P>
+
+<B><A name='font'>Changing Font</A></B><P>
+<DIV CLASS='NEWSSECTION'>
+<IMG src='screenshots/adie_font.jpg' alt='fonts'><P>
+You can change font by invoking the Font Selection Dialog from the Font menu. The Font Dialog displays four list boxes showing the font Family, Weight, Style, and Size of each font.<BR>
+You can narrow down the number of fonts displayed by selecting a specific character set, setwidth, pitch, and whether or not scalable fonts are to be listed only.<BR>
+The All Fonts checkbutton causes all fonts to be listed. Use this feature if you need to select old-style X11 bitmap fonts.<BR>
+The Preview window shows a sample of text in the selected font.<BR>
+</DIV>
+<P>
+
+<B><A name='colors'>Changing Colors.</A></B><P>
+<DIV CLASS='NEWSSECTION'>
+<IMG src='screenshots/adie_colors.jpg' alt='colors'><P>
+The colors subpane allows you to change the colors used in the File/Directory browser, and the Text Window.<BR>
+You can simply drag colors from one color well to another, or you can double-click on a color well and bring up the Color Dialog.<BR>
+The Color Dialog offers a number of ways to create a new color, either by selecting one of the pre-defined color wells, by mixing a custom color in RGB, HSV, or CMYK color space, or by selecting a named color from a list.<BR>
+</DIV>
+<P>
+
+
+<B><A name='settings'>Changing Editor Settings.</A></B><P>
+<DIV CLASS='NEWSSECTION'>
+<IMG src='screenshots/adie_edit.jpg' alt='edit'><P>
+The editor subpane is used to change various modes of the editor:<P>
+<DL>
+<DT>Word Wrapping
+<DD>This enables word wrapping mode for the Text Window; when word wrapping is turned on, text flowed to stay within the wrap margins.
+<P>
+<DT>Fixed Wrap Margin
+<DD>When this feature is enabled, the text is flowed to stay within a fixed wrap column; when disabled, the Text Window is in continuous wrapping mode, and the text is flowed to fit the size of the Text Window.  This option has no effect if the Word Wrapping option is off.
+<P>
+<DT>Wrap Margin
+<DD>This specifies the column at which paragraphs are to be wrapped; the wrap margin only has effect if the fixed wrap margin option is selected.
+<P>
+<DT>Tab Columns
+<DD>This specifies the tab spacing, in terms of spaces.
+<P>
+<DT>Strip Carriage Returns
+<DD>When this option is selected, MS-Windows/MS-DOS text files with lines ending in CRLF are transformed into LF only files upon read; this is mostly of interest when loading DOS files on a UNIX system; when Adie runs under MS-Windows, files are normally automatically translated back and forth.
+<P>
+<DT>Strip Trailing Spaces
+<DD>When selected, Adie will remove all white-space after the last printable character when reading a file.
+<P>
+<DT>Auto Indent
+<DD>This causes spaces or tabs to be inserted to match the previous line; this option is meant for programmers.
+<P>
+<DT>Brace Match Time
+<DD>When entering a brace, parenthesis, or bracket, the cursor temporarily jumps to the matching brace and pauses there for a bit before hopping back to the insert position.  If the brace match time is set to 0, then this feature is disabled.
+<P>
+<DT>Insert Tab Characters
+<DD>When this option is selected, hard tab characters are inserted when entering the tab key.  If the option is not selected then entering the tab key will insert the corresponding number of spaces into the text buffer.
+<P>
+<DT>Mouse Wheel Lines
+<DD>This is the number of lines scrolled when the mouse wheel is rotated by one notch.  When holding the control key while using the wheel, the text scrolls by one page at a time; when holding the alt key, it scrolls one pixel at a time.
+<P>
+<DT>Save View of File
+<DD>When this option is selected, the current view or scroll position is saved so that a subsequent visit to this file can immediately jump back to the same view.  Disabling this option will cause all remembered views to be forgotten.
+<P>
+<DT>Save Bookmarks
+<DD>When selected, all currently set bookmarks will be saved for this file; a subsequent visit to this file will restore the bookmarks.  Disabling this option will cause all remembered bookmarks to be forgotten.
+</DL>
+</DIV>
+<P>
+
+<B><A name='patterns'>Changing File Patterns.</A></B><P>
+<DIV CLASS='NEWSSECTION'>
+<IMG src='screenshots/adie_pat.jpg' alt='patterns'><P>
+This subpane allows you to enter a list of file patterns, one pattern on each line.  These patterns are used in the File/Directory browser and the File Dialog.  They are especially useful in the File/Directory browser as it allows you to cause the File/Directory browser to only show those file types you want to see (e.g. only source files).<BR>
+Each line of a pattern has the format:<P>
+<code>
+patternname (patternlist)
+</code>
+<P>
+Where patternname is the name of the pattern (e.g. "C Source") and the patternlist is a comma separated list of patterns (for example "*.h,*.c").
+The patternname is optional.
+Some examples from my own setup of Adie are shown below:<P>
+<code>
+  All Files (*)<BR>
+  All Source (*.cpp,*.cxx,*.cc,*.C,*.c,*.hpp,*.hxx,*.hh,*.H,*.h,*.y,*.l)<BR>
+  C++ Source Files (*.cpp,*.cxx,*.cc,*.c,*.C)<BR>
+  C++ Header Files (*.h,*.hpp,*.hxx,*.hh,*.H)<BR>
+  C Source Files (*.c)<BR>
+  C Header Files (*.h)<BR>
+  Python Files (*.py)<BR>
+  Perl Files (*.pl)<BR>
+  Ruby Files (*.rb)<BR>
+  Lex (*.l)<BR>
+  Yacc (*.y)<BR>
+  Object (*.o)<BR>
+  X Pixmap (*.xpm)<BR>
+  X Bitmap (*.xbm)<BR>
+</code>
+<P>
+Some details on the allowable wild-card patterns:<P>
+<TABLE border=0>
+<TR><TD>?</TD><TD>Matches single character.</TD></TR>
+<TR><TD>*</TD><TD>Matches zero or more characters.</TD></TR>
+<TR><TD>[abc]</TD><TD>Matches a single character, which must be a, b, or c.</TD></TR>
+<TR><TD>[^abc]</TD><TD>Matches a single character, which must be anything other than a, b, or c.</TD></TR>
+<TR><TD>[!abc]</TD><TD>Ditto.</TD></TR>
+<TR><TD>[a-zA-Z]</TD><TD>Matches single character, which must be one of a-z or A-Z.</TD></TR>
+<TR><TD>[^a-zA-Z]</TD><TD>Matches single character, which must be anything other than a-z or A-Z.</TD></TR>
+<TR><TD>[!a-zA-Z]</TD><TD>Ditto.</TD></TR>
+<TR><TD>pat1|pat2</TD><TD>Matches either pat1 or pat2.</TD></TR>
+<TR><TD>pat1,pat2</TD><TD>Ditto.</TD></TR>
+<TR><TD>(pat1|pat2)</TD><TD>Matches either pat1 or pat2; patterns may be nested.</TD></TR>
+<TR><TD>(pat1,pat2)</TD><TD>Ditto.</TD></TR>
+</TABLE>
+</DIV>
+<P>
+
+
+<B><A name='delimiters'>Changing Delimiters.</A></B><P>
+<DIV CLASS='NEWSSECTION'>
+<IMG src='screenshots/adie_del.jpg' alt='del'><P>
+Different programming language have different notions about identifiers.  Adie accomodates for this by allowing you to specify which characters (besides white space, of course) are used to delimit identifiers or tokens in the programming language. The default set of delimiters is "!"#$%&'()*+,-./:; &lt;= &gt;?@[\]^`{|}~".<BR>
+</DIV>
+<P>
+
+
+<B><A name='other'>Other Configuration Issues.</A></B><P>
+<DIV CLASS='NEWSSECTION'>
+Because Adie is an editor written to use the FOX Toolkit, there are various other items, common to all FOX Toolkit programs, which may be configured either by hand or using some other control panel.
+A few items of particular interest are list below:<P>
+<code>
+
+  [SETTINGS]<BR>
+  typingspeed=800<BR>
+  clickspeed=400<BR>
+  scrollspeed=80<BR>
+  scrolldelay=600<BR>
+  blinkspeed=500<BR>
+  animspeed=10<BR>
+  menupause=400<BR>
+  tippause=800<BR>
+  tiptime=3000<BR>
+  dragdelta=6<BR>
+  wheellines=1<BR>
+  bordercolor=black<BR>
+  basecolor=AntiqueWhite3<BR>
+  hilitecolor=AntiqueWhite<BR>
+  shadowcolor=AntiqueWhite4<BR>
+  backcolor=AntiqueWhite1<BR>
+  forecolor=black<BR>
+  selforecolor=AntiqueWhite<BR>
+  selbackcolor=#aea395<BR>
+  tipforecolor=yellow<BR>
+  tipbackcolor=black<BR>
+  normalfont="[lucidatypewriter] 90 700 1 1 0 1"<BR>
+  iconpath = /usr/share/icons:/home/jeroen/icons<BR>
+
+</code>
+
+<P>
+
+These settings can be either placed in $HOME/.foxrc (and thus affect all FOX programs), or in $HOME/.foxrc/FoxTest/Adie (only applying to Adie).
+File types may be bound to a command, mime-type, and icons using statements like the one below:
+<P>
+<code>
+  [FILETYPES]<BR>
+  cpp = "/usr/local/bin/textedit %s &;C++ Source File;c_src.xpm;mini/c_src.xpm"<BR>
+  /home/jeroen = ";Home Directory;home.xpm;mini/home.xpm;application/x-folder"<BR>
+  defaultfilebinding = "/usr/local/bin/textedit %s &;Document;document.xpm;mini/document.xpm"<BR>
+  defaultexecbinding = ";Application;exec.xpm;mini/exec.xpm;application/x-executable-file"<BR>
+  defaultdirbinding = ";Folder;folder.xpm;mini/folder.xpm;application/x-folder"<BR>
+</code>
+<P>
+This example shows how the extension ".cpp" is bound to the program "textedit" and is associated with two icons, a big icon "c_src.xpm" and a small icon "mini/c_src.xpm", which are to be found in the directories determined by 'iconpath", in this case, "/usr/share/icons" or "/home/jeroen/icons".<BR>
+It also binds two icons "home.xpm" and "mini/home.xpm" to the home directory "/home/jeroen".<BR>
+Finally, it assigns icons, commands, and mime-types to unbound documents, executables, and directories, overriding the built-in icons of the FOX Toolkit.<BR>
+
+</DIV>
+<P>
+
+<!-- end main window content -->
+
+    </td>
+    <td bgcolor=#ffffff>&nbsp;</td>
+    <td bgcolor=#557faa width=15>&nbsp;</td>
+  </tr>
+  <tr>
+    <td colspan=2 bgcolor="#557faa" align=center>
+      <a href=http://sourceforge.net>&nbsp;
+     </td>
+    <td bgcolor=#ffffff valign=bottom align=left><img src=art/ill.gif width=8 height=8></td>
+    <td bgcolor=#ffffff>&nbsp;</td>
+    <td bgcolor=#ffffff valign=bottom align=right><img src=art/ilr.gif width=8 height=8></td>
+    <td bgcolor=#557faa width=15>&nbsp;</td>
+  </tr>
+  <tr>
+    <td valign=bottom align=left bgcolor=#557faa><img src=art/oll.gif width=8 height=8></td>
+    <td colspan=4 bgcolor=#557faa>&nbsp;</td>
+    <td valign=bottom align=right bgcolor=#557faa><img src=art/olr.gif width=8 height=8></td>
+  </tr>
+</table>
+
+<address>Copyright &copy; 1997-2002 <a href=mailto:jeroen@fox-toolkit.org>Jeroen van der Zijp</a></address>
+<!-- Created: Mon Apr 10 11:20:32 CEST 2000 -->
+<!-- hhmts start -->
+
+<!-- hhmts end -->
+</body>
+</html>

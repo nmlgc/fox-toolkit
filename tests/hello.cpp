@@ -1,4 +1,5 @@
-#include "fx.h"	
+#include "fx.h"
+
 
 /*
 
@@ -9,7 +10,7 @@
   Note the following things:
   
     - Each FOX application needs one (and only one) application
-      object (FXApp).  You may subclass from FXApp if you need to.
+      object (FXApp). 
       
     - Before doing anything, the application object needs to be
       initialized.  You need to pass argc and argv so that certain
@@ -30,14 +31,13 @@
   
 */
   
-  
+
 int main(int argc,char **argv){
-  FXApp *app=new FXApp;
-  app->init(argc,argv);
-  FXMainWindow *main=new FXMainWindow(app,"Hello",DECOR_ALL);
-  new FXButton(main,"&Hello, World!",NULL,app,FXApp::ID_QUIT);
-  app->create();
-  main->show();
-  app->run();
-  return 0;
+  FXApp application("Hello","FoxTest");
+  application.init(argc,argv);
+  FXMainWindow *main=new FXMainWindow(&application,"Hello",NULL,NULL,DECOR_ALL);
+  new FXButton(main,"&Hello, World!",NULL,&application,FXApp::ID_QUIT);
+  application.create();
+  main->show(PLACEMENT_SCREEN);
+  return application.run();
   }

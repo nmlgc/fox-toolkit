@@ -1,0 +1,132 @@
+##############################################################################
+#                                                                            #
+#                       FOX:  A Free C++ Class Library for X                 #
+#                                                                            #
+##############################################################################
+# Copyright (C) 1997 by Jeroen van der Zijp.   All Rights Reserved.          #
+##############################################################################
+# $Id: Makefile.icc,v 1.6 2001/12/13 18:41:32 jeroen Exp $                   #
+##############################################################################
+# This library is free software; you can redistribute it and/or              #
+# modify it under the terms of the GNU Library General Public                #
+# License as published by the Free Software Foundation; either               #
+# version 2 of the License, or (at your option) any later version.           #
+#                                                                            #
+# This library is distributed in the hope that it will be useful,            #
+# but WITHOUT ANY WARRANTY; without even the implied warranty of             #
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU          #
+# Library General Public License for more details.                           #
+#                                                                            #
+# You should have received a copy of the GNU Library General Public          #
+# License along with this library; if not, write to the Free                 #
+# Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.         #
+##############################################################################
+
+# For use with Borland C++ Builder 3 or later
+CXX       = icc
+RM        = del
+TOPDIR    = ..
+CXXFLAGS  = -G5 -O2 -Gm+ -w-par -w-csu -w-aus
+DEFINES   = -DNDEBUG -DWIN32 -DHAVE_OPENGL
+LDFLAGS   = user32.lib gdi32.lib advapi32.lib shell32.lib winspool.lib comctl32.lib
+GLLIBS    = opengl32.lib glu32.lib
+INCDIRS   = -I$(TOPDIR)\include
+FOXLIB    = $(TOPDIR)\src\fox.lib
+RESWRAP   = $(TOPDIR)\utils\reswrap
+LIB       = $(CPPMAIN)\sdk\lib\winnt;$(LIB)
+
+PROGRAMS  = minheritance.exe mditest.exe table.exe groupbox.exe foursplit.exe\
+            datatarget.exe scribble.exe splitter.exe shutter.exe\
+            image.exe header.exe hello.exe hello2.exe switcher.exe\
+            iconlist.exe tabbook.exe dialog.exe dirlist.exe button.exe\
+            dctest.exe glviewer.exe gltest.exe imageviewer.exe rex.exe
+
+SOURCES = button.cpp mditest.cpp groupbox.cpp scribble.cpp splitter.cpp\
+          header.cpp iconlist.cpp shutter.cpp minheritance.cpp\
+          image.cpp hello.cpp hello2.cpp dirlist.cpp datatarget.cpp dialog.cpp\
+          switcher.cpp tabbook.cpp table.cpp foursplit.cpp dctest.cpp\
+          glviewer.cpp gltest.cpp imageviewer.cpp
+
+
+OBJECTS = $(SOURCES:.cpp=.obj)
+
+.cpp.obj:
+	$(CXX) -c $(INCDIRS) $(CXXFLAGS) $(DEFINES) $*.cpp
+
+all: $(PROGRAMS)
+
+rex.exe: $(FOXLIB) rex.obj
+	$(CXX) $(LDFLAGS) $(LIBDIRS) rex.obj $(FOXLIB)
+
+minheritance.exe: $(FOXLIB) minheritance.obj
+	$(CXX) $(LDFLAGS) $(LIBDIRS) minheritance.obj $(FOXLIB)
+
+foursplit.exe: $(FOXLIB) foursplit.obj
+	$(CXX) $(LDFLAGS) $(LIBDIRS) foursplit.obj $(FOXLIB)
+
+tabbook.exe: $(FOXLIB) tabbook.obj
+	$(CXX) $(LDFLAGS) $(LIBDIRS) tabbook.obj $(FOXLIB)
+
+table.exe: $(FOXLIB) table.obj
+	$(CXX) $(LDFLAGS) $(LIBDIRS) table.obj $(FOXLIB)
+
+switcher.exe: $(FOXLIB) switcher.obj
+	$(CXX) $(LDFLAGS) $(LIBDIRS) switcher.obj $(FOXLIB)
+
+button.exe: $(FOXLIB) button.obj
+	$(CXX) $(LDFLAGS) $(LIBDIRS) button.obj $(FOXLIB)
+
+mditest.exe: $(FOXLIB) mditest.obj
+	$(CXX) $(LDFLAGS) $(LIBDIRS) mditest.obj $(FOXLIB)
+
+datatarget.exe: $(FOXLIB) datatarget.obj
+	$(CXX) $(LDFLAGS) $(LIBDIRS) datatarget.obj $(FOXLIB)
+
+imageviewer.exe: $(FOXLIB) imageviewer.obj
+	$(CXX) $(LDFLAGS) $(LIBDIRS) imageviewer.obj $(FOXLIB)
+
+hello.exe: $(FOXLIB) hello.obj
+	$(CXX) $(LDFLAGS) $(LIBDIRS) hello.obj $(FOXLIB)
+
+hello2.exe: $(FOXLIB) hello2.obj
+	$(CXX) $(LDFLAGS) $(LIBDIRS) hello2.obj $(FOXLIB)
+
+dirlist.exe: $(FOXLIB) dirlist.obj
+	$(CXX) $(LDFLAGS) $(LIBDIRS) dirlist.obj $(FOXLIB)
+
+groupbox.exe: $(FOXLIB) groupbox.obj
+	$(CXX) $(LDFLAGS) $(LIBDIRS) groupbox.obj $(FOXLIB)
+
+scribble.exe: $(FOXLIB) scribble.obj
+	$(CXX) $(LDFLAGS) $(LIBDIRS) scribble.obj $(FOXLIB)
+
+splitter.exe: $(FOXLIB) splitter.obj
+	$(CXX) $(LDFLAGS) $(LIBDIRS) splitter.obj $(FOXLIB)
+
+iconlist.exe: $(FOXLIB) iconlist.obj
+	$(CXX) $(LDFLAGS) $(LIBDIRS) iconlist.obj $(FOXLIB)
+
+header.exe: $(FOXLIB) header.obj
+	$(CXX) $(LDFLAGS) $(LIBDIRS) header.obj $(FOXLIB)
+
+shutter.exe: $(FOXLIB) shutter.obj
+	$(CXX) $(LDFLAGS) $(LIBDIRS) shutter.obj $(FOXLIB)
+
+image.exe: $(FOXLIB) image.obj
+	$(CXX) $(LDFLAGS) $(LIBDIRS) image.obj $(FOXLIB)
+
+gltest.exe: $(FOXLIB) gltest.obj
+	$(CXX) $(LDFLAGS) $(LIBDIRS) gltest.obj $(FOXLIB) $(GLLIBS)
+
+glviewer.exe: $(FOXLIB) glviewer.obj
+	$(CXX) $(LDFLAGS) $(LIBDIRS) glviewer.obj $(FOXLIB) $(GLLIBS)
+
+dialog.exe: $(FOXLIB) dialog.obj
+	$(CXX) $(LDFLAGS) $(LIBDIRS) dialog.obj $(FOXLIB)
+
+dctest.exe: $(FOXLIB) dctest.obj
+	$(CXX) $(LDFLAGS) $(LIBDIRS) dctest.obj $(FOXLIB)
+
+clean:
+	del *.obj
+	del *.exe

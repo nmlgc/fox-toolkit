@@ -1,0 +1,264 @@
+## Process this file with automake to produce Makefile.in
+
+CXXFLAGS = @CXXFLAGS@ @X_CFLAGS@
+INCLUDES = -I$(top_srcdir)/include -I$(top_builddir)/include
+
+lib_LTLIBRARIES = libFOX.la
+
+libFOX_la_LIBADD  = $(X_LIBS) $(X_BASE_LIBS) $(X_EXTRA_LIBS) $(GL_LIBS)
+
+libFOX_la_LDFLAGS = \
+        -version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)    \
+	-release $(LT_RELEASE)
+
+
+CURSORS = \
+crosshair.xbm \
+crosshair_mask.xbm \
+dndcopy.xbm \
+dndcopy_mask.xbm \
+dndlink.xbm \
+dndlink_mask.xbm \
+dndmove.xbm \
+dndmove_mask.xbm \
+dontdrop.xbm \
+dontdrop_mask.xbm \
+drag.xbm \
+drag_mask.xbm \
+gray.xbm \
+hsplit.xbm \
+hsplit_mask.xbm \
+move.xbm \
+move_mask.xbm \
+resize.xbm \
+resize_mask.xbm \
+resizeleft.xbm \
+resizeleft_mask.xbm \
+resizetop.xbm \
+resizetop_mask.xbm \
+resizetopleft.xbm \
+resizetopleft_mask.xbm \
+resizetopright.xbm \
+resizetopright_mask.xbm \
+rotate.xbm \
+rotate_mask.xbm \
+swatch.xbm \
+swatch_mask.xbm \
+vsplit.xbm \
+vsplit_mask.xbm \
+xsplit.xbm \
+xsplit_mask.xbm \
+ne.xbm \
+ne_mask.xbm \
+se.xbm \
+se_mask.xbm \
+sw.xbm \
+sw_mask.xbm \
+nw.xbm \
+nw_mask.xbm \
+translate.xbm \
+translate_mask.xbm \
+zoom.xbm \
+zoom_mask.xbm
+
+
+
+libFOX_la_SOURCES = \
+FX4Splitter.cpp \
+FXAccelTable.cpp \
+FXApp.cpp \
+FXArrowButton.cpp \
+FXBMPIcon.cpp \
+FXBMPImage.cpp \
+FXBitmap.cpp \
+FXButton.cpp \
+FXCURCursor.cpp \
+FXCanvas.cpp \
+FXCharset.cpp \
+FXCheckButton.cpp \
+FXColorBar.cpp \
+FXColorDialog.cpp \
+FXColorNames.cpp \
+FXColorSelector.cpp \
+FXColorWell.cpp \
+FXColorWheel.cpp \
+FXComboBox.cpp \
+FXComposite.cpp \
+FXCursor.cpp \
+FXDC.cpp \
+FXDCPrint.cpp \
+FXDCWindow.cpp \
+FXDHMat.cpp \
+FXDHVec.cpp \
+FXDQuat.cpp \
+FXDVec.cpp \
+FXDataTarget.cpp \
+FXDebugTarget.cpp \
+FXDelegator.cpp \
+FXDial.cpp \
+FXDialogBox.cpp \
+FXDict.cpp \
+FXDirBox.cpp \
+FXDirDialog.cpp \
+FXDirList.cpp \
+FXDirSelector.cpp \
+FXDocument.cpp \
+FXDragCorner.cpp \
+FXDrawable.cpp \
+FXDriveBox.cpp \
+FXException.cpp \
+FXFile.cpp \
+FXFileDialog.cpp \
+FXFileDict.cpp \
+FXFileList.cpp \
+FXFileSelector.cpp \
+FXFont.cpp \
+FXFontDialog.cpp \
+FXFontSelector.cpp \
+FXFrame.cpp \
+FXGIFCursor.cpp \
+FXGIFIcon.cpp \
+FXGIFImage.cpp \
+FXGLCanvas.cpp \
+FXGLCone.cpp \
+FXGLContext.cpp \
+FXGLCube.cpp \
+FXGLCylinder.cpp \
+FXGLObject.cpp \
+FXGLShape.cpp \
+FXGLSphere.cpp \
+FXGLTriangleMesh.cpp \
+FXGLViewer.cpp \
+FXGLVisual.cpp \
+FXGroupBox.cpp \
+FXHMat.cpp \
+FXHVec.cpp \
+FXHeader.cpp \
+FXHorizontalFrame.cpp \
+FXICOIcon.cpp \
+FXICOImage.cpp \
+FXIcon.cpp \
+FXIconList.cpp \
+FXId.cpp \
+FXImage.cpp \
+FXImageView.cpp \
+FXInputDialog.cpp \
+FXJPGIcon.cpp \
+FXJPGImage.cpp \
+FXLabel.cpp \
+FXList.cpp \
+FXListBox.cpp \
+FXMDIButton.cpp \
+FXMDIChild.cpp \
+FXMDIClient.cpp \
+FXMainWindow.cpp \
+FXMatrix.cpp \
+FXMenubar.cpp \
+FXMenuButton.cpp \
+FXMenuCaption.cpp \
+FXMenuCascade.cpp \
+FXMenuCommand.cpp \
+FXMenuPane.cpp \
+FXMenuSeparator.cpp \
+FXMenuTitle.cpp \
+FXMessageBox.cpp \
+FXObject.cpp \
+FXObjectList.cpp \
+FXOptionMenu.cpp \
+FXPCXIcon.cpp \
+FXPCXImage.cpp \
+FXPNGIcon.cpp \
+FXPNGImage.cpp \
+FXPacker.cpp \
+FXPicker.cpp \
+FXPopup.cpp \
+FXPoint.cpp \
+FXPrintDialog.cpp \
+FXProgressBar.cpp \
+FXProgressDialog.cpp \
+FXQuat.cpp \
+FXRGBIcon.cpp \
+FXRGBImage.cpp \
+FXRadioButton.cpp \
+FXRange.cpp \
+FXRecentFiles.cpp \
+FXRectangle.cpp \
+FXRegion.cpp \
+FXRegistry.cpp \
+FXReplaceDialog.cpp \
+FXRex.cpp \
+FXRootWindow.cpp \
+FXScrollArea.cpp \
+FXScrollWindow.cpp \
+FXScrollbar.cpp \
+FXSearchDialog.cpp \
+FXSeparator.cpp \
+FXSettings.cpp \
+FXShell.cpp \
+FXShutter.cpp \
+FXSize.cpp \
+FXSlider.cpp \
+FXSpinner.cpp \
+FXSplitter.cpp \
+FXStatusbar.cpp \
+FXStatusline.cpp \
+FXStream.cpp \
+FXString.cpp \
+FXStringDict.cpp \
+FXSwitcher.cpp \
+FXTGAIcon.cpp \
+FXTGAImage.cpp \
+FXTIFIcon.cpp \
+FXTIFImage.cpp \
+FXTabBar.cpp \
+FXTabBook.cpp \
+FXTabItem.cpp \
+FXTable.cpp \
+FXText.cpp \
+FXTextField.cpp \
+FXToggleButton.cpp \
+FXToolbar.cpp \
+FXToolbarGrip.cpp \
+FXToolbarShell.cpp \
+FXToolbarTab.cpp \
+FXTooltip.cpp \
+FXTopWindow.cpp \
+FXTreeList.cpp \
+FXTreeListBox.cpp \
+FXUndoList.cpp \
+FXURL.cpp \
+FXVec.cpp \
+FXVerticalFrame.cpp \
+FXVisual.cpp \
+FXWindow.cpp \
+FXXPMIcon.cpp \
+FXXPMImage.cpp \
+fxbmpio.cpp \
+fxcurio.cpp \
+fxfilematch.cpp \
+fxgifio.cpp \
+fxicoio.cpp \
+fxjpegio.cpp \
+fxpcxio.cpp \
+fxpngio.cpp \
+fxpriv.h \
+fxpriv.cpp \
+fxquantize.cpp \
+fxrgbio.cpp \
+fxtargaio.cpp \
+fxtifio.cpp \
+fxutils.cpp \
+fxwinkbd.cpp \
+fxxpmio.cpp \
+jitter.h \
+version.rc \
+version.rc.in \
+vsscanf.cpp \
+$(CURSORS)
+
+
+EXTRA_DIST = Makefile.bc \
+             Makefile.bc.resp \
+             Makefile.icc \
+             Makefile.icc.resp
+

@@ -3,46 +3,56 @@
 *                P a c k e r   C o n t a i n e r   O b j e c t                  *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997 by Jeroen van der Zijp.   All Rights Reserved.             *
+* Copyright (C) 1997,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
-* modify it under the terms of the GNU Library General Public                   *
+* modify it under the terms of the GNU Lesser General Public                    *
 * License as published by the Free Software Foundation; either                  *
-* version 2 of the License, or (at your option) any later version.              *
+* version 2.1 of the License, or (at your option) any later version.            *
 *                                                                               *
 * This library is distributed in the hope that it will be useful,               *
 * but WITHOUT ANY WARRANTY; without even the implied warranty of                *
 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU             *
-* Library General Public License for more details.                              *
+* Lesser General Public License for more details.                               *
 *                                                                               *
-* You should have received a copy of the GNU Library General Public             *
-* License along with this library; if not, write to the Free                    *
-* Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.            *
+* You should have received a copy of the GNU Lesser General Public              *
+* License along with this library; if not, write to the Free Software           *
+* Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXPacker.cpp,v 1.20 1998/09/18 22:07:16 jvz Exp $                      *
+* $Id: FXPacker.cpp,v 1.24 2002/02/02 01:03:41 fox Exp $                     *
 ********************************************************************************/
 #include "xincs.h"
+#include "fxver.h"
 #include "fxdefs.h"
 #include "FXStream.h"
 #include "FXString.h"
-#include "FXObject.h"
-#include "FXAccelTable.h"
-#include "FXObjectList.h"
+#include "FXSize.h"
+#include "FXPoint.h"
+#include "FXRectangle.h"
+#include "FXRegistry.h"
 #include "FXApp.h"
-#include "FXId.h"
-#include "FXDrawable.h"
-#include "FXWindow.h"
-#include "FXFrame.h"
-#include "FXComposite.h"
+#include "FXDCWindow.h"
 #include "FXPacker.h"
-#include "FXShell.h"
 
-  
+
 /*
   To do:
-  - Should FXPacker send GUI update messages????
+  - Now observes LAYOUT_FIX_X and LAYOUT_FIX_Y hints.
+  - LAYOUT_FIX_WIDTH and LAYOUT_FIX_HEIGHT take precedence over PACK_UNIFORM_WIDTH and
+    PACK_UNIFORM_HEIGHT!
+  - Tabbing order takes widget layout into account
 */
 
+// Side layout modes
+#define LAYOUT_SIDE_MASK  (LAYOUT_SIDE_LEFT|LAYOUT_SIDE_RIGHT|LAYOUT_SIDE_TOP|LAYOUT_SIDE_BOTTOM)
+
+
+// Layout modes
+#define LAYOUT_MASK       (LAYOUT_SIDE_MASK|LAYOUT_RIGHT|LAYOUT_CENTER_X|LAYOUT_BOTTOM|LAYOUT_CENTER_Y|LAYOUT_FIX_X|LAYOUT_FIX_Y|LAYOUT_FIX_WIDTH|LAYOUT_FIX_HEIGHT|LAYOUT_FILL_X|LAYOUT_FILL_Y)
+
+
+// Frame styles
+#define FRAME_MASK        (FRAME_SUNKEN|FRAME_RAISED|FRAME_THICK)
 
 
 /*******************************************************************************/
@@ -51,6 +61,10 @@
 // Map
 FXDEFMAP(FXPacker) FXPackerMap[]={
   FXMAPFUNC(SEL_PAINT,0,FXPacker::onPaint),
+  FXMAPFUNC(SEL_FOCUS_UP,0,FXPacker::onFocusUp),
+  FXMAPFUNC(SEL_FOCUS_DOWN,0,FXPacker::onFocusDown),
+  FXMAPFUNC(SEL_FOCUS_LEFT,0,FXPacker::onFocusLeft),
+  FXMAPFUNC(SEL_FOCUS_RIGHT,0,FXPacker::onFocusRight),
   };
 
 
@@ -58,13 +72,20 @@ FXDEFMAP(FXPacker) FXPackerMap[]={
 FXIMPLEMENT(FXPacker,FXComposite,FXPackerMap,ARRAYNUMBER(FXPackerMap))
 
 
+// Deserialization
+FXPacker::FXPacker(){
+  flags|=FLAG_SHOWN;
+  }
+
+
 // Create child frame window
 FXPacker::FXPacker(FXComposite* p,FXuint opts,FXint x,FXint y,FXint w,FXint h,FXint pl,FXint pr,FXint pt,FXint pb,FXint hs,FXint vs):
   FXComposite(p,opts,x,y,w,h){
-  baseColor=0;
-  hiliteColor=0;
-  shadowColor=0;
-  borderColor=0;
+  flags|=FLAG_SHOWN;
+  baseColor=getApp()->getBaseColor();
+  hiliteColor=getApp()->getHiliteColor();
+  shadowColor=getApp()->getShadowColor();
+  borderColor=getApp()->getBorderColor();
   padtop=pt;
   padbottom=pb;
   padleft=pl;
@@ -75,135 +96,113 @@ FXPacker::FXPacker(FXComposite* p,FXuint opts,FXint x,FXint y,FXint w,FXint h,FX
   }
 
 
-// Create window
-void FXPacker::create(){
-  FXComposite::create();
-  baseColor=acquireColor(getApp()->backColor);
-  hiliteColor=acquireColor(getApp()->hiliteColor);
-  shadowColor=acquireColor(getApp()->shadowColor);
-  borderColor=acquireColor(getApp()->borderColor);
-  show();
+void FXPacker::drawBorderRectangle(FXDCWindow& dc,FXint x,FXint y,FXint w,FXint h){
+  dc.setForeground(borderColor);
+  dc.drawRectangle(x,y,w-1,h-1);
   }
 
 
-// Draw simple line border
-void FXPacker::drawBorderRectangle(FXint x,FXint y,FXint w,FXint h){
-  FXASSERT(xid);
-  setForeground(borderColor);
-  drawRectangle(x,y,w,h);
+void FXPacker::drawRaisedRectangle(FXDCWindow& dc,FXint x,FXint y,FXint w,FXint h){
+  dc.setForeground(shadowColor);
+  dc.fillRectangle(x,y+h-1,w,1);
+  dc.fillRectangle(x+w-1,y,1,h);
+  dc.setForeground(hiliteColor);
+  dc.fillRectangle(x,y,w,1);
+  dc.fillRectangle(x,y,1,h);
   }
 
 
-// Draw 1 pixel raised border
-void FXPacker::drawRaisedRectangle(FXint x,FXint y,FXint w,FXint h){
-  FXASSERT(xid);
-  setForeground(hiliteColor);
-  drawLine(x,y,x+w-2,y);
-  drawLine(x,y,x,y+h-2);
-  setForeground(shadowColor);
-  drawLine(x,y+h-1,x+w-1,y+h-1);
-  drawLine(x+w-1,y,x+w-1,y+h-1);
+void FXPacker::drawSunkenRectangle(FXDCWindow& dc,FXint x,FXint y,FXint w,FXint h){
+  dc.setForeground(shadowColor);
+  dc.fillRectangle(x,y,w,1);
+  dc.fillRectangle(x,y,1,h);
+  dc.setForeground(hiliteColor);
+  dc.fillRectangle(x,y+h-1,w,1);
+  dc.fillRectangle(x+w-1,y,1,h);
   }
 
 
-// Draw 1 pixel sunken border
-void FXPacker::drawSunkenRectangle(FXint x,FXint y,FXint w,FXint h){
-  FXASSERT(xid);
-  setForeground(shadowColor);
-  drawLine(x,y,x+w-2,y);
-  drawLine(x,y,x,y+h-2);
-  setForeground(hiliteColor);
-  drawLine(x,y+h-1,x+w-1,y+h-1);
-  drawLine(x+w-1,y,x+w-1,y+h-1);
+void FXPacker::drawRidgeRectangle(FXDCWindow& dc,FXint x,FXint y,FXint w,FXint h){
+  dc.setForeground(hiliteColor);
+  dc.fillRectangle(x,y,w,1);
+  dc.fillRectangle(x,y,1,h);
+  dc.fillRectangle(x+1,y+h-2,w-2,1);
+  dc.fillRectangle(x+w-2,y+1,1,h-2);
+  dc.setForeground(shadowColor);
+  dc.fillRectangle(x+1,y+1,w-3,1);
+  dc.fillRectangle(x+1,y+1,1,h-3);
+  dc.fillRectangle(x,y+h-1,w,1);
+  dc.fillRectangle(x+w-1,y,1,h);
   }
 
 
-// Draw 2 pixel ridge border
-void FXPacker::drawRidgeRectangle(FXint x,FXint y,FXint w,FXint h){
-  FXASSERT(xid);
-  setForeground(hiliteColor);
-  drawLine(x,y,x+w-1,y);
-  drawLine(x,y,x,y+h-1);
-  drawLine(x+1,y+h-2,x+w-2,y+h-2);
-  drawLine(x+w-2,y+1,x+w-2,y+h-2);
-  setForeground(shadowColor);
-  drawLine(x+1,y+1,x+w-3,y+1);
-  drawLine(x+1,y+1,x+1,y+h-3);
-  drawLine(x,y+h-1,x+w-1,y+h-1);
-  drawLine(x+w-1,y,x+w-1,y+h-1);
+void FXPacker::drawGrooveRectangle(FXDCWindow& dc,FXint x,FXint y,FXint w,FXint h){
+  dc.setForeground(shadowColor);
+  dc.fillRectangle(x,y,w,1);
+  dc.fillRectangle(x,y,1,h);
+  dc.fillRectangle(x+1,y+h-2,w-2,1);
+  dc.fillRectangle(x+w-2,y+1,1,h-2);
+  dc.setForeground(hiliteColor);
+  dc.fillRectangle(x+1,y+1,w-3,1);
+  dc.fillRectangle(x+1,y+1,1,h-3);
+  dc.fillRectangle(x,y+h-1,w,1);
+  dc.fillRectangle(x+w-1,y,1,h);
   }
 
 
-// Draw 2 pixel groove border
-void FXPacker::drawGrooveRectangle(FXint x,FXint y,FXint w,FXint h){
-  FXASSERT(xid);
-  setForeground(shadowColor);
-  drawLine(x,y,x+w-1,y);
-  drawLine(x,y,x,y+h-1);
-  drawLine(x+1,y+h-2,x+w-2,y+h-2);
-  drawLine(x+w-2,y+1,x+w-2,y+h-2);
-  setForeground(hiliteColor);
-  drawLine(x+1,y+1,x+w-2,y+1);
-  drawLine(x+1,y+1,x+1,y+h-2);
-  drawLine(x+1,y+h-1,x+w-1,y+h-1);
-  drawLine(x+w-1,y+1,x+w-1,y+h-1);
+void FXPacker::drawDoubleRaisedRectangle(FXDCWindow& dc,FXint x,FXint y,FXint w,FXint h){
+  dc.setForeground(hiliteColor);
+  dc.fillRectangle(x,y,w-1,1);
+  dc.fillRectangle(x,y,1,h-1);
+  dc.setForeground(baseColor);
+  dc.fillRectangle(x+1,y+1,w-2,1);
+  dc.fillRectangle(x+1,y+1,1,h-2);
+  dc.setForeground(shadowColor);
+  dc.fillRectangle(x+1,y+h-2,w-2,1);
+  dc.fillRectangle(x+w-2,y+1,1,h-1);
+  dc.setForeground(borderColor);
+  dc.fillRectangle(x,y+h-1,w,1);
+  dc.fillRectangle(x+w-1,y,1,h);
   }
 
-
-// Draw 2 pixel double raised border
-void FXPacker::drawDoubleRaisedRectangle(FXint x,FXint y,FXint w,FXint h){
-  FXASSERT(xid);
-  setForeground(hiliteColor);
-  drawLine(x,y,x+w-2,y);
-  drawLine(x,y,x,y+h-2);
-  setForeground(baseColor);
-  drawLine(x+1,y+1,x+w-3,y+1);
-  drawLine(x+1,y+1,x+1,y+h-3);
-  setForeground(shadowColor);
-  drawLine(x+1,y+h-2,x+w-2,y+h-2);
-  drawLine(x+w-2,y+h-2,x+w-2,y+1);
-  setForeground(borderColor);
-  drawLine(x,y+h-1,x+w-1,y+h-1);
-  drawLine(x+w-1,y,x+w-1,y+h-1);
+void FXPacker::drawDoubleSunkenRectangle(FXDCWindow& dc,FXint x,FXint y,FXint w,FXint h){
+  dc.setForeground(shadowColor);
+  dc.fillRectangle(x,y,w-1,1);
+  dc.fillRectangle(x,y,1,h-1);
+  dc.setForeground(borderColor);
+  dc.fillRectangle(x+1,y+1,w-3,1);
+  dc.fillRectangle(x+1,y+1,1,h-3);
+  dc.setForeground(hiliteColor);
+  dc.fillRectangle(x,y+h-1,w,1);
+  dc.fillRectangle(x+w-1,y,1,h);
+  dc.setForeground(baseColor);
+  dc.fillRectangle(x+1,y+h-2,w-2,1);
+  dc.fillRectangle(x+w-2,y+1,1,h-2);
   }
 
-
-// Draw 2 pixel double sunken border
-void FXPacker::drawDoubleSunkenRectangle(FXint x,FXint y,FXint w,FXint h){
-  FXASSERT(xid);
-  setForeground(shadowColor);
-  drawLine(x,y,x+w-1,y);
-  drawLine(x,y,x,y+h-1);
-  setForeground(borderColor);
-  drawLine(x+1,y+1,x+w-2,y+1);
-  drawLine(x+1,y+1,x+1,y+h-2);
-  setForeground(hiliteColor);
-  drawLine(x+1,y+h-1,x+w-1,y+h-1);
-  drawLine(x+w-1,y+h-1,x+w-1,y+1);
-  setForeground(baseColor);
-  drawLine(x+2,y+h-2,x+w-2,y+h-2);
-  drawLine(x+w-2,y+2,x+w-2,y+h-2);
-  }
 
 
 // Draw border
-void FXPacker::drawFrame(FXint x,FXint y,FXint w,FXint h){
+void FXPacker::drawFrame(FXDCWindow& dc,FXint x,FXint y,FXint w,FXint h){
   switch(options&FRAME_MASK) {
-    case FRAME_LINE: drawBorderRectangle(x,y,w,h); break;
-    case FRAME_SUNKEN: drawSunkenRectangle(x,y,w,h); break;
-    case FRAME_RAISED: drawRaisedRectangle(x,y,w,h); break;
-    case FRAME_GROOVE: drawGrooveRectangle(x,y,w,h); break;
-    case FRAME_RIDGE: drawRidgeRectangle(x,y,w,h); break;
-    case FRAME_SUNKEN|FRAME_THICK: drawDoubleSunkenRectangle(x,y,w,h); break;
-    case FRAME_RAISED|FRAME_THICK: drawDoubleRaisedRectangle(x,y,w,h); break;
+    case FRAME_LINE: drawBorderRectangle(dc,x,y,w,h); break;
+    case FRAME_SUNKEN: drawSunkenRectangle(dc,x,y,w,h); break;
+    case FRAME_RAISED: drawRaisedRectangle(dc,x,y,w,h); break;
+    case FRAME_GROOVE: drawGrooveRectangle(dc,x,y,w,h); break;
+    case FRAME_RIDGE: drawRidgeRectangle(dc,x,y,w,h); break;
+    case FRAME_SUNKEN|FRAME_THICK: drawDoubleSunkenRectangle(dc,x,y,w,h); break;
+    case FRAME_RAISED|FRAME_THICK: drawDoubleRaisedRectangle(dc,x,y,w,h); break;
     }
   }
 
 
-// Handle repaint 
-long FXPacker::onPaint(FXObject* sender,FXSelector sel,void* ptr){
-  FXComposite::onPaint(sender,sel,ptr);
-  drawFrame(0,0,width,height);
+// Handle repaint
+long FXPacker::onPaint(FXObject*,FXSelector,void* ptr){
+  FXEvent *ev=(FXEvent*)ptr;
+  FXDCWindow dc(this,ev);
+  dc.setForeground(backColor);
+  dc.fillRectangle(ev->rect.x,ev->rect.y,ev->rect.w,ev->rect.h);
+  drawFrame(dc,0,0,width,height);
   return 1;
   }
 
@@ -213,41 +212,58 @@ void FXPacker::setFrameStyle(FXuint style){
   options=(options&~FRAME_MASK) | (style&FRAME_MASK);
   border=(options&FRAME_THICK) ? 2 : (options&(FRAME_SUNKEN|FRAME_RAISED)) ? 1 : 0;
   recalc();
-  update(0,0,width,height);
+  update();
   }
 
 
 // Get frame style
-FXuint FXPacker::getFrameStyle() const { 
-  return (options&FRAME_MASK); 
+FXuint FXPacker::getFrameStyle() const {
+  return (options&FRAME_MASK);
+  }
+
+
+// Change packing hints
+void FXPacker::setPackingHints(FXuint ph){
+  FXuint opts=(options&~(PACK_UNIFORM_HEIGHT|PACK_UNIFORM_WIDTH)) | (ph&(PACK_UNIFORM_HEIGHT|PACK_UNIFORM_WIDTH));
+  if(opts!=options){
+    options=opts;
+    recalc();
+    update();
+    }
+  }
+
+
+// Get packing hints
+FXuint FXPacker::getPackingHints() const {
+  return (options&(PACK_UNIFORM_HEIGHT|PACK_UNIFORM_WIDTH));
   }
 
 
 // Set base color
-void FXPacker::setBaseColor(FXPixel clr){
+void FXPacker::setBaseColor(FXColor clr){
   baseColor=clr;
-  update(0,0,width,height);
+  update();
   }
 
 
 // Set highlight color
-void FXPacker::setHiliteColor(FXPixel clr){
+void FXPacker::setHiliteColor(FXColor clr){
   hiliteColor=clr;
-  update(0,0,width,height);
+  update();
   }
 
 
 // Set shadow color
-void FXPacker::setShadowColor(FXPixel clr){
+void FXPacker::setShadowColor(FXColor clr){
   shadowColor=clr;
-  update(0,0,width,height);
+  update();
   }
 
 
 // Set border color
-void FXPacker::setBorderColor(FXPixel clr){
+void FXPacker::setBorderColor(FXColor clr){
   borderColor=clr;
-  update(0,0,width,height);
+  update();
   }
 
 
@@ -256,7 +272,7 @@ void FXPacker::setPadTop(FXint pt){
   if(padtop!=pt){
     padtop=pt;
     recalc();
-    update(0,0,width,height);
+    update();
     }
   }
 
@@ -266,7 +282,7 @@ void FXPacker::setPadBottom(FXint pb){
   if(padbottom!=pb){
     padbottom=pb;
     recalc();
-    update(0,0,width,height);
+    update();
     }
   }
 
@@ -276,7 +292,7 @@ void FXPacker::setPadLeft(FXint pl){
   if(padleft!=pl){
     padleft=pl;
     recalc();
-    update(0,0,width,height);
+    update();
     }
   }
 
@@ -286,7 +302,7 @@ void FXPacker::setPadRight(FXint pr){
   if(padright!=pr){
     padright=pr;
     recalc();
-    update(0,0,width,height);
+    update();
     }
   }
 
@@ -296,7 +312,7 @@ void FXPacker::setHSpacing(FXint hs){
   if(hspacing!=hs){
     hspacing=hs;
     recalc();
-    update(0,0,width,height);
+    update();
     }
   }
 
@@ -306,14 +322,166 @@ void FXPacker::setVSpacing(FXint vs){
   if(vspacing!=vs){
     vspacing=vs;
     recalc();
-    update(0,0,width,height);
+    update();
     }
+  }
+
+
+// Focus moved up
+long FXPacker::onFocusUp(FXObject*,FXSelector sel,void* ptr){
+  FXWindow *child,*c;
+  FXint cury,childy;
+  if(getFocus()){
+    cury=getFocus()->getY();
+    while(1){
+      child=NULL;
+      childy=-10000000;
+      for(c=getFirst(); c; c=c->getNext()){
+        if(c->shown() && c->getY()<cury && childy<c->getY()){ childy=c->getY(); child=c; }
+        }
+      if(!child) return 0;
+      if(child->isEnabled() && child->canFocus()){
+        child->handle(this,MKUINT(0,SEL_FOCUS_SELF),ptr);
+        return 1;
+        }
+      if(child->isComposite() && child->handle(this,sel,ptr)) return 1;
+      cury=childy;
+      }
+    }
+  else{
+    child=getLast();
+    while(child){
+      if(child->shown()){
+        if(child->isEnabled() && child->canFocus()){
+          child->handle(this,MKUINT(0,SEL_FOCUS_SELF),ptr);
+          return 1;
+          }
+        if(child->isComposite() && child->handle(this,sel,ptr)) return 1;
+        }
+      child=child->getPrev();
+      }
+    }
+  return 0;
+  }
+
+
+// Focus moved down
+long FXPacker::onFocusDown(FXObject*,FXSelector sel,void* ptr){
+  FXWindow *child,*c;
+  FXint cury,childy;
+  if(getFocus()){
+    cury=getFocus()->getY();
+    while(1){
+      child=NULL;
+      childy=10000000;
+      for(c=getFirst(); c; c=c->getNext()){
+        if(c->shown() && cury<c->getY() && c->getY()<childy){ childy=c->getY(); child=c; }
+        }
+      if(!child) return 0;
+      if(child->isEnabled() && child->canFocus()){
+        child->handle(this,MKUINT(0,SEL_FOCUS_SELF),ptr);
+        return 1;
+        }
+      if(child->isComposite() && child->handle(this,sel,ptr)) return 1;
+      cury=childy;
+      }
+    }
+  else{
+    child=getFirst();
+    while(child){
+      if(child->shown()){
+        if(child->isEnabled() && child->canFocus()){
+          child->handle(this,MKUINT(0,SEL_FOCUS_SELF),ptr);
+          return 1;
+          }
+        if(child->isComposite() && child->handle(this,sel,ptr)) return 1;
+        }
+      child=child->getNext();
+      }
+    }
+  return 0;
+  }
+
+
+// Focus moved to left
+long FXPacker::onFocusLeft(FXObject*,FXSelector sel,void* ptr){
+  FXWindow *child,*c;
+  FXint curx,childx;
+  if(getFocus()){
+    curx=getFocus()->getX();
+    while(1){
+      child=NULL;
+      childx=-10000000;
+      for(c=getFirst(); c; c=c->getNext()){
+        if(c->shown() && c->getX()<curx && childx<c->getX()){ childx=c->getX(); child=c; }
+        }
+      if(!child) return 0;
+      if(child->isEnabled() && child->canFocus()){
+        child->handle(this,MKUINT(0,SEL_FOCUS_SELF),ptr);
+        return 1;
+        }
+      if(child->isComposite() && child->handle(this,sel,ptr)) return 1;
+      curx=childx;
+      }
+    }
+  else{
+    child=getLast();
+    while(child){
+      if(child->shown()){
+        if(child->isEnabled() && child->canFocus()){
+          child->handle(this,MKUINT(0,SEL_FOCUS_SELF),ptr);
+          return 1;
+          }
+        if(child->isComposite() && child->handle(this,sel,ptr)) return 1;
+        }
+      child=child->getPrev();
+      }
+    }
+  return 0;
+  }
+
+
+// Focus moved to right
+long FXPacker::onFocusRight(FXObject*,FXSelector sel,void* ptr){
+  FXWindow *child,*c;
+  FXint curx,childx;
+  if(getFocus()){
+    curx=getFocus()->getX();
+    while(1){
+      child=NULL;
+      childx=10000000;
+      for(c=getFirst(); c; c=c->getNext()){
+        if(c->shown() && curx<c->getX() && c->getX()<childx){ childx=c->getX(); child=c; }
+        }
+      if(!child) return 0;
+      if(child->isEnabled() && child->canFocus()){
+        child->handle(this,MKUINT(0,SEL_FOCUS_SELF),ptr);
+        return 1;
+        }
+      if(child->isComposite() && child->handle(this,sel,ptr)) return 1;
+      curx=childx;
+      }
+    }
+  else{
+    child=getFirst();
+    while(child){
+      if(child->shown()){
+        if(child->isEnabled() && child->canFocus()){
+          child->handle(this,MKUINT(0,SEL_FOCUS_SELF),ptr);
+          return 1;
+          }
+        if(child->isComposite() && child->handle(this,sel,ptr)) return 1;
+        }
+      child=child->getNext();
+      }
+    }
+  return 0;
   }
 
 
 // Compute minimum width based on child layout hints
 int FXPacker::getDefaultWidth(){
-  register FXint t,wcum,wmax,mw=0;
+  register FXint w,wcum,wmax,mw=0;
   register FXWindow* child;
   register FXuint hints,side;
   wmax=wcum=0;
@@ -322,19 +490,19 @@ int FXPacker::getDefaultWidth(){
     if(child->shown()){
       hints=child->getLayoutHints();
       side=hints&LAYOUT_SIDE_MASK;
-      if(hints&LAYOUT_FIX_WIDTH) t=child->getWidth(); 
-      else if(options&PACK_UNIFORM_WIDTH) t=mw;
-      else t=child->getDefaultWidth();
-      if(hints&LAYOUT_FIX_X){ 
-        t=child->getX()+t;
-        if(t>wmax) wmax=t;
+      if(hints&LAYOUT_FIX_WIDTH) w=child->getWidth();
+      else if(options&PACK_UNIFORM_WIDTH) w=mw;
+      else w=child->getDefaultWidth();
+      if((hints&LAYOUT_RIGHT)&&(hints&LAYOUT_CENTER_X)){
+        w=child->getX()+w;
+        if(w>wmax) wmax=w;
         }
       else if(side==LAYOUT_SIDE_LEFT || side==LAYOUT_SIDE_RIGHT){
         if(child->getNext()) wcum+=hspacing;
-        wcum+=t;
+        wcum+=w;
         }
       else{
-        if(t>wcum) wcum=t;
+        if(w>wcum) wcum=w;
         }
       }
     }
@@ -344,7 +512,7 @@ int FXPacker::getDefaultWidth(){
 
 // Compute minimum height based on child layout hints
 int FXPacker::getDefaultHeight(){
-  register FXint t,hcum,hmax,mh=0;
+  register FXint h,hcum,hmax,mh=0;
   register FXWindow* child;
   register FXuint hints,side;
   hmax=hcum=0;
@@ -353,19 +521,19 @@ int FXPacker::getDefaultHeight(){
     if(child->shown()){
       hints=child->getLayoutHints();
       side=hints&LAYOUT_SIDE_MASK;
-      if(hints&LAYOUT_FIX_HEIGHT) t=child->getHeight(); 
-      else if(options&PACK_UNIFORM_HEIGHT) t=mh;
-      else t=child->getDefaultHeight();
-      if(hints&LAYOUT_FIX_Y){
-        t=child->getY()+t;
-        if(t>hmax) hmax=t;
+      if(hints&LAYOUT_FIX_HEIGHT) h=child->getHeight();
+      else if(options&PACK_UNIFORM_HEIGHT) h=mh;
+      else h=child->getDefaultHeight();
+      if((hints&LAYOUT_BOTTOM)&&(hints&LAYOUT_CENTER_Y)){
+        h=child->getY()+h;
+        if(h>hmax) hmax=h;
         }
       else if(side==LAYOUT_SIDE_TOP || side==LAYOUT_SIDE_BOTTOM){
         if(child->getNext()) hcum+=vspacing;
-        hcum+=t;
+        hcum+=h;
         }
       else{
-        if(t>hcum) hcum=t;
+        if(h>hcum) hcum=h;
         }
       }
     }
@@ -375,170 +543,90 @@ int FXPacker::getDefaultHeight(){
 
 // Recalculate layout
 void FXPacker::layout(){
-  FXint left,right,top,bottom;
-  FXint mw=0,mh=0;
-  FXWindow* child;
-  FXint x,y,w,h;
-  FXint extra_space,total_space;
-  FXuint hints,side;
-  
+  register FXint left,right,top,bottom,x,y,w,h;
+  register FXint mw=0,mh=0;
+  register FXWindow* child;
+  register FXuint hints;
+
   // Placement rectangle; right/bottom non-inclusive
   left=border+padleft;
   right=width-border-padright;
   top=border+padtop;
   bottom=height-border-padbottom;
-  
+
   // Get maximum child size
   if(options&PACK_UNIFORM_WIDTH) mw=maxChildWidth();
   if(options&PACK_UNIFORM_HEIGHT) mh=maxChildHeight();
-  
+
   // Pack them in the cavity
   for(child=getFirst(); child; child=child->getNext()){
     if(child->shown()){
       hints=child->getLayoutHints();
-      side=hints&LAYOUT_SIDE_MASK;
       x=child->getX();
       y=child->getY();
-      
-      if(hints&LAYOUT_FIX_WIDTH) w=child->getWidth(); 
-      else if(options&PACK_UNIFORM_WIDTH) w=mw;
-      else w=child->getDefaultWidth();
-      
-      if(hints&LAYOUT_FIX_HEIGHT) h=child->getHeight(); 
+
+      // Height
+      if(hints&LAYOUT_FIX_HEIGHT) h=child->getHeight();
       else if(options&PACK_UNIFORM_HEIGHT) h=mh;
+      else if(hints&LAYOUT_FILL_Y) h=bottom-top;
       else h=child->getDefaultHeight();
-      
-      if(side==LAYOUT_SIDE_LEFT){           // Left side
-        if(!(hints&LAYOUT_FIX_Y)){
-          extra_space=0;
-          if((hints&LAYOUT_FILL_Y) && !(hints&LAYOUT_FIX_HEIGHT)){
-            h=bottom-top;
-            if(h<0) h=0;
-            }
-          else if(hints&LAYOUT_CENTER_Y){
-            if(h<(bottom-top)) extra_space=(bottom-top-h)/2;
-            }
-          if(hints&LAYOUT_BOTTOM)
-            y=bottom-extra_space-h;
-          else /*hints&LAYOUT_TOP*/
-            y=top+extra_space;
+
+      // Width
+      if(hints&LAYOUT_FIX_WIDTH) w=child->getWidth();
+      else if(options&PACK_UNIFORM_WIDTH) w=mw;
+      else if(hints&LAYOUT_FILL_X) w=right-left;
+      else w=child->getDefaultWidth();
+
+      // Vertical
+      if(hints&LAYOUT_SIDE_LEFT){
+
+        // Y
+        if(!((hints&LAYOUT_BOTTOM)&&(hints&LAYOUT_CENTER_Y))){
+          if(hints&LAYOUT_CENTER_Y) y=top+(bottom-top-h)/2;
+          else if(hints&LAYOUT_BOTTOM) y=bottom-h;
+          else y=top;
           }
-        extra_space=0;
-        total_space=0;
-        if((hints&LAYOUT_FILL_X) && !(hints&LAYOUT_FIX_WIDTH)){
-          w=right-left;
-          if(w<0) w=0;
-          }
-        else if(hints&LAYOUT_CENTER_X){
-          if(w<(right-left)){
-            total_space=right-left-w;
-            extra_space=total_space/2;
+
+        // X
+        if(!((hints&LAYOUT_RIGHT)&&(hints&LAYOUT_CENTER_X))){
+          if(hints&LAYOUT_CENTER_X) x=left+(right-left-w)/2;
+          else if(hints&LAYOUT_SIDE_BOTTOM){
+            x=right-w;
+            right-=(w+hspacing);
+            }
+          else{
+            x=left;
+            left+=(w+hspacing);
             }
           }
-        x=left+extra_space;
-        left+=(w+hspacing+total_space);
         }
-      
-      else if(side==LAYOUT_SIDE_RIGHT){     // Right side
-        if(!(hints&LAYOUT_FIX_Y)){
-          extra_space=0;
-          if((hints&LAYOUT_FILL_Y) && !(hints&LAYOUT_FIX_HEIGHT)){
-            h=bottom-top;
-            if(h<0) h=0;
-            }
-          else if(hints&LAYOUT_CENTER_Y){
-            if(h<(bottom-top)) extra_space=(bottom-top-h)/2;
-            }
-          if(hints&LAYOUT_BOTTOM)
-            y=bottom-extra_space-h;
-          else /*hints&LAYOUT_TOP*/
-            y=top+extra_space;
+
+      // Horizontal
+      else{
+
+        // X
+        if(!((hints&LAYOUT_RIGHT)&&(hints&LAYOUT_CENTER_X))){
+          if(hints&LAYOUT_CENTER_X) x=left+(right-left-w)/2;
+          else if(hints&LAYOUT_RIGHT) x=right-w;
+          else x=left;
           }
-        extra_space=0;
-        total_space=0;
-        if((hints&LAYOUT_FILL_X) && !(hints&LAYOUT_FIX_WIDTH)){
-          w=right-left;
-          if(w<0) w=0;
-          }
-        else if(hints&LAYOUT_CENTER_X){
-          if(w<(right-left)){
-            total_space=right-left-w;
-            extra_space=total_space/2;
+
+        // Y
+        if(!((hints&LAYOUT_BOTTOM)&&(hints&LAYOUT_CENTER_Y))){
+          if(hints&LAYOUT_CENTER_Y) y=top+(bottom-top-h)/2;
+          else if(hints&LAYOUT_SIDE_BOTTOM){
+            y=bottom-h;
+            bottom-=(h+vspacing);
+            }
+          else{
+            y=top;
+            top+=(h+vspacing);
             }
           }
-        x=right-w-extra_space;
-        right-=(w+hspacing+total_space);
         }
-      
-      else if(side==LAYOUT_SIDE_BOTTOM){    // Bottom side
-        if(!(hints&LAYOUT_FIX_X)){
-          extra_space=0;
-          if((hints&LAYOUT_FILL_X) && !(hints&LAYOUT_FIX_WIDTH)){
-            w=right-left;
-            if(w<0) w=0;
-            }
-          else if(hints&LAYOUT_CENTER_X){
-            if(w<(right-left)) extra_space=(right-left-w)/2;
-            }
-          if(hints&LAYOUT_RIGHT)
-            x=right-extra_space-w;
-          else /*hints&LAYOUT_LEFT*/
-            x=left+extra_space;
-          }
-        extra_space=0;
-        total_space=0;
-        if((hints&LAYOUT_FILL_Y) && !(hints&LAYOUT_FIX_HEIGHT)){
-          h=bottom-top;
-          if(h<0) h=0;
-          }
-        else if(hints&LAYOUT_CENTER_Y){
-          if(h<(bottom-top)){
-            total_space=bottom-top-h;
-            extra_space=total_space/2;
-            }
-          }
-        y=bottom-h-extra_space;
-        bottom-=(h+vspacing+total_space);
-        }
-      
-      else if(side==LAYOUT_SIDE_TOP){       // Top side
-        if(!(hints&LAYOUT_FIX_X)){
-          extra_space=0;
-          if((hints&LAYOUT_FILL_X) && !(hints&LAYOUT_FIX_WIDTH)){
-            w=right-left;
-            if(w<0) w=0;
-            }
-          else if(hints&LAYOUT_CENTER_X){
-            if(w<(right-left)) extra_space=(right-left-w)/2;
-            }
-          if(hints&LAYOUT_RIGHT)
-            x=right-extra_space-w;
-          else /*hints&LAYOUT_LEFT*/
-            x=left+extra_space;
-          }
-        extra_space=0;
-        total_space=0;
-        if((hints&LAYOUT_FILL_Y) && !(hints&LAYOUT_FIX_HEIGHT)){
-          //if(h<(bottom-top)) h=bottom-top;
-          h=bottom-top;
-          if(h<0) h=0;
-          }
-        else if(hints&LAYOUT_CENTER_Y){
-          if(h<(bottom-top)){
-            total_space=bottom-top-h;
-            extra_space=total_space/2;
-            }
-          }
-        y=top+extra_space;
-        top+=(h+vspacing+total_space);
-        }
-      
-      // Place it
       child->position(x,y,w,h);
       }
     }
-  
-  // No more dirty
   flags&=~FLAG_DIRTY;
   }
 
@@ -546,12 +634,24 @@ void FXPacker::layout(){
 // Save object to stream
 void FXPacker::save(FXStream& store) const {
   FXComposite::save(store);
-  store << padtop << padbottom << padleft << padright << hspacing << vspacing << border;
+  store << baseColor;
+  store << hiliteColor;
+  store << shadowColor;
+  store << borderColor;
+  store << padtop << padbottom << padleft << padright;
+  store << hspacing << vspacing;
+  store << border;
   }
 
 
 // Load object from stream
 void FXPacker::load(FXStream& store){
   FXComposite::load(store);
-  store >> padtop >> padbottom >> padleft >> padright >> hspacing >> vspacing >> border;
-  }  
+  store >> baseColor;
+  store >> hiliteColor;
+  store >> shadowColor;
+  store >> borderColor;
+  store >> padtop >> padbottom >> padleft >> padright;
+  store >> hspacing >> vspacing;
+  store >> border;
+  }

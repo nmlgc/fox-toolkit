@@ -3,48 +3,83 @@
 *                           R e g i s t r y   C l a s s                         *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998 by Jeroen van der Zijp.   All Rights Reserved.             *
+* Copyright (C) 1998,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
-* modify it under the terms of the GNU Library General Public                   *
+* modify it under the terms of the GNU Lesser General Public                    *
 * License as published by the Free Software Foundation; either                  *
-* version 2 of the License, or (at your option) any later version.              *
+* version 2.1 of the License, or (at your option) any later version.            *
 *                                                                               *
 * This library is distributed in the hope that it will be useful,               *
 * but WITHOUT ANY WARRANTY; without even the implied warranty of                *
 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU             *
-* Library General Public License for more details.                              *
+* Lesser General Public License for more details.                               *
 *                                                                               *
-* You should have received a copy of the GNU Library General Public             *
-* License along with this library; if not, write to the Free                    *
-* Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.            *
+* You should have received a copy of the GNU Lesser General Public              *
+* License along with this library; if not, write to the Free Software           *
+* Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXRegistry.h,v 1.2 1998/03/03 06:04:38 jeroen Exp $                      *
+* $Id: FXRegistry.h,v 1.21 2002/01/23 18:53:57 jeroen Exp $                     *
 ********************************************************************************/
 #ifndef FXREGISTRY_H
 #define FXREGISTRY_H
 
+#ifndef FXSETTINGS_H
+#include "FXSettings.h"
+#endif
 
-class FXRegistry {
 
+
+/**
+* The registry maintains a database of persistent settings for an application,
+* or suite of applications.
+*/
+class FXAPI FXRegistry : public FXSettings {
+  FXDECLARE(FXRegistry)
+protected:
+  FXString applicationkey;  // Application key
+  FXString vendorkey;       // Vendor key
+  FXbool   ascii;           // ASCII file-based registry
+protected:
+  FXbool readFromDir(const FXString& dirname,FXbool mark);
+#ifdef WIN32
+  FXbool readFromRegistry(void* hRootKey,FXbool mark);
+  FXbool writeToRegistry(void* hRootKey);
+  FXbool readFromRegistryGroup(void* org,const char* groupname,FXbool mark=FALSE);
+  FXbool writeToRegistryGroup(void* org,const char* groupname);
+#endif
+private:
+  FXRegistry(const FXRegistry&);
+  FXRegistry &operator=(const FXRegistry&);
 public:
-  FXRegistry();
-  
-  // Read a registry entry
-  const FXchar *readEntry(const char *key,const char *def=NULL) const;
-  const FXint readEntry(const char *key,FXint def=0) const;
-  const FXdouble readEntry(const char *key,FXdouble def=0.0) const;
-  
-  // Write a registry entry
-  FXbool writeEntry(const char *key,const FXchar *val);
-  FXbool writeEntry(const char *key,FXint val);
-  FXbool writeEntry(const char *key,FXdouble val);
-  
-  // Delete a registry entry
-  FXbool deleteEntry(const char *key);
-  
- ~FXRegistry();
+
+  /**
+  * Construct registry object; akey and vkey must be string constants.
+  * Regular applications SHOULD set a vendor key!
+  */
+  FXRegistry(const FXString& akey=FXString::null,const FXString& vkey=FXString::null);
+
+  /// Read registry
+  FXbool read();
+
+  /// Write registry
+  FXbool write();
+
+  /// Return application key
+  const FXString& getAppKey() const { return applicationkey; }
+
+  /// Return vendor key
+  const FXString& getVendorKey() const { return vendorkey; }
+
+  /**
+  * Set ASCII mode; under MS-Windows, this will switch the system to a
+  * file-based registry system, instead of using the System Registry API.
+  */
+  void setAsciiMode(FXbool asciiMode){ ascii=asciiMode; }
+
+  /// Get ASCII mode
+  FXbool getAsciiMode() const { return ascii; }
   };
-  
-  
+
+
 #endif

@@ -1,0 +1,458 @@
+<html>
+<head>
+<LINK REL="stylesheet" HREF="styles.css" TYPE="text/css">
+<title>FOX-Toolkit</title>
+<!-- HTML Copyright 2001 Paul Laufer -->
+</head>
+
+<body bgcolor=#ffffff link=#990033 vlink=#4a73ad alink=#ed004f text=#000000>
+
+<!--header-->
+<table align=center border=0 cellpadding=0 cellspacing=0 width=100% >
+  <tr><td bgcolor=silver colspan=5 align=right height=50><img src=art/oul_grey.gif align=left valign=top width=8 height=8><img src=art/foxlogo.png valign=bottom alt="FOX Toolkit" height=50 width=500 border=0 ></td>
+  	<td bgcolor=#557faa valign=top align=right><img src=art/our.gif width=8 height=8></td>
+  </tr>
+<!-- end header -->
+  <tr>
+    <td bgcolor=#557faa colspan=2 valign=top align=left>&nbsp;</td>
+    <td bgcolor=#557faa colspan=3><font color=#ffffff size=+1><center>
+<!-- Page Title -->
+Timers, Signals and Input Messages
+<!-- End Page Title -->
+    </center></font></td>
+    <td bgcolor=#557faa valign=top align=right>&nbsp;</td>
+  </tr>
+  <tr>
+    <td bgcolor=#557faa colspan=2>&nbsp;</td>
+    <td bgcolor=#ffffff valign=top align=left><img src=art/iul.gif width=8 height=8></td>
+    <td bgcolor=#ffffff>&nbsp;</td>
+    <td bgcolor=#ffffff valign=top align=right><img src=art/iur.gif width=8 height=8></td>
+    <td bgcolor=#557faa width=15>&nbsp;</td>
+  </tr>
+  <tr>
+    <td width=8 bgcolor=#557faa>&nbsp;</td>
+    <td valign=top bgcolor=#557faa link=#ffffff width=150>
+
+<!-- start navbar content -->
+
+	<a href=fox.html><font color=#ffffff>Home</font></a><br>
+	<a href=news.html><font color=#ffffff>News</font></a><br>
+	<a href=download.html><font color=#ffffff>Download</font></a><br>
+	<a href=goals.html><font color=#ffffff>Goals & Approach</font></a><br>
+	<a href=doc.html><font color=#ffffff>Documentation</font></a><br>
+	<a href=faq.html><font color=#ffffff>FAQ</font></a><br>
+	<a href=rex.html><font color=#ffffff>FXRex</font></a><br>
+	<a href=screenshots.html><font color=#ffffff>Screenshots</font></a><br>
+	<br>
+	<a href=adie.html><font color=#ffffff>Adie</font></a><br>
+	<a href=pathfinder.html><font color=#ffffff>PathFinder</font></a><br>
+	<a href=calc.html><font color=#ffffff>FOX Calculator</font></a><br>
+	<br>
+	<a href=projects.html><font color=#ffffff>Projects</font></a><br>
+	<br>
+	<a href='http://fxpy.sourceforge.net'><font color=#ffffff>FXPy</font></a><br>
+	<a href='http://fxruby.sourceforge.net'><font color=#ffffff>FXRuby</font></a><br>
+	<a href='http://eiffelfox.sourceforge.net'><font color=#ffffff>EiffelFox</font></a><br>
+        <a href='http://eevolved.com/foxhole/'><font color=#ffffff>The FOX Hole</font></a><br>
+        <a href='http://takahr.dhis.portside.net/cgi-bin/rwiki.cgi?cmd=view;name=FOX+FAQ'><font color=#ffffff>Japanese Docs</font></a><br>
+	<br>
+	<center>
+	<a href="http://www.eff.org/br"><img SRC="art/freespeach.gif" border=0></a>
+	<p>
+	<a href="http://www.slashdot.org"><img SRC="art/slingerzbutton1.gif" border=0></a>
+	</center>
+
+
+
+<!-- end navbar content -->
+
+    </td>
+    <td bgcolor=#ffffff>&nbsp;</td>
+    <td valign=top>
+
+<!-- start main window content -->
+<center><img src='art/foxstart.png'>
+<BR><B>Documentation: Timers, Signals and Input Messages</B>
+</center>
+<p>
+<b>Other Messages</b>
+<hr>
+Most messages your application will receive are
+generated from FOX Widgets, such as buttons, sliders, and other controls.&nbsp;
+However, FOX also provides some messages which are generated from other
+sources.</font>
+<p><font color="#000000">There are four types of such messages: Timers,
+Chores, Signals, and Inputs.</font>
+<p>
+<p>
+<b>Timer Messages</b>
+<hr>
+<font color="#000000">Timer messages are used so your program can receive
+a message after some specified interval has elapsed. This can be very useful,
+for example for performing an animation of some kind.</font>
+<p><font color="#000000">Like all messages, timer messages are handled
+by specifying a <i>target object </i>which is to handle the message.&nbsp;
+When the specified time has elapsed, the object will receive a message
+of the type <b>SEL_TIMEOUT,&nbsp;</b> with the message <b>ID</b> being
+the one which was registered at the beginning of the time interval.</font>
+<p><font color="#000000">The length of the time interval is expressed in
+<b><i>milliseconds</i></b>,
+and the interval starts at the time the callback message was registered.&nbsp;
+The message callback to the target object will be when the interval has
+expired.</font>
+<p><font color="#000000">Here's how you would&nbsp; program a message map
+entry to catch a timer message in a target object of type MyObject:</font>
+<br>&nbsp;
+<br>&nbsp;
+<br>&nbsp;
+<center><table BORDER CELLSPACING=0 COLS=1 WIDTH="90%" BGCOLOR="#FFF8E1" NOSAVE >
+<tr>
+<td><tt><font color="#000000">// Message map entry of "object"</font></tt>
+<br><tt><font color="#000000"><b>FXDEFMAP</b>(MyObject) MyObjectMap[]={</font></tt>
+<br><tt><font color="#000000"><b>&nbsp; FXMAPFUNC</b>(SEL_TIMEOUT,MyObject::ID_ANIMATIONSTEP,MyObject::onAnimationStep),</font></tt>
+<br><tt><font color="#000000">&nbsp; <b>...</b></font></tt>
+<br><tt><font color="#000000">&nbsp; };</font></tt></td>
+</tr>
+</table></center>
+
+<p><font color="#000000">To register a timer message, you would&nbsp; call
+the function <b>FXApp::addTimeout(),</b> as follows:</font>
+<br>&nbsp;
+<center><table BORDER CELLSPACING=0 COLS=1 WIDTH="90%" BGCOLOR="#FFF8E1" NOSAVE >
+<tr>
+<td><tt><font color="#000000">// Register Timer callback message</font></tt>
+<br><tt><font color="#000000"><b>FXTimer</b>* timerhandle;</font></tt>
+<br><tt><font color="#000000">MyObject* object;</font></tt>
+<br><tt><font color="#000000">timerhandle=app-><b>addTimeout</b>(1000,object,ID_ANIMATIONSTEP);</font></tt></td>
+</tr>
+</table></center>
+
+<p>Timers can be unregistered at any time <b><i>prior</i></b> to being
+fired, by calling <b>FXApp::removeTimeout()</b> with the handle which was
+previously returned from <b>FXApp::addTimeout():</b>
+<br>&nbsp;
+<br>&nbsp;
+<center><table BORDER CELLSPACING=0 COLS=1 WIDTH="90%" BGCOLOR="#FFF8E1" NOSAVE >
+<tr>
+<td><tt><font color="#000000">// Unregister Timer callback message</font></tt>
+<br><tt><font color="#000000">app-><b>removeTimeout</b>(timerhandle);</font></tt></td>
+</tr>
+</table></center>
+
+<p>Note that it is an <b><i><font color="#CC0000">error</font></i></b>
+to unregister the timer callback message after it has already been fired,
+as timers are automatically unregistered already when they're fired. A
+common practice is therefore for the target of a timer to reset the handle
+to NULL when the timer callback has been received, as demonstrated by the
+following code segment:
+<br>&nbsp;
+<br>&nbsp;
+<center><table BORDER CELLSPACING=0 COLS=1 WIDTH="90%" BGCOLOR="#FFF8E1" NOSAVE >
+<tr>
+<td><tt><font color="#000000">// Receive a Timer callback</font></tt>
+<br><tt><font color="#000000">long MyObject::onAnimationStep(FXObject*,FXSelector,void*){</font></tt>
+<br><tt><font color="#000000">&nbsp; if(continueToAnimate){</font></tt>
+<br><tt><font color="#000000">&nbsp;&nbsp;&nbsp; timerhandle=app-><b>addTimeout</b>(1000,object,ID_ANIMATIONSTEP);&nbsp;
+// Restart timer for another interval</font></tt>
+<br><tt><font color="#000000">&nbsp;&nbsp;&nbsp; }</font></tt>
+<br><tt><font color="#000000">&nbsp; else{</font></tt>
+<br><tt><font color="#000000">&nbsp;&nbsp;&nbsp; timerhandle=<b>NULL</b>;
+// We're done, zero-out the handle to we won't remove the timer twice</font></tt>
+<br><tt><font color="#000000">&nbsp;&nbsp;&nbsp; }</font></tt>
+<br><tt><font color="#000000">&nbsp; return 1;</font></tt>
+<br><tt><font color="#000000">&nbsp; }</font></tt></td>
+</tr>
+</table></center>
+
+<p>It is OK to call <b>FXApp::removeTimeout()</b> with a NULL handle, so
+in the destructor of MyObject, you could simply:
+<br>&nbsp;
+<center><table BORDER CELLSPACING=0 COLS=1 WIDTH="90%" BGCOLOR="#FFF8E1" NOSAVE >
+<tr>
+<td><tt><font color="#000000">// Clean up to prevent sending a timer message
+to a deleted target</font></tt>
+<br><tt><font color="#000000">MyObject::~MyObject(){</font></tt>
+<br><tt><font color="#000000">&nbsp; app-><b>removeTimeout</b>(timerhandle);</font></tt>
+<br><tt><font color="#000000">&nbsp; }</font></tt></td>
+</tr>
+</table></center>
+
+<p>Which makes for much cleaner code.
+<p>Timers are <b>fired</b> when the application returns to the event loop.&nbsp;
+In other words, handlers may be invoked a bit later than specified by the
+timer interval.&nbsp; To maintain smooth animation sequences, you might
+want to call <b>gettimeofday()</b> or some equivalent function so as to
+decrease the next timer interval in the sequence a little bit to correct
+for this effect, particularly if some of your applications are CPU intensive.
+
+<p>
+<p>
+<b>Chore Messages</b>
+<hr>
+Chore messages are messages which are delivered
+to their target object when the application is about to block for events.&nbsp;
+They are used for background tasks which are to be performed when no other,
+more urgent tasks need to be performed.&nbsp; You can use chores for housekeeping
+tasks in your application, or&nbsp; perhaps for animations.&nbsp; A chore
+will fire as soon as the event stream is exhausted and there is nothing
+else for the application to do, this is why it is also sometimes referred
+to as <b><i>idle processing.</i></b></font>
+<p><font color="#000000">When the chore message is fired, your object will
+receive a message of the type <b>SEL_CHORE,</b> with the message <b>ID</b>
+being the one which was registered.&nbsp; To intercept this message, here's
+how you would program your message map:</font>
+<br>&nbsp;
+<center><table BORDER CELLSPACING=0 COLS=1 WIDTH="90%" BGCOLOR="#FFF8E1" NOSAVE >
+<tr>
+<td><tt><font color="#000000">// Message map entry of "object"</font></tt>
+<br><tt><font color="#000000"><b>FXDEFMAP</b>(MyObject) MyObjectMap[]={</font></tt>
+<br><tt><font color="#000000"><b>&nbsp; FXMAPFUNC</b>(SEL_CHORE,MyObject::ID_IDLETASK,MyObject::onIdleTask),</font></tt>
+<br><tt><font color="#000000">&nbsp; <b>...</b></font></tt>
+<br><tt><font color="#000000">&nbsp; };</font></tt></td>
+</tr>
+</table></center>
+
+<p><font color="#000000">As you see, it is very similar to timer callback
+processing.&nbsp; Setting or registering a chore callback message is similar
+as well, and is done by calling <b>FXApp::addChore() </b>as shown below:</font>
+<br>&nbsp;
+<center><table BORDER CELLSPACING=0 COLS=1 WIDTH="90%" BGCOLOR="#FFF8E1" NOSAVE >
+<tr>
+<td><tt><font color="#000000">// Register Chore callback message</font></tt>
+<br><tt><font color="#000000">FXChore* chorehandle;</font></tt>
+<br><tt><font color="#000000">MyObject* object;</font></tt>
+<br><tt><font color="#000000">chorehandle=app-><b>addChore</b>(object,ID_ANIMATIONSTEP);</font></tt></td>
+</tr>
+</table></center>
+
+<p>Chores can be unregistered at any time <b><i>prior</i></b> to being
+fired, by calling <b>FXApp::removeChore()</b> with the handle which was
+previously returned from <b>FXApp::addChore():</b>
+<br>&nbsp;
+<br>&nbsp;
+<center><table BORDER CELLSPACING=0 COLS=1 WIDTH="90%" BGCOLOR="#FFF8E1" NOSAVE >
+<tr>
+<td><tt><font color="#000000">// Unregister Chore callback message</font></tt>
+<br><tt><font color="#000000">app-><b>removeChore</b>(chorehandle);</font></tt></td>
+</tr>
+</table></center>
+
+<p><font color="#000000">Since chores, like timers, are automatically unregistered
+when they are fired, it is an </font><b><i><font color="#CC0000">error</font></i></b><font color="#000000">
+to remove a chore after it has been fired.&nbsp; Thus, your program will
+likely deal with chore handle's in a similar way as with timer handles,
+as described above.</font>
+<p><font color="#000000">Some notes:</font>
+<ul>
+<li>
+<font color="#000000">Some computer graphics books describe using <b>Motif
+work-proc</b>'s to perform delayed drawing for complicated 3D graphics.&nbsp;
+While FOX's Chores are indeed equivalent to Motif's work-proc's, this is
+unnecessary, as ALL paint operations in the FOX toolkit are already delayed.</font></li>
+
+<li>
+<font color="#000000">Repeatedly resetting the chore callback will mean
+that your application will never yield the CPU, because there will always
+be a chore ready to execute prior to blocking for event input.</font></li>
+
+<li>
+<font color="#000000">The GUI update and the Chore processing are interleaved,
+so that each time through the event loop, at least one GUI update callback
+and one Chore are always being executed.&nbsp; This means however, that
+if a Chore takes a long time, the GUI update process itself will also proceed
+much slower, as it will proceed in lock-step with the Chore processing.</font></li>
+</ul>
+
+<p>
+<p>
+<b>Signal Messages</b>
+<hr>
+<font color="#000000">Signal messages are generated when certain asynchronous
+events happen.&nbsp; On most systems, these events are generated in the
+form of <b><i>POSIX signals</i></b>.&nbsp; The POSIX signal facility is
+available on most systems to which FOX has been ported, although&nbsp;
+non-POSIX [e.g. BSD) signals should work also.</font><font color="#000000"></font>
+<p><font color="#000000">You can use Signal messages to allow FOX objects
+to receive signals and process them.&nbsp; For example, you could&nbsp;
+register a signal handler for <b>SIGINT</b>, so that an application may
+be closed down properly when the user hits <tt><b>^C</b> </tt>on the controlling
+terminal.&nbsp; Another use might be to register a handler to catch the
+<b>SIGFPE</b> during a computation, so a warning panel can be popped for
+a divide by zero, and perhaps gracefully save the user's data rather than
+core dumping.</font><font color="#000000"></font>
+<p><font color="#000000">When a Signal message is sent, your target object
+will receive a message of the type <b>SEL_SIGNAL</b> with the <b>ID</b>
+being the one specified when the callback message was registered:</font>
+<br><font color="#000000"></font>&nbsp;
+<center><table BORDER CELLSPACING=0 COLS=1 WIDTH="90%" BGCOLOR="#FFF8E1" NOSAVE >
+<tr>
+<td><tt><font color="#000000">// Message map entry of "object"</font></tt>
+<br><tt><font color="#000000"><b>FXDEFMAP</b>(MyObject) MyObjectMap[]={</font></tt>
+<br><tt><font color="#000000"><b>&nbsp; FXMAPFUNC</b>(SEL_SIGNAL,MyObject::ID_INTERRUPT,MyObject::onCleanUpAndQuit),</font></tt>
+<br><tt><font color="#000000">&nbsp; <b>...</b></font></tt>
+<br><tt><font color="#000000">&nbsp; };</font></tt></td>
+</tr>
+</table></center>
+<font color="#000000"></font>
+<p><font color="#000000">A signal handler can be added by calling <b>FXApp::addSignal().</b>&nbsp;
+There are two methods to deliver a signal to the application: synchronously,
+and asynchronously (immediately).</font><font color="#000000"></font>
+<p><b><font color="#000000">Synchronous or non-immediate</font></b><font color="#000000">
+ <b>signals </b>are held until the application returns to the event loop,
+and then dispatched to the application.&nbsp; Thus, in most cases, the
+normal flow of computation in the application will not be interrupted,
+and your signal callback message handler can assume that all data structures
+are in a consistent state.&nbsp;&nbsp;&nbsp; Relatively harmless signals
+such as <b>SIGINT</b> are best handled synchronously.</font><font color="#000000"></font>
+<p><font color="#000000"><b>Asynchronous or immediate signals </b>are dispatched
+to the target object immediately.&nbsp; Since the regular processing of
+your application may have been interrupted by the signal, you will have
+to exercise extreme caution in the handler, as data structures may be partically
+complete.&nbsp; The immediate signal handlers are best reserved for last-ditch
+efforts, such as cleaning up after a <b>SIGSEGV</b> or <b>SIGBUS</b>, when
+a grave error has occured but there may be a chance to perhaps recover
+some of the user's data.</font><font color="#000000"></font>
+<p><font color="#000000">You can set a signal as follows:</font>
+<br><font color="#000000"></font>&nbsp;
+<br>&nbsp;
+<center><table BORDER CELLSPACING=0 COLS=1 WIDTH="90%" BGCOLOR="#FFF8E1" NOSAVE >
+<tr>
+<td><tt><font color="#000000">// Register Signal callback message</font></tt>
+<br><tt><font color="#000000">app-><b>addSignal</b>(SIGINT,myobject,ID_INTERRUPT,FALSE,flags);</font></tt></td>
+</tr>
+</table></center>
+
+<p>The flags are set as for POSIX signal handling facilities, pleace confer
+your man pages for <b>sigaction(2).</b>
+<br>To remove the signal handler callback message and restore the default
+signal handling action, you can call <b>FXApp::removeSignal() </b>as follows:
+<br>&nbsp;
+<center><table BORDER CELLSPACING=0 COLS=1 WIDTH="90%" BGCOLOR="#FFF8E1" NOSAVE >
+<tr>
+<td><tt><font color="#000000">// Unregister Signal callback message</font></tt>
+<br><tt><font color="#000000">app-><b>removeSignal</b>(SIGINT);</font></tt></td>
+</tr>
+</table></center>
+<font color="#000000"></font>
+<p>
+<p>
+<b>Input Messages</b>
+<hr>
+<font color="#000000">Input messages allow your programs to receive
+inputs from other sources than the GUI.&nbsp; Input messages can for example
+be used to watch <b><i>sockets</i></b>, <b><i>pipes</i></b>, and a host
+of other <b><i>synchronization objects</i></b> [if available on your machine].</font><font color="#000000"></font>
+<p><font color="#000000">Writing networked applications, such as e.g. a
+chat program, involves watching inputs from a number of different sources.&nbsp;
+You could have your program continuously check all these inputs for activity
+in a timer callback, but it is far more efficient to register an input
+source and yield the CPU until there is something going on.</font><font color="#000000"></font>
+<p><font color="#000000">Fortunately, most operating systems provide such
+a facility, and FOX can take advantage of this:</font>
+<br><font color="#000000"></font>&nbsp;
+<ul>
+<li>
+<font color="#000000">On UNIX, the <b>select()</b> system call is used.&nbsp;
+The select mechanism allow a group of file descriptors representing sockets,
+pipes, and [where supported] asynchronous files to be watched for activity.&nbsp;
+In fact, the connection to the display, i.e. the GUI is just one of the
+file descriptors that can be watched.&nbsp; Please consult your UNIX <i>select(2)
+</i>man pages for more information about this system call.</font></li>
+
+<li>
+<font color="#000000">On WIndows NT, the <b>MsgWaitForMultipleObjects()</b>
+system call is used.&nbsp; This system call waits for GUI messages, as
+well as any number of synchronization objects, such as asynchronous files,
+sockets, pipes, event objects, mutexes, and even directories.&nbsp; More
+information about this can be found on the Microsoft Developer Network
+CD's, or on their on-line version of <a href="http://msdn.microsoft.com/library/default.asp">MSDN</a>.</font></li>
+</ul>
+To register a callback message for an input source, you can call FXApp::addInput().&nbsp;
+The callback message will remain registered even even after it has fired,
+unlike for Timers and Chores which are automatically removed after being
+fired once.
+<p>When a synchronization object becomes signaled, a message of the type
+SEL_IO_READ, SEL_IO_WRITE, or SEL_IO_EXCEPT will be sent to the target
+object, with the ID being the one specified in addInput().&nbsp; You can
+intercept these messages as follows:
+<br>&nbsp;
+<center><table BORDER CELLSPACING=0 COLS=1 WIDTH="90%" BGCOLOR="#FFF8E1" NOSAVE >
+<tr>
+<td><tt><font color="#000000">// Message map entry of "object"</font></tt>
+<br><tt><font color="#000000"><b>FXDEFMAP</b>(MyObject) MyObjectMap[]={</font></tt>
+<br><tt><font color="#000000"><b>&nbsp; FXMAPFUNC</b>(SEL_IO_READ,MyObject::ID_ACCEPT,MyObject::onAcceptConnectionFromTheNet),</font></tt>
+<br><tt><font color="#000000"><b>&nbsp; FXMAPFUNC</b>(SEL_IO_READ,MyObject::ID_SOCKET,MyObject::onReceivedInputFromTheNet),</font></tt>
+<br><tt><font color="#000000">&nbsp;<b> FXMAPFUNC</b>(SEL_IO_WRITE,MyObject::ID_SOCKET,MyObject::onSendOutputToTheNet),</font></tt>
+<br><tt><font color="#000000">&nbsp;<b> FXMAPFUNC</b>(SEL_IO_EXCEPT,MyObject::ID_SOCKET,MyObject::onDealWithExcept),</font></tt>
+<br><tt><font color="#000000">&nbsp; <b>...</b></font></tt>
+<br><tt><font color="#000000">&nbsp; };</font></tt></td>
+</tr>
+</table></center>
+
+<p><font color="#000000">In this example, a server type application may
+be creating a <b>socket</b> (socket(2)), and listen for incoming connections.&nbsp;
+When an incoming connection is received the callback handler <b>onAcceptConnectionFromTheNet</b><tt>()
+</tt>presumably verifies the request and calls <b>accept</b> (accept(2))&nbsp;
+and registers another handler to deal with incoming or outgoing data, and
+exceptional conditions.</font><font color="#000000"></font>
+<p><font color="#000000">You can register a input handler by calling <b>FXApp::addInput()</b>.</font>
+<br>&nbsp;
+<br>&nbsp;
+<br>&nbsp;
+<center><table BORDER CELLSPACING=0 COLS=1 WIDTH="90%" BGCOLOR="#FFF8E1" NOSAVE >
+<tr>
+<td><tt><font color="#000000">// Accept the connection</font></tt>
+<br><tt><font color="#000000">socket=accept(...);</font></tt><tt><font color="#000000"></font></tt>
+<p><tt><font color="#000000">// Register input callback message</font></tt>
+<br><tt><font color="#000000">app-><b>addInput</b>(socket,INPUT_READ|INPUT_WRITE|INPUT_EXCEPT,myobject,ID_SOCKET);</font></tt></td>
+</tr>
+</table></center>
+
+<p>Passing <b>INPUT_READ|INPUT_WRITE|INPUT_EXCEPT</b> will register the
+same callback message handler <b>ID</b> for all three types of I/O activities.
+<br>To remove a callback message handler, you can call <b>FXApp::removeInput()
+</b>as follows:
+<br>&nbsp;
+<br>&nbsp;
+<center><table BORDER CELLSPACING=0 COLS=1 WIDTH="90%" BGCOLOR="#FFF8E1" NOSAVE >
+<tr>
+<td><tt><font color="#000000">// Unregister input callback message</font></tt>
+<br><tt><font color="#000000">app->remove<b>Input</b>(socket,INPUT_WRITE);</font></tt></td>
+</tr>
+</table></center>
+
+<p>This will remove the callback message <b>ID</b> for I/O output.&nbsp;
+It is usually a good idea for output, because the file descriptor will
+remain signaled as long as there is buffering to accept more outgoing data.
+<br>You would add the <b>INPUT_WRITE</b> back only when buffers get full
+[when the other party is tardy processing the data you're sending, lets
+say].
+<p>
+<!-- end main window content -->
+
+    </td>
+    <td bgcolor=#ffffff>&nbsp;</td>
+    <td bgcolor=#557faa width=15>&nbsp;</td>
+  </tr>
+  <tr>
+    <td colspan=2 bgcolor="#557faa" align=center>&nbsp;
+     </td>
+    <td bgcolor=#ffffff valign=bottom align=left><img src=art/ill.gif width=8 height=8></td>
+    <td bgcolor=#ffffff>&nbsp;</td>
+    <td bgcolor=#ffffff valign=bottom align=right><img src=art/ilr.gif width=8 height=8></td>
+    <td bgcolor=#557faa width=15>&nbsp;</td>
+  </tr>
+  <tr>
+    <td valign=bottom align=left bgcolor=#557faa><img src=art/oll.gif width=8 height=8></td>
+    <td colspan=4 bgcolor=#557faa>&nbsp;</td>
+    <td valign=bottom align=right bgcolor=#557faa><img src=art/olr.gif width=8 height=8></td>
+  </tr>
+</table>
+
+<address>Copyright 1997-2002 <a href=mailto:jeroen@fox-toolkit.org>Jeroen van der Zijp</a></address>
+<!-- Created: Mon Apr 10 11:20:32 CEST 2000 -->
+<!-- hhmts start -->
+
+<!-- hhmts end -->
+</body>
+</html>

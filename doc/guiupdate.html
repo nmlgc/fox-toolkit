@@ -1,58 +1,161 @@
-<HTML>
-<HEAD>
-   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
-   <META NAME="Author" CONTENT="Jeroen van der Zijp">
-   <META NAME="GENERATOR" CONTENT="Mozilla/4.05 [en] (X11; I; Linux 2.0.34 i686) [Netscape]">
-   <META NAME="Description" CONTENT="Widget Updating">
-   <META NAME="Keywords" CONTENT="FOX, GUI, Toolkit, C++ Class Library">
-   <TITLE>Messages</TITLE>
-</HEAD>
-<BODY TEXT="#000000" BGCOLOR="#FFFFFF" LINK="#0000EE" VLINK="#551A8B" ALINK="#FF0000" BACKGROUND="foxback.gif">
+<html>
+<head>
+<LINK REL="stylesheet" HREF="styles.css" TYPE="text/css">
+<title>FOX-Toolkit</title>
+<!-- HTML Copyright 2001 Paul Laufer -->
+</head>
 
-<CENTER><U><FONT COLOR="#990000"><FONT SIZE=+4>Automatic GUI Updating</FONT></FONT></U></CENTER>
+<body bgcolor=#ffffff link=#990033 vlink=#4a73ad alink=#ed004f text=#000000>
 
-<CENTER>&nbsp;</CENTER>
-<A NAME="UPDATING"></A><U><FONT COLOR="#990000"><FONT SIZE=+4>What is Automatic
-GUI Updating?</FONT></FONT></U>
+<!--header-->
+<table align=center border=0 cellpadding=0 cellspacing=0 width=100% >
+  <tr><td bgcolor=silver colspan=5 align=right height=50><img src=art/oul_grey.gif align=left valign=top width=8 height=8><img src=art/foxlogo.png valign=bottom alt="FOX Toolkit" height=50 width=500 border=0 ></td>
+  	<td bgcolor=#557faa valign=top align=right><img src=art/our.gif width=8 height=8></td>
+  </tr>
+<!-- end header -->
+  <tr>
+    <td bgcolor=#557faa colspan=2 valign=top align=left>&nbsp;</td>
+    <td bgcolor=#557faa colspan=3><font color=#ffffff size=+1><center>
+<!-- Page Title -->
+Documentation: Automatic GUI Updating
+<!-- End Page Title -->
+    </center></font></td>
+    <td bgcolor=#557faa valign=top align=right>&nbsp;</td>
+  </tr>
+  <tr>
+    <td bgcolor=#557faa colspan=2>&nbsp;</td>
+    <td bgcolor=#ffffff valign=top align=left><img src=art/iul.gif width=8 height=8></td>
+    <td bgcolor=#ffffff>&nbsp;</td>
+    <td bgcolor=#ffffff valign=top align=right><img src=art/iur.gif width=8 height=8></td>
+    <td bgcolor=#557faa width=15>&nbsp;</td>
+  </tr>
+  <tr>
+    <td width=8 bgcolor=#557faa>&nbsp;</td>
+    <td valign=top bgcolor=#557faa link=#ffffff width=150>
+
+<!-- start navbar content -->
+
+	<a href=fox.html><font color=#ffffff>Home</font></a><br>
+	<a href=news.html><font color=#ffffff>News</font></a><br>
+	<a href=download.html><font color=#ffffff>Download</font></a><br>
+	<a href=goals.html><font color=#ffffff>Goals & Approach</font></a><br>
+	<a href=doc.html><font color=#ffffff>Documentation</font></a><br>
+	<a href=faq.html><font color=#ffffff>FAQ</font></a><br>
+	<a href=rex.html><font color=#ffffff>FXRex</font></a><br>
+	<a href=screenshots.html><font color=#ffffff>Screenshots</font></a><br>
+	<br>
+	<a href=adie.html><font color=#ffffff>Adie</font></a><br>
+	<a href=pathfinder.html><font color=#ffffff>PathFinder</font></a><br>
+	<a href=calc.html><font color=#ffffff>FOX Calculator</font></a><br>
+	<br>
+	<a href=projects.html><font color=#ffffff>Projects</font></a><br>
+	<br>
+	<a href='http://fxpy.sourceforge.net'><font color=#ffffff>FXPy</font></a><br>
+	<a href='http://fxruby.sourceforge.net'><font color=#ffffff>FXRuby</font></a><br>
+	<a href='http://eiffelfox.sourceforge.net'><font color=#ffffff>EiffelFox</font></a><br>
+        <a href='http://eevolved.com/foxhole/'><font color=#ffffff>The FOX Hole</font></a><br>
+        <a href='http://takahr.dhis.portside.net/cgi-bin/rwiki.cgi?cmd=view;name=FOX+FAQ'><font color=#ffffff>Japanese Docs</font></a><br>
+	<br>
+	<center>
+	<a href="http://www.eff.org/br"><img SRC="art/freespeach.gif" border=0></a>
+	<p>
+	<a href="http://www.slashdot.org"><img SRC="art/slingerzbutton1.gif" border=0></a>
+	</center>
+
+
+
+<!-- end navbar content -->
+
+    </td>
+    <td bgcolor=#ffffff>&nbsp;</td>
+    <td valign=top>
+
+<!-- start main window content -->
+<center><img src='art/foxstart.png'>
+<BR><B>Documentation: Automatic GUI Updating</B>
+</center>
+<p>
+<b>What is Automatic GUI Updating?</b>
+<hr>
+<P>Traditionally, Controls such as Buttons and Sliders have been used to
+provide notifications to the application code that a certain command is
+to be performed, or some value has changed.&nbsp; For example, if one moves
+a Slider a little bit, a notification message informs the application that
+a new value is available; at the same time, the Slider's position will
+give a <I>visual cue</I> about the value being transmitted to the application
+code.
+<P>But suppose one were to add a TextField to control the same variable.&nbsp;
+If we type into the TextField, the new value will be transmitted to the
+application just fine, but since the slider was not moved, the visual position
+of the slider now no longer represents the value that the program is actually
+working with.
+<P>Traditionally, GUI developers have solved this problem roughly like
+this:
 <BR>&nbsp;
+<UL>
+<LI>
+When receiving a message from the Slider Control, the program accepts the
+new value, and then turns around and sets the new value in the TextField.</LI>
 
-<P>Complex graphical user interfaces can have hundreds of Controls.&nbsp;
-Applications typically have a number of different states, and not every
-Control is applicable in every state.&nbsp; Some Buttons or other Controls
-may even be dangerous in some states.&nbsp;&nbsp; Controls which are not
-appropriate in certain application states are typically made unavailable
-to the user by&nbsp; <I>desensitizing</I> them (``grey-out''), or <I>hiding</I>
-them, or some other means.
-
-<P>Another issue is that Controls are often used to reflect the application's
-state, rather than just control it; for example, CheckButtons are shown
-as checked, Sliders indicate by their position the currently selected value,
-and so on.
-
-<P>The application programmer is faced with the issue of making sure that
-each and every Control is properly set in each state of the application.&nbsp;
-As each action from the user could potentially cause a state change in
-every Control in the application, the situation quickly becomes a combinatorial
-nightmare.
-
-<P>A new type of message called the GUI-Update message can solve this problem.&nbsp;
-The quintessential idea is that Controls update themselves by interrogating
-the application state.
-
-<P>Thus, rather than N action messages updating M controls (involving an
-amount of programming proportional to N*M), we just have N messages from
-Controls to perform some sort of action changing the application state,
-and M update messages from Controls to inquire about the new application
-state.
-
-<P>Clearly, the amount of programming involved is simply proportional to
-M+N.&nbsp; For realistic size projects, this is a big win.
 <BR>&nbsp;
+<LI>
+When receiving a message from the TextField, the program similarly accepts
+the new value from the TextField and now updates the Slider.</LI>
+</UL>
+The above pattern seems eminently reasonable.&nbsp; Up till now, this was
+how it was done [although certain toolkits&nbsp; didn't&nbsp; make even
+this simple approach very easy!].
+<P>However, now imagine a large program being implemented by several developers,
+and a graphical user interface that has hundreds, perhaps even thousands
+of Controls.&nbsp;&nbsp; All these controls manipulate a bunch of data
+in the application program.
+<BR>We can see the problem with this approach: how is developer <I>A</I>
+supposed to know that the Dialog panel being designed by developer <I>B</I>
+is to reflect the new values for the variables being modified by developer
+<I>A</I>'s
+code?&nbsp; Clearly, this problem can grow&nbsp; into a combinatorial nighmare.
+<P>The GUI Updating facility implemented in FOX can largely eliminate this
+problem.&nbsp; In a nutshell, the idea is that in FOX, the GUI Controls
+are <B><I>bi-directional</I></B>:
 <BR>&nbsp;
+<UL>
+<LI>
+A Control can&nbsp; <B><I>notify</I></B>&nbsp; the application program
+to inform it that the Control has been given a new value by the user. One
+could call this a ``<B><I>push</I></B>.''</LI>
 
-<P><U><FONT COLOR="#990000"><FONT SIZE=+4>GUI Updating Example.</FONT></FONT></U>
-
-<P>An example of GUI Updating is given in the ScribbleApp program.&nbsp;
+<BR>&nbsp;
+<LI>
+A Control can also <B><I>interrogate</I></B> the application about the
+current state of the application and its data structures, so that the Control
+may properly reflect this graphically.&nbsp; This one could call a ``<B><I>pull</I></B>.''</LI>
+</UL>
+Why is this good?&nbsp; Because it <B><I>compartmentalizes</I></B> large
+scale GUI design, and <B><I>simplifies coding.&nbsp;&nbsp; </I></B>In the
+above example, developer <I>B</I> wouldn't even need to <I>talk</I> to
+developer <I>A</I>.&nbsp; He would simply implement [for each Control in
+his Dialog panel]&nbsp; not only the ``command'' messages which notify
+his routines about user inputs, but also the ``update'' messages by which
+the Controls ask for the values they should be displaying.
+<P>Coding complexity is reduced because instead of N command messages each
+updating M Controls [for a total of N x M combinations], the developer
+would only have to implement N command messages and M update messages [just
+N + M combinations].&nbsp; Complexity is also reduced because <I>command
+handlers</I> just perform their operation on the application data structures,
+and <I>update handlers</I> simply update the corresponding controls given
+the state in which they found these data structures.
+<P>A common use of the GUI Updating mechanism is the <B><I>disabling</I></B>
+or ``<B><I>graying-out</I></B>'' of controls when they're not applicable
+under certain conditions.&nbsp; For example, a <B><FONT FACE="Arial,Helvetica">Save
+File </FONT></B>Button may be made unavailable when the application hasn't
+loaded a file yet.&nbsp;&nbsp; Other common uses include hiding or showing
+of Controls in the GUI based on context or which ``mode'' an application
+is in.
+<p>
+<p>
+<b>GUI Updating Example</b>
+<hr>
+An example of GUI Updating is given in the ScribbleApp program.&nbsp;
 The ScribbleApp program allows lines to be drawn in some canvas.&nbsp;
 To clear the canvas, the users invokes the <B><FONT FACE="Arial,Helvetica"><U>C</U>lear</FONT></B>
 Button.&nbsp; The <B><FONT FACE="Arial,Helvetica"><U>C</U>lear </FONT></B>Button
@@ -60,95 +163,158 @@ is to be available only when something has been scribbled; otherwise, it
 is to be grayed out or desensitized.&nbsp; One can accomplish this in FOX
 as follows:
 <BR>&nbsp;
-<BR>&nbsp;
-<PRE><FONT FACE="Courier New,Courier">&nbsp;&nbsp;&nbsp; // Construct the Clear Button</FONT></PRE>
+<CENTER><TABLE BORDER CELLSPACING=0 COLS=1 WIDTH="90%" BGCOLOR="#FFF8E1" NOSAVE >
+<TR>
+<TD>
+<PRE><TT><FONT COLOR="#000000"></FONT></TT></PRE>
 
-<PRE><FONT FACE="Courier New,Courier">&nbsp;&nbsp;&nbsp; new FXButton(buttonFrame,"&amp;Clear",NULL,app,<FONT COLOR="#000000">ScribbleApp::</FONT><FONT COLOR="#FF6666">ID_CLEAR</FONT>,FRAME_THICK|FRAME_RAISED|LAYOUT_FILL_X|LAYOUT_TOP|LAYOUT_LEFT,0,0,0,0,10,10,5,5);</FONT></PRE>
-This constructs a new Button object, which will send a message ID_CLEAR
+<PRE><TT><FONT COLOR="#000000">// Construct the Clear Button</FONT></TT></PRE>
+
+<PRE><TT><FONT COLOR="#000000">new FXButton(buttonFrame,"&amp;Clear",NULL,</FONT></TT></PRE>
+
+<PRE><TT><FONT COLOR="#000000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; app,ScribbleApp::ID_CLEAR,</FONT></TT></PRE>
+
+<PRE><TT><FONT COLOR="#000000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; FRAME_THICK|FRAME_RAISED|LAYOUT_FILL_X|LAYOUT_TOP|LAYOUT_LEFT,</FONT></TT></PRE>
+
+<PRE><TT><FONT COLOR="#000000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0,0,0,0,10,10,5,5);</FONT></TT></PRE>
+</TD>
+</TR>
+</TABLE></CENTER>
+
+<P>This constructs a new Button object, which will send a message ID_CLEAR
 to the application object (app).
-
 <P>In the application object, we catch <B><I>two</I></B> message types
 from the Clear button:
 <BR>&nbsp;
-<PRE><FONT FACE="Courier New,Courier">&nbsp;&nbsp;&nbsp; // Message Map for the Scribble App class</FONT></PRE>
+<CENTER><TABLE BORDER CELLSPACING=0 COLS=1 WIDTH="90%" BGCOLOR="#FFF8E1" NOSAVE >
+<TR NOSAVE>
+<TD NOSAVE>
+<PRE><FONT FACE="Courier New,Courier"></FONT></PRE>
 
-<PRE><FONT FACE="Courier New,Courier">&nbsp;&nbsp;&nbsp; FXDEFMAP(ScribbleApp) ScribbleAppMap[]={</FONT></PRE>
+<PRE><FONT FACE="Courier New,Courier">// Message Map for the Scribble App class</FONT></PRE>
 
-<PRE><FONT FACE="Courier New,Courier">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; FXMAPFUNC(SEL_LEFTBUTTONPRESS,&nbsp;&nbsp; ScribbleApp::ID_MOUSE,&nbsp; ScribbleApp::onMouseDown),</FONT></PRE>
+<PRE><FONT FACE="Courier New,Courier">FXDEFMAP(ScribbleApp) ScribbleAppMap[]={</FONT></PRE>
 
-<PRE><FONT FACE="Courier New,Courier">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; FXMAPFUNC(SEL_LEFTBUTTONRELEASE, ScribbleApp::ID_MOUSE,&nbsp; ScribbleApp::onMouseUp),</FONT></PRE>
+<PRE><FONT FACE="Courier New,Courier">&nbsp;&nbsp; FXMAPFUNC(SEL_LEFTBUTTONPRESS,&nbsp;&nbsp; ScribbleApp::ID_MOUSE,&nbsp; ScribbleApp::onMouseDown),</FONT></PRE>
 
-<PRE><FONT FACE="Courier New,Courier">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; FXMAPFUNC(SEL_MOTION,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ScribbleApp::ID_MOUSE,&nbsp; ScribbleApp::onMouseMove),</FONT></PRE>
+<PRE><FONT FACE="Courier New,Courier">&nbsp;&nbsp; FXMAPFUNC(SEL_LEFTBUTTONRELEASE, ScribbleApp::ID_MOUSE,&nbsp; ScribbleApp::onMouseUp),</FONT></PRE>
 
-<PRE><FONT FACE="Courier New,Courier"><FONT COLOR="#000000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; FXMAPFUNC(</FONT><FONT COLOR="#FF6666">SEL_COMMAND</FONT><FONT COLOR="#000000">,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ScribbleApp::</FONT><FONT COLOR="#FF6666">ID_CLEAR</FONT><FONT COLOR="#000000">,&nbsp; ScribbleApp::</FONT><FONT COLOR="#FF6666">onCmdClear</FONT><FONT COLOR="#000000">),</FONT></FONT></PRE>
+<PRE><FONT FACE="Courier New,Courier">&nbsp;&nbsp; FXMAPFUNC(SEL_MOTION,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ScribbleApp::ID_MOUSE,&nbsp; ScribbleApp::onMouseMove),</FONT></PRE>
 
-<PRE><FONT FACE="Courier New,Courier"><FONT COLOR="#000000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; FXMAPFUNC(</FONT><FONT COLOR="#FF6666">SEL_UPDATE</FONT><FONT COLOR="#000000">,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ScribbleApp::</FONT><FONT COLOR="#FF6666">ID_CLEAR</FONT><FONT COLOR="#000000">,&nbsp; ScribbleApp::</FONT><FONT COLOR="#FF6666">onUpdClear</FONT><FONT COLOR="#000000">),</FONT></FONT></PRE>
+<PRE><FONT FACE="Courier New,Courier"><FONT COLOR="#000000">&nbsp;&nbsp; FXMAPFUNC(</FONT><FONT COLOR="#FF6666">SEL_COMMAND</FONT><FONT COLOR="#000000">,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ScribbleApp::</FONT><FONT COLOR="#FF6666">ID_CLEAR</FONT><FONT COLOR="#000000">,&nbsp; ScribbleApp::</FONT><FONT COLOR="#FF6666">onCmdClear</FONT><FONT COLOR="#000000">),</FONT></FONT></PRE>
 
-<PRE><FONT FACE="Courier New,Courier">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; };</FONT></PRE>
-The SEL_COMMAND message indicates that the Clear button has been pressed;
+<PRE><FONT FACE="Courier New,Courier"><FONT COLOR="#000000">&nbsp;&nbsp; FXMAPFUNC(</FONT><FONT COLOR="#FF6666">SEL_UPDATE</FONT><FONT COLOR="#000000">,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ScribbleApp::</FONT><FONT COLOR="#FF6666">ID_CLEAR</FONT><FONT COLOR="#000000">,&nbsp; ScribbleApp::</FONT><FONT COLOR="#FF6666">onUpdClear</FONT><FONT COLOR="#000000">),</FONT></FONT></PRE>
+<FONT FACE="Courier New,Courier">&nbsp;&nbsp;&nbsp; };</FONT>
+<BR><FONT FACE="Courier New,Courier"></FONT>&nbsp;</TD>
+</TR>
+</TABLE></CENTER>
+
+<P>The SEL_COMMAND message indicates that the Clear button has been pressed;
 its action will be to clear the drawing canvas:
 <BR>&nbsp;
 <BR>&nbsp;
-<PRE><FONT FACE="Courier New,Courier">&nbsp;&nbsp;&nbsp; // Handle the clear message</FONT></PRE>
+<CENTER><TABLE BORDER CELLSPACING=0 COLS=1 WIDTH="90%" BGCOLOR="#FFF8E1" NOSAVE >
+<TR>
+<TD>
+<PRE><FONT FACE="Courier New,Courier"></FONT></PRE>
 
-<PRE><FONT FACE="Courier New,Courier">&nbsp;&nbsp;&nbsp; long ScribbleApp::<FONT COLOR="#FF6666">onCmdClear</FONT>(FXObject*,FXSelector,void*){</FONT></PRE>
+<PRE><FONT FACE="Courier New,Courier">// Handle the clear message</FONT></PRE>
 
-<PRE><FONT FACE="Courier New,Courier">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; canvas->clearWindow();</FONT></PRE>
+<PRE><FONT FACE="Courier New,Courier">long ScribbleApp::<FONT COLOR="#FF6666">onCmdClear</FONT>(FXObject*,FXSelector,void*){</FONT></PRE>
 
-<PRE><FONT FACE="Courier New,Courier">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; dirty=0;</FONT></PRE>
+<PRE><FONT FACE="Courier New,Courier">&nbsp;&nbsp; FXDC *dc=canvas->DC();
 
-<PRE><FONT FACE="Courier New,Courier">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return 1;</FONT></PRE>
+&nbsp;&nbsp; // Erase the canvas
+&nbsp;&nbsp; dc->begin(canvas);
+&nbsp;&nbsp; dc->setForeground(FXRGB(255,255,255));
+&nbsp;&nbsp; dc->fillRectangle(0,0,canvas->getWidth(),canvas->getHeight());
+&nbsp;&nbsp; dc->end();</FONT></PRE>
 
-<PRE><FONT FACE="Courier New,Courier">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }</FONT></PRE>
-The SEL_UPDATE message is sent when the Clear Button updates itself.&nbsp;
+<PRE><FONT FACE="Courier New,Courier">&nbsp;&nbsp; dirty=0;</FONT></PRE>
+
+<PRE><FONT FACE="Courier New,Courier">&nbsp;&nbsp; return 1;</FONT></PRE>
+<FONT FACE="Courier New,Courier">&nbsp;&nbsp;&nbsp; }</FONT>
+<BR><FONT FACE="Courier New,Courier"></FONT>&nbsp;</TD>
+</TR>
+</TABLE></CENTER>
+
+<P>The SEL_UPDATE message is sent when the Clear Button updates itself.&nbsp;
 The GUI-Update handler determines whether the Clear Button should be sensitized
 or not depending on whether any drawing has taken place in the canvas;
-this is kept track of through a flag variable dirty:
+this is kept track of through a flag variable <B><FONT FACE="Courier New,Courier">dirty</FONT></B>:
 <BR>&nbsp;
-<PRE><FONT FACE="Courier New,Courier">&nbsp;&nbsp;&nbsp; // Handle the GUI Update from the Clear button</FONT></PRE>
+<CENTER><TABLE BORDER CELLSPACING=0 COLS=1 WIDTH="90%" BGCOLOR="#FFF8E1" NOSAVE >
+<TR NOSAVE>
+<TD NOSAVE>
+<PRE><FONT FACE="Courier New,Courier"></FONT></PRE>
 
-<PRE><FONT FACE="Courier New,Courier">&nbsp;&nbsp;&nbsp; long ScribbleApp::<FONT COLOR="#FF6666">onUpdClear</FONT>(FXObject* sender,FXSelector,void*){</FONT></PRE>
+<PRE><FONT FACE="Courier New,Courier">// Handle the GUI Update from the Clear button</FONT></PRE>
 
-<PRE><FONT FACE="Courier New,Courier">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; FXButton* button=(FXButton*)sender;</FONT></PRE>
+<PRE><FONT FACE="Courier New,Courier">long ScribbleApp::<FONT COLOR="#FF6666">onUpdClear</FONT>(FXObject* sender,FXSelector,void*){</FONT></PRE>
 
-<PRE><FONT FACE="Courier New,Courier">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Button is available when canvas is dirty only</FONT></PRE>
+<PRE><FONT FACE="Courier New,Courier">&nbsp;&nbsp; FXButton* button=(FXButton*)sender;</FONT></PRE>
 
-<PRE><FONT FACE="Courier New,Courier">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; dirty ? button->enable() : button->disable();</FONT></PRE>
+<PRE><FONT FACE="Courier New,Courier">&nbsp;&nbsp; // Button is available when canvas is dirty only</FONT></PRE>
 
-<PRE><FONT FACE="Courier New,Courier">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return 1;</FONT></PRE>
+<PRE><FONT FACE="Courier New,Courier">&nbsp;&nbsp; dirty ? button->enable() : button->disable();</FONT></PRE>
 
-<PRE><FONT FACE="Courier New,Courier">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }</FONT></PRE>
-Note that in this case we know the origin of the message (the <I>sender</I>)
-to be of the type FXButton, so we can simply cast the sender object down
-to the appropriate type.
+<PRE><FONT FACE="Courier New,Courier">&nbsp;&nbsp; return 1;</FONT></PRE>
+<FONT FACE="Courier New,Courier">&nbsp;&nbsp;&nbsp; }</FONT></TD>
+</TR>
+</TABLE></CENTER>
+
+<P>Note that in this case we know the origin of the message (the <I>sender</I>)
+to be of the type FXButton, so we can simply <I>cast</I> the sender object
+down to the appropriate type.
 <BR>In general however, we may not always know [the only thing we know
-is that the sender is of type FXObject].
-<BR>In such a case, the GUI Update handler should <I>send a message back
-</I>to the sender.&nbsp;&nbsp; We can safely do this since all FOX objects
-are derived from FXObject, and FXObject's can be sent messages.&nbsp; This
-leads to the following code:
+is that the sender is of type FXObject].&nbsp; In that a case, the GUI
+Update handler should <I>send a message back
+</I>to the sender.&nbsp;&nbsp;
+We can safely do this since all FOX objects are derived from FXObject,
+and FXObject's can be sent messages.&nbsp; This leads to the following
+code:
 <BR>&nbsp;
-<PRE><FONT FACE="Courier New,Courier">&nbsp;&nbsp;&nbsp; // Update sender</FONT></PRE>
+<CENTER><TABLE BORDER CELLSPACING=0 COLS=1 WIDTH="90%" BGCOLOR="#FFF8E1" NOSAVE >
+<TR>
+<TD>
+<PRE><FONT FACE="Courier New,Courier"></FONT></PRE>
 
-<PRE><FONT FACE="Courier New,Courier">&nbsp;&nbsp;&nbsp; long ScribbleApp::<FONT COLOR="#FF6666">onUpdClear</FONT>(FXObject* sender,FXSelector,void*){</FONT></PRE>
+<PRE><FONT FACE="Courier New,Courier">// Update sender</FONT></PRE>
 
-<PRE><FONT FACE="Courier New,Courier">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; FXuint msg=dirty ? ID_ENABLE : ID_DISABLE;</FONT></PRE>
+<PRE><FONT FACE="Courier New,Courier">long ScribbleApp::<FONT COLOR="#FF6666">onUpdClear</FONT>(FXObject* sender,FXSelector,void*){</FONT></PRE>
 
-<PRE><FONT FACE="Courier New,Courier">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; sender->handle(this,MKUINT(msg,SEL_COMMAND),NULL);</FONT></PRE>
+<PRE><FONT FACE="Courier New,Courier">&nbsp;&nbsp; FXuint msg=dirty ? ID_ENABLE : ID_DISABLE;</FONT></PRE>
 
-<PRE><FONT FACE="Courier New,Courier">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return 1;</FONT></PRE>
+<PRE><FONT FACE="Courier New,Courier">&nbsp;&nbsp; sender->handle(this,MKUINT(msg,SEL_COMMAND),NULL);</FONT></PRE>
 
-<PRE><FONT FACE="Courier New,Courier">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }</FONT></PRE>
-Many FOX Widgets understand the ID_ENABLE, and ID_DISABLE messages;&nbsp;
+<PRE><FONT FACE="Courier New,Courier">&nbsp;&nbsp; return 1;</FONT></PRE>
+<FONT FACE="Courier New,Courier">&nbsp;&nbsp;&nbsp; }</FONT></TD>
+</TR>
+</TABLE></CENTER>
+
+<P>Many FOX Widgets understand the ID_ENABLE, and ID_DISABLE messages;&nbsp;
 if however, a message is sent to a sender that doesn't, nothing bad will
 happen as no message handler will be associated with the message.
-<BR>&nbsp;
-
-<P><U><FONT COLOR="#990000"><FONT SIZE=+4>When is GUI Updating Performed?</FONT></FONT></U>
-
-<P>In FOX, automatic GUI Updating is performed automatically after <B><I>handled</I></B>
-events.&nbsp; This is why it is important to return <B>1</B> or <B>0</B>
-in your message handlers.:
+<p>
+<p>
+<b>When is GUI Updating Performed?</b>
+<hr>
+There are two sides to this question:- under what conditions can a Control
+be updated, and when is the updating actually done.
+<P>With regard to the first part, a Control can be <I>updated</I> whenever
+it is <I>not currently being manipulated</I> by the user.&nbsp; In other
+words, a Control is normally in a ``<B><I>pull</I></B>'' mode, in that
+it tries to interrogate the application to determine the value it needs
+to display graphically.&nbsp; As soon as the user starts to manipulate
+the Control, it switches to a ``<B><I>push</I></B>'' mode, in which the
+Control becomes an <I>input</I> of new values to the application.
+<P>As far as the second part of the question goes, the FOX library performs
+the GUI Updates when there isn't much else to do, that is to say, the system
+is about to block and wait for events from the user.&nbsp; Furthermore,
+the GUI Updates are only performed when previous events have been dispatched
+and handled.
+<P>This is why it is important to return <B>1</B> or <B>0</B> in your message
+handlers.:
 <BR>&nbsp;
 <UL>
 <LI>
@@ -160,27 +326,17 @@ If you return <B>0</B>, the message is considered unhandled, and since
 unhandled messages should not have changed the application's state, no
 GUI Update is performed.</LI>
 </UL>
-For increased efficiency, FOX does not perform GUI Updating until catching
-up with the event stream; also, FOX checks for new events between each
+For increased efficiency, the system checks for new events between each
 GUI Update message, to prevent ``event-deafness'' for extended periods
 of time.&nbsp; Even so, it is important to restrict your GUI Update message
 handlers to small routines, and to not perform any major computations in
 GUI Update message handlers.
 
-<P>As part of the GUI Update of each widget, layout is performed also.&nbsp;
-Thus, many layout changes may be peformed during regular (non gui-update)
-message handling without any additional overhead:- FOX not only delays
-painting, but also layout computation until idle-processing time.&nbsp;
-This makes FOX extremely fast.
-<BR>However, since layout computation is performed during GUI-Update processing,
-GUI Update message handlers should avoid making changes to Controls that
-could cause layout computation, as these changes will not be handled till
-the next GUI Update cycle.
-<BR>&nbsp;
-<BR><U>&nbsp;</U>
-<BR><U><FONT COLOR="#990000"><FONT SIZE=+4>Automatic Gray Out or Hide.</FONT></FONT></U>
-<BR>&nbsp;
-<BR>FOX also has the option to automatically gray out or hide certain Widgets.&nbsp;
+<p>
+<p>
+<b>Automatic Gray Out or Hide</b>
+<hr>
+FOX also has the option to automatically gray out or hide certain Widgets.&nbsp;
 Both options work very similar, and differ only visually.&nbsp; When automatic
 grayout is in effect, the Widget will be automatically grayed out (disabled,
 or desensitized to user inputs), when one of the following is true:
@@ -192,23 +348,17 @@ The Widget's target is NULL.</LI>
 <LI>
 The Widget's target does not handle the Widget's SEL_UPDATE message.</LI>
 </OL>
-
-
-<P>If the above is not true, the Widget will be sensitized or enabled again.
-
-<P>Why is this useful?&nbsp; If a Widget's target is an object that performs
+Why is this useful?&nbsp; If a Widget's target is an object that performs
 some sort of message <B><I>delegation</I></B> (for example, FXMDIClient
 and FXMDIChild do this), then the ability to handle a certain SEL_UPDATE
 message may depend on the delegate object that is in effect at the time
 the update message is sent.&nbsp;&nbsp; If the particular delegate in effect
 does not handle the update message, there is no handler to make a Widget
 assume the correct state.
-
 <P>With automatic gray out, however, the absence of a handler for the SEL_UPDATE
 message can be turned into an action to gray out the Widget instead.&nbsp;
 This will keep the GUI consistent even in the absence of update message
 handlers.
-
 <P>The automatic gray out technique is of particular significance when
 using MDI (Multiple Document Interface) widgets as both FXMDIClient and
 FXMDIChild perform message delegation.&nbsp; Messages from the pulldown
@@ -216,28 +366,124 @@ menus are typically sent to the FXMDIClient, and then subsequently forwarded
 by the FXMDIClient to the active FXMDIChild (Sometimes, there are no FXMDIChild
 windows, and the message can not be forwarded and then the message handler
 returns 0).
-
 <P>As automatic gray out of Widgets will cause a gray out if no handler
 for the SEL_UPDATE message is found, it is imperative that the SEL_UPDATE
 must always be handled when the Widget should be sensitive.&nbsp; The update
 message handler does not necessarily have to do anything, it just needs
 to return 1.
-
 <P>To handle this common situation, FXWindow defines just such a message
 handler for you:&nbsp; <B>FXWindow::onUpdYes()<TT> </TT></B>will do nothing
-but return a 1.&nbsp; You can simply append this to your message map as
-in:
+but show and sensitize the Widget that is the sender of the message, and
+return a 1.&nbsp; You can simply append this to your message map as in:
 <BR>&nbsp;
 <BLOCKQUOTE><TT>FXMAPFUNC(SEL_UPDATE,ID_MYMENU,<FONT COLOR="#000000">FXWindow::onUpdYes</FONT>)</TT></BLOCKQUOTE>
-
-
-<P>That will take care of it.&nbsp; Of course if the update message should
+That will take care of it.&nbsp; Of course if the update message should
 do something, you should write your own handler and make it return 1.
+<p>
+<p>
+<b>Delayed Repaint/Layout</b>
+<hr>Procrastination is Good Thing [even though my parents always told me
+otherwise :-)].&nbsp; The motto is <I>the fastest thing you can do is nothing
+at all.</I> Indeed, my lowly Pentium Classic can do ``<B><I>nothing</I></B>
+''as fast as the fastest supercomputer!
+<P>All this seems pretty obvious, but what does it mean for GUI systems?&nbsp;
+It means we should try to <B>avoid</B> doing the two most expensive things
+that GUI systems have to do:
 <BR>&nbsp;
+<OL>
+<LI>
+<B>Drawing onto the screen</B>.&nbsp; Drawing generates X protocol,&nbsp;
+and causes context switching between client and display server, and is
+therefore very expensive.</LI>
 
+<BR>&nbsp;
+<LI>
+<B>Layout of widgets</B>.&nbsp; Layout involves recursing up and down the
+Widget Tree, and computing a bunch of stuff such as sizes of List contents,
+etc.&nbsp; In addition, layout also causes lots of stuff to be redrawn!</LI>
+</OL>
+So it is clear that these two are to be avoided at all cost.&nbsp; Here's
+how FOX does this:
+<BR>&nbsp;
+<OL>
+<LI>
+Expose or repaint events are stacked up until the system has processed
+all user input events.&nbsp; Moreover, exposed regions are compounded so
+that in most cases only one repaint is necessary.</LI>
+
+<BR>&nbsp;
+<LI>
+Layout is performed during the GUI Update phase; in other words, layout
+is delayed similarly to repainting so that only a single big layout remains
+to be done at the end [I believe FOX is unique in this; having scrutinized
+many systems, I have not found any that incorporate this feature; I think
+it is therefore safe to say that I invented this...].</LI>
+
+<BR>&nbsp;
+<LI>
+Size-caching is performed by certain [complex] Widgets to avoid potentially
+expensive size computations; for example, resizing a ScrollWindow does
+not necessarily change the size of the content.</LI>
+</OL>
+So how well does this all work?&nbsp; <B><I>It Really Rocks</I></B>!&nbsp;
+The <B><I>delayed painting</I></B> is important, as it prevents stacking
+up huge piles of expose events when for example dragging [solid-, or opaque-dragging]
+windows over FOX applications.&nbsp; By NOT doing the unnecessary work,
+the system actually catches up more quickly, and never falls behind more
+than one repaint.
+<P>The <B><I>delayed layout</I></B> is responsible for the extremely fast
+startup times of FOX applications.&nbsp; As hundreds of Widgets are being
+added during construction of an application's GUI, recalculating layout
+after each addition really kills startup performance.
+<BR>Delayed layout benefits performance each time many GUI Widgets are
+added or removed, or if layout hints are changed with widespread effects.&nbsp;
+It also makes opaque resizing [supported by a few X Window Managers] quite
+fast.
+<P>Several advanced GUI systems have added special freeze/thaw semantics
+to temporarily suspend layout calculations.&nbsp; In FOX, this feature
+is automatic, and application-wide in effect.
+<P>As the delayed layout is performed as part of the GUI Update process,
+GUI Update message handlers should avoid making changes to Controls that
+could cause layout computation, as these changes will not be handled till
+the next GUI Update cycle.
+<P>One more speed-feature related to use of Brian Paul's excellent Mesa
+graphics library.&nbsp; With Mesa, double buffering is implemented using
+a software backbuffer.&nbsp; Thus, after having drawn this back buffer,&nbsp;
+an expose event can repaint the dirty area simply by blitting back this
+back buffer, instead of re-rendering OpenGL commands [which can be very
+expensive indeed!].
+<P>Hence, FOX distinguishes between ``synthetic'' repaint events and ``non-synthetic''
+ones.&nbsp; Synthetic expose events are those that originate from within
+the application.&nbsp; When receiving a synthetic expose event, the OpenGL
+will have to be regenerated; for non-synthetic expose events, the back
+buffer can be blitted back.
 <P>
-<HR WIDTH="100%">
-<BR><FONT SIZE=-1>Copyright &copy; 1998 <A HREF="mailto:jvz@cfdrc.com">Jeroen
-van der Zijp</A>, all rights reserved.</FONT>
-</BODY>
-</HTML>
+
+<!-- end main window content -->
+
+    </td>
+    <td bgcolor=#ffffff>&nbsp;</td>
+    <td bgcolor=#557faa width=15>&nbsp;</td>
+  </tr>
+  <tr>
+    <td colspan=2 bgcolor="#557faa" align=center>&nbsp;
+     </td>
+    <td bgcolor=#ffffff valign=bottom align=left><img src=art/ill.gif width=8 height=8></td>
+    <td bgcolor=#ffffff>&nbsp;</td>
+    <td bgcolor=#ffffff valign=bottom align=right><img src=art/ilr.gif width=8 height=8></td>
+    <td bgcolor=#557faa width=15>&nbsp;</td>
+  </tr>
+  <tr>
+    <td valign=bottom align=left bgcolor=#557faa><img src=art/oll.gif width=8 height=8></td>
+    <td colspan=4 bgcolor=#557faa>&nbsp;</td>
+    <td valign=bottom align=right bgcolor=#557faa><img src=art/olr.gif width=8 height=8></td>
+  </tr>
+</table>
+
+<address>Copyright 1997-2002 <a href=mailto:jeroen@fox-toolkit.org>Jeroen van der Zijp</a></address>
+<!-- Created: Mon Apr 10 11:20:32 CEST 2000 -->
+<!-- hhmts start -->
+
+<!-- hhmts end -->
+</body>
+</html>

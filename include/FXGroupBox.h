@@ -1,67 +1,121 @@
 /********************************************************************************
 *                                                                               *
-*                G r o u p  B o x   W i n d o w   O b j e c t                   *
+*                G r o u p  B o x   W i n d o w   W i d g e t                   *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997 by Jeroen van der Zijp.   All Rights Reserved.             *
+* Copyright (C) 1997,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
-* modify it under the terms of the GNU Library General Public                   *
+* modify it under the terms of the GNU Lesser General Public                    *
 * License as published by the Free Software Foundation; either                  *
-* version 2 of the License, or (at your option) any later version.              *
+* version 2.1 of the License, or (at your option) any later version.            *
 *                                                                               *
 * This library is distributed in the hope that it will be useful,               *
 * but WITHOUT ANY WARRANTY; without even the implied warranty of                *
 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU             *
-* Library General Public License for more details.                              *
+* Lesser General Public License for more details.                               *
 *                                                                               *
-* You should have received a copy of the GNU Library General Public             *
-* License along with this library; if not, write to the Free                    *
-* Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.            *
+* You should have received a copy of the GNU Lesser General Public              *
+* License along with this library; if not, write to the Free Software           *
+* Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXGroupBox.h,v 1.6 1998/08/26 07:41:10 jeroen Exp $                      *
+* $Id: FXGroupBox.h,v 1.14 2002/01/18 22:42:53 jeroen Exp $                     *
 ********************************************************************************/
 #ifndef FXGROUPBOX_H
 #define FXGROUPBOX_H
 
+#ifndef FXPACKER_H
+#include "FXPacker.h"
+#endif
+
 
 
 // Group box options
-enum FXGroupboxStyle {
-  GROUPBOX_TITLE_NONE   = 0,
-  GROUPBOX_TITLE_LEFT   = 0x00020000,
-  GROUPBOX_TITLE_CENTER = 0x00040000,
-  GROUPBOX_TITLE_RIGHT  = 0x00080000,
-  GROUPBOX_TITLE_MASK   = GROUPBOX_TITLE_LEFT|GROUPBOX_TITLE_CENTER|GROUPBOX_TITLE_RIGHT
+enum {
+  GROUPBOX_TITLE_LEFT   = 0,	        /// Title is left-justified
+  GROUPBOX_TITLE_CENTER = 0x00020000,	/// Title is centered
+  GROUPBOX_TITLE_RIGHT  = 0x00040000,	/// Title is right-justified
+  GROUPBOX_NORMAL       = GROUPBOX_TITLE_LEFT
   };
 
 
 
-// Group box 
-class FXGroupBox : public FXPacker {
+/**
+* A group box widget provides a nice raised or sunken border
+* around a group of widgets, providing a visual delineation.
+* Typically, a title is placed over the border to provide some
+* clarification.
+* Radio buttons placed inside a group box automatically assume
+* mutually exclusive behaviour, i.e. at most one radio button will
+* be checked at any one time.
+*/
+class FXAPI FXGroupBox : public FXPacker {
   FXDECLARE(FXGroupBox)
 protected:
-  FXString  label; 
+  FXString  label;
   FXFont   *font;
-  FXPixel   textColor;
+  FXColor   textColor;
 protected:
   FXGroupBox();
-  FXGroupBox(const FXGroupBox&){}
   virtual void layout();
+private:
+  FXGroupBox(const FXGroupBox&);
+  FXGroupBox &operator=(const FXGroupBox&);
 public:
   long onPaint(FXObject*,FXSelector,void*);
   long onUncheckOther(FXObject*,FXSelector,void*);
 public:
-  FXGroupBox(FXComposite* p,const char* text,FXuint opts=GROUPBOX_TITLE_LEFT,FXint x=0,FXint y=0,FXint w=0,FXint h=0,FXint pl=DEFAULT_SPACING,FXint pr=DEFAULT_SPACING,FXint pt=DEFAULT_SPACING,FXint pb=DEFAULT_SPACING,FXint hs=DEFAULT_SPACING,FXint vs=DEFAULT_SPACING);
+
+  /// Construct group box layout manager
+  FXGroupBox(FXComposite* p,const FXString& text,FXuint opts=GROUPBOX_NORMAL,FXint x=0,FXint y=0,FXint w=0,FXint h=0,FXint pl=DEFAULT_SPACING,FXint pr=DEFAULT_SPACING,FXint pt=DEFAULT_SPACING,FXint pb=DEFAULT_SPACING,FXint hs=DEFAULT_SPACING,FXint vs=DEFAULT_SPACING);
+
+  /// Create server-side resources
   virtual void create();
+
+  /// Detach server-side resources
+  virtual void detach();
+
+  /// Enable the window
+  virtual void enable();
+
+  /// Disable the window
+  virtual void disable();
+
+  /// Return default width
   virtual FXint getDefaultWidth();
+
+  /// Return default height
   virtual FXint getDefaultHeight();
-  void setText(const FXchar* text);
-  const FXchar* getText() const { return label.text(); }
+
+  /// Change group box title text
+  void setText(const FXString& text);
+
+  /// Return current groupbox title text
+  FXString getText() const { return label; }
+
+  /// Change group box style
+  void setGroupBoxStyle(FXuint style);
+
+  /// Return current group box style
+  FXuint getGroupBoxStyle() const;
+
+  /// Change title font
   void setFont(FXFont* fnt);
+
+  /// Return title font
   FXFont* getFont() const { return font; }
-  FXPixel getTextColor() const { return textColor; }
-  void setTextColor(FXPixel clr);
+
+  /// Change title text color
+  void setTextColor(FXColor clr);
+
+  /// Return text color
+  FXColor getTextColor() const { return textColor; }
+
+  /// Save to a stream
+  virtual void save(FXStream& store) const;
+
+  /// Load from a stream
+  virtual void load(FXStream& store);
   };
 
 

@@ -3,40 +3,52 @@
 *     H o m o g e n e o u s   F l o a t - V e c t o r   O p e r a t i o n s     *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1994 by Jeroen van der Zijp.   All Rights Reserved.             *
+* Copyright (C) 1994,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
-* modify it under the terms of the GNU Library General Public                   *
+* modify it under the terms of the GNU Lesser General Public                    *
 * License as published by the Free Software Foundation; either                  *
-* version 2 of the License, or (at your option) any later version.              *
+* version 2.1 of the License, or (at your option) any later version.            *
 *                                                                               *
 * This library is distributed in the hope that it will be useful,               *
 * but WITHOUT ANY WARRANTY; without even the implied warranty of                *
 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU             *
-* Library General Public License for more details.                              *
+* Lesser General Public License for more details.                               *
 *                                                                               *
-* You should have received a copy of the GNU Library General Public             *
-* License along with this library; if not, write to the Free                    *
-* Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.            *
+* You should have received a copy of the GNU Lesser General Public              *
+* License along with this library; if not, write to the Free Software           *
+* Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXHVec.cpp,v 1.3 1998/07/06 22:44:46 jeroen Exp $                         *
+* $Id: FXHVec.cpp,v 1.5 2002/01/18 22:43:00 jeroen Exp $                        *
 ********************************************************************************/
 #include "xincs.h"
+#include "fxver.h"
 #include "fxdefs.h"
 #include "FXStream.h"
 #include "FXObject.h"
+#include "FXVec.h"
 #include "FXHVec.h"
 
-// FXHVec::FXHVec(const FXColor clr){
-//   v[0]=0.0039215686*FXREDVAL(rgba);
-//   v[1]=0.0039215686*FXGREENVAL(rgba);
-//   v[2]=0.0039215686*FXBLUEVAL(rgba);
-//   v[3]=0.0039215686*FXALPHAVAL(rgba);
-//   }
+
+FXHVec::FXHVec(FXColor color){
+  v[0]=0.003921568627f*FXREDVAL(color);
+  v[1]=0.003921568627f*FXGREENVAL(color);
+  v[2]=0.003921568627f*FXBLUEVAL(color);
+  v[3]=0.003921568627f*FXALPHAVAL(color);
+  }
+
+
+FXHVec& FXHVec::operator=(FXColor color){
+  v[0]=0.003921568627f*FXREDVAL(color);
+  v[1]=0.003921568627f*FXGREENVAL(color);
+  v[2]=0.003921568627f*FXBLUEVAL(color);
+  v[3]=0.003921568627f*FXALPHAVAL(color);
+  return *this;
+  }
 
 
 FXHVec::operator FXColor() const {
-  return FXRGBA((v[0]*255.0),(v[1]*255.0),(v[2]*255.0),(v[3]*255.0));
+  return FXRGBA((v[0]*255.0f),(v[1]*255.0f),(v[2]*255.0f),(v[3]*255.0f));
   }
 
 

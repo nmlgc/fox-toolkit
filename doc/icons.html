@@ -1,19 +1,84 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
-<HTML>
-<HEAD>
-   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
-   <META NAME="GENERATOR" CONTENT="Mozilla/4.06 [en] (X11; I; Linux 2.0.34 i686) [Netscape]">
-   <META NAME="Author" CONTENT="Jeroen van der Zijp">
-   <META NAME="Description" CONTENT="Icons and Images in FOX">
-   <TITLE>Icons and Images</TITLE>
-</HEAD>
-<BODY TEXT="#000000" BGCOLOR="#FFEDED" LINK="#0000EF" VLINK="#51188E" ALINK="#FF0000" BACKGROUND="foxback.gif">
+<html>
+<head>
+<LINK REL="stylesheet" HREF="styles.css" TYPE="text/css">
+<title>FOX-Toolkit</title>
+<!-- HTML Copyright 2001 Paul Laufer -->
+</head>
 
-<CENTER><U><FONT COLOR="#990000"><FONT SIZE=+4>Icons and Images in FOX</FONT></FONT></U></CENTER>
+<body bgcolor=#ffffff link=#990033 vlink=#4a73ad alink=#ed004f text=#000000>
 
-<P><A NAME="ICONS"></A><U><FONT COLOR="#990000"><FONT SIZE=+4>Icons and
-Images.</FONT></FONT></U>
-<P>Icons and Images are part an parcel of attractive, user-friendly Graphical
+<!--header-->
+<table align=center border=0 cellpadding=0 cellspacing=0 width=100% >
+  <tr><td bgcolor=silver colspan=5 align=right height=50><img src=art/oul_grey.gif align=left valign=top width=8 height=8><img src=art/foxlogo.png valign=bottom alt="FOX Toolkit" height=50 width=500 border=0 ></td>
+  	<td bgcolor=#557faa valign=top align=right><img src=art/our.gif width=8 height=8></td>
+  </tr>
+<!-- end header -->
+  <tr>
+    <td bgcolor=#557faa colspan=2 valign=top align=left>&nbsp;</td>
+    <td bgcolor=#557faa colspan=3><font color=#ffffff size=+1><center>
+<!-- Page Title -->
+Documentation: Icons and Images
+<!-- End Page Title -->
+    </center></font></td>
+    <td bgcolor=#557faa valign=top align=right>&nbsp;</td>
+  </tr>
+  <tr>
+    <td bgcolor=#557faa colspan=2>&nbsp;</td>
+    <td bgcolor=#ffffff valign=top align=left><img src=art/iul.gif width=8 height=8></td>
+    <td bgcolor=#ffffff>&nbsp;</td>
+    <td bgcolor=#ffffff valign=top align=right><img src=art/iur.gif width=8 height=8></td>
+    <td bgcolor=#557faa width=15>&nbsp;</td>
+  </tr>
+  <tr>
+    <td width=8 bgcolor=#557faa>&nbsp;</td>
+    <td valign=top bgcolor=#557faa link=#ffffff width=150>
+
+<!-- start navbar content -->
+
+	<a href=fox.html><font color=#ffffff>Home</font></a><br>
+	<a href=news.html><font color=#ffffff>News</font></a><br>
+	<a href=download.html><font color=#ffffff>Download</font></a><br>
+	<a href=goals.html><font color=#ffffff>Goals & Approach</font></a><br>
+	<a href=doc.html><font color=#ffffff>Documentation</font></a><br>
+	<a href=faq.html><font color=#ffffff>FAQ</font></a><br>
+	<a href=rex.html><font color=#ffffff>FXRex</font></a><br>
+	<a href=screenshots.html><font color=#ffffff>Screenshots</font></a><br>
+	<br>
+	<a href=adie.html><font color=#ffffff>Adie</font></a><br>
+	<a href=pathfinder.html><font color=#ffffff>PathFinder</font></a><br>
+	<a href=calc.html><font color=#ffffff>FOX Calculator</font></a><br>
+	<br>
+	<a href=projects.html><font color=#ffffff>Projects</font></a><br>
+	<br>
+	<a href='http://fxpy.sourceforge.net'><font color=#ffffff>FXPy</font></a><br>
+	<a href='http://fxruby.sourceforge.net'><font color=#ffffff>FXRuby</font></a><br>
+	<a href='http://eiffelfox.sourceforge.net'><font color=#ffffff>EiffelFox</font></a><br>
+        <a href='http://eevolved.com/foxhole/'><font color=#ffffff>The FOX Hole</font></a><br>
+        <a href='http://takahr.dhis.portside.net/cgi-bin/rwiki.cgi?cmd=view;name=FOX+FAQ'><font color=#ffffff>Japanese Docs</font></a><br>
+	<br>
+	<center>
+	<a href="http://www.eff.org/br"><img SRC="art/freespeach.gif" border=0></a>
+	<p>
+	<a href="http://www.slashdot.org"><img SRC="art/slingerzbutton1.gif" border=0></a>
+	</center>
+
+
+
+<!-- end navbar content -->
+
+    </td>
+    <td bgcolor=#ffffff>&nbsp;</td>
+    <td valign=top>
+
+<!-- start main window content -->
+<center><img src='art/foxstart.png'>
+<BR><B>Documentation: Icons and Images</B>
+</center>
+<p>
+<p>
+<b>Icons and Images</b>
+<hr>
+Icons and Images are part an parcel of attractive, user-friendly Graphical
 User Interfaces these days.&nbsp; Consequently, considerable effort has
 been expended in designing FOX to allow icon- and image-rich applications
 to be developed with the greatest ease.
@@ -48,74 +113,94 @@ have an option <B>IMAGE_KEEP</B> to allow you to hang on to the pixel data
 in the client.&nbsp; After making changes to the pixel data, you can call
 <TT>icon->render()</TT>
 again to render it into the pixmap.
-<BR>&nbsp;
-<P><U><FONT COLOR="#990000"><FONT SIZE=+4>Image Formats Supported.</FONT></FONT></U>
-<P>Currently, FOX supports both <B>GIF</B> and <B>BMP</B> based icons.&nbsp;
-In the near future, <B>XPM</B> will be added as a convenience.&nbsp; The
+<p>
+<p>
+<b>Image Formats Supported</b>
+<hr>Currently, FOX supports <B>GIF</B>, <B>BMP</B>, <B>PNG</B>, <B>JPEG</B>, <B>XPM</B>, <B>TIFF</B>, <B>ICO</B>
+and <B>PCX</B> based icons/images.&nbsp;
+In the near future, <B>PPM</B> will be added as a convenience.&nbsp; The
 most preferred format is GIF, as it is about 10 times more compact than
 XPM, and about 2 times more compact than BMP.&nbsp; This is of some concern,
 as applications may have lots of icons [some analysis of our own applications
 revealed than one application's executable had about 1MB worth of XPM icons;
 with GIF, this would have been less than a 100kB].
-<BR>&nbsp;
-<P><U><FONT COLOR="#990000"><FONT SIZE=+4>Incorporating Icons and Images
-into an Application.</FONT></FONT></U>
-<P>One crucial problem with icon-rich applications is where to keep all
+<p>
+<p>
+<b>Incorporating Icons and Images into an Application</b>
+<hr>
+One crucial problem with icon-rich applications is where to keep all
 those icons; obviously, keeping icons in separate files allows end-users
 to substitute icons and perhaps change them with an Icon Editor program.&nbsp;
 However, such a scenario also poses a maintainance problem:- software becomes
 extraordinarily dependent on specifics of a user installation, and end-users
 may actually break software by substituting corrupted icon files by accident,
 or perhaps other applications may overwrite them.&nbsp; Another common
-problem is the need for end-users to set paths and enironment variables.
+problem is the need for end-users to set paths and environment variables.
 <P>To eliminate these problems, the FOX approach is to <B><I>embed</I></B>
 all icons and images right into the application's executable.&nbsp; This
 is done by simply by compiling the icons into the code in the form of C
-data statements, and then linking then in.
-<BR>It is my experience that the number of users that actually wants to
-change icons themselves is very small; most users simply appreciate the
-ease of installation.&nbsp; However, should you desire to place icons in
-files, FOX supports this also.
-<P>In order to embed icons and images easily, the FOX distribution offers
-a small programming tool called&nbsp;<A NAME="RESWRAP"></A><B><I>reswrap</I></B>
-to perform the job of turning an image file into an embeddable C data array,
-which can then be easily compiled into the application as part of the normal
-build process.
+data statements, and then linking them in.
+<P>For XPM icons or images, the image files can be directly included into
+the code, as the XPM format is basically a C/C++ data array.
+<P>Other image formats need to be transformed into a C/C++ data
+array with a small build-time utility called <A NAME="RESWRAP"></A><B><I>reswrap</I></B>,
+which is provided in the FOX distribution.
+<P>
+Reswrap allows you to generate the C/C++ data arrays automatically from the
+icons during the build process of your application; simply add a few rules
+into your Makefile, or, under VC++, use the reswrap program in a so-called
+<em>Utility Project</em>.
 <P>For example, given as input a GIF file image such as below:
 <BR>&nbsp;
 <BR>&nbsp;
 <BR>
 <BR>
 <BR>
+<BR>
 <CENTER>
-<P><IMG SRC="bigpenguin.gif" HEIGHT=57 WIDTH=48>
+<P><IMG SRC="art/bigpenguin.png" HEIGHT=57 WIDTH=48>
 <BR>Figure 1. Linux Penguin from file <I>bigpenguin.gif</I>.</CENTER>
 
 <BR>&nbsp;
 <P><BR>
 <BR>
 <BR>
+<BR>
+<BR>
+<BR>
+<BR>
 <P>&nbsp;After processing this file, reswrap generates a C data statement
 such as:
 <BR>&nbsp;
-<BLOCKQUOTE><TT>/* Generated by reswrap from file <I>bigpenguin.gif</I>
-*/</TT>
+<CENTER><TABLE BORDER CELLSPACING=0 COLS=1 WIDTH="90%" BGCOLOR="#FFF8E1" NOSAVE >
+<TR>
+<TD><TT>/* Generated by reswrap from file <I>bigpenguin.gif</I> */</TT>
 <BR><TT>const unsigned char bigpenguin[]={</TT>
 <BR><TT>&nbsp; 0x47,0x49,0x46,0x38,0x37,0x61,0x30,0x00,0x39,0x00,0xf3,0x00,0x00,0xb2,0xc0,0xdc,</TT>
 <BR><TT>&nbsp; ...............................................................................</TT>
 <BR><TT>&nbsp; ...............................................................................</TT>
 <BR><TT>&nbsp; 0xf4,0xe0,0x63,0x90,0x7c,0x7d,0x40,0xc5,0x92,0x0c,0x34,0x39,0x41,0x04,0x00,0x3b</TT>
-<BR><TT>&nbsp; };</TT></BLOCKQUOTE>
-This can then be subsequently compiled into an object file, and linked
+<BR><TT>&nbsp; };</TT></TD>
+</TR>
+</TABLE></CENTER>
+
+<P>This can then be subsequently compiled into an object file, and linked
 in with the executable.&nbsp; To make use of such an icon, FOX supports
 deserialization from a <I>memory stream</I>.
 <BR>The icon data above could be used as follows to create an Icon:
 <BR>&nbsp;
-<BLOCKQUOTE><TT>FXIcon *tux_icon = new FXGIFIcon(application,bigpenguin);</TT></BLOCKQUOTE>
-This one statement creates an icon object, then deserializes the icon data
-from the GIF stream to build the icon's internal pixel data.&nbsp; A subsequent
-call:
-<BR>&nbsp;
+<CENTER><TABLE BORDER CELLSPACING=0 COLS=1 WIDTH="90%" BGCOLOR="#FFF8E1" NOSAVE >
+<TR>
+<TD>
+<BLOCKQUOTE><TT></TT>&nbsp;
+<BR><TT>FXIcon *tux_icon = new FXGIFIcon(application,bigpenguin);</TT></BLOCKQUOTE>
+</TD>
+</TR>
+</TABLE></CENTER>
+
+<P>Wait! Is that all? Yes it is!&nbsp; This <I>one</I> statement creates
+an icon object, then <I>deserializes</I> the icon data from the GIF stream
+to build the icon's internal pixel data.&nbsp; A subsequent call:
 <BLOCKQUOTE><TT>tux_icon->create();</TT></BLOCKQUOTE>
 Will create an X pixmap, render the icon into it, and subsequently release
 the pixel data after it is no longer needed.&nbsp; If you had created the
@@ -125,9 +210,102 @@ for subsequent manipulation by your application, and perhaps repeated rendering.
 <BR>&nbsp;
 <BLOCKQUOTE><TT>window->drawIcon(tux_icon,x,y);</TT></BLOCKQUOTE>
 will do the job.
+<p>
+<p>
+<b>Bitmaps</b>
+<hr>
+Bitmaps in FOX behave very much like Images.&nbsp; Except, unlike Images
+which are always 24 bits, and in color, Bitmaps are only one bit, or blank
+and white.&nbsp; Typical uses for Bitmaps are the creation of patterns
+and stipples, or shape masks against which other primitives are clipped.
+<BR>In terms of constructing and using Bitmaps in FOX, it is completely
+analoguous:
 <BR>&nbsp;
-<P><U><FONT COLOR="#990000"><FONT SIZE=+4>If Icons Look Funny...</FONT></FONT></U>
-<P>Sometimes, your icons may look funny.&nbsp; This is usually because
+<BR>&nbsp;
+<CENTER><TABLE BORDER CELLSPACING=0 COLS=1 WIDTH="90%" BGCOLOR="#FFF8E1" NOSAVE >
+<TR>
+<TD>
+<BR>// Bitmap Data, in XBM Format
+<P>#define gray_width 32
+<BR>#define gray_height 2
+<BR>static unsigned char gray_bits[] = {0x55, 0x55, 0x55, 0x55, 0xaa, 0xaa,
+0xaa, 0xaa};
+<P>// Construct a bitmap object
+<BR>FXBitmap *grayBitmap=new FXBitmap(application, gray_bits, 0, gray_width,
+gray_height);</TD>
+</TR>
+</TABLE></CENTER>
+
+<P>In terms of using Bitmaps for subsequent tiling and stippling operations,
+remember that MS-Windows has certain size limits such patterns;&nbsp; X-Windows
+has no such limit, but presumably smaller patterns are more efficient.&nbsp;
+It is probably a good idea to keep so widths such as 8,16, or 32.
+<p>
+<p>
+<b>Cursors</b>
+<hr>
+Cursors can be constructed in FOX to change the shape of the mouse-cursor.&nbsp;
+Constructing Cursors is very similar to constructing Bitmaps, except that
+Cursors comprise two bitmaps, a picture and a shape mask; also, Cursors
+have a so-called hot-spot, the point inside the cursor-glyph which is ``pointer
+to'' by the mouse.
+<BR>Besides defining your own ``custom'' cursors, FOX also allows you to
+simply create a ``stock'' cursor, i.e. a cursor whose shape has already
+been predefined by the system.
+<P>To create a custom Cursor:
+<BR>&nbsp;
+<BR>&nbsp;
+<CENTER><TABLE BORDER CELLSPACING=0 COLS=1 WIDTH="90%" BGCOLOR="#FFF8E1" NOSAVE >
+<TR>
+<TD>
+<BR>// Picture bits, in XBM Format
+<BR>#define resize_width 32
+<BR>#define resize_height 32
+<BR>#define resize_x_hot 9
+<BR>#define resize_y_hot 9
+<BR>static unsigned char resize_bits[] = {
+<BR>&nbsp;&nbsp; 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xfc,
+0x00, 0x00, 0x00,
+<BR>&nbsp;&nbsp; ....
+<BR>&nbsp;&nbsp; 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+0x00, 0x00, 0x00};
+<P>// Shape bits, in XBM Format
+<BR>#define resize_mask_width 32
+<BR>#define resize_mask_height 32
+<BR>#define resize_mask_x_hot 9
+<BR>#define resize_mask_y_hot 9
+<BR>static unsigned char resize_mask_bits[] = {
+<BR>&nbsp;&nbsp; 0x00, 0x00, 0x00, 0x00, 0xfe, 0x01, 0x00, 0x00, 0xfe,
+0x01, 0x00, 0x00,
+<BR>&nbsp;&nbsp; ....
+<BR>&nbsp;&nbsp; 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+0x00, 0x00, 0x00};
+<BR>&nbsp;
+<P>&nbsp; // Resize corner
+<BR>&nbsp; resizeCursor=new FXCursor(application,resize_bits,resize_mask_bits,resize_width,resize_height,resize_x_hot,resize_y_hot);
+<BR>&nbsp;</TD>
+</TR>
+</TABLE></CENTER>
+
+<P>To create a stock Cursor:
+<BR>&nbsp;
+<BR>&nbsp;
+<CENTER><TABLE BORDER CELLSPACING=0 COLS=1 WIDTH="90%" BGCOLOR="#FFF8E1" NOSAVE >
+<TR>
+<TD>
+<BR>&nbsp; // Text Cursor
+<BR>&nbsp; IBeamCursor=new FXCursor(application,CURSOR_IBEAM);
+<BR>&nbsp;</TD>
+</TR>
+</TABLE></CENTER>
+
+<P>If you define your own Custom Cursors, make sure the size is exactly
+32x32. MS-Windows does not support any other sizes.&nbsp; Also, the shape
+and the picture will have to be the same size.
+<p>
+<p>
+<b>If Icons Look Funny...</b>
+<hr>Sometimes, your icons may look funny.&nbsp; This is usually because
 FOX Icon routines determine the wrong value for the transparency color.&nbsp;
 FOX can handle images with a true alpha-channel, or images with a special
 transparency color.&nbsp; The latter is the more common approach, as many
@@ -176,7 +354,7 @@ construct your icons as:
 <BLOCKQUOTE><FONT FACE="Courier New,Courier">new FXGIFIcon(app,picture_data,FXRGB(192,192,192),IMAGE_ALPHACOLOR);</FONT></BLOCKQUOTE>
 
 <P><BR>To create an completely opaque icon:
-<BLOCKQUOTE><FONT FACE="Courier New,Courier"></FONT>&nbsp;
+<BLOCKQUOTE>&nbsp;
 <BR><FONT FACE="Courier New,Courier">new FXGIFIcon(app,picture_data,0,IMAGE_OPQUE);</FONT></BLOCKQUOTE>
 
 <P><BR>For more information on graphics file formats and their idiosyncracies,
@@ -184,10 +362,12 @@ see&nbsp; the <A HREF="http://www.dcs.ed.ac.uk/~mxr/gfx/index-hi.html">Graphics
 File Format Web Site</A>.
 <BR>&nbsp;
 <BR>&nbsp;
-<P><A NAME="RESWRAPDOC"></A><U><FONT COLOR="#990000"><FONT SIZE=+4>More
-on Reswrap.</FONT></FONT></U>
-<BR>&nbsp;
-<P>The reswrap tool has a number of options to make it convenient to build
+<P><A NAME="RESWRAPDOC"></A>
+<p>
+<p>
+<b>More on Reswrap</b>
+<hr>
+The reswrap tool has a number of options to make it convenient to build
 C source and header files automatically from image files as a part of your
 regular project build process.&nbsp; Reswrap is normally invoked as follows:
 <BR>&nbsp;
@@ -258,11 +438,31 @@ Example of using reswrap in your Application's Makefile:
 This will cause make to generate two files, <TT>icons.h</TT> and <TT>icons.cc</TT>
 which contain the declarations and definitions respectively for all the
 reswrapped icons listed in the ICONS variable.
-<BR>&nbsp;
-<BR>&nbsp;
-<BR>&nbsp;
-<BLOCKQUOTE>
-<HR WIDTH="100%"></BLOCKQUOTE>
-<FONT SIZE=-1>Copyright &copy; 1998 Jeroen van der Zijp, all rights reserved.</FONT>
-</BODY>
-</HTML>
+<!-- end main window content -->
+
+    </td>
+    <td bgcolor=#ffffff>&nbsp;</td>
+    <td bgcolor=#557faa width=15>&nbsp;</td>
+  </tr>
+  <tr>
+    <td colspan=2 bgcolor="#557faa" align=center>&nbsp;
+     </td>
+    <td bgcolor=#ffffff valign=bottom align=left><img src=art/ill.gif width=8 height=8></td>
+    <td bgcolor=#ffffff>&nbsp;</td>
+    <td bgcolor=#ffffff valign=bottom align=right><img src=art/ilr.gif width=8 height=8></td>
+    <td bgcolor=#557faa width=15>&nbsp;</td>
+  </tr>
+  <tr>
+    <td valign=bottom align=left bgcolor=#557faa><img src=art/oll.gif width=8 height=8></td>
+    <td colspan=4 bgcolor=#557faa>&nbsp;</td>
+    <td valign=bottom align=right bgcolor=#557faa><img src=art/olr.gif width=8 height=8></td>
+  </tr>
+</table>
+
+<address>Copyright 1997-2002 <a href=mailto:jeroen@fox-toolkit.org>Jeroen van der Zijp</a></address>
+<!-- Created: Mon Apr 10 11:20:32 CEST 2000 -->
+<!-- hhmts start -->
+
+<!-- hhmts end -->
+</body>
+</html>

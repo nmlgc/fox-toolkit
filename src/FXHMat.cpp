@@ -3,25 +3,26 @@
 *            H o m o g e n e o u s   M a t r i x   O p e r a t i o n s          *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1994 by Jeroen van der Zijp.   All Rights Reserved.             *
+* Copyright (C) 1994,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
-* modify it under the terms of the GNU Library General Public                   *
+* modify it under the terms of the GNU Lesser General Public                    *
 * License as published by the Free Software Foundation; either                  *
-* version 2 of the License, or (at your option) any later version.              *
+* version 2.1 of the License, or (at your option) any later version.            *
 *                                                                               *
 * This library is distributed in the hope that it will be useful,               *
 * but WITHOUT ANY WARRANTY; without even the implied warranty of                *
 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU             *
-* Library General Public License for more details.                              *
+* Lesser General Public License for more details.                               *
 *                                                                               *
-* You should have received a copy of the GNU Library General Public             *
-* License along with this library; if not, write to the Free                    *
-* Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.            *
+* You should have received a copy of the GNU Lesser General Public              *
+* License along with this library; if not, write to the Free Software           *
+* Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXHMat.cpp,v 1.4 1998/10/21 15:31:12 jvz Exp $                         *
+* $Id: FXHMat.cpp,v 1.13 2002/01/18 22:43:00 jeroen Exp $                       *
 ********************************************************************************/
 #include "xincs.h"
+#include "fxver.h"
 #include "fxdefs.h"
 #include "FXStream.h"
 #include "FXObject.h"
@@ -31,7 +32,12 @@
 #include "FXHMat.h"
 
 
-#define SWAP(a,b,tmp) ((tmp)=(a),(a)=(b),(b)=(tmp))
+/*
+  Notes:
+  - Transformations pre-multiply.
+  - Goal is same effect as OpenGL.
+*/
+
 
 #define DET2(a00,a01, \
              a10,a11) ((a00)*(a11)-(a10)*(a01))
@@ -53,7 +59,7 @@
 /*******************************************************************************/
 
 // Build matrix from constant
-FXHMat::FXHMat(const FXfloat w){
+FXHMat::FXHMat(FXfloat w){
   m[0][0]=w; m[0][1]=w; m[0][2]=w; m[0][3]=w;
   m[1][0]=w; m[1][1]=w; m[1][2]=w; m[1][3]=w;
   m[2][0]=w; m[2][1]=w; m[2][2]=w; m[2][3]=w;
@@ -62,10 +68,10 @@ FXHMat::FXHMat(const FXfloat w){
 
 
 // Build matrix from scalars
-FXHMat::FXHMat(const FXfloat a00,const FXfloat a01,const FXfloat a02,const FXfloat a03,
-               const FXfloat a10,const FXfloat a11,const FXfloat a12,const FXfloat a13,
-               const FXfloat a20,const FXfloat a21,const FXfloat a22,const FXfloat a23,
-               const FXfloat a30,const FXfloat a31,const FXfloat a32,const FXfloat a33){
+FXHMat::FXHMat(FXfloat a00,FXfloat a01,FXfloat a02,FXfloat a03,
+               FXfloat a10,FXfloat a11,FXfloat a12,FXfloat a13,
+               FXfloat a20,FXfloat a21,FXfloat a22,FXfloat a23,
+               FXfloat a30,FXfloat a31,FXfloat a32,FXfloat a33){
   m[0][0]=a00; m[0][1]=a01; m[0][2]=a02; m[0][3]=a03;
   m[1][0]=a10; m[1][1]=a11; m[1][2]=a12; m[1][3]=a13;
   m[2][0]=a20; m[2][1]=a21; m[2][2]=a22; m[2][3]=a23;
@@ -73,7 +79,7 @@ FXHMat::FXHMat(const FXfloat a00,const FXfloat a01,const FXfloat a02,const FXflo
   }
 
 
-// Build matrix from for vectors
+// Build matrix from four vectors
 FXHMat::FXHMat(const FXHVec& a,const FXHVec& b,const FXHVec& c,const FXHVec& d){
   m[0][0]=a[0]; m[0][1]=a[1]; m[0][2]=a[2]; m[0][3]=a[3];
   m[1][0]=b[0]; m[1][1]=b[1]; m[1][2]=b[2]; m[1][3]=b[3];
@@ -81,9 +87,30 @@ FXHMat::FXHMat(const FXHVec& a,const FXHVec& b,const FXHVec& c,const FXHVec& d){
   m[3][0]=d[0]; m[3][1]=d[1]; m[3][2]=d[2]; m[3][3]=d[3];
   }
 
-  
+
+// Copy constructor
+FXHMat::FXHMat(const FXHMat& other){
+  m[0]=other.m[0];
+  m[1]=other.m[1];
+  m[2]=other.m[2];
+  m[3]=other.m[3];
+  }
+
+
+// Assignment operator
+FXHMat& FXHMat::operator=(const FXHMat& other){
+  if(&other!=this){
+    m[0]=other.m[0];
+    m[1]=other.m[1];
+    m[2]=other.m[2];
+    m[3]=other.m[3];
+    }
+  return *this;
+  }
+
+
 // Set matrix to constant
-FXHMat& FXHMat::operator=(const FXfloat w){
+FXHMat& FXHMat::operator=(FXfloat w){
   m[0][0]=w; m[0][1]=w; m[0][2]=w; m[0][3]=w;
   m[1][0]=w; m[1][1]=w; m[1][2]=w; m[1][3]=w;
   m[2][0]=w; m[2][1]=w; m[2][2]=w; m[2][3]=w;
@@ -113,7 +140,7 @@ FXHMat& FXHMat::operator-=(const FXHMat& w){
 
 
 // Multiply matrix by scalar
-FXHMat& FXHMat::operator*=(const FXfloat w){
+FXHMat& FXHMat::operator*=(FXfloat w){
   m[0][0]*=w; m[0][1]*=w; m[0][2]*=w; m[0][3]*=w;
   m[1][0]*=w; m[1][1]*=w; m[1][2]*=w; m[2][3]*=w;
   m[2][0]*=w; m[2][1]*=w; m[2][2]*=w; m[3][3]*=w;
@@ -150,7 +177,7 @@ FXHMat& FXHMat::operator*=(const FXHMat& w){
 
 
 // Divide matric by scalar
-FXHMat& FXHMat::operator/=(const FXfloat w){
+FXHMat& FXHMat::operator/=(FXfloat w){
   m[0][0]/=w; m[0][1]/=w; m[0][2]/=w; m[0][3]/=w;
   m[1][0]/=w; m[1][1]/=w; m[1][2]/=w; m[1][3]/=w;
   m[2][0]/=w; m[2][1]/=w; m[2][2]/=w; m[2][3]/=w;
@@ -216,7 +243,7 @@ FXHMat operator*(const FXHMat& a,const FXHMat& b){
 
 
 // Multiply scalar by matrix
-FXHMat operator*(const FXfloat x,const FXHMat& a){
+FXHMat operator*(FXfloat x,const FXHMat& a){
   return FXHMat(x*a.m[0][0],x*a.m[0][1],x*a.m[0][2],a.m[0][3],
                 x*a.m[1][0],x*a.m[1][1],x*a.m[1][2],a.m[1][3],
                 x*a.m[2][0],x*a.m[2][1],x*a.m[2][2],a.m[2][3],
@@ -225,7 +252,7 @@ FXHMat operator*(const FXfloat x,const FXHMat& a){
 
 
 // Multiply matrix by scalar
-FXHMat operator*(const FXHMat& a,const FXfloat x){
+FXHMat operator*(const FXHMat& a,FXfloat x){
   return FXHMat(a.m[0][0]*x,a.m[0][1]*x,a.m[0][2]*x,a.m[0][3],
                 a.m[1][0]*x,a.m[1][1]*x,a.m[1][2]*x,a.m[1][3],
                 a.m[2][0]*x,a.m[2][1]*x,a.m[2][2]*x,a.m[2][3],
@@ -234,7 +261,7 @@ FXHMat operator*(const FXHMat& a,const FXfloat x){
 
 
 // Divide scalar by matrix
-FXHMat operator/(const FXfloat x,const FXHMat& a){
+FXHMat operator/(FXfloat x,const FXHMat& a){
   return FXHMat(x/a.m[0][0],x/a.m[0][1],x/a.m[0][2],a.m[0][3],
                 x/a.m[1][0],x/a.m[1][1],x/a.m[1][2],a.m[1][3],
                 x/a.m[2][0],x/a.m[2][1],x/a.m[2][2],a.m[2][3],
@@ -243,7 +270,7 @@ FXHMat operator/(const FXfloat x,const FXHMat& a){
 
 
 // Divide matrix by scalar
-FXHMat operator/(const FXHMat& a,const FXfloat x){
+FXHMat operator/(const FXHMat& a,FXfloat x){
   return FXHMat(a.m[0][0]/x,a.m[0][1]/x,a.m[0][2]/x,a.m[0][3],
                 a.m[1][0]/x,a.m[1][1]/x,a.m[1][2]/x,a.m[1][3],
                 a.m[2][0]/x,a.m[2][1]/x,a.m[2][2]/x,a.m[2][3],
@@ -293,20 +320,119 @@ FXVec operator*(const FXHMat& m,const FXVec& v){
 
 // Make unit matrix
 FXHMat& FXHMat::eye(){
-  m[0][0]=1.0; m[0][1]=0.0; m[0][2]=0.0; m[0][3]=0.0;
-  m[1][0]=0.0; m[1][1]=1.0; m[1][2]=0.0; m[1][3]=0.0;
-  m[2][0]=0.0; m[2][1]=0.0; m[2][2]=1.0; m[2][3]=0.0;
-  m[3][0]=0.0; m[3][1]=0.0; m[3][2]=0.0; m[3][3]=1.0;
+  m[0][0]=1.0f; m[0][1]=0.0f; m[0][2]=0.0f; m[0][3]=0.0f;
+  m[1][0]=0.0f; m[1][1]=1.0f; m[1][2]=0.0f; m[1][3]=0.0f;
+  m[2][0]=0.0f; m[2][1]=0.0f; m[2][2]=1.0f; m[2][3]=0.0f;
+  m[3][0]=0.0f; m[3][1]=0.0f; m[3][2]=0.0f; m[3][3]=1.0f;
+  return *this;
+  }
+
+
+// Orthographic projection
+FXHMat& FXHMat::ortho(FXfloat left,FXfloat right,FXfloat bottom,FXfloat top,FXfloat hither,FXfloat yon){
+  register FXfloat x,y,z,tx,ty,tz,rl,tb,yh,r0,r1,r2,r3;
+  rl=right-left;
+  tb=top-bottom;
+  yh=yon-hither;
+  FXASSERT(rl && tb && yh);         // Throw exception in future
+  x= 2.0f/rl;
+  y= 2.0f/tb;
+  z=-2.0f/yh;
+  tx=-(right+left)/rl;
+  ty=-(top+bottom)/tb;
+  tz=-(yon+hither)/yh;
+  r0=m[0][0];
+  r1=m[1][0];
+  r2=m[2][0];
+  r3=m[3][0];
+  m[0][0]=x*r0;
+  m[1][0]=y*r1;
+  m[2][0]=z*r2;
+  m[3][0]=tx*r0+ty*r1+tz*r2+r3;
+  r0=m[0][1];
+  r1=m[1][1];
+  r2=m[2][1];
+  r3=m[3][1];
+  m[0][1]=x*r0;
+  m[1][1]=y*r1;
+  m[2][1]=z*r2;
+  m[3][1]=tx*r0+ty*r1+tz*r2+r3;
+  r0=m[0][2];
+  r1=m[1][2];
+  r2=m[2][2];
+  r3=m[3][2];
+  m[0][2]=x*r0;
+  m[1][2]=y*r1;
+  m[2][2]=z*r2;
+  m[3][2]=tx*r0+ty*r1+tz*r2+r3;
+  r0=m[0][3];
+  r1=m[1][3];
+  r2=m[2][3];
+  r3=m[3][3];
+  m[0][3]=x*r0;
+  m[1][3]=y*r1;
+  m[2][3]=z*r2;
+  m[3][3]=tx*r0+ty*r1+tz*r2+r3;
+  return *this;
+  }
+
+
+// Perspective projection
+FXHMat& FXHMat::frustum(FXfloat left,FXfloat right,FXfloat bottom,FXfloat top,FXfloat hither,FXfloat yon){
+  register FXfloat x,y,a,b,c,d,rl,tb,yh,r0,r1,r2,r3;
+  FXASSERT(0.0<hither && hither<yon);   // Throw exception in future
+  rl=right-left;
+  tb=top-bottom;
+  yh=yon-hither;
+  FXASSERT(rl && tb);                   // Throw exception in future
+  x= 2.0f*hither/rl;
+  y= 2.0f*hither/tb;
+  a= (right+left)/rl;
+  b= (top+bottom)/tb;
+  c=-(yon+hither)/yh;
+  d=-(2.0f*yon*hither)/yh;
+  r0=m[0][0];
+  r1=m[1][0];
+  r2=m[2][0];
+  r3=m[3][0];
+  m[0][0]=x*r0;
+  m[1][0]=y*r1;
+  m[2][0]=a*r0+b*r1+c*r2-r3;
+  m[3][0]=d*r2;
+  r0=m[0][1];
+  r1=m[1][1];
+  r2=m[2][1];
+  r3=m[3][1];
+  m[0][1]=x*r0;
+  m[1][1]=y*r1;
+  m[2][1]=a*r0+b*r1+c*r2-r3;
+  m[3][1]=d*r2;
+  r0=m[0][2];
+  r1=m[1][2];
+  r2=m[2][2];
+  r3=m[3][2];
+  m[0][2]=x*r0;
+  m[1][2]=y*r1;
+  m[2][2]=a*r0+b*r1+c*r2-r3;
+  m[3][2]=d*r2;
+  r0=m[0][3];
+  r1=m[1][3];
+  r2=m[2][3];
+  r3=m[3][3];
+  m[0][3]=x*r0;
+  m[1][3]=y*r1;
+  m[2][3]=a*r0+b*r1+c*r2-r3;
+  m[3][3]=d*r2;
   return *this;
   }
 
 
 // Make left hand matrix
 FXHMat& FXHMat::left(){
-  FXASSERT(m[0][3]==0.0 && m[1][3]==0.0 && m[2][3]==0.0 && m[3][3]==1.0);
   m[2][0]= -m[2][0];
   m[2][1]= -m[2][1];
   m[2][2]= -m[2][2];
+  m[2][3]= -m[2][3];
   return *this;
   }
 
@@ -317,188 +443,196 @@ FXHMat& FXHMat::rot(const FXQuat& q){
   register FXfloat r00,r01,r02,r10,r11,r12,r20,r21,r22;
   register FXfloat x2,y2,z2,xx2,yy2,zz2,xy2,xz2,yz2,wx2,wy2,wz2;
   register FXfloat x,y,z;
-  FXASSERT(m[0][3]==0.0 && m[1][3]==0.0 && m[2][3]==0.0 && m[3][3]==1.0);
 
   // Pre-calculate some stuff
-  x2 =  q[0]*2.0; y2 = q[1]*2.0; z2 = q[2]*2.0;
-  xx2 = q[0]*x2; yy2 = q[1]*y2; zz2 = q[2]*z2;
-  xy2 = q[0]*y2; xz2 = q[0]*z2; yz2 = q[1]*z2;
-  wx2 = q[3]*x2; wy2 = q[3]*y2; wz2 = q[3]*z2;
+  x2  = q[0]*2.0f; y2  = q[1]*2.0f; z2  = q[2]*2.0f;
+  xx2 = q[0]*x2;   yy2 = q[1]*y2;   zz2 = q[2]*z2;
+  xy2 = q[0]*y2;   xz2 = q[0]*z2;   yz2 = q[1]*z2;
+  wx2 = q[3]*x2;   wy2 = q[3]*y2;   wz2 = q[3]*z2;
 
   // Rotation matrix
-  r00 = 1.0-yy2-zz2; r01 = xy2+wz2; r02 = xz2-wy2;
-  r10 = xy2-wz2; r11 = 1.0-xx2-zz2; r12 = yz2+wx2;
-  r20 = xz2+wy2; r21 = yz2-wx2; r22 = 1.0-xx2-yy2;
+  r00 = 1.0f-yy2-zz2; r01 = xy2+wz2;      r02 = xz2-wy2;
+  r10 = xy2-wz2;      r11 = 1.0f-xx2-zz2; r12 = yz2+wx2;
+  r20 = xz2+wy2;      r21 = yz2-wx2;      r22 = 1.0f-xx2-yy2;
 
   // Pre-multiply
-  x=m[0][0]; y=m[1][0]; z=m[2][0];
+  x=m[0][0];
+  y=m[1][0];
+  z=m[2][0];
   m[0][0]=x*r00+y*r01+z*r02;
-  m[1][0]=x*r10+y*r11+z*r12; 
+  m[1][0]=x*r10+y*r11+z*r12;
   m[2][0]=x*r20+y*r21+z*r22;
-  x=m[0][1]; y=m[1][1]; z=m[2][1];
-  m[0][1]=x*r00+y*r01+z*r02; 
-  m[1][1]=x*r10+y*r11+z*r12; 
+  x=m[0][1];
+  y=m[1][1];
+  z=m[2][1];
+  m[0][1]=x*r00+y*r01+z*r02;
+  m[1][1]=x*r10+y*r11+z*r12;
   m[2][1]=x*r20+y*r21+z*r22;
-  x=m[0][2]; y=m[1][2]; z=m[2][2];
-  m[0][2]=x*r00+y*r01+z*r02; 
-  m[1][2]=x*r10+y*r11+z*r12; 
+  x=m[0][2];
+  y=m[1][2];
+  z=m[2][2];
+  m[0][2]=x*r00+y*r01+z*r02;
+  m[1][2]=x*r10+y*r11+z*r12;
   m[2][2]=x*r20+y*r21+z*r22;
+  x=m[0][3];
+  y=m[1][3];
+  z=m[2][3];
+  m[0][3]=x*r00+y*r01+z*r02;
+  m[1][3]=x*r10+y*r11+z*r12;
+  m[2][3]=x*r20+y*r21+z*r22;
   return *this;
   }
 
 
-// Rotate by angle about arbitrary vector
-FXHMat& FXHMat::rot(const FXVec& v,const FXfloat phi){
-  FXASSERT((v*v-1.0)<0.000001);
-  FXASSERT(m[0][3]==0.0 && m[1][3]==0.0 && m[2][3]==0.0 && m[3][3]==1.0);
-  return rot(v,cos((double)phi),sin((double)phi));
-  }
-
-
-// Rotate about arbitrary vector
-FXHMat& FXHMat::rot(const FXVec& v,const FXfloat c,const FXfloat s){
+// Rotate by angle (cos,sin) about arbitrary vector
+FXHMat& FXHMat::rot(const FXVec& v,FXfloat c,FXfloat s){
+  register FXfloat xx,yy,zz,xy,yz,zx,xs,ys,zs,t;
   register FXfloat r00,r01,r02,r10,r11,r12,r20,r21,r22;
-  register FXfloat x,y,z,t;
-  FXASSERT((v*v-1.0)<0.00001);
+  register FXfloat x=v[0];
+  register FXfloat y=v[1];
+  register FXfloat z=v[2];
+  register FXfloat mag=x*x+y*y+z*z;
   FXASSERT(-1.00001<c && c<1.00001 && -1.00001<s && s<1.00001);
-  FXASSERT(m[0][3]==0.0 && m[1][3]==0.0 && m[2][3]==0.0 && m[3][3]==1.0);
-
-  // Rotation matrix
-  t=1.0-c;
-  r00=t*v[0]*v[0]+c; r01=t*v[0]*v[1]+s*v[2]; r02=t*v[0]*v[2]-s*v[1];
-  r10=t*v[0]*v[1]-s*v[2]; r11=t*v[1]*v[1]+c; r12=t*v[1]*v[2]+s*v[0];
-  r20=t*v[0]*v[2]+s*v[1]; r21=t*v[1]*v[2]-s*v[0]; r22=t*v[2]*v[2]+c;
-
-  // Pre-multiply
-  x=m[0][0]; y=m[1][0]; z=m[2][0];
+  if(mag<=1.0E-30f) return *this;         // Rotation about 0-length axis
+  mag=(FXfloat)sqrt(mag);
+  x/=mag;
+  y/=mag;
+  z/=mag;
+  xx=x*x;
+  yy=y*y;
+  zz=z*z;
+  xy=x*y;
+  yz=y*z;
+  zx=z*x;
+  xs=x*s;
+  ys=y*s;
+  zs=z*s;
+  t=1.0f-c;
+  r00=t*xx+c;  r10=t*xy-zs; r20=t*zx+ys;
+  r01=t*xy+zs; r11=t*yy+c;  r21=t*yz-xs;
+  r02=t*zx-ys; r12=t*yz+xs; r22=t*zz+c;
+  x=m[0][0];
+  y=m[1][0];
+  z=m[2][0];
   m[0][0]=x*r00+y*r01+z*r02;
-  m[1][0]=x*r10+y*r11+z*r12; 
+  m[1][0]=x*r10+y*r11+z*r12;
   m[2][0]=x*r20+y*r21+z*r22;
-  x=m[0][1]; y=m[1][1]; z=m[2][1];
-  m[0][1]=x*r00+y*r01+z*r02; 
-  m[1][1]=x*r10+y*r11+z*r12; 
+  x=m[0][1];
+  y=m[1][1];
+  z=m[2][1];
+  m[0][1]=x*r00+y*r01+z*r02;
+  m[1][1]=x*r10+y*r11+z*r12;
   m[2][1]=x*r20+y*r21+z*r22;
-  x=m[0][2]; y=m[1][2]; z=m[2][2];
+  x=m[0][2];
+  y=m[1][2];
+  z=m[2][2];
+  m[0][2]=x*r00+y*r01+z*r02;
+  m[1][2]=x*r10+y*r11+z*r12;
+  m[2][2]=x*r20+y*r21+z*r22;
+  x=m[0][3];
+  y=m[1][3];
+  z=m[2][3];
+  m[0][3]=x*r00+y*r01+z*r02;
+  m[1][3]=x*r10+y*r11+z*r12;
+  m[2][3]=x*r20+y*r21+z*r22;
   return *this;
+  }
+
+
+// Rotate by angle (in radians) about arbitrary vector
+FXHMat& FXHMat::rot(const FXVec& v,FXfloat phi){
+  return rot(v,(FXfloat)cos((double)phi),(FXfloat)sin((double)phi));
   }
 
 
 // Rotate about x-axis
-FXHMat& FXHMat::xrot(const FXfloat c,const FXfloat s){
+FXHMat& FXHMat::xrot(FXfloat c,FXfloat s){
   register FXfloat u,v;
-  FXASSERT(m[0][3]==0.0 && m[1][3]==0.0 && m[2][3]==0.0 && m[3][3]==1.0);
   FXASSERT(-1.00001<c && c<1.00001 && -1.00001<s && s<1.00001);
   u=m[1][0]; v=m[2][0]; m[1][0]=c*u+s*v; m[2][0]=c*v-s*u;
   u=m[1][1]; v=m[2][1]; m[1][1]=c*u+s*v; m[2][1]=c*v-s*u;
   u=m[1][2]; v=m[2][2]; m[1][2]=c*u+s*v; m[2][2]=c*v-s*u;
+  u=m[1][3]; v=m[2][3]; m[1][3]=c*u+s*v; m[2][3]=c*v-s*u;
   return *this;
   }
 
 
 // Rotate by angle about x-axis
-FXHMat& FXHMat::xrot(const FXfloat phi){ 
-  register FXfloat c=cos(phi),s=sin(phi),u,v;
-  FXASSERT(m[0][3]==0.0 && m[1][3]==0.0 && m[2][3]==0.0 && m[3][3]==1.0);
-  u=m[1][0]; v=m[2][0]; m[1][0]=c*u+s*v; m[2][0]=c*v-s*u;
-  u=m[1][1]; v=m[2][1]; m[1][1]=c*u+s*v; m[2][1]=c*v-s*u;
-  u=m[1][2]; v=m[2][2]; m[1][2]=c*u+s*v; m[2][2]=c*v-s*u;
-  return *this;
+FXHMat& FXHMat::xrot(FXfloat phi){
+  return xrot((FXfloat)cos(phi),(FXfloat)sin(phi));
   }
 
 
 // Rotate about y-axis
-FXHMat& FXHMat::yrot(const FXfloat c,const FXfloat s){
+FXHMat& FXHMat::yrot(FXfloat c,FXfloat s){
   register FXfloat u,v;
-  FXASSERT(m[0][3]==0.0 && m[1][3]==0.0 && m[2][3]==0.0 && m[3][3]==1.0);
   FXASSERT(-1.00001<c && c<1.00001 && -1.00001<s && s<1.00001);
-  u=m[0][0]; v=m[2][0]; m[0][0]=c*u-s*v; m[2][0]=s*u+c*v;
-  u=m[0][1]; v=m[2][1]; m[0][1]=c*u-s*v; m[2][1]=s*u+c*v;
-  u=m[0][2]; v=m[2][2]; m[0][2]=c*u-s*v; m[2][2]=s*u+c*v;
+  u=m[0][0]; v=m[2][0]; m[0][0]=c*u-s*v; m[2][0]=c*v+s*u;
+  u=m[0][1]; v=m[2][1]; m[0][1]=c*u-s*v; m[2][1]=c*v+s*u;
+  u=m[0][2]; v=m[2][2]; m[0][2]=c*u-s*v; m[2][2]=c*v+s*u;
+  u=m[0][3]; v=m[2][3]; m[0][3]=c*u-s*v; m[2][3]=c*v+s*u;
   return *this;
   }
 
 
 // Rotate by angle about y-axis
-FXHMat& FXHMat::yrot(const FXfloat phi){
-  register FXfloat c=cos(phi),s=sin(phi),u,v;
-  FXASSERT(m[0][3]==0.0 && m[1][3]==0.0 && m[2][3]==0.0 && m[3][3]==1.0);
-  u=m[0][0]; v=m[2][0]; m[0][0]=c*u-s*v; m[2][0]=s*u+c*v;
-  u=m[0][1]; v=m[2][1]; m[0][1]=c*u-s*v; m[2][1]=s*u+c*v;
-  u=m[0][2]; v=m[2][2]; m[0][2]=c*u-s*v; m[2][2]=s*u+c*v;
-  return *this;
+FXHMat& FXHMat::yrot(FXfloat phi){
+  return yrot((FXfloat)cos(phi),(FXfloat)sin(phi));
   }
 
 
 // Rotate about z-axis
-FXHMat& FXHMat::zrot(const FXfloat c,const FXfloat s){
+FXHMat& FXHMat::zrot(FXfloat c,FXfloat s){
   register FXfloat u,v;
-  FXASSERT(m[0][3]==0.0 && m[1][3]==0.0 && m[2][3]==0.0 && m[3][3]==1.0);
   FXASSERT(-1.00001<c && c<1.00001 && -1.00001<s && s<1.00001);
   u=m[0][0]; v=m[1][0]; m[0][0]=c*u+s*v; m[1][0]=c*v-s*u;
   u=m[0][1]; v=m[1][1]; m[0][1]=c*u+s*v; m[1][1]=c*v-s*u;
   u=m[0][2]; v=m[1][2]; m[0][2]=c*u+s*v; m[1][2]=c*v-s*u;
+  u=m[0][3]; v=m[1][3]; m[0][3]=c*u+s*v; m[1][3]=c*v-s*u;
   return *this;
   }
 
 
 // Rotate by angle about z-axis
-FXHMat& FXHMat::zrot(const FXfloat phi){
-  register FXfloat c=cos(phi),s=sin(phi),u,v;
-  FXASSERT(m[0][3]==0.0 && m[1][3]==0.0 && m[2][3]==0.0 && m[3][3]==1.0);
-  u=m[0][0]; v=m[1][0]; m[0][0]=c*u+s*v; m[1][0]=c*v-s*u;
-  u=m[0][1]; v=m[1][1]; m[0][1]=c*u+s*v; m[1][1]=c*v-s*u;
-  u=m[0][2]; v=m[1][2]; m[0][2]=c*u+s*v; m[1][2]=c*v-s*u;
-  return *this;
+FXHMat& FXHMat::zrot(FXfloat phi){
+  return zrot((FXfloat)cos(phi),(FXfloat)sin(phi));
   }
 
 
 // Translate
-FXHMat& FXHMat::trans(const FXfloat tx,const FXfloat ty,const FXfloat tz){
-  FXASSERT(m[0][3]==0.0 && m[1][3]==0.0 && m[2][3]==0.0 && m[3][3]==1.0);
+FXHMat& FXHMat::trans(FXfloat tx,FXfloat ty,FXfloat tz){
   m[3][0]=m[3][0]+tx*m[0][0]+ty*m[1][0]+tz*m[2][0];
   m[3][1]=m[3][1]+tx*m[0][1]+ty*m[1][1]+tz*m[2][1];
   m[3][2]=m[3][2]+tx*m[0][2]+ty*m[1][2]+tz*m[2][2];
+  m[3][3]=m[3][3]+tx*m[0][3]+ty*m[1][3]+tz*m[2][3];
   return *this;
   }
 
 
 // Translate over vector
 FXHMat& FXHMat::trans(const FXVec& v){
-  FXASSERT(m[0][3]==0.0 && m[1][3]==0.0 && m[2][3]==0.0 && m[3][3]==1.0);
-  m[3][0]=m[3][0]+v[0]*m[0][0]+v[1]*m[1][0]+v[2]*m[2][0];
-  m[3][1]=m[3][1]+v[0]*m[0][1]+v[1]*m[1][1]+v[2]*m[2][1];
-  m[3][2]=m[3][2]+v[0]*m[0][2]+v[1]*m[1][2]+v[2]*m[2][2];
-  return *this;
+  return trans(v[0],v[1],v[2]);
   }
 
 
 // Scale unqual
-FXHMat& FXHMat::scale(const FXfloat sx,const FXfloat sy,const FXfloat sz){
-  FXASSERT(m[0][3]==0.0 && m[1][3]==0.0 && m[2][3]==0.0 && m[3][3]==1.0);
-  m[0][0]*=sx; m[0][1]*=sx; m[0][2]*=sx;
-  m[1][0]*=sy; m[1][1]*=sy; m[1][2]*=sy;
-  m[2][0]*=sz; m[2][1]*=sz; m[2][2]*=sz;
+FXHMat& FXHMat::scale(FXfloat sx,FXfloat sy,FXfloat sz){
+  m[0][0]*=sx; m[0][1]*=sx; m[0][2]*=sx; m[0][3]*=sx;
+  m[1][0]*=sy; m[1][1]*=sy; m[1][2]*=sy; m[1][3]*=sy;
+  m[2][0]*=sz; m[2][1]*=sz; m[2][2]*=sz; m[2][3]*=sz;
   return *this;
   }
 
 
 // Scale uniform
-FXHMat& FXHMat::scale(const FXfloat s){
-  FXASSERT(m[0][3]==0.0 && m[1][3]==0.0 && m[2][3]==0.0 && m[3][3]==1.0);
-  m[0][0]*=s; m[0][1]*=s; m[0][2]*=s;
-  m[1][0]*=s; m[1][1]*=s; m[1][2]*=s;
-  m[2][0]*=s; m[2][1]*=s; m[2][2]*=s;
-  return *this;
+FXHMat& FXHMat::scale(FXfloat s){
+  return scale(s,s,s);
   }
 
 
 // Scale matrix
 FXHMat& FXHMat::scale(const FXVec& v){
-  FXASSERT(m[0][3]==0.0 && m[1][3]==0.0 && m[2][3]==0.0 && m[3][3]==1.0);
-  m[0][0]*=v[0]; m[0][1]*=v[0]; m[0][2]*=v[0];
-  m[1][0]*=v[1]; m[1][1]*=v[1]; m[1][2]*=v[1];
-  m[2][0]*=v[2]; m[2][1]*=v[2]; m[2][2]*=v[2];
-  return *this;
+  return scale(v[0],v[1],v[2]);
   }
 
 
@@ -522,40 +656,31 @@ FXHMat transpose(const FXHMat& m){
 
 // Invert matrix
 FXHMat invert(const FXHMat& s){
-  FXHMat m(1.0, 0.0, 0.0, 0.0,
-           0.0, 1.0, 0.0, 0.0,
-           0.0, 0.0, 1.0, 0.0,
-           0.0, 0.0, 0.0, 1.0);
+  FXHMat m(1.0f,0.0f,0.0f,0.0f,0.0f,1.0f,0.0f,0.0f,0.0f,0.0f,1.0f,0.0f,0.0f,0.0f,0.0f,1.0f);
   FXHMat x(s);
   register FXfloat pvv,t;
   register int i,j,pvi;
   for(i=0; i<4; i++){
     pvv=x[i][i];
     pvi=i;
-    for(j=i+1; j<4; j++){   /* Find pivot (largest in column i) */
+    for(j=i+1; j<4; j++){   // Find pivot (largest in column i)
       if(fabs(x[j][i])>fabs(pvv)){
         pvi=j;
         pvv=x[j][i];
         }
       }
-    FXASSERT(pvv != 0.0);                                 /* Should not be singular */
-    if(pvi!=i){       /* Swap rows i and pvi */
-      SWAP(m[i][0],m[pvi][0],t); SWAP(m[i][1],m[pvi][1],t);
-      SWAP(m[i][2],m[pvi][2],t); SWAP(m[i][3],m[pvi][3],t);
-      SWAP(x[i][0],x[pvi][0],t); SWAP(x[i][1],x[pvi][1],t);
-      SWAP(x[i][2],x[pvi][2],t); SWAP(x[i][3],x[pvi][3],t);
+    FXASSERT(pvv != 0.0f);  // Should not be singular
+    if(pvi!=i){             // Swap rows i and pvi
+      FXSWAP(m[i][0],m[pvi][0],t); FXSWAP(m[i][1],m[pvi][1],t); FXSWAP(m[i][2],m[pvi][2],t); FXSWAP(m[i][3],m[pvi][3],t);
+      FXSWAP(x[i][0],x[pvi][0],t); FXSWAP(x[i][1],x[pvi][1],t); FXSWAP(x[i][2],x[pvi][2],t); FXSWAP(x[i][3],x[pvi][3],t);
       }
-    x[i][0]/=pvv; x[i][1]/=pvv;   /* Normalize row i */
-    x[i][2]/=pvv; x[i][3]/=pvv;
-    m[i][0]/=pvv; m[i][1]/=pvv;
-    m[i][2]/=pvv; m[i][3]/=pvv;
-    for(j=0; j<4; j++){     /* Eliminate column i */
+    x[i][0]/=pvv; x[i][1]/=pvv; x[i][2]/=pvv; x[i][3]/=pvv;
+    m[i][0]/=pvv; m[i][1]/=pvv; m[i][2]/=pvv; m[i][3]/=pvv;
+    for(j=0; j<4; j++){     // Eliminate column i
       if(j!=i){
         t=x[j][i];
-        x[j][0]-=x[i][0]*t; x[j][1]-=x[i][1]*t;
-        x[j][2]-=x[i][2]*t; x[j][3]-=x[i][3]*t;
-        m[j][0]-=m[i][0]*t; m[j][1]-=m[i][1]*t;
-        m[j][2]-=m[i][2]*t; m[j][3]-=m[i][3]*t;
+        x[j][0]-=x[i][0]*t; x[j][1]-=x[i][1]*t; x[j][2]-=x[i][2]*t; x[j][3]-=x[i][3]*t;
+        m[j][0]-=m[i][0]*t; m[j][1]-=m[i][1]*t; m[j][2]-=m[i][2]*t; m[j][3]-=m[i][3]*t;
         }
       }
     }
@@ -564,8 +689,8 @@ FXHMat invert(const FXHMat& s){
 
 
 // Look at
-FXHMat& FXHMat::look(FXVec& eye,FXVec& cntr,FXVec& vup){
-  register FXfloat x0,x1,x2,tx,ty,tz; 
+FXHMat& FXHMat::look(const FXVec& eye,const FXVec& cntr,const FXVec& vup){
+  register FXfloat x0,x1,x2,tx,ty,tz;
   FXVec rz,rx,ry;
   rz=normalize(eye-cntr);
   rx=normalize(vup^rz);
@@ -606,4 +731,4 @@ FXStream& operator>>(FXStream& store,FXHMat& m){
   store >> m[0] >> m[1] >> m[2] >> m[3];
   return store;
   }
- 
+

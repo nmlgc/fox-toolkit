@@ -5,32 +5,179 @@
 ********************************************************************************/
 #include "fx.h"
 #include "fx3d.h"
-#include "fxregex.h"
+
+
+#ifdef HAVE_OPENGL
+
+
+// Timer setting (in milliseconds)
+const FXuint TIMER_INTERVAL = 100;
+
+
+/*******************************************************************************/
+
+
+// Settings dialog thanks to Sander Jansen <sxj@cfdrc.com>
+class FXAPI SettingsDialog : public FXDialogBox {
+  FXDECLARE(SettingsDialog)
+private:
+  SettingsDialog(){}
+public:
+  SettingsDialog(FXWindow* owner,FXGLVisual * vis);
+  virtual ~SettingsDialog();
+  };
+
+
+
+/*******************************************************************************/
+
+
+// Settings dialog thanks to Sander Jansen <sxj@cfdrc.com>
+FXIMPLEMENT(SettingsDialog,FXDialogBox,NULL,0)
+
+
+// Construct a dialog box
+SettingsDialog::SettingsDialog(FXWindow* owner,FXGLVisual * vis):FXDialogBox(owner,"OpenGL Info",DECOR_TITLE|DECOR_BORDER,0,600){
+  FXVerticalFrame * master=new FXVerticalFrame(this,LAYOUT_FILL_X|LAYOUT_FILL_Y,0,0,0,0, 0,0,0,0);
+
+  //gl version information
+  FXGroupBox *versionbox=new FXGroupBox(master,"OpenGL Driver Information",GROUPBOX_NORMAL|FRAME_RIDGE|LAYOUT_FILL_X);
+  FXMatrix *v_matrix=new FXMatrix(versionbox,2,MATRIX_BY_COLUMNS,0,0,0,0,0,0,0,0);
+
+  new FXLabel(v_matrix,"Vendor: ",NULL,LABEL_NORMAL);
+  new FXLabel(v_matrix,FXStringFormat("%s",glGetString(GL_VENDOR)),NULL,LABEL_NORMAL);
+
+  new FXLabel(v_matrix,"Renderer: ",NULL,LABEL_NORMAL);
+  new FXLabel(v_matrix,FXStringFormat("%s",glGetString(GL_RENDERER)),NULL,LABEL_NORMAL);
+
+  new FXLabel(v_matrix,"GL Version: ",NULL,LABEL_NORMAL);
+  new FXLabel(v_matrix,FXStringFormat("%s",glGetString(GL_VERSION)),NULL,LABEL_NORMAL);
+
+  new FXLabel(v_matrix,"GLU Version: ",NULL,LABEL_NORMAL);
+  new FXLabel(v_matrix,FXStringFormat("%s",gluGetString(GLU_VERSION)),NULL,LABEL_NORMAL);
+
+  FXHorizontalFrame *options=new FXHorizontalFrame(master,LAYOUT_SIDE_TOP|FRAME_NONE|LAYOUT_FILL_X|LAYOUT_FILL_Y,0,0,0,0,0,0,0,0);
+
+  //Display Mode
+  FXGroupBox *dmbox=new FXGroupBox(options,"Display Mode",GROUPBOX_NORMAL|FRAME_RIDGE|LAYOUT_FILL_Y);
+  FXMatrix *mat=new FXMatrix(dmbox,2,MATRIX_BY_COLUMNS);
+
+
+  new FXLabel(mat,"Accelerated",NULL,LABEL_NORMAL);
+  if(vis->isAccelerated())
+    new FXLabel(mat,"enabled",NULL,LABEL_NORMAL);
+  else
+    new FXLabel(mat,"disabled",NULL,LABEL_NORMAL);
+
+  new FXLabel(mat,"Double Buffering",NULL,LABEL_NORMAL);
+  if(vis->isDoubleBuffer())
+    new FXLabel(mat,"enabled",NULL,LABEL_NORMAL);
+  else
+    new FXLabel(mat,"disabled",NULL,LABEL_NORMAL);
+
+  new FXLabel(mat,"Stereo View",NULL,LABEL_NORMAL);
+  if(vis->isStereo())
+    new FXLabel(mat,"enabled",NULL,LABEL_NORMAL);
+  else
+    new FXLabel(mat,"disabled",NULL,LABEL_NORMAL);
+
+  new FXLabel(mat,"Color Depth",NULL,LABEL_NORMAL);
+  new FXLabel(mat,FXStringFormat("%d",vis->getDepth()),NULL,LABEL_NORMAL);
+
+  new FXLabel(mat,"Depth Buffer Size",NULL,LABEL_NORMAL);
+  new FXLabel(mat,FXStringFormat("%d",vis->getActualDepthSize()),NULL,LABEL_NORMAL);
+
+  new FXLabel(mat,"Stencil Buffer Size",NULL,LABEL_NORMAL);
+  new FXLabel(mat,FXStringFormat("%d",vis->getActualStencilSize()),NULL,LABEL_NORMAL);
+
+  new FXLabel(mat,"RGBA",NULL,LABEL_NORMAL);
+  new FXLabel(mat,FXStringFormat("%d-%d-%d-%d",vis->getActualRedSize(),vis->getActualGreenSize(),vis->getActualBlueSize(),vis->getActualAlphaSize()),NULL,LABEL_NORMAL);
+
+  new FXLabel(mat,"Accum RGBA",NULL,LABEL_NORMAL);
+  new FXLabel(mat,FXStringFormat("%d-%d-%d-%d",vis->getActualAccumRedSize(),vis->getActualAccumGreenSize(),vis->getActualAccumBlueSize(),vis->getActualAccumAlphaSize()),NULL,LABEL_NORMAL);
+
+  FXGroupBox *exbox= new FXGroupBox(options,"Available GL/GLU Extensions",GROUPBOX_NORMAL|FRAME_RIDGE|LAYOUT_FILL_Y|LAYOUT_FILL_X);
+
+  FXVerticalFrame *listframe=new FXVerticalFrame(exbox,LAYOUT_FILL_X|LAYOUT_FILL_Y|FRAME_SUNKEN|FRAME_THICK,0,0,0,0,0,0,0,0,0,0);
+
+  FXList *pExtList=new FXList(listframe,10,NULL,0,FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_FILL_Y);
+
+  char *token,*text,*tmp;
+
+  // Get GL extensions
+  tmp=(char*)glGetString(GL_EXTENSIONS);
+  if(tmp){
+    text=strdup(tmp);
+    token=strtok(text," ");
+    while(token!=NULL){
+      pExtList->appendItem(FXStringFormat("(GL) %s",token));
+      token=strtok(NULL," ");
+      }
+    free(text);
+    }
+
+  // Get GLU extensions
+#if defined(GLU_VERSION_1_1)
+  tmp=(char*)gluGetString(GLU_EXTENSIONS);
+  if(tmp){
+    text=strdup(tmp);
+    token=strtok(text," ");
+    while(token!=NULL){
+      pExtList->appendItem(FXStringFormat("(GLU) %s",token));
+      token=strtok(NULL," ");
+      }
+    free(text);
+    }
+#endif
+
+  new FXHorizontalSeparator(master);
+
+  // Contents
+  FXHorizontalFrame * control=new FXHorizontalFrame(master,LAYOUT_SIDE_TOP|FRAME_NONE|LAYOUT_FILL_X);
+
+  // Accept
+  new FXButton(control,"OK",NULL,this,ID_ACCEPT,FRAME_RAISED|FRAME_THICK|LAYOUT_CENTER_X|LAYOUT_CENTER_Y,0,0,0,0, 20,20,3,3);
+  }
+
+
+// Must delete the menus
+SettingsDialog::~SettingsDialog(){
+  }
+
+
+/*******************************************************************************/
 
 
 // Event Handler Object
-class GLTestApp : public FXApp {
-  FXDECLARE(GLTestApp)
+class FXAPI GLTestWindow : public FXMainWindow {
+  FXDECLARE(GLTestWindow)
 
 private:
 
-  FXMainWindow    *main;                      // Main window
   FXGLCanvas      *glcanvas;                  // GL Canvas to draw into
   FXTimer         *timer;                     // Timer for spinning box
+  FXChore         *chore;                     // Timer for spinning box
   int              spinning;                  // Is box spinning
   double           angle;                     // Rotation angle of box
-  
+  FXGLVisual      *glvisual;                  // OpenGL visual
+
+protected:
+  GLTestWindow(){}
+
 public:
 
   // We define additional ID's, starting from the last one used by the base class+1.
   // This way, we know the ID's are all unique for this particular target.
   enum{
-    ID_CANVAS=FXApp::ID_LAST,
+    ID_CANVAS=FXMainWindow::ID_LAST,
     ID_SPIN,
+    ID_SPINFAST,
     ID_STOP,
-    ID_TIMEOUT
+    ID_TIMEOUT,
+    ID_CHORE,
+    ID_OPENGL,
     };
-    
+
   // Message handlers
   long onMouseDown(FXObject*,FXSelector,void*);
   long onMouseUp(FXObject*,FXSelector,void*);
@@ -42,131 +189,137 @@ public:
   long onCmdStop(FXObject*,FXSelector,void*);
   long onUpdStop(FXObject*,FXSelector,void*);
   long onTimeout(FXObject*,FXSelector,void*);
-  
+  long onChore(FXObject*,FXSelector,void*);
+  long onCmdSpinFast(FXObject*,FXSelector,void*);
+  long onUpdSpinFast(FXObject*,FXSelector,void*);
+  long onCmdOpenGL(FXObject*,FXSelector,void*);
+
 public:
 
-  // GLTestApp constructor
-  GLTestApp();
-  
+  // GLTestWindow constructor
+  GLTestWindow(FXApp* a);
+
   // Initialize
   void create();
-  
+
   // Draw scene
   void drawScene();
-  
-  // GLTestApp destructor
-  virtual ~GLTestApp();
+
+  // GLTestWindow destructor
+  virtual ~GLTestWindow();
   };
 
 
 
 // Message Map for the Scribble App class
-FXDEFMAP(GLTestApp) GLTestAppMap[]={
+FXDEFMAP(GLTestWindow) GLTestWindowMap[]={
 
   //________Message_Type_________ID_____________________Message_Handler_______
-  FXMAPFUNC(SEL_PAINT,         GLTestApp::ID_CANVAS,  GLTestApp::onExpose),
-  FXMAPFUNC(SEL_CONFIGURE,     GLTestApp::ID_CANVAS,  GLTestApp::onConfigure),
-  
-  FXMAPFUNC(SEL_COMMAND,       GLTestApp::ID_SPIN,    GLTestApp::onCmdSpin),
-  FXMAPFUNC(SEL_UPDATE,        GLTestApp::ID_SPIN,    GLTestApp::onUpdSpin),
-  
-  FXMAPFUNC(SEL_COMMAND,       GLTestApp::ID_STOP,    GLTestApp::onCmdStop),
-  FXMAPFUNC(SEL_UPDATE,        GLTestApp::ID_STOP,    GLTestApp::onUpdStop),
-
-  FXMAPFUNC(SEL_TIMEOUT,       GLTestApp::ID_TIMEOUT, GLTestApp::onTimeout),
-  
+  FXMAPFUNC(SEL_PAINT,     GLTestWindow::ID_CANVAS,   GLTestWindow::onExpose),
+  FXMAPFUNC(SEL_CONFIGURE, GLTestWindow::ID_CANVAS,   GLTestWindow::onConfigure),
+  FXMAPFUNC(SEL_COMMAND,   GLTestWindow::ID_SPIN,     GLTestWindow::onCmdSpin),
+  FXMAPFUNC(SEL_UPDATE,    GLTestWindow::ID_SPIN,     GLTestWindow::onUpdSpin),
+  FXMAPFUNC(SEL_COMMAND,   GLTestWindow::ID_SPINFAST, GLTestWindow::onCmdSpinFast),
+  FXMAPFUNC(SEL_UPDATE,    GLTestWindow::ID_SPINFAST, GLTestWindow::onUpdSpinFast),
+  FXMAPFUNC(SEL_COMMAND,   GLTestWindow::ID_STOP,     GLTestWindow::onCmdStop),
+  FXMAPFUNC(SEL_UPDATE,    GLTestWindow::ID_STOP,     GLTestWindow::onUpdStop),
+  FXMAPFUNC(SEL_TIMEOUT,   GLTestWindow::ID_TIMEOUT,  GLTestWindow::onTimeout),
+  FXMAPFUNC(SEL_CHORE,     GLTestWindow::ID_CHORE,    GLTestWindow::onChore),
+  FXMAPFUNC(SEL_COMMAND,   GLTestWindow::ID_OPENGL,   GLTestWindow::onCmdOpenGL),
   };
 
 
 
 // Macro for the GLTestApp class hierarchy implementation
-FXIMPLEMENT(GLTestApp,FXApp,GLTestAppMap,ARRAYNUMBER(GLTestAppMap))
+FXIMPLEMENT(GLTestWindow,FXMainWindow,GLTestWindowMap,ARRAYNUMBER(GLTestWindowMap))
 
 
 
 // Construct a GLTestApp
-GLTestApp::GLTestApp(){
+GLTestWindow::GLTestWindow(FXApp* a):FXMainWindow(a,"OpenGL Test Application",NULL,NULL,DECOR_ALL,0,0,800,600){
   FXVerticalFrame *glcanvasFrame;
   FXVerticalFrame *buttonFrame;
   FXComposite *glpanel;
   FXHorizontalFrame *frame;
 
-  // Make my own main window
-  main=new FXMainWindow(this,"OpenGL Test Application",DECOR_ALL,0,0,800,600);
+  frame=new FXHorizontalFrame(this,LAYOUT_SIDE_TOP|LAYOUT_FILL_X|LAYOUT_FILL_Y,0,0,0,0, 0,0,0,0);
 
-  frame=new FXHorizontalFrame(main,LAYOUT_SIDE_TOP|LAYOUT_FILL_X|LAYOUT_FILL_Y,0,0,0,0, 0,0,0,0);
-  
-    // LEFT pane to contain the glcanvas
-    glcanvasFrame=new FXVerticalFrame(frame,LAYOUT_FILL_X|LAYOUT_FILL_Y|LAYOUT_TOP|LAYOUT_LEFT,0,0,0,0,10,10,10,10);
+  // LEFT pane to contain the glcanvas
+  glcanvasFrame=new FXVerticalFrame(frame,LAYOUT_FILL_X|LAYOUT_FILL_Y|LAYOUT_TOP|LAYOUT_LEFT,0,0,0,0,10,10,10,10);
 
-      // Label above the glcanvas               
-      new FXLabel(glcanvasFrame,"OpenGL Canvas Frame",NULL,JUSTIFY_CENTER_X|LAYOUT_FILL_X);
+  // Label above the glcanvas
+  new FXLabel(glcanvasFrame,"OpenGL Canvas Frame",NULL,JUSTIFY_CENTER_X|LAYOUT_FILL_X);
 
-      // Horizontal divider line
-      new FXHorizontalSeparator(glcanvasFrame,SEPARATOR_GROOVE|LAYOUT_FILL_X);
+  // Horizontal divider line
+  new FXHorizontalSeparator(glcanvasFrame,SEPARATOR_GROOVE|LAYOUT_FILL_X);
 
-      // Drawing glcanvas
-      glpanel=new FXVerticalFrame(glcanvasFrame,FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_FILL_Y|LAYOUT_TOP|LAYOUT_LEFT,0,0,0,0, 0,0,0,0);
+  // Drawing glcanvas
+  glpanel=new FXVerticalFrame(glcanvasFrame,FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_FILL_Y|LAYOUT_TOP|LAYOUT_LEFT,0,0,0,0, 0,0,0,0);
 
-        // Drawing glcanvas
-        glcanvas=new FXGLCanvas(glpanel,this,ID_CANVAS,GL_INSTALL_COLORMAP|GL_DOUBLE_BUFFER|LAYOUT_FILL_X|LAYOUT_FILL_Y|LAYOUT_TOP|LAYOUT_LEFT);
+  // A Visual to drag OpenGL
+  glvisual=new FXGLVisual(getApp(),VISUAL_DOUBLEBUFFER|VISUAL_STEREO);
 
-    // RIGHT pane for the buttons
-    buttonFrame=new FXVerticalFrame(frame,LAYOUT_FILL_Y|LAYOUT_TOP|LAYOUT_LEFT,0,0,0,0,10,10,10,10);
+  // Drawing glcanvas
+  glcanvas=new FXGLCanvas(glpanel,glvisual,this,ID_CANVAS,LAYOUT_FILL_X|LAYOUT_FILL_Y|LAYOUT_TOP|LAYOUT_LEFT);
 
-      // Label above the buttons  
-      new FXLabel(buttonFrame,"Button Frame",NULL,JUSTIFY_CENTER_X|LAYOUT_FILL_X);
+  // RIGHT pane for the buttons
+  buttonFrame=new FXVerticalFrame(frame,LAYOUT_FILL_Y|LAYOUT_TOP|LAYOUT_LEFT,0,0,0,0,10,10,10,10);
 
-      // Horizontal divider line
-      new FXHorizontalSeparator(buttonFrame,SEPARATOR_RIDGE|LAYOUT_FILL_X);
+  // Label above the buttons
+  new FXLabel(buttonFrame,"Button Frame",NULL,JUSTIFY_CENTER_X|LAYOUT_FILL_X);
 
-      // Button to print
-      new FXButton(buttonFrame,"Spin Boxes",NULL,this,ID_SPIN,FRAME_THICK|FRAME_RAISED|LAYOUT_FILL_X|LAYOUT_TOP|LAYOUT_LEFT,0,0,0,0,10,10,5,5);
+  // Horizontal divider line
+  new FXHorizontalSeparator(buttonFrame,SEPARATOR_RIDGE|LAYOUT_FILL_X);
 
-      // Button to print
-      new FXButton(buttonFrame,"Stop Boxes",NULL,this,ID_STOP,FRAME_THICK|FRAME_RAISED|LAYOUT_FILL_X|LAYOUT_TOP|LAYOUT_LEFT,0,0,0,0,10,10,5,5);
+  new FXButton(buttonFrame,"&OpenGL Info\tDisplay OpenGL Capabilities",NULL,this,ID_OPENGL,FRAME_THICK|FRAME_RAISED|LAYOUT_FILL_X|LAYOUT_TOP|LAYOUT_LEFT,0,0,0,0,10,10,5,5);
+  // Button to print
+  new FXButton(buttonFrame,"Spin &Timer\tSpin using interval timers\nNote the app blocks until the interal has elapsed...",NULL,this,ID_SPIN,FRAME_THICK|FRAME_RAISED|LAYOUT_FILL_X|LAYOUT_TOP|LAYOUT_LEFT,0,0,0,0,10,10,5,5);
+  new FXButton(buttonFrame,"Spin &Chore\tSpin as fast as possible using chores\nNote even though the app is very responsive, it never blocks;\nthere is always something to do...",NULL,this,ID_SPINFAST,FRAME_THICK|FRAME_RAISED|LAYOUT_FILL_X|LAYOUT_TOP|LAYOUT_LEFT,0,0,0,0,10,10,5,5);
 
-      // Exit button
-      new FXButton(buttonFrame,"Exit",NULL,this,ID_QUIT,FRAME_THICK|FRAME_RAISED|LAYOUT_FILL_X|LAYOUT_TOP|LAYOUT_LEFT,0,0,0,0,10,10,5,5);
+  // Button to print
+  new FXButton(buttonFrame,"&Stop Spin\tStop this mad spinning, I'm getting dizzy",NULL,this,ID_STOP,FRAME_THICK|FRAME_RAISED|LAYOUT_FILL_X|LAYOUT_TOP|LAYOUT_LEFT,0,0,0,0,10,10,5,5);
+
+  // Exit button
+  new FXButton(buttonFrame,"&Exit\tExit the application",NULL,getApp(),FXApp::ID_QUIT,FRAME_THICK|FRAME_RAISED|LAYOUT_FILL_X|LAYOUT_TOP|LAYOUT_LEFT,0,0,0,0,10,10,5,5);
+
+  // Make a tooltip
+  new FXTooltip(getApp());
 
   // Initialize private variables
-  spinning=0;    
+  spinning=0;
   timer = NULL;
   angle = 0.;
   }
-    
+
 
 // Destructor
-GLTestApp::~GLTestApp(){
-  if(timer) removeTimeout(timer);
+GLTestWindow::~GLTestWindow(){
+  if(timer) getApp()->removeTimeout(timer);
   }
 
- 
 
-// Create and initialize 
-void GLTestApp::create(){
 
-  // Create the windows
-  FXApp::create();
-  
-  // Make the main window appear
-  main->show();
+// Create and initialize
+void GLTestWindow::create(){
+  FXMainWindow::create();
+  show(PLACEMENT_SCREEN);
   }
 
 
 
 // Widget has been resized
-long GLTestApp::onConfigure(FXObject*,FXSelector,void* ptr){
-  glcanvas->makeCurrent();
-  glViewport(0,0,glcanvas->getWidth(),glcanvas->getHeight());
+long GLTestWindow::onConfigure(FXObject*,FXSelector,void*){
+  if(glcanvas->makeCurrent()){
+    glViewport(0,0,glcanvas->getWidth(),glcanvas->getHeight());
+    glcanvas->makeNonCurrent();
+    }
   return 1;
   }
 
 
 
 // Widget needs repainting
-long GLTestApp::onExpose(FXObject*,FXSelector,void* ptr){
-  glcanvas->makeCurrent();
+long GLTestWindow::onExpose(FXObject*,FXSelector,void*){
   drawScene();
   return 1;
   }
@@ -174,75 +327,84 @@ long GLTestApp::onExpose(FXObject*,FXSelector,void* ptr){
 
 
 //  Rotate the boxes when a timer message is received
-long GLTestApp::onTimeout(FXObject*,FXSelector,void*){
+long GLTestWindow::onTimeout(FXObject*,FXSelector,void*){
   angle += 2.;
   if(angle > 360.) angle -= 360.;
   drawScene();
-  timer=addTimeout(100,this,ID_TIMEOUT);
+  timer=getApp()->addTimeout(TIMER_INTERVAL,this,ID_TIMEOUT);
   return 1;
   }
 
 
+// Rotate the boxes when a chore message is received
+long GLTestWindow::onChore(FXObject*,FXSelector,void*){
+  angle += 2.;
+  if(angle > 360.) angle -= 360.;
+  drawScene();
+  chore=getApp()->addChore(this,ID_CHORE);
+  return 1;
+  }
+
 
 // Start the boxes spinning
-long GLTestApp::onCmdSpin(FXObject*,FXSelector,void*){
+long GLTestWindow::onCmdSpin(FXObject*,FXSelector,void*){
   spinning=1;
-  timer=addTimeout(100,this,ID_TIMEOUT);
+  timer=getApp()->addTimeout(TIMER_INTERVAL,this,ID_TIMEOUT);
   return 1;
   }
 
 
 
 // Enable or disable the spin button
-long GLTestApp::onUpdSpin(FXObject* sender,FXSelector,void*){
+long GLTestWindow::onUpdSpin(FXObject* sender,FXSelector,void*){
   FXButton* button=(FXButton*)sender;
-  spinning ? button->disable() : button->enable(); 
+  spinning ? button->disable() : button->enable();
   return 1;
   }
 
 
+// Start the boxes spinning
+long GLTestWindow::onCmdSpinFast(FXObject*,FXSelector,void*){
+  spinning=1;
+  chore=getApp()->addChore(this,ID_CHORE);
+  return 1;
+  }
+
+
+// Enable or disable the spin button
+long GLTestWindow::onUpdSpinFast(FXObject* sender,FXSelector,void*){
+  FXButton* button=(FXButton*)sender;
+  spinning ? button->disable() : button->enable();
+  return 1;
+  }
+
 
 // If boxes are spinning, stop them
-long GLTestApp::onCmdStop(FXObject*,FXSelector,void*){
+long GLTestWindow::onCmdStop(FXObject*,FXSelector,void*){
   spinning=0;
   if(timer){
-    removeTimeout(timer);
+    getApp()->removeTimeout(timer);
     timer=NULL;
+    }
+  if(chore){
+    getApp()->removeChore(chore);
+    chore=NULL;
     }
   return 1;
   }
 
 
 // Enable or disable the stop button
-long GLTestApp::onUpdStop(FXObject* sender,FXSelector,void*){
+long GLTestWindow::onUpdStop(FXObject* sender,FXSelector,void*){
   FXButton* button=(FXButton*)sender;
-  spinning ? button->enable() : button->disable(); 
+  spinning ? button->enable() : button->disable();
   return 1;
   }
 
 
 
-// Here we begin
-int main(int argc,char *argv[]){
-
-  // Make application
-  GLTestApp* application=new GLTestApp;
-  
-  // Open the display
-  application->init(argc,argv);
-
-  // Create the application's windows
-  application->create();
-  
-  // Run the application
-  application->run();
-  
-  return 0;
-  }
-
-
 // Draws a simple box using the given corners
-void drawBox(double xmin, double ymin, double zmin, double xmax, double ymax, double zmax) {
+void drawBox(GLfloat xmin, GLfloat ymin, GLfloat zmin, GLfloat xmax, GLfloat ymax, GLfloat zmax) {
   glBegin(GL_TRIANGLE_STRIP);
     glNormal3f(0.,0.,-1.);
     glVertex3f(xmin, ymin, zmin);
@@ -294,25 +456,31 @@ void drawBox(double xmin, double ymin, double zmin, double xmax, double ymax, do
 
 
 // Draw the GL scene
-void GLTestApp::drawScene(){
+void GLTestWindow::drawScene(){
+  const GLfloat lightPosition[]={15.,10.,5.,1.};
+  const GLfloat lightAmbient[]={.1f,.1f,.1f,1.};
+  const GLfloat lightDiffuse[]={.9f,.9f,.9f,1.};
+  const GLfloat redMaterial[]={1.,0.,0.,1.};
+  const GLfloat blueMaterial[]={0.,0.,1.,1.};
+
   GLdouble width = glcanvas->getWidth();
   GLdouble height = glcanvas->getHeight();
-  GLdouble aspect = width / height;
-  GLfloat lightPosition[]={15.,10.,5.,1.};
-  GLfloat lightAmbient[]={.1,.1,.1,1.};
-  GLfloat lightDiffuse[]={.9,.9,.9,1.};
-  GLfloat redMaterial[]={1.,0.,0.,1.};
-  GLfloat blueMaterial[]={0.,0.,1.,1.};
+  GLdouble aspect = height>0 ? width/height : 1.0;
 
+  // Make context current
   glcanvas->makeCurrent();
+
+  glViewport(0,0,glcanvas->getWidth(),glcanvas->getHeight());
 
   glClearColor(1.0,1.0,1.0,1.0);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
   glEnable(GL_DEPTH_TEST);
 
+  glDisable(GL_DITHER);
+
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  gluPerspective(30.,aspect, 1., 100.);
+  gluPerspective(30.,aspect,1.,100.);
 
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
@@ -377,5 +545,53 @@ void GLTestApp::drawScene(){
 
   glPopMatrix();
 
-  glcanvas->swapBuffers();
+  // Swap if it is double-buffered
+  if(glvisual->isDoubleBuffer()){
+    glcanvas->swapBuffers();
+    }
+
+  // Make context non-current
+  glcanvas->makeNonCurrent();
   }
+
+
+// Pop a dialog showing OpenGL properties
+long GLTestWindow::onCmdOpenGL(FXObject*,FXSelector,void*){
+  glcanvas->makeCurrent();
+  SettingsDialog sd((FXWindow*)this,glvisual);
+  glcanvas->makeNonCurrent();
+  sd.execute();
+  return 1;
+  }
+
+
+// Here we begin
+int main(int argc,char *argv[]){
+
+  // Make application
+  FXApp application("GLTest","FoxTest");
+
+  // Open the display
+  application.init(argc,argv);
+
+  // Make window
+  new GLTestWindow(&application);
+
+  // Create the application's windows
+  application.create();
+
+  // Run the application
+  return application.run();
+  }
+
+
+#else
+
+
+// Here we begin
+int main(int argc,char *argv[]){
+  fxmessage("The FOX Library was compiled without OpenGL\n");
+  return 0;
+  }
+
+#endif

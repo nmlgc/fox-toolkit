@@ -3,61 +3,57 @@
 *                     S h e l l   W i n d o w   O b j e c t                     *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997 by Jeroen van der Zijp.   All Rights Reserved.             *
+* Copyright (C) 1997,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
-* modify it under the terms of the GNU Library General Public                   *
+* modify it under the terms of the GNU Lesser General Public                    *
 * License as published by the Free Software Foundation; either                  *
-* version 2 of the License, or (at your option) any later version.              *
+* version 2.1 of the License, or (at your option) any later version.            *
 *                                                                               *
 * This library is distributed in the hope that it will be useful,               *
 * but WITHOUT ANY WARRANTY; without even the implied warranty of                *
 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU             *
-* Library General Public License for more details.                              *
+* Lesser General Public License for more details.                               *
 *                                                                               *
-* You should have received a copy of the GNU Library General Public             *
-* License along with this library; if not, write to the Free                    *
-* Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.            *
+* You should have received a copy of the GNU Lesser General Public              *
+* License along with this library; if not, write to the Free Software           *
+* Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXShell.cpp,v 1.15 1998/10/30 15:49:39 jvz Exp $                      *
+* $Id: FXShell.cpp,v 1.55 2002/01/18 22:43:04 jeroen Exp $                      *
 ********************************************************************************/
 #include "xincs.h"
+#include "fxver.h"
 #include "fxdefs.h"
+#include "fxkeys.h"
 #include "FXStream.h"
 #include "FXString.h"
-#include "FXObject.h"
+#include "FXSize.h"
+#include "FXPoint.h"
+#include "FXRectangle.h"
+#include "FXRegistry.h"
 #include "FXAccelTable.h"
-#include "FXObjectList.h"
 #include "FXApp.h"
-#include "FXId.h"
-#include "FXCursor.h"
-#include "FXDrawable.h"
-#include "FXWindow.h"
-#include "FXFrame.h"
-#include "FXComposite.h"
-#include "FXRootWindow.h"
 #include "FXShell.h"
 
-/*
 
-  To do:
-  - allow resize option..
-  - setting icons
-  - Iconified/normal
-  - FXApp should keep track of toplevel windows, and if last one is closed,
-    end the application.
-  - It is not true that all shell windows' sizes are controlled by users;
-    popups should resize when contents change...
-  - Should Shell be a type of packer?
+/*
+  Notes:
+  - FXShell handles keys to implement focus change messages.
+  - The initial size should probably be determined not in create(), but in show().
+  - Note that Shell is base class for transient ``popup'' override-redirect windows.
+    For top level windows, we should use size hints rather than force the size.
 */
+
 
 /*******************************************************************************/
 
 // Map
 FXDEFMAP(FXShell) FXShellMap[]={
+  FXMAPFUNC(SEL_CONFIGURE,0,FXShell::onConfigure),
+  FXMAPFUNC(SEL_KEYPRESS,0,FXShell::onKeyPress),
+  FXMAPFUNC(SEL_KEYRELEASE,0,FXShell::onKeyRelease),
   FXMAPFUNC(SEL_FOCUS_NEXT,0,FXShell::onFocusNext),
   FXMAPFUNC(SEL_FOCUS_PREV,0,FXShell::onFocusPrev),
-  FXMAPFUNC(SEL_CONFIGURE,0,FXShell::onConfigure),
   };
 
 
@@ -67,34 +63,84 @@ FXIMPLEMENT(FXShell,FXComposite,FXShellMap,ARRAYNUMBER(FXShellMap))
 
 // Create a toplevel window
 FXShell::FXShell(FXApp* a,FXuint opts,FXint x,FXint y,FXint w,FXint h):
-  FXComposite(a,opts,x,y,w,h){
+  FXComposite(a,NULL,opts,x,y,w,h){
+  }
+
+
+// Create a toplevel window
+FXShell::FXShell(FXWindow* own,FXuint opts,FXint x,FXint y,FXint w,FXint h):
+  FXComposite(own->getApp(),own,opts,x,y,w,h){
   }
 
 
 // Create X window
 void FXShell::create(){
-//fprintf(stderr,"%s width=%d (%d), height=%d (%d)\n",getClassName(),width,getDefaultWidth(),height,getDefaultHeight());
+  FXint w,h;
+
+  // Create this widget and all of its children
   FXComposite::create();
-//fprintf(stderr,"%s width=%d (%d), height=%d (%d)\n",getClassName(),width,getDefaultWidth(),height,getDefaultHeight());
-  if(width<2 || height<2) resize(getDefaultWidth(),getDefaultHeight());
+
+  // Adjust size if necessary
+  w=(1<width) ? width : getDefaultWidth();
+  h=(1<height) ? height : getDefaultHeight();
+
+  // Resize this widget
+  resize(w,h);
   }
 
 
 // User determines size of shells
 void FXShell::recalc(){
-  getApp()->refresh();
+  getApp()->refresher=this;       // As long as layout cleanup is done with GUI update
+  getApp()->again=TRUE;
   flags|=FLAG_DIRTY;
   }
 
+
+// Shell into the focus chain
+void FXShell::setFocus(){
+  flags|=FLAG_HELP;
+  }
+
+
+// Shell out of focus chain
+void FXShell::killFocus(){
+  if(getFocus()) getFocus()->killFocus();
+  flags&=~FLAG_HELP;
+  flags|=FLAG_UPDATE;
+  }
+
+
+// // Set initial default window
+// void FXShell::setInitialWindow(FXWindow* window){
+//   initialWindow=window;
+//   defaultWindow=window;
+//   if(window) window->setDefault(TRUE);
+//   }
+//
+//
+// // Set default window
+// void FXShell::setDefaultWindow(FXWindow *window){
+//   if(!window) window=initialWindow;
+//   if(defaultWindow!=window){
+//     if(defaultWindow) defaultWindow->setDefault(FALSE);
+//     defaultWindow=window;
+//     if(defaultWindow) defaultWindow->setDefault(TRUE);
+//     }
+//   }
+//
 
 // Handle configure notify
 long FXShell::onConfigure(FXObject* sender,FXSelector sel,void* ptr){
   FXEvent *ev=(FXEvent*)ptr;
   FXComposite::onConfigure(sender,sel,ptr);
+  xpos=ev->rect.x;
+  ypos=ev->rect.y;
   if((ev->rect.w!=width) || (ev->rect.h!=height)){
     width=ev->rect.w;               // Record new size
     height=ev->rect.h;
-    recalc();                       // Need layout later
+    layout();                       // Do layout
+    //recalc();                     /// FIXME This causes trouble on MSWindows
     }
   return 1;
   }
@@ -107,7 +153,7 @@ long FXShell::onFocusNext(FXObject* sender,FXSelector sel,void* ptr){
     child=getFocus()->getNext();
     while(child){
       if(child->isEnabled() && child->canFocus()){
-        child->setFocus();
+        child->handle(this,MKUINT(0,SEL_FOCUS_SELF),ptr);
         return 1;
         }
       if(child->isComposite() && child->handle(sender,sel,ptr)) return 1;
@@ -118,7 +164,7 @@ long FXShell::onFocusNext(FXObject* sender,FXSelector sel,void* ptr){
   child=getFirst();
   while(child){
     if(child->isEnabled() && child->canFocus()){
-      child->setFocus();
+      child->handle(this,MKUINT(0,SEL_FOCUS_SELF),ptr);
       return 1;
       }
     if(child->isComposite() && child->handle(sender,sel,ptr)) return 1;
@@ -135,7 +181,7 @@ long FXShell::onFocusPrev(FXObject* sender,FXSelector sel,void* ptr){
     child=getFocus()->getPrev();
     while(child){
       if(child->isEnabled() && child->canFocus()){
-        child->setFocus();
+        child->handle(this,MKUINT(0,SEL_FOCUS_SELF),ptr);
         return 1;
         }
       if(child->isComposite() && child->handle(sender,sel,ptr)) return 1;
@@ -146,7 +192,7 @@ long FXShell::onFocusPrev(FXObject* sender,FXSelector sel,void* ptr){
   child=getLast();
   while(child){
     if(child->isEnabled() && child->canFocus()){
-      child->setFocus();
+      child->handle(this,MKUINT(0,SEL_FOCUS_SELF),ptr);
       return 1;
       }
     if(child->isComposite() && child->handle(sender,sel,ptr)) return 1;
@@ -154,5 +200,128 @@ long FXShell::onFocusPrev(FXObject* sender,FXSelector sel,void* ptr){
     }
   return 0;
   }
+
+
+// // Keyboard press
+// long FXShell::onKeyPress(FXObject* sender,FXSelector sel,void* ptr){
+//   register FXWindow *def;
+//
+//   // Handle normal keys
+//   if(((FXEvent*)ptr)->code!=KEY_Return && ((FXEvent*)ptr)->code!=KEY_KP_Enter){
+//
+//     // Bounce to focus widget
+//     if(getFocus() && getFocus()->handle(sender,sel,ptr)) return 1;
+//
+//     // Try target first
+//     if(isEnabled() && target && target->handle(this,MKUINT(message,SEL_KEYPRESS),ptr)) return 1;
+//
+//     // Check the accelerators
+//     if(getAccelTable() && getAccelTable()->handle(this,sel,ptr)) return 1;
+//
+//     // Otherwise, perform the default keyboard processing
+//     switch(((FXEvent*)ptr)->code){
+//       case KEY_Tab:
+//         if(((FXEvent*)ptr)->state&SHIFTMASK) goto prv;
+//       case KEY_Next:
+//         return handle(this,MKUINT(0,SEL_FOCUS_NEXT),ptr);
+//       case KEY_Prior:
+//       case KEY_ISO_Left_Tab:
+// prv:    return handle(this,MKUINT(0,SEL_FOCUS_PREV),ptr);
+//       case KEY_Up:
+//       case KEY_KP_Up:
+//         return handle(this,MKUINT(0,SEL_FOCUS_UP),ptr);
+//       case KEY_Down:
+//       case KEY_KP_Down:
+//         return handle(this,MKUINT(0,SEL_FOCUS_DOWN),ptr);
+//       case KEY_Left:
+//       case KEY_KP_Left:
+//         return handle(this,MKUINT(0,SEL_FOCUS_LEFT),ptr);
+//       case KEY_Right:
+//       case KEY_KP_Right:
+//         return handle(this,MKUINT(0,SEL_FOCUS_RIGHT),ptr);
+//       }
+//     return 0;
+//     }
+//
+//   // Find default widget
+//   def=findDefault(this);
+//
+//   // Handle default key
+//   if(def && def->handle(sender,sel,ptr)) return 1;
+//
+//   return 0;
+//   }
+
+// // Keyboard release
+// long FXShell::onKeyRelease(FXObject* sender,FXSelector sel,void* ptr){
+//   register FXWindow *def;
+//
+//   // Handle normal keys
+//   if(((FXEvent*)ptr)->code!=KEY_Return && ((FXEvent*)ptr)->code!=KEY_KP_Enter){
+//
+//     // Bounce to focus widget
+//     if(getFocus() && getFocus()->handle(sender,sel,ptr)) return 1;
+//
+//     // Try target first
+//     if(isEnabled() && target && target->handle(this,MKUINT(message,SEL_KEYRELEASE),ptr)) return 1;
+//
+//     // Check the accelerators
+//     if(getAccelTable() && getAccelTable()->handle(this,sel,ptr)) return 1;
+//
+//     return 0;
+//     }
+//
+//   // Find default widget
+//   def=findDefault(this);
+//
+//   // Handle default key
+//   if(def && def->handle(sender,sel,ptr)) return 1;
+//
+//   return 0;
+//   }
+
+
+// Keyboard press
+long FXShell::onKeyPress(FXObject* sender,FXSelector sel,void* ptr){
+
+  // Try to handle normally
+  if(FXComposite::onKeyPress(sender,sel,ptr)) return 1;
+
+  // If not handled yet, try the default button
+  if(((FXEvent*)ptr)->code==KEY_Return || ((FXEvent*)ptr)->code==KEY_KP_Enter){
+
+    // Find default widget
+    FXWindow *def=findDefault(this);
+
+    // Handle default key
+    if(def && def->handle(sender,sel,ptr)) return 1;
+    }
+  return 0;
+  }
+
+
+// Keyboard release
+long FXShell::onKeyRelease(FXObject* sender,FXSelector sel,void* ptr){
+
+  // Try to handle normally
+  if(FXComposite::onKeyRelease(sender,sel,ptr)) return 1;
+
+  // If not handled yet, try the default button
+  if(((FXEvent*)ptr)->code==KEY_Return || ((FXEvent*)ptr)->code==KEY_KP_Enter){
+
+    // Find default widget
+    FXWindow *def=findDefault(this);
+
+    // Handle default key
+    if(def && def->handle(sender,sel,ptr)) return 1;
+    }
+  return 0;
+  }
+
+
+// Destruct
+FXShell::~FXShell(){
+  }
+
 
 
