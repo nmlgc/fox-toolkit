@@ -3,7 +3,7 @@
 *                      S e p a r a t o r   W i d g e t s                        *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXSeparator.cpp,v 1.13.4.2 2003/09/03 00:51:27 fox Exp $                  *
+* $Id: FXSeparator.cpp,v 1.22 2004/02/08 17:29:07 fox Exp $                     *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -30,6 +30,7 @@
 #include "FXPoint.h"
 #include "FXRectangle.h"
 #include "FXRegistry.h"
+#include "FXHash.h"
 #include "FXApp.h"
 #include "FXDCWindow.h"
 #include "FXSeparator.h"
@@ -42,131 +43,154 @@
   - When text changes, do we delete the hot key, or parse it from the new label?
   - It makes sense for certain ``passive'' widgets such as labels to have onUpdate;
     for example, to show/hide/whatever based on changing data structures.
+  - Why not just have one type of separator, orientation simply being based on the
+    widest dimension?
 */
 
 #define SEPARATOR_EXTRA 2
 
+#define SEPARATOR_MASK  (SEPARATOR_NONE|SEPARATOR_GROOVE|SEPARATOR_RIDGE|SEPARATOR_LINE)
+
+
+using namespace FX;
+
 /*******************************************************************************/
 
 
+namespace FX {
+
 
 // Map
-FXDEFMAP(FXHorizontalSeparator) FXHorizontalSeparatorMap[]={
-  FXMAPFUNC(SEL_PAINT,0,FXHorizontalSeparator::onPaint),
+FXDEFMAP(FXSeparator) FXSeparatorMap[]={
+  FXMAPFUNC(SEL_PAINT,0,FXSeparator::onPaint),
   };
 
 
 // Object implementation
-FXIMPLEMENT(FXHorizontalSeparator,FXFrame,FXHorizontalSeparatorMap,ARRAYNUMBER(FXHorizontalSeparatorMap))
+FXIMPLEMENT(FXSeparator,FXFrame,FXSeparatorMap,ARRAYNUMBER(FXSeparatorMap))
 
 
 // Construct and init
-FXHorizontalSeparator::FXHorizontalSeparator(FXComposite* p,FXuint opts,FXint x,FXint y,FXint w,FXint h,FXint pl,FXint pr,FXint pt,FXint pb):
+FXSeparator::FXSeparator(FXComposite* p,FXuint opts,FXint x,FXint y,FXint w,FXint h,FXint pl,FXint pr,FXint pt,FXint pb):
   FXFrame(p,opts,x,y,w,h,pl,pr,pt,pb){
   }
 
 
 // Get default size
-FXint FXHorizontalSeparator::getDefaultWidth(){
-  return padleft+padright+(border<<1);
+FXint FXSeparator::getDefaultWidth(){
+  FXint w=(options&(SEPARATOR_GROOVE|SEPARATOR_RIDGE)) ? 2 : 1;
+  return w+padleft+padright+(border<<1);
   }
 
 
-FXint FXHorizontalSeparator::getDefaultHeight(){
+FXint FXSeparator::getDefaultHeight(){
   FXint h=(options&(SEPARATOR_GROOVE|SEPARATOR_RIDGE)) ? 2 : 1;
   return h+padtop+padbottom+(border<<1);
   }
 
 
 // Handle repaint
-long FXHorizontalSeparator::onPaint(FXObject*,FXSelector,void* ptr){
+long FXSeparator::onPaint(FXObject*,FXSelector,void* ptr){
   FXEvent *ev=(FXEvent*)ptr;
   FXDCWindow dc(this,ev);
-  FXint yy,hh;
+  register FXint kk,ll;
+
+  // Draw background
   dc.setForeground(backColor);
   dc.fillRectangle(ev->rect.x,ev->rect.y,ev->rect.w,ev->rect.h);
+
+  // Draw frame
   drawFrame(dc,0,0,width,height);
-  hh=(options&(SEPARATOR_GROOVE|SEPARATOR_RIDGE)) ? 2 : 1;
-  yy=border+padtop+(height-padbottom-padtop-(border<<1)-hh)/2;
-  if(options&SEPARATOR_GROOVE){
-    dc.setForeground(shadowColor);
-    dc.fillRectangle(border+padleft,yy,width-padright-padleft-(border<<1),1);
-    dc.setForeground(hiliteColor);
-    dc.fillRectangle(border+padleft,yy+1,width-padright-padleft-(border<<1),1);
+
+  // Horizonal orientation
+  if((height-padbottom-padtop) < (width-padleft-padright)){
+    kk=(options&(SEPARATOR_GROOVE|SEPARATOR_RIDGE)) ? 2 : 1;
+    ll=border+padtop+(height-padbottom-padtop-(border<<1)-kk)/2;
+    if(options&SEPARATOR_GROOVE){
+      dc.setForeground(shadowColor);
+      dc.fillRectangle(border+padleft,ll,width-padright-padleft-(border<<1),1);
+      dc.setForeground(hiliteColor);
+      dc.fillRectangle(border+padleft,ll+1,width-padright-padleft-(border<<1),1);
+      }
+    else if(options&SEPARATOR_RIDGE){
+      dc.setForeground(hiliteColor);
+      dc.fillRectangle(border+padleft,ll,width-padright-padleft-(border<<1),1);
+      dc.setForeground(shadowColor);
+      dc.fillRectangle(border+padleft,ll+1,width-padright-padleft-(border<<1),1);
+      }
+    else if(options&SEPARATOR_LINE){
+      dc.setForeground(borderColor);
+      dc.fillRectangle(border+padleft,ll,width-padright-padleft-(border<<1),1);
+      }
     }
-  else if(options&SEPARATOR_RIDGE){
-    dc.setForeground(hiliteColor);
-    dc.fillRectangle(border+padleft,yy,width-padright-padleft-(border<<1),1);
-    dc.setForeground(shadowColor);
-    dc.fillRectangle(border+padleft,yy+1,width-padright-padleft-(border<<1),1);
-    }
-  else if(options&SEPARATOR_LINE){
-    dc.setForeground(borderColor);
-    dc.fillRectangle(border+padleft,yy,width-padright-padleft-(border<<1),1);
+
+  // Vertical orientation
+  else{
+    kk=(options&(SEPARATOR_GROOVE|SEPARATOR_RIDGE)) ? 2 : 1;
+    ll=border+padleft+(width-padleft-padright-(border<<1)-kk)/2;
+    if(options&SEPARATOR_GROOVE){
+      dc.setForeground(shadowColor);
+      dc.fillRectangle(ll,padtop+border,1,height-padtop-padbottom-(border<<1));
+      dc.setForeground(hiliteColor);
+      dc.fillRectangle(ll+1,padtop+border,1,height-padtop-padbottom-(border<<1));
+      }
+    else if(options&SEPARATOR_RIDGE){
+      dc.setForeground(hiliteColor);
+      dc.fillRectangle(ll,padtop+border,1,height-padtop-padbottom-(border<<1));
+      dc.setForeground(shadowColor);
+      dc.fillRectangle(ll+1,padtop+border,1,height-padtop-padbottom-(border<<1));
+      }
+    else if(options&SEPARATOR_LINE){
+      dc.setForeground(borderColor);
+      dc.fillRectangle(ll,padtop+border,1,height-padtop-padbottom-(border<<1));
+      }
     }
   return 1;
+  }
+
+
+// Change separator style
+void FXSeparator::setSeparatorStyle(FXuint style){
+  FXuint opts=(options&~SEPARATOR_MASK) | (style&SEPARATOR_MASK);
+  if(options!=opts){
+    options=opts;
+    recalc();
+    update();
+    }
+  }
+
+
+// Get separator style
+FXuint FXSeparator::getSeparatorStyle() const {
+  return (options&SEPARATOR_MASK);
   }
 
 
 /*******************************************************************************/
 
 
-// Map
-FXDEFMAP(FXVerticalSeparator) FXVerticalSeparatorMap[]={
-  FXMAPFUNC(SEL_PAINT,0,FXVerticalSeparator::onPaint),
-  };
+// Object implementation
+FXIMPLEMENT(FXHorizontalSeparator,FXSeparator,0,0)
+
+
+// Construct and init
+FXHorizontalSeparator::FXHorizontalSeparator(FXComposite* p,FXuint opts,FXint x,FXint y,FXint w,FXint h,FXint pl,FXint pr,FXint pt,FXint pb):
+  FXSeparator(p,opts,x,y,w,h,pl,pr,pt,pb){
+  }
+
+
+/*******************************************************************************/
 
 
 // Object implementation
-FXIMPLEMENT(FXVerticalSeparator,FXFrame,FXVerticalSeparatorMap,ARRAYNUMBER(FXVerticalSeparatorMap))
+FXIMPLEMENT(FXVerticalSeparator,FXSeparator,0,0)
 
 
 // Construct and init
 FXVerticalSeparator::FXVerticalSeparator(FXComposite* p,FXuint opts,FXint x,FXint y,FXint w,FXint h,FXint pl,FXint pr,FXint pt,FXint pb):
-  FXFrame(p,opts,x,y,w,h,pl,pr,pt,pb){
+  FXSeparator(p,opts,x,y,w,h,pl,pr,pt,pb){
   }
 
 
-// Get default size
-FXint FXVerticalSeparator::getDefaultWidth(){
-  FXint w=(options&(SEPARATOR_GROOVE|SEPARATOR_RIDGE)) ? 2 : 1;
-  return w+padleft+padright+(border<<1);
-  }
-
-
-FXint FXVerticalSeparator::getDefaultHeight(){
-  return padtop+padbottom+(border<<1);
-  }
-
-
-// Handle repaint
-long FXVerticalSeparator::onPaint(FXObject*,FXSelector,void* ptr){
-  FXEvent *ev=(FXEvent*)ptr;
-  FXDCWindow dc(this,ev);
-  FXint ww,xx;
-  dc.setForeground(backColor);
-  dc.fillRectangle(ev->rect.x,ev->rect.y,ev->rect.w,ev->rect.h);
-  drawFrame(dc,0,0,width,height);
-  ww=(options&(SEPARATOR_GROOVE|SEPARATOR_RIDGE)) ? 2 : 1;
-  xx=border+padleft+(width-padleft-padright-(border<<1)-ww)/2;
-  if(options&SEPARATOR_GROOVE){
-    dc.setForeground(shadowColor);
-    dc.fillRectangle(xx,padtop+border,1,height-padtop-padbottom-(border<<1));
-    dc.setForeground(hiliteColor);
-    dc.fillRectangle(xx+1,padtop+border,1,height-padtop-padbottom-(border<<1));
-    }
-  else if(options&SEPARATOR_RIDGE){
-    dc.setForeground(hiliteColor);
-    dc.fillRectangle(xx,padtop+border,1,height-padtop-padbottom-(border<<1));
-    dc.setForeground(shadowColor);
-    dc.fillRectangle(xx+1,padtop+border,1,height-padtop-padbottom-(border<<1));
-    }
-  else if(options&SEPARATOR_LINE){
-    dc.setForeground(borderColor);
-    dc.fillRectangle(xx,padtop+border,1,height-padtop-padbottom-(border<<1));
-    }
-  return 1;
-  }
-
-
+}
 

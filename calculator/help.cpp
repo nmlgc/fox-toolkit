@@ -3,23 +3,23 @@
 *                      O n - L i n e   H e l p   T e x t                        *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2001 by Jeroen van der Zijp.   All Rights Reserved.             *
+* Copyright (C) 2001,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
-* This library is free software; you can redistribute it and/or                 *
-* modify it under the terms of the GNU Lesser General Public                    *
-* License as published by the Free Software Foundation; either                  *
-* version 2.1 of the License, or (at your option) any later version.            *
+* This program is free software; you can redistribute it and/or modify          *
+* it under the terms of the GNU General Public License as published by          *
+* the Free Software Foundation; either version 2 of the License, or             *
+* (at your option) any later version.                                           *
 *                                                                               *
-* This library is distributed in the hope that it will be useful,               *
+* This program is distributed in the hope that it will be useful,               *
 * but WITHOUT ANY WARRANTY; without even the implied warranty of                *
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU             *
-* Lesser General Public License for more details.                               *
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                 *
+* GNU General Public License for more details.                                  *
 *                                                                               *
-* You should have received a copy of the GNU Lesser General Public              *
-* License along with this library; if not, write to the Free Software           *
+* You should have received a copy of the GNU General Public License             *
+* along with this program; if not, write to the Free Software                   *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: help.cpp,v 1.3 2001/03/20 16:23:56 jeroen Exp $                          *
+* $Id: help.cpp,v 1.5 2002/05/23 15:48:18 fox Exp $                          *
 ********************************************************************************/
 #include "fx.h"
 #include "Calculator.h"
@@ -82,6 +82,8 @@ const char Calculator::help[]=
 "\n"
 "\tpi\tEnters the number 3.1415926535897932384626433833\n"
 "\te\tEnters the number 2.7182818284590452353602874713 (hit the \"inv\" button first)\n"
+"\tphi\tEnters the golden ratio number 1.6180339887498948482045868343 (hit the \"hyp\" button first)\n"
+"\t1/phi\tEnters the inverse golden ratio number (hit the \"hyp\" and \"inv\" buttons)\n"
 "\n\n"
 "Operators.\n"
 "\n"

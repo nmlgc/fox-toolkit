@@ -5,7 +5,7 @@
 ##############################################################################
 # Contributed by: Andre Fornacon <afo@zlug.org>                              #
 ##############################################################################
-# $Id: Makefile.dmc,v 1.1.2.3 2002/07/26 02:41:54 fox Exp $                  #
+# $Id: Makefile.dmc,v 1.4 2003/08/21 22:15:27 fox Exp $                      #
 ##############################################################################
 # This library is free software; you can redistribute it and/or              #
 # modify it under the terms of the GNU Library General Public                #
@@ -42,11 +42,10 @@ OBJECTS = $(SOURCES:.cpp=.obj)
 
 all: $(PROGRAMS)
 
-reswrap.exe: $(FOXLIB) reswrap.obj
+reswrap.exe: reswrap.obj
 	$(CXX) $(LDFLAGS) $(LIBDIRS) reswrap.obj
 
 clean:
 	del *.obj
 	del *.exe
 	del *.tds
-	del *.map

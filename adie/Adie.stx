@@ -1,0 +1,280 @@
+#################################################################################
+#                                                                               #
+#                       A d i e   S y n t a x   F i l e                         #
+#                                                                               #
+#################################################################################
+# Copyright (C) 2004 by Jeroen van der Zijp.   All Rights Reserved.             #
+#################################################################################
+# This program is free software; you can redistribute it and/or modify          #
+# it under the terms of the GNU General Public License as published by          #
+# the Free Software Foundation; either version 2 of the License, or             #
+# (at your option) any later version.                                           #
+#                                                                               #
+# This program is distributed in the hope that it will be useful,               #
+# but WITHOUT ANY WARRANTY; without even the implied warranty of                #
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                 #
+# GNU General Public License for more details.                                  #
+#                                                                               #
+# You should have received a copy of the GNU General Public License             #
+# along with this program; if not, write to the Free Software                   #
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    #
+#################################################################################
+# $Id: Adie.stx,v 1.4 2004/05/16 20:56:10 fox Exp $                             #
+#################################################################################
+
+#
+# Notes:
+#
+# - Please send addition changes or additions to this file to:
+#
+#       jeroen@fox-toolkit.org
+#
+# - Use bracketed patterns with sub-patterns instead of complex
+#   regular expressions; complex regular expressions can recurse
+#   deeply, which can be very expensive.
+#
+# - Rule name is used as registry key; should be unique if
+#   different colors are desired!
+#
+
+
+#################################################################################
+
+# A Syntax coloring pattern for syntax coloring patterns ;-)
+language "Adie Syntax"
+  filesmatch "*.stx"
+  rule "Comment"
+    openpattern   "#"
+    closepattern  "$"
+  end
+  rule "Keyword"
+    pattern     "\<(language|filesmatch|contentsmatch|delimiters|contextlines|contextchars|rule|foreground|end)\>"
+  end
+  rule "Expression"
+    openpattern    "pattern|openpattern|closepattern|stoppattern"
+    closepattern   "$"
+    rule "Pattern"
+      openpattern   "\""
+      closepattern  "\""
+      stoppattern   "$"
+      rule "Escape"
+        pattern     "\\\""
+      end
+    end
+  end
+  rule "String"
+    openpattern   "\""
+    closepattern  "\""
+    stoppattern   "$"
+    rule "Escape"
+      pattern     "\\\""
+    end
+  end
+end
+
+
+# C++ programming language
+language "C++"
+
+  # File patterns for this language mode
+  filesmatch "*.C,*.cpp,*.cc,*.cxx,*.c++,*.H,*.hpp,*.hh,*.h++,*.h"
+
+  # Word delimiters
+  delimiters "~.,/\`'!@#$%^&*()-=+{}|[]\":;<>?"
+
+  # C++ style comment
+  rule "CPPDocComment"
+    openpattern   "/// "
+    closepattern  "$"
+  end
+
+
+  # C++ style comment
+  rule "CPPComment"
+    openpattern   "//"
+    closepattern  "$"
+    rule "FIXME"
+      pattern     "FIXME"
+    end
+  end
+
+  # C style comment
+  rule "CDocComment"
+    openpattern   "/\*\*[ \n]"
+    closepattern  "\*/"
+  end
+
+  # C style comment
+  rule "CComment"
+    openpattern   "/\*"
+    closepattern  "\*/"
+    rule "FIXME"
+      pattern     "FIXME"
+    end
+  end
+
+  # String
+  rule "String"
+    openpattern   "\""
+    closepattern  "\""
+    stoppattern   "$"
+    rule "OctalEscape"
+      pattern     "\\d+"
+    end
+    rule "ControlEscape"
+      pattern     "\\."
+    end
+    rule "Format"
+      pattern "%[#0 +-]?\d*(\\.(\*|\d*))?l?[diouxXeEfFgGaAcsp]"
+    end
+  end
+
+
+  # Char constant
+  rule "Char"
+    openpattern  "'"
+    closepattern "'"
+    rule "OctalEscape"
+      pattern "\\d+"
+    end
+    rule "ControlEscape"
+      pattern "\\."
+    end
+  end
+
+  # Preprocessor
+  rule "Preprocessor"
+    openpattern  "^\s*#"
+    closepattern "$"
+    rule "PreprocessorContinuation"
+      pattern "\\n"
+    end
+  end
+
+  # Special macros
+  rule "FOXMacro"
+    pattern     "\<(FXDEFMAP|FXMALLOC|FXFREE|FXCALLOC|FXRESIZE|FXMEMDUP|FXTRACE|FXMAPFUNCS|FXMAPFUNC|FXIMPLEMENT|FXDECLARE|FXMAPTYPES|FXMAPTYPE|FXRGBA|FXRGB|FXREDVAL|FXGREENVAL|FXBLUEVAL|FXALPHAVAL|FXASSERT|FXSELID|FXSELTYPE|FXSEL|ARRAYNUMBER)\>"
+  end
+
+  rule "Keyword"
+    pattern     "\<(friend|typename|explicit|typeid|for|while|if|else|try|catch|new|delete|do|namespace|class|struct|enum|union|public|private|protected|template|switch|case|default|this|return|throw|using|break|continue|goto|static|volatile|const|virtual|mutable|operator|auto|register|overload|inline|extern|and|or|xor|not|compl|and_eq|xor_eq|const_cast|dynamic_cast|true|false|not_eq|sizeof|bitor|bitand|reinterpret_cast|static_cast)\>"
+  end
+
+  rule "Number"
+    pattern     "\<((0[xX][0-9a-fA-F]+)|((\d+\.?\d*)|(\.\d+))([eE](\+|-)?\d+)?)(L|l|UL|ul|u|U|F|f)?\>"
+  end
+
+  rule "Type"
+    pattern     "\<(unsigned|signed|int|char|short|long|float|double|bool|complex|void|wchar_t)\>"
+  end
+
+  rule "Operator"
+    pattern     "(\+\+|\+=|\+|--|-=|->\*|->|-|==|=|&&|&=|&|\|\\||\|=|\||\^=|\^|<<=|<<|<=|<|>>=|>>|>=|>|!=|!|~=|~|\*=|\*|/=|/|%=|%)"
+  end
+
+end
+
+language "Shell"
+  contentsmatch "#!\s*/bin/(ba)?sh"
+  rule "Comment"
+    pattern    "#.*?$"
+  end
+  rule "Keyword"
+    pattern     "\<(for|in|do|done|if|then|else|elif|fi|switch|case|esac|while|function|select|until|time)\>"
+  end
+  rule "Operator"
+    pattern     "(=|;;|;|!|\{|\}|\[\[|\]\])"
+  end
+end
+
+language "Pascal"
+  filesmatch "*.pas,*.p"
+  rule "Number"
+    pattern     "\<((0[xX][0-9a-fA-F]+)|((\d+\.?\d*)|(\.\d+))([eE](\+|-)?\d+)?)(L|l|UL|ul|u|U|F|f)?\>"
+  end
+  rule "String"
+    pattern    "\'[^']*?\'"
+  end
+  rule "Type"
+    pattern    "\<(?iInteger|Shortint|SmallInt|Longint|Int64|Byte|Word|Cardinal|QWord|Boolean|ByteBool|LongBool|Char)\>"
+  end
+  rule "Comment"
+    pattern    "\(\*.*?\*\)|\{.*?\}"
+  end
+  rule "Operator"
+    pattern     "(:=|:|@|\\+=|\\+|-=|-|=|\\^|<=|<|>=|>|\\*=|\\*|/=|/|\\.)"
+  end
+  rule "Keyword"
+    pattern     "\<(?iabsolute|and|array|asm|begin|break|case|const|constructor|continue|destructor|div|do|downto|else|end|file|for|function|goto|if|implementation|in|inherited|inline|interface|label|mod|nil|not|object|of|on|operator|or|packed|procedure|program|record|repeat|self|set|shl|shr|string|then|to|type|unit|until|uses|var|while|with|xor)\>"
+  end
+end
+
+
+language "Configure"
+  filesmatch "*.in"
+  rule "String1"
+    pattern    "'(\\\\\\\\|\\\\'|.)*?'"
+  end
+  rule "String2"
+    pattern    "\"(\\\\\\\\|\\\\\"|.)*?\""
+  end
+  rule "Comment"
+    pattern    "\\<dnl\\>.*?$"
+  end
+  rule "Macro"
+    pattern    "\\<A[CM]\\w*\\>"
+  end
+  rule "ShellResult"
+    pattern    "`(\\\\\\\\|\\\\`|.)*?`"
+  end
+end
+
+
+language "Python"
+  filesmatch "*.py"
+  rule "Number"
+    pattern     "\<((0[xX][0-9a-fA-F]+)|((\d+\.?\d*)|(\.\d+))([eE](\+|-)?\d+)?)(L|l|UL|ul|u|U|F|f)?\>"
+  end
+  rule "String"
+    pattern    "(\\\".*?\\\")|(\\'.*?\\')"
+  end
+  rule "Comment"
+    pattern    "#.*?$"
+  end
+  rule "Operator"
+    pattern     "\+\+|\+=|\+|--|-=|-|==|=|&&|&=|&|=|^=|^|<<=|<<|<=|<|>>=|>>|>=|>|!=|!=|!|~=|~|\*=|\*|/=|/|%=|%"
+  end
+  rule "Keyword"
+    pattern     "\<(def|import|for|in|while|if|elif|else|try|class|return|break|continue|raise|and|or|not|print|pass|access|global|from|except|exec|is|finally|lambda)\>"
+  end
+end
+
+language "Ruby"
+  filesmatch "*.rb"
+  rule "Number"
+    pattern     "\<((0[xX][0-9a-fA-F]+)|((\d+\.?\d*)|(\.\d+))([eE](\+|-)?\d+)?)(L|l|UL|ul|u|U|F|f)?\>"
+  end
+  rule "SingleString"
+    openpattern   "'"
+    closepattern  "'"
+    rule "CharEscape"
+      pattern     "\\."
+    end
+  end
+  rule "DoubleString"
+    openpattern   "\""
+    closepattern  "\""
+    rule "CharEscape"
+      pattern     "\\."
+    end
+  end
+  rule "Comment"
+    pattern    "#.*?$"
+  end
+  rule "Operator"
+    pattern     "\+=|\+|-=|-|===|==|=|&&|&=|&|\|\||\|=|\||^=|^|<<=|<<|<=|<|>>=|>>|>=|>|!=|!|~=|~|\*=|\*|/=|/|%=|%|"
+  end
+  rule "Keyword"
+    pattern     "\<(alias|and|BEGIN|begin|break|case|class|def|defined|do|else|elsif|END|end|ensure|false|for|if|in|module|next|nil|not|or|redo|rescue|retry|return|self|super|then|true|undef|unless|until|when|while|yield)\>"
+  end
+end

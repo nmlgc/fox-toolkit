@@ -3,7 +3,7 @@
 *               O p e n G L   T r i a n g l e   M e s h   O b j e c t           *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1999,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1999,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * Contributed by: Angel-Ventura Mendo Gomez <ventura@labri.u-bordeaux.fr>       *
 *********************************************************************************
@@ -21,17 +21,18 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXGLTriangleMesh.cpp,v 1.12 2002/01/18 22:43:00 jeroen Exp $             *
+* $Id: FXGLTriangleMesh.cpp,v 1.23 2004/02/20 16:29:39 fox Exp $                *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
 #include "fxdefs.h"
 #include "FXStream.h"
-#include "FXVec.h"
-#include "FXHVec.h"
-#include "FXQuat.h"
-#include "FXHMat.h"
-#include "FXRange.h"
+#include "FXVec2f.h"
+#include "FXVec3f.h"
+#include "FXVec4f.h"
+#include "FXQuatf.h"
+#include "FXMat4f.h"
+#include "FXRangef.h"
 #include "FXString.h"
 #include "FXSize.h"
 #include "FXPoint.h"
@@ -39,6 +40,7 @@
 #include "FXRegistry.h"
 #include "FXAccelTable.h"
 #include "FXObjectList.h"
+#include "FXHash.h"
 #include "FXApp.h"
 #include "FXGLViewer.h"
 #include "FXGLTriangleMesh.h"
@@ -59,9 +61,11 @@
     it spit out smooth normals based on mesh connectivity.
 */
 
+using namespace FX;
 
 /*******************************************************************************/
 
+namespace FX {
 
 // Object implementation
 FXIMPLEMENT(FXGLTriangleMesh,FXGLShape,NULL,0)
@@ -71,9 +75,9 @@ FXIMPLEMENT(FXGLTriangleMesh,FXGLShape,NULL,0)
 FXGLTriangleMesh::FXGLTriangleMesh():
   vertexBuffer(NULL),colorBuffer(NULL),normalBuffer(NULL),textureBuffer(NULL),vertexNumber(0){
   FXTRACE((100,"FXGLTriangleMesh::FXGLTriangleMesh\n"));
-  range[0][0]=0.0; range[0][1]=0.0;
-  range[1][0]=0.0; range[1][1]=0.0;
-  range[2][0]=0.0; range[2][1]=0.0;
+  range.lower.x=range.upper.x=0.0f;
+  range.lower.y=range.upper.y=0.0f;
+  range.lower.z=range.upper.z=0.0f;
   }
 
 
@@ -100,10 +104,10 @@ FXGLTriangleMesh::FXGLTriangleMesh(FXfloat x,FXfloat y,FXfloat z,FXint nv,FXfloa
 // Copy constructor
 FXGLTriangleMesh::FXGLTriangleMesh(const FXGLTriangleMesh& orig):FXGLShape(orig){
   FXTRACE((100,"FXGLTriangleMesh::FXGLTriangleMesh\n"));
-  FXMEMDUP(&vertexBuffer,FXfloat,orig.vertexBuffer,3*orig.vertexNumber);
-  FXMEMDUP(&colorBuffer,FXfloat,orig.colorBuffer,4*orig.vertexNumber);
-  FXMEMDUP(&normalBuffer,FXfloat,orig.normalBuffer,3*orig.vertexNumber);
-  FXMEMDUP(&textureBuffer,FXfloat,orig.textureBuffer,2*orig.vertexNumber);
+  FXMEMDUP(&vertexBuffer,orig.vertexBuffer,FXfloat,3*orig.vertexNumber);
+  FXMEMDUP(&colorBuffer,orig.colorBuffer,FXfloat,4*orig.vertexNumber);
+  FXMEMDUP(&normalBuffer,orig.normalBuffer,FXfloat,3*orig.vertexNumber);
+  FXMEMDUP(&textureBuffer,orig.textureBuffer,FXfloat,2*orig.vertexNumber);
   vertexNumber=orig.vertexNumber;
   }
 
@@ -119,23 +123,23 @@ void FXGLTriangleMesh::setVertexBuffer(FXfloat *vertices){
 void FXGLTriangleMesh::recomputerange(){
   register FXint i,n;
   register FXfloat t;
-  range[0][0]=0.0; range[0][1]=0.0;
-  range[1][0]=0.0; range[1][1]=0.0;
-  range[2][0]=0.0; range[2][1]=0.0;
+  range.lower.x=range.upper.x=0.0f;
+  range.lower.y=range.upper.y=0.0f;
+  range.lower.z=range.upper.z=0.0f;
   if(vertexBuffer && vertexNumber>0){
-    range[0][0]=range[0][1]=vertexBuffer[0];
-    range[1][0]=range[1][1]=vertexBuffer[1];
-    range[2][0]=range[2][1]=vertexBuffer[2];
+    range.lower.x=range.upper.x=vertexBuffer[0];
+    range.lower.y=range.upper.y=vertexBuffer[0];
+    range.lower.z=range.upper.z=vertexBuffer[0];
     for(i=0,n=0; n<vertexNumber; n++){
       t=vertexBuffer[i++];
-      if(t<range[0][0]) range[0][0]=t;
-      if(t>range[0][1]) range[0][1]=t;
+      if(t<range.lower.x) range.lower.x=t;
+      if(t>range.upper.x) range.upper.x=t;
       t=vertexBuffer[i++];
-      if(t<range[1][0]) range[1][0]=t;
-      if(t>range[1][1]) range[1][1]=t;
+      if(t<range.lower.y) range.lower.y=t;
+      if(t>range.upper.y) range.upper.y=t;
       t=vertexBuffer[i++];
-      if(t<range[2][0]) range[2][0]=t;
-      if(t>range[2][1]) range[2][1]=t;
+      if(t<range.lower.z) range.lower.z=t;
+      if(t>range.upper.z) range.upper.z=t;
       }
     }
   }
@@ -144,7 +148,7 @@ void FXGLTriangleMesh::recomputerange(){
 // Draw
 void FXGLTriangleMesh::drawshape(FXGLViewer*){
   if(!vertexBuffer || vertexNumber<=0) return;
-#ifdef HAVE_OPENGL
+#ifdef HAVE_GL_H
 
 #if !defined(GL_VERSION_1_1) && !defined(GL_VERSION_1_2)
 
@@ -205,34 +209,28 @@ void FXGLTriangleMesh::generatenormals(){
   if(!normalBuffer) FXMALLOC(&normalBuffer,FXfloat,vertexNumber*3);
 
   for(i=0; i<vertexNumber*3; i+=9){
-    FXVec a(vertexBuffer[i+0],
-	    vertexBuffer[i+1],
-	    vertexBuffer[i+2]);
-    FXVec b(vertexBuffer[i+3],
-	    vertexBuffer[i+4],
-	    vertexBuffer[i+5]);
-    FXVec c(vertexBuffer[i+6],
-	    vertexBuffer[i+7],
-	    vertexBuffer[i+8]);
+    FXVec3f a(vertexBuffer[i+0],vertexBuffer[i+1],vertexBuffer[i+2]);
+    FXVec3f b(vertexBuffer[i+3],vertexBuffer[i+4],vertexBuffer[i+5]);
+    FXVec3f c(vertexBuffer[i+6],vertexBuffer[i+7],vertexBuffer[i+8]);
 
     c-=b;
     b-=a;
 
-    FXVec normal=b^c;
+    FXVec3f normal=b^c;
 
     normal=normalize(normal);
 
-    normalBuffer[i+0]=normal[0];
-    normalBuffer[i+1]=normal[1];
-    normalBuffer[i+2]=normal[2];
+    normalBuffer[i+0]=normal.x;
+    normalBuffer[i+1]=normal.y;
+    normalBuffer[i+2]=normal.z;
 
-    normalBuffer[i+3]=normal[0];
-    normalBuffer[i+4]=normal[1];
-    normalBuffer[i+5]=normal[2];
+    normalBuffer[i+3]=normal.x;
+    normalBuffer[i+4]=normal.y;
+    normalBuffer[i+5]=normal.z;
 
-    normalBuffer[i+6]=normal[0];
-    normalBuffer[i+7]=normal[1];
-    normalBuffer[i+8]=normal[2];
+    normalBuffer[i+6]=normal.x;
+    normalBuffer[i+7]=normal.y;
+    normalBuffer[i+8]=normal.z;
     }
   }
 
@@ -282,3 +280,5 @@ FXGLTriangleMesh::~FXGLTriangleMesh(){
   FXFREE(&normalBuffer);
   FXFREE(&textureBuffer);
   }
+
+}

@@ -3,7 +3,7 @@
 *                       S c r o l l A r e a   W i d g e t                       *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXScrollArea.h,v 1.15 2002/01/18 22:42:54 jeroen Exp $                   *
+* $Id: FXScrollArea.h,v 1.27 2004/02/08 17:17:34 fox Exp $                      *
 ********************************************************************************/
 #ifndef FXSCROLLAREA_H
 #define FXSCROLLAREA_H
@@ -27,6 +27,8 @@
 #ifndef FXCOMPOSITE_H
 #include "FXComposite.h"
 #endif
+
+namespace FX {
 
 
 /// Scrollbar options
@@ -45,9 +47,8 @@ enum {
   };
 
 
-class FXScrollbar;
+class FXScrollBar;
 class FXScrollCorner;
-struct FXTimer;
 
 
 /**
@@ -67,22 +68,19 @@ struct FXTimer;
 class FXAPI FXScrollArea : public FXComposite {
   FXDECLARE(FXScrollArea)
 protected:
-  FXScrollbar    *horizontal;
-  FXScrollbar    *vertical;
-  FXScrollCorner *corner;
-  FXTimer        *scrolltimer;
-  FXint           viewport_w;
-  FXint           viewport_h;
-  FXint           content_w;
-  FXint           content_h;
-  FXint           pos_x;
-  FXint           pos_y;
+  FXScrollBar    *horizontal;   // Horizontal scroll bar
+  FXScrollBar    *vertical;     // Vertical scroll bar
+  FXScrollCorner *corner;       // Scroll corner
+  FXint           viewport_w;   // Viewport width
+  FXint           viewport_h;   // Viewport height
+  FXint           pos_x;        // X scroll position (pos_x<=0)
+  FXint           pos_y;        // Y scroll position (pos_y<=0)
 protected:
   FXScrollArea();
-  FXbool startAutoScroll(FXint x,FXint y,FXbool onlywheninside=FALSE);
+  FXbool startAutoScroll(FXEvent *event,FXbool onlywheninside=FALSE);
   void stopAutoScroll();
-  virtual void layout();
   FXScrollArea(FXComposite* p,FXuint opts,FXint x,FXint y,FXint w,FXint h);
+  virtual void moveContents(FXint x,FXint y);
 private:
   FXScrollArea(const FXScrollArea&);
   FXScrollArea &operator=(const FXScrollArea&);
@@ -102,12 +100,19 @@ public:
   /// Return default height
   virtual FXint getDefaultHeight();
 
-  /// Return viewport size
+  /// Perform layout
+  virtual void layout();
+
+  /// Return viewport height
   virtual FXint getViewportHeight();
+
+  /// Return viewport width
   virtual FXint getViewportWidth();
 
-  /// Return content size
+  /// Return content width
   virtual FXint getContentWidth();
+
+  /// Return content height
   virtual FXint getContentHeight();
 
   /// Change scroll style
@@ -123,10 +128,10 @@ public:
   FXbool isVerticalScrollable() const;
 
   /// Return a pointer to the horizontal scrollbar
-  FXScrollbar* horizontalScrollbar() const { return horizontal; }
+  FXScrollBar* horizontalScrollBar() const { return horizontal; }
 
   /// Return a pointer to the vertical scrollbar
-  FXScrollbar* verticalScrollbar() const { return vertical; }
+  FXScrollBar* verticalScrollBar() const { return vertical; }
 
   /// Return the current x-position
   FXint getXPosition() const { return pos_x; }
@@ -140,13 +145,10 @@ public:
   /// Get the current position
   void getPosition(FXint& x,FXint& y) const { x=pos_x; y=pos_y; }
 
-  /// Move contents to the specified position
-  virtual void moveContents(FXint x,FXint y);
-
   /// Destructor
   virtual ~FXScrollArea();
   };
 
-
+}
 
 #endif

@@ -3,7 +3,7 @@
 *                        G I F   I n p u t / O u t p u t                        *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1998,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: fxgifio.cpp,v 1.31.4.3 2003/05/12 11:04:35 fox Exp $                      *
+* $Id: fxgifio.cpp,v 1.68 2004/04/24 14:12:46 fox Exp $                         *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -28,56 +28,69 @@
 #include "fxpriv.h"
 
 
-
 /*
   Notes:
 
-    "The Graphics Interchange Format(c) is the Copyright property of
+  - "The Graphics Interchange Format(c) is the Copyright property of
     CompuServe Incorporated. GIF(sm) is a Service Mark property of
     CompuServe Incorporated."
+
+  - Make sure reading and writing GIF transfers same number of bytes
+    from/to the stream.
+
+  - For a transparent pixel, we zero out the alpha channel but leave
+    the RGB intact; this way, we can maintain the original RGB data.
+
+  - The interleaving works as follows:
+
+                Pass1  Pass2  Pass3  Pass4
+        Start     0      4      3      1
+        Step      8      8      4      2
+
+  - LZW Patent has expired 6/20/2003; so compression now implemented.
 */
 
-#define ASCPECTEXT        'R'
-#define COMMENTEXT        0xFE
-#define PLAINTEXTEXT      0x01
-#define APPLICATIONEXT    0xFF
-#define GRAPHICCONTROLEXT 0xF9
-#ifdef EXTENSION
-#undef EXTENSION /* Borland C++ 5.5 had this defined for something else */
-#endif
-#define EXTENSION         0x21
-#define IMAGESEP          0x2c
-#define TRAILER           0x3b
-#define INTERLACE         0x40
-#define COLORMAP          0x80
 
+using namespace FX;
 
 /*******************************************************************************/
 
-/// Load a gif file from a stream
-extern FXAPI FXbool fxloadGIF(FXStream& store,FXuchar*& data,FXColor& transp,FXint& width,FXint& height);
+namespace FX {
 
 
-/// Save a gif file to a stream
-extern FXAPI FXbool fxsaveGIF(FXStream& store,const FXuchar *data,FXColor transp,FXint width,FXint height);
+extern FXAPI FXbool fxloadGIF(FXStream& store,FXColor*& data,FXint& width,FXint& height);
+extern FXAPI FXbool fxsaveGIF(FXStream& store,const FXColor *data,FXint width,FXint height,FXbool fast=TRUE);
 
 
-
-
-/*******************************************************************************/
+// Codes found in the GIF specification
+const FXuchar TAG_EXTENSION   = 0x21;   // Extension block
+const FXuchar TAG_GRAPHIC     = 0xF9;   // Graphic control block
+const FXuchar TAG_IMAGE       = 0x2c;   // Image separator
+const FXuchar TAG_TERMINATOR  = 0x00;   // Block terminator
+const FXuchar TAG_GRAPHICSIZE = 0x04;   // Graphic block size
+const FXuchar TAG_IMAGEFLAGS  = 0x00;   // Image flags
+const FXuchar TAG_ZERO        = 0x00;   // Just a zero
+const FXuchar TAG_ENDFILE     = 0x3B;   // End of file
+const FXuchar TAG_TRANSPARENT = 0x01;   // Transparent flag
+const FXuchar TAG_SIG1        = 0x47;   // Extension block
+const FXuchar TAG_SIG2        = 0x49;   // Extension block
+const FXuchar TAG_SIG3        = 0x46;   // Extension block
+const FXuchar TAG_VER         = 0x38;   // Version byte
+const FXuchar TAG_NEW         = 0x39;   // New version
+const FXuchar TAG_OLD         = 0x37;   // Old version
+const FXuchar TAG_SUF         = 0x61;   // Version suffix
 
 
 // Load image from stream
-FXbool fxloadGIF(FXStream& store,FXuchar*& data,FXColor& transp,FXint& width,FXint& height){
+FXbool fxloadGIF(FXStream& store,FXColor*& data,FXint& width,FXint& height){
   const   FXint Yinit[4]={0,4,2,1};
   const   FXint Yinc[4]={8,8,4,2};
-  FXint   imwidth,imheight,interlace,ncolors,resolution,npixels,maxpixels;
-  FXuchar c1,c2,c3,sbsize,flags,*ptr;
-  FXuchar colormap[256*3];
-  FXbool  version_89a,havealpha;
-  FXuchar alpha;                      // Transparent color
+  FXint   imwidth,imheight,interlace,ncolors,npixels,maxpixels,i;
+  FXuchar c1,c2,c3,sbsize,flags,alpha,*ptr,*buf,*pix;
+  FXColor colormap[256];
   FXint   BitOffset;                  // Bit Offset of next code
-  FXint   XC, YC;                     // Output X and Y coords of current pixel
+  FXint   ByteOffset;                 // Byte offset of next code
+  FXint   XC,YC;                      // Output X and Y coords of current pixel
   FXint   Pass;                       // Used by output routine if interlaced pic
   FXint   OutCount;                   // Decompressor output 'stack count'
   FXint   CodeSize;                   // Code size, read from GIF header
@@ -86,7 +99,7 @@ FXbool fxloadGIF(FXStream& store,FXuchar*& data,FXColor& transp,FXint& width,FXi
   FXint   MaxCode;                    // limiting value for current code size
   FXint   ClearCode;                  // GIF clear code
   FXint   EOFCode;                    // GIF end-of-information code
-  FXint   CurCode, OldCode, InCode;   // Decompressor variables
+  FXint   CurCode,OldCode,InCode;     // Decompressor variables
   FXint   FirstFree;                  // First free code, generated per GIF spec
   FXint   FreeCode;                   // Decompressor,next free slot in hash table
   FXint   FinChar;                    // Decompressor variable
@@ -95,18 +108,27 @@ FXbool fxloadGIF(FXStream& store,FXuchar*& data,FXColor& transp,FXint& width,FXi
   FXint   Prefix[4096];               // The hash table used by the decompressor
   FXint   Suffix[4096];               // The hash table used by the decompressor
   FXint   OutCode[4097];              // An output array used by the decompressor
-  FXint   ByteOffset;
-  register int i,ix;
+
+  // Null out
+  data=NULL;
+  width=0;
+  height=0;
+
+  // Load signature
+  store >> c1;
+  store >> c2;
+  store >> c3;
 
   // Check signature
-  store >> c1 >> c2 >> c3;
-  if(!(c1=='G' && c2=='I' && c3=='F')) return FALSE;
+  if(c1!=TAG_SIG1 || c2!=TAG_SIG2|| c3!=TAG_SIG3) return FALSE;
+
+  // Load version
+  store >> c1;
+  store >> c2;
+  store >> c3;
 
   // Check version
-  store >> c1 >> c2 >> c3;
-  if(c1=='8' && c2=='7' && c3=='a') version_89a=FALSE;
-  else if(c1=='8' && c2=='9' && c3=='a') version_89a=TRUE;
-  else return FALSE;
+  if(c1!=TAG_VER || (c2!=TAG_OLD && c2!=TAG_NEW) || c3!=TAG_SUF) return FALSE;
 
   // Get screen descriptor
   store >> c1 >> c2;    // Skip screen width
@@ -118,98 +140,96 @@ FXbool fxloadGIF(FXStream& store,FXuchar*& data,FXColor& transp,FXint& width,FXi
   // Determine number of colors
   ncolors=2<<(flags&7);
   BitMask=ncolors-1;
-  resolution=((flags&0x70)>>3)+1;
-
-  // Preset first in case index refers outside map
-  memset(colormap,0,256*3);
 
   // If no colormap, spec says first 2 colors are black and white
-  colormap[0]=colormap[1]=colormap[2]=0;
-  colormap[3]=colormap[4]=colormap[5]=255;
+  colormap[0]=FXRGB(0,0,0);
+  colormap[1]=FXRGB(255,255,255);
 
-  // Get colormap
-  if(flags&COLORMAP){
-    store.load(colormap,3*ncolors);
+  // Read global map if there is one
+  if(flags&0x80){
+    for(i=0; i<ncolors; i++){
+      store >> ((FXuchar*)(colormap+i))[0];     // Blue
+      store >> ((FXuchar*)(colormap+i))[1];     // Green
+      store >> ((FXuchar*)(colormap+i))[2];     // Red
+      ((FXuchar*)(colormap+i))[3]=255;          // Alpha
+      }
     }
-
-  // Assume no alpha
-  transp=0;
-  havealpha=0;
 
   // Process it
   while(1){
     store >> c1;
-    if(c1==EXTENSION){
+    if(c1==TAG_EXTENSION){
 
       // Read extension code
       store >> c2;
 
       // Graphic Control Extension
-      if(c2==GRAPHICCONTROLEXT){
+      if(c2==TAG_GRAPHIC){
         store >> sbsize;
-        if(sbsize!=4) return FALSE;
+        if(sbsize!=TAG_GRAPHICSIZE) return FALSE;
         store >> flags;         // Flags
         store >> c3 >> c3;      // Delay time
-        store >> alpha;         // Alpha color index
+        store >> alpha;         // Alpha color index; we suspect alpha<ncolors not always true...
         store >> c3;
-        havealpha=(flags&1);
-        // Make unique transparency color; patch
-        // from Daniel Gehriger <bulk@linkcad.com>
-        if(havealpha){
-          for(i=ncolors-1; i>=0; --i){
-            if(colormap[3*i+0]==colormap[3*alpha+0] && colormap[3*i+1]==colormap[3*alpha+1] && colormap[3*i+2]==colormap[3*alpha+2] && i!=alpha){
-              if(++colormap[3*alpha+0]==0){
-                if(++colormap[3*alpha+1]==0){
-                  ++colormap[3*alpha+2];
-                  }
-                }
-              i=ncolors;        // Try again with new value
-              }
-            }
+        if(flags&1){            // Clear alpha channel of alpha color
+          colormap[alpha]&=FXRGBA(255,255,255,0);       // Clear the alpha channel but keep the RGB
           }
+        continue;
         }
 
       // Other extension
-      else{
-        do{
-          store >> sbsize;
-          for(i=0; i<sbsize; i++) store >> c3;
-          }
-        while(sbsize>0 && store.status()==FXStreamOK);
+      do{
+        store >> sbsize;
+        store.position(store.position()+sbsize);
         }
+      while(sbsize>0 && !store.eof());    // FIXME this logic still flawed
       continue;
       }
 
     // Image separator
-    if(c1==IMAGESEP){
+    if(c1==TAG_IMAGE){
       store >> c1 >> c2;
       store >> c1 >> c2;
 
       // Get image width
       store >> c1 >> c2;
-      imwidth=c2*256+c1;
+      imwidth=(c2<<8)+c1;
 
       // Get image height
       store >> c1 >> c2;
-      imheight=c2*256+c1;
+      imheight=(c2<<8)+c1;
 
       // Get image flags
       store >> flags;
 
-      maxpixels=imwidth*imheight;
-
-      // Allocate memory
-      FXCALLOC(&data,FXuchar,3*maxpixels);
-      if(!data) return FALSE;
-
-      // Has a colormap
-      if(flags&COLORMAP){
+      // Read local map if there is one
+      if(flags&0x80){
         ncolors=2<<(flags&7);
-        store.load(colormap,3*ncolors);
+        for(i=0; i<ncolors; i++){
+          store >> ((FXuchar*)(colormap+i))[0]; // Blue
+          store >> ((FXuchar*)(colormap+i))[1]; // Green
+          store >> ((FXuchar*)(colormap+i))[2]; // Red
+          ((FXuchar*)(colormap+i))[3]=255;      // Alpha
+          }
         }
 
       // Interlaced image
-      interlace=(flags&INTERLACE);
+      interlace=(flags&0x40);
+
+      // Total pixels expected
+      maxpixels=imwidth*imheight;
+
+      // Allocate memory
+      if(!FXMALLOC(&data,FXColor,maxpixels)) return FALSE;
+
+      // Set up pointers; we're using the first 3/4 of the
+      // data array for the compressed data, and the latter 1/4 for
+      // the 8-bit pixel data.  At the end of the decompression, we
+      // overwrite the data array with the 32-bit RGBA data.
+      // Note that the unGIF "compressed" data may be larger than
+      // the uncompressed data, hence the large safety factor...
+      buf=(FXuchar*)data;
+      pix=buf+maxpixels+maxpixels+maxpixels;
 
       // Start reading the raster data. First we get the intial code size
       // and compute decompressor constant values, based on this code size.
@@ -229,32 +249,23 @@ FXbool fxloadGIF(FXStream& store,FXuchar*& data,FXColor& transp,FXint& width,FXi
       MaxCode=1<<CodeSize;
       ReadMask=MaxCode-1;
 
-//       FXTRACE((200,"CodeSize = %d\n",CodeSize));
-//       FXTRACE((200,"ClearCode = %d\n",ClearCode));
-//       FXTRACE((200,"EOFCode = %d\n",EOFCode));
-//       FXTRACE((200,"FreeCode = %d\n",FreeCode));
-//       FXTRACE((200,"InitCodeSize = %d\n",InitCodeSize));
-//       FXTRACE((200,"MaxCode = %d\n",MaxCode));
-//       FXTRACE((200,"ReadMask = %d\n",ReadMask));
-
-
-      // Read all blocks into memory, reusing pixel storage.
-      // We assume that since it's compressed, it should take less room!
-      ptr=data;
+      // Read all blocks of compressed data into one single buffer.
+      // We have an extra test to make sure we don't write past 3/4
+      // of the buffer:- this could happen in malicious GIF images!
+      ptr=buf;
       do{
         store >> sbsize;
+        if(ptr+sbsize>pix){ FXFREE(&data); return FALSE; }
         store.load(ptr,sbsize);
         ptr+=sbsize;
         }
-      while(sbsize>0 && store.status()==FXStreamOK);
+      while(sbsize>0 && !store.eof());    // FIXME this logic still flawed
 
-//       FXTRACE((200,"maxpixels=%d bytesread=%d\n",maxpixels,ptr-data));
+      // Initialize
+      BitOffset=XC=YC=Pass=OutCount=OldCode=FinChar=npixels=0;
 
-      npixels=0;
-      BitOffset = XC = YC = Pass = OutCount = 0;
-
-      // Drop data at the end, so we can resuse pixel memory
-      ptr=&data[2*maxpixels];
+      // Drop 8-bit pixels in the upper part
+      ptr=pix;
 
       // Decompress the file, continuing until you see the GIF EOF code.
       // One obvious enhancement is to add checking for corrupt files here.
@@ -267,8 +278,7 @@ FXbool fxloadGIF(FXStream& store,FXuchar*& data,FXColor& transp,FXint& width,FXi
         // three bytes, compute the bit Offset into our 24-bit chunk, shift to
         // bring the desired code to the bottom, then mask it off and return it.
         ByteOffset=BitOffset>>3;
-        Code=(FXuint)data[ByteOffset]+(((FXuint)data[ByteOffset+1])<<8);
-        if(CodeSize>=8) Code=Code+(((FXuint)data[ByteOffset+2])<<16);
+        Code=(FXuint)buf[ByteOffset]+(((FXuint)buf[ByteOffset+1])<<8)+(((FXuint)buf[ByteOffset+2])<<16);
         Code>>=(BitOffset&7);
         BitOffset+=CodeSize;
         Code&=ReadMask;
@@ -286,8 +296,7 @@ FXbool fxloadGIF(FXStream& store,FXuchar*& data,FXColor& transp,FXint& width,FXi
 
           // Get next code
           ByteOffset=BitOffset>>3;
-          Code=(FXuint)data[ByteOffset]+(((FXuint)data[ByteOffset+1])<<8);
-          if(CodeSize>=8) Code=Code+(((FXuint)data[ByteOffset+2])<<16);
+          Code=(FXuint)buf[ByteOffset]+(((FXuint)buf[ByteOffset+1])<<8)+(((FXuint)buf[ByteOffset+2])<<16);
           Code>>=(BitOffset&7);
           BitOffset+=CodeSize;
           Code&=ReadMask;
@@ -318,11 +327,7 @@ FXbool fxloadGIF(FXStream& store,FXuchar*& data,FXColor& transp,FXint& width,FXi
         else{
 
           // If we're at maxcode and didn't get a clear, stop loading
-          if(FreeCode>=4096){
-            fxwarning("fxloadGIF: problem!\n");
-            FXFREE(&data);
-            return FALSE;
-            }
+          if(FreeCode>=4096){ FXFREE(&data); return FALSE; }
 
           CurCode=InCode=Code;
 
@@ -330,11 +335,7 @@ FXbool fxloadGIF(FXStream& store,FXuchar*& data,FXColor& transp,FXint& width,FXi
           // repeat the last character decoded
           if(CurCode>=FreeCode){
             CurCode=OldCode;
-            if(OutCount>4096){
-              fxwarning("fxloadGIF: problem!\n");
-              FXFREE(&data);
-              return FALSE;
-              }
+            if(OutCount>4096){ FXFREE(&data); return FALSE; }
             OutCode[OutCount++]=FinChar;
             }
 
@@ -342,16 +343,12 @@ FXbool fxloadGIF(FXStream& store,FXuchar*& data,FXColor& transp,FXint& width,FXi
           // through the hash table to its end; each code in the chain puts its
           // associated output code on the output queue.
           while(CurCode>BitMask){
-            if(OutCount>4096) break;   /* corrupt file */
+            if(OutCount>4096) break;    // corrupt file
             OutCode[OutCount++]=Suffix[CurCode];
             CurCode=Prefix[CurCode];
             }
 
-          if(OutCount>4096){
-            fxwarning("fxloadGIF: problem!\n");
-            FXFREE(&data);
-            return FALSE;
-            }
+          if(OutCount>4096){ FXFREE(&data); return FALSE; }
 
           // The last code in the chain is treated as raw data
           FinChar=CurCode&BitMask;
@@ -412,26 +409,18 @@ FXbool fxloadGIF(FXStream& store,FXuchar*& data,FXColor& transp,FXint& width,FXi
       width=imwidth;
       height=imheight;
 
+      // Technically, this is incorrect; but we have so
+      // many GIF87a's that we have to keep doing this!
+      colormap[alpha]&=FXRGBA(255,255,255,0);
+
       // Apply colormap
       for(i=0; i<maxpixels; i++){
-        ix=data[2*maxpixels+i];
-        data[3*i+0]=colormap[3*ix+0];
-        data[3*i+1]=colormap[3*ix+1];
-        data[3*i+2]=colormap[3*ix+2];
+        data[i]=colormap[pix[i]];
         }
 
-//       // If we had a transparent color, use it
-//       if(havealpha){
-//         transp=FXRGB(colormap[3*alpha],colormap[3*alpha+1],colormap[3*alpha+2]);
-//         }
-
-      // Remark:- the above code is correct, but all our icons don't have
-      // an alpha (they're GIF87a's) and so we need to fix those first...
-      transp=FXRGB(colormap[3*alpha],colormap[3*alpha+1],colormap[3*alpha+2]);
-
-      // We're done!
+      // Skip image terminator to fully read all bytes
       store >> c1;
-      
+
       return TRUE;
       }
 
@@ -444,238 +433,223 @@ FXbool fxloadGIF(FXStream& store,FXuchar*& data,FXColor& transp,FXint& width,FXi
   }
 
 
-
 /*******************************************************************************/
-
-/* Largest value that will fit in N bits */
-#define MAXCODE(n_bits)        ((1 << (n_bits)) - 1)
-
-
-// Private version of data destination object
-struct GIFOUTPUT {
-  FXStream *stream;           // Stream to save to
-
-  // State for packing variable-width codes into a bitstream
-  FXint     n_bits;           // current number of bits/code
-  FXint     maxcode;          // maximum code, given n_bits
-  FXint     cur_accum;        // holds bits not yet output
-  FXint     cur_bits;         // # of bits in cur_accum
-
-  // State for GIF code assignment/
-  FXint     ClearCode;        // clear code (doesn't change)
-  FXint     EOFCode;          // EOF code (ditto)
-  FXint     code_counter;     // counts output symbols
-
-  // GIF data packet construction buffer
-  FXint     bytesinpkt;       // # of bytes in current packet
-  FXuchar   packetbuf[256];   // workspace for accumulating packet
-  };
-
-
-
-// Routines to package finished data bytes into GIF data blocks.
-// A data block consists of a count byte (1..255) and that many data bytes.
-static void flush_packet(GIFOUTPUT& go){
-  if(go.bytesinpkt>0){                              // never write zero-length packet
-    go.packetbuf[0] = (char) go.bytesinpkt++;
-    go.stream->save(go.packetbuf,go.bytesinpkt);
-    go.bytesinpkt = 0;
-    }
-  }
-
-
-// Add a character to current packet; flush to disk if necessary
-static void char_out(GIFOUTPUT& go,FXuchar c){
-  go.packetbuf[++go.bytesinpkt]=c;
-  if(go.bytesinpkt>=255) flush_packet(go);
-  }
-
-
-// Routine to convert variable-width codes into a byte stream
-// Emit a code of n_bits bits.  Uses cur_accum and cur_bits to
-// reblock into 8-bit bytes
-static void output(GIFOUTPUT& go,FXint code){
-  go.cur_accum|=(code<<go.cur_bits);
-  go.cur_bits+=go.n_bits;
-  while(go.cur_bits>=8){
-    char_out(go,(go.cur_accum&0xFF));
-    go.cur_accum>>=8;
-    go.cur_bits-=8;
-    }
-  }
-
-
-// The pseudo-compression algorithm.
-//
-// In this module we simply output each pixel value as a separate symbol;
-// thus, no compression occurs.  In fact, there is expansion of one bit per
-// pixel, because we use a symbol width one bit wider than the pixel width.
-//
-// GIF ordinarily uses variable-width symbols, and the decoder will expect
-// to ratchet up the symbol width after a fixed number of symbols.
-// To simplify the logic and keep the expansion penalty down, we emit a
-// GIF Clear code to reset the decoder just before the width would ratchet up.
-// Thus, all the symbols in the output file will have the same bit width.
-// Note that emitting the Clear codes at the right times is a mere matter of
-// counting output symbols and is in no way dependent on the LZW patent.
-//
-// With a small basic pixel width (low color count), Clear codes will be
-// needed very frequently, causing the file to expand even more.  So this
-// simplistic approach wouldn't work too well on bilevel images, for example.
-// But for output of JPEG conversions the pixel width will usually be 8 bits
-// (129 to 256 colors), so the overhead added by Clear symbols is only about
-// one symbol in every 256.
-
-/* Initialize pseudo-compressor */
-static void compress_init(GIFOUTPUT& go,FXint i_bits){
-  go.n_bits=i_bits;                                 // init all the state variables
-  go.maxcode=MAXCODE(go.n_bits);
-  go.ClearCode=(1<<(i_bits-1));
-  go.EOFCode=go.ClearCode+1;
-  go.code_counter=go.ClearCode+2;
-  go.bytesinpkt=0;                                  // init output buffering vars
-  go.cur_accum=0;
-  go.cur_bits=0;
-  output(go,go.ClearCode);                          // GIF specifies an initial Clear code
-  }
-
-
-// Accept and "compress" one pixel value.
-// The given value must be less than n_bits wide.
-static void compress_pixel(GIFOUTPUT& go,FXint c){
-
-  // Output the given pixel value as a symbol
-  output(go,c);
-
-  // Issue Clear codes often enough to keep the reader from ratcheting up
-  // its symbol size.
-  if(go.code_counter<go.maxcode){
-    go.code_counter++;
-    }
-  else{
-    output(go,go.ClearCode);
-    go.code_counter=go.ClearCode+2;                 // Reset the counter
-    }
-  }
-
-
-// Clean up at end
-static void compress_term(GIFOUTPUT& go){
-  output(go,go.EOFCode);                            // Send an EOF code
-  if(go.cur_bits>0){                                // Flush the bit-packing buffer
-    char_out(go,(go.cur_accum&0xFF));
-    }
-  flush_packet(go);                                 // Flush the packet buffer
-  }
-
-
-static void write16(FXStream& store,FXuint i){
-  FXuchar c1,c2;
-  c1=(0xff&i);
-  c2=(0xff&(i>>8));
-  store << c1 << c2;
-  }
 
 
 // Save a gif file to a stream
-FXbool fxsaveGIF(FXStream& store,const FXuchar *data,FXColor,FXint width,FXint height){
-  FXuchar   rmap[256];      // Red colormap
-  FXuchar   gmap[256];      // Green colormap
-  FXuchar   bmap[256];      // Blue colormap
-  FXint     NumPixels;      // Total number of pixels
-  FXint     NumColors;      // Number of colors
-  FXint     ColorMapSize;   // Colormap size
-  FXint     BitsPerPixel;   // Bits per pixel (Codes uses at least this + 1)
-  FXint     InitCodeSize;   // Initial code size
-  GIFOUTPUT go;             // Struct passed around
-  FXuchar  *pixels,c1,bg;
-  FXint     i;
-  FXbool    ok;
+FXbool fxsaveGIF(FXStream& store,const FXColor *data,FXint width,FXint height,FXbool fast){
+  FXuint   clearcode,endcode,freecode,findcode,prefix,current,outaccu,initcodesize,codesize,hash,step;
+  FXint    maxpixels,ncolors,bitsperpixel,colormapsize,outbits,src,dst,i;
+  FXuchar  c1,c2,alpha,*pixels,*output;
+  FXColor  colormap[256];
+  FXuint   hashtab[5003];
+  FXushort codetab[5003];
+
+  // Must make sense
+  if(!data || width<=0 || height<=0) return FALSE;
 
   // How many pixels
-  NumPixels=width*height;
+  maxpixels=width*height;
 
   // Allocate temp buffer for pixels
-  if(!FXMALLOC(&pixels,FXuchar,NumPixels)) return FALSE;
+  if(!FXMALLOC(&output,FXuchar,(maxpixels<<1))) return FALSE;
+  pixels=output+maxpixels;
 
   // First, try EZ quantization, because it is exact; a previously
   // loaded GIF will be re-saved with exactly the same colors.
-  ok=fxezquantize(pixels,data,rmap,gmap,bmap,NumColors,width,height,256);
-
-  if(!ok){
-
-    // Floyd-Steinberg quantize full 24 bpp to 256 colors, organized as 3:3:2
-    fxfsquantize(pixels,data,rmap,gmap,bmap,NumColors,width,height,256);
+  if(!fxezquantize(pixels,data,colormap,ncolors,width,height,256)){
+    if(fast){
+      fxfsquantize(pixels,data,colormap,ncolors,width,height,256);
+      }
+    else{
+      fxwuquantize(pixels,data,colormap,ncolors,width,height,256);
+      }
     }
 
-  FXASSERT(NumColors<=256);
-
-  go.stream=&store;
-
   // File signature
-  store.save("GIF89a",6);
+  store << TAG_SIG1;
+  store << TAG_SIG2;
+  store << TAG_SIG3;
 
-  // Screen header
-  write16(store,width);
-  write16(store,height);
+  // File version
+  store << TAG_VER;
+  store << TAG_NEW;
+  store << TAG_SUF;
 
   // Figure out bits per pixel
-  for(BitsPerPixel=1; NumColors>(1<<BitsPerPixel); BitsPerPixel++);
+  for(bitsperpixel=1; ncolors>(1<<bitsperpixel); bitsperpixel++);
 
   // Colormap size
-  ColorMapSize = 1 << BitsPerPixel;
+  colormapsize=1<<bitsperpixel;
 
-  // Initial code size
-  InitCodeSize=(BitsPerPixel<=1) ? 2 : BitsPerPixel;
-
-  c1=0x80;                    // Yes, there is a color map
-  c1|=(BitsPerPixel-1)<<4;    // OR in the color resolution (hardwired 8)
-  c1|=(BitsPerPixel-1);       // OR in the # of bits per pixel
-  store << c1;                // Flags
-  store << bg;                // background color
-  c1=0;
-  store << c1;                // future expansion byte
+  // Screen header
+  c1=width;
+  c2=width>>8;
+  store << c1 << c2;            // Width
+  c1=height;
+  c2=height>>8;
+  store << c1 << c2;            // Height
+  c1=0x80;                      // There is a color map
+  c1|=(bitsperpixel-1)<<4;      // Number of bits of color resolution
+  c1|=(bitsperpixel-1);         // The size (in bits) of the colormap
+  store << c1;                  // Flags
+  store << TAG_ZERO;            // Background color
+  store << TAG_ZERO;            // Aspect Ratio is none
 
   // Output colormap
-  for(i=0; i<ColorMapSize; i++){
-    store << rmap[i];
-    store << gmap[i];
-    store << bmap[i];
+  for(i=0; i<colormapsize; i++){
+    store << ((FXuchar*)(colormap+i))[0]; // Blue
+    store << ((FXuchar*)(colormap+i))[1]; // Green
+    store << ((FXuchar*)(colormap+i))[2]; // Red
+    }
+
+  // Output Graphics Control Extension, if alpha is present
+  for(i=0,alpha=0; i<ncolors; i++){
+    if(((FXuchar*)(colormap+i))[3]==0){
+      alpha=i;
+      store << TAG_EXTENSION;   // Extension Introducer
+      store << TAG_GRAPHIC;     // Graphic Control Label
+      store << TAG_GRAPHICSIZE; // Block Size
+      store << TAG_TRANSPARENT; // Disposal Method
+      store << TAG_ZERO;        // Delay Time
+      store << TAG_ZERO;
+      store << alpha;           // Transparent color index
+      store << TAG_TERMINATOR;  // Block Terminator
+      break;
+      }
     }
 
   // Image descriptor
-  c1=',';
-  store << c1;                // Image separator
-  write16(store,0);           // Image offset X
-  write16(store,0);           // Image offset Y
-  write16(store,width);       // Image width
-  write16(store,height);      // Image height
-  c1=0;
-  store << c1;                // Flags (no local map)
+  store << TAG_IMAGE;           // Image separator
+  store << TAG_ZERO;            // Image offset X
+  store << TAG_ZERO;
+  store << TAG_ZERO;            // Image offset Y
+  store << TAG_ZERO;
+  c1=width;
+  c2=width>>8;
+  store << c1 << c2;            // Width
+  c1=height;
+  c2=height>>8;
+  store << c1 << c2;            // Height
+  store << TAG_IMAGEFLAGS;      // Flags: no local map, no interlace
+
+  // Figure out code size and stuff
+  initcodesize=(bitsperpixel<=1)?2:bitsperpixel;
+  codesize=initcodesize+1;
+  clearcode=1<<(codesize-1);
+  endcode=clearcode+1;
 
   // Now for the beef...
-  c1=InitCodeSize;
-  store << c1;                      // Write the Code size
+  c1=initcodesize;
+  store << c1;                          // Write the Code size
 
-  // Initialize for "compression" of image data
-  compress_init(go,InitCodeSize+1);
+  // Clear hash table
+  memset(hashtab,0xff,sizeof(hashtab));
+  freecode=clearcode+2;
 
-  // Output the "compressed" pixels
-  for(i=0; i<NumPixels; i++){
-    compress_pixel(go,pixels[i]);
+  // Output clear code
+  FXASSERT(clearcode<(1<<codesize));
+  outaccu=clearcode;
+  outbits=codesize;
+
+  // Compress image
+  src=dst=0;
+  prefix=pixels[src++];
+  while(1){
+
+    // Flush filled out bytes
+    while(outbits>=8){
+      output[dst++]=(FXuchar)outaccu;
+      outaccu>>=8;
+      outbits-=8;
+      }
+
+    // Done yet
+    if(src>=maxpixels) break;
+
+    // Get next pixel
+    current=pixels[src++];
+
+    // Check if in hash table
+    findcode=(current<<12)+prefix;
+    hash=findcode%5003;                 // 0<=hash<=5002
+    step=findcode%4999+1;               // 1<=step<=4999
+    while(hashtab[hash]!=0xffffffff){   // Occupied slot?
+      if(hashtab[hash]==findcode){      // Existing prefix
+        prefix=codetab[hash];           // Code for prefix
+        goto nxt;
+        }
+      hash=(hash+step)%5003;
+      }
+
+    // Output prefix code
+    FXASSERT(prefix<(1<<codesize));
+    FXASSERT(outbits+codesize<=32);
+    outaccu|=prefix<<outbits;
+    outbits+=codesize;
+
+    // New prefix code
+    prefix=current;
+
+    // If still room, enter into hash table
+    if(freecode<4096){                  // Add to hash table
+      if(freecode>=(1<<codesize) && codesize<12) codesize++;
+      codetab[hash]=freecode++;
+      hashtab[hash]=findcode;
+      }
+
+    // Else issue clear code
+    else{
+      FXASSERT(clearcode<(1<<codesize));
+      FXASSERT(outbits+codesize<=32);
+      outaccu|=clearcode<<outbits;
+      outbits+=codesize;
+
+      // Clear hash table
+      memset(hashtab,0xff,sizeof(hashtab));
+      freecode=clearcode+2;
+      codesize=initcodesize+1;
+      }
+
+    // Next pixel
+nxt:continue;
     }
 
-  // Flush "compression" mechanism
-  compress_term(go);
+  // Output final prefix code
+  FXASSERT(prefix<(1<<codesize));
+  FXASSERT(outbits+codesize<=32);
+  outaccu|=prefix<<outbits;
+  outbits+=codesize;
 
-  c1=0;
-  store << c1;                // Zero length data block marks end
-  c1=';';
-  store << c1;                // File terminator
+  // Output end code
+  FXASSERT(endcode<(1<<codesize));
+  FXASSERT(outbits+codesize<=32);
+  outaccu|=endcode<<outbits;
+  outbits+=codesize;
+
+  // FLush remaining bits out
+  while(outbits>0){
+    output[dst++]=(FXuchar)outaccu;
+    outaccu>>=8;
+    outbits-=8;
+    }
+
+  // Write blocks
+  for(src=0; src<dst; src+=c1){
+    c1=FXMIN(255,(dst-src));
+    store << c1;
+    store.save(&output[src],c1);
+    }
+
+  // Trailer
+  store << TAG_TERMINATOR;      // Block terminator
+  store << TAG_ENDFILE;         // File terminator
 
   // Free storage
-  FXFREE(&pixels);
-
+  FXFREE(&output);
   return TRUE;
   }
+
+
+}
 

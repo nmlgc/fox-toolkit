@@ -3,7 +3,7 @@
 *                     P o p u p   W i n d o w   O b j e c t                     *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1998,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXPopup.cpp,v 1.49.4.2 2002/07/24 21:29:14 fox Exp $                      *
+* $Id: FXPopup.cpp,v 1.73 2004/04/24 00:46:29 fox Exp $                         *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -31,6 +31,7 @@
 #include "FXPoint.h"
 #include "FXRectangle.h"
 #include "FXRegistry.h"
+#include "FXHash.h"
 #include "FXApp.h"
 #include "FXDCWindow.h"
 #include "FXPopup.h"
@@ -42,14 +43,23 @@
   - LAYOUT_FIX_xxx takes precedence over PACK_UNIFORM_xxx!!
   - Perhaps the grab owner could be equal to the owner?
   - Perhaps popup should resize when recalc() has been called!
-  - I believe that popup() should in fact enter a modal loop runModalWhileShown().
+  - Need to implement Mikael Aronssen's suggestion to make it easier to
+    run FXPopup in a modal loop.  This shouls also return a code, just
+    like FXDialogBox does.  Thus it becomes very straighforward to run
+    a popup menu just to get a single choice value back.
+  - Do not assume root window is at (0,0); multi-monitor machines may
+    have secondary monitor anywhere relative to primary display.
 */
 
 
 // Frame styles
 #define FRAME_MASK        (FRAME_SUNKEN|FRAME_RAISED|FRAME_THICK)
 
+using namespace FX;
+
 /*******************************************************************************/
+
+namespace FX {
 
 
 // Map
@@ -83,9 +93,14 @@ FXDEFMAP(FXPopup) FXPopupMap[]={
 FXIMPLEMENT(FXPopup,FXShell,FXPopupMap,ARRAYNUMBER(FXPopupMap))
 
 
+// Deserialization
+FXPopup::FXPopup():prevActive(NULL),nextActive(NULL){
+  }
+
+
 // Transient window used for popups
 FXPopup::FXPopup(FXWindow* owner,FXuint opts,FXint x,FXint y,FXint w,FXint h):
-  FXShell(owner,opts,x,y,w,h){
+  FXShell(owner,opts,x,y,w,h),prevActive(NULL),nextActive(NULL){
   defaultCursor=getApp()->getDefaultCursor(DEF_RARROW_CURSOR);
   dragCursor=getApp()->getDefaultCursor(DEF_RARROW_CURSOR);
   flags|=FLAG_ENABLED;
@@ -117,17 +132,24 @@ const char* FXPopup::GetClass() const { return "FXPopup"; }
 #endif
 
 
-// Popup can not get focus
+// Setting focus causes keyboard grab, because all keyboard
+// events need to be reported to the active popup.
 void FXPopup::setFocus(){
   FXShell::setFocus();
   //grabKeyboard();
   }
 
 
-// Popup can not get focus
+// Killing the focus should revert the keyboard grab to the
+// previously active popup, or release the keyboard grab
 void FXPopup::killFocus(){
   FXShell::killFocus();
-  //ungrabKeyboard();
+  //if(prevActive){
+  //  prevActive->setFocus();
+  //  }
+  //else{
+  //  ungrabKeyboard();
+  //  }
   }
 
 
@@ -140,44 +162,56 @@ FXWindow* FXPopup::getGrabOwner() const {
 // Get width
 FXint FXPopup::getDefaultWidth(){
   register FXWindow* child;
-  register FXint w,wmax,wcum,n;
+  register FXint w,wmax,wcum;
   register FXuint hints;
-  wmax=wcum=n=0;
+  wmax=wcum=0;
   for(child=getFirst(); child; child=child->getNext()){
     if(child->shown()){
       hints=child->getLayoutHints();
       if(hints&LAYOUT_FIX_WIDTH) w=child->getWidth();
       else w=child->getDefaultWidth();
       if(wmax<w) wmax=w;
-      wcum+=w;
-      n++;
       }
     }
-  if(options&PACK_UNIFORM_WIDTH) wcum=n*wmax;
-  if(options&POPUP_HORIZONTAL) wmax=wcum;
-  return wmax+(border<<1);
+  for(child=getFirst(); child; child=child->getNext()){
+    if(child->shown()){
+      hints=child->getLayoutHints();
+      if(hints&LAYOUT_FIX_WIDTH) w=child->getWidth();
+      else if(options&PACK_UNIFORM_WIDTH) w=wmax;
+      else w=child->getDefaultWidth();
+      wcum+=w;
+      }
+    }
+  if(!(options&POPUP_HORIZONTAL)) wcum=wmax;
+  return wcum+(border<<1);
   }
 
 
 // Get height
 FXint FXPopup::getDefaultHeight(){
   register FXWindow* child;
-  register FXint h,hmax,hcum,n;
+  register FXint h,hmax,hcum;
   register FXuint hints;
-  hmax=hcum=n=0;
+  hmax=hcum=0;
   for(child=getFirst(); child; child=child->getNext()){
     if(child->shown()){
       hints=child->getLayoutHints();
       if(hints&LAYOUT_FIX_HEIGHT) h=child->getHeight();
       else h=child->getDefaultHeight();
       if(hmax<h) hmax=h;
-      hcum+=h;
-      n++;
       }
     }
-  if(options&PACK_UNIFORM_HEIGHT) hcum=n*hmax;
-  if(!(options&POPUP_HORIZONTAL)) hmax=hcum;
-  return hmax+(border<<1);
+  for(child=getFirst(); child; child=child->getNext()){
+    if(child->shown()){
+      hints=child->getLayoutHints();
+      if(hints&LAYOUT_FIX_HEIGHT) h=child->getHeight();
+      else if(options&PACK_UNIFORM_HEIGHT) h=hmax;
+      else h=child->getDefaultHeight();
+      hcum+=h;
+      }
+    }
+  if(options&POPUP_HORIZONTAL) hcum=hmax;
+  return hcum+(border<<1);
   }
 
 
@@ -185,8 +219,7 @@ FXint FXPopup::getDefaultHeight(){
 void FXPopup::layout(){
   register FXWindow *child;
   register FXuint hints;
-  register FXint w,h,x,y,remain,t;
-  register FXint mh=0,mw=0;
+  register FXint w,h,x,y,remain,t,mw,mh;
   register FXint sumexpand=0;
   register FXint numexpand=0;
   register FXint e=0;
@@ -199,6 +232,16 @@ void FXPopup::layout(){
 
     // Space available
     remain=width-(border<<1);
+
+    // Get maximum size
+    for(child=getFirst(),mw=0; child; child=child->getNext()){
+      if(child->shown()){
+        hints=child->getLayoutHints();
+        if(hints&LAYOUT_FIX_WIDTH) w=child->getWidth();
+        else w=child->getDefaultWidth();
+        if(mw<w) mw=w;
+        }
+      }
 
     // Find number of paddable children and total space remaining
     for(child=getFirst(); child; child=child->getNext()){
@@ -219,7 +262,7 @@ void FXPopup::layout(){
       }
 
     // Do the layout
-    for(x=border,child=getFirst(); child; child=child->getNext()){
+    for(child=getFirst(),x=border; child; child=child->getNext()){
       if(child->shown()){
         hints=child->getLayoutHints();
         if(hints&LAYOUT_FIX_WIDTH) w=child->getWidth();
@@ -249,11 +292,18 @@ void FXPopup::layout(){
   // Vertical
   else{
 
-    // Get maximum size if uniform packed
-    if(options&PACK_UNIFORM_HEIGHT) mh=maxChildHeight();
-
     // Space available
     remain=height-(border<<1);
+
+    // Get maximum size
+    for(child=getFirst(),mh=0; child; child=child->getNext()){
+      if(child->shown()){
+        hints=child->getLayoutHints();
+        if(hints&LAYOUT_FIX_HEIGHT) h=child->getHeight();
+        else h=child->getDefaultHeight();
+        if(mh<h) mh=h;
+        }
+      }
 
     // Find number of paddable children and total space remaining
     for(child=getFirst(); child; child=child->getNext()){
@@ -274,7 +324,7 @@ void FXPopup::layout(){
       }
 
     // Do the layout
-    for(y=border,child=getFirst(); child; child=child->getNext()){
+    for(child=getFirst(),y=border; child; child=child->getNext()){
       if(child->shown()){
         hints=child->getLayoutHints();
         if(hints&LAYOUT_FIX_HEIGHT) h=child->getHeight();
@@ -446,10 +496,7 @@ long FXPopup::onFocusNext(FXObject*,FXSelector,void* ptr){
     child=getFocus()->getNext();
     while(child){
       if(child->shown()){
-        if(child->isEnabled() && child->canFocus()){
-          child->handle(this,MKUINT(0,SEL_FOCUS_SELF),ptr);
-          return 1;
-          }
+        if(child->handle(this,FXSEL(SEL_FOCUS_SELF,0),ptr)) return 1;
         }
       child=child->getNext();
       }
@@ -457,10 +504,7 @@ long FXPopup::onFocusNext(FXObject*,FXSelector,void* ptr){
   child=getFirst();
   while(child){
     if(child->shown()){
-      if(child->isEnabled() && child->canFocus()){
-        child->handle(this,MKUINT(0,SEL_FOCUS_SELF),ptr);
-        return 1;
-        }
+      if(child->handle(this,FXSEL(SEL_FOCUS_SELF,0),ptr)) return 1;
       }
     child=child->getNext();
     }
@@ -475,10 +519,7 @@ long FXPopup::onFocusPrev(FXObject*,FXSelector,void* ptr){
     child=getFocus()->getPrev();
     while(child){
       if(child->shown()){
-        if(child->isEnabled() && child->canFocus()){
-          child->handle(this,MKUINT(0,SEL_FOCUS_SELF),ptr);
-          return 1;
-          }
+        if(child->handle(this,FXSEL(SEL_FOCUS_SELF,0),ptr)) return 1;
         }
       child=child->getPrev();
       }
@@ -486,10 +527,7 @@ long FXPopup::onFocusPrev(FXObject*,FXSelector,void* ptr){
   child=getLast();
   while(child){
     if(child->shown()){
-      if(child->isEnabled() && child->canFocus()){
-        child->handle(this,MKUINT(0,SEL_FOCUS_SELF),ptr);
-        return 1;
-        }
+      if(child->handle(this,FXSEL(SEL_FOCUS_SELF,0),ptr)) return 1;
       }
     child=child->getPrev();
     }
@@ -558,7 +596,7 @@ long FXPopup::onMap(FXObject* sender,FXSelector sel,void* ptr){
 // Pressed button outside popup
 long FXPopup::onButtonPress(FXObject*,FXSelector,void*){
   FXTRACE((200,"%s::onButtonPress %p\n",getClassName(),this));
-  handle(this,MKUINT(ID_UNPOST,SEL_COMMAND),NULL);
+  handle(this,FXSEL(SEL_COMMAND,ID_UNPOST),NULL);
   //popdown(0);
   return 1;
   }
@@ -568,7 +606,7 @@ long FXPopup::onButtonPress(FXObject*,FXSelector,void*){
 long FXPopup::onButtonRelease(FXObject*,FXSelector,void* ptr){
   FXEvent* event=(FXEvent*)ptr;
   FXTRACE((200,"%s::onButtonRelease %p\n",getClassName(),this));
-  if(event->moved){handle(this,MKUINT(ID_UNPOST,SEL_COMMAND),NULL);}
+  if(event->moved){handle(this,FXSEL(SEL_COMMAND,ID_UNPOST),NULL);}
   //popdown(0);
   return 1;
   }
@@ -577,7 +615,7 @@ long FXPopup::onButtonRelease(FXObject*,FXSelector,void* ptr){
 // The widget lost the grab for some reason; unpost the menu
 long FXPopup::onUngrabbed(FXObject* sender,FXSelector sel,void* ptr){
   FXShell::onUngrabbed(sender,sel,ptr);
-  handle(this,MKUINT(ID_UNPOST,SEL_COMMAND),NULL);
+  handle(this,FXSEL(SEL_COMMAND,ID_UNPOST),NULL);
   return 1;
   }
 
@@ -586,7 +624,7 @@ long FXPopup::onUngrabbed(FXObject* sender,FXSelector sel,void* ptr){
 long FXPopup::onKeyPress(FXObject* sender,FXSelector sel,void* ptr){
   FXEvent* event=(FXEvent*)ptr;
   if(event->code==KEY_Escape || event->code==KEY_Cancel || event->code==KEY_Alt_L || event->code==KEY_Alt_R){
-    handle(this,MKUINT(ID_UNPOST,SEL_COMMAND),NULL);
+    handle(this,FXSEL(SEL_COMMAND,ID_UNPOST),NULL);
     return 1;
     }
   return FXShell::onKeyPress(sender,sel,ptr);
@@ -597,7 +635,7 @@ long FXPopup::onKeyPress(FXObject* sender,FXSelector sel,void* ptr){
 long FXPopup::onKeyRelease(FXObject* sender,FXSelector sel,void* ptr){
   FXEvent* event=(FXEvent*)ptr;
   if(event->code==KEY_Escape || event->code==KEY_Cancel){
-    handle(this,MKUINT(ID_UNPOST,SEL_COMMAND),NULL);
+    handle(this,FXSEL(SEL_COMMAND,ID_UNPOST),NULL);
     return 1;
     }
   return FXShell::onKeyRelease(sender,sel,ptr);
@@ -609,7 +647,7 @@ long FXPopup::onKeyRelease(FXObject* sender,FXSelector sel,void* ptr){
 long FXPopup::onCmdUnpost(FXObject*,FXSelector,void* ptr){
   FXTRACE((150,"%s::onCmdUnpost %p\n",getClassName(),this));
   if(grabowner){
-    grabowner->handle(this,MKUINT(ID_UNPOST,SEL_COMMAND),ptr);
+    grabowner->handle(this,FXSEL(SEL_COMMAND,ID_UNPOST),ptr);
     }
   else{
     popdown();
@@ -619,18 +657,174 @@ long FXPopup::onCmdUnpost(FXObject*,FXSelector,void* ptr){
   }
 
 
+// Show popup and add to popup stack
+void FXPopup::show(){
+  if(!(flags&FLAG_SHOWN)){
+    FXShell::show();
+    prevActive=getApp()->popupWindow;
+    if(prevActive) prevActive->nextActive=this;
+    getApp()->popupWindow=this;
+    setFocus();
+    }
+  }
+
+
+// Hide popup and remove from popup stack
+void FXPopup::hide(){
+  if(flags&FLAG_SHOWN){
+    FXShell::hide();
+    if(getApp()->popupWindow==this) getApp()->popupWindow=prevActive;
+    if(prevActive) prevActive->nextActive=nextActive;
+    if(nextActive) nextActive->prevActive=prevActive;
+    nextActive=NULL;
+    prevActive=NULL;
+    killFocus();
+    }
+  // Focus back to popup under this one, iff this was top one
+  }
+
+
+/*
 // Popup the menu at some location
 void FXPopup::popup(FXWindow* grabto,FXint x,FXint y,FXint w,FXint h){
+#ifndef WIN32
+  FXint rx=getRoot()->getX();
+  FXint ry=getRoot()->getY();
   FXint rw=getRoot()->getWidth();
   FXint rh=getRoot()->getHeight();
+#else
+  OSVERSIONINFO version;
+  RECT rect;
+  FXint rx,ry,rw,rh;
+  version.dwOSVersionInfoSize=sizeof(OSVERSIONINFO);
+  GetVersionEx (&version);
+
+  // Patch from "Rafael de Pelegrini Soares" <Rafael@enq.ufrgs.br>
+  // Older Microsoft Operating Systems, Win95 and NT4 or below
+  if(version.dwMajorVersion<5 && version.dwMinorVersion<10){
+    SystemParametersInfo(SPI_GETWORKAREA,sizeof(RECT),&rect,0);
+    rx=rect.left;
+    ry=rect.top;
+    rw=rect.right-rect.left;
+    rh=rect.bottom-rect.top;
+    }
+
+  // Later Microsoft Operating Systems
+  // Patch from Brian Hook <hook_l@pyrogon.com>
+  else{
+    rx=GetSystemMetrics(SM_XVIRTUALSCREEN);
+    ry=GetSystemMetrics(SM_YVIRTUALSCREEN);
+    rw=GetSystemMetrics(SM_CXVIRTUALSCREEN);
+    rh=GetSystemMetrics(SM_CYVIRTUALSCREEN);
+    }
+#endif
   FXTRACE((150,"%s::popup %p\n",getClassName(),this));
   grabowner=grabto;
   if((options&POPUP_SHRINKWRAP) || w<=1) w=getDefaultWidth();
   if((options&POPUP_SHRINKWRAP) || h<=1) h=getDefaultHeight();
   if(x+w>rw) x=rw-w;
   if(y+h>rh) y=rh-h;
-  if(x<0) x=0;
-  if(y<0) y=0;
+  if(x<rx) x=rx;
+  if(y<ry) y=ry;
+  position(x,y,w,h);
+  show();
+  raise();
+  setFocus();
+  if(!grabowner) grab();
+  }
+*/
+
+
+// Popup the menu at some location
+void FXPopup::popup(FXWindow* grabto,FXint x,FXint y,FXint w,FXint h){
+  FXint rx,ry,rw,rh;
+#ifndef WIN32
+  rx=getRoot()->getX();
+  ry=getRoot()->getY();
+  rw=getRoot()->getWidth();
+  rh=getRoot()->getHeight();
+#else
+  OSVERSIONINFO vinfo;
+  RECT rect;
+  memset(&vinfo,0,sizeof(vinfo));
+  vinfo.dwOSVersionInfoSize=sizeof(vinfo);
+  GetVersionEx(&vinfo);
+
+#if (WINVER >= 0x500) || ((defined _WIN32_WINDOWS) && (_WIN32_WINDOWS >= 0x410))
+
+/*
+  // Patch from Brian Hook <hook_l@py...>
+  if((vinfo.dwPlatformId==VER_PLATFORM_WIN32_WINDOWS && vinfo.dwMinorVersion>0) || (vinfo.dwPlatformId==VER_PLATFORM_WIN32_NT && vinfo.dwMajorVersion>=5))
+
+    {
+    MONITORINFOEX minfo;
+    HMONITOR hMon;
+    rect.left=x;
+    rect.right=x+w;
+    rect.top=y;
+    rect.bottom=y+h;
+    hMon=MonitorFromRect(&rect,MONITOR_DEFAULTTOPRIMARY);
+    memset(&minfo,0,sizeof(minfo));
+    minfo.cbSize=sizeof(minfo);
+    GetMonitorInfo(hMon,&minfo);
+    rx=minfo.rcWork.left;
+    ry=minfo.rcWork.top;
+    rw=minfo.rcWork.right;
+    rh=minfo.rcWork.bottom;
+    }
+*/
+
+
+  HINSTANCE user32;
+  typedef BOOL (WINAPI* PFN_GETMONITORINFOA)(HMONITOR, LPMONITORINFO);
+  typedef HMONITOR (WINAPI* PFN_MONITORFROMRECTA)(LPRECT, DWORD);
+  PFN_GETMONITORINFOA GetMonitorInfoA;
+  PFN_MONITORFROMRECTA MonitorFromRectA;
+
+  // Suggested by "Daniel Gehriger" <gehriger@linkcad.com>
+  // The API does not exist on older Windows NT and 95, so
+  // We can't even link it, let alone call it.
+  // The solution is to ask the DLL if the function exists.
+  if((user32=LoadLibrary("User32")) && (GetMonitorInfoA=reinterpret_cast<PFN_GETMONITORINFOA>(GetProcAddress(user32,"GetMonitorInfoA"))) && (MonitorFromRectA=reinterpret_cast<PFN_MONITORFROMRECTA>(GetProcAddress(user32,"MonitorFromRectA")))){
+    MONITORINFOEX minfo;
+    HMONITOR hMon;
+    rect.left=x;
+    rect.right=x+w;
+    rect.top=y;
+    rect.bottom=y+h;
+    hMon=MonitorFromRectA(&rect,MONITOR_DEFAULTTOPRIMARY);
+    memset(&minfo,0,sizeof(minfo));
+    minfo.cbSize=sizeof(minfo);
+    GetMonitorInfoA(hMon,&minfo);
+    rx=minfo.rcWork.left;
+    ry=minfo.rcWork.top;
+    rw=minfo.rcWork.right;
+    rh=minfo.rcWork.bottom;
+    }
+
+  else
+
+#endif
+
+    {
+    // On Win95 and WinNT, we have to use the following
+    SystemParametersInfo(SPI_GETWORKAREA,sizeof(RECT),&rect,0);
+    rx=rect.left;
+    ry=rect.top;
+    rw=rect.right-rect.left;
+    rh=rect.bottom-rect.top;
+    }
+
+#endif
+
+  FXTRACE((150,"%s::popup %p\n",getClassName(),this));
+  grabowner=grabto;
+  if((options&POPUP_SHRINKWRAP) || w<=1) w=getDefaultWidth();
+  if((options&POPUP_SHRINKWRAP) || h<=1) h=getDefaultHeight();
+  if(x+w>rw) x=rw-w;
+  if(y+h>rh) y=rh-h;
+  if(x<rx) x=rx;
+  if(y<ry) y=ry;
   position(x,y,w,h);
   show();
   raise();
@@ -644,42 +838,40 @@ void FXPopup::popdown(){
   FXTRACE((150,"%s::popdown %p\n",getClassName(),this));
   if(!grabowner) ungrab();
   grabowner=NULL;
-  //if(getFocus()) getFocus()->killFocus();
   killFocus();
   hide();
   }
 
 
-// // Popup the menu and grab to the given owner
-// FXint FXPopup::popup(FXint x,FXint y,FXint w,FXint h){
-//   FXint rw,rh;
-//   create();
-//   if((options&POPUP_SHRINKWRAP) || w<=1) w=getDefaultWidth();
-//   if((options&POPUP_SHRINKWRAP) || h<=1) h=getDefaultHeight();
-//   rw=getRoot()->getWidth();
-//   rh=getRoot()->getHeight();
-//   if(x+w>rw) x=rw-w;
-//   if(y+h>rh) y=rh-h;
-//   if(x<0) x=0;
-//   if(y<0) y=0;
-//   position(x,y,w,h);
-//   show();
-//   raise();
-//   //setFocus();
-//   return getApp()->runPopup(this);
-//   }
-//
-//
-// // Pop down the menu
-// void FXPopup::popdown(FXint value){
-//   getApp()->stopModal(this,value);
-//   //killFocus();
-//   hide();
-//   }
+/*
+// Popup the menu and grab to the given owner
+FXint FXPopup::popup(FXint x,FXint y,FXint w,FXint h){
+  FXint rw,rh;
+  create();
+  if((options&POPUP_SHRINKWRAP) || w<=1) w=getDefaultWidth();
+  if((options&POPUP_SHRINKWRAP) || h<=1) h=getDefaultHeight();
+  rw=getRoot()->getWidth();
+  rh=getRoot()->getHeight();
+  if(x+w>rw) x=rw-w;
+  if(y+h>rh) y=rh-h;
+  if(x<0) x=0;
+  if(y<0) y=0;
+  position(x,y,w,h);
+  show();
+  raise();
+  return getApp()->runPopup(this);
+  }
 
+
+// Pop down the menu
+void FXPopup::popdown(FXint value){
+  getApp()->stopModal(this,value);
+  hide();
+  }
+*/
 
 // Close popup
-long FXPopup::onCmdChoice(FXObject*,FXSelector sel,void*){
+long FXPopup::onCmdChoice(FXObject*,FXSelector,void*){
   //popdown(SELID(sel)-ID_CHOICE);
   return 1;
   }
@@ -770,7 +962,14 @@ FXuint FXPopup::getFrameStyle() const {
   }
 
 
-// Zap
+// Unlink popup from active popup stack
 FXPopup::~FXPopup(){
-  grabowner=(FXWindow*)-1;
+  if(getApp()->popupWindow==this) getApp()->popupWindow=prevActive;
+  if(prevActive) prevActive->nextActive=nextActive;
+  if(nextActive) nextActive->prevActive=prevActive;
+  prevActive=(FXPopup*)-1L;
+  nextActive=(FXPopup*)-1L;
+  grabowner=(FXWindow*)-1L;
   }
+
+}

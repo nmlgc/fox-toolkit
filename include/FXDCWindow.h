@@ -3,7 +3,7 @@
 *  D e v i c e   C o n t e x t   F o r   W i n d o w s   a n d   I m a g e s    *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1999,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1999,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXDCWindow.h,v 1.27 2002/01/18 22:42:51 jeroen Exp $                     *
+* $Id: FXDCWindow.h,v 1.38 2004/01/21 07:09:58 fox Exp $                        *
 ********************************************************************************/
 #ifndef FXDCWINDOW_H
 #define FXDCWINDOW_H
@@ -28,6 +28,7 @@
 #include "FXDC.h"
 #endif
 
+namespace FX {
 
 
 class FXApp;
@@ -37,7 +38,6 @@ class FXBitmap;
 class FXIcon;
 class FXFont;
 class FXVisual;
-
 
 
 /**
@@ -58,17 +58,17 @@ protected:
   FXuint      flags;          // GC Flags
   FXPixel     devfg;          // Device foreground pixel value
   FXPixel     devbg;          // Device background pixel value
-  void*       gc;             // GC
+  void       *xftDraw;        // Hook used only for XFT support
 #else
   FXID        oldpalette;
   FXID        oldbrush;
   FXID        oldpen;
   FXPixel     devfg;          // Device foreground pixel value
   FXPixel     devbg;          // Device background pixel value
-  FXID        dc;
   FXbool      needsNewBrush;
   FXbool      needsNewPen;
   FXbool      needsPath;
+  FXbool      needsClipReset;
 #endif
 private:
 #ifdef WIN32
@@ -120,6 +120,10 @@ public:
   /// Filled rectangles
   virtual void fillRectangle(FXint x,FXint y,FXint w,FXint h);
   virtual void fillRectangles(const FXRectangle* rectangles,FXuint nrectangles);
+
+  /// Fill chord
+  virtual void fillChord(FXint x,FXint y,FXint w,FXint h,FXint ang1,FXint ang2);
+  virtual void fillChords(const FXArc* chords,FXuint nchords);
 
   /// Draw arcs
   virtual void fillArc(FXint x,FXint y,FXint w,FXint h,FXint ang1,FXint ang2);
@@ -215,7 +219,7 @@ public:
   virtual void clearClipMask();
 
   /// Set font to draw text with
-  virtual void setTextFont(FXFont *fnt);
+  virtual void setFont(FXFont *fnt);
 
   /// Clip against child windows
   virtual void clipChildren(FXbool yes);
@@ -224,5 +228,6 @@ public:
   virtual ~FXDCWindow();
   };
 
+}
 
 #endif

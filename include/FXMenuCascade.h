@@ -1,9 +1,9 @@
 /********************************************************************************
 *                                                                               *
-*                      M e n u   C a s c a d e   W i d g e t                    *
+*                        M e n u C a s c a d e   W i d g e t                    *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXMenuCascade.h,v 1.15 2002/01/18 22:42:53 jeroen Exp $                  *
+* $Id: FXMenuCascade.h,v 1.21 2004/02/08 17:17:33 fox Exp $                     *
 ********************************************************************************/
 #ifndef FXMENUCASCADE_H
 #define FXMENUCASCADE_H
@@ -28,10 +28,10 @@
 #include "FXMenuCaption.h"
 #endif
 
+namespace FX {
 
 
 class FXPopup;
-struct FXTimer;
 
 
 /**
@@ -42,7 +42,6 @@ class FXAPI FXMenuCascade : public FXMenuCaption {
   FXDECLARE(FXMenuCascade)
 protected:
   FXPopup *pane;
-  FXTimer *timer;
 protected:
   FXMenuCascade();
   void drawTriangle(FXDCWindow& dc,FXint l,FXint t,FXint r,FXint b);
@@ -53,7 +52,6 @@ public:
   long onPaint(FXObject*,FXSelector,void*);
   long onEnter(FXObject*,FXSelector,void*);
   long onLeave(FXObject*,FXSelector,void*);
-  long onTimeout(FXObject*,FXSelector,void*);
   long onButtonPress(FXObject*,FXSelector,void*);
   long onButtonRelease(FXObject*,FXSelector,void*);
   long onKeyPress(FXObject*,FXSelector,void*);
@@ -109,5 +107,6 @@ public:
   virtual ~FXMenuCascade();
   };
 
+}
 
 #endif

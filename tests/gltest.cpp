@@ -7,7 +7,7 @@
 #include "fx3d.h"
 
 
-#ifdef HAVE_OPENGL
+#ifdef HAVE_GL_H
 
 
 // Timer setting (in milliseconds)
@@ -100,7 +100,7 @@ SettingsDialog::SettingsDialog(FXWindow* owner,FXGLVisual * vis):FXDialogBox(own
 
   FXVerticalFrame *listframe=new FXVerticalFrame(exbox,LAYOUT_FILL_X|LAYOUT_FILL_Y|FRAME_SUNKEN|FRAME_THICK,0,0,0,0,0,0,0,0,0,0);
 
-  FXList *pExtList=new FXList(listframe,10,NULL,0,FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_FILL_Y);
+  FXList *pExtList=new FXList(listframe,NULL,0,FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_FILL_Y);
 
   char *token,*text,*tmp;
 
@@ -155,8 +155,6 @@ class GLTestWindow : public FXMainWindow {
 private:
 
   FXGLCanvas      *glcanvas;                  // GL Canvas to draw into
-  FXTimer         *timer;                     // Timer for spinning box
-  FXChore         *chore;                     // Timer for spinning box
   int              spinning;                  // Is box spinning
   double           angle;                     // Rotation angle of box
   FXGLVisual      *glvisual;                  // OpenGL visual
@@ -283,18 +281,19 @@ GLTestWindow::GLTestWindow(FXApp* a):FXMainWindow(a,"OpenGL Test Application",NU
   new FXButton(buttonFrame,"&Exit\tExit the application",NULL,getApp(),FXApp::ID_QUIT,FRAME_THICK|FRAME_RAISED|LAYOUT_FILL_X|LAYOUT_TOP|LAYOUT_LEFT,0,0,0,0,10,10,5,5);
 
   // Make a tooltip
-  new FXTooltip(getApp());
+  new FXToolTip(getApp());
 
   // Initialize private variables
   spinning=0;
-  timer = NULL;
-  angle = 0.;
+  angle=0.0;
   }
 
 
 // Destructor
 GLTestWindow::~GLTestWindow(){
-  if(timer) getApp()->removeTimeout(timer);
+  getApp()->removeTimeout(this,ID_TIMEOUT);
+  getApp()->removeChore(this,ID_CHORE);
+  delete glvisual;
   }
 
 
@@ -331,7 +330,7 @@ long GLTestWindow::onTimeout(FXObject*,FXSelector,void*){
   angle += 2.;
   if(angle > 360.) angle -= 360.;
   drawScene();
-  timer=getApp()->addTimeout(TIMER_INTERVAL,this,ID_TIMEOUT);
+  getApp()->addTimeout(this,ID_TIMEOUT,TIMER_INTERVAL);
   return 1;
   }
 
@@ -341,7 +340,7 @@ long GLTestWindow::onChore(FXObject*,FXSelector,void*){
   angle += 2.;
   if(angle > 360.) angle -= 360.;
   drawScene();
-  chore=getApp()->addChore(this,ID_CHORE);
+  getApp()->addChore(this,ID_CHORE);
   return 1;
   }
 
@@ -349,7 +348,7 @@ long GLTestWindow::onChore(FXObject*,FXSelector,void*){
 // Start the boxes spinning
 long GLTestWindow::onCmdSpin(FXObject*,FXSelector,void*){
   spinning=1;
-  timer=getApp()->addTimeout(TIMER_INTERVAL,this,ID_TIMEOUT);
+  getApp()->addTimeout(this,ID_TIMEOUT,TIMER_INTERVAL);
   return 1;
   }
 
@@ -366,7 +365,7 @@ long GLTestWindow::onUpdSpin(FXObject* sender,FXSelector,void*){
 // Start the boxes spinning
 long GLTestWindow::onCmdSpinFast(FXObject*,FXSelector,void*){
   spinning=1;
-  chore=getApp()->addChore(this,ID_CHORE);
+  getApp()->addChore(this,ID_CHORE);
   return 1;
   }
 
@@ -381,15 +380,9 @@ long GLTestWindow::onUpdSpinFast(FXObject* sender,FXSelector,void*){
 
 // If boxes are spinning, stop them
 long GLTestWindow::onCmdStop(FXObject*,FXSelector,void*){
+  getApp()->removeTimeout(this,ID_TIMEOUT);
+  getApp()->removeChore(this,ID_CHORE);
   spinning=0;
-  if(timer){
-    getApp()->removeTimeout(timer);
-    timer=NULL;
-    }
-  if(chore){
-    getApp()->removeChore(chore);
-    chore=NULL;
-    }
   return 1;
   }
 

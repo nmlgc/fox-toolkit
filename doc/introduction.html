@@ -1,112 +1,64 @@
 <html>
 <head>
-<LINK REL="stylesheet" HREF="styles.css" TYPE="text/css">
-<title>FOX-Toolkit</title>
-<!-- HTML Copyright 2001 Paul Laufer -->
+<link rel="stylesheet" href="page.css" type="text/css">
+<title>Home</title>
 </head>
-
-<body bgcolor=#ffffff link=#990033 vlink=#4a73ad alink=#ed004f text=#000000>
-
-<!--header-->
-<table align=center border=0 cellpadding=0 cellspacing=0 width=100% >
-  <tr><td bgcolor=silver colspan=5 align=right height=50><img src=art/oul_grey.gif align=left valign=top width=8 height=8><img src=art/foxlogo.png valign=bottom alt="FOX Toolkit" height=50 width=500 border=0 ></td>
-  	<td bgcolor=#557faa valign=top align=right><img src=art/our.gif width=8 height=8></td>
-  </tr>
-<!-- end header -->
-  <tr>
-    <td bgcolor=#557faa colspan=2 valign=top align=left>&nbsp;</td>
-    <td bgcolor=#557faa colspan=3><font color=#ffffff size=+1><center>
-<!-- Page Title -->
-Documentation: Introduction
-<!-- End Page Title -->
-    </center></font></td>
-    <td bgcolor=#557faa valign=top align=right>&nbsp;</td>
-  </tr>
-  <tr>
-    <td bgcolor=#557faa colspan=2>&nbsp;</td>
-    <td bgcolor=#ffffff valign=top align=left><img src=art/iul.gif width=8 height=8></td>
-    <td bgcolor=#ffffff>&nbsp;</td>
-    <td bgcolor=#ffffff valign=top align=right><img src=art/iur.gif width=8 height=8></td>
-    <td bgcolor=#557faa width=15>&nbsp;</td>
-  </tr>
-  <tr>
-    <td width=8 bgcolor=#557faa>&nbsp;</td>
-    <td valign=top bgcolor=#557faa link=#ffffff width=150>
-
-<!-- start navbar content -->
-
-	<a href=fox.html><font color=#ffffff>Home</font></a><br>
-	<a href=news.html><font color=#ffffff>News</font></a><br>
-	<a href=download.html><font color=#ffffff>Download</font></a><br>
-	<a href=goals.html><font color=#ffffff>Goals & Approach</font></a><br>
-	<a href=doc.html><font color=#ffffff>Documentation</font></a><br>
-	<a href=faq.html><font color=#ffffff>FAQ</font></a><br>
-	<a href=rex.html><font color=#ffffff>FXRex</font></a><br>
-	<a href=screenshots.html><font color=#ffffff>Screenshots</font></a><br>
-	<br>
-	<a href=adie.html><font color=#ffffff>Adie</font></a><br>
-	<a href=pathfinder.html><font color=#ffffff>PathFinder</font></a><br>
-	<a href=calc.html><font color=#ffffff>FOX Calculator</font></a><br>
-	<br>
-	<a href=projects.html><font color=#ffffff>Projects</font></a><br>
-	<br>
-	<a href='http://fxpy.sourceforge.net'><font color=#ffffff>FXPy</font></a><br>
-	<a href='http://fxruby.sourceforge.net'><font color=#ffffff>FXRuby</font></a><br>
-	<a href='http://eiffelfox.sourceforge.net'><font color=#ffffff>EiffelFox</font></a><br>
-        <a href='http://eevolved.com/foxhole/'><font color=#ffffff>The FOX Hole</font></a><br>
-        <a href='http://takahr.dhis.portside.net/cgi-bin/rwiki.cgi?cmd=view;name=FOX+FAQ'><font color=#ffffff>Japanese Docs</font></a><br>
-	<br>
-	<center>
-	<a href="http://www.eff.org/br"><img SRC="art/freespeach.gif" border=0></a>
-	<p>
-	<a href="http://www.slashdot.org"><img SRC="art/slingerzbutton1.gif" border=0></a>
-	</center>
+<body bgcolor=#ffffff link=#990033 vlink=#990033 alink=#990033 text=#000000>
 
 
-
-<!-- end navbar content -->
-
-    </td>
-    <td bgcolor=#ffffff>&nbsp;</td>
-    <td valign=top>
-
-<!-- start main window content -->
-<center><img src='art/foxstart.png'>
-<BR><B>Documentation: Introduction</B>
-</center>
+<!---- TOPIC TITLE WITH LOGO--->
+<table border=0 cellpadding= cellspacing=2 width=100% ><tr><td><a href='http://www.fox-toolkit.org' target=_top><img src='art/foxlogo_small.jpg' border=0></a></td><td width=100% valign=bottom id="HEADLINE"><b>
+Documentation: Introduction  <A href='introduction.html' target="_top" align=left><font  size=-2>[Remove Frame]</font></a>
+<br><img src='art/line.gif' width=100% height=1></b></td></tr></table>
 <p>
-<p>
-<b>FOX Programming</b>
-<hr>
+<!--- TOPIC TITLE WITH LOGO --->
+<ul>
 To illustrate the facility with which you can build a FOX application,
 we're going to build a few simple FOX applications.&nbsp; The first application
 called Scribble.&nbsp; A picture of the Scribble application is shown below:
-<br>&nbsp;
-<br>&nbsp;
-<br>
-<br>
+</ul>
+
+<!--- TOPIC TITLE -->
+<p>
+<table width=100% cellpadding=0 cellspacing=2><tr><td width=100% valign=bottom id=HEADLINE><b>
+Scribble
+<br><img src='art/line.gif' width=100% height=1></b></td></tr></table>
+<p>
+<!--- TOPIC TITLE -->
+<ul>
 <center>
 <p><img SRC="art/scribble.png">
-<br>Fig 1. The Scribble Application.</center>
+<br>Fig 1. The Scribble Application.
+</center>
 
-
-<p>Scribble demonstrates how to use the FOX Layout Managers, how to create
-Buttons, and how to handle messages.&nbsp; Enough talk, lets start coding!&nbsp;
-The very first thing is to include the FOX header files.&nbsp; This is
+<p>
+Scribble demonstrates how to use the FOX Layout Managers, how to create
+Buttons, and how to handle messages.&nbsp; Enough talk, lets start coding!
+The very first thing is to include the FOX header files. This is
 simple, as there is just one thing you need to include:
-<br>&nbsp;
-<ul><tt><font size=-1>#include "fx.h"</font></tt></ul>
-Next, we need a top level Window object, this is a class derived from FXMainWindow.&nbsp;
+
+<pre>
+  #include "fx.h"
+</pre>
+
+
+Next, we need a top level Window object, this is a class derived from FXMainWindow.
 There is only one Main Window; if you need additional toplevel windows,
 you will probably derive those from FXDialogBox or FXTopWindow.
 <p>In the case of Scribble, we make a class called ScribbleWindow:
-<br>&nbsp;
-<ul><tt><font size=-1>// Event Handler Object</font></tt>
-<br><tt><font size=-1>class ScribbleWindow : public FXMainWindow {</font></tt>
-<p><tt><font size=-1>&nbsp; // Macro for class hierarchy declarations</font></tt>
-<br><tt><font size=-1>&nbsp; FXDECLARE(ScribbleWindow)</font></tt></ul>
+<br>
+
+
+<pre>
+  // Event Handler Object
+  class ScribbleWindow : public FXMainWindow {
+    // Macro for class hierarchy declarations
+    FXDECLARE(ScribbleWindow)
+</pre>
+
+
 The first line says <i>ScribbleWindow</i> is derived from <i>FXMainWindow</i>;
-FXMainWindow, like most FOX classes, is derived from FXObject.&nbsp; Most
+FXMainWindow, like most FOX classes, is derived from FXObject. Most
 classes you will write in the course of programming with FOX are either
 directly or indirectly derived from one single top level class called FXObject.
 <p>The macro <i>FXDECLARE(ScribbleWindow)</i> declares a number of member
@@ -116,44 +68,38 @@ a macro as it is always the same, and more convenient to program this way.
 and the drawing color.&nbsp; We also keep a flag to remember if the mouse
 was down, and a flag to remember if the canvas is dirty, i.e. has been
 scribbled on:
-<br>&nbsp;
-<ul><tt><font size=-1>private:</font></tt>
-<p><tt><font size=-1>&nbsp; FXHorizontalFrame *contents;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-// Content frame</font></tt>
-<br><tt><font size=-1>&nbsp; FXVerticalFrame&nbsp;&nbsp; *canvasFrame;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-// Canvas frame</font></tt>
-<br><tt><font size=-1>&nbsp; FXVerticalFrame&nbsp;&nbsp; *buttonFrame;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-// Button frame</font></tt>
-<br><tt><font size=-1>&nbsp; FXCanvas&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-*canvas;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-// Canvas to draw into</font></tt>
-<br><tt><font size=-1>&nbsp; int&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-mdflag;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-// Mouse button down?</font></tt>
-<br><tt><font size=-1>&nbsp; int&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-dirty;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-// Canvas has been painted?</font></tt>
-<br><tt><font size=-1>&nbsp; FXColor&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-drawColor;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-// Color for the line</font></tt>
-</ul>
-<p>
+
+<pre>
+  private:
+  FXHorizontalFrame *contents;     // Content frame
+  FXVerticalFrame   *buttonFrame;  // Button frame
+  FXCanvas          *canvas;       // Canvas to draw into
+  int                mdflag;       // Mouse button down?
+  int                dirty;        // Canvas has been painted?
+  FXColor            drawColor;    // Color for the line
+</pre>
+
+
+<br><br>
 To satisfy the serialization macro, we need to furnish a default contructor:
-<p>
-<ul><tt><font size=-1>protected:</font></tt>
-<p><tt><font size=-1>&nbsp; ScribbleWindow(){}</font></tt>
-</ul>
-<br>
+
+<pre>
+  protected:
+    ScribbleWindow(){}
+</pre>
+
 <p>
 FOX handles events from the user through a system of <i>messages</i> sent
 to a certain <i>object</i>.&nbsp; In this case, the received of the messages
 is the ScribbleWindow class.&nbsp; Thus, we need to add handler member
 functions to catch these messages and perform some action in response.&nbsp;
 All message handler functions in FOX have the same argument signature:
-<br>
-<ul><tt><font size=-1>long onSomeCommand(FXObject* sender,FXSelector sel,void *ptr);</font></tt></ul>
+<p>
+<pre>
+  long onSomeCommand(FXObject* sender,FXSelector sel,void *ptr);
+</pre>
 Where:
-<br>&nbsp;
+<p>
 <ul><b><i>sender</i></b> is the sender object that sent the message to
 us.
 <br><b><i>sel </i></b>is the selector, a combination of a message type
@@ -163,31 +109,35 @@ this points to the FXEvent structure which contains the event that led
 to the message.</ul>
 For the Scribble application, we want&nbsp; to handle mouse messages, as
 well as messages from the two buttons:
-<br>&nbsp;
-<ul><tt><font size=-1>public:</font></tt>
-<br><tt><font size=-1>&nbsp; long onPaint(FXObject*,FXSelector,void*);</font></tt>
-<br><tt><font size=-1>&nbsp; long onMouseDown(FXObject*,FXSelector,void*);</font></tt>
-<br><tt><font size=-1>&nbsp; long onMouseUp(FXObject*,FXSelector,void*);</font></tt>
-<br><tt><font size=-1>&nbsp; long onMouseMove(FXObject*,FXSelector,void*);</font></tt>
-<br><tt><font size=-1>&nbsp; long onCmdClear(FXObject*,FXSelector,void*);</font></tt>
-<br><tt><font size=-1>&nbsp; long onUpdClear(FXObject*,FXSelector,void*);</font></tt></ul>
+<p>
+<pre>
+  public:
+    long onPaint(FXObject*,FXSelector,void*);
+    long onMouseDown(FXObject*,FXSelector,void*);
+    long onMouseUp(FXObject*,FXSelector,void*);
+    long onMouseMove(FXObject*,FXSelector,void*);
+    long onCmdClear(FXObject*,FXSelector,void*);
+    long onUpdClear(FXObject*,FXSelector,void*);
+</pre>
+<p>
 ScribbleWindow also needs to define some new message ID's.&nbsp; A message
 consists of a <b><i>type </i></b>and an <b><i>id</i></b>.&nbsp; The <i>type</i>
 defines <i>what</i> has happened; the <i>id</i> identifies the <i>source</i>
 of the message.&nbsp; Even though we know the object that sent us the message,
 in many cases, we can be sent the same message from different sources,
 and the id is much more convenient; so:
-<br>&nbsp;
-<ul><tt><font size=-1>public:</font></tt>
-<br><tt><font size=-1>&nbsp; enum{</font></tt>
-<br><tt><font size=-1>&nbsp;&nbsp;&nbsp; ID_CANVAS=FXMainWindow::ID_LAST,</font></tt>
-<br><tt><font size=-1>&nbsp;&nbsp;&nbsp; ID_CLEAR,</font></tt>
-<br><tt><font size=-1>&nbsp;&nbsp;&nbsp; ID_LAST</font></tt>
-<br><tt><font size=-1>&nbsp;&nbsp;&nbsp; };</font></tt></ul>
-
-<p><br>We typically define the list of messages some target understands
-as an
-<i>enum</i> type.&nbsp; As the ScribbleWindow class is derived from
+<p>
+<pre>
+  public:
+    enum{
+      ID_CANVAS=FXMainWindow::ID_LAST,
+      ID_CLEAR,
+      ID_LAST
+      };
+</pre>
+<p>
+We typically define the list of messages some target understands
+as an <i>enum</i> type.&nbsp; As the ScribbleWindow class is derived from
 FXMainWindow, it also understands all the messages already understood by
 the basic FXMainWindow.&nbsp; Our new messages should have different numbers
 from those.&nbsp; Rather than counting by hand, we let the compiler worry
@@ -197,135 +147,158 @@ its message id's from; if ever any new message id's are added to the base
 class, our own messages are automatically renumbered by the compiler.
 <p>We wrap up the remainder of the ScribbleApp class declaration by defining
 a constructor and one member function called create():
-<br>&nbsp;
-<ul><tt><font size=-1>public:</font></tt>
-<br><tt><font size=-1>&nbsp; ScribbleWindow(FXApp* a);</font></tt>
-<br><tt><font size=-1>&nbsp; virtual void create();</font></tt>
-<br><tt><font size=-1>&nbsp; };</font></tt></ul>
+<p>
+<pre>
+  public:
+    ScribbleWindow(FXApp* a);
+    virtual void create();
+    };
+</pre>
+<p>
 
 <p><br>In our implementation, the constructor ScribbleWindow will actually
-build the GUI.&nbsp; The create() function is a virtual function that is
-called by the system.&nbsp; Most FOX Widgets have this create function.&nbsp;
+build the GUI.  The create() function is a virtual function that is
+called by the system.  Most FOX Widgets have this create function.
 FOX Widgets have a two-stage creation process; first, the client side Widgets
-are constructed, using ordinary C++ constructors.&nbsp; Then, once the
+are constructed, using ordinary C++ constructors.  Then, once the
 whole widget tree is complete, a single call to the application's create()
-function will create all the windows for those widgets.&nbsp; This two
+function will create all the windows for those widgets.  This two
 step process is needed as the second step may only be executed one the
 connecion to the display has been established.
 <p>Now, we're ready to implement this new class; in most cases, the previous
 code would reside in a header file, while the implementation would be in
-a C++ source file, of course.&nbsp; In the case of ScribbleWindow, it is
+a C++ source file, of course.  In the case of ScribbleWindow, it is
 so simple that we placed everything into one file.
-<p>The first thing&nbsp; to do is to define the <b><i>message map</i></b>.&nbsp;
+<p>The first thing  to do is to define the <b><i>message map</i></b>.
 The message map is a simple table that <i>associates </i>a<i> message type,
 </i>and<i>
-message id </i>to a class's<i> member function.</i>&nbsp; Having a message
+message id </i>to a class's<i> member function.</i>  Having a message
 map allows us to send any message to any [FXObject-derived] object.
 <br>Thus:
-<br>&nbsp;
-<ul><tt><font size=-1>FXDEFMAP(ScribbleWindow) ScribbleWindowMap[]={</font></tt>
-<p><tt><font size=-1>&nbsp; //________Message_Type_____________________ID_______________Message_Handler_______</font></tt>
-<br><tt><font size=-1>&nbsp; FXMAPFUNC(SEL_PAINT,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-ScribbleWindow::ID_CANVAS, ScribbleWindow::onPaint),</font></tt>
-<br><tt><font size=-1>&nbsp; FXMAPFUNC(SEL_LEFTBUTTONPRESS,&nbsp;&nbsp;
-ScribbleWindow::ID_CANVAS, ScribbleWindow::onMouseDown),</font></tt>
-<br><tt><font size=-1>&nbsp; FXMAPFUNC(SEL_LEFTBUTTONRELEASE, ScribbleWindow::ID_CANVAS,
-ScribbleWindow::onMouseUp),</font></tt>
-<br><tt><font size=-1>&nbsp; FXMAPFUNC(SEL_MOTION,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-ScribbleWindow::ID_CANVAS, ScribbleWindow::onMouseMove),</font></tt>
-<br><tt><font size=-1>&nbsp; FXMAPFUNC(SEL_COMMAND,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-ScribbleWindow::ID_CLEAR,&nbsp; ScribbleWindow::onCmdClear),</font></tt>
-<br><tt><font size=-1>&nbsp; FXMAPFUNC(SEL_UPDATE,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-ScribbleWindow::ID_CLEAR,&nbsp; ScribbleWindow::onUpdClear),</font></tt>
-<br><tt><font size=-1>&nbsp; };</font></tt>
-<br>&nbsp;</ul>
+<br>
+<pre>
+  FXDEFMAP(ScribbleWindow) ScribbleWindowMap[]={
+    //________Message_Type_____________________ID_______________Message_Handler_______
+    FXMAPFUNC(SEL_PAINT,            ScribbleWindow::ID_CANVAS,ScribbleWindow::onPaint),
+    FXMAPFUNC(SEL_LEFTBUTTONPRESS,  ScribbleWindow::ID_CANVAS,ScribbleWindow::onMouseDown),
+    FXMAPFUNC(SEL_LEFTBUTTONRELEASE,ScribbleWindow::ID_CANVAS,ScribbleWindow::onMouseUp),
+    FXMAPFUNC(SEL_MOTION,           ScribbleWindow::ID_CANVAS,ScribbleWindow::onMouseMove),
+    FXMAPFUNC(SEL_COMMAND,          ScribbleWindow::ID_CLEAR, ScribbleWindow::onCmdClear),
+    FXMAPFUNC(SEL_UPDATE,           ScribbleWindow::ID_CLEAR, ScribbleWindow::onUpdClear),
+    };
+</pre>
+<p>
 Note several things about this table; first, there are several messages
 with the same <b><i>id</i></b>, but a different <b><i>type</i></b>. Message
 types indicate what happened, for example, SEL_LEFTBUTTONPRESS means that
-the left mouse button was just pressed.&nbsp; The message id identifies
-the source.&nbsp; FOX defines a large collection of message types, each
+the left mouse button was just pressed.  The message id identifies
+the source.  FOX defines a large collection of message types, each
 of them has a specific meaning.
 <p>Next, we need to implement the ``boilerplate'' stuff that the previous
 FXDECLARE macro has declared:
-<br>&nbsp;
-<ul><tt>FXIMPLEMENT(ScribbleWindow,FXMainWindow,ScribbleWindowMap,ARRAYNUMBER(ScribbleWindowMap))</tt></ul>
-
-<p><br>This the first argument of the macro should have the name of the
+<p>
+<pre>
+  FXIMPLEMENT(ScribbleWindow,FXMainWindow,ScribbleWindowMap,ARRAYNUMBER(ScribbleWindowMap))
+</pre>
+<p>
+This the first argument of the macro should have the name of the
 class, in this case ScribbleWindow; the second argument should be the name
 of the class from which the class has been derived; in this case, that's
-FXMainWindow.&nbsp; The last to arguments are a pointer to the message
-map, and the number of messages in that map.&nbsp; FOX has a convenience
+FXMainWindow.  The last to arguments are a pointer to the message
+map, and the number of messages in that map.  FOX has a convenience
 macro ARRAYNUMBER() that expands to the number of elements in a compile-time
 defined array; this makes it easier to add or remove messages.
 <p>If the class you're defining implements no additional messages, the
 last two arguments of FXIMPLEMENT should be simply NULL and 0.
 <p>The remainder of the ScribbleWindow's implementation is pretty much
-ordinary C++ code.&nbsp; The constructor follows below:
-<br>&nbsp;
-<ul><tt><font size=-1>// Construct a ScribbleWindow</font></tt>
-<br><tt><font size=-1>ScribbleWindow::ScribbleWindow(FXApp *a):FXMainWindow(a,"Scribble
-Application",NULL,NULL,DECOR_ALL,0,0,800,600){</font></tt>
-<p><tt><font size=-1>&nbsp; contents=new FXHorizontalFrame(this,LAYOUT_SIDE_TOP|LAYOUT_FILL_X|LAYOUT_FILL_Y,0,0,0,0,
-0,0,0,0);</font></tt>
-<p><tt><font size=-1>&nbsp; // LEFT pane to contain the canvas</font></tt>
-<br><tt><font size=-1>&nbsp; canvasFrame=new FXVerticalFrame(contents,FRAME_SUNKEN|LAYOUT_FILL_X|LAYOUT_FILL_Y|LAYOUT_TOP|LAYOUT_LEFT,0,0,0,0,10,10,10,10);</font></tt>
-<p><tt><font size=-1>&nbsp;&nbsp;&nbsp; // Label above the canvas</font></tt>
-<br><tt><font size=-1>&nbsp;&nbsp;&nbsp; new FXLabel(canvasFrame,"Canvas
-Frame",NULL,JUSTIFY_CENTER_X|LAYOUT_FILL_X);</font></tt>
-<p><tt><font size=-1>&nbsp;&nbsp;&nbsp; // Horizontal divider line</font></tt>
-<br><tt><font size=-1>&nbsp;&nbsp;&nbsp; new FXHorizontalSeparator(canvasFrame,SEPARATOR_GROOVE|LAYOUT_FILL_X);</font></tt>
-<p><tt><font size=-1>&nbsp;&nbsp;&nbsp; // Drawing canvas</font></tt>
-<br><tt><font size=-1>&nbsp;&nbsp;&nbsp; canvas=new FXCanvas(canvasFrame,this,ID_CANVAS,FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_FILL_Y|LAYOUT_TOP|LAYOUT_LEFT);</font></tt>
-<p><tt><font size=-1>&nbsp; // RIGHT pane for the buttons</font></tt>
-<br><tt><font size=-1>&nbsp; buttonFrame=new FXVerticalFrame(contents,FRAME_SUNKEN|LAYOUT_FILL_Y|LAYOUT_TOP|LAYOUT_LEFT,0,0,0,0,10,10,10,10);</font></tt>
-<p><tt><font size=-1>&nbsp;&nbsp;&nbsp; // Label above the buttons</font></tt>
-<br><tt><font size=-1>&nbsp;&nbsp;&nbsp; new FXLabel(buttonFrame,"Button
-Frame",NULL,JUSTIFY_CENTER_X|LAYOUT_FILL_X);</font></tt>
-<p><tt><font size=-1>&nbsp;&nbsp;&nbsp; // Horizontal divider line</font></tt>
-<br><tt><font size=-1>&nbsp;&nbsp;&nbsp; new FXHorizontalSeparator(buttonFrame,SEPARATOR_RIDGE|LAYOUT_FILL_X);</font></tt>
-<p><tt><font size=-1>&nbsp;&nbsp;&nbsp; // Button to clear</font></tt>
-<br><tt><font size=-1>&nbsp;&nbsp;&nbsp; new FXButton(buttonFrame,"&amp;Clear",NULL,this,ID_CLEAR,FRAME_THICK|FRAME_RAISED|LAYOUT_FILL_X|LAYOUT_TOP|LAYOUT_LEFT,0,0,0,0,10,10,5,5);</font></tt>
-<p><tt><font size=-1>&nbsp;&nbsp;&nbsp; // Exit button</font></tt>
-<br><tt><font size=-1>&nbsp;&nbsp;&nbsp; new FXButton(buttonFrame,"&amp;Exit",NULL,getApp(),FXApp::ID_QUIT,FRAME_THICK|FRAME_RAISED|LAYOUT_FILL_X|LAYOUT_TOP|LAYOUT_LEFT,0,0,0,0,10,10,5,5);</font></tt>
-<p><tt><font size=-1>&nbsp; // Initialize private variables</font></tt>
-<br><tt><font size=-1>&nbsp; drawColor=FXRGB(255,0,0);</font></tt>
-<br><tt><font size=-1>&nbsp; mdflag=0;</font></tt>
-<br><tt><font size=-1>&nbsp; dirty=0;</font></tt>
-<br><tt><font size=-1>&nbsp; }</font></tt>
-<br>&nbsp;</ul>
+ordinary C++ code.  The constructor follows below:
+<p>
+<pre>
+  // Construct a ScribbleWindow
+  ScribbleWindow::ScribbleWindow(FXApp *a):FXMainWindow(a,"ScribbleApplication",NULL,NULL,DECOR_ALL,0,0,800,600){
+
+  contents=new FXHorizontalFrame(this,LAYOUT_SIDE_TOP|LAYOUT_FILL_X|LAYOUT_FILL_Y,0,0,0,0,0,0,0,0);
+
+  // LEFT pane to contain the canvas
+  canvasFrame=new FXVerticalFrame(contents,
+                                  FRAME_SUNKEN|LAYOUT_FILL_X|LAYOUT_FILL_Y|LAYOUT_TOP|LAYOUT_LEFT,0,0,0,0,10,10,10,10);
+
+  // Label above the canvas
+  new FXLabel(canvasFrame,"CanvasFrame",NULL,JUSTIFY_CENTER_X|LAYOUT_FILL_X);
+
+  // Horizontal divider line
+  new FXHorizontalSeparator(canvasFrame,SEPARATOR_GROOVE|LAYOUT_FILL_X);
+
+  // Drawing canvas
+  canvas=new FXCanvas(canvasFrame,this,ID_CANVAS,
+                      FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_FILL_Y|LAYOUT_TOP|LAYOUT_LEFT);
+
+  // RIGHT pane for the buttons
+  buttonFrame=new FXVerticalFrame(contents,
+                                  FRAME_SUNKEN|LAYOUT_FILL_Y|LAYOUT_TOP|LAYOUT_LEFT,0,0,0,0,10,10,10,10);
+
+  // Label above the buttons
+  new FXLabel(buttonFrame,"ButtonFrame",NULL,JUSTIFY_CENTER_X|LAYOUT_FILL_X);
+
+  // Horizontal divider line
+  new FXHorizontalSeparator(buttonFrame,SEPARATOR_RIDGE|LAYOUT_FILL_X);
+
+  // Button to clear
+  new FXButton(buttonFrame,"&amp;Clear",NULL,this,ID_CLEAR,
+               FRAME_THICK|FRAME_RAISED|LAYOUT_FILL_X|LAYOUT_TOP|LAYOUT_LEFT,0,0,0,0,10,10,5,5);
+
+  // Exit button
+  new FXButton(buttonFrame,"&amp;Exit",NULL,getApp(),FXApp::ID_QUIT,
+               FRAME_THICK|FRAME_RAISED|LAYOUT_FILL_X|LAYOUT_TOP|LAYOUT_LEFT,0,0,0,0,10,10,5,5);
+
+  // Initialize private variables
+  drawColor=FXRGB(255,0,0);
+  mdflag=0;
+  dirty=0;
+  }
+</pre>
+<p>
 In almost all cases, it takes just one line of C++ code to create a FOX
-Widget.&nbsp; Typically, that is a constructor invocation.&nbsp; As most
+Widget.  Typically, that is a constructor invocation.  As most
 FOX Widget supply convenient default parameters to the constructor, you
 may not have to specify most of them.
+
 <p>The first line in the body of the constructor creates a top level window;
 toplevel windows in FOX have no parent, so pass in a pointer to the application
-object (<b><i>this</i></b> in this case).&nbsp; The remaining parameters
+object (<b><i>this</i></b> in this case).  The remaining parameters
 are the window title, window decorations (such as resize handles, borders,
-etc.), as well as the initial size and position.&nbsp; The initial size
+etc.), as well as the initial size and position.  The initial size
 and position may be ignored by your particular window manager, they are
 just hints.
-<p>The next line creates a FXHorizontalFrame Widget.&nbsp; The FXHorizontalFrame
+
+<p>The next line creates a FXHorizontalFrame Widget.  The FXHorizontalFrame
 Widget is a <a href="layout.html#LAYOUT">Layout Manager</a> that places
 its children horizontally.
+
 <p>The FXMainWindow Widget itself is also a Layout Manager, and the options
-passed to the FXHorizontalFrame widget's constructor&nbsp; determine how
+passed to the FXHorizontalFrame widget's constructor determine how
 it is placed in the FXMainWindow.
+
 <p>Next, two FXVerticalFrame widgets are created, one for the drawing Canvas
-and one for the buttons.&nbsp; In the canvasFrame, we then place a Label,
-a grooved Separator, and the Canvas for drawing into.&nbsp; The Canvas's
+and one for the buttons.  In the canvasFrame, we then place a Label,
+a grooved Separator, and the Canvas for drawing into.  The Canvas's
 target object is ScribbleWindow (i.e. <b><i>this</i></b>), and its message
-is set to ID_CANVAS.&nbsp; This causes Canvas to send all its messages
+is set to ID_CANVAS.  This causes Canvas to send all its messages
 to the ScribbleApp object, with the ID set to ID_CANVAS.
+
 <p>Likewise, in the right buttonFrame we place a Label, a grooved Separator,
-and two Buttons.&nbsp; The clear button has a caption "&amp;Clear".&nbsp;
+and two Buttons.  The clear button has a caption "&amp;Clear".
+
 The &amp; in front of a latter will cause the Button to install a hot-key
-Alt-C automatically.&nbsp; The caption is drawn with the C underlines,
-as in "<u>C</u>lear."&nbsp; The target of the clear Button is again the
-ScribbleApp object, and its message ID is ID_CLEAR.&nbsp; Likewise, the
+Alt-C automatically.  The caption is drawn with the C underlines,
+as in "<u>C</u>lear."  The target of the clear Button is again the
+ScribbleApp object, and its message ID is ID_CLEAR.  Likewise, the
 exit Button sends ID_QUIT.
+
 <p>Note that we didn't have to define ID_QUIT, as this is a message every
-FXApp object already understands.&nbsp;&nbsp; Thus, we can simply hook
+FXApp object already understands.  Thus, we can simply hook
 up buttons to their targets.
+
 <p>The remaining arguments to the Buttons determine its frame style (FRAME_THICK|FRAME_RAISED),
 and how it is placed inside the VerticalFrame Layout Manager (LAYOUT_FILL_X|LAYOUT_TOP|LAYOUT_LEFT)
 tells the Layout Manager to stretch the Buttons to fill the available room,
@@ -333,101 +306,107 @@ making them nicely the same size.
 <p>Finally, the ScribbleWindow's constructor initializes its member variables
 for the drawing color and the flags.
 <p>Next, we implement the create() routine:
-<br>&nbsp;
-<ul><tt><font size=-1>// Create and initialize</font></tt>
-<br><tt><font size=-1>void ScribbleWindow::create(){</font></tt>
-<p><tt><font size=-1>&nbsp; // Create the windows</font></tt>
-<br><tt><font size=-1>&nbsp; FXMainWindow::create();</font></tt>
-<p><tt><font size=-1>&nbsp; // Make the main window appear</font></tt>
-<br><tt><font size=-1>&nbsp; show();</font></tt>
-<br><tt><font size=-1>&nbsp; }</font></tt></ul>
+<p>
+<pre>
+  // Create and initialize
+  void ScribbleWindow::create(){
+    // Create the windows
+    FXMainWindow::create();
+    // Make the main window appear
+    show();
+    }
+</pre>
+<p>
 First, we call the base classes' create; then, the main window is shown
 on the screen by calling its show() member function.
 <p>Now, we're ready to handle some messages:
-<br>&nbsp;
-<ul><tt><font size=-1>// Mouse button was pressed somewhere</font></tt>
-<br><tt><font size=-1>long ScribbleWindow::onMouseDown(FXObject*,FXSelector,void*){</font></tt>
-<p><tt><font size=-1>&nbsp; // While the mouse is down, we'll draw lines</font></tt>
-<br><tt><font size=-1>&nbsp; mdflag=1;</font></tt>
-<p><tt><font size=-1>&nbsp; return 1;</font></tt>
-<br><tt><font size=-1>&nbsp; }</font></tt>
-<br>&nbsp;
-<p><tt><font size=-1>// The mouse has moved, draw a line</font></tt>
-<br><tt><font size=-1>long ScribbleWindow::onMouseMove(FXObject*, FXSelector,
-void* ptr){</font></tt>
-<br><tt><font size=-1>&nbsp; FXEvent *ev=(FXEvent*)ptr;</font></tt>
-<br><tt><font size=-1>&nbsp; if(mdflag){</font></tt>
-<p><tt><font size=-1>&nbsp;&nbsp;&nbsp; // Get DC for the canvas</font></tt>
-<br><tt><font size=-1>&nbsp;&nbsp;&nbsp; FXDCWindow dc(canvas);</font></tt>
-<p><tt><font size=-1>&nbsp;&nbsp;&nbsp; // Set foreground color</font></tt>
-<br><tt><font size=-1>&nbsp;&nbsp;&nbsp; dc.setForeground(drawColor);</font></tt>
-<p><tt><font size=-1>&nbsp;&nbsp;&nbsp; // Draw line</font></tt>
-<br><tt><font size=-1>&nbsp;&nbsp;&nbsp; dc.drawLine(ev->last_x, ev->last_y,
-ev->win_x, ev->win_y);</font></tt>
-<p><tt><font size=-1>&nbsp;&nbsp;&nbsp; // We have drawn something, so
-now the canvas is dirty</font></tt>
-<br><tt><font size=-1>&nbsp;&nbsp;&nbsp; dirty=1;</font></tt>
-<br><tt><font size=-1>&nbsp;&nbsp;&nbsp; }</font></tt>
-<br><tt><font size=-1>&nbsp; return 1;</font></tt>
-<br><tt><font size=-1>&nbsp; }</font></tt>
-<br>&nbsp;
-<p><tt><font size=-1>// The mouse button was released again</font></tt>
-<br><tt><font size=-1>long ScribbleWindow::onMouseUp(FXObject*,FXSelector,void*
-ptr){</font></tt>
-<br><tt><font size=-1>&nbsp; FXEvent *ev=(FXEvent*) ptr;</font></tt>
-<br><tt><font size=-1>&nbsp; if(mdflag){</font></tt>
-<br><tt><font size=-1>&nbsp;&nbsp;&nbsp; FXDCWindow dc(canvas);</font></tt>
-<p><tt><font size=-1>&nbsp;&nbsp;&nbsp; dc.setForeground(drawColor);</font></tt>
-<br><tt><font size=-1>&nbsp;&nbsp;&nbsp; dc.drawLine(ev->last_x, ev->last_y,
-ev->win_x, ev->win_y);</font></tt>
-<p><tt><font size=-1>&nbsp;&nbsp;&nbsp; // We have drawn something, so
-now the canvas is dirty</font></tt>
-<br><tt><font size=-1>&nbsp;&nbsp;&nbsp; dirty=1;</font></tt>
-<p><tt><font size=-1>&nbsp;&nbsp;&nbsp; // Mouse no longer down</font></tt>
-<br><tt><font size=-1>&nbsp;&nbsp;&nbsp; mdflag=0;</font></tt>
-<br><tt><font size=-1>&nbsp;&nbsp;&nbsp; }</font></tt>
-<br><tt><font size=-1>&nbsp; return 1;</font></tt>
-<br><tt><font size=-1>&nbsp; }</font></tt>
-<br>&nbsp;
-<p><tt><font size=-1>// Paint the canvas</font></tt>
-<br><tt><font size=-1>long ScribbleWindow::onPaint(FXObject*,FXSelector,void*
-ptr){</font></tt>
-<br><tt><font size=-1>&nbsp; FXEvent *ev=(FXEvent*)ptr;</font></tt>
-<br><tt><font size=-1>&nbsp; FXDCWindow dc(canvas,ev);</font></tt>
-<br><tt><font size=-1>&nbsp; dc.setForeground(canvas->getBackColor());</font></tt>
-<br><tt><font size=-1>&nbsp; dc.fillRectangle(ev->rect.x,ev->rect.y,ev->rect.w,ev->rect.h);</font></tt>
-<br><tt><font size=-1>&nbsp; return 1;</font></tt>
-<br><tt><font size=-1>&nbsp; }</font></tt></ul>
+<p>
+<pre>
+   // Mouse button was pressed somewhere
+   long ScribbleWindow::onMouseDown(FXObject*,FXSelector,void*){
 
-<p><br>The <i>onMouseDown</i> message handler simply sets a flag to remember
-than the mouse is now down;&nbsp; the <i>onMouseMove</i> handler draws
+     // While the mouse is down, we'll draw lines
+     mdflag=1;
+     return 1;
+     }
+
+   // The mouse has moved, draw a line
+   long ScribbleWindow::onMouseMove(FXObject*, FXSelector,void* ptr){
+     FXEvent *ev=(FXEvent*)ptr;
+     if(mdflag){
+
+       // Get DC for the canvas
+       FXDCWindow dc(canvas);
+
+       // Set foreground color
+       dc.setForeground(drawColor);
+
+       // Draw line
+       dc.drawLine(ev->last_x, ev->last_y,ev->win_x, ev->win_y);
+
+       // We have drawn something, sonow the canvas is dirty
+       dirty=1;
+       }
+     return 1;
+     }
+
+   // The mouse button was released again
+   long ScribbleWindow::onMouseUp(FXObject*,FXSelector,void*ptr){
+     FXEvent *ev=(FXEvent*) ptr;
+     if(mdflag){
+       FXDCWindow dc(canvas);
+       dc.setForeground(drawColor);
+       dc.drawLine(ev->last_x, ev->last_y,ev->win_x, ev->win_y);
+
+       // We have drawn something, sonow the canvas is dirty
+       dirty=1;
+
+       // Mouse no longer down
+       mdflag=0;
+       }
+     return 1;
+     }
+
+   // Paint the canvas
+   long ScribbleWindow::onPaint(FXObject*,FXSelector,void*ptr){
+     FXEvent *ev=(FXEvent*)ptr;
+     FXDCWindow dc(canvas,ev);
+     dc.setForeground(canvas->getBackColor());
+     dc.fillRectangle(ev->rect.x,ev->rect.y,ev->rect.w,ev->rect.h);
+     return 1;
+     }
+</pre>
+
+<p>The <i>onMouseDown</i> message handler simply sets a flag to remember
+than the mouse is now down; the <i>onMouseMove</i> handler draws
 a line from the last to the current mouse positions; it then sets a dirty
-flag to 1 to remember that the Canvas has been drawn onto.&nbsp; The <i>onMouseUp</i>
-handler finishes the line, and resets the mouse down flag.&nbsp; Finally,
+flag to 1 to remember that the Canvas has been drawn onto.  The <i>onMouseUp</i>
+handler finishes the line, and resets the mouse down flag.  Finally,
 the <i>onPaint</i> handler repaints the canvas to the background color.
 <br>Nothing remarkable here at all.
 <p>The next few message handlers are more interesting:
-<br>&nbsp;
-<ul><tt><font size=-1>// Handle the clear message</font></tt>
-<br><tt><font size=-1>long ScribbleWindow::onCmdClear(FXObject*,FXSelector,void*){</font></tt>
-<br><tt><font size=-1>&nbsp; FXDCWindow dc(canvas);</font></tt>
-<br><tt><font size=-1>&nbsp; dc.setForeground(canvas->getBackColor());</font></tt>
-<br><tt><font size=-1>&nbsp; dc.fillRectangle(0,0,canvas->getWidth(),canvas->getHeight());</font></tt>
-<br><tt><font size=-1>&nbsp; dirty=0;</font></tt>
-<br><tt><font size=-1>&nbsp; return 1;</font></tt>
-<br><tt><font size=-1>&nbsp; }</font></tt>
-<br><tt><font size=-1></font></tt>&nbsp;
-<br>&nbsp;
-<br>&nbsp;
-<p><tt><font size=-1>// Update the clear button</font></tt>
-<br><tt><font size=-1>long ScribbleWindow::onUpdClear(FXObject* sender,FXSelector,void*){</font></tt><tt><font size=-1></font></tt>
-<p><tt><font size=-1>&nbsp; if(dirty)</font></tt>
-<br><tt><font size=-1>&nbsp;&nbsp;&nbsp; sender->handle(this,MKUINT(FXWindow::ID_ENABLE,SEL_COMMAND),NULL);</font></tt>
-<br><tt><font size=-1>&nbsp; else</font></tt>
-<br><tt><font size=-1>&nbsp;&nbsp;&nbsp; sender->handle(this,MKUINT(FXWindow::ID_DISABLE,SEL_COMMAND),NULL);</font></tt><tt><font size=-1></font></tt>
-<p><tt><font size=-1>&nbsp; return 1;</font></tt>
-<br><tt><font size=-1>&nbsp; }</font></tt>
-<br>&nbsp;</ul>
+<p>
+<pre>
+  // Handle the clear message
+  long ScribbleWindow::onCmdClear(FXObject*,FXSelector,void*){
+    FXDCWindow dc(canvas);
+    dc.setForeground(canvas->getBackColor());
+    dc.fillRectangle(0,0,canvas->getWidth(),canvas->getHeight());
+    dirty=0;
+    return 1;
+    }
+
+
+  // Update the clear button
+  long ScribbleWindow::onUpdClear(FXObject* sender,FXSelector,void*){
+    if(dirty)
+      sender->handle(this,FXSEL(SEL_COMMAND,ID_ENABLE),NULL);
+    else
+      sender->handle(this,FXSEL(SEL_COMMAND,ID_DISABLE),NULL);
+    return 1;
+    }
+</pre>
+<p>
 The <i>onCmdClear</i> message handler clears the canvas, then resets the
 dirty flag.&nbsp; The <i>onUpdClear</i> message handler <b><i>updates</i></b>
 the clear Button.
@@ -445,30 +424,33 @@ etc), the GUI will automatically keep itself up to date without any additional
 coding.
 <p>To complete the Scribble Application, only one thing remains:- to kick
 it all off from the main() routine:
-<br>&nbsp;
-<ul><tt><font size=-1>// Here we begin</font></tt>
-<br><tt><font size=-1>int main(int argc,char *argv[]){</font></tt><tt><font size=-1></font></tt>
-<p><tt><font size=-1>&nbsp; // Make application</font></tt>
-<br><tt><font size=-1>&nbsp; FXApp* application=new FXApp("Scribble","Test");</font></tt>
-<br><tt><font size=-1>&nbsp;</font></tt>
-<br><tt><font size=-1>&nbsp; // Start app</font></tt>
-<br><tt><font size=-1>&nbsp; application->init(argc,argv);</font></tt><tt><font size=-1></font></tt>
-<p><tt><font size=-1>&nbsp; // Scribble window</font></tt>
-<br><tt><font size=-1>&nbsp; new ScribbleWindow(application);</font></tt>
-<br><tt><font size=-1>&nbsp;</font></tt>
-<br><tt><font size=-1>&nbsp; // Create the application's windows</font></tt>
-<br><tt><font size=-1>&nbsp; application->create();</font></tt>
-<br><tt><font size=-1>&nbsp;</font></tt>
-<br><tt><font size=-1>&nbsp; // Run the application</font></tt>
-<br><tt><font size=-1>&nbsp; application->run();</font></tt>
-<br><tt><font size=-1>&nbsp;</font></tt>
-<br><tt><font size=-1>&nbsp; return 0;</font></tt>
-<br><tt><font size=-1>&nbsp; }</font></tt>
-<br><tt><font size=-1></font></tt>&nbsp;</ul>
+<p>
+<pre>
+  // Here we begin
+  int main(int argc,char *argv[]){
+
+    // Make application
+    FXApp* application=new FXApp("Scribble","Test");
+
+    // Start app
+    application->init(argc,argv);
+    // Scribble window
+    new ScribbleWindow(application);
+
+    // Create the application's windows
+    application->create();
+
+    // Run the application
+    application->run();
+
+    return 0;
+    }
+</pre>
+<p>
 First, we construct a FXApp object by calling<i> new FXApp("Scribble","Test").</i>
 The first string is the name of the application `Scribble' is often referred
 to as the Application Key, while the second string`Test' is called the
-Vendor Key.&nbsp; Together, these two strings are used to determine the
+Vendor Key.  Together, these two strings are used to determine the
 application's registry- or preference-settings.
 <p>The call to <i>application->init(argc,argv) </i>initializes the application;
 argc and argv of the command line are passed in so that the FOX system
@@ -480,103 +462,87 @@ parts:- the <i>client-side </i>resources, which live in our own process,
 and the <i>server-side</i> resources which live in the X server (X11) or
 GDI (Windows).
 <br>When we construct a FOX widget, only the client-side resources are
-determined.&nbsp; A subsequent call to <i>application->create()</i> recursively
+determined.  A subsequent call to <i>application->create()</i> recursively
 creates all server-side resources for each widget that has been previously
 constructed.
 <p>Finally, <i>application->run()</i> member function is called to run
-the application.&nbsp; This function never returns.
-<br>&nbsp;
-<p>
-<b>Recap</b>
-<hr>
-<p>In the previous example, several FOX features have been discussed:
-<br>&nbsp;
-<ul>
-<li>
-Building applications using FOX means <b><i>building</i></b> more C++ classes;
-these new classes should always be derived from FXObject, either directly
-or indirectly.&nbsp; The sophisticated developer will try and make these
-new classes general, so that he/she may use these again in some other project.&nbsp;
-Thus, the development effort may be leveraged many times over.<br>
-<BR></li>
+the application.  This function never returns.
+<br>
+</ul>
 
-<li>
-FOX uses a target/message system; Each message handler has three arguments:-
+<!--- TOPIC TITLE -->
+<p>
+<table width=100% cellpadding=0 cellspacing=2><tr><td width=100% valign=bottom id=HEADLINE><b>
+Recap
+<br><img src='art/line.gif' width=100% height=1></b></td></tr></table>
+<p>
+<!--- TOPIC TITLE -->
+<ul>
+In the previous example, several FOX features have been discussed:
+<br><br>
+
+<ul>
+<li>Building applications using FOX means <b><i>building</i></b> more C++ classes;
+these new classes should always be derived from FXObject, either directly
+or indirectly.  The sophisticated developer will try and make these
+new classes general, so that he/she may use these again in some other project.
+Thus, the development effort may be leveraged many times over.<br>
+</li>
+<br><br>
+<li>FOX uses a target/message system; Each message handler has three arguments:-
 the sender of the message, which is always an object derived from FXObject,
 the message selector, which is a combination of the message <b><i>type</i></b>
 and message <b><i>id</i></b>, and a void pointer which may provide additional
-information about the message.&nbsp; The message type identifies the type
+information about the message.  The message type identifies the type
 of action that occurred, whereas the message id identifies the source of
 the message; it makes the message unique.<br>
-<BR></li>
-
-<li>
-When <b><i>defining</i></b> new messages, use <b><i>enums</i></b>.&nbsp;
+</li>
+<br><br>
+<li>When <b><i>defining</i></b> new messages, use <b><i>enums</i></b>.
 The first new message for a derived class should be equal to the base classes
-ID_LAST.&nbsp; This way, the compiler takes care of unique message numbering.&nbsp;
+ID_LAST.  This way, the compiler takes care of unique message numbering.
 Note that messages should be <i><b>unique</b> </i>with respect to <i><b>a
-specific target</b> </i>only:- unrelated targets do not have to be unique.&nbsp;
+specific target</b> </i>only:- unrelated targets do not have to be unique.
 If the class you're writing may be subclassed later, define a message ID_LAST,
 so that the subclass may define additional message id's starting from that
 point.<br>
-<BR></li>
-
-<li>
-Major FOX building blocks already understand a bunch of messages; for example,
-FXApp understands the message ID_QUIT.&nbsp; This means that in many cases,
+</li>
+<br><br>
+<li>Major FOX building blocks already understand a bunch of messages; for example,
+FXApp understands the message ID_QUIT.  This means that in many cases,
 simple <b><i>glue-cod</i></b>e may be avoided.<br>
-<BR></li>
-
-<li>
-During idle processing, FOX <b><i>automatically updates </i></b>eachWidget<b><i>,</i></b>
+</li>
+<br><br>
+<li>During idle processing, FOX <b><i>automatically updates </i></b>eachWidget<b><i>,</i></b>
 by asking the Widget's target what its state should be; the message being
-sent to the target object is of type SEL_UPDATE.&nbsp; The GUI Update process
+sent to the target object is of type SEL_UPDATE.  The GUI Update process
 is an important tool to use for large-scale applications, where multiple
 developers may not even be aware of which widgets may need updating when
-some data structure changes.&nbsp; With GUI Updating, it is easy to keep
+some data structure changes.  With GUI Updating, it is easy to keep
 it consistent.<br>
-<BR></li>
-
-<li>
-Hot Keys may be set on Button captions simply by prefixing the hotkey latter
-with an <b><i>&amp;</i></b>.&nbsp; The indicated letter will be automatically
+</li>
+<br><br>
+<li>Hot Keys may be set on Button captions simply by prefixing the hotkey latter
+with an <b><i>&amp;</i></b>.  The indicated letter will be automatically
 underlined.<br>
-<BR></li>
-
-<li>
-FOX uses a two-step process to build its Widgets; in the construction phase,
+</li>
+<br><br>
+<li>FOX uses a two-step process to build its Widgets; in the construction phase,
 C++ data structures are built, and member data are filled in; in the second
 phase, the connection to the display is established, and actual windows
 are created for each Widget.</li>
 </ul>
 
+</ul>
 
+<!--- COPYRIGHT -->
+<p>
+<table width=100% cellpadding=0 cellspacing=0><tr><td width=100% valign=top id=HEADLINE align=right>
+<img src='art/line.gif' width=100% height=1><font size=-1>
+Copyright &copy; 1997-2004 Jeroen van der Zijp</font>
+</td></tr></table>
+</p>
+<!--- COPYRIGHT -->
 
-<!-- end main window content -->
-
-    </td>
-    <td bgcolor=#ffffff>&nbsp;</td>
-    <td bgcolor=#557faa width=15>&nbsp;</td>
-  </tr>
-  <tr>
-    <td colspan=2 bgcolor="#557faa" align=center>&nbsp;
-     </td>
-    <td bgcolor=#ffffff valign=bottom align=left><img src=art/ill.gif width=8 height=8></td>
-    <td bgcolor=#ffffff>&nbsp;</td>
-    <td bgcolor=#ffffff valign=bottom align=right><img src=art/ilr.gif width=8 height=8></td>
-    <td bgcolor=#557faa width=15>&nbsp;</td>
-  </tr>
-  <tr>
-    <td valign=bottom align=left bgcolor=#557faa><img src=art/oll.gif width=8 height=8></td>
-    <td colspan=4 bgcolor=#557faa>&nbsp;</td>
-    <td valign=bottom align=right bgcolor=#557faa><img src=art/olr.gif width=8 height=8></td>
-  </tr>
-</table>
-
-<address>Copyright 1997-2002 <a href=mailto:jeroen@fox-toolkit.org>Jeroen van der Zijp</a></address>
-<!-- Created: Mon Apr 10 11:20:32 CEST 2000 -->
-<!-- hhmts start -->
-
-<!-- hhmts end -->
 </body>
 </html>

@@ -5,7 +5,7 @@
 *********************************************************************************
 * Copyright (C) 1998 by Jeroen van der Zijp.   All Rights Reserved.             *
 *********************************************************************************
-* $Id: minheritance.cpp,v 1.12 2001/11/16 22:59:26 jeroen Exp $                 *
+* $Id: minheritance.cpp,v 1.14 2002/09/27 22:22:13 fox Exp $                    *
 ********************************************************************************/
 #include "fx.h"
 #include <stdio.h>
@@ -18,12 +18,12 @@
 
   We have tabulated the following cases:
 
-    | Message map where handler is found | Class which message handler is member of 
+    | Message map where handler is found | Class which message handler is member of
   --+------------------------------------+------------------------------------------
-  1 |     derived class                  |        derived class                     
-  2 |     one of the base classes        |        one of the base classes           
-  3 |     derived class                  |        one of the base classes           
-  4 |     one of the base classes        |        derived class                     
+  1 |     derived class                  |        derived class
+  2 |     one of the base classes        |        one of the base classes
+  3 |     derived class                  |        one of the base classes
+  4 |     one of the base classes        |        derived class
 
 
   Ad 1. The most common scenario, and typically presents no problem, as the
@@ -36,7 +36,7 @@
   Ad 3. A handler which is defined in the base class is entered into the
         message map of the derived class.  This is sometimes done to give an
         existing member function an additional binding to a different message-id.
-        
+
         According to the C++ rules (contravariance rule, pp. 420 3rd ed. C++ book),
         one can assign a pointer to member of base class to a pointer to
         member of derived class, and thats what we do.
@@ -45,7 +45,7 @@
         sake, and to see if you're paying attention...
 
 
-  To test properly, we try several orderings of the two base classes.  
+  To test properly, we try several orderings of the two base classes.
   We print out the "this" address in the ctor and the handler so as to see
   if the correct offset is being added when the handler is actually being
   called.
@@ -56,7 +56,7 @@
     FXIMPLEMENT2
     FXIMPLEMENT3
         ...
-    ad nauseam    
+    ad nauseam
 
   Nausea starts at N=2 for me...
 
@@ -90,8 +90,8 @@ public:
   virtual ~Base2();
   };
 
-  
-  
+
+
 // Non-FOX object
 class Base3 {
 protected:
@@ -102,7 +102,7 @@ public:
   virtual ~Base3();
   };
 
-  
+
 // FOX object with mix-in
 class TwoBaseOne : public Base1, public Base2 {
   FXDECLARE(TwoBaseOne)
@@ -120,8 +120,8 @@ public:
   virtual ~TwoBaseOne();
   };
 
-  
-  
+
+
 // FOX object with mix-in
 class TwoBaseTwo : public Base2, public Base1 {
   FXDECLARE(TwoBaseTwo)
@@ -138,8 +138,8 @@ public:
   TwoBaseTwo();
   virtual ~TwoBaseTwo();
   };
-  
-  
+
+
 // FOX object with mix-in
 class ThreeBase : public Base3, public TwoBaseOne {
   FXDECLARE(ThreeBase)
@@ -161,7 +161,7 @@ public:
 
 
 /*******************************************************************************/
-  
+
 Base1::Base1(){
   FXTRACE((100,"Base1::Base1 at %08lx\n",(unsigned long)this));
   a=1;
@@ -178,7 +178,7 @@ Base1::~Base1(){
 FXDEFMAP(Base2) Base2Map[]={
   FXMAPFUNC(SEL_COMMAND,Base2::ID_BASE2,Base2::onCmdBase2),
   };
-  
+
 FXIMPLEMENT(Base2,FXObject,Base2Map,ARRAYNUMBER(Base2Map))
 
 Base2::Base2(){
@@ -217,7 +217,7 @@ Base3::~Base3(){
 FXDEFMAP(TwoBaseOne) TwoBaseOneMap[]={
   FXMAPFUNC(SEL_COMMAND,TwoBaseOne::ID_TWOBASEONE,TwoBaseOne::onCmdTwoBaseOne),
   };
-  
+
 FXIMPLEMENT(TwoBaseOne,Base2,TwoBaseOneMap,ARRAYNUMBER(TwoBaseOneMap))
 
 TwoBaseOne::TwoBaseOne(){
@@ -240,7 +240,7 @@ TwoBaseOne::~TwoBaseOne(){
 FXDEFMAP(TwoBaseTwo) TwoBaseTwoMap[]={
   FXMAPFUNC(SEL_COMMAND,TwoBaseTwo::ID_TWOBASETWO,TwoBaseTwo::onCmdTwoBaseTwo),
   };
-  
+
 FXIMPLEMENT(TwoBaseTwo,Base2,TwoBaseTwoMap,ARRAYNUMBER(TwoBaseTwoMap))
 
 TwoBaseTwo::TwoBaseTwo(){
@@ -266,7 +266,7 @@ FXDEFMAP(ThreeBase) ThreeBaseMap[]={
   FXMAPFUNC(SEL_COMMAND,ThreeBase::ID_TWOBASEONE,ThreeBase::onCmdTwoBaseOne),
   FXMAPFUNC(SEL_COMMAND,ThreeBase::ID_BASE2,ThreeBase::onCmdBase2),
   };
-  
+
 FXIMPLEMENT(ThreeBase,TwoBaseOne,ThreeBaseMap,ARRAYNUMBER(ThreeBaseMap))
 
 ThreeBase::ThreeBase(){
@@ -293,14 +293,14 @@ int main(int,char**){
 
   {
   TwoBaseOne twobase1;
-  
+
   // Found in TwoBaseOne
   FXTRACE((100,"calling TwoBaseOne\n"));
-  twobase1.handle(NULL,MKUINT(TwoBaseOne::ID_TWOBASEONE,SEL_COMMAND),NULL);
-  
+  twobase1.handle(NULL,FXSEL(SEL_COMMAND,TwoBaseOne::ID_TWOBASEONE),NULL);
+
   // Found in Base2
   FXTRACE((100,"calling Base2\n"));
-  twobase1.handle(NULL,MKUINT(Base2::ID_BASE2,SEL_COMMAND),NULL);
+  twobase1.handle(NULL,FXSEL(SEL_COMMAND,Base2::ID_BASE2),NULL);
   }
 
   FXTRACE((100,"=============\n"));
@@ -310,37 +310,37 @@ int main(int,char**){
 
   // Found in TwoBaseTwo
   FXTRACE((100,"calling TwoBaseTwo\n"));
-  twobase2.handle(NULL,MKUINT(TwoBaseTwo::ID_TWOBASETWO,SEL_COMMAND),NULL);
+  twobase2.handle(NULL,FXSEL(SEL_COMMAND,TwoBaseTwo::ID_TWOBASETWO),NULL);
 
   // Found in Base2
   FXTRACE((100,"calling Base2\n"));
-  twobase2.handle(NULL,MKUINT(Base2::ID_BASE2,SEL_COMMAND),NULL);
+  twobase2.handle(NULL,FXSEL(SEL_COMMAND,Base2::ID_BASE2),NULL);
   }
 
   FXTRACE((100,"=============\n"));
 
   {
   ThreeBase threebase;
-  
+
   // Found in ThreeBase
   FXTRACE((100,"calling ThreeBase\n"));
-  threebase.handle(NULL,MKUINT(ThreeBase::ID_THREEBASE,SEL_COMMAND),NULL);
-  
+  threebase.handle(NULL,FXSEL(SEL_COMMAND,ThreeBase::ID_THREEBASE),NULL);
+
   // Found in TwoBaseOne
   FXTRACE((100,"calling TwoBaseOne\n"));
-  threebase.handle(NULL,MKUINT(TwoBaseOne::ID_TWOBASEONE,SEL_COMMAND),NULL);
-  
+  threebase.handle(NULL,FXSEL(SEL_COMMAND,TwoBaseOne::ID_TWOBASEONE),NULL);
+
   // Found in Base2
   FXTRACE((100,"calling Base2\n"));
-  threebase.handle(NULL,MKUINT(Base2::ID_BASE2,SEL_COMMAND),NULL);
-  
+  threebase.handle(NULL,FXSEL(SEL_COMMAND,Base2::ID_BASE2),NULL);
+
   // Found in TwoBaseOne
   FXTRACE((100,"calling TwoBaseOne via ThreeBase\n"));
-  threebase.handle(NULL,MKUINT(ThreeBase::ID_TWOBASEONE,SEL_COMMAND),NULL);
-  
+  threebase.handle(NULL,FXSEL(SEL_COMMAND,ThreeBase::ID_TWOBASEONE),NULL);
+
   // Found in Base2
   FXTRACE((100,"calling Base2 via ThreeBase\n"));
-  threebase.handle(NULL,MKUINT(ThreeBase::ID_BASE2,SEL_COMMAND),NULL);
+  threebase.handle(NULL,FXSEL(SEL_COMMAND,ThreeBase::ID_BASE2),NULL);
   }
 
   return 1;

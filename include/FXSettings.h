@@ -3,7 +3,7 @@
 *                           S e t t i n g s   C l a s s                         *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1998,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXSettings.h,v 1.18 2002/02/08 14:27:20 fox Exp $                        *
+* $Id: FXSettings.h,v 1.21 2004/02/08 17:17:34 fox Exp $                        *
 ********************************************************************************/
 #ifndef FXSETTINGS_H
 #define FXSETTINGS_H
@@ -28,9 +28,10 @@
 #include "FXDict.h"
 #endif
 
+namespace FX {
+
 
 class FXStringDict;
-
 
 
 /**
@@ -131,5 +132,6 @@ public:
   virtual ~FXSettings();
   };
 
+}
 
 #endif

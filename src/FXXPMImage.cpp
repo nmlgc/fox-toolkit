@@ -3,7 +3,7 @@
 *                            X P M   I m a g e   O b j e c t                    *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2000,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 2000,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,17 +19,19 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXXPMImage.cpp,v 1.13 2002/01/18 22:43:07 jeroen Exp $                   *
+* $Id: FXXPMImage.cpp,v 1.23 2004/02/08 17:29:07 fox Exp $                      *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
 #include "fxdefs.h"
 #include "FXStream.h"
+#include "FXMemoryStream.h"
 #include "FXString.h"
 #include "FXSize.h"
 #include "FXPoint.h"
 #include "FXRectangle.h"
 #include "FXRegistry.h"
+#include "FXHash.h"
 #include "FXApp.h"
 #include "FXXPMImage.h"
 
@@ -39,9 +41,12 @@
   Notes:
 */
 
+using namespace FX;
 
 
 /*******************************************************************************/
+
+namespace FX {
 
 // Object implementation
 FXIMPLEMENT(FXXPMImage,FXImage,NULL,0)
@@ -49,29 +54,27 @@ FXIMPLEMENT(FXXPMImage,FXImage,NULL,0)
 
 // Initialize
 FXXPMImage::FXXPMImage(FXApp* a,const FXchar **pix,FXuint opts,FXint w,FXint h):
-  FXImage(a,NULL,opts&~IMAGE_ALPHA,w,h){
+  FXImage(a,NULL,opts,w,h){
   if(pix){
-    FXColor clearcolor;
-    fxloadXPM(pix,data,clearcolor,width,height);
+    fxloadXPM(pix,data,width,height);
     options|=IMAGE_OWNED;
     }
   }
 
 
 // Save pixel data only
-void FXXPMImage::savePixels(FXStream& store) const {
-  FXASSERT(!(options&IMAGE_ALPHA));
-  fxsaveXPM(store,data,0,width,height);
+FXbool FXXPMImage::savePixels(FXStream& store) const {
+  if(!fxsaveXPM(store,data,width,height)) return FALSE;
+  return TRUE;
   }
 
 
 // Load pixel data only
-void FXXPMImage::loadPixels(FXStream& store){
-  FXColor clearcolor;
+FXbool FXXPMImage::loadPixels(FXStream& store){
   if(options&IMAGE_OWNED){FXFREE(&data);}
-  fxloadXPM(store,data,clearcolor,width,height);
-  options&=~IMAGE_ALPHA;
+  if(!fxloadXPM(store,data,width,height)) return FALSE;
   options|=IMAGE_OWNED;
+  return TRUE;
   }
 
 
@@ -79,4 +82,4 @@ void FXXPMImage::loadPixels(FXStream& store){
 FXXPMImage::~FXXPMImage(){
   }
 
-
+}

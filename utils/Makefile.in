@@ -88,7 +88,6 @@ VERSION = @VERSION@
 X_BASE_LIBS = @X_BASE_LIBS@
 
 CXXFLAGS = @CXXFLAGS@ @X_CFLAGS@
-INCLUDES = -I$(top_srcdir)/include -I$(top_builddir)/include
 
 bin_PROGRAMS = reswrap
 
@@ -96,7 +95,7 @@ man_MANS = reswrap.1
 
 reswrap_SOURCES = reswrap.cpp
 
-EXTRA_DIST = $(man_MANS)                   maketree                   Makefile.bc                   Makefile.icc                   Makefile.dmc
+EXTRA_DIST = $(man_MANS)                   maketree                   Makefile.bc                   Makefile.icc                   Makefile.wc                   Makefile.dmc
 
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_CLEAN_FILES = 
@@ -307,7 +306,7 @@ distdir: $(DISTFILES)
 	    || cp -p $$d/$$file $(distdir)/$$file || :; \
 	  fi; \
 	done
-reswrap.o: reswrap.cpp ../include/xincs.h ../include/fxdefs.h
+reswrap.o: reswrap.cpp
 
 info-am:
 info: info-am

@@ -3,7 +3,7 @@
 *                G r o u p  B o x   W i n d o w   O b j e c t                   *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXGroupBox.cpp,v 1.20 2002/01/18 22:43:00 jeroen Exp $                   *
+* $Id: FXGroupBox.cpp,v 1.29 2004/02/08 17:29:06 fox Exp $                      *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -31,6 +31,7 @@
 #include "FXRectangle.h"
 #include "FXSettings.h"
 #include "FXRegistry.h"
+#include "FXHash.h"
 #include "FXApp.h"
 #include "FXDC.h"
 #include "FXDCWindow.h"
@@ -42,21 +43,23 @@
 /*
   Notes:
 
-  - Having FXGroupBox enforce radio behaviour isn't as useful anymore when
-    you already have GUI Update mechanism.  Perhaps this should be dropped.
+  - Radio behaviour of groupbox has been dropped; groupbox is now
+    purely a decorative layout manager.
 */
 
 
 #define FRAME_MASK           (FRAME_SUNKEN|FRAME_RAISED|FRAME_THICK)
 #define GROUPBOX_TITLE_MASK  (GROUPBOX_TITLE_LEFT|GROUPBOX_TITLE_CENTER|GROUPBOX_TITLE_RIGHT)
 
+using namespace FX;
 
 /*******************************************************************************/
+
+namespace FX {
 
 // Map
 FXDEFMAP(FXGroupBox) FXGroupBoxMap[]={
   FXMAPFUNC(SEL_PAINT,0,FXGroupBox::onPaint),
-  FXMAPFUNC(SEL_UNCHECK_OTHER,0,FXGroupBox::onUncheckOther),
   };
 
 
@@ -67,7 +70,7 @@ FXIMPLEMENT(FXGroupBox,FXPacker,FXGroupBoxMap,ARRAYNUMBER(FXGroupBoxMap))
 // Deserialization
 FXGroupBox::FXGroupBox(){
   flags|=FLAG_ENABLED;
-  font=(FXFont*)-1;
+  font=(FXFont*)-1L;
   textColor=0;
   }
 
@@ -196,7 +199,7 @@ long FXGroupBox::onPaint(FXObject*,FXSelector,void* ptr){
     else if(options&GROUPBOX_TITLE_CENTER) xx=(width-tw)/2-4;
     else xx=8;
     dc.setForeground(backColor);
-    dc.setTextFont(font);
+    dc.setFont(font);
     dc.fillRectangle(xx,yy,tw+8,2);
     if(isEnabled()){
       dc.setForeground(textColor);
@@ -208,16 +211,6 @@ long FXGroupBox::onPaint(FXObject*,FXSelector,void* ptr){
       dc.setForeground(shadowColor);
       dc.drawText(xx+4,2+font->getFontAscent(),label.text(),label.length());
       }
-    }
-  return 1;
-  }
-
-
-// Uncheck other radio buttons
-long FXGroupBox::onUncheckOther(FXObject* sender,FXSelector,void*){
-  FXWindow* child;
-  for(child=getFirst(); child; child=child->getNext()){
-    if(child!=sender){ child->handle(sender,MKUINT(0,SEL_UNCHECK_RADIO),NULL); }
     }
   return 1;
   }
@@ -275,3 +268,5 @@ void FXGroupBox::load(FXStream& store){
   store >> font;
   store >> textColor;
   }
+
+}

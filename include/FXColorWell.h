@@ -3,7 +3,7 @@
 *                         C o l o r W e l l   W i d g e t                       *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1998,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXColorWell.h,v 1.22 2002/01/18 22:42:51 jeroen Exp $                    *
+* $Id: FXColorWell.h,v 1.30 2004/02/08 17:17:33 fox Exp $                       *
 ********************************************************************************/
 #ifndef FXCOLORWELL_H
 #define FXCOLORWELL_H
@@ -28,6 +28,7 @@
 #include "FXFrame.h"
 #endif
 
+namespace FX {
 
 
 // Color Well Styles
@@ -56,7 +57,6 @@ class FXAPI FXColorWell : public FXFrame {
 protected:
   FXColor   wellColor[2];             // Pixel value of RGBA over black and white
   FXColor   rgba;                     // Color with RGB and Alpha
-  FXColor   oldrgba;                  // Old color
   FXString  tip;                      // Tooltip value
   FXString  help;                     // Help value
 protected:
@@ -94,13 +94,17 @@ public:
   long onClicked(FXObject*,FXSelector,void*);
   long onDoubleClicked(FXObject*,FXSelector,void*);
   long onTripleClicked(FXObject*,FXSelector,void*);
-  long onQueryHelp(FXObject*,FXSelector,void*);
-  long onQueryTip(FXObject*,FXSelector,void*);
   long onCmdSetValue(FXObject*,FXSelector,void*);
   long onCmdSetIntValue(FXObject*,FXSelector,void*);
   long onCmdGetIntValue(FXObject*,FXSelector,void*);
   long onCmdColorWell(FXObject*,FXSelector,void*);
   long onChgColorWell(FXObject*,FXSelector,void*);
+  long onCmdSetHelp(FXObject*,FXSelector,void*);
+  long onCmdGetHelp(FXObject*,FXSelector,void*);
+  long onCmdSetTip(FXObject*,FXSelector,void*);
+  long onCmdGetTip(FXObject*,FXSelector,void*);
+  long onQueryHelp(FXObject*,FXSelector,void*);
+  long onQueryTip(FXObject*,FXSelector,void*);
 public:
   enum {
     ID_COLORDIALOG=FXFrame::ID_LAST,
@@ -166,5 +170,6 @@ public:
   virtual ~FXColorWell();
   };
 
+}
 
 #endif

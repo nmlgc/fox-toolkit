@@ -3,7 +3,7 @@
 *                      T e x t   R e p l a c e   D i a l o g                    *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2000,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 2000,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXReplaceDialog.h,v 1.16 2002/01/18 22:42:54 jeroen Exp $                *
+* $Id: FXReplaceDialog.h,v 1.20 2004/02/08 17:17:34 fox Exp $                   *
 ********************************************************************************/
 #ifndef FXREPLACEDIALOG_H
 #define FXREPLACEDIALOG_H
@@ -28,6 +28,7 @@
 #include "FXDialogBox.h"
 #endif
 
+namespace FX {
 
 
 class FXButton;
@@ -129,5 +130,6 @@ public:
   virtual ~FXReplaceDialog();
   };
 
+}
 
 #endif

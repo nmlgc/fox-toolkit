@@ -3,7 +3,7 @@
 *                         T e x t   F i e l d   O b j e c t                     *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1998,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXTextField.cpp,v 1.79.4.3 2003/02/25 23:10:54 fox Exp $                  *
+* $Id: FXTextField.cpp,v 1.121 2004/05/05 16:03:37 fox Exp $                    *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -31,11 +31,11 @@
 #include "FXPoint.h"
 #include "FXRectangle.h"
 #include "FXRegistry.h"
+#include "FXHash.h"
 #include "FXApp.h"
 #include "FXDCWindow.h"
 #include "FXFont.h"
 #include "FXCursor.h"
-#include "FXLabel.h"
 #include "FXTextField.h"
 
 
@@ -43,17 +43,10 @@
   Notes:
 
   - TextField passes string ptr in the SEL_COMMAND callback.
-
-  - GUI updatable as long as its in the focus chain.
-
   - Double-click should select word, triple click all of text field.
-
   - TextField should return 0 for all unhandled keys!
-
   - Pressing mouse button will set the focus w/o claiming selection!
-
   - Change of cursor only implies makePositionVisible() if done by user.
-
   - Input verify and input verify callback operation:
 
     1) The input is tested to see if it qualifies as an integer or
@@ -73,26 +66,28 @@
     particular order.
 
   - Option to grow/shrink textfield to fit text.
-
   - Perhaps need selstartpos,selendpos member variables to keep track of selection.
-
   - Maybe also send SEL_SELECTED, SEL_DESELECTED?
-
+  - Need block cursor when in overstrike mode.
 */
 
 
 #define JUSTIFY_MASK    (JUSTIFY_HZ_APART|JUSTIFY_VT_APART)
-#define TEXTFIELD_MASK  (TEXTFIELD_PASSWD|TEXTFIELD_INTEGER|TEXTFIELD_REAL|TEXTFIELD_READONLY|TEXTFIELD_ENTER_ONLY|TEXTFIELD_LIMITED|TEXTFIELD_OVERSTRIKE)
+#define TEXTFIELD_MASK  (TEXTFIELD_PASSWD|TEXTFIELD_INTEGER|TEXTFIELD_REAL|TEXTFIELD_READONLY|TEXTFIELD_ENTER_ONLY|TEXTFIELD_LIMITED|TEXTFIELD_OVERSTRIKE|TEXTFIELD_AUTOHIDE|TEXTFIELD_AUTOGRAY)
 
+using namespace FX;
 
 /*******************************************************************************/
+
+namespace FX {
 
 // Map
 FXDEFMAP(FXTextField) FXTextFieldMap[]={
   FXMAPFUNC(SEL_PAINT,0,FXTextField::onPaint),
+  FXMAPFUNC(SEL_UPDATE,0,FXTextField::onUpdate),
   FXMAPFUNC(SEL_MOTION,0,FXTextField::onMotion),
   FXMAPFUNC(SEL_TIMEOUT,FXTextField::ID_BLINK,FXTextField::onBlink),
-  FXMAPFUNC(SEL_TIMEOUT,FXWindow::ID_AUTOSCROLL,FXTextField::onAutoScroll),
+  FXMAPFUNC(SEL_TIMEOUT,FXTextField::ID_AUTOSCROLL,FXTextField::onAutoScroll),
   FXMAPFUNC(SEL_LEFTBUTTONPRESS,0,FXTextField::onLeftBtnPress),
   FXMAPFUNC(SEL_LEFTBUTTONRELEASE,0,FXTextField::onLeftBtnRelease),
   FXMAPFUNC(SEL_MIDDLEBUTTONPRESS,0,FXTextField::onMiddleBtnPress),
@@ -109,21 +104,30 @@ FXDEFMAP(FXTextField) FXTextFieldMap[]={
   FXMAPFUNC(SEL_FOCUSIN,0,FXTextField::onFocusIn),
   FXMAPFUNC(SEL_FOCUSOUT,0,FXTextField::onFocusOut),
   FXMAPFUNC(SEL_FOCUS_SELF,0,FXTextField::onFocusSelf),
-  FXMAPFUNC(SEL_UPDATE,FXWindow::ID_QUERY_TIP,FXTextField::onQueryTip),
-  FXMAPFUNC(SEL_UPDATE,FXWindow::ID_QUERY_HELP,FXTextField::onQueryHelp),
+  FXMAPFUNC(SEL_UPDATE,FXTextField::ID_QUERY_TIP,FXTextField::onQueryTip),
+  FXMAPFUNC(SEL_UPDATE,FXTextField::ID_QUERY_HELP,FXTextField::onQueryHelp),
   FXMAPFUNC(SEL_UPDATE,FXTextField::ID_TOGGLE_EDITABLE,FXTextField::onUpdToggleEditable),
   FXMAPFUNC(SEL_UPDATE,FXTextField::ID_TOGGLE_OVERSTRIKE,FXTextField::onUpdToggleOverstrike),
-  FXMAPFUNC(SEL_COMMAND,FXWindow::ID_SETVALUE,FXTextField::onCmdSetValue),
-  FXMAPFUNC(SEL_COMMAND,FXWindow::ID_SETINTVALUE,FXTextField::onCmdSetIntValue),
-  FXMAPFUNC(SEL_COMMAND,FXWindow::ID_SETREALVALUE,FXTextField::onCmdSetRealValue),
-  FXMAPFUNC(SEL_COMMAND,FXWindow::ID_SETSTRINGVALUE,FXTextField::onCmdSetStringValue),
-  FXMAPFUNC(SEL_COMMAND,FXWindow::ID_GETINTVALUE,FXTextField::onCmdGetIntValue),
-  FXMAPFUNC(SEL_COMMAND,FXWindow::ID_GETREALVALUE,FXTextField::onCmdGetRealValue),
-  FXMAPFUNC(SEL_COMMAND,FXWindow::ID_GETSTRINGVALUE,FXTextField::onCmdGetStringValue),
+  FXMAPFUNC(SEL_UPDATE,FXTextField::ID_CUT_SEL,FXTextField::onUpdHaveSelection),
+  FXMAPFUNC(SEL_UPDATE,FXTextField::ID_COPY_SEL,FXTextField::onUpdHaveSelection),
+  FXMAPFUNC(SEL_UPDATE,FXTextField::ID_PASTE_SEL,FXTextField::onUpdYes),
+  FXMAPFUNC(SEL_UPDATE,FXTextField::ID_DELETE_SEL,FXTextField::onUpdHaveSelection),
+  FXMAPFUNC(SEL_UPDATE,FXTextField::ID_SELECT_ALL,FXTextField::onUpdSelectAll),
+  FXMAPFUNC(SEL_COMMAND,FXTextField::ID_SETVALUE,FXTextField::onCmdSetValue),
+  FXMAPFUNC(SEL_COMMAND,FXTextField::ID_SETINTVALUE,FXTextField::onCmdSetIntValue),
+  FXMAPFUNC(SEL_COMMAND,FXTextField::ID_SETREALVALUE,FXTextField::onCmdSetRealValue),
+  FXMAPFUNC(SEL_COMMAND,FXTextField::ID_SETSTRINGVALUE,FXTextField::onCmdSetStringValue),
+  FXMAPFUNC(SEL_COMMAND,FXTextField::ID_GETINTVALUE,FXTextField::onCmdGetIntValue),
+  FXMAPFUNC(SEL_COMMAND,FXTextField::ID_GETREALVALUE,FXTextField::onCmdGetRealValue),
+  FXMAPFUNC(SEL_COMMAND,FXTextField::ID_GETSTRINGVALUE,FXTextField::onCmdGetStringValue),
   FXMAPFUNC(SEL_COMMAND,FXTextField::ID_CURSOR_HOME,FXTextField::onCmdCursorHome),
   FXMAPFUNC(SEL_COMMAND,FXTextField::ID_CURSOR_END,FXTextField::onCmdCursorEnd),
   FXMAPFUNC(SEL_COMMAND,FXTextField::ID_CURSOR_RIGHT,FXTextField::onCmdCursorRight),
   FXMAPFUNC(SEL_COMMAND,FXTextField::ID_CURSOR_LEFT,FXTextField::onCmdCursorLeft),
+  FXMAPFUNC(SEL_COMMAND,FXTextField::ID_CURSOR_WORD_LEFT,FXTextField::onCmdCursorWordLeft),
+  FXMAPFUNC(SEL_COMMAND,FXTextField::ID_CURSOR_WORD_RIGHT,FXTextField::onCmdCursorWordRight),
+  FXMAPFUNC(SEL_COMMAND,FXTextField::ID_CURSOR_WORD_START,FXTextField::onCmdCursorWordStart),
+  FXMAPFUNC(SEL_COMMAND,FXTextField::ID_CURSOR_WORD_END,FXTextField::onCmdCursorWordEnd),
   FXMAPFUNC(SEL_COMMAND,FXTextField::ID_MARK,FXTextField::onCmdMark),
   FXMAPFUNC(SEL_COMMAND,FXTextField::ID_EXTEND,FXTextField::onCmdExtend),
   FXMAPFUNC(SEL_COMMAND,FXTextField::ID_SELECT_ALL,FXTextField::onCmdSelectAll),
@@ -132,18 +136,26 @@ FXDEFMAP(FXTextField) FXTextFieldMap[]={
   FXMAPFUNC(SEL_COMMAND,FXTextField::ID_COPY_SEL,FXTextField::onCmdCopySel),
   FXMAPFUNC(SEL_COMMAND,FXTextField::ID_PASTE_SEL,FXTextField::onCmdPasteSel),
   FXMAPFUNC(SEL_COMMAND,FXTextField::ID_DELETE_SEL,FXTextField::onCmdDeleteSel),
+  FXMAPFUNC(SEL_COMMAND,FXTextField::ID_DELETE_ALL,FXTextField::onCmdDeleteAll),
   FXMAPFUNC(SEL_COMMAND,FXTextField::ID_OVERST_STRING,FXTextField::onCmdOverstString),
   FXMAPFUNC(SEL_COMMAND,FXTextField::ID_INSERT_STRING,FXTextField::onCmdInsertString),
   FXMAPFUNC(SEL_COMMAND,FXTextField::ID_BACKSPACE,FXTextField::onCmdBackspace),
   FXMAPFUNC(SEL_COMMAND,FXTextField::ID_DELETE,FXTextField::onCmdDelete),
   FXMAPFUNC(SEL_COMMAND,FXTextField::ID_TOGGLE_EDITABLE,FXTextField::onCmdToggleEditable),
   FXMAPFUNC(SEL_COMMAND,FXTextField::ID_TOGGLE_OVERSTRIKE,FXTextField::onCmdToggleOverstrike),
+  FXMAPFUNC(SEL_COMMAND,FXTextField::ID_SETHELPSTRING,FXTextField::onCmdSetHelp),
+  FXMAPFUNC(SEL_COMMAND,FXTextField::ID_GETHELPSTRING,FXTextField::onCmdGetHelp),
+  FXMAPFUNC(SEL_COMMAND,FXTextField::ID_SETTIPSTRING,FXTextField::onCmdSetTip),
+  FXMAPFUNC(SEL_COMMAND,FXTextField::ID_GETTIPSTRING,FXTextField::onCmdGetTip),
   };
 
 
 // Object implementation
 FXIMPLEMENT(FXTextField,FXFrame,FXTextFieldMap,ARRAYNUMBER(FXTextFieldMap))
 
+
+// Delimiters
+const FXchar FXTextField::textDelimiters[]="~.,/\\`'!@#$%^&*()-=+{}|[]\":;<>?";
 
 
 /*******************************************************************************/
@@ -152,13 +164,14 @@ FXIMPLEMENT(FXTextField,FXFrame,FXTextFieldMap,ARRAYNUMBER(FXTextFieldMap))
 // For serialization
 FXTextField::FXTextField(){
   flags|=FLAG_ENABLED;
-  font=(FXFont*)-1;
+  delimiters=textDelimiters;
+  font=(FXFont*)-1L;
   textColor=0;
   selbackColor=0;
   seltextColor=0;
+  cursorColor=0;
   cursor=0;
   anchor=0;
-  blinker=NULL;
   columns=0;
   shift=0;
   }
@@ -168,20 +181,20 @@ FXTextField::FXTextField(){
 FXTextField::FXTextField(FXComposite* p,FXint ncols,FXObject* tgt,FXSelector sel,FXuint opts,FXint x,FXint y,FXint w,FXint h,FXint pl,FXint pr,FXint pt,FXint pb):
   FXFrame(p,opts,x,y,w,h,pl,pr,pt,pb){
   if(ncols<0) ncols=0;
-  contents.fill('\0',ncols+1);
   flags|=FLAG_ENABLED;
   target=tgt;
   message=sel;
   defaultCursor=getApp()->getDefaultCursor(DEF_TEXT_CURSOR);
   dragCursor=getApp()->getDefaultCursor(DEF_TEXT_CURSOR);
+  delimiters=textDelimiters;
   font=getApp()->getNormalFont();
   backColor=getApp()->getBackColor();
   textColor=getApp()->getForeColor();
   selbackColor=getApp()->getSelbackColor();
   seltextColor=getApp()->getSelforeColor();
+  cursorColor=getApp()->getForeColor();
   cursor=0;
   anchor=0;
-  blinker=NULL;
   columns=ncols;
   shift=0;
   }
@@ -189,6 +202,7 @@ FXTextField::FXTextField(FXComposite* p,FXint ncols,FXObject* tgt,FXSelector sel
 
 // Create X window
 void FXTextField::create(){
+  if(!textType){ textType=getApp()->registerDragType(textTypeName); }
   FXFrame::create();
   font->create();
   }
@@ -234,6 +248,16 @@ FXint FXTextField::getDefaultHeight(){
   }
 
 
+// Implement auto-hide or auto-gray modes
+long FXTextField::onUpdate(FXObject* sender,FXSelector sel,void* ptr){
+  if(!FXFrame::onUpdate(sender,sel,ptr)){
+    if(options&TEXTFIELD_AUTOHIDE){if(shown()){hide();recalc();}}
+    if(options&TEXTFIELD_AUTOGRAY){disable();}
+    }
+  return 1;
+  }
+
+
 // We now really do have the selection; repaint the text field
 long FXTextField::onSelectionGained(FXObject* sender,FXSelector sel,void* ptr){
   FXFrame::onSelectionGained(sender,sel,ptr);
@@ -260,16 +284,22 @@ long FXTextField::onSelectionRequest(FXObject* sender,FXSelector sel,void* ptr){
   if(FXFrame::onSelectionRequest(sender,sel,ptr)) return 1;
 
   // Return text of the selection
-  if(event->target==stringType){
+  if(event->target==stringType || event->target==textType){
+    FXASSERT(0<=anchor && anchor<=contents.length());
+    FXASSERT(0<=cursor && cursor<=contents.length());
     if(anchor<cursor){start=anchor;len=cursor-anchor;}else{start=cursor;len=anchor-cursor;}
-    FXMALLOC(&data,FXuchar,len);
+    FXCALLOC(&data,FXuchar,len+1);
     if(options&TEXTFIELD_PASSWD){
       memset((FXchar*)data,'*',len);      // We shall not reveal the password!
       }
     else{
       memcpy(data,&contents[start],len);
       }
-    setDNDData(FROM_SELECTION,stringType,data,len);
+#ifndef WIN32
+    setDNDData(FROM_SELECTION,event->target,data,len);
+#else
+    setDNDData(FROM_SELECTION,event->target,data,len+1);
+#endif
     return 1;
     }
 
@@ -302,7 +332,7 @@ long FXTextField::onClipboardRequest(FXObject* sender,FXSelector sel,void* ptr){
   if(FXFrame::onClipboardRequest(sender,sel,ptr)) return 1;
 
   // Return clipped text
-  if(event->target==stringType){
+  if(event->target==stringType || event->target==textType){
     len=clipped.length();
     FXCALLOC(&data,FXuchar,len+1);
     if(options&TEXTFIELD_PASSWD){
@@ -312,9 +342,9 @@ long FXTextField::onClipboardRequest(FXObject* sender,FXSelector sel,void* ptr){
       memcpy(data,clipped.text(),len);
       }
 #ifndef WIN32
-    setDNDData(FROM_CLIPBOARD,stringType,data,len);
+    setDNDData(FROM_CLIPBOARD,event->target,data,len);
 #else
-    setDNDData(FROM_CLIPBOARD,stringType,data,len+1);
+    setDNDData(FROM_CLIPBOARD,event->target,data,len+1);
 #endif
     return 1;
     }
@@ -323,11 +353,19 @@ long FXTextField::onClipboardRequest(FXObject* sender,FXSelector sel,void* ptr){
   }
 
 
+// Blink the cursor
+long FXTextField::onBlink(FXObject*,FXSelector,void*){
+  drawCursor(flags^FLAG_CARET);
+  getApp()->addTimeout(this,ID_BLINK,getApp()->getBlinkSpeed());
+  return 0;
+  }
+
+
 // Gained focus
 long FXTextField::onFocusIn(FXObject* sender,FXSelector sel,void* ptr){
   FXFrame::onFocusIn(sender,sel,ptr);
   if(isEditable()){
-    if(!blinker) blinker=getApp()->addTimeout(getApp()->getBlinkSpeed(),this,ID_BLINK);
+    getApp()->addTimeout(this,ID_BLINK,getApp()->getBlinkSpeed());
     drawCursor(FLAG_CARET);
     }
   if(hasSelection()){
@@ -340,7 +378,7 @@ long FXTextField::onFocusIn(FXObject* sender,FXSelector sel,void* ptr){
 // Lost focus
 long FXTextField::onFocusOut(FXObject* sender,FXSelector sel,void* ptr){
   FXFrame::onFocusOut(sender,sel,ptr);
-  if(blinker){getApp()->removeTimeout(blinker);blinker=NULL;}
+  getApp()->removeTimeout(this,ID_BLINK);
   drawCursor(0);
   if(hasSelection()){
     update(border,border,width-(border<<1),height-(border<<1));
@@ -354,7 +392,7 @@ long FXTextField::onFocusSelf(FXObject* sender,FXSelector sel,void* ptr){
   if(FXFrame::onFocusSelf(sender,sel,ptr)){
     FXEvent *event=(FXEvent*)ptr;
     if(event->type==SEL_KEYPRESS || event->type==SEL_KEYRELEASE){
-      handle(this,MKUINT(ID_SELECT_ALL,SEL_COMMAND),NULL);
+      handle(this,FXSEL(SEL_COMMAND,ID_SELECT_ALL),NULL);
       }
     return 1;
     }
@@ -382,16 +420,44 @@ void FXTextField::killFocus(){
   if(flags&FLAG_CHANGED){
     flags&=~FLAG_CHANGED;
     if(!(options&TEXTFIELD_ENTER_ONLY) && target){
-      target->handle(this,MKUINT(message,SEL_COMMAND),(void*)contents.text());
+      target->handle(this,FXSEL(SEL_COMMAND,message),(void*)contents.text());
       }
     }
+  }
+
+
+// Set help using a message
+long FXTextField::onCmdSetHelp(FXObject*,FXSelector,void* ptr){
+  setHelpText(*((FXString*)ptr));
+  return 1;
+  }
+
+
+// Get help using a message
+long FXTextField::onCmdGetHelp(FXObject*,FXSelector,void* ptr){
+  *((FXString*)ptr)=getHelpText();
+  return 1;
+  }
+
+
+// Set tip using a message
+long FXTextField::onCmdSetTip(FXObject*,FXSelector,void* ptr){
+  setTipText(*((FXString*)ptr));
+  return 1;
+  }
+
+
+// Get tip using a message
+long FXTextField::onCmdGetTip(FXObject*,FXSelector,void* ptr){
+  *((FXString*)ptr)=getTipText();
+  return 1;
   }
 
 
 // We were asked about status text
 long FXTextField::onQueryHelp(FXObject* sender,FXSelector,void*){
   if(!help.empty() && (flags&FLAG_HELP)){
-    sender->handle(this,MKUINT(ID_SETSTRINGVALUE,SEL_COMMAND),&help);
+    sender->handle(this,FXSEL(SEL_COMMAND,ID_SETSTRINGVALUE),&help);
     return 1;
     }
   return 0;
@@ -401,7 +467,7 @@ long FXTextField::onQueryHelp(FXObject* sender,FXSelector,void*){
 // We were asked about tip text
 long FXTextField::onQueryTip(FXObject* sender,FXSelector,void*){
   if(!tip.empty() && (flags&FLAG_TIP)){
-    sender->handle(this,MKUINT(ID_SETSTRINGVALUE,SEL_COMMAND),&tip);
+    sender->handle(this,FXSEL(SEL_COMMAND,ID_SETSTRINGVALUE),&tip);
     return 1;
     }
   return 0;
@@ -462,10 +528,11 @@ long FXTextField::onLeftBtnPress(FXObject*,FXSelector,void* ptr){
   FXEvent* ev=(FXEvent*)ptr;
   FXint pos;
   flags&=~FLAG_TIP;
-  handle(this,MKUINT(0,SEL_FOCUS_SELF),ptr);
+  handle(this,FXSEL(SEL_FOCUS_SELF,0),ptr);
   if(isEnabled()){
     grab();
-    if(target && target->handle(this,MKUINT(message,SEL_LEFTBUTTONPRESS),ptr)) return 1;
+    if(target && target->handle(this,FXSEL(SEL_LEFTBUTTONPRESS,message),ptr)) return 1;
+    flags&=~FLAG_UPDATE;
     if(ev->click_count==1){
       pos=index(ev->win_x);
       setCursorPos(pos);
@@ -478,7 +545,6 @@ long FXTextField::onLeftBtnPress(FXObject*,FXSelector,void* ptr){
         }
       makePositionVisible(pos);
       flags|=FLAG_PRESSED;
-      flags&=~FLAG_UPDATE;
       }
     else{
       setAnchorPos(0);
@@ -497,7 +563,7 @@ long FXTextField::onLeftBtnRelease(FXObject*,FXSelector,void* ptr){
   if(isEnabled()){
     ungrab();
     flags&=~FLAG_PRESSED;
-    if(target && target->handle(this,MKUINT(message,SEL_LEFTBUTTONRELEASE),ptr)) return 1;
+    if(target && target->handle(this,FXSEL(SEL_LEFTBUTTONRELEASE,message),ptr)) return 1;
     return 1;
     }
   return 0;
@@ -509,10 +575,10 @@ long FXTextField::onMiddleBtnPress(FXObject*,FXSelector,void* ptr){
   FXEvent* ev=(FXEvent*)ptr;
   FXint pos;
   flags&=~FLAG_TIP;
-  handle(this,MKUINT(0,SEL_FOCUS_SELF),ptr);
+  handle(this,FXSEL(SEL_FOCUS_SELF,0),ptr);
   if(isEnabled()){
     grab();
-    if(target && target->handle(this,MKUINT(message,SEL_MIDDLEBUTTONPRESS),ptr)) return 1;
+    if(target && target->handle(this,FXSEL(SEL_MIDDLEBUTTONPRESS,message),ptr)) return 1;
     pos=index(ev->win_x);
     setCursorPos(pos);
     setAnchorPos(pos);
@@ -530,13 +596,13 @@ long FXTextField::onMiddleBtnRelease(FXObject*,FXSelector,void* ptr){
   FXuchar *data; FXuint len;
   if(isEnabled()){
     ungrab();
-    if(target && target->handle(this,MKUINT(message,SEL_MIDDLEBUTTONRELEASE),ptr)) return 1;
+    if(target && target->handle(this,FXSEL(SEL_MIDDLEBUTTONRELEASE,message),ptr)) return 1;
 
-    // Paste text from selection (X-Windows only)
+    // Paste text from selection
     if(isEditable()){
       if(getDNDData(FROM_SELECTION,stringType,data,len)){
         FXRESIZE(&data,FXchar,len+1); data[len]='\0';
-        handle(this,MKUINT(ID_INSERT_STRING,SEL_COMMAND),(void*)data);
+        handle(this,FXSEL(SEL_COMMAND,ID_INSERT_STRING),(void*)data);
         FXFREE(&data);
         return 1;
         }
@@ -551,14 +617,17 @@ long FXTextField::onMiddleBtnRelease(FXObject*,FXSelector,void* ptr){
 
 // Moved
 long FXTextField::onMotion(FXObject*,FXSelector,void* ptr){
-  FXEvent* ev=(FXEvent*)ptr;
+  FXEvent* event=(FXEvent*)ptr;
   FXint t;
   if(flags&FLAG_PRESSED){
-    if(ev->win_x<(border+padleft) || (width-border-padright)<ev->win_x){
-      getApp()->addTimeout(getApp()->getScrollSpeed(),this,FXWindow::ID_AUTOSCROLL);
+    if(event->win_x<(border+padleft) || (width-border-padright)<event->win_x){
+      if(!getApp()->hasTimeout(this,ID_AUTOSCROLL)){
+        getApp()->addTimeout(this,ID_AUTOSCROLL,getApp()->getScrollSpeed(),event);
+        }
       }
     else{
-      t=index(ev->win_x);
+      getApp()->removeTimeout(this,ID_AUTOSCROLL);
+      t=index(event->win_x);
       if(t!=cursor){
         drawCursor(0);
         cursor=t;
@@ -572,14 +641,14 @@ long FXTextField::onMotion(FXObject*,FXSelector,void* ptr){
 
 
 // Automatic scroll
-long FXTextField::onAutoScroll(FXObject*,FXSelector,void*){
-  FXuint buttons; FXint x,y,t,ll,rr,ww,tw,lim;
+long FXTextField::onAutoScroll(FXObject*,FXSelector,void* ptr){
+  register FXEvent* event=(FXEvent*)ptr;
   if(flags&FLAG_PRESSED){
-    t=cursor;
-    getCursorPosition(x,y,buttons);
-    ll=border+padleft;
-    rr=width-border-padright;
-    ww=rr-ll;
+    register FXint newcursor=cursor;
+    register FXint ll=border+padleft;
+    register FXint rr=width-border-padright;
+    register FXint ww=rr-ll;
+    register FXint tw,lim;
 
     if(options&TEXTFIELD_PASSWD)
       tw=font->getTextWidth("*",1)*contents.length();
@@ -590,27 +659,27 @@ long FXTextField::onAutoScroll(FXObject*,FXSelector,void*){
       lim=tw-ww;
 
       // Scroll left
-      if(x<ll){
+      if(event->win_x<ll){
         if(lim>0){
-          shift+=ll-x;
+          shift+=ll-event->win_x;
           if(shift>=lim)
             shift=lim;
           else
-            getApp()->addTimeout(getApp()->getScrollSpeed(),this,FXWindow::ID_AUTOSCROLL);
+            getApp()->addTimeout(this,ID_AUTOSCROLL,getApp()->getScrollSpeed(),event);
           }
-        t=index(ll);
+        newcursor=index(ll);
         }
 
       // Scroll right
-      if(rr<x){
+      if(rr<event->win_x){
         if(lim>0){
-          shift+=rr-x;
+          shift+=rr-event->win_x;
           if(shift<=0)
             shift=0;
           else
-            getApp()->addTimeout(getApp()->getScrollSpeed(),this,FXWindow::ID_AUTOSCROLL);
+            getApp()->addTimeout(this,ID_AUTOSCROLL,getApp()->getScrollSpeed(),event);
           }
-        t=index(rr);
+        newcursor=index(rr);
         }
       FXASSERT(shift>=0);
       }
@@ -618,47 +687,39 @@ long FXTextField::onAutoScroll(FXObject*,FXSelector,void*){
       lim=ww-tw;
 
       // Scroll left
-      if(x<ll){
+      if(event->win_x<ll){
         if(lim<0){
-          shift+=ll-x;
+          shift+=ll-event->win_x;
           if(shift>=0)
             shift=0;
           else
-            getApp()->addTimeout(getApp()->getScrollSpeed(),this,FXWindow::ID_AUTOSCROLL);
+            getApp()->addTimeout(this,ID_AUTOSCROLL,getApp()->getScrollSpeed(),event);
           }
-        t=index(ll);
+        newcursor=index(ll);
         }
 
       // Scroll right
-      if(rr<x){
+      if(rr<event->win_x){
         if(lim<0){
-          shift+=rr-x;
+          shift+=rr-event->win_x;
           if(shift<=lim)
             shift=lim;
           else
-            getApp()->addTimeout(getApp()->getScrollSpeed(),this,FXWindow::ID_AUTOSCROLL);
+            getApp()->addTimeout(this,ID_AUTOSCROLL,getApp()->getScrollSpeed(),event);
           }
-        t=index(rr);
+        newcursor=index(rr);
         }
       FXASSERT(shift<=0);
       }
 
     // Extend the selection
-    if(t!=cursor){
+    if(newcursor!=cursor){
       drawCursor(0);
-      cursor=t;
+      cursor=newcursor;
       extendSelection(cursor);
       }
     }
   return 1;
-  }
-
-
-// Blink the cursor
-long FXTextField::onBlink(FXObject*,FXSelector,void*){
-  drawCursor(flags^FLAG_CARET);
-  blinker=getApp()->addTimeout(getApp()->getBlinkSpeed(),this,ID_BLINK);
-  return 0;
   }
 
 
@@ -671,10 +732,9 @@ long FXTextField::onCmdToggleOverstrike(FXObject*,FXSelector,void*){
 
 // Update overstrike toggle
 long FXTextField::onUpdToggleOverstrike(FXObject* sender,FXSelector,void*){
-  FXuint msg=(options&TEXTFIELD_OVERSTRIKE) ? ID_CHECK : ID_UNCHECK;
-  sender->handle(this,MKUINT(msg,SEL_COMMAND),NULL);
-  sender->handle(this,MKUINT(ID_SHOW,SEL_COMMAND),NULL);
-  sender->handle(this,MKUINT(ID_ENABLE,SEL_COMMAND),NULL);
+  sender->handle(this,(options&TEXTFIELD_OVERSTRIKE)?FXSEL(SEL_COMMAND,ID_CHECK):FXSEL(SEL_COMMAND,ID_UNCHECK),NULL);
+  sender->handle(this,FXSEL(SEL_COMMAND,ID_SHOW),NULL);
+  sender->handle(this,FXSEL(SEL_COMMAND,ID_ENABLE),NULL);
   return 1;
   }
 
@@ -689,10 +749,23 @@ long FXTextField::onCmdToggleEditable(FXObject*,FXSelector,void*){
 
 // Update editable toggle
 long FXTextField::onUpdToggleEditable(FXObject* sender,FXSelector,void*){
-  FXuint msg=(options&TEXTFIELD_READONLY) ? ID_UNCHECK : ID_CHECK;
-  sender->handle(this,MKUINT(msg,SEL_COMMAND),NULL);
-  sender->handle(this,MKUINT(ID_SHOW,SEL_COMMAND),NULL);
-  sender->handle(this,MKUINT(ID_ENABLE,SEL_COMMAND),NULL);
+  sender->handle(this,(options&TEXTFIELD_READONLY)?FXSEL(SEL_COMMAND,ID_UNCHECK):FXSEL(SEL_COMMAND,ID_CHECK),NULL);
+  sender->handle(this,FXSEL(SEL_COMMAND,ID_SHOW),NULL);
+  sender->handle(this,FXSEL(SEL_COMMAND,ID_ENABLE),NULL);
+  return 1;
+  }
+
+
+// Update somebody who works on the selection
+long FXTextField::onUpdHaveSelection(FXObject* sender,FXSelector,void* ptr){
+  sender->handle(this,hasSelection()?FXSEL(SEL_COMMAND,ID_ENABLE):FXSEL(SEL_COMMAND,ID_DISABLE),ptr);
+  return 1;
+  }
+
+
+// Update somebody who works on the selection
+long FXTextField::onUpdSelectAll(FXObject* sender,FXSelector,void* ptr){
+  sender->handle(this,contents.empty()?FXSEL(SEL_COMMAND,ID_DISABLE):FXSEL(SEL_COMMAND,ID_ENABLE),ptr);
   return 1;
   }
 
@@ -717,34 +790,51 @@ void FXTextField::setAnchorPos(FXint pos){
   }
 
 
-// Draw the cursor
+// Draw the cursor; need to draw 2 characters around the cursor
+// due to possible overhanging in certain fonts.  Also, need to
+// completely erase and redraw because of ClearType.
+// Kudos to Bill Baxter for help with this code.
 void FXTextField::drawCursor(FXuint state){
-  FXint cl,ch,xx,len;
-  if(!xid) return;
+  FXint cl,ch,len,xx,xlo,xhi;
   if((state^flags)&FLAG_CARET){
-    FXDCWindow dc(this);
-    len=contents.length();
-    FXASSERT(0<=cursor && cursor<=len);
-    FXASSERT(0<=anchor && anchor<=len);
-    xx=coord(cursor)-1;
-    dc.setClipRectangle(border,border,width-(border<<1),height-(border<<1));
-    if(flags&FLAG_CARET){
-      dc.setForeground(backColor);
-      dc.fillRectangle(xx,padtop+border,1,height-padbottom-padtop-(border<<1));
-      dc.fillRectangle(xx-2,padtop+border,5,1);
-      dc.fillRectangle(xx-2,height-border-padbottom-1,5,1);
-      cl=cursor-1;
-      ch=cursor+1;
-      drawTextRange(dc,FXMAX(cl,0),FXMIN(ch,len));     // Gotta redraw these letters...
-      flags&=~FLAG_CARET;
+    if(xid){
+      FXDCWindow dc(this);
+      len=contents.length();
+      FXASSERT(0<=cursor && cursor<=len);
+      FXASSERT(0<=anchor && anchor<=len);
+      xx=coord(cursor)-1;
+
+      // Clip rectangle around cursor
+      xlo=FXMAX(xx-2,border);
+      xhi=FXMIN(xx+3,width-border);
+
+      // Cursor can overhang padding but not borders
+      dc.setClipRectangle(xlo,border,xhi-xlo,height-(border<<1));
+
+      // Draw I beam
+      if(state&FLAG_CARET){
+
+        // Draw I-beam
+        dc.setForeground(cursorColor);
+        dc.fillRectangle(xx,padtop+border,1,height-padbottom-padtop-(border<<1));
+        dc.fillRectangle(xx-2,padtop+border,5,1);
+        dc.fillRectangle(xx-2,height-border-padbottom-1,5,1);
+        }
+
+      // Erase I-beam
+      else{
+
+        // Erase I-beam, plus the text immediately surrounding it
+        dc.setForeground(backColor);
+        dc.fillRectangle(xx-2,border,5,height-(border<<1));
+
+        // Draw two characters before and after cursor
+        cl=cursor-2;
+        ch=cursor+2;
+        drawTextRange(dc,FXMAX(cl,0),FXMIN(ch,len));
+        }
       }
-    else{
-      dc.setForeground(textColor);
-      dc.fillRectangle(xx,padtop+border,1,height-padbottom-padtop-(border<<1));
-      dc.fillRectangle(xx-2,padtop+border,5,1);
-      dc.fillRectangle(xx-2,height-border-padbottom-1,5,1);
-      flags|=FLAG_CARET;
-      }
+    flags^=FLAG_CARET;
     }
   }
 
@@ -935,8 +1025,10 @@ void FXTextField::drawPWDTextFragment(FXDCWindow& dc,FXint x,FXint y,FXint fm,FX
 // Draw range of text
 void FXTextField::drawTextRange(FXDCWindow& dc,FXint fm,FXint to){
   register FXint sx,ex,xx,yy,cw,hh,ww,si,ei,lx,rx;
+
   if(to<=fm) return;
-  dc.setTextFont(font);
+
+  dc.setFont(font);
 
   // Text color
   dc.setForeground(textColor);
@@ -994,11 +1086,11 @@ void FXTextField::drawTextRange(FXDCWindow& dc,FXint fm,FXint to){
       rx-=cw;
       to--;
       }
-      
+
     // Adjust selected range
     if(si<fm) si=fm;
     if(ei>to) ei=to;
-      
+
     // Nothing selected
     if(!hasSelection() || to<=si || ei<=fm){
       drawPWDTextFragment(dc,xx,yy,fm,to);
@@ -1066,11 +1158,11 @@ void FXTextField::drawTextRange(FXDCWindow& dc,FXint fm,FXint to){
       rx-=cw;
       to--;
       }
-      
+
     // Adjust selected range
     if(si<fm) si=fm;
     if(ei>to) ei=to;
-      
+
     // Nothing selected
     if(!hasSelection() || to<=si || ei<=fm){
       drawTextFragment(dc,xx,yy,fm,to);
@@ -1135,7 +1227,7 @@ long FXTextField::onPaint(FXObject*,FXSelector,void* ptr){
   // Draw caret
   if(flags&FLAG_CARET){
     int xx=coord(cursor)-1;
-    dc.setForeground(textColor);
+    dc.setForeground(cursorColor);
     dc.fillRectangle(xx,padtop+border,1,height-padbottom-padtop-(border<<1));
     dc.fillRectangle(xx-2,padtop+border,5,1);
     dc.fillRectangle(xx-2,height-border-padbottom-1,5,1);
@@ -1176,6 +1268,90 @@ long FXTextField::onCmdCursorLeft(FXObject*,FXSelector,void*){
   }
 
 
+// Find end of previous word
+FXint FXTextField::leftWord(FXint pos) const {
+  FXASSERT(0<=pos && pos<=contents.length());
+  while(0<pos && !isspace((FXuchar)contents[pos-1]) && !strchr(delimiters,contents[pos-1])) pos--;
+  while(0<pos && isspace((FXuchar)contents[pos-1])) pos--;
+  if(0<pos && pos==cursor) pos--;
+  return pos;
+  }
+
+
+// Find begin of next word
+FXint FXTextField::rightWord(FXint pos) const {
+  FXASSERT(0<=pos && pos<=contents.length());
+  while(pos<contents.length() && !isspace((FXuchar)contents[pos]) && !strchr(delimiters,contents[pos])) pos++;
+  while(pos<contents.length() && isspace((FXuchar)contents[pos])) pos++;
+  if(pos<contents.length() && pos==cursor) pos++;
+  return pos;
+  }
+
+
+// Find begin of a word
+FXint FXTextField::wordStart(FXint pos) const {
+  FXASSERT(0<=pos && pos<=contents.length());
+  if(pos==contents.length() || isspace((FXuchar)contents[pos])){
+    while(0<pos && isspace((FXuchar)contents[pos-1])) pos--;
+    }
+  else if(strchr(delimiters,contents[pos])){
+    while(0<pos && strchr(delimiters,contents[pos-1])) pos--;
+    }
+  else{
+    while(0<pos && !strchr(delimiters,contents[pos-1]) && !isspace((FXuchar)contents[pos-1])) pos--;
+    }
+  return pos;
+  }
+
+
+// Find end of word
+FXint FXTextField::wordEnd(FXint pos) const {
+  FXASSERT(0<=pos && pos<=contents.length());
+  if(pos==contents.length() || isspace((FXuchar)contents[pos])){
+    while(pos<contents.length() && isspace((FXuchar)contents[pos])) pos++;
+    }
+  else if(strchr(delimiters,contents[pos])){
+    while(pos<contents.length() && strchr(delimiters,contents[pos])) pos++;
+    }
+  else{
+    while(pos<contents.length() && !strchr(delimiters,contents[pos]) && !isspace((FXuchar)contents[pos])) pos++;
+    }
+  return pos;
+  }
+
+
+// Move cursor word right
+long FXTextField::onCmdCursorWordRight(FXObject*,FXSelector,void*){
+  setCursorPos(rightWord(cursor));
+  makePositionVisible(cursor);
+  return 1;
+  }
+
+
+// Move cursor word left
+long FXTextField::onCmdCursorWordLeft(FXObject*,FXSelector,void*){
+  setCursorPos(leftWord(cursor));
+  makePositionVisible(cursor);
+  return 1;
+  }
+
+
+// Move cursor to word start
+long FXTextField::onCmdCursorWordStart(FXObject*,FXSelector,void*){
+  setCursorPos(wordStart(cursor));
+  makePositionVisible(cursor);
+  return 1;
+  }
+
+
+// Move cursor to word end
+long FXTextField::onCmdCursorWordEnd(FXObject*,FXSelector,void*){
+  setCursorPos(wordEnd(cursor));
+  makePositionVisible(cursor);
+  return 1;
+  }
+
+
 // Mark
 long FXTextField::onCmdMark(FXObject*,FXSelector,void*){
   setAnchorPos(cursor);
@@ -1207,16 +1383,17 @@ long FXTextField::onCmdDeselectAll(FXObject*,FXSelector,void*){
 
 // Cut
 long FXTextField::onCmdCutSel(FXObject*,FXSelector,void*){
-  FXDragType types[1];
+  FXDragType types[2];
   if(hasSelection()){
     if(isEditable()){
       types[0]=stringType;
-      if(acquireClipboard(types,1)){
+      types[1]=textType;
+      if(acquireClipboard(types,2)){
         if(anchor<cursor)
           clipped=contents.mid(anchor,cursor-anchor);
         else
           clipped=contents.mid(cursor,anchor-cursor);
-        handle(this,MKUINT(ID_DELETE_SEL,SEL_COMMAND),NULL);
+        handle(this,FXSEL(SEL_COMMAND,ID_DELETE_SEL),NULL);
         }
       }
     else{
@@ -1229,10 +1406,11 @@ long FXTextField::onCmdCutSel(FXObject*,FXSelector,void*){
 
 // Copy onto cliboard
 long FXTextField::onCmdCopySel(FXObject*,FXSelector,void*){
-  FXDragType types[1];
+  FXDragType types[2];
   if(hasSelection()){
     types[0]=stringType;
-    if(acquireClipboard(types,1)){
+    types[1]=textType;
+    if(acquireClipboard(types,2)){
       if(anchor<cursor)
         clipped=contents.mid(anchor,cursor-anchor);
       else
@@ -1248,11 +1426,11 @@ long FXTextField::onCmdPasteSel(FXObject*,FXSelector,void*){
   FXuchar *data; FXuint len;
   if(isEditable()){
     if(hasSelection()){
-      handle(this,MKUINT(ID_DELETE_SEL,SEL_COMMAND),NULL);
+      handle(this,FXSEL(SEL_COMMAND,ID_DELETE_SEL),NULL);
       }
     if(getDNDData(FROM_CLIPBOARD,stringType,data,len)){
       FXRESIZE(&data,FXchar,len+1); data[len]='\0';
-      handle(this,MKUINT(ID_INSERT_STRING,SEL_COMMAND),(void*)data);
+      handle(this,FXSEL(SEL_COMMAND,ID_INSERT_STRING),(void*)data);
       FXFREE(&data);
       return 1;
       }
@@ -1266,18 +1444,32 @@ long FXTextField::onCmdPasteSel(FXObject*,FXSelector,void*){
 
 // Delete selection
 long FXTextField::onCmdDeleteSel(FXObject*,FXSelector,void*){
-  int st,en;
+  FXint st,en;
   if(!hasSelection()) return 1;
   st=FXMIN(anchor,cursor);
   en=FXMAX(anchor,cursor);
   setCursorPos(st);
-  setAnchorPos(cursor);
+  setAnchorPos(st);
   contents.remove(st,en-st);
   layout();
   makePositionVisible(st);
   killSelection();
   flags|=FLAG_CHANGED;
-  if(target){target->handle(this,MKUINT(message,SEL_CHANGED),(void*)contents.text());}
+  if(target){target->handle(this,FXSEL(SEL_CHANGED,message),(void*)contents.text());}
+  return 1;
+  }
+
+
+// Delete all text
+long FXTextField::onCmdDeleteAll(FXObject*,FXSelector,void*){
+  setCursorPos(0);
+  setAnchorPos(0);
+  contents.clear();
+  layout();
+  makePositionVisible(0);
+  killSelection();
+  flags|=FLAG_CHANGED;
+  if(target){target->handle(this,FXSEL(SEL_CHANGED,message),(void*)contents.text());}
   return 1;
   }
 
@@ -1286,16 +1478,25 @@ long FXTextField::onCmdDeleteSel(FXObject*,FXSelector,void*){
 long FXTextField::onCmdOverstString(FXObject*,FXSelector,void* ptr){
   FXString tentative=contents;
   FXint len=strlen((FXchar*)ptr);
-  tentative.replace(cursor,len,(FXchar*)ptr,len);
-  if(handle(this,MKUINT(0,SEL_VERIFY),(void*)tentative.text())){ getApp()->beep(); return 1; }
+  FXint reppos=cursor;
+  FXint replen=0;
+  if(hasSelection()){
+    reppos=FXMIN(anchor,cursor);
+    replen=FXMAX(anchor,cursor)-reppos;
+    }
+  tentative.replace(reppos,replen,(FXchar*)ptr,len);
+  if(handle(this,FXSEL(SEL_VERIFY,0),(void*)tentative.text())){ getApp()->beep(); return 1; }
+  setCursorPos(reppos);
+  setAnchorPos(reppos);
   contents=tentative;
   layout();
-  setCursorPos(cursor+1);
-  setAnchorPos(cursor);
-  makePositionVisible(cursor);
+  setCursorPos(reppos+len);
+  setAnchorPos(reppos+len);
+  makePositionVisible(reppos+len);
+  killSelection();
   update(border,border,width-(border<<1),height-(border<<1));
   flags|=FLAG_CHANGED;
-  if(target){target->handle(this,MKUINT(message,SEL_CHANGED),(void*)contents.text());}
+  if(target){target->handle(this,FXSEL(SEL_CHANGED,message),(void*)contents.text());}
   return 1;
   }
 
@@ -1304,16 +1505,25 @@ long FXTextField::onCmdOverstString(FXObject*,FXSelector,void* ptr){
 long FXTextField::onCmdInsertString(FXObject*,FXSelector,void* ptr){
   FXString tentative=contents;
   FXint len=strlen((FXchar*)ptr);
-  tentative.insert(cursor,(FXchar*)ptr,len);
-  if(handle(this,MKUINT(0,SEL_VERIFY),(void*)tentative.text())){ getApp()->beep(); return 1; }
+  FXint reppos=cursor;
+  FXint replen=0;
+  if(hasSelection()){
+    reppos=FXMIN(anchor,cursor);
+    replen=FXMAX(anchor,cursor)-reppos;
+    }
+  tentative.replace(reppos,replen,(FXchar*)ptr,len);
+  if(handle(this,FXSEL(SEL_VERIFY,0),(void*)tentative.text())){ getApp()->beep(); return 1; }
+  setCursorPos(reppos);
+  setAnchorPos(reppos);
   contents=tentative;
   layout();
-  setCursorPos(cursor+len);
-  setAnchorPos(cursor);
-  makePositionVisible(cursor);
+  setCursorPos(reppos+len);
+  setAnchorPos(reppos+len);
+  makePositionVisible(reppos+len);
+  killSelection();
   update(border,border,width-(border<<1),height-(border<<1));
   flags|=FLAG_CHANGED;
-  if(target){target->handle(this,MKUINT(message,SEL_CHANGED),(void*)contents.text());}
+  if(target){target->handle(this,FXSEL(SEL_CHANGED,message),(void*)contents.text());}
   return 1;
   }
 
@@ -1328,7 +1538,7 @@ long FXTextField::onCmdBackspace(FXObject*,FXSelector,void*){
   makePositionVisible(cursor);
   update(border,border,width-(border<<1),height-(border<<1));
   flags|=FLAG_CHANGED;
-  if(target){target->handle(this,MKUINT(message,SEL_CHANGED),(void*)contents.text());}
+  if(target){target->handle(this,FXSEL(SEL_CHANGED,message),(void*)contents.text());}
   return 1;
   }
 
@@ -1343,7 +1553,7 @@ long FXTextField::onCmdDelete(FXObject*,FXSelector,void*){
   makePositionVisible(cursor);
   update(border,border,width-(border<<1),height-(border<<1));
   flags|=FLAG_CHANGED;
-  if(target){target->handle(this,MKUINT(message,SEL_CHANGED),(void*)contents.text());}
+  if(target){target->handle(this,FXSEL(SEL_CHANGED,message),(void*)contents.text());}
   return 1;
   }
 
@@ -1354,7 +1564,7 @@ long FXTextField::onVerify(FXObject*,FXSelector,void* ptr){
 
   // Limit number of columns
   if(options&TEXTFIELD_LIMITED){
-    if(strlen(p)>columns) return 1;
+    if((FXint)strlen(p)>columns) return 1;
     }
 
   // Integer input
@@ -1383,7 +1593,7 @@ long FXTextField::onVerify(FXObject*,FXSelector,void* ptr){
     }
 
   // Target has chance to object to the proposed change
-  if(target && target->handle(this,MKUINT(message,SEL_VERIFY),ptr)) return 1;
+  if(target && target->handle(this,FXSEL(SEL_VERIFY,message),ptr)) return 1;
 
   // No objections have been raised!
   return 0;
@@ -1396,70 +1606,80 @@ long FXTextField::onKeyPress(FXObject*,FXSelector,void* ptr){
   flags&=~FLAG_TIP;
   if(isEnabled()){
     FXTRACE((200,"%s::onKeyPress keysym=0x%04x state=%04x\n",getClassName(),event->code,event->state));
-    if(target && target->handle(this,MKUINT(message,SEL_KEYPRESS),ptr)) return 1;
+    if(target && target->handle(this,FXSEL(SEL_KEYPRESS,message),ptr)) return 1;
     flags&=~FLAG_UPDATE;
     switch(event->code){
       case KEY_Right:
       case KEY_KP_Right:
         if(!(event->state&SHIFTMASK)){
-          handle(this,MKUINT(ID_DESELECT_ALL,SEL_COMMAND),NULL);
+          handle(this,FXSEL(SEL_COMMAND,ID_DESELECT_ALL),NULL);
           }
-        handle(this,MKUINT(ID_CURSOR_RIGHT,SEL_COMMAND),NULL);
-        if(event->state&SHIFTMASK){
-          handle(this,MKUINT(ID_EXTEND,SEL_COMMAND),NULL);
+        if(event->state&CONTROLMASK){
+          handle(this,FXSEL(SEL_COMMAND,ID_CURSOR_WORD_RIGHT),NULL);
           }
         else{
-          handle(this,MKUINT(ID_MARK,SEL_COMMAND),NULL);
+          handle(this,FXSEL(SEL_COMMAND,ID_CURSOR_RIGHT),NULL);
+          }
+        if(event->state&SHIFTMASK){
+          handle(this,FXSEL(SEL_COMMAND,ID_EXTEND),NULL);
+          }
+        else{
+          handle(this,FXSEL(SEL_COMMAND,ID_MARK),NULL);
           }
         return 1;
       case KEY_Left:
       case KEY_KP_Left:
         if(!(event->state&SHIFTMASK)){
-          handle(this,MKUINT(ID_DESELECT_ALL,SEL_COMMAND),NULL);
+          handle(this,FXSEL(SEL_COMMAND,ID_DESELECT_ALL),NULL);
           }
-        handle(this,MKUINT(ID_CURSOR_LEFT,SEL_COMMAND),NULL);
-        if(event->state&SHIFTMASK){
-          handle(this,MKUINT(ID_EXTEND,SEL_COMMAND),NULL);
+        if(event->state&CONTROLMASK){
+          handle(this,FXSEL(SEL_COMMAND,ID_CURSOR_WORD_LEFT),NULL);
           }
         else{
-          handle(this,MKUINT(ID_MARK,SEL_COMMAND),NULL);
+          handle(this,FXSEL(SEL_COMMAND,ID_CURSOR_LEFT),NULL);
+          }
+        if(event->state&SHIFTMASK){
+          handle(this,FXSEL(SEL_COMMAND,ID_EXTEND),NULL);
+          }
+        else{
+          handle(this,FXSEL(SEL_COMMAND,ID_MARK),NULL);
           }
         return 1;
       case KEY_Home:
       case KEY_KP_Home:
         if(!(event->state&SHIFTMASK)){
-          handle(this,MKUINT(ID_DESELECT_ALL,SEL_COMMAND),NULL);
+          handle(this,FXSEL(SEL_COMMAND,ID_DESELECT_ALL),NULL);
           }
-        handle(this,MKUINT(ID_CURSOR_HOME,SEL_COMMAND),NULL);
+        handle(this,FXSEL(SEL_COMMAND,ID_CURSOR_HOME),NULL);
         if(event->state&SHIFTMASK){
-          handle(this,MKUINT(ID_EXTEND,SEL_COMMAND),NULL);
+          handle(this,FXSEL(SEL_COMMAND,ID_EXTEND),NULL);
           }
         else{
-          handle(this,MKUINT(ID_MARK,SEL_COMMAND),NULL);
+          handle(this,FXSEL(SEL_COMMAND,ID_MARK),NULL);
           }
         return 1;
       case KEY_End:
       case KEY_KP_End:
         if(!(event->state&SHIFTMASK)){
-          handle(this,MKUINT(ID_DESELECT_ALL,SEL_COMMAND),NULL);
+          handle(this,FXSEL(SEL_COMMAND,ID_DESELECT_ALL),NULL);
           }
-        handle(this,MKUINT(ID_CURSOR_END,SEL_COMMAND),NULL);
+        handle(this,FXSEL(SEL_COMMAND,ID_CURSOR_END),NULL);
         if(event->state&SHIFTMASK){
-          handle(this,MKUINT(ID_EXTEND,SEL_COMMAND),NULL);
+          handle(this,FXSEL(SEL_COMMAND,ID_EXTEND),NULL);
           }
         else{
-          handle(this,MKUINT(ID_MARK,SEL_COMMAND),NULL);
+          handle(this,FXSEL(SEL_COMMAND,ID_MARK),NULL);
           }
         return 1;
       case KEY_Insert:
       case KEY_KP_Insert:
         if(event->state&CONTROLMASK){
-          handle(this,MKUINT(ID_COPY_SEL,SEL_COMMAND),NULL);
+          handle(this,FXSEL(SEL_COMMAND,ID_COPY_SEL),NULL);
           return 1;
           }
         else if(event->state&SHIFTMASK){
           if(isEditable()){
-            handle(this,MKUINT(ID_PASTE_SEL,SEL_COMMAND),NULL);
+            handle(this,FXSEL(SEL_COMMAND,ID_PASTE_SEL),NULL);
             }
           else{
             getApp()->beep();
@@ -1467,16 +1687,23 @@ long FXTextField::onKeyPress(FXObject*,FXSelector,void* ptr){
           return 1;
           }
         else{
-          handle(this,MKUINT(ID_TOGGLE_OVERSTRIKE,SEL_COMMAND),NULL);
+          handle(this,FXSEL(SEL_COMMAND,ID_TOGGLE_OVERSTRIKE),NULL);
           }
         return 1;
       case KEY_Delete:
       case KEY_KP_Delete:
         if(isEditable()){
-          if(hasSelection())
-            handle(this,MKUINT(ID_DELETE_SEL,SEL_COMMAND),NULL);
-          else
-            handle(this,MKUINT(ID_DELETE,SEL_COMMAND),NULL);
+          if(hasSelection()){
+            if(event->state&SHIFTMASK){
+              handle(this,FXSEL(SEL_COMMAND,ID_CUT_SEL),NULL);
+              }
+            else{
+              handle(this,FXSEL(SEL_COMMAND,ID_DELETE_SEL),NULL);
+              }
+            }
+          else{
+            handle(this,FXSEL(SEL_COMMAND,ID_DELETE),NULL);
+            }
           }
         else{
           getApp()->beep();
@@ -1485,10 +1712,10 @@ long FXTextField::onKeyPress(FXObject*,FXSelector,void* ptr){
       case KEY_BackSpace:
         if(isEditable()){
           if(hasSelection()){
-            handle(this,MKUINT(ID_DELETE_SEL,SEL_COMMAND),NULL);
+            handle(this,FXSEL(SEL_COMMAND,ID_DELETE_SEL),NULL);
             }
           else{
-            handle(this,MKUINT(ID_BACKSPACE,SEL_COMMAND),NULL);
+            handle(this,FXSEL(SEL_COMMAND,ID_BACKSPACE),NULL);
             }
           }
         else{
@@ -1501,7 +1728,7 @@ long FXTextField::onKeyPress(FXObject*,FXSelector,void* ptr){
           flags|=FLAG_UPDATE;
           flags&=~FLAG_CHANGED;
           if(target){
-            target->handle(this,MKUINT(message,SEL_COMMAND),(void*)contents.text());
+            target->handle(this,FXSEL(SEL_COMMAND,message),(void*)contents.text());
             }
           }
         else{
@@ -1510,12 +1737,13 @@ long FXTextField::onKeyPress(FXObject*,FXSelector,void* ptr){
         return 1;
       case KEY_a:
         if(!(event->state&CONTROLMASK)) goto ins;
-        handle(this,MKUINT(ID_SELECT_ALL,SEL_COMMAND),NULL);
+        handle(this,FXSEL(SEL_COMMAND,ID_SELECT_ALL),NULL);
         return 1;
       case KEY_x:
         if(!(event->state&CONTROLMASK)) goto ins;
+      case KEY_F20:                             // Sun Cut key
         if(isEditable()){
-          handle(this,MKUINT(ID_CUT_SEL,SEL_COMMAND),NULL);
+          handle(this,FXSEL(SEL_COMMAND,ID_CUT_SEL),NULL);
           }
         else{
           getApp()->beep();
@@ -1523,12 +1751,14 @@ long FXTextField::onKeyPress(FXObject*,FXSelector,void* ptr){
         return 1;
       case KEY_c:
         if(!(event->state&CONTROLMASK)) goto ins;
-        handle(this,MKUINT(ID_COPY_SEL,SEL_COMMAND),NULL);
+      case KEY_F16:                             // Sun Copy key
+        handle(this,FXSEL(SEL_COMMAND,ID_COPY_SEL),NULL);
         return 1;
       case KEY_v:
         if(!(event->state&CONTROLMASK)) goto ins;
+      case KEY_F18:                             // Sun Paste key
         if(isEditable()){
-          handle(this,MKUINT(ID_PASTE_SEL,SEL_COMMAND),NULL);
+          handle(this,FXSEL(SEL_COMMAND,ID_PASTE_SEL),NULL);
           }
         else{
           getApp()->beep();
@@ -1537,14 +1767,11 @@ long FXTextField::onKeyPress(FXObject*,FXSelector,void* ptr){
       default:
 ins:    if((event->state&(CONTROLMASK|ALTMASK)) || ((FXuchar)event->text[0]<32)) return 0;
         if(isEditable()){
-          if(hasSelection()){
-            handle(this,MKUINT(ID_DELETE_SEL,SEL_COMMAND),NULL);
-            }
           if(options&TEXTFIELD_OVERSTRIKE){
-            handle(this,MKUINT(ID_OVERST_STRING,SEL_COMMAND),(void*)event->text.text());
+            handle(this,FXSEL(SEL_COMMAND,ID_OVERST_STRING),(void*)event->text.text());
             }
           else{
-            handle(this,MKUINT(ID_INSERT_STRING,SEL_COMMAND),(void*)event->text.text());
+            handle(this,FXSEL(SEL_COMMAND,ID_INSERT_STRING),(void*)event->text.text());
             }
           }
         else{
@@ -1559,10 +1786,9 @@ ins:    if((event->state&(CONTROLMASK|ALTMASK)) || ((FXuchar)event->text[0]<32))
 
 // Key Release
 long FXTextField::onKeyRelease(FXObject*,FXSelector,void* ptr){
-  FXEvent* event=(FXEvent*)ptr;
   if(isEnabled()){
-    FXTRACE((200,"%s::onKeyRelease keysym=0x%04x state=%04x\n",getClassName(),event->code,event->state));
-    if(target && target->handle(this,MKUINT(message,SEL_KEYRELEASE),ptr)) return 1;
+    FXTRACE((200,"%s::onKeyRelease keysym=0x%04x state=%04x\n",getClassName(),((FXEvent*)ptr)->code,((FXEvent*)ptr)->state));
+    if(target && target->handle(this,FXSEL(SEL_KEYRELEASE,message),ptr)) return 1;
     }
   return 0;
   }
@@ -1599,7 +1825,7 @@ FXbool FXTextField::setSelection(FXint pos,FXint len){
 
 // Extend selection
 FXbool FXTextField::extendSelection(FXint pos){
-  FXDragType types[1];
+  FXDragType types[2];
   FXint l=contents.length();
 
   // Validate position
@@ -1609,8 +1835,9 @@ FXbool FXTextField::extendSelection(FXint pos){
   // Got a selection at all?
   if(anchor!=pos){
     types[0]=stringType;
+    types[1]=textType;
     if(!hasSelection()){
-      acquireSelection(types,1);
+      acquireSelection(types,2);
       }
     }
   else{
@@ -1661,6 +1888,15 @@ void FXTextField::setSelBackColor(FXColor clr){
 void FXTextField::setSelTextColor(FXColor clr){
   if(seltextColor!=clr){
     seltextColor=clr;
+    update();
+    }
+  }
+
+
+// Set cursor color
+void FXTextField::setCursorColor(FXColor clr){
+  if(clr!=cursorColor){
+    cursorColor=clr;
     update();
     }
   }
@@ -1747,6 +1983,7 @@ void FXTextField::save(FXStream& store) const {
   store << textColor;
   store << selbackColor;
   store << seltextColor;
+  store << cursorColor;
   store << columns;
   store << help;
   store << tip;
@@ -1761,6 +1998,7 @@ void FXTextField::load(FXStream& store){
   store >> textColor;
   store >> selbackColor;
   store >> seltextColor;
+  store >> cursorColor;
   store >> columns;
   store >> help;
   store >> tip;
@@ -1769,7 +2007,9 @@ void FXTextField::load(FXStream& store){
 
 // Clean up
 FXTextField::~FXTextField(){
-  if(blinker) getApp()->removeTimeout(blinker);
-  font=(FXFont*)-1;
-  blinker=(FXTimer*)-1;
+  getApp()->removeTimeout(this,ID_BLINK);
+  getApp()->removeTimeout(this,ID_AUTOSCROLL);
+  font=(FXFont*)-1L;
   }
+
+}

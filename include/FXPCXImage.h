@@ -3,7 +3,7 @@
 *                            P C X   I m a g e   O b j e c t                    *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2001,2002 by Janusz Ganczarski.   All Rights Reserved.          *
+* Copyright (C) 2001,2004 by Janusz Ganczarski.   All Rights Reserved.          *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXPCXImage.h,v 1.4 2002/01/18 22:55:03 jeroen Exp $                      *
+* $Id: FXPCXImage.h,v 1.12 2004/02/08 17:17:34 fox Exp $                        *
 ********************************************************************************/
 #ifndef FXPCXIMAGE_H
 #define FXPCXIMAGE_H
@@ -28,6 +28,7 @@
 #include "FXImage.h"
 #endif
 
+namespace FX {
 
 ///  PCX graphics file
 class FXAPI FXPCXImage : public FXImage {
@@ -43,22 +44,29 @@ public:
   FXPCXImage(FXApp* a,const void *pix=NULL,FXuint opts=0,FXint w=1,FXint h=1);
 
   /// Save pixels into stream in PCX file
-  virtual void savePixels(FXStream& store) const;
+  virtual FXbool savePixels(FXStream& store) const;
 
   /// Load pixels from stream in  bitmap format
-  virtual void loadPixels(FXStream& store);
+  virtual FXbool loadPixels(FXStream& store);
 
   /// Destroy icon
   virtual ~FXPCXImage();
   };
 
 
-/// Load a bmp file from a stream
-extern FXAPI FXbool fxloadPCX(FXStream& store,FXuchar*& data,FXColor& transp,FXint& width,FXint& height);
+/**
+* Load an PCX (PC Paintbrush) file from a stream.
+* Upon successful return, the pixel array and size are returned.
+* If an error occurred, the pixel array is set to NULL.
+*/
+extern FXAPI FXbool fxloadPCX(FXStream& store,FXColor*& data,FXint& width,FXint& height);
 
 
-/// Save a bmp file to a stream
-extern FXAPI FXbool fxsavePCX(FXStream& store,const FXuchar *data,FXColor transp,FXint width,FXint height);
+/**
+* Save an PCX (PC Paintbrush) file to a stream.
+*/
+extern FXAPI FXbool fxsavePCX(FXStream& store,const FXColor *data,FXint width,FXint height);
 
+}
 
 #endif

@@ -3,7 +3,7 @@
 *                            V i s u a l   C l a s s                            *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1999,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1999,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,12 +19,12 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXGLVisual.cpp,v 1.34.4.1 2003/02/28 22:46:02 fox Exp $                   *
+* $Id: FXGLVisual.cpp,v 1.53 2004/05/15 07:39:51 fox Exp $                      *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
 #include "fxdefs.h"
-#include "fxkeys.h"
+#include "fxpriv.h"
 #include "FXStream.h"
 #include "FXString.h"
 #include "FXSize.h"
@@ -33,6 +33,7 @@
 #include "FXSettings.h"
 #include "FXRegistry.h"
 #include "FXAccelTable.h"
+#include "FXHash.h"
 #include "FXApp.h"
 #include "FXFont.h"
 #include "FXGLVisual.h"
@@ -86,8 +87,11 @@
 
 #define DISPLAY(app) ((Display*)((app)->display))
 
+using namespace FX;
+
 /*******************************************************************************/
 
+namespace FX {
 
 // Object implementation
 FXIMPLEMENT(FXGLVisual,FXVisual,NULL,0)
@@ -106,7 +110,7 @@ FXGLVisual::FXGLVisual(FXApp* a,FXuint flgs):FXVisual(a,flgs){
   greenSize=8;
   blueSize=8;
   alphaSize=0;
-  depthSize=16;
+  depthSize=24;
   stencilSize=0;
   accumRedSize=0;
   accumGreenSize=0;
@@ -119,7 +123,8 @@ FXGLVisual::FXGLVisual(FXApp* a,FXuint flgs):FXVisual(a,flgs){
 
 #ifdef WIN32
 
-static FXuchar defSysClr[20][3] = {                         // System colors to match against
+// System colors to match against
+static FXuchar defSysClr[20][3] = {
     { 0,   0,   0 },
     { 0x80,0,   0 },
     { 0,   0x80,0 },
@@ -145,32 +150,35 @@ static FXuchar defSysClr[20][3] = {                         // System colors to 
     };
 
 static int defaultOverride[13] = {
-   0, 3, 24, 27, 64, 67, 88, 173, 181, 236, 247, 164, 91
+  0, 3, 24, 27, 64, 67, 88, 173, 181, 236, 247, 164, 91
   };
 
 
 // Make palette
-void FXGLVisual::makeOpenGLPalette(){
+static HPALETTE makeOpenGLPalette(PIXELFORMATDESCRIPTOR* info){
   int n,i,j,rr,gg,bb;
   int rmax,gmax,bmax;
   LOGPALETTE *pal;
+  HPALETTE hPalette;
 
-  n = 1 << ((PIXELFORMATDESCRIPTOR*)info)->cColorBits;
+  // Size of palette array
+  n=1<<((PIXELFORMATDESCRIPTOR*)info)->cColorBits;
+
+  // Allocate palette array
   FXMALLOC(&pal,char,sizeof(LOGPALETTE)+sizeof(PALETTEENTRY)*n);
   pal->palVersion = 0x300;
   pal->palNumEntries = n;
 
-  rmax=(1 << ((PIXELFORMATDESCRIPTOR*)info)->cRedBits)-1;
-  gmax=(1 << ((PIXELFORMATDESCRIPTOR*)info)->cGreenBits)-1;
-  bmax=(1 << ((PIXELFORMATDESCRIPTOR*)info)->cBlueBits)-1;
+  // Maximum values each color
+  rmax=(1 << info->cRedBits)-1;
+  gmax=(1 << info->cGreenBits)-1;
+  bmax=(1 << info->cBlueBits)-1;
 
   // Build palette
   for(rr=0; rr<=rmax; rr++){
     for(gg=0; gg<=gmax; gg++){
       for(bb=0; bb<=bmax; bb++){
-        i = (rr << ((PIXELFORMATDESCRIPTOR*)info)->cRedShift) |
-            (gg << ((PIXELFORMATDESCRIPTOR*)info)->cGreenShift) |
-            (bb << ((PIXELFORMATDESCRIPTOR*)info)->cBlueShift);
+        i = (rr << info->cRedShift) | (gg << info->cGreenShift) | (bb << info->cBlueShift);
         pal->palPalEntry[i].peRed = (255*rr)/rmax;
         pal->palPalEntry[i].peGreen = (255*gg)/gmax;
         pal->palPalEntry[i].peBlue = (255*bb)/bmax;
@@ -178,63 +186,24 @@ void FXGLVisual::makeOpenGLPalette(){
         }
       }
     }
-//for(i=0; i<256; i++){
-//FXTRACE((100,"%3d %3d %3d %3d\n",i,pal->palPalEntry[i].peRed,pal->palPalEntry[i].peGreen,pal->palPalEntry[i].peBlue));
-//}
 
-  if((((PIXELFORMATDESCRIPTOR*)info)->cColorBits==8) &&
-     (((PIXELFORMATDESCRIPTOR*)info)->cRedBits==3) &&
-     (((PIXELFORMATDESCRIPTOR*)info)->cRedShift== 0) &&
-     (((PIXELFORMATDESCRIPTOR*)info)->cGreenBits==3) &&
-     (((PIXELFORMATDESCRIPTOR*)info)->cGreenShift==3) &&
-     (((PIXELFORMATDESCRIPTOR*)info)->cBlueBits==2) &&
-     (((PIXELFORMATDESCRIPTOR*)info)->cBlueShift==6)){
+  // For 8-bit palette
+  if((info->cColorBits==8) && (info->cRedBits==3) && (info->cRedShift==0) && (info->cGreenBits==3) && (info->cGreenShift==3) && (info->cBlueBits==2) && (info->cBlueShift==6)){
     for(j=1; j<=12; j++){
-      pal->palPalEntry[defaultOverride[j]].peRed = defSysClr[j][0];
-      pal->palPalEntry[defaultOverride[j]].peGreen = defSysClr[j][1];
-      pal->palPalEntry[defaultOverride[j]].peBlue = defSysClr[j][1];
-      pal->palPalEntry[defaultOverride[j]].peFlags = 0;
+      pal->palPalEntry[defaultOverride[j]].peRed=defSysClr[j][0];
+      pal->palPalEntry[defaultOverride[j]].peGreen=defSysClr[j][1];
+      pal->palPalEntry[defaultOverride[j]].peBlue=defSysClr[j][1];
+      pal->palPalEntry[defaultOverride[j]].peFlags=0;
       }
     }
 
-
-/*
-  // Find best mapping of default colors to new map
-  if(n==256){
-    for(i=0; i<256; i++) index[i]=255;
-    for(j=19; j>=0; j--){
-      mindif = 3*256*256;
-      for(i=0; i<256; i++){
-        if(index[i]==255){
-          dr = (int)pal->palPalEntry[i].peRed - defSysClr[j][0];
-          dg = (int)pal->palPalEntry[i].peGreen - defSysClr[j][1];
-          db = (int)pal->palPalEntry[i].peBlue - defSysClr[j][2];
-          dif = dr*dr+dg*dg+db*db;
-          if(dif<mindif){
-            closest = i;
-            mindif = dif;
-            }
-          }
-        }
-      FXTRACE((100,"system color %d mapped to %d: dif = %f\n",j,closest,sqrt((double)mindif)));
-      FXASSERT(index[closest]==255);
-      index[closest] = j;
-      }
-
-    // Change proposed map to include already existing colors
-    for(i=0; i<256; i++){
-      j = index[i];
-      if(j<20){
-        pal->palPalEntry[i].peRed = defSysClr[j][0];
-        pal->palPalEntry[i].peGreen = defSysClr[j][1];
-        pal->palPalEntry[i].peBlue = defSysClr[j][2];
-        pal->palPalEntry[i].peFlags = 0;
-        }
-      }
-    }
-*/
+  // Make palette
   hPalette=CreatePalette(pal);
+
+  // Free palette array
   FXFREE(&pal);
+
+  return hPalette;
   }
 
 
@@ -245,24 +214,70 @@ void FXGLVisual::makeOpenGLPalette(){
 /*******************************************************************************/
 
 
+// Test if OpenGL is possible
+FXbool FXGLVisual::supported(FXApp* application,int& major,int& minor){
+  major=minor=0;
+  if(application->isInitialized()){
+#ifdef HAVE_GL_H
+#ifndef WIN32
+    if(!glXQueryExtension(DISPLAY(application),NULL,NULL)) return FALSE;
+    if(!glXQueryVersion(DISPLAY(application),&major,&minor)) return FALSE;
+#if GL_VERSION_1_5
+    if(minor>5) minor=5;
+#elif GL_VERSION_1_4
+    if(minor>4) minor=4;
+#elif GL_VERSION_1_3
+    if(minor>3) minor=3;
+#elif GL_VERSION_1_2
+    if(minor>2) minor=2;
+#elif GL_VERSION_1_1
+    if(minor>1) minor=1;
+#else
+    if(minor>0) minor=0;
+#endif
+    return TRUE;
+#else
+    major=1;
+#if GL_VERSION_1_4
+    minor=4;
+#elif GL_VERSION_1_3
+    minor=3;
+#elif GL_VERSION_1_2
+    minor=2;
+#elif GL_VERSION_1_1
+    minor=1;
+#else
+    minor=0;
+#endif
+    return TRUE;
+#endif
+#endif
+    }
+  return FALSE;
+  }
+
+
+
+#ifndef WIN32                   // UNIX
+
+
 // Initialize
 void FXGLVisual::create(){
-#ifdef HAVE_OPENGL
+#ifdef HAVE_GL_H
   if(!xid){
-    if(getApp()->initialized){
+    if(getApp()->isInitialized()){
       FXTRACE((100,"%s::create %p\n",getClassName(),this));
-#ifndef WIN32
-      XVisualInfo vitemplate;
-      XVisualInfo *vi;
-      int gdblbuf,glstereo,gldepth;
-      int glred,glgreen,glblue,glalpha,glstencil;
+      int major,minor;
+      int gdblbuf,gllevel,glstereo,glstencil,gldepth,glrgba;
+      int glred,glgreen,glblue,glalpha;
       int glaccred,glaccgreen,glaccblue,glaccalpha;
-      int glrgba,glsupport,gllevel;
+      int glsupport;
       int bestvis,dmatch,bestmatch;
       int dred,dgreen,dblue,ddepth,dalpha,dstencil;
       int daccred,daccgreen,daccblue,daccalpha;
+      XVisualInfo vitemplate;
+      XVisualInfo *vi;
       int nvi,i;
-      int major,minor;
 
       // OpenGL is available if we're talking to an OpenGL-capable X-Server
       if(!glXQueryExtension(DISPLAY(getApp()),NULL,NULL)){
@@ -289,117 +304,120 @@ void FXGLVisual::create(){
 
         // GL RGBA Support is requested
         glXGetConfig(DISPLAY(getApp()),&vi[i],GLX_USE_GL,&glsupport);
+        if(!glsupport) continue;
+
+        // Don't care about index color mode
         glXGetConfig(DISPLAY(getApp()),&vi[i],GLX_RGBA,&glrgba);
+        if(!glrgba) continue;
+
+        // Don't care for overlays
         glXGetConfig(DISPLAY(getApp()),&vi[i],GLX_LEVEL,&gllevel);
+        if(gllevel!=0) continue;
 
-        // Without GL support, we're toast
-        if(glsupport && glrgba && gllevel==0){
+        // Must have Single/Double buffer as requested
+        glXGetConfig(DISPLAY(getApp()),&vi[i],GLX_DOUBLEBUFFER,&gdblbuf);
 
-          // Must have Single/Double buffer as requested
-          glXGetConfig(DISPLAY(getApp()),&vi[i],GLX_DOUBLEBUFFER,&gdblbuf);
+        // Stereo support as requested
+        glXGetConfig(DISPLAY(getApp()),&vi[i],GLX_STEREO,&glstereo);
 
-          // Stereo support as requested
-          glXGetConfig(DISPLAY(getApp()),&vi[i],GLX_STEREO,&glstereo);
+        // Get planes
+        glXGetConfig(DISPLAY(getApp()),&vi[i],GLX_RED_SIZE,&glred);
+        glXGetConfig(DISPLAY(getApp()),&vi[i],GLX_GREEN_SIZE,&glgreen);
+        glXGetConfig(DISPLAY(getApp()),&vi[i],GLX_BLUE_SIZE,&glblue);
+        glXGetConfig(DISPLAY(getApp()),&vi[i],GLX_ALPHA_SIZE,&glalpha);
+        glXGetConfig(DISPLAY(getApp()),&vi[i],GLX_DEPTH_SIZE,&gldepth);
+        glXGetConfig(DISPLAY(getApp()),&vi[i],GLX_STENCIL_SIZE,&glstencil);
+        glXGetConfig(DISPLAY(getApp()),&vi[i],GLX_ACCUM_RED_SIZE,&glaccred);
+        glXGetConfig(DISPLAY(getApp()),&vi[i],GLX_ACCUM_GREEN_SIZE,&glaccgreen);
+        glXGetConfig(DISPLAY(getApp()),&vi[i],GLX_ACCUM_BLUE_SIZE,&glaccblue);
+        glXGetConfig(DISPLAY(getApp()),&vi[i],GLX_ACCUM_ALPHA_SIZE,&glaccalpha);
 
-          // Get planes
-          glXGetConfig(DISPLAY(getApp()),&vi[i],GLX_RED_SIZE,&glred);
-          glXGetConfig(DISPLAY(getApp()),&vi[i],GLX_GREEN_SIZE,&glgreen);
-          glXGetConfig(DISPLAY(getApp()),&vi[i],GLX_BLUE_SIZE,&glblue);
-          glXGetConfig(DISPLAY(getApp()),&vi[i],GLX_ALPHA_SIZE,&glalpha);
-          glXGetConfig(DISPLAY(getApp()),&vi[i],GLX_DEPTH_SIZE,&gldepth);
-          glXGetConfig(DISPLAY(getApp()),&vi[i],GLX_STENCIL_SIZE,&glstencil);
-          glXGetConfig(DISPLAY(getApp()),&vi[i],GLX_ACCUM_RED_SIZE,&glaccred);
-          glXGetConfig(DISPLAY(getApp()),&vi[i],GLX_ACCUM_GREEN_SIZE,&glaccgreen);
-          glXGetConfig(DISPLAY(getApp()),&vi[i],GLX_ACCUM_BLUE_SIZE,&glaccblue);
-          glXGetConfig(DISPLAY(getApp()),&vi[i],GLX_ACCUM_ALPHA_SIZE,&glaccalpha);
+        // We prefer to get a few MORE bits in RGBA than we asked for
+        dred   = glred-redSize;     if(dred<0)   dred   *= -100;
+        dgreen = glgreen-greenSize; if(dgreen<0) dgreen *= -100;
+        dblue  = glblue-blueSize;   if(dblue<0)  dblue  *= -100;
+        dalpha = glalpha-alphaSize; if(dalpha<0) dalpha *= -100;
 
-          // We prefer to get a few MORE bits in RGBA than we asked for
-          dred   = glred-redSize;     if(dred<0)   dred   *= -100;
-          dgreen = glgreen-greenSize; if(dgreen<0) dgreen *= -100;
-          dblue  = glblue-blueSize;   if(dblue<0)  dblue  *= -100;
-          dalpha = glalpha-alphaSize; if(dalpha<0) dalpha *= -100;
+        // Prefer better Z than asked, but colors more important
+        ddepth = gldepth-depthSize; if(ddepth<0) ddepth *= -10;
 
-          // Prefer better Z than asked, but colors more important
-          ddepth = gldepth-depthSize; if(ddepth<0) ddepth *= -10;
+        // We care about colors and Z depth more than stencil depth
+        dstencil = glstencil-stencilSize; if(dstencil<0) dstencil *= -1;
 
-          // We care about colors and Z depth more than stencil depth
-          dstencil = glstencil-stencilSize; if(dstencil<0) dstencil *= -1;
+        // Accumulation buffers
+        daccred=glaccred-accumRedSize;       if(daccred<0)   daccred   *= -1;
+        daccgreen=glaccgreen-accumGreenSize; if(daccgreen<0) daccgreen *= -1;
+        daccblue=glaccblue-accumBlueSize;    if(daccblue<0)  daccblue  *= -1;
+        daccalpha=glaccalpha-accumAlphaSize; if(daccalpha<0) daccalpha *= -1;
 
-          // Accumulation buffers
-          daccred=glaccred-accumRedSize;       if(daccred<0)   daccred   *= -1;
-          daccgreen=glaccgreen-accumGreenSize; if(daccgreen<0) daccgreen *= -1;
-          daccblue=glaccblue-accumBlueSize;    if(daccblue<0)  daccblue  *= -1;
-          daccalpha=glaccalpha-accumAlphaSize; if(daccalpha<0) daccalpha *= -1;
+        // Want the best colors, of course
+        dmatch=dred+dgreen+dblue+dalpha;
 
-          // Want the best colors, of course
-          dmatch=dred+dgreen+dblue+dalpha;
+        // Accumulation buffers
+        dmatch+=daccred+daccgreen+daccblue+daccalpha;
 
-          // Accumulation buffers
-          dmatch+=daccred+daccgreen+daccblue+daccalpha;
+        // Extra penalty for no alpha if we asked for alpha, but no
+        // penalty at all if there is alpha and we didn't ask for it.
+        if(alphaSize>0){
+          if(glalpha<1) dmatch+=100000;
+          }
 
-          // Extra penalty for no alpha if we asked for alpha, but no
-          // penalty at all if there is alpha and we didn't ask for it.
-          if(alphaSize>0){
-            if(glalpha<1) dmatch+=100000;
-            }
+        // Wanted Z-buffer
+        if(depthSize>0){
+          if(gldepth<1) dmatch+=10000000;
+          else dmatch+=ddepth;
+          }
+        else{
+          if(gldepth>0) dmatch+=10000000;
+          }
 
-          // Wanted Z-buffer
-          if(depthSize>0){
-            if(gldepth<1) dmatch+=10000000;
-            else dmatch+=ddepth;
-            }
-          else{
-            if(gldepth>0) dmatch+=10000000;
-            }
+        // Double buffering also quite strongly preferred
+        if(flags&VISUAL_DOUBLEBUFFER){
+          if(!gdblbuf) dmatch+=1000000;
+          }
+        else{
+          if(gdblbuf) dmatch+=1000000;
+          }
 
-          // Double buffering also quite strongly preferred
-          if(flags&VISUAL_DOUBLEBUFFER){
-            if(!gdblbuf) dmatch+=1000000;
-            }
-          else{
-            if(gdblbuf) dmatch+=1000000;
-            }
+        // Stencil buffers desired
+        if(stencilSize>0){
+          if(glstencil<1) dmatch+=10000;
+          else dmatch+=dstencil;
+          }
+        else{
+          if(glstencil>0) dmatch+=1;
+          }
 
-          // Stencil buffers desired
-          if(stencilSize>0){
-            if(glstencil<1) dmatch+=10000;
-            else dmatch+=dstencil;
-            }
-          else{
-            if(glstencil>0) dmatch+=10000;
-            }
+        // Stereo not so important
+        if(flags&VISUAL_STEREO){
+          if(!glstereo) dmatch+=10000;
+          }
+        else{
+          if(glstereo) dmatch+=10000;
+          }
 
-          // Stereo not so important
-          if(flags&VISUAL_STEREO){
-            if(!glstereo) dmatch+=10000;
-            }
-          else{
-            if(glstereo) dmatch+=10000;
-            }
+        // Trace
+        FXTRACE((150,"Visual 0x%02x (%d) match value = %d\n",(FXuint)vi[i].visualid,i,dmatch));
+        FXTRACE((150,"  red size   = %d\n",glred));
+        FXTRACE((150,"  green size = %d\n",glgreen));
+        FXTRACE((150,"  blue size  = %d\n",glblue));
+        FXTRACE((150,"  alpha size = %d\n",glalpha));
+        FXTRACE((150,"  depth size = %d\n",gldepth));
+        FXTRACE((150,"  double buf = %d\n",gdblbuf));
+        FXTRACE((150,"  stencil    = %d\n",glstencil));
+        FXTRACE((150,"  acc red    = %d\n",glaccred));
+        FXTRACE((150,"  acc green  = %d\n",glaccgreen));
+        FXTRACE((150,"  acc blue   = %d\n",glaccblue));
+        FXTRACE((150,"  acc alpha  = %d\n",glaccalpha));
+        FXTRACE((150,"  stereo     = %d\n",glstereo));
 
-          // Trace
-          FXTRACE((150,"Visual 0x%02x (%d) match value = %d\n",(FXuint)vi[i].visualid,i,dmatch));
-          FXTRACE((150,"  red size   = %d\n",glred));
-          FXTRACE((150,"  green size = %d\n",glgreen));
-          FXTRACE((150,"  blue size  = %d\n",glblue));
-          FXTRACE((150,"  alpha size = %d\n",glalpha));
-          FXTRACE((150,"  depth size = %d\n",gldepth));
-          FXTRACE((150,"  double buf = %d\n",gdblbuf));
-          FXTRACE((150,"  stencil    = %d\n",glstencil));
-          FXTRACE((150,"  acc red    = %d\n",glaccred));
-          FXTRACE((150,"  acc green  = %d\n",glaccgreen));
-          FXTRACE((150,"  acc blue   = %d\n",glaccblue));
-          FXTRACE((150,"  acc alpha  = %d\n",glaccalpha));
-          FXTRACE((150,"  stereo     = %d\n",glstereo));
+        // May the best visual win
+        if(dmatch<=bestmatch){
 
-          // May the best visual win
-          if(dmatch<=bestmatch){
-
-            // All other things being equal, we prefer default visual!
-            if(dmatch<bestmatch || vi[i].visual==DefaultVisual(DISPLAY(getApp()),DefaultScreen(DISPLAY(getApp())))){
-              bestmatch=dmatch;
-              bestvis=i;
-              }
+          // All other things being equal, we prefer default visual!
+          if(dmatch<bestmatch || vi[i].visual==DefaultVisual(DISPLAY(getApp()),DefaultScreen(DISPLAY(getApp())))){
+            bestmatch=dmatch;
+            bestvis=i;
             }
           }
         }
@@ -428,18 +446,46 @@ void FXGLVisual::create(){
       setupcolormap();
 
       // Make GC's for this visual
-      gc=makegc(FALSE);
-      scrollgc=makegc(TRUE);
+      gc=fxmakegc(DISPLAY(getApp()),(Visual*)visual,depth,FALSE);
+      scrollgc=fxmakegc(DISPLAY(getApp()),(Visual*)visual,depth,TRUE);
 
       xid=1;
 
-#else
+      // Report what we got if tracing enabled
+      FXTRACE((150,"  redSize:        %d\n",getActualRedSize()));
+      FXTRACE((150,"  greenSize:      %d\n",getActualGreenSize()));
+      FXTRACE((150,"  blueSize:       %d\n",getActualBlueSize()));
+      FXTRACE((150,"  alphaSize:      %d\n",getActualAlphaSize()));
+      FXTRACE((150,"  depthSize:      %d\n",getActualDepthSize()));
+      FXTRACE((150,"  stencilSize:    %d\n",getActualStencilSize()));
+      FXTRACE((150,"  accumRedSize:   %d\n",getActualAccumRedSize()));
+      FXTRACE((150,"  accumGreenSize: %d\n",getActualAccumGreenSize()));
+      FXTRACE((150,"  accumBlueSize:  %d\n",getActualAccumBlueSize()));
+      FXTRACE((150,"  accumAlphaSize: %d\n",getActualAccumAlphaSize()));
+      FXTRACE((150,"  doubleBuffer:   %d\n",isDoubleBuffer()));
+      FXTRACE((150,"  stereo:         %d\n",isStereo()));
+      FXTRACE((150,"  accelerated:    %d\n",isAccelerated()));
+      }
+    }
+#endif
+  }
 
+
+#else                   // Windows
+
+
+// Initialize
+void FXGLVisual::create(){
+#ifdef HAVE_GL_H
+  if(!xid){
+    if(getApp()->isInitialized()){
+      FXTRACE((100,"%s::create %p\n",getClassName(),this));
       PIXELFORMATDESCRIPTOR pfd;
       HDC hdc;
       int gdblbuf,glstereo,gldepth,glaccel;
       int glred,glgreen,glblue,glalpha,glstencil;
       int glaccred,glaccgreen,glaccblue,glaccalpha;
+      int glindex,glswapcopy;
       int bestvis,dmatch,bestmatch;
       int dred,dgreen,dblue,ddepth,dalpha,dstencil;
       int daccred,daccgreen,daccblue,daccalpha;
@@ -463,124 +509,147 @@ void FXGLVisual::create(){
         // Get info about this visual
         DescribePixelFormat(hdc,i,sizeof(PIXELFORMATDESCRIPTOR),&pfd);
 
-        //if(pfd.dwFlags&PFD_DRAW_TO_BITMAP) continue;
+        // Draw to window is required
+        if(!(pfd.dwFlags&PFD_DRAW_TO_WINDOW)) continue;
 
-        // GL RGBA Support is requested.
-        // If VISUAL_NOACCEL is specified, we skip hardware accelerated formats;
-        // this is useful if you want to avoid using broken graphics hardware drivers.
-        if((pfd.dwFlags&PFD_SUPPORT_OPENGL) && (pfd.dwFlags&PFD_DRAW_TO_WINDOW) && (pfd.iPixelType==PFD_TYPE_RGBA) && ((pfd.dwFlags&PFD_GENERIC_FORMAT) || !(flags&VISUAL_NOACCEL))){
+        // OpenGL support is required
+        if(!(pfd.dwFlags&PFD_SUPPORT_OPENGL)) continue;
 
-          // Is this a hardware-accelerated visual?
-          glaccel=(pfd.dwFlags&PFD_GENERIC_FORMAT)==0;
+        // RGBA support is required
+        if(pfd.iPixelType!=PFD_TYPE_RGBA) continue;
 
-          // Must have single/double buffer as requested
-          gdblbuf=(pfd.dwFlags&PFD_DOUBLEBUFFER)!=0;
+        // Skip accelerated formats if VISUAL_NOACCEL specified
+        if((flags&VISUAL_NOACCEL) && !(pfd.dwFlags&PFD_GENERIC_FORMAT)) continue;
 
-          // Stereo support as requested
-          glstereo=(pfd.dwFlags&PFD_STEREO)!=0;
+        // Is this a hardware-accelerated visual?
+        glaccel=(pfd.dwFlags&PFD_GENERIC_FORMAT)==0;
 
-          // Get planes
-          glred=pfd.cRedBits;
-          glgreen=pfd.cGreenBits;
-          glblue=pfd.cBlueBits;
-          glalpha=pfd.cAlphaBits;
-          gldepth=pfd.cDepthBits;
-          glstencil=pfd.cStencilBits;
-          glaccred=pfd.cAccumRedBits;
-          glaccgreen=pfd.cAccumGreenBits;
-          glaccblue=pfd.cAccumBlueBits;
-          glaccalpha=pfd.cAccumAlphaBits;
+        // Must have single/double buffer as requested
+        gdblbuf=(pfd.dwFlags&PFD_DOUBLEBUFFER)!=0;
 
-          // We prefer to get a few MORE bits in RGBA than we asked for
-          dred   = glred-redSize;     if(dred<0)   dred   *= -100;
-          dgreen = glgreen-greenSize; if(dgreen<0) dgreen *= -100;
-          dblue  = glblue-blueSize;   if(dblue<0)  dblue  *= -100;
-          dalpha = glalpha-alphaSize; if(dalpha<0) dalpha *= -100;
+        // Stereo support as requested
+        glstereo=(pfd.dwFlags&PFD_STEREO)!=0;
 
-          // Prefer better Z than asked, but colors more important
-          ddepth = gldepth-depthSize; if(ddepth<0) ddepth *= -10;
+        // Must have RGB as requested
+        glindex=(pfd.iPixelType&PFD_TYPE_COLORINDEX)!=0;
 
-          // We care about colors and Z depth more than stencil depth
-          dstencil = glstencil-stencilSize; if(dstencil<0) dstencil *= -1;
+        // copy swap buffer
+        glswapcopy=(pfd.dwFlags&PFD_SWAP_COPY)!=0;
 
-          // Accumulation buffers
-          daccred=glaccred-accumRedSize;       if(daccred<0)   daccred   *= -1;
-          daccgreen=glaccgreen-accumGreenSize; if(daccgreen<0) daccgreen *= -1;
-          daccblue=glaccblue-accumBlueSize;    if(daccblue<0)  daccblue  *= -1;
-          daccalpha=glaccalpha-accumAlphaSize; if(daccalpha<0) daccalpha *= -1;
+        // Get planes
+        glred=pfd.cRedBits;
+        glgreen=pfd.cGreenBits;
+        glblue=pfd.cBlueBits;
+        glalpha=pfd.cAlphaBits;
+        gldepth=pfd.cDepthBits;
+        glstencil=pfd.cStencilBits;
+        glaccred=pfd.cAccumRedBits;
+        glaccgreen=pfd.cAccumGreenBits;
+        glaccblue=pfd.cAccumBlueBits;
+        glaccalpha=pfd.cAccumAlphaBits;
 
-          // Want the best colors, of course
-          dmatch=dred+dgreen+dblue+dalpha;
+        // We prefer to get a few MORE bits in RGBA than we asked for
+        dred   = glred-redSize;     if(dred<0)   dred   *= -100;
+        dgreen = glgreen-greenSize; if(dgreen<0) dgreen *= -100;
+        dblue  = glblue-blueSize;   if(dblue<0)  dblue  *= -100;
+        dalpha = glalpha-alphaSize; if(dalpha<0) dalpha *= -100;
 
-          // Accumulation buffers
-          dmatch+=daccred+daccgreen+daccblue+daccalpha;
+        // Prefer better Z than asked, but colors more important
+        ddepth = gldepth-depthSize; if(ddepth<0) ddepth *= -10;
 
-          // Hardware accelerated a plus
-          if(!glaccel){
-            dmatch+=10000;
-            }
+        // We care about colors and Z depth more than stencil depth
+        dstencil = glstencil-stencilSize; if(dstencil<0) dstencil *= -1;
 
-          // Extra penalty for no alpha if we asked for alpha, but no
-          // penalty at all if there is alpha and we didn't ask for it.
-          if(alphaSize>0){
-            if(glalpha<1) dmatch+=100000;
-            }
+        // Accumulation buffers
+        daccred=glaccred-accumRedSize;       if(daccred<0)   daccred   *= -1;
+        daccgreen=glaccgreen-accumGreenSize; if(daccgreen<0) daccgreen *= -1;
+        daccblue=glaccblue-accumBlueSize;    if(daccblue<0)  daccblue  *= -1;
+        daccalpha=glaccalpha-accumAlphaSize; if(daccalpha<0) daccalpha *= -1;
 
-          // Wanted Z-buffer
-          if(depthSize>0){
-            if(gldepth<1) dmatch+=100000000;
-            else dmatch+=ddepth;
-            }
-          else{
-            if(gldepth>0) dmatch+=100000000;
-            }
+        // Want the best colors, of course
+        dmatch=dred+dgreen+dblue+dalpha;
 
-          // Double buffering also quite strongly preferred
-          if(flags&VISUAL_DOUBLEBUFFER){
-            if(!gdblbuf) dmatch+=10000000;
-            }
-          else{
-            if(gdblbuf) dmatch+=10000000;
-            }
+        // Accumulation buffers
+        dmatch+=daccred+daccgreen+daccblue+daccalpha;
 
-          // Stencil buffers desired
-          if(stencilSize>0){
-            if(glstencil<1) dmatch+=10000;
-            else dmatch+=dstencil;
-            }
-          else{
-            if(glstencil>0) dmatch+=10000;
-            }
+        // Hardware accelerated a plus
+        if(!glaccel){
+          dmatch+=10000;
+          }
 
-          // Stereo not so important
-          if(flags&VISUAL_STEREO){
-            if(!glstereo) dmatch+=100000;
-            }
-          else{
-            if(glstereo) dmatch+=100000;
-            }
+        // Extra penalty for no alpha if we asked for alpha, but no
+        // penalty at all if there is alpha and we didn't ask for it.
+        if(alphaSize>0){
+          if(glalpha<1) dmatch+=100000;
+          }
 
-          // Trace
-          FXTRACE((150,"Pixel Format (%d) match value = %d\n",i,dmatch));
-          FXTRACE((150,"  red size    = %d\n",glred));
-          FXTRACE((150,"  green size  = %d\n",glgreen));
-          FXTRACE((150,"  blue size   = %d\n",glblue));
-          FXTRACE((150,"  alpha size  = %d\n",glalpha));
-          FXTRACE((150,"  depth size  = %d\n",gldepth));
-          FXTRACE((150,"  double buf  = %d\n",gdblbuf));
-          FXTRACE((150,"  stencil     = %d\n",glstencil));
-          FXTRACE((150,"  acc red     = %d\n",glaccred));
-          FXTRACE((150,"  acc green   = %d\n",glaccgreen));
-          FXTRACE((150,"  acc blue    = %d\n",glaccblue));
-          FXTRACE((150,"  acc alpha   = %d\n",glaccalpha));
-          FXTRACE((150,"  stereo      = %d\n",glstereo));
-          FXTRACE((150,"  accelerated = %d\n",glaccel));
+        // Wanted Z-buffer
+        if(depthSize>0){
+          if(gldepth<1) dmatch+=100000000;
+          else dmatch+=ddepth;
+          }
+        else{
+          if(gldepth>0) dmatch+=100000000;
+          }
 
-          // May the best visual win
-          if(dmatch<bestmatch){
-            bestmatch=dmatch;
-            bestvis=i;
-            }
+        // Double buffering also quite strongly preferred
+        if(flags&VISUAL_DOUBLEBUFFER){
+          if(!gdblbuf) dmatch+=10000000;
+          }
+        else{
+          if(gdblbuf) dmatch+=10000000;
+          }
+
+        // Color index mode only if requested
+        if(flags&VISUAL_INDEXCOLOR){
+          if(!glindex) dmatch+=10000000;
+          }
+        else{
+          if(glindex) dmatch+=10000000;
+          }
+
+        // Stencil buffers desired
+        if(stencilSize>0){
+          if(glstencil<1) dmatch+=10000;
+          else dmatch+=dstencil;
+          }
+        else{
+          if(glstencil>0) dmatch+=1;
+          }
+
+        // Stereo not so important
+        if(flags&VISUAL_STEREO){
+          if(!glstereo) dmatch+=100000;
+          }
+        else{
+          if(glstereo) dmatch+=100000;
+          }
+
+        // Swap copies also important
+        if(flags&VISUAL_SWAP_COPY){
+          if(!glswapcopy) dmatch+=10000000;
+          }
+
+        // Trace
+        FXTRACE((150,"Pixel Format (%d) match value = %d\n",i,dmatch));
+        FXTRACE((150,"  red size    = %d\n",glred));
+        FXTRACE((150,"  green size  = %d\n",glgreen));
+        FXTRACE((150,"  blue size   = %d\n",glblue));
+        FXTRACE((150,"  alpha size  = %d\n",glalpha));
+        FXTRACE((150,"  depth size  = %d\n",gldepth));
+        FXTRACE((150,"  double buf  = %d\n",gdblbuf));
+        FXTRACE((150,"  stencil     = %d\n",glstencil));
+        FXTRACE((150,"  acc red     = %d\n",glaccred));
+        FXTRACE((150,"  acc green   = %d\n",glaccgreen));
+        FXTRACE((150,"  acc blue    = %d\n",glaccblue));
+        FXTRACE((150,"  acc alpha   = %d\n",glaccalpha));
+        FXTRACE((150,"  stereo      = %d\n",glstereo));
+        FXTRACE((150,"  accelerated = %d\n",glaccel));
+
+        // May the best visual win
+        if(dmatch<bestmatch){
+          bestmatch=dmatch;
+          bestvis=i;
           }
         }
 
@@ -599,14 +668,14 @@ void FXGLVisual::create(){
 
       // Make a palette for it if needed
       if(((PIXELFORMATDESCRIPTOR*)info)->dwFlags&PFD_NEED_PALETTE){
-        makeOpenGLPalette();
+        colormap=makeOpenGLPalette((PIXELFORMATDESCRIPTOR*)info);
+        freemap=TRUE;
         }
 
       // Done with that window
       ReleaseDC(GetDesktopWindow(),hdc);
 
       xid=(void*)1;
-#endif
 
       // Report what we got if tracing enabled
       FXTRACE((150,"  redSize:        %d\n",getActualRedSize()));
@@ -628,11 +697,16 @@ void FXGLVisual::create(){
   }
 
 
+#endif
+
+
 // Detach visual
 void FXGLVisual::detach(){
-#ifdef HAVE_OPENGL
+#ifdef HAVE_GL_H
   if(xid){
     FXTRACE((100,"%s::detach %p\n",getClassName(),this));
+    colormap=0;
+    freemap=FALSE;
     xid=0;
     }
 #endif
@@ -641,19 +715,19 @@ void FXGLVisual::detach(){
 
 // Destroy visual
 void FXGLVisual::destroy(){
-#ifdef HAVE_OPENGL
+#ifdef HAVE_GL_H
   if(xid){
-    if(getApp()->initialized){
+    if(getApp()->isInitialized()){
       FXTRACE((100,"%s::destroy %p\n",getClassName(),this));
 #ifndef WIN32
-      //if(freemap){XFreeColormap(DISPLAY(getApp()),colormap);}
+      if(freemap){XFreeColormap(DISPLAY(getApp()),colormap);}   // Should we free?
       XFreeGC(DISPLAY(getApp()),(GC)gc);
       XFreeGC(DISPLAY(getApp()),(GC)scrollgc);
-      freemap=FALSE;
 #else
-      if(hPalette){DeleteObject(hPalette);}
-      hPalette=NULL;
+      if(colormap){DeleteObject(colormap);}
 #endif
+      colormap=0;
+      freemap=FALSE;
       }
 
     // Free info on the 3D layout
@@ -667,7 +741,7 @@ void FXGLVisual::destroy(){
 // Get actual red size
 FXint FXGLVisual::getActualRedSize() const {
   if(!info){ fxerror("%s::getActualRedSize: visual not yet initialized.\n",getClassName()); }
-#ifdef HAVE_OPENGL
+#ifdef HAVE_GL_H
   FXint s;
 #ifndef WIN32
   glXGetConfig(DISPLAY(getApp()),(XVisualInfo*)info,GLX_RED_SIZE,&s);
@@ -684,7 +758,7 @@ FXint FXGLVisual::getActualRedSize() const {
 // Get actual green size
 FXint FXGLVisual::getActualGreenSize() const {
   if(!info){ fxerror("%s::getActualGreenSize: visual not yet initialized.\n",getClassName()); }
-#ifdef HAVE_OPENGL
+#ifdef HAVE_GL_H
   FXint s;
 #ifndef WIN32
   glXGetConfig(DISPLAY(getApp()),(XVisualInfo*)info,GLX_GREEN_SIZE,&s);
@@ -701,7 +775,7 @@ FXint FXGLVisual::getActualGreenSize() const {
 // Get actual blue size
 FXint FXGLVisual::getActualBlueSize() const {
   if(!info){ fxerror("%s::getActualBlueSize: visual not yet initialized.\n",getClassName()); }
-#ifdef HAVE_OPENGL
+#ifdef HAVE_GL_H
   FXint s;
 #ifndef WIN32
   glXGetConfig(DISPLAY(getApp()),(XVisualInfo*)info,GLX_BLUE_SIZE,&s);
@@ -718,7 +792,7 @@ FXint FXGLVisual::getActualBlueSize() const {
 // Get actual alpha size
 FXint FXGLVisual::getActualAlphaSize() const {
   if(!info){ fxerror("%s::getActualAlphaSize: visual not yet initialized.\n",getClassName()); }
-#ifdef HAVE_OPENGL
+#ifdef HAVE_GL_H
   FXint s;
 #ifndef WIN32
   glXGetConfig(DISPLAY(getApp()),(XVisualInfo*)info,GLX_ALPHA_SIZE,&s);
@@ -736,7 +810,7 @@ FXint FXGLVisual::getActualAlphaSize() const {
 // Get actual depth size
 FXint FXGLVisual::getActualDepthSize() const {
   if(!info){ fxerror("%s::getActualDepthSize: visual not yet initialized.\n",getClassName()); }
-#ifdef HAVE_OPENGL
+#ifdef HAVE_GL_H
   FXint s;
 #ifndef WIN32
   glXGetConfig(DISPLAY(getApp()),(XVisualInfo*)info,GLX_DEPTH_SIZE,&s);
@@ -752,7 +826,7 @@ FXint FXGLVisual::getActualDepthSize() const {
 // Get actual stencil size
 FXint FXGLVisual::getActualStencilSize() const {
   if(!info){ fxerror("%s::getActualStencilSize: visual not yet initialized.\n",getClassName()); }
-#ifdef HAVE_OPENGL
+#ifdef HAVE_GL_H
   FXint s;
 #ifndef WIN32
   glXGetConfig(DISPLAY(getApp()),(XVisualInfo*)info,GLX_STENCIL_SIZE,&s);
@@ -769,7 +843,7 @@ FXint FXGLVisual::getActualStencilSize() const {
 // Get actual accum red size
 FXint FXGLVisual::getActualAccumRedSize() const {
   if(!info){ fxerror("%s::getActualAccumRedSize: visual not yet initialized.\n",getClassName()); }
-#ifdef HAVE_OPENGL
+#ifdef HAVE_GL_H
   FXint s;
 #ifndef WIN32
   glXGetConfig(DISPLAY(getApp()),(XVisualInfo*)info,GLX_ACCUM_RED_SIZE,&s);
@@ -786,7 +860,7 @@ FXint FXGLVisual::getActualAccumRedSize() const {
 // Get actual accum green size
 FXint FXGLVisual::getActualAccumGreenSize() const {
   if(!info){ fxerror("%s::getActualAccumGreenSize: visual not yet initialized.\n",getClassName()); }
-#ifdef HAVE_OPENGL
+#ifdef HAVE_GL_H
   FXint s;
 #ifndef WIN32
   glXGetConfig(DISPLAY(getApp()),(XVisualInfo*)info,GLX_ACCUM_GREEN_SIZE,&s);
@@ -803,7 +877,7 @@ FXint FXGLVisual::getActualAccumGreenSize() const {
 // Get actual accum blue size
 FXint FXGLVisual::getActualAccumBlueSize() const {
   if(!info){ fxerror("%s::getActualAccumBlueSize: visual not yet initialized.\n",getClassName()); }
-#ifdef HAVE_OPENGL
+#ifdef HAVE_GL_H
   FXint s;
 #ifndef WIN32
   glXGetConfig(DISPLAY(getApp()),(XVisualInfo*)info,GLX_ACCUM_BLUE_SIZE,&s);
@@ -820,7 +894,7 @@ FXint FXGLVisual::getActualAccumBlueSize() const {
 // Get actual accum alpha size
 FXint FXGLVisual::getActualAccumAlphaSize() const {
   if(!info){ fxerror("%s::getActualAccumAlphaSize: visual not yet initialized.\n",getClassName()); }
-#ifdef HAVE_OPENGL
+#ifdef HAVE_GL_H
   FXint s;
 #ifndef WIN32
   glXGetConfig(DISPLAY(getApp()),(XVisualInfo*)info,GLX_ACCUM_ALPHA_SIZE,&s);
@@ -837,7 +911,7 @@ FXint FXGLVisual::getActualAccumAlphaSize() const {
 // Is it double buffer
 FXbool FXGLVisual::isDoubleBuffer() const {
   if(!info){ fxerror("%s::isDoubleBuffer: visual not yet initialized.\n",getClassName()); }
-#ifdef HAVE_OPENGL
+#ifdef HAVE_GL_H
   FXint s;
 #ifndef WIN32
   glXGetConfig(DISPLAY(getApp()),(XVisualInfo*)info,GLX_DOUBLEBUFFER,&s);
@@ -854,7 +928,7 @@ FXbool FXGLVisual::isDoubleBuffer() const {
 // Is it stereo
 FXbool FXGLVisual::isStereo() const {
   if(!info){ fxerror("%s::isStereo: visual not yet initialized.\n",getClassName()); }
-#ifdef HAVE_OPENGL
+#ifdef HAVE_GL_H
   FXint s;
 #ifndef WIN32
   glXGetConfig(DISPLAY(getApp()),(XVisualInfo*)info,GLX_STEREO,&s);
@@ -871,11 +945,26 @@ FXbool FXGLVisual::isStereo() const {
 // Is it hardware-accelerated?
 FXbool FXGLVisual::isAccelerated() const {
   if(!info){ fxerror("%s::isHardwareAccelerated: visual not yet initialized.\n",getClassName()); }
-#ifdef HAVE_OPENGL
+#ifdef HAVE_GL_H
 #ifndef WIN32
   return TRUE;
 #else
   return (((PIXELFORMATDESCRIPTOR*)info)->dwFlags&PFD_GENERIC_FORMAT)==0;
+#endif
+#else
+  return FALSE;
+#endif
+  }
+
+
+// Does it swap by copying instead of flipping buffers
+FXbool FXGLVisual::isBufferSwapCopy() const {
+ if(!info){ fxerror("%s::isBufferSwapCopy: visual not yet initialized.\n",getClassName()); }
+#ifdef HAVE_GL_H
+#ifndef WIN32
+  return FALSE;
+#else
+  return (((PIXELFORMATDESCRIPTOR*)info)->dwFlags&PFD_SWAP_COPY)!=0;
 #endif
 #else
   return FALSE;
@@ -929,7 +1018,7 @@ FXGLVisual::~FXGLVisual(){
 // Create a display list of bitmaps from font glyphs in a font
 void glUseFXFont(FXFont* font,int first,int count,int list){
   if(!font || !font->id()){ fxerror("glUseFXFont: invalid font.\n"); }
-#ifdef HAVE_OPENGL
+#ifdef HAVE_GL_H
 #ifndef WIN32
   glXUseXFont((Font)font->id(),first,count,list);
 #else
@@ -941,3 +1030,4 @@ void glUseFXFont(FXFont* font,int first,int count,int list){
 #endif
   }
 
+}

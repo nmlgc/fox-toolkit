@@ -1,9 +1,9 @@
 /********************************************************************************
 *                                                                               *
-*                         C o l o r B a r   W i d g e t                         *
+*                       C o l o r   B a r   W i d g e t                         *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2001,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 2001,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXColorBar.cpp,v 1.10.4.1 2003/01/16 18:32:07 fox Exp $                    *
+* $Id: FXColorBar.cpp,v 1.21 2004/02/08 17:29:06 fox Exp $                      *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -32,6 +32,7 @@
 #include "FXRectangle.h"
 #include "FXSettings.h"
 #include "FXRegistry.h"
+#include "FXHash.h"
 #include "FXApp.h"
 #include "FXDCWindow.h"
 #include "FXDrawable.h"
@@ -45,8 +46,11 @@
 #define BAR_WIDTH       30
 #define BAR_MASK        (COLORBAR_HORIZONTAL|COLORBAR_VERTICAL)
 
+using namespace FX;
+
 /*******************************************************************************/
 
+namespace FX {
 
 // Map
 FXDEFMAP(FXColorBar) FXColorBarMap[]={
@@ -54,17 +58,17 @@ FXDEFMAP(FXColorBar) FXColorBarMap[]={
   FXMAPFUNC(SEL_MOTION,0,FXColorBar::onMotion),
   FXMAPFUNC(SEL_LEFTBUTTONPRESS,0,FXColorBar::onLeftBtnPress),
   FXMAPFUNC(SEL_LEFTBUTTONRELEASE,0,FXColorBar::onLeftBtnRelease),
-  FXMAPFUNC(SEL_UPDATE,FXWindow::ID_QUERY_TIP,FXColorBar::onQueryTip),
-  FXMAPFUNC(SEL_UPDATE,FXWindow::ID_QUERY_HELP,FXColorBar::onQueryHelp),
+  FXMAPFUNC(SEL_UPDATE,FXColorBar::ID_QUERY_TIP,FXColorBar::onQueryTip),
+  FXMAPFUNC(SEL_UPDATE,FXColorBar::ID_QUERY_HELP,FXColorBar::onQueryHelp),
+  FXMAPFUNC(SEL_COMMAND,FXColorBar::ID_SETHELPSTRING,FXColorBar::onCmdSetHelp),
+  FXMAPFUNC(SEL_COMMAND,FXColorBar::ID_GETHELPSTRING,FXColorBar::onCmdGetHelp),
+  FXMAPFUNC(SEL_COMMAND,FXColorBar::ID_SETTIPSTRING,FXColorBar::onCmdSetTip),
+  FXMAPFUNC(SEL_COMMAND,FXColorBar::ID_GETTIPSTRING,FXColorBar::onCmdGetTip),
   };
 
 
 // Object implementation
 FXIMPLEMENT(FXColorBar,FXFrame,FXColorBarMap,ARRAYNUMBER(FXColorBarMap))
-
-
-
-/*******************************************************************************/
 
 
 // Init
@@ -82,7 +86,7 @@ FXColorBar::FXColorBar(FXComposite* p,FXObject* tgt,FXSelector sel,FXuint opts,F
   flags|=FLAG_ENABLED;
   target=tgt;
   message=sel;
-  bar=new FXImage(getApp(),NULL,IMAGE_ALPHA|IMAGE_DITHER|IMAGE_KEEP|IMAGE_OWNED|IMAGE_SHMI|IMAGE_SHMP,1,1);
+  bar=new FXImage(getApp(),NULL,IMAGE_DITHER|IMAGE_KEEP|IMAGE_OWNED|IMAGE_SHMI|IMAGE_SHMP,1,1);
   hsv[0]=0.0f;
   hsv[1]=0.0f;
   hsv[2]=1.0f;
@@ -122,8 +126,8 @@ void FXColorBar::layout(){
 
 // Recompute the bar image
 void FXColorBar::updatebar(){
-  register FXColor *colors=(FXColor*)bar->getData(),clr;
   register FXint x,y,w,h;
+  register FXColor clr;
   FXfloat r,g,b,d;
   w=bar->getWidth();
   h=bar->getHeight();
@@ -133,7 +137,7 @@ void FXColorBar::updatebar(){
       for(y=0; y<h; y++){
         fxhsv_to_rgb(r,g,b,hsv[0],hsv[1],1.0f-y*d);
         clr=FXRGB(255.0f*r,255.0f*g,255.0f*b);
-        for(x=0; x<w; x++) colors[y*w+x]=clr;
+        for(x=0; x<w; x++) bar->setPixel(x,y,clr);
         }
       }
     }
@@ -143,7 +147,7 @@ void FXColorBar::updatebar(){
       for(x=0; x<w; x++){
         fxhsv_to_rgb(r,g,b,hsv[0],hsv[1],x*d);
         clr=FXRGB(255.0f*r,255.0f*g,255.0f*b);
-        for(y=0; y<h; y++) colors[y*w+x]=clr;
+        for(y=0; y<h; y++) bar->setPixel(x,y,clr);
         }
       }
     }
@@ -164,10 +168,38 @@ FXint FXColorBar::getDefaultHeight(){
   }
 
 
+// Set help using a message
+long FXColorBar::onCmdSetHelp(FXObject*,FXSelector,void* ptr){
+  setHelpText(*((FXString*)ptr));
+  return 1;
+  }
+
+
+// Get help using a message
+long FXColorBar::onCmdGetHelp(FXObject*,FXSelector,void* ptr){
+  *((FXString*)ptr)=getHelpText();
+  return 1;
+  }
+
+
+// Set tip using a message
+long FXColorBar::onCmdSetTip(FXObject*,FXSelector,void* ptr){
+  setTipText(*((FXString*)ptr));
+  return 1;
+  }
+
+
+// Get tip using a message
+long FXColorBar::onCmdGetTip(FXObject*,FXSelector,void* ptr){
+  *((FXString*)ptr)=getTipText();
+  return 1;
+  }
+
+
 // We were asked about status text
 long FXColorBar::onQueryHelp(FXObject* sender,FXSelector,void*){
   if(!help.empty() && (flags&FLAG_HELP)){
-    sender->handle(this,MKUINT(ID_SETSTRINGVALUE,SEL_COMMAND),(void*)&help);
+    sender->handle(this,FXSEL(SEL_COMMAND,ID_SETSTRINGVALUE),(void*)&help);
     return 1;
     }
   return 0;
@@ -177,7 +209,7 @@ long FXColorBar::onQueryHelp(FXObject* sender,FXSelector,void*){
 // We were asked about tip text
 long FXColorBar::onQueryTip(FXObject* sender,FXSelector,void*){
   if(!tip.empty() && (flags&FLAG_TIP)){
-    sender->handle(this,MKUINT(ID_SETSTRINGVALUE,SEL_COMMAND),(void*)&tip);
+    sender->handle(this,FXSEL(SEL_COMMAND,ID_SETSTRINGVALUE),(void*)&tip);
     return 1;
     }
   return 0;
@@ -229,7 +261,7 @@ long FXColorBar::onMotion(FXObject*,FXSelector,void* ptr){
       hsv[2]=v;
       flags|=FLAG_CHANGED;
       update(xx,yy,ww,hh);
-      if(target) target->handle(this,MKUINT(message,SEL_CHANGED),(void*)hsv);
+      if(target) target->handle(this,FXSEL(SEL_CHANGED,message),(void*)hsv);
       }
     flags|=FLAG_CHANGED;
     return 1;
@@ -246,7 +278,7 @@ long FXColorBar::onLeftBtnPress(FXObject*,FXSelector,void* ptr){
   flags&=~FLAG_TIP;
   if(isEnabled()){
     grab();
-    if(target && target->handle(this,MKUINT(message,SEL_LEFTBUTTONPRESS),ptr)) return 1;
+    if(target && target->handle(this,FXSEL(SEL_LEFTBUTTONPRESS,message),ptr)) return 1;
     xx=border+padleft+2;
     yy=border+padtop+2;
     ww=bar->getWidth();
@@ -266,7 +298,7 @@ long FXColorBar::onLeftBtnPress(FXObject*,FXSelector,void* ptr){
       hsv[2]=v;
       flags|=FLAG_CHANGED;
       update(xx,yy,ww,hh);
-      if(target) target->handle(this,MKUINT(message,SEL_CHANGED),(void*)hsv);
+      if(target) target->handle(this,FXSEL(SEL_CHANGED,message),(void*)hsv);
       }
     flags|=FLAG_PRESSED;
     flags&=~FLAG_UPDATE;
@@ -283,9 +315,9 @@ long FXColorBar::onLeftBtnRelease(FXObject*,FXSelector,void* ptr){
     flags|=FLAG_UPDATE;
     flags&=~FLAG_PRESSED;
     flags&=~FLAG_CHANGED;
-    if(target && target->handle(this,MKUINT(message,SEL_LEFTBUTTONRELEASE),ptr)) return 1;
+    if(target && target->handle(this,FXSEL(SEL_LEFTBUTTONRELEASE,message),ptr)) return 1;
     if(flgs&FLAG_CHANGED){
-      if(target) target->handle(this,MKUINT(message,SEL_COMMAND),(void*)hsv);
+      if(target) target->handle(this,FXSEL(SEL_COMMAND,message),(void*)hsv);
       }
     return 1;
     }
@@ -371,6 +403,7 @@ void FXColorBar::load(FXStream& store){
 // Destroy
 FXColorBar::~FXColorBar(){
   delete bar;
-  bar=(FXImage*)-1;
+  bar=(FXImage*)-1L;
   }
 
+}

@@ -1,258 +1,196 @@
 <html>
 <head>
-<LINK REL="stylesheet" HREF="styles.css" TYPE="text/css">
-<title>FOX-Toolkit</title>
-<!-- HTML Copyright 2001 Paul Laufer -->
+<link rel="stylesheet" href="page.css" type="text/css">
+<title>Documentation: Writing your very own Widgets</title>
 </head>
+<body bgcolor=#ffffff link=#990033 vlink=#990033 alink=#990033 text=#000000>
 
-<body bgcolor=#ffffff link=#990033 vlink=#4a73ad alink=#ed004f text=#000000>
+<!---- TOPIC TITLE WITH LOGO--->
+<table border=0 cellpadding= cellspacing=2 width=100% ><tr><td><a href='http://www.fox-toolkit.org' target=_top><img src='art/foxlogo_small.jpg' border=0></a></td><td width=100% valign=bottom id="HEADLINE"><b>
+Documentation: Writing your very own Widgets <A href='widgets.html' target="_top" align=left><font  size=-2>[Remove Frame]</font></a>
+<br><img src='art/line.gif' width=100% height=1></b></td></tr></table>
+</p>
+<!--- TOPIC TITLE WITH LOGO --->
+<ul>
+  <p>FOX makes it very easy to build your own widgets.&nbsp;
+  It was designed to do this from the ground up.&nbsp; This is actually one
+  of the prime benefits of FOX <I>vis-a-vis</I> other widget libraries.&nbsp;
+  As FOX is completely written in C++, and most important functions are overloadable,
+  writing your own widget typically entails picking an existing widget class
+  which looks close to the one you want, and then redefining selected aspects
+  of that widget by subclassing it.</p>
+  <P>We illustrate this process with an example from
+  FOX itself:- the FXProgressBar widget.&nbsp; First, you pick which widget
+  to subclass from; in this case, we subclass of of FXFrame, as the progress
+  bar widget needs to inherit the margins and borders from FXFrame.</p>
 
-<!--header-->
-<table align=center border=0 cellpadding=0 cellspacing=0 width=100% >
-  <tr><td bgcolor=silver colspan=5 align=right height=50><img src=art/oul_grey.gif align=left valign=top width=8 height=8><img src=art/foxlogo.png valign=bottom alt="FOX Toolkit" height=50 width=500 border=0 ></td>
-  	<td bgcolor=#557faa valign=top align=right><img src=art/our.gif width=8 height=8></td>
-  </tr>
-<!-- end header -->
-  <tr>
-    <td bgcolor=#557faa colspan=2 valign=top align=left>&nbsp;</td>
-    <td bgcolor=#557faa colspan=3><font color=#ffffff size=+1><center>
-<!-- Page Title -->
-Documentation: Writing your very own Widgets
-<!-- End Page Title -->
-    </center></font></td>
-    <td bgcolor=#557faa valign=top align=right>&nbsp;</td>
-  </tr>
-  <tr>
-    <td bgcolor=#557faa colspan=2>&nbsp;</td>
-    <td bgcolor=#ffffff valign=top align=left><img src=art/iul.gif width=8 height=8></td>
-    <td bgcolor=#ffffff>&nbsp;</td>
-    <td bgcolor=#ffffff valign=top align=right><img src=art/iur.gif width=8 height=8></td>
-    <td bgcolor=#557faa width=15>&nbsp;</td>
-  </tr>
-  <tr>
-    <td width=8 bgcolor=#557faa>&nbsp;</td>
-    <td valign=top bgcolor=#557faa link=#ffffff width=150>
+  <p>In terms of C++ code, this means:</p>
 
-<!-- start navbar content -->
+<pre>
+class FXProgressBar: public FXFrame {
+  FXDECLARE(FXProgressBar)
+</pre>
 
-	<a href=fox.html><font color=#ffffff>Home</font></a><br>
-	<a href=news.html><font color=#ffffff>News</font></a><br>
-	<a href=download.html><font color=#ffffff>Download</font></a><br>
-	<a href=goals.html><font color=#ffffff>Goals & Approach</font></a><br>
-	<a href=doc.html><font color=#ffffff>Documentation</font></a><br>
-	<a href=faq.html><font color=#ffffff>FAQ</font></a><br>
-	<a href=rex.html><font color=#ffffff>FXRex</font></a><br>
-	<a href=screenshots.html><font color=#ffffff>Screenshots</font></a><br>
-	<br>
-	<a href=adie.html><font color=#ffffff>Adie</font></a><br>
-	<a href=pathfinder.html><font color=#ffffff>PathFinder</font></a><br>
-	<a href=calc.html><font color=#ffffff>FOX Calculator</font></a><br>
-	<br>
-	<a href=projects.html><font color=#ffffff>Projects</font></a><br>
-	<br>
-	<a href='http://fxpy.sourceforge.net'><font color=#ffffff>FXPy</font></a><br>
-	<a href='http://fxruby.sourceforge.net'><font color=#ffffff>FXRuby</font></a><br>
-	<a href='http://eiffelfox.sourceforge.net'><font color=#ffffff>EiffelFox</font></a><br>
-        <a href='http://eevolved.com/foxhole/'><font color=#ffffff>The FOX Hole</font></a><br>
-        <a href='http://takahr.dhis.portside.net/cgi-bin/rwiki.cgi?cmd=view;name=FOX+FAQ'><font color=#ffffff>Japanese Docs</font></a><br>
-	<br>
-	<center>
-	<a href="http://www.eff.org/br"><img SRC="art/freespeach.gif" border=0></a>
-	<p>
-	<a href="http://www.slashdot.org"><img SRC="art/slingerzbutton1.gif" border=0></a>
-	</center>
+  <p>The FXDECLARE() macro establishes some boilerplate member functions that
+  every class derived from FXObject should redefine. Next, we add some member
+  data.&nbsp; In the case, we want to add:</p>
+
+<pre>
+protected:
+  FXuint   progress;                      // Integer percentage number
+  FXuint   total;                         // Amount for completion
+  FXint    barsize;                       // Bar size
+  FXFont*  font;                          // Font used for the percentage text
+  FXPixel  barBGColor;                    // Background color of bar
+  FXPixel  barColor;                      // Bar color
+  FXPixel  textNumColor;                  // Text color outside of bar
+  FXPixel  textAltColor;                  // Text color inside of bar
+</pre>
+
+  <p>There is nothing unusual about this. Standard C++ programming practice!&nbsp;
+  Next, we make the default and copy constructors protected; while this is
+  not required, it prevents an application programmer from accidentally creating
+  an object with these, causing the creation of an improperly initialized
+  object, which will most certainly cause problems later on.</p>
+
+<pre>
+protected:
+  FXProgressBar(){}
+  FXProgressBar(const FXProgressBar&){}
+</pre>
+
+  <p>So far so good.&nbsp; Now comes the meat.&nbsp; The progress bar should&nbsp;
+  of course draw itself to reflect the amount of progress.&nbsp; This should
+  look something like:</p>
+
+  <CENTER><IMG SRC="art/progress.png" HEIGHT=23 WIDTH=171 ALIGN=BOTTOM><br>Progress Bar</CENTER>
+
+  <p>This is done by implementing the onPaint() message.&nbsp; Every time&nbsp;
+  FOX determines that a widget needs to be repainted, for example, after
+  moving a window out of the way, it sends the widget a SEL_PAINT message.&nbsp;
+  This message should be intercepted by your widget so that you can make
+  it draw in a different manner.&nbsp; If you didn't intercept it, the message
+  would be intercepted later on by the base class, which will perform its
+  usual drawing behaviour. Hence, we declare the message-handling routine (handler):</p>
+
+<pre>
+public:
+  long onPaint(FXObject*,FXSelector,void*);
+</pre>
+
+  <p>Note that the message handler should be declared public.&nbsp; The message
+  handler is passed three parameters when invoked: the object that sent it
+  the message, the selector, and a pointer.&nbsp; The sending object is in
+  this case the widget itself; the selector is a combination of the <I>message-type </I>and <I>message-id.</I>
+  <BR>The message type identifies the type of message that occurred; here
+  it is SEL_PAINT.&nbsp; The message id identifies the sender of the message;
+  for mesages from the system itself, this id is always set to zero (0).&nbsp;
+  The message type and id can be extracted from the selector by means of&nbsp;
+  two convenience macros: FXSELTYPE(selector) and FXSELID(selector).</p>
+
+  <p>The pointer which is passed to the message handler may refer to different
+  things; for system messages, however, it typically points to a data structure
+  called FXEvent, which contains information about the event that caused
+  this handler to be invoked.</p>
+
+  <P>The onPaint() handler may use the information in the FXEvent structure
+  to determine the rectangle that needs to be repainted.&nbsp; Widgets (especially
+  complicated ones!) should try and redraw only the indicated area.&nbsp;
+  This cuts down significantly on expensive drawing commands, as well as
+  reducing visual flickering on the screen.</p>
+
+  <p>Next,&nbsp; we define the widget's main constructor.&nbsp; As a first
+  argument, all child-widgets pass in a pointer to the parent widget (Toplevel
+  or <I>shell</I> widgets pass in a pointer to the application object).&nbsp;
+  Next,&nbsp; the layout and other options are passed, followed by the x,
+  y coordinate, followed by the width, and height.&nbsp; All of these have
+  default values, as in many cases the exact widget placement and size is
+  left to a container class such as the Packer or Matrix layout manager.</p>
+
+  <p>The options should be passed in as a <I>bit-wise <B>or</B></I> (|) of
+  a number of option flags. <I>Care should be taken so as to <B>not conflict</B>
+  with any option flags which have already been used in base classes of this
+  widget .</I>
+
+<pre>
+  FXProgressBar(FXComposite* p,FXuint opts=(FRAME_SUNKEN|FRAME_THICK),
+           FXint x=0,FXint y=0,FXint w=0,FXint h=0,FXint pl=DEFAULT_PAD,
+           FXint pr=DEFAULT_PAD,FXint pt=DEFAULT_PAD,FXint pb=DEFAULT_PAD);
+</pre>
+
+  <p>The constructor you write should simply pass the arguments to their corresponding
+  arguments in the base class of your class, then initialize the newly added
+  member data to some sensible values.
+  <BR>The intent is that your widget should be useful without setting additional
+  parameters or calling additional member functions, at least for the most
+  common usage of your widget.</p>
+
+  <p>In order to interact properly with the layout managers, each child widget
+  needs to properly compute its dimensions when asked by its parent.&nbsp;
+  The two functions involved with this are:</p>
+
+<pre>
+  virtual FXint getDefaultWidth();
+  virtual FXint getDefaultHeight();
+</pre>
+
+  <p>These two functions compute the <I>minimum</I> width and height of the
+  widget, given the current state of the widget.&nbsp; The layout managers
+  use this information to place the widgets properly.&nbsp; In the case of
+  the ProgressBar, for example, getDefaultWidth() computes the widget's size
+  based on the border, left- and right padding, current text font, whether
+  it is horizontal or vertical, and presence of the percentage display.</p>
+
+  <p>Next, the create() function needs to be implemented:</p>
+
+<pre>
+  void create();
+</pre>
+
+  <p>The create() function is called in the second stage of the widget instantiation
+  process.&nbsp; In the first stage, the C++ objects have been created, but
+  no windows have been associated yet with those C++ objects.&nbsp; The second
+  stage takes place when the application is instantiating the widgets, and
+  building X-Windows associated with the C++ objects.&nbsp; It does this
+  by recursively travering all widgets, starting from the root window.</p>
+  <BR>It is sometimes necessary to overload the create() routine, so as to
+  determine resources which were not yet known before.&nbsp; In the case
+  of the ProgressBar,&nbsp; until the connection with the X-Server was established,
+  it was not yet known which colors were going to be available, so these
+  colors will have to be allocated in the create() routine. Also, the create()
+  routine makes sure the font is available, by calling font->create() to
+  create the font.</p>
+  <p>After implementing the ordinary C++ member functions for your new widget,
+  you may have to define a destructor:</p>
+
+<pre>
+  virtual ~FXProgressBar();
+</pre>
+
+  <p>The FOX library usually implements a destructor which intentionally thrashes
+  the object; in this case,&nbsp; it sets font to (FXFont*)(-1).&nbsp; Thrashing
+  objects intentionally may cause dangling pointers etc. to be discovered
+  much sooner, and thus ease debugging and increase program correctness.</p>
+  <P>Note that FOX does not try trash the other member variables:- thrash-values
+  for the other variables would not be distinguishable from good values anyway.&nbsp;
+  But a thrash value for a pointer like -1 will most likely cause a SIGSEGV,
+  when accidentally used!!</P>
+</ul>
 
 
 
-<!-- end navbar content -->
 
-    </td>
-    <td bgcolor=#ffffff>&nbsp;</td>
-    <td valign=top>
 
-<!-- start main window content -->
-<center><img src='art/foxstart.png'>
-<BR><B>Documentation: Writing your very own Widgets</B>
-</center>
+
+<!--- COPYRIGHT -->
 <p>
-<p>
-<b>Creating Your Own Widgets</b>
-<hr>
-<FONT COLOR="#000000">FOX makes it very easy to build your own widgets.&nbsp;
-It was designed to do this from the ground up.&nbsp; This is actually one
-of the prime benefits of FOX <I>vis-a-vis</I> other widget libraries.&nbsp;
-As FOX is completely written in C++, and most important functions are overloadable,
-writing your own widget typically entails picking an existing widget class
-which looks close to the one you want, and then redefining selected aspects
-of that widget by subclassing it.</FONT>
-<P><FONT COLOR="#000000">We illustrate this process with an example from
-FOX itself:- the FXProgressBar widget.&nbsp; First, you pick which widget
-to subclass from; in this case, we subclass of of FXFrame, as the progress
-bar widget needs to inherit the margins and borders from FXFrame.</FONT>
-<P><FONT COLOR="#000000">In terms of C++ code, this means:</FONT>
-<BR>&nbsp;
-<PRE><FONT SIZE=-1><FONT COLOR="#000000">&nbsp;&nbsp;&nbsp; class </FONT>FXProgressBar: public FXFrame {</FONT></PRE>
+<table width=100% cellpadding=0 cellspacing=0><tr><td width=100% valign=top id=HEADLINE align=right>
+<img src='art/line.gif' width=100% height=1>
+<font size=-1>Copyright &copy; 1997-2004 Jeroen van der Zijp</font>
+</td></tr></table>
+</p>
+<!--- COPYRIGHT -->
 
-<PRE><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; FXDECLARE(FXProgressBar)</FONT></PRE>
-The FXDECLARE() macro establishes some boilerplate member functions that
-every class derived from FXObject should redefine. Next, we add some member
-data.&nbsp; In the case, we want to add:
-<BR>&nbsp;
-<PRE><FONT SIZE=-1>&nbsp;&nbsp;&nbsp; protected:</FONT></PRE>
 
-<PRE><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; FXuint&nbsp;&nbsp; progress;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Integer percentage number</FONT></PRE>
-
-<PRE><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; FXuint&nbsp;&nbsp; total;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Amount for completion</FONT></PRE>
-
-<PRE><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; FXint&nbsp;&nbsp;&nbsp; barsize;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Bar size</FONT></PRE>
-
-<PRE><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; FXFont*&nbsp; font;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Font used for the percentage text</FONT></PRE>
-
-<PRE><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; FXPixel&nbsp; barBGColor;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Background color of bar</FONT></PRE>
-
-<PRE><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; FXPixel&nbsp; barColor;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Bar color</FONT></PRE>
-
-<PRE><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; FXPixel&nbsp; textNumColor;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Text color outside of bar</FONT></PRE>
-
-<PRE><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; FXPixel&nbsp; textAltColor;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Text color inside of bar</FONT></PRE>
-There is nothing unusual about this. Standard C++ programming practice!&nbsp;
-Next, we make the default and copy constructors protected; while this is
-not required, it prevents an application programmer from accidentally creating
-an object with these, causing the creation of an improperly initialized
-object, which will most certainly cause problems later on.
-<PRE><FONT SIZE=-1>&nbsp;&nbsp;&nbsp; protected:</FONT></PRE>
-
-<PRE><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; FXProgressBar(){}</FONT></PRE>
-
-<PRE><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; FXProgressBar(const FXProgressBar&amp;){}</FONT></PRE>
-So far so good.&nbsp; Now comes the meat.&nbsp; The progress bar should&nbsp;
-of course draw itself to reflect the amount of progress.&nbsp; This should
-look something like:
-<BR>&nbsp;
-<BR>&nbsp;
-<BR>
-<CENTER>
-<P><IMG SRC="art/progress.png" HEIGHT=23 WIDTH=171 ALIGN=BOTTOM>
-<BR>Progress Bar</CENTER>
-
-<P><BR>
-<P>This is done by implementing the onPaint() message.&nbsp; Every time&nbsp;
-FOX determines that a widget needs to be repainted, for example, after
-moving a window out of the way, it sends the widget a SEL_PAINT message.&nbsp;
-This message should be intercepted by your widget so that you can make
-it draw in a different manner.&nbsp; If you didn't intercept it, the message
-would be intercepted later on by the base class, which will perform its
-usual drawing behaviour.
-<BR>Hence, we declare the message-handling routine (handler):
-<BR>&nbsp;
-<PRE><FONT SIZE=-1>&nbsp;&nbsp;&nbsp; public:</FONT></PRE>
-
-<PRE><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; long onPaint(FXObject*,FXSelector,void*);</FONT></PRE>
-Note that the message handler should be declared public.&nbsp; The message
-handler is passed three parameters when invoked: the object that sent it
-the message, the selector, and a pointer.&nbsp; The sending object is in
-this case the widget itself; the selector is a combination of the <I>message-type
-</I>and
-<I>message-id.</I>
-<BR>The message type identifies the type of message that occurred; here
-it is SEL_PAINT.&nbsp; The message id identifies the sender of the message;
-for mesages from the system itself, this id is always set to zero (0).&nbsp;
-The message type and id can be extracted from the selector by means of&nbsp;
-two convenience macros: SELTYPE(selector) and SELID(selector).
-<P>The pointer which is passed to the message handler may refer to different
-things; for system messages, however, it typically points to a data structure
-called FXEvent, which contains information about the event that caused
-this handler to be invoked.
-<P>The onPaint() handler may use the information in the FXEvent structure
-to determine the rectangle that needs to be repainted.&nbsp; Widgets (especially
-complicated ones!) should try and redraw only the indicated area.&nbsp;
-This cuts down significantly on expensive drawing commands, as well as
-reducing visual flickering on the screen.
-<P>Next,&nbsp; we define the widget's main constructor.&nbsp; As a first
-argument, all child-widgets pass in a pointer to the parent widget (Toplevel
-or <I>shell</I> widgets pass in a pointer to the application object).&nbsp;
-Next,&nbsp; the layout and other options are passed, followed by the x,
-y coordinate, followed by the width, and height.&nbsp; All of these have
-default values, as in many cases the exact widget placement and size is
-left to a container class such as the Packer or Matrix layout manager.
-<P>The options should be passed in as a <I>bit-wise <B>or</B></I> (|) of
-a number of option flags. <I>Care should be taken so as to <B>not conflict</B>
-with any option flags which have already been used in base classes of this
-widget .</I>
-<BR>&nbsp;
-<PRE><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; FXProgressBar(FXComposite* p,FXuint opts=(FRAME_SUNKEN|FRAME_THICK),FXint x=0,FXint y=0,FXint w=0,FXint h=0,FXint pl=DEFAULT_PAD,FXint pr=DEFAULT_PAD,FXint pt=DEFAULT_PAD,FXint pb=DEFAULT_PAD);</FONT></PRE>
-The constructor you write should simply pass the arguments to their corresponding
-arguments in the base class of your class, then initialize the newly added
-member data to some sensible values.
-<BR>The intent is that your widget should be useful without setting additional
-parameters or calling additional member functions, at least for the most
-common usage of your widget.
-<P>In order to interact properly with the layout managers, each child widget
-needs to properly compute its dimensions when asked by its parent.&nbsp;
-The two functions involved with this are:
-<BR>&nbsp;
-<PRE><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; virtual FXint getDefaultWidth();</FONT></PRE>
-
-<PRE><FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; virtual FXint getDefaultHeight();</FONT></PRE>
-These two functions compute the <I>minimum</I> width and height of the
-widget, given the current state of the widget.&nbsp; The layout managers
-use this information to place the widgets properly.&nbsp; In the case of
-the ProgressBar, for example, getDefaultWidth() computes the widget's size
-based on the border, left- and right padding, current text font, whether
-it is horizontal or vertical, and presence of the percentage display.
-<P>Next, the create() function needs to be implemented:
-<PRE>&nbsp;<FONT SIZE=-1>&nbsp;&nbsp;&nbsp;&nbsp; void create();</FONT></PRE>
-The create() function is called in the second stage of the widget instantiation
-process.&nbsp; In the first stage, the C++ objects have been created, but
-no windows have been associated yet with those C++ objects.&nbsp; The second
-stage takes place when the application is instantiating the widgets, and
-building X-Windows associated with the C++ objects.&nbsp; It does this
-by recursively travering all widgets, starting from the root window.
-<BR>It is sometimes necessary to overload the create() routine, so as to
-determine resources which were not yet known before.&nbsp; In the case
-of the ProgressBar,&nbsp; until the connection with the X-Server was established,
-it was not yet known which colors were going to be available, so these
-colors will have to be allocated in the create() routine. Also, the create()
-routine makes sure the font is available, by calling font->create() to
-create the font.
-<P>After implementing the ordinary C++ member functions for your new widget,
-you may have to define a destructor:
-<PRE>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <FONT SIZE=-1>virtual ~FXProgressBar();</FONT></PRE>
-The FOX library usually implements a destructor which intentionally thrashes
-the object; in this case,&nbsp; it sets font to (FXFont*)(-1).&nbsp; Thrashing
-objects intentionally may cause dangling pointers etc. to be discovered
-much sooner, and thus ease debugging and increase program correctness.
-<P>Note that FOX does not try trash the other member variables:- thrash-values
-for the other variables would not be distinguishable from good values anyway.&nbsp;
-But a thrash value for a pointer like -1 will most likely cause a SIGSEGV,
-when accidentally used!!
-<BR>&nbsp;
-<P>
-<!-- end main window content -->
-
-    </td>
-    <td bgcolor=#ffffff>&nbsp;</td>
-    <td bgcolor=#557faa width=15>&nbsp;</td>
-  </tr>
-  <tr>
-    <td colspan=2 bgcolor="#557faa" align=center>&nbsp;
-     </td>
-    <td bgcolor=#ffffff valign=bottom align=left><img src=art/ill.gif width=8 height=8></td>
-    <td bgcolor=#ffffff>&nbsp;</td>
-    <td bgcolor=#ffffff valign=bottom align=right><img src=art/ilr.gif width=8 height=8></td>
-    <td bgcolor=#557faa width=15>&nbsp;</td>
-  </tr>
-  <tr>
-    <td valign=bottom align=left bgcolor=#557faa><img src=art/oll.gif width=8 height=8></td>
-    <td colspan=4 bgcolor=#557faa>&nbsp;</td>
-    <td valign=bottom align=right bgcolor=#557faa><img src=art/olr.gif width=8 height=8></td>
-  </tr>
-</table>
-
-<address>Copyright 1997-2002 <a href=mailto:jeroen@fox-toolkit.org>Jeroen van der Zijp</a></address>
-<!-- Created: Mon Apr 10 11:20:32 CEST 2000 -->
-<!-- hhmts start -->
-
-<!-- hhmts end -->
 </body>
 </html>

@@ -3,7 +3,7 @@
 *                        G I F   I c o n   O b j e c t                          *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXGIFIcon.h,v 1.9 2002/01/18 22:42:53 jeroen Exp $                       *
+* $Id: FXGIFIcon.h,v 1.17 2004/04/24 14:10:29 fox Exp $                         *
 ********************************************************************************/
 #ifndef FXGIFICON_H
 #define FXGIFICON_H
@@ -28,6 +28,7 @@
 #include "FXIcon.h"
 #endif
 
+namespace FX {
 
 /// GIF Icon class
 class FXAPI FXGIFIcon : public FXIcon {
@@ -39,26 +40,39 @@ private:
   FXGIFIcon &operator=(const FXGIFIcon&);
 public:
 
-  /// Construct an icon from memory stream formatted as CompuServe GIF format
+  /// Construct an icon from memory stream formatted as GIF format
   FXGIFIcon(FXApp* a,const void *pix=NULL,FXColor clr=FXRGB(192,192,192),FXuint opts=0,FXint w=1,FXint h=1);
 
-  /// Save pixels into stream in [un]GIF format
-  virtual void savePixels(FXStream& store) const;
+  /// Save pixels into stream in GIF format
+  virtual FXbool savePixels(FXStream& store) const;
 
-  /// Load pixels from stream in CompuServe GIF format
-  virtual void loadPixels(FXStream& store);
+  /// Load pixels from stream in GIF format
+  virtual FXbool loadPixels(FXStream& store);
 
   /// Destroy
   virtual ~FXGIFIcon();
   };
 
 
-/// Load a gif file from a stream
-extern FXAPI FXbool fxloadGIF(FXStream& store,FXuchar*& data,FXColor& transp,FXint& width,FXint& height);
+
+#ifndef FXLOADGIF
+#define FXLOADGIF
+
+/**
+* Load an GIF (Graphics Interchange Format) file from a stream.
+* Upon successful return, the pixel array and size are returned.
+* If an error occurred, the pixel array is set to NULL.
+*/
+extern FXAPI FXbool fxloadGIF(FXStream& store,FXColor*& data,FXint& width,FXint& height);
 
 
-/// Save a gif file to a stream
-extern FXAPI FXbool fxsaveGIF(FXStream& store,const FXuchar *data,FXColor transp,FXint width,FXint height);
+/**
+* Save an GIF (Graphics Interchange Format) file to a stream.
+*/
+extern FXAPI FXbool fxsaveGIF(FXStream& store,const FXColor *data,FXint width,FXint height,FXbool fast=TRUE);
 
+#endif
+
+}
 
 #endif

@@ -5,7 +5,7 @@
 ##############################################################################
 # Contributed by: Andre Fornacon <afo@zlug.org>                              #
 ##############################################################################
-# $Id: Makefile.dmc,v 1.1.2.4 2002/08/23 01:06:36 fox Exp $		     #
+# $Id: Makefile.dmc,v 1.10 2003/09/26 05:01:20 fox Exp $		             #
 ##############################################################################
 # This library is free software; you can redistribute it and/or 	     #
 # modify it under the terms of the GNU Library General Public		     #
@@ -27,25 +27,27 @@ CXX	  = sc
 CXXFLAGS  = -mn -5 -a8
 RM	  = del
 TOPDIR	  = ..
-DEFINES   = -DNDEBUG -DFOX_BIGENDIAN=0 -DWIN32 -D_WINDOWS -DHAVE_OPENGL
+DEFINES   = -DNDEBUG -DFOX_BIGENDIAN=0 -DWIN32 -D_WINDOWS
 LD	  = sc
 LDFLAGS   =
 LIBS	  = advapi32.lib+shell32.lib+gdi32.lib+wsock32.lib+winspool.lib
 GLLIBS	  = opengl32.lib glu32.lib
 INCDIRS   = -I$(TOPDIR)\include
-FOXLIB	  = $(TOPDIR)\src\fox.lib
-RESWRAP   = $(TOPDIR)\utils\reswrap.exe
+FOXLIB	  = $(TOPDIR)\src\FOX-1.1.lib
+RESWRAP	  = $(TOPDIR)\utils\reswrap.exe
+
 PROGRAMS  = adie.exe
 
 OBJECTS   = \
-	adie.obj     \
+	adie.obj \
 	Commands.obj  \
-	HelpWindow.obj	 \
-	Preferences.obj   \
-	help.obj	 \
-	Hilite.obj	 \
-	icons.obj
-
+	HelpWindow.obj \
+	TextWindow.obj \
+	Preferences.obj \
+	help.obj \
+	Hilite.obj \
+	icons.obj \
+	main.obj
 
 # splitted to avoid 'cmdline too long' errors
 ICONS_1	= adie_gif.gif big_gif.gif bookset_gif.gif booknext_gif.gif \
@@ -63,7 +65,6 @@ ICONS_3 = saveas_gif.gif search_gif.gif searchnext_gif.gif searchprev_gif.gif \
 ICONS = $(ICONS_1) $(ICONS_2) $(ICONS_3)
 
 
-
 .cpp.obj:
 	$(CXX) -c $(INCDIRS) $(CXXFLAGS) $(DEFINES) $*.cpp
 
@@ -75,13 +76,18 @@ adie.exe: $(OBJECTS) $(FOXLIB)
 
 adie.obj: icons.cpp
 
+icons.h: $(ICONS)
+	$(RM) $@
+	$(RESWRAP) -i -oa $@ $(ICONS_1)
+	$(RESWRAP) -i -oa $@ $(ICONS_2)
+	$(RESWRAP) -i -oa $@ $(ICONS_2)
+
 icons.cpp: $(ICONS)
 	$(RM) $@
 	echo ^#include "icons.h" > $@
 	$(RESWRAP) -oa $@ $(ICONS_1)
 	$(RESWRAP) -oa $@ $(ICONS_2)
 	$(RESWRAP) -oa $@ $(ICONS_3)
-
 
 clean:
 	$(RM) *.obj *.exe *.tds *.map icons.cpp

@@ -3,7 +3,7 @@
 *                     S c r o l l W i n d o w   W i d g e t                     *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1998,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXScrollWindow.cpp,v 1.17 2002/01/18 22:43:04 jeroen Exp $               *
+* $Id: FXScrollWindow.cpp,v 1.31 2004/02/08 17:29:07 fox Exp $                  *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -32,23 +32,28 @@
 #include "FXRectangle.h"
 #include "FXRegistry.h"
 #include "FXAccelTable.h"
+#include "FXHash.h"
 #include "FXApp.h"
 #include "FXDCWindow.h"
-#include "FXScrollbar.h"
+#include "FXScrollBar.h"
 #include "FXScrollWindow.h"
 
 
 /*
   Notes:
-  - Perhaps scroll windows should observe FRAME_SUNKEN etc.
-  - Perhaps need clip-window to be a parent of the content window.
-  - Need margins [and item spacing]
   - Intercepts pagedn/pageup to scroll.
+  - We're assuming you're not using LAYOUT_FIX_WIDTH and LAYOUT_FILL_X
+    at the same time...
+  - Note that content window's position is not necessarily the same as
+    the scroll position pos_x and pos_y.
 */
 
+using namespace FX;
 
 
 /*******************************************************************************/
+
+namespace FX {
 
 // Map
 FXDEFMAP(FXScrollWindow) FXScrollWindowMap[]={
@@ -77,20 +82,63 @@ FXWindow* FXScrollWindow::contentWindow() const {
 
 // Determine content width of scroll area
 FXint FXScrollWindow::getContentWidth(){
-  return contentWindow() ? contentWindow()->getDefaultWidth() : 1;
+  register FXuint hints;
+  register FXint w=1;
+  if(contentWindow()){
+    hints=contentWindow()->getLayoutHints();
+    if(hints&LAYOUT_FIX_WIDTH) w=contentWindow()->getWidth();
+    else w=contentWindow()->getDefaultWidth();
+    }
+  return w;
   }
 
 
 // Determine content height of scroll area
 FXint FXScrollWindow::getContentHeight(){
-  return contentWindow() ? contentWindow()->getDefaultHeight() : 1;
+  register FXuint hints;
+  register FXint h=1;
+  if(contentWindow()){
+    hints=contentWindow()->getLayoutHints();
+    if(hints&LAYOUT_FIX_HEIGHT) h=contentWindow()->getHeight();
+    else h=contentWindow()->getDefaultHeight();
+    }
+  return h;
   }
 
 
 // Move contents; moves child window
 void FXScrollWindow::moveContents(FXint x,FXint y){
-  FXWindow* contents=contentWindow();
-  if(contents) contents->move(x,y);
+  register FXWindow* contents=contentWindow();
+  register FXint xx,yy,ww,hh;
+  register FXuint hints;
+  if(contents){
+
+    // Get hints
+    hints=contents->getLayoutHints();
+
+    // Get content size
+    ww=getContentWidth();
+    hh=getContentHeight();
+
+    // Determine x-position
+    xx=x;
+    if(ww<viewport_w){
+      if(hints&LAYOUT_FILL_X) ww=viewport_w;
+      if(hints&LAYOUT_CENTER_X) xx=(viewport_w-ww)/2;
+      else if(hints&LAYOUT_RIGHT) xx=viewport_w-ww;
+      else xx=0;
+      }
+
+    // Determine y-position
+    yy=y;
+    if(hh<viewport_h){
+      if(hints&LAYOUT_FILL_Y) hh=viewport_h;
+      if(hints&LAYOUT_CENTER_Y) yy=(viewport_h-hh)/2;
+      else if(hints&LAYOUT_BOTTOM) yy=viewport_h-hh;
+      else yy=0;
+      }
+    contents->move(xx,yy);
+    }
   pos_x=x;
   pos_y=y;
   }
@@ -98,18 +146,46 @@ void FXScrollWindow::moveContents(FXint x,FXint y){
 
 // Recalculate layout
 void FXScrollWindow::layout(){
+  register FXWindow* contents=contentWindow();
+  register FXint xx,yy,ww,hh;
+  register FXuint hints;
 
   // Layout scroll bars and viewport
   FXScrollArea::layout();
 
   // Resize contents
-  if(contentWindow()){
+  if(contents){
+
+    // Get hints
+    hints=contents->getLayoutHints();
+
+    // Get content size
+    ww=getContentWidth();
+    hh=getContentHeight();
+
+    // Determine x-position
+    xx=pos_x;
+    if(ww<viewport_w){
+      if(hints&LAYOUT_FILL_X) ww=viewport_w;
+      if(hints&LAYOUT_CENTER_X) xx=(viewport_w-ww)/2;
+      else if(hints&LAYOUT_RIGHT) xx=viewport_w-ww;
+      else xx=0;
+      }
+
+    // Determine y-position
+    yy=pos_y;
+    if(hh<viewport_h){
+      if(hints&LAYOUT_FILL_Y) hh=viewport_h;
+      if(hints&LAYOUT_CENTER_Y) yy=(viewport_h-hh)/2;
+      else if(hints&LAYOUT_BOTTOM) yy=viewport_h-hh;
+      else yy=0;
+      }
 
     // Reposition content window
-    contentWindow()->position(pos_x,pos_y,content_w,content_h);
+    contents->position(xx,yy,ww,hh);
 
     // Make sure its under the scroll bars
-    contentWindow()->lower();
+    contents->lower();
     }
   flags&=~FLAG_DIRTY;
   }
@@ -117,16 +193,9 @@ void FXScrollWindow::layout(){
 
 // When focus moves to scroll window, we actually force the
 // focus to the content window or a child thereof.
-long FXScrollWindow::onFocusSelf(FXObject* sender,FXSelector sel,void* ptr){
-  FXWindow *child=contentWindow();
-  if(child){
-    if(child->isEnabled() && child->canFocus()){
-      child->handle(this,MKUINT(0,SEL_FOCUS_SELF),ptr);
-      return 1;
-      }
-    if(child->isComposite() && child->handle(this,MKUINT(0,SEL_FOCUS_SELF),ptr)) return 1;
-    }
-  return FXComposite::onFocusSelf(sender,sel,ptr);
+long FXScrollWindow::onFocusSelf(FXObject* sender,FXSelector,void* ptr){
+  FXWindow *child=contentWindow();      ///// FIXME see MDIChild /////
+  return child && child->handle(sender,FXSEL(SEL_FOCUS_SELF,0),ptr);
   }
 
 
@@ -136,11 +205,11 @@ long FXScrollWindow::onKeyPress(FXObject* sender,FXSelector sel,void* ptr){
   switch(((FXEvent*)ptr)->code){
     case KEY_Page_Up:
     case KEY_KP_Page_Up:
-      setPosition(pos_x,pos_y+verticalScrollbar()->getPage());
+      setPosition(pos_x,pos_y+verticalScrollBar()->getPage());
       return 1;
     case KEY_Page_Down:
     case KEY_KP_Page_Down:
-      setPosition(pos_x,pos_y-verticalScrollbar()->getPage());
+      setPosition(pos_x,pos_y-verticalScrollBar()->getPage());
       return 1;
     }
   return 0;
@@ -160,3 +229,4 @@ long FXScrollWindow::onKeyRelease(FXObject* sender,FXSelector sel,void* ptr){
   return 0;
   }
 
+}

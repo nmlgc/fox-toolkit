@@ -3,7 +3,7 @@
 *                           R e g i s t r y   C l a s s                         *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1998,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXRegistry.h,v 1.21 2002/01/23 18:53:57 jeroen Exp $                     *
+* $Id: FXRegistry.h,v 1.26 2004/02/08 17:17:34 fox Exp $                        *
 ********************************************************************************/
 #ifndef FXREGISTRY_H
 #define FXREGISTRY_H
@@ -28,6 +28,7 @@
 #include "FXSettings.h"
 #endif
 
+namespace FX {
 
 
 /**
@@ -66,10 +67,10 @@ public:
   FXbool write();
 
   /// Return application key
-  const FXString& getAppKey() const { return applicationkey; }
+  FXString getAppKey() const { return applicationkey; }
 
   /// Return vendor key
-  const FXString& getVendorKey() const { return vendorkey; }
+  FXString getVendorKey() const { return vendorkey; }
 
   /**
   * Set ASCII mode; under MS-Windows, this will switch the system to a
@@ -81,5 +82,6 @@ public:
   FXbool getAsciiMode() const { return ascii; }
   };
 
+}
 
 #endif

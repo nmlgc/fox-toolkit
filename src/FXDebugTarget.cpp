@@ -3,7 +3,7 @@
 *                      D e b u g - T a r g e t   O b j e c t                    *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXDebugTarget.cpp,v 1.16 2002/01/18 22:42:59 jeroen Exp $                *
+* $Id: FXDebugTarget.cpp,v 1.23 2004/02/08 17:29:06 fox Exp $                   *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -35,8 +35,11 @@
   - So purely for debugging purposes.
 */
 
+using namespace FX;
 
 /*******************************************************************************/
+
+namespace FX {
 
 
 // Table of message type names
@@ -69,7 +72,6 @@ const char *const FXDebugTarget::messageTypeName[]={
   "SEL_RAISED",
   "SEL_LOWERED",
   "SEL_CLOSE",
-  "SEL_CLOSEALL",
   "SEL_DELETE",
   "SEL_MINIMIZE",
   "SEL_RESTORE",
@@ -113,8 +115,6 @@ const char *const FXDebugTarget::messageTypeName[]={
   "SEL_DND_DROP",
   "SEL_DND_MOTION",
   "SEL_DND_REQUEST",
-  "SEL_UNCHECK_OTHER",
-  "SEL_UNCHECK_RADIO",
   "SEL_IO_READ",
   "SEL_IO_WRITE",
   "SEL_IO_EXCEPT",
@@ -142,8 +142,8 @@ FXDebugTarget::FXDebugTarget(){
 
 // Got one
 long FXDebugTarget::onMessage(FXObject* sender,FXSelector sel,void* ptr){
-  FXuint type=SELTYPE(sel);
-  FXuint msid=SELID(sel);
+  FXuint type=FXSELTYPE(sel);
+  FXuint msid=FXSELID(sel);
   FXASSERT(ARRAYNUMBER(messageTypeName)==SEL_LAST);
   if(sender!=lastsender || sel!=lastsel){
     fxmessage("\nTYPE:%-23s ID:%-5d SENDER: %-15s PTR: 0x%08lx #%-4d",type<SEL_LAST?messageTypeName[type]:"ILLEGAL",msid,sender?sender->getClassName():"NULL",(unsigned long)ptr,1);
@@ -157,3 +157,5 @@ long FXDebugTarget::onMessage(FXObject* sender,FXSelector sel,void* ptr){
     }
   return 0;
   }
+
+}

@@ -3,7 +3,7 @@
 *                 T o p - L e v e l   W i n d o w   W i d g e t                 *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1998,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXTopWindow.h,v 1.36 2002/01/18 22:42:55 jeroen Exp $                    *
+* $Id: FXTopWindow.h,v 1.53 2004/02/08 17:17:34 fox Exp $                       *
 ********************************************************************************/
 #ifndef FXTOPWINDOW_H
 #define FXTOPWINDOW_H
@@ -29,18 +29,22 @@
 #endif
 
 
+namespace FX {
+
 
 /// Title and border decorations
 enum {
-  DECOR_NONE     = 0,                 /// Borderless window
-  DECOR_TITLE    = 0x00020000,        /// Window title
-  DECOR_MINIMIZE = 0x00040000,        /// Minimize button
-  DECOR_MAXIMIZE = 0x00080000,        /// Maximize button
-  DECOR_CLOSE    = 0x00100000,        /// Close button
-  DECOR_BORDER   = 0x00200000,        /// Border
-  DECOR_RESIZE   = 0x00400000,        /// Resize handles
-  DECOR_MENU     = 0x00800000,        /// Window menu
-  DECOR_ALL      = (DECOR_TITLE|DECOR_MINIMIZE|DECOR_MAXIMIZE|DECOR_CLOSE|DECOR_BORDER|DECOR_RESIZE|DECOR_MENU)
+  DECOR_NONE        = 0,                                  /// Borderless window
+  DECOR_TITLE       = 0x00020000,                         /// Window title
+  DECOR_MINIMIZE    = 0x00040000,                         /// Minimize button
+  DECOR_MAXIMIZE    = 0x00080000,                         /// Maximize button
+  DECOR_CLOSE       = 0x00100000,                         /// Close button
+  DECOR_BORDER      = 0x00200000,                         /// Border
+  DECOR_SHRINKABLE  = 0x00400000,                         /// Window can become smaller
+  DECOR_STRETCHABLE = 0x00800000,                         /// Window can become larger
+  DECOR_RESIZE      = DECOR_SHRINKABLE|DECOR_STRETCHABLE, /// Resize handles
+  DECOR_MENU        = 0x01000000,                         /// Window menu
+  DECOR_ALL         = (DECOR_TITLE|DECOR_MINIMIZE|DECOR_MAXIMIZE|DECOR_CLOSE|DECOR_BORDER|DECOR_SHRINKABLE|DECOR_STRETCHABLE|DECOR_MENU)
   };
 
 
@@ -55,11 +59,32 @@ enum {
   };
 
 
-class FXToolbar;
+class FXToolBar;
+class FXIcon;
 
 
 
-/// Abstract base class for all top-level windows
+/**
+* Abstract base class for all top-level windows.
+* TopWindows are usually managed by a Window Manager under X11 and
+* therefore borders and window-menus and other decorations like resize-
+* handles are subject to the Window Manager's interpretation of the
+* decoration hints.
+* When a TopWindow is closed, it sends a SEL_CLOSE message to its
+* target.  The target should return 0 in response to this message if
+* there is no objection to proceed with the closing of the window, and
+* return 1 otherwise.  After the SEL_CLOSE message has been sent and
+* no objection was raised, the window will delete itself.
+* When receiving a SEL_UPDATE, the target can update the title string
+* of the window, so that the title of the window reflects the name
+* of the document, for example.
+* For convenience, TopWindow provides the same layout behavior as
+* the Packer widget, as well as docking and undocking of toolbars.
+* TopWindows can be owned by other windows, or be free-floating.
+* Owned TopWindows will usually remain stacked on top of the owner
+* windows. The lifetime of an owned window should not exceed that of
+* the owner.
+*/
 class FXAPI FXTopWindow : public FXShell {
   FXDECLARE_ABSTRACT(FXTopWindow)
 protected:
@@ -79,7 +104,6 @@ protected:
   void settitle();
   void seticons();
   void setdecorations();
-  virtual void layout();
   FXTopWindow(FXApp* a,const FXString& name,FXIcon *ic,FXIcon *mi,FXuint opts,FXint x,FXint y,FXint w,FXint h,FXint pl,FXint pr,FXint pt,FXint pb,FXint hs,FXint vs);
   FXTopWindow(FXWindow* owner,const FXString& name,FXIcon *ic,FXIcon *mi,FXuint opts,FXint x,FXint y,FXint w,FXint h,FXint pl,FXint pr,FXint pt,FXint pb,FXint hs,FXint vs);
 private:
@@ -90,19 +114,25 @@ private:
   static void* makeicon(FXIcon* icon);
 #endif
 public:
-  long onClose(FXObject*,FXSelector,void*);
-  long onCmdSetStringValue(FXObject*,FXSelector,void*);
-  long onCmdIconify(FXObject*,FXSelector,void*);
-  long onCmdDeiconify(FXObject*,FXSelector,void*);
   long onFocusUp(FXObject*,FXSelector,void*);
   long onFocusDown(FXObject*,FXSelector,void*);
   long onFocusLeft(FXObject*,FXSelector,void*);
   long onFocusRight(FXObject*,FXSelector,void*);
+  long onCmdMaximize(FXObject*,FXSelector,void*);
+  long onCmdMinimize(FXObject*,FXSelector,void*);
+  long onCmdRestore(FXObject*,FXSelector,void*);
+  long onCmdClose(FXObject*,FXSelector,void*);
+  long onCmdSetStringValue(FXObject*,FXSelector,void*);
+  long onCmdGetStringValue(FXObject*,FXSelector,void*);
+  long onCmdSetIconValue(FXObject*,FXSelector,void*);
+  long onCmdGetIconValue(FXObject*,FXSelector,void*);
 public:
   enum {
-    ID_ICONIFY=FXShell::ID_LAST,    /// Iconify the window
-    ID_DEICONIFY,                   /// Deiconify the window
-    ID_QUERY_DOCK,                  /// Toolbar asks to dock
+    ID_MAXIMIZE=FXShell::ID_LAST,       /// Maximize the window
+    ID_MINIMIZE,                        /// Minimize the window
+    ID_RESTORE,                         /// Restore the window
+    ID_CLOSE,                           /// Close the window
+    ID_QUERY_DOCK,                      /// Toolbar asks to dock
     ID_LAST
     };
 public:
@@ -112,6 +142,9 @@ public:
 
   /// Detach the server-side resources for this window
   virtual void detach();
+
+  /// Perform layout
+  virtual void layout();
 
   /// Move the focus to this window
   virtual void setFocus();
@@ -146,14 +179,23 @@ public:
   /// Move and resize this window in the parent's coordinates
   virtual void position(FXint x,FXint y,FXint w,FXint h);
 
-  /// Iconify window
-  virtual void iconify();
+  /// Maximize window, return TRUE if maximized
+  virtual FXbool maximize(FXbool notify=FALSE);
 
-  /// Deiconify window
-  virtual void deiconify();
+  /// Minimize or iconify window, return TRUE if minimized
+  virtual FXbool minimize(FXbool notify=FALSE);
 
-  /// Return TRUE if window has been iconified
-  FXbool isIconified() const;
+  /// Restore window to normal, return TRUE if restored
+  virtual FXbool restore(FXbool notify=FALSE);
+
+  /// Close the window, return TRUE if actually closed
+  virtual FXbool close(FXbool notify=FALSE);
+
+  /// Return TRUE if maximized
+  FXbool isMaximized() const;
+
+  /// Return TRUE if minimized
+  FXbool isMinimized() const;
 
   /// Change window title
   void setTitle(const FXString& name);
@@ -231,5 +273,6 @@ public:
   virtual ~FXTopWindow();
   };
 
+}
 
 #endif

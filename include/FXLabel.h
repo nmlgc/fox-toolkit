@@ -3,7 +3,7 @@
 *                            L a b e l   W i d g e t                            *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1998,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXLabel.h,v 1.15 2002/01/18 22:42:53 jeroen Exp $                        *
+* $Id: FXLabel.h,v 1.26 2004/04/22 20:51:04 fox Exp $                           *
 ********************************************************************************/
 #ifndef FXLABEL_H
 #define FXLABEL_H
@@ -28,21 +28,7 @@
 #include "FXFrame.h"
 #endif
 
-
-
-/// Justification modes
-enum {
-  JUSTIFY_NORMAL       = 0,			      /// Default justification is centered text
-  JUSTIFY_CENTER_X     = 0,			      /// Text is centered horizontally
-  JUSTIFY_LEFT         = 0x00008000,		      /// Text is left-justified
-  JUSTIFY_RIGHT        = 0x00010000,		      /// Text is right-justified
-  JUSTIFY_HZ_APART     = JUSTIFY_LEFT|JUSTIFY_RIGHT,  /// Combination of JUSTIFY_LEFT & JUSTIFY_RIGHT
-  JUSTIFY_CENTER_Y     = 0,			      /// Text is centered vertically
-  JUSTIFY_TOP          = 0x00020000,		      /// Text is aligned with label top
-  JUSTIFY_BOTTOM       = 0x00040000,		      /// Text is aligned with label bottom
-  JUSTIFY_VT_APART     = JUSTIFY_TOP|JUSTIFY_BOTTOM   /// Combination of JUSTIFY_TOP & JUSTIFY_BOTTOM
-  };
-
+namespace FX {
 
 
 /// Relationship options for icon-labels
@@ -100,8 +86,15 @@ public:
   long onPaint(FXObject*,FXSelector,void*);
   long onHotKeyPress(FXObject*,FXSelector,void*);
   long onHotKeyRelease(FXObject*,FXSelector,void*);
-  long onCmdGetStringValue(FXObject*,FXSelector,void*);
+  long onCmdSetValue(FXObject*,FXSelector,void*);
   long onCmdSetStringValue(FXObject*,FXSelector,void*);
+  long onCmdGetStringValue(FXObject*,FXSelector,void*);
+  long onCmdSetIconValue(FXObject*,FXSelector,void*);
+  long onCmdGetIconValue(FXObject*,FXSelector,void*);
+  long onCmdSetHelp(FXObject*,FXSelector,void*);
+  long onCmdGetHelp(FXObject*,FXSelector,void*);
+  long onCmdSetTip(FXObject*,FXSelector,void*);
+  long onCmdGetTip(FXObject*,FXSelector,void*);
   long onQueryHelp(FXObject*,FXSelector,void*);
   long onQueryTip(FXObject*,FXSelector,void*);
 public:
@@ -164,13 +157,13 @@ public:
   FXuint getIconPosition() const;
 
   /// Set the status line help text for this label
-  void setHelpText(const FXString& text);
+  void setHelpText(const FXString& text){ help=text; }
 
   /// Get the status line help text for this label
   FXString getHelpText() const { return help; }
 
   /// Set the tool tip message for this label
-  void setTipText(const FXString&  text);
+  void setTipText(const FXString& text){ tip=text; }
 
   /// Get the tool tip message for this label
   FXString getTipText() const { return tip; }
@@ -185,6 +178,6 @@ public:
   virtual ~FXLabel();
   };
 
-
+}
 
 #endif

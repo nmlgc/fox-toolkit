@@ -3,7 +3,7 @@
 *                         D o c u m e n t   O b j e c t                         *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1998,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXDocument.cpp,v 1.10 2002/01/18 22:42:59 jeroen Exp $                    *
+* $Id: FXDocument.cpp,v 1.17 2004/02/08 17:29:06 fox Exp $                      *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -35,6 +35,7 @@
 #include "FXRegistry.h"
 #include "FXAccelTable.h"
 #include "FXObjectList.h"
+#include "FXHash.h"
 #include "FXApp.h"
 #include "FXCursor.h"
 #include "FXFrame.h"
@@ -82,7 +83,7 @@
        simply force a repaint; so in order to just repaint everything:
 
         long MyDocument::onCmdChangedSomething(FXObject* sender, FXSelector sel,void* ptr){
-          forallWindows(sender,MKUINT(ID_UPDATE,SEL_COMMAND),ptr);
+          forallWindows(sender,FXSEL(SEL_COMMAND,ID_UPDATE),ptr);
           return 1;
           }
 
@@ -128,25 +129,28 @@
        FXDocument returns 1 in the SEL_CLOSE handler which causes the FXMDIChild
        to delete itself.
 
-    8) A message ID_CLOSE_ALL_DOCUMENTS (ID_CLOSE_DOCUMENT) to the FXMDIClient
-       first sends a SEL_CLOSEALL to each document; if this returns 1, FXMDIClient
+    8) A message ID_CLOSE_DOCUMENT to FXDocument (via FXMDIClient and FXMDIChild) checks
+       if document needs to be saved; once saved, the document can delete all child
+       windows.  It could do this via:
+
+         mdiclient->forallDocWindows(this,this,FXSEL(SEL_COMMAND,FXWindow::ID_DELETE),NULL);
+
+       forAllfirst sends a SEL_CLOSEALL
+       to each document; if this returns 1, FXMDIClient
        proceeds to send ID_MDI_CLOSE to each FXMDIChild belonging to the same document.
        Each FXMDIChild will then ask the FXDocument whether its OK to close this
        FXMDIChild; since the FXDocument was already saved in response to the SEL_CLOSEALL,
        the FXDocument is no longer dirty and the answer will be OK to close for all of
        them [except perhaps in unusual circumstances].
 
-    9) It is possible that the target of FXMDIChild is not a ``document''.  In this
-       case, all you have to do is return 1 for SEL_CLOSEALL, but return 0 or 1 for
-       SEL_CLOSE.  That is to say, you can prompt before closing ALL windows, or
-       for you can prompt for each one.
-
-   10) You will need to catch SEL_CLOSEALL with the ID you passed in to the FXMDIChild.
-
 
 */
 
+using namespace FX;
+
 /*******************************************************************************/
+
+namespace FX {
 
 
 // Map
@@ -183,7 +187,7 @@ void FXDocument::setFilename(const FXString& path){
 long FXDocument::onUpdTitle(FXObject* sender,FXSelector,void*){
   FXString string=title;
   if(modified) string+="*";
-  sender->handle(this,MKUINT(FXWindow::ID_SETSTRINGVALUE,SEL_COMMAND),(void*)&string);
+  sender->handle(this,FXSEL(SEL_COMMAND,FXWindow::ID_SETSTRINGVALUE),(void*)&string);
   return 1;
   }
 
@@ -192,7 +196,7 @@ long FXDocument::onUpdTitle(FXObject* sender,FXSelector,void*){
 long FXDocument::onUpdFilename(FXObject* sender,FXSelector,void*){
   FXString string=filename;
   if(modified) string+="*";
-  sender->handle(this,MKUINT(FXWindow::ID_SETSTRINGVALUE,SEL_COMMAND),(void*)&string);
+  sender->handle(this,FXSEL(SEL_COMMAND,FXWindow::ID_SETSTRINGVALUE),(void*)&string);
   return 1;
   }
 
@@ -213,3 +217,4 @@ void FXDocument::load(FXStream& store){
 FXDocument::~FXDocument(){
   }
 
+}

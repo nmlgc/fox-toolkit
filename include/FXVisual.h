@@ -3,7 +3,7 @@
 *                            V i s u a l   C l a s s                            *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1999,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1999,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXVisual.h,v 1.23 2002/01/18 22:42:55 jeroen Exp $                       *
+* $Id: FXVisual.h,v 1.34 2004/04/21 20:58:36 fox Exp $                          *
 ********************************************************************************/
 #ifndef FXVISUAL_H
 #define FXVISUAL_H
@@ -28,6 +28,7 @@
 #include "FXId.h"
 #endif
 
+namespace FX {
 
 
 /// Construction options for FXVisual class
@@ -41,7 +42,8 @@ enum FXVisualOptions {
   VISUAL_OWNCOLORMAP  = 32,           /// Allocate private colormap
   VISUAL_DOUBLEBUFFER = 64,           /// Double-buffered [FXGLVisual]
   VISUAL_STEREO       = 128,          /// Stereo [FXGLVisual]
-  VISUAL_NOACCEL      = 256           /// No hardware acceleration [for broken h/w]
+  VISUAL_NOACCEL      = 256,          /// No hardware acceleration [for broken h/w]
+  VISUAL_SWAP_COPY    = 512           /// Buffer swap by copying [FXGLVisual]
   };
 
 
@@ -79,27 +81,26 @@ class FXAPI FXVisual : public FXId {
 protected:
   FXuint        flags;                  // Visual flags
   FXuint        hint;                   // Depth Hint
-  FXuint        depth;                  // Visual depth, bits/pixel
+  FXuint        depth;                  // Visual depth, significant bits/pixel
   FXuint        numred;                 // Number of reds
   FXuint        numgreen;               // Number of greens
   FXuint        numblue;                // Number of blues
   FXuint        numcolors;              // Total number of colors
   FXuint        maxcolors;              // Maximum number of colors
   FXVisualType  type;                   // Visual type
+  void         *info;                   // Opaque data
+  FXID          colormap;               // Color map, if any
+  FXbool        freemap;                // We allocated the map
 #ifndef WIN32
 protected:
-  void         *visual;                 // Application visual [Visual]
-  void         *info;                   // XVisualInfo, if any
-  FXID          colormap;               // Color map, if any
+  void*         visual;                 // Application visual [Visual]
   void*         gc;                     // Drawing GC
   void*         scrollgc;               // Scrolling GC
   FXPixel       rpix[16][256];          // Mapping from red -> pixel
   FXPixel       gpix[16][256];          // Mapping from green -> pixel
   FXPixel       bpix[16][256];          // Mapping from blue -> pixel
   FXPixel       lut[256];               // Color lookup table
-  FXbool        freemap;                // We allocated the map
 protected:
-  void* makegc(FXbool gex);
   void setuptruecolor();
   void setupdirectcolor();
   void setuppseudocolor();
@@ -110,18 +111,20 @@ protected:
   void setupcolormap();
 #else
 protected:
-  FXID          hPalette;               // Palette, if any
-  void         *info;                   // PIXELFORMATDESCRIPTOR, if any
   int           pixelformat;            // PIXELFORMAT number
-protected:
-  FXID createAllPurposePalette();
 #endif
 protected:
   FXVisual();
+private:
+  FXVisual(const FXVisual&);
+  FXVisual &operator=(const FXVisual&);
 public:
 
   /// Construct default visual
   FXVisual(FXApp* a,FXuint flgs,FXuint d=32);
+
+  /// Get visual type
+  FXVisualType getType() const { return type; }
 
   /// Create visual
   virtual void create();
@@ -135,7 +138,7 @@ public:
   /// Get flags (see FXVisualOptions)
   FXuint getFlags() const { return flags; }
 
-  /// Get depth
+  /// Get depth, i.e. number of significant bits in color representation
   FXuint getDepth() const { return depth; }
 
   /// Get number of colors
@@ -162,9 +165,6 @@ public:
   /// Get maximum number of colors
   FXuint getMaxColors() const { return maxcolors; }
 
-  /// Get visual type
-  FXVisualType getType() const { return type; }
-
   /// Save visual information to a stream
   virtual void save(FXStream& store) const;
 
@@ -175,5 +175,6 @@ public:
   virtual ~FXVisual();
   };
 
+}
 
 #endif

@@ -44,8 +44,8 @@ RSC=rc.exe
 # PROP Target_Dir ""
 F90=df.exe
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /YX /FD /c
-# ADD CPP /nologo /MT /W3 /GX /O2 /I "..\..\..\include" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /FD /c
-# SUBTRACT CPP /YX
+# ADD CPP /MT /W3 /GR /GX /O2 /I "..\..\..\include" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /FD /c
+# SUBTRACT CPP /nologo /YX
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
@@ -55,7 +55,8 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /machine:I386
-# ADD LINK32 winspool.lib comctl32.lib wsock32.lib kernel32.lib user32.lib gdi32.lib advapi32.lib shell32.lib mpr.lib /nologo /entry:"mainCRTStartup" /subsystem:windows /machine:I386
+# ADD LINK32 winspool.lib comctl32.lib wsock32.lib kernel32.lib user32.lib gdi32.lib advapi32.lib shell32.lib mpr.lib /entry:"mainCRTStartup" /subsystem:windows /pdb:none /machine:I386
+# SUBTRACT LINK32 /nologo
 
 !ELSEIF  "$(CFG)" == "pathfinder - Win32 Debug"
 
@@ -72,7 +73,7 @@ LINK32=link.exe
 # PROP Target_Dir ""
 F90=df.exe
 # ADD BASE CPP /nologo /W3 /Gm /GX /Zi /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /YX /FD /c
-# ADD CPP /MT /W3 /Gm /GR /GX /ZI /Od /I "..\..\..\include" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /FD /c
+# ADD CPP /MTd /W3 /GR /GX /ZI /Od /I "..\..\..\include" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /FD /c
 # SUBTRACT CPP /nologo /YX
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
@@ -83,7 +84,8 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 winspool.lib comctl32.lib wsock32.lib ws2_32.lib kernel32.lib user32.lib gdi32.lib advapi32.lib shell32.lib mpr.lib /nologo /entry:"mainCRTStartup" /subsystem:windows /debug /machine:I386 /pdbtype:sept
+# ADD LINK32 winspool.lib comctl32.lib wsock32.lib ws2_32.lib kernel32.lib user32.lib gdi32.lib advapi32.lib shell32.lib mpr.lib /entry:"mainCRTStartup" /subsystem:windows /pdb:none /debug /machine:I386
+# SUBTRACT LINK32 /nologo
 
 !ENDIF 
 
@@ -97,7 +99,7 @@ SOURCE=..\..\..\pathfinder\bigicons.bmp
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\pathfinder\bigpenguin.bmp
+SOURCE=..\..\..\pathfinder\closepanel.gif
 # End Source File
 # Begin Source File
 
@@ -133,6 +135,22 @@ SOURCE=..\..\..\pathfinder\dirup.bmp
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\pathfinder\enter.gif
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\pathfinder\file_gif.gif
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\pathfinder\foxbig.gif
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\pathfinder\foxmini.gif
+# End Source File
+# Begin Source File
+
 SOURCE=.\gifs.list
 
 !IF  "$(CFG)" == "pathfinder - Win32 Release"
@@ -143,8 +161,8 @@ InputPath=.\gifs.list
 
 BuildCmds= \
 	cd ..\..\..\pathfinder \
-	$(WkspDir)\reswrap\Release\reswrap -e -o icons.cpp bigicons.bmp bigpenguin.bmp clrbook.gif copy.bmp copyit.gif cut.bmp deleteit.bmp desktop.bmp details.bmp dirup.bmp goback.bmp goforw.bmp gotodir.bmp home.gif hosts.bmp linkit.gif maphost.bmp minipenguin.bmp moveit.gif paste.bmp properties.bmp setbook.gif smallicons.bmp unmaphost.bmp  work.gif \
-	$(WkspDir)\reswrap\Release\reswrap -i -o icons.h bigicons.bmp bigpenguin.bmp clrbook.gif copy.bmp copyit.gif cut.bmp deleteit.bmp desktop.bmp details.bmp dirup.bmp goback.bmp goforw.bmp gotodir.bmp home.gif hosts.bmp linkit.gif maphost.bmp minipenguin.bmp moveit.gif paste.bmp properties.bmp setbook.gif smallicons.bmp unmaphost.bmp  work.gif \
+	$(WkspDir)\reswrap\Release\reswrap -e -o icons.cpp bigicons.bmp closepanel.gif clrbook.gif copy.bmp copyit.gif cut.bmp deleteit.bmp desktop.bmp details.bmp dirup.bmp enter.gif file_gif.gif foxbig.gif foxmini.gif goback.bmp goforw.bmp gotodir.bmp home.gif hosts.bmp iconpath.gif linkit.gif location.gif maphost.bmp moveit.gif paste.bmp pattern_gif.gif properties.bmp quit_gif.gif renameit.gif rotateleft.gif rotateright.gif setbook.gif smallicons.bmp unmaphost.bmp  work.gif \
+	$(WkspDir)\reswrap\Release\reswrap -i -o icons.h bigicons.bmp closepanel.gif clrbook.gif copy.bmp copyit.gif cut.bmp deleteit.bmp desktop.bmp details.bmp dirup.bmp enter.gif file_gif.gif foxbig.gif foxmini.gif goback.bmp goforw.bmp gotodir.bmp home.gif hosts.bmp iconpath.gif linkit.gif location.gif maphost.bmp moveit.gif paste.bmp pattern_gif.gif properties.bmp quit_gif.gif renameit.gif rotateleft.gif rotateright.gif setbook.gif smallicons.bmp unmaphost.bmp  work.gif \
 	
 
 "icons.h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
@@ -162,8 +180,8 @@ InputPath=.\gifs.list
 
 BuildCmds= \
 	cd ..\..\..\pathfinder \
-	$(WkspDir)\reswrap\Debug\reswrap -e -o icons.cpp bigicons.bmp bigpenguin.bmp clrbook.gif copy.bmp copyit.gif cut.bmp deleteit.bmp desktop.bmp details.bmp dirup.bmp goback.bmp goforw.bmp gotodir.bmp home.gif hosts.bmp linkit.gif maphost.bmp minipenguin.bmp moveit.gif paste.bmp properties.bmp setbook.gif smallicons.bmp unmaphost.bmp  work.gif \
-	$(WkspDir)\reswrap\Debug\reswrap -i -o icons.h bigicons.bmp bigpenguin.bmp clrbook.gif copy.bmp copyit.gif cut.bmp deleteit.bmp desktop.bmp details.bmp dirup.bmp goback.bmp goforw.bmp gotodir.bmp home.gif hosts.bmp linkit.gif maphost.bmp minipenguin.bmp moveit.gif paste.bmp properties.bmp setbook.gif smallicons.bmp unmaphost.bmp  work.gif \
+	$(WkspDir)\reswrap\Debug\reswrap -e -o icons.cpp bigicons.bmp closepanel.gif clrbook.gif copy.bmp copyit.gif cut.bmp deleteit.bmp desktop.bmp details.bmp dirup.bmp enter.gif file_gif.gif foxbig.gif foxmini.gif goback.bmp goforw.bmp gotodir.bmp home.gif hosts.bmp iconpath.gif linkit.gif location.gif maphost.bmp moveit.gif paste.bmp pattern_gif.gif properties.bmp quit_gif.gif renameit.gif rotateleft.gif rotateright.gif setbook.gif smallicons.bmp unmaphost.bmp  work.gif \
+	$(WkspDir)\reswrap\Debug\reswrap -i -o icons.h bigicons.bmp closepanel.gif clrbook.gif copy.bmp copyit.gif cut.bmp deleteit.bmp desktop.bmp details.bmp dirup.bmp enter.gif file_gif.gif foxbig.gif foxmini.gif goback.bmp goforw.bmp gotodir.bmp home.gif hosts.bmp iconpath.gif linkit.gif location.gif maphost.bmp moveit.gif paste.bmp pattern_gif.gif properties.bmp quit_gif.gif renameit.gif rotateleft.gif rotateright.gif setbook.gif smallicons.bmp unmaphost.bmp  work.gif \
 	
 
 "icons.h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
@@ -198,6 +216,10 @@ SOURCE=..\..\..\pathfinder\hosts.bmp
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\pathfinder\iconpath.gif
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\pathfinder\icons.cpp
 # End Source File
 # Begin Source File
@@ -210,6 +232,10 @@ SOURCE=..\..\..\pathfinder\linkit.gif
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\pathfinder\location.gif
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\pathfinder\Makefile.am
 # End Source File
 # Begin Source File
@@ -219,10 +245,6 @@ SOURCE=..\..\..\pathfinder\Makefile.bc
 # Begin Source File
 
 SOURCE=..\..\..\pathfinder\maphost.bmp
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\pathfinder\minipenguin.bmp
 # End Source File
 # Begin Source File
 
@@ -242,6 +264,18 @@ SOURCE=..\..\..\pathfinder\PathFinder.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\pathfinder\pattern_gif.gif
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\pathfinder\Preferences.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\pathfinder\Preferences.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\pathfinder\properties.bmp
 # End Source File
 # Begin Source File
@@ -251,6 +285,22 @@ SOURCE=..\..\..\pathfinder\PropertyDialog.cpp
 # Begin Source File
 
 SOURCE=..\..\..\pathfinder\PropertyDialog.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\pathfinder\quit_gif.gif
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\pathfinder\renameit.gif
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\pathfinder\rotateleft.gif
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\pathfinder\rotateright.gif
 # End Source File
 # Begin Source File
 

@@ -3,7 +3,7 @@
 *                D i r e c t o r y   S e l e c t i o n   D i a l o g            *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2000,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 2000,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXDirDialog.h,v 1.8 2002/01/18 22:42:52 jeroen Exp $                     *
+* $Id: FXDirDialog.h,v 1.13 2004/02/08 17:17:33 fox Exp $                       *
 ********************************************************************************/
 #ifndef FXDIRDIALOG_H
 #define FXDIRDIALOG_H
@@ -28,6 +28,7 @@
 #include "FXDialogBox.h"
 #endif
 
+namespace FX {
 
 
 class FXDirSelector;
@@ -46,7 +47,7 @@ private:
 public:
 
   /// Construct Directory Dialog Box
-  FXDirDialog(FXWindow* owner,const FXString& name,FXuint opts=0,FXint x=0,FXint y=0,FXint w=500,FXint h=300);
+  FXDirDialog(FXWindow* owner,const FXString& name,FXuint opts=0,FXint x=0,FXint y=0,FXint w=400,FXint h=300);
 
   /// Change directory
   void setDirectory(const FXString& path);
@@ -70,5 +71,6 @@ public:
   virtual ~FXDirDialog();
   };
 
+}
 
 #endif

@@ -1,9 +1,9 @@
 /********************************************************************************
 *                                                                               *
-*                       M e n u   C a p t i o n   W i d g e t                   *
+*                         M e n u C a p t i o n   W i d g e t                   *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXMenuCaption.h,v 1.18 2002/01/18 22:42:53 jeroen Exp $                  *
+* $Id: FXMenuCaption.h,v 1.28 2004/02/08 17:17:33 fox Exp $                     *
 ********************************************************************************/
 #ifndef FXMENUCAPTION_H
 #define FXMENUCAPTION_H
@@ -28,6 +28,7 @@
 #include "FXWindow.h"
 #endif
 
+namespace FX {
 
 
 /// Menu Caption options
@@ -66,10 +67,14 @@ private:
   FXMenuCaption &operator=(const FXMenuCaption&);
 public:
   long onPaint(FXObject*,FXSelector,void*);
-  long onQueryHelp(FXObject*,FXSelector,void*);
   long onUpdate(FXObject*,FXSelector,void*);
   long onCmdGetStringValue(FXObject*,FXSelector,void*);
   long onCmdSetStringValue(FXObject*,FXSelector,void*);
+  long onCmdSetIconValue(FXObject*,FXSelector,void*);
+  long onCmdGetIconValue(FXObject*,FXSelector,void*);
+  long onCmdSetHelp(FXObject*,FXSelector,void*);
+  long onCmdGetHelp(FXObject*,FXSelector,void*);
+  long onQueryHelp(FXObject*,FXSelector,void*);
 public:
 
   /// Construct a menu caption
@@ -110,6 +115,12 @@ public:
 
   /// Return the text font
   FXFont* getFont() const { return font; }
+
+  /// Set menu caption style
+  void setMenuStyle(FXuint style);
+
+  /// Get menu caption style
+  FXuint getMenuStyle() const;
 
   /// Get the current text color
   FXColor getTextColor() const { return textColor; }
@@ -157,5 +168,6 @@ public:
   virtual ~FXMenuCaption();
   };
 
+}
 
 #endif

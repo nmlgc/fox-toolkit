@@ -3,7 +3,7 @@
 *                           O p e n G L   O b j e c t                           *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1998,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXGLObject.h,v 1.19 2002/01/18 22:42:53 jeroen Exp $                     *
+* $Id: FXGLObject.h,v 1.25 2004/02/20 16:29:39 fox Exp $                        *
 ********************************************************************************/
 #ifndef FXGLOBJECT_H
 #define FXGLOBJECT_H
@@ -28,6 +28,7 @@
 #include "FXObject.h"
 #endif
 
+namespace FX {
 
 
 class FXGLViewer;
@@ -53,7 +54,7 @@ public:
   FXGLObject(const FXGLObject& orig):FXObject(orig){}
 
   /// Called by the viewer to get bounds for this object
-  virtual void bounds(FXRange& box);
+  virtual void bounds(FXRangef& box);
 
   /// Draw this object in a viewer
   virtual void draw(FXGLViewer* viewer);
@@ -107,7 +108,7 @@ public:
   FXGLObjectList& getList(){ return list; }
 
   /// Return bounding box
-  virtual void bounds(FXRange& box);
+  virtual void bounds(FXRangef& box);
 
   /// Draw into viewer
   virtual void draw(FXGLViewer* viewer);
@@ -175,7 +176,7 @@ public:
 class FXAPI FXGLPoint : public FXGLObject {
   FXDECLARE(FXGLPoint)
 public:
-  FXVec  pos;
+  FXVec3f pos;
 public:
 
   /// Default constructor
@@ -191,7 +192,7 @@ public:
   virtual FXGLObject* copy();
 
   /// Called by the viewer to get bounds for this object
-  virtual void bounds(FXRange& box);
+  virtual void bounds(FXRangef& box);
 
   /// Draw this object in a viewer
   virtual void draw(FXGLViewer* viewer);
@@ -224,7 +225,7 @@ public:
   FXGLLine(FXfloat fx,FXfloat fy,FXfloat fz,FXfloat tx,FXfloat ty,FXfloat tz);
 
   /// Called by the viewer to get bounds for this object
-  virtual void bounds(FXRange& box);
+  virtual void bounds(FXRangef& box);
 
   /// Draw this object in a viewer
   virtual void draw(FXGLViewer* viewer);
@@ -242,6 +243,7 @@ public:
   virtual void load(FXStream& store);
   };
 
+}
 
 #endif
 

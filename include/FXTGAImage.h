@@ -3,7 +3,7 @@
 *                       T A R G A  I m a g e   O b j e c t                      *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2001,2002 by Janusz Ganczarski.   All Rights Reserved.          *
+* Copyright (C) 2001,2004 by Janusz Ganczarski.   All Rights Reserved.          *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXTGAImage.h,v 1.4 2002/01/18 22:55:03 jeroen Exp $                      *
+* $Id: FXTGAImage.h,v 1.12 2004/02/08 17:17:34 fox Exp $                        *
 ********************************************************************************/
 #ifndef FXTGAIMAGE_H
 #define FXTGAIMAGE_H
@@ -27,6 +27,8 @@
 #ifndef FXIMAGE_H
 #include "FXImage.h"
 #endif
+
+namespace FX {
 
 
 /// TARGA graphics file
@@ -43,24 +45,29 @@ public:
   FXTGAImage(FXApp* a,const void *pix=NULL,FXuint opts=0,FXint w=1,FXint h=1);
 
   /// Save pixels into stream in TARGA file
-  virtual void savePixels(FXStream& store) const;
+  virtual FXbool savePixels(FXStream& store) const;
 
   /// Load pixels from stream in TARGA format
-  virtual void loadPixels(FXStream& store);
+  virtual FXbool loadPixels(FXStream& store);
 
   /// Destroy image
   virtual ~FXTGAImage();
   };
 
 
-/// Load a TARGA file from a stream
-extern FXAPI FXbool fxloadTGA(FXStream& store,FXuchar*& data,FXuint& channels,FXint& width,FXint& height);
+/**
+* Load an TARGA file from a stream.
+* Upon successful return, the pixel array and size are returned.
+* If an error occurred, the pixel array is set to NULL.
+*/
+extern FXAPI FXbool fxloadTGA(FXStream& store,FXColor*& data,FXint& width,FXint& height);
 
 
-/// Save a TARGA file to a stream
-extern FXAPI FXbool fxsaveTGA(FXStream& store,const FXuchar *data,FXuint channels,FXint width,FXint height);
+/**
+* Save an TARGA file to a stream.
+*/
+extern FXAPI FXbool fxsaveTGA(FXStream& store,const FXColor *data,FXint width,FXint height);
 
-
-typedef FXTGAImage FXTargaImage;
+}
 
 #endif

@@ -3,7 +3,7 @@
 *                  F i l e   S e l e c t i o n   W i d g e t                    *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1998,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXFileSelector.cpp,v 1.101.4.9 2003/06/20 19:02:07 fox Exp $                  *
+* $Id: FXFileSelector.cpp,v 1.142 2004/03/18 15:25:20 fox Exp $                 *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -34,6 +34,7 @@
 #include "FXSettings.h"
 #include "FXRegistry.h"
 #include "FXAccelTable.h"
+#include "FXHash.h"
 #include "FXApp.h"
 #include "FXFont.h"
 #include "FXGIFIcon.h"
@@ -55,7 +56,7 @@
 #include "FXShell.h"
 #include "FXPopup.h"
 #include "FXMenuPane.h"
-#include "FXScrollbar.h"
+#include "FXScrollBar.h"
 #include "FXScrollArea.h"
 #include "FXList.h"
 #include "FXTreeList.h"
@@ -67,15 +68,17 @@
 #include "FXFileList.h"
 #include "FXFileSelector.h"
 #include "FXMenuCaption.h"
-#include "FXMenuCascade.h"
 #include "FXMenuCommand.h"
+#include "FXMenuCascade.h"
+#include "FXMenuRadio.h"
+#include "FXMenuCheck.h"
 #include "FXMenuSeparator.h"
 #include "FXTopWindow.h"
 #include "FXDialogBox.h"
 #include "FXInputDialog.h"
 #include "FXSeparator.h"
 #include "FXMessageBox.h"
-
+#include "icons.h"
 
 /*
   Notes:
@@ -119,174 +122,20 @@
     one extension given).
 
   - Perhaps ".." should be excluded from SELECTFILE_MULTIPLE_ALL selections.
+  - Drag corner would be nice.
+  - When copying, moving, deleting, linking multiple files, build the list
+    of selected files first, to take care of FXFileList possibly updating
+    before operation is finished.
 */
 
 
 #define FILELISTMASK (ICONLIST_EXTENDEDSELECT|ICONLIST_SINGLESELECT|ICONLIST_BROWSESELECT|ICONLIST_MULTIPLESELECT)
 
-/*******************************************************************************/
-
-const unsigned char tbuplevel[]={
-  0x47,0x49,0x46,0x38,0x37,0x61,0x10,0x00,0x10,0x00,0xf1,0x00,0x00,0xb2,0xc0,0xdc,
-  0x00,0x00,0x00,0xff,0xff,0x00,0xff,0xff,0xff,0x2c,0x00,0x00,0x00,0x00,0x10,0x00,
-  0x10,0x00,0x00,0x02,0x32,0x84,0x8f,0x79,0xc1,0xac,0x18,0xc4,0x90,0x22,0x3c,0xd0,
-  0xb2,0x76,0x78,0x7a,0xfa,0x0d,0x56,0xe4,0x05,0x21,0x35,0x96,0xcc,0x29,0x62,0x92,
-  0x76,0xa6,0x28,0x08,0x8e,0x35,0x5b,0x75,0x28,0xfc,0xba,0xf8,0x27,0xfb,0xf5,0x36,
-  0x44,0xce,0xe5,0x88,0x44,0x14,0x00,0x00,0x3b
-  };
-
-const unsigned char tbnewfolder[]={
-  0x47,0x49,0x46,0x38,0x37,0x61,0x10,0x00,0x10,0x00,0xf1,0x00,0x00,0xb2,0xc0,0xdc,
-  0x00,0x00,0x00,0xff,0xff,0x00,0xff,0xff,0xff,0x2c,0x00,0x00,0x00,0x00,0x10,0x00,
-  0x10,0x00,0x00,0x02,0x30,0x84,0x8f,0xa9,0x19,0xeb,0xbf,0x1a,0x04,0xf2,0x54,0x1a,
-  0xb2,0x69,0x1c,0x05,0x31,0x80,0x52,0x67,0x65,0xe6,0xb9,0x51,0x54,0xc8,0x82,0xe2,
-  0xf5,0xb5,0x2d,0xb9,0xba,0xf2,0xb8,0xd9,0xfa,0x55,0xcb,0x22,0xa3,0x9b,0x31,0x4e,
-  0x44,0xde,0x24,0x51,0x00,0x00,0x3b
-  };
-
-const unsigned char tbbigicons[]={
-  0x47,0x49,0x46,0x38,0x37,0x61,0x10,0x00,0x10,0x00,0xf1,0x00,0x00,0xb2,0xc0,0xdc,
-  0x00,0x00,0x80,0xff,0xff,0xff,0x00,0x00,0x00,0x2c,0x00,0x00,0x00,0x00,0x10,0x00,
-  0x10,0x00,0x00,0x02,0x22,0x84,0x8f,0xa9,0xab,0xe1,0x9c,0x82,0x78,0xd0,0xc8,0x59,
-  0xad,0xc0,0xd9,0xd1,0x0c,0x1a,0xc3,0x48,0x1e,0x5e,0x28,0x7d,0xd0,0x15,0x80,0xac,
-  0x7b,0x86,0x21,0x59,0xca,0x46,0x01,0x00,0x3b
-  };
-
-const unsigned char tbdetails[]={
-  0x47,0x49,0x46,0x38,0x37,0x61,0x10,0x00,0x10,0x00,0xf1,0x00,0x00,0xb2,0xc0,0xdc,
-  0x00,0x00,0x00,0x00,0x00,0x80,0x00,0x00,0x00,0x2c,0x00,0x00,0x00,0x00,0x10,0x00,
-  0x10,0x00,0x00,0x02,0x27,0x84,0x8f,0xa9,0xbb,0xe1,0x01,0x5e,0x74,0xac,0x8a,0x8b,
-  0xb3,0x16,0x75,0xf1,0x49,0x49,0x52,0xa7,0x7c,0x0f,0x24,0x52,0x64,0x62,0xa6,0xa8,
-  0xba,0x1e,0x6d,0x48,0x43,0xb1,0x6c,0x9c,0xe0,0x7e,0x1b,0x05,0x00,0x3b
-  };
-
-const unsigned char tblist[]={
-  0x47,0x49,0x46,0x38,0x37,0x61,0x10,0x00,0x10,0x00,0xf1,0x00,0x00,0xb2,0xc0,0xdc,
-  0x00,0x00,0x80,0xff,0xff,0xff,0x00,0x00,0x00,0x2c,0x00,0x00,0x00,0x00,0x10,0x00,
-  0x10,0x00,0x00,0x02,0x2a,0x84,0x8f,0xa9,0x8b,0x11,0xea,0xa0,0x78,0xa3,0x82,0x30,
-  0x41,0x1d,0x37,0x36,0xcf,0x84,0x22,0x03,0x1e,0xa5,0x81,0x51,0x56,0xaa,0xad,0xa7,
-  0xf3,0x8c,0xf2,0x7c,0x76,0x92,0xca,0xb1,0x5b,0x17,0x9b,0xf5,0x6c,0x28,0x00,0x00,
-  0x3b
-  };
-
-const unsigned char home[]={
-  0x47,0x49,0x46,0x38,0x37,0x61,0x10,0x00,0x10,0x00,0xc2,0x00,0x00,0xb2,0xc0,0xdc,
-  0x00,0x00,0x00,0x84,0x00,0x00,0xff,0xff,0x00,0xff,0xff,0xff,0x00,0x00,0x00,0x00,
-  0x00,0x00,0x00,0x00,0x00,0x2c,0x00,0x00,0x00,0x00,0x10,0x00,0x10,0x00,0x00,0x03,
-  0x3b,0x08,0xba,0xdc,0xae,0x21,0x28,0x21,0x1f,0x08,0x63,0x48,0x6a,0x71,0xd4,0x9c,
-  0xe3,0x11,0x84,0x57,0x31,0x23,0x59,0x6a,0x4d,0xaa,0xae,0xa7,0xfb,0xc2,0x4b,0x30,
-  0xcf,0xe7,0xa5,0x46,0xd1,0x8e,0xee,0x19,0x1b,0x29,0x27,0x5c,0x69,0x7c,0x35,0xe0,
-  0x71,0xf8,0x1b,0x06,0x91,0x10,0x9e,0x54,0x6a,0xa9,0x02,0x12,0x00,0x3b
-  };
-
-const unsigned char fileshown[]={
-  0x47,0x49,0x46,0x38,0x37,0x61,0x10,0x00,0x10,0x00,0xf2,0x00,0x00,0xb2,0xc0,0xdc,
-  0x00,0x00,0x00,0xc0,0xc0,0xff,0xff,0xff,0xff,0xc0,0xc0,0xc0,0xff,0xff,0xc0,0xff,
-  0x80,0x00,0x00,0x00,0x00,0x2c,0x00,0x00,0x00,0x00,0x10,0x00,0x10,0x00,0x00,0x03,
-  0x43,0x08,0xaa,0xd1,0xfb,0x30,0x08,0x19,0xe0,0x6a,0x4d,0x68,0x5c,0xef,0xf8,0x03,
-  0x46,0x80,0x1d,0x10,0x80,0x28,0x5a,0x9e,0x5a,0xeb,0x86,0xa6,0x99,0xce,0x4d,0xd1,
-  0x0c,0x6e,0x1e,0x16,0xc6,0x3d,0x93,0xbc,0x0a,0x2b,0xb7,0x09,0x32,0x7e,0xbb,0x9e,
-  0x87,0x18,0x08,0xae,0x68,0x84,0x1e,0xe1,0x99,0xc3,0x08,0x60,0x47,0xe4,0xa7,0x64,
-  0xe2,0x78,0xb9,0x09,0x00,0x3b
-  };
-
-const unsigned char filehidden[]={
-  0x47,0x49,0x46,0x38,0x37,0x61,0x10,0x00,0x10,0x00,0xf1,0x00,0x00,0xb2,0xc0,0xdc,
-  0xa0,0xa0,0xa4,0xc0,0xc0,0xff,0xff,0xff,0xff,0x2c,0x00,0x00,0x00,0x00,0x10,0x00,
-  0x10,0x00,0x00,0x02,0x2c,0x84,0x1d,0x79,0xcb,0x21,0x1e,0xd8,0x49,0x49,0x58,0x1a,
-  0xe7,0xd8,0x83,0xf2,0xae,0x7d,0x22,0x88,0x8c,0x62,0x06,0x04,0xe6,0x87,0xaa,0xeb,
-  0xd6,0xbe,0x70,0xf8,0xc6,0xb2,0x5d,0xd3,0x2b,0xbe,0xeb,0x26,0x9a,0xc2,0x08,0x81,
-  0x05,0x00,0x3b
-  };
-
-const unsigned char mark[]={
-  0x47,0x49,0x46,0x38,0x37,0x61,0x10,0x00,0x10,0x00,0xf2,0x00,0x00,0xb2,0xc0,0xdc,
-  0x00,0x00,0x00,0xff,0x00,0x00,0x00,0x00,0x80,0xa0,0x8c,0x68,0x00,0x00,0x00,0x00,
-  0x00,0x00,0x00,0x00,0x00,0x2c,0x00,0x00,0x00,0x00,0x10,0x00,0x10,0x00,0x00,0x03,
-  0x2f,0x08,0xba,0xac,0xd1,0x70,0xbd,0x08,0xc3,0xa4,0x52,0x88,0x4b,0x83,0xde,0x18,
-  0xe0,0x69,0x03,0xd7,0x58,0xe4,0x50,0x9a,0xa2,0xa3,0xaa,0x1a,0x77,0x05,0xef,0x37,
-  0x33,0xf4,0x60,0x4b,0xd5,0x78,0x47,0x04,0x0b,0x2f,0x44,0x2c,0x1a,0x8f,0x8a,0x04,
-  0x00,0x3b
-  };
-
-const unsigned char clear[]={
-  0x47,0x49,0x46,0x38,0x37,0x61,0x10,0x00,0x10,0x00,0xf2,0x00,0x00,0xb2,0xc0,0xdc,
-  0x00,0x00,0xff,0xad,0xd8,0xe6,0x00,0x00,0x00,0xff,0x00,0x00,0x00,0x00,0x80,0xa0,
-  0x8c,0x68,0x00,0x00,0x00,0x2c,0x00,0x00,0x00,0x00,0x10,0x00,0x10,0x00,0x00,0x03,
-  0x43,0x08,0xba,0x10,0x21,0x2c,0x2e,0x07,0xa5,0x0b,0x8a,0xca,0x25,0xee,0x63,0x83,
-  0xd4,0x69,0x4a,0x28,0x7a,0xa5,0x19,0x69,0xce,0x40,0x10,0x6a,0xf6,0xc9,0x6f,0xdc,
-  0xcc,0x6e,0x40,0x14,0x36,0xee,0xee,0x05,0x9e,0x4a,0x00,0x31,0x0d,0x82,0xc1,0x9a,
-  0xa2,0xb8,0x38,0x26,0x95,0x25,0xd0,0x13,0xd6,0x94,0x0c,0x7e,0x2a,0xdb,0xc2,0x70,
-  0xdd,0x78,0x23,0x09,0x00,0x3b
-  };
-
-const unsigned char work[]={
-  0x47,0x49,0x46,0x38,0x37,0x61,0x10,0x00,0x10,0x00,0xf1,0x00,0x00,0xb2,0xc0,0xdc,
-  0x00,0x00,0x00,0x80,0x80,0x00,0x80,0x00,0x00,0x2c,0x00,0x00,0x00,0x00,0x10,0x00,
-  0x10,0x00,0x00,0x02,0x28,0x84,0x8f,0xa9,0x10,0x1d,0x8b,0x9a,0x10,0x0e,0x1e,0x39,
-  0x9f,0x65,0x93,0x6e,0x16,0x64,0xda,0x12,0x0c,0x4e,0x46,0x9a,0x46,0x38,0x46,0xea,
-  0x95,0xb6,0x50,0x29,0xc7,0x1f,0xf3,0x7e,0xcd,0xcd,0xf7,0x4a,0x01,0x00,0x3b
-  };
-
-
-const unsigned char dlgnewfolder[]={
-  0x47,0x49,0x46,0x38,0x37,0x61,0x20,0x00,0x20,0x00,0xf2,0x00,0x00,0xb2,0xc0,0xdc,
-  0x80,0x80,0x80,0xff,0xff,0xff,0xff,0xff,0x00,0xc0,0xc0,0xc0,0x00,0x00,0x00,0x80,
-  0x80,0x00,0x00,0x00,0x00,0x2c,0x00,0x00,0x00,0x00,0x20,0x00,0x20,0x00,0x00,0x03,
-  0x83,0x08,0xba,0xdc,0xfe,0x30,0xca,0x49,0x6b,0x0c,0x38,0x67,0x0b,0x83,0xf8,0x20,
-  0x18,0x70,0x8d,0x37,0x10,0x67,0x8a,0x12,0x23,0x09,0x98,0xab,0xaa,0xb6,0x56,0x40,
-  0xdc,0x78,0xae,0x6b,0x3c,0x5f,0xbc,0xa1,0xa0,0x70,0x38,0x2c,0x14,0x60,0xb2,0x98,
-  0x32,0x99,0x34,0x1c,0x05,0xcb,0x28,0x53,0xea,0x44,0x4a,0xaf,0xd3,0x2a,0x74,0xca,
-  0xc5,0x6a,0xbb,0xe0,0xa8,0x16,0x4b,0x66,0x7e,0xcb,0xe8,0xd3,0x38,0xcc,0x46,0x9d,
-  0xdb,0xe1,0x75,0xba,0xfc,0x9e,0x77,0xe5,0x70,0xef,0x33,0x1f,0x7f,0xda,0xe9,0x7b,
-  0x7f,0x77,0x7e,0x7c,0x7a,0x56,0x85,0x4d,0x84,0x82,0x54,0x81,0x88,0x62,0x47,0x06,
-  0x91,0x92,0x93,0x94,0x95,0x96,0x91,0x3f,0x46,0x9a,0x9b,0x9c,0x9d,0x9e,0x9a,0x2e,
-  0xa1,0xa2,0x13,0x09,0x00,0x3b
-  };
-
-const unsigned char deletefile[]={
-  0x42,0x4d,0x7e,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x3e,0x00,0x00,0x00,0x28,0x00,
-  0x00,0x00,0x10,0x00,0x00,0x00,0x10,0x00,0x00,0x00,0x01,0x00,0x01,0x00,0x00,0x00,
-  0x00,0x00,0x40,0x00,0x00,0x00,0x6d,0x0b,0x00,0x00,0x6d,0x0b,0x00,0x00,0x02,0x00,
-  0x00,0x00,0x02,0x00,0x00,0x00,0xdc,0xc0,0xb2,0x00,0x00,0x00,0x84,0x00,0x00,0x00,
-  0x00,0x00,0x00,0x00,0x00,0x00,0x20,0x04,0x00,0x00,0x70,0x00,0x00,0x00,0x78,0x08,
-  0x00,0x00,0x38,0x10,0x00,0x00,0x1c,0x30,0x00,0x00,0x0e,0x60,0x00,0x00,0x07,0xc0,
-  0x00,0x00,0x03,0x80,0x00,0x00,0x07,0xc0,0x00,0x00,0x0e,0x60,0x00,0x00,0x3c,0x30,
-  0x00,0x00,0x78,0x18,0x00,0x00,0x70,0x04,0x00,0x00,0x00,0x00,0x00,0x00
-  };
-
-
-const unsigned char copyfile[]={
-  0x47,0x49,0x46,0x38,0x37,0x61,0x10,0x00,0x10,0x00,0xa1,0x00,0x00,0xb2,0xc0,0xdc,
-  0x00,0x00,0x00,0xff,0xff,0xff,0xff,0xff,0xcb,0x2c,0x00,0x00,0x00,0x00,0x10,0x00,
-  0x10,0x00,0x00,0x02,0x3c,0x84,0x8f,0x09,0xc1,0xad,0x18,0x84,0x14,0xec,0x99,0x38,
-  0x63,0xb0,0xba,0x57,0x85,0x4d,0xd2,0x06,0x52,0x8c,0xd9,0x90,0x97,0x48,0x0d,0xee,
-  0xf0,0x2d,0x68,0xfb,0x06,0xf0,0x2a,0xda,0x0c,0xec,0xa4,0xcd,0x0b,0x54,0x41,0x78,
-  0x3f,0xe1,0xc1,0x06,0x74,0x19,0x2f,0xc4,0xdd,0x72,0x91,0x54,0x3e,0x7c,0x29,0x40,
-  0x01,0x00,0x3b
-  };
-
-
-const unsigned char movefile[]={
-  0x47,0x49,0x46,0x38,0x37,0x61,0x10,0x00,0x10,0x00,0xc2,0x00,0x00,0xb2,0xc0,0xdc,
-  0x7f,0x7f,0x65,0xb3,0xb3,0x8e,0x00,0x00,0x00,0xff,0xff,0xcb,0x00,0x00,0x00,0x00,
-  0x00,0x00,0x00,0x00,0x00,0x2c,0x00,0x00,0x00,0x00,0x10,0x00,0x10,0x00,0x00,0x03,
-  0x3e,0x08,0xba,0xdc,0x10,0x30,0x3a,0x16,0x84,0x15,0x70,0xaa,0x7a,0x6b,0xd0,0x5e,
-  0x98,0x39,0xdc,0x65,0x7d,0x24,0x06,0x09,0x43,0xeb,0x52,0x26,0x4b,0xcc,0x44,0xbb,
-  0x88,0x32,0x3d,0xd4,0x5b,0xbc,0xb7,0xb5,0x57,0x24,0xb2,0xa3,0xe9,0x26,0x3f,0xd7,
-  0x0f,0x69,0x3c,0x3a,0x92,0x2e,0xde,0xb3,0x39,0x1b,0x20,0x95,0x4a,0x40,0x02,0x00,
-  0x3b
-  };
-
-const unsigned char linkfile[]={
-  0x47,0x49,0x46,0x38,0x37,0x61,0x10,0x00,0x10,0x00,0xa1,0x00,0x00,0xb2,0xc0,0xdc,
-  0x00,0x00,0x00,0x00,0xff,0xff,0x00,0x00,0x00,0x2c,0x00,0x00,0x00,0x00,0x10,0x00,
-  0x10,0x00,0x00,0x02,0x20,0x84,0x8f,0xa9,0xcb,0xed,0x0f,0x4f,0x98,0x33,0xd1,0x00,
-  0x82,0xd8,0xfb,0x6a,0x3e,0x09,0x1e,0x48,0x89,0x1f,0x59,0x82,0xd9,0x65,0x51,0xd1,
-  0x0b,0xc7,0xf2,0x8c,0x14,0x00,0x3b
-  };
+using namespace FX;
 
 /*******************************************************************************/
+
+namespace FX {
 
 
 // Map
@@ -328,42 +177,43 @@ static const FXchar allfiles[]="All Files (*)";
 /*******************************************************************************/
 
 // Separator item
-FXFileSelector::FXFileSelector(FXComposite *p,FXObject* tgt,FXSelector sel,FXuint opts,FXint x,FXint y,FXint w,FXint h):
-  FXPacker(p,opts,x,y,w,h),
-  mrufiles("Visited Directories"){
-  FXAccelTable *table;
+FXFileSelector::FXFileSelector(FXComposite *p,FXObject* tgt,FXSelector sel,FXuint opts,FXint x,FXint y,FXint w,FXint h):FXPacker(p,opts,x,y,w,h),mrufiles("Visited Directories"){
+  FXAccelTable *table=getShell()->getAccelTable();
   target=tgt;
   message=sel;
-  FXHorizontalFrame *buttons=new FXHorizontalFrame(this,LAYOUT_SIDE_TOP|LAYOUT_FILL_X,0,0,0,0, DEFAULT_SPACING,DEFAULT_SPACING,DEFAULT_SPACING,DEFAULT_SPACING, 0,0);
-  FXMatrix *fields=new FXMatrix(this,3,MATRIX_BY_COLUMNS|LAYOUT_SIDE_BOTTOM|LAYOUT_FILL_X);
-  new FXLabel(fields,"&File Name:",NULL,JUSTIFY_LEFT|LAYOUT_CENTER_Y);
-  filename=new FXTextField(fields,25,this,ID_ACCEPT,TEXTFIELD_ENTER_ONLY|LAYOUT_FILL_COLUMN|LAYOUT_FILL_X|FRAME_SUNKEN|FRAME_THICK);
-  new FXButton(fields,"&OK",NULL,this,ID_ACCEPT,BUTTON_INITIAL|BUTTON_DEFAULT|FRAME_RAISED|FRAME_THICK|LAYOUT_FILL_X,0,0,0,0,20,20);
-  accept=new FXButton(buttons,NULL,NULL,NULL,0,LAYOUT_FIX_X|LAYOUT_FIX_Y|LAYOUT_FIX_WIDTH|LAYOUT_FIX_HEIGHT,0,0,0,0, 0,0,0,0);
-  new FXLabel(fields,"File F&ilter:",NULL,JUSTIFY_LEFT|LAYOUT_CENTER_Y);
-  FXHorizontalFrame *filterframe=new FXHorizontalFrame(fields,LAYOUT_FILL_COLUMN|LAYOUT_FILL_X|LAYOUT_FILL_Y,0,0,0,0, 0,0,0,0);
-  filefilter=new FXComboBox(filterframe,10,4,this,ID_FILEFILTER,COMBOBOX_STATIC|LAYOUT_FILL_X|FRAME_SUNKEN|FRAME_THICK);
+  navbuttons=new FXHorizontalFrame(this,LAYOUT_SIDE_TOP|LAYOUT_FILL_X,0,0,0,0, DEFAULT_SPACING,DEFAULT_SPACING,DEFAULT_SPACING,DEFAULT_SPACING, 0,0);
+  entryblock=new FXMatrix(this,3,MATRIX_BY_COLUMNS|LAYOUT_SIDE_BOTTOM|LAYOUT_FILL_X);
+  new FXLabel(entryblock,"&File Name:",NULL,JUSTIFY_LEFT|LAYOUT_CENTER_Y);
+  filename=new FXTextField(entryblock,25,this,ID_ACCEPT,TEXTFIELD_ENTER_ONLY|LAYOUT_FILL_COLUMN|LAYOUT_FILL_X|FRAME_SUNKEN|FRAME_THICK);
+  new FXButton(entryblock,"&OK",NULL,this,ID_ACCEPT,BUTTON_INITIAL|BUTTON_DEFAULT|FRAME_RAISED|FRAME_THICK|LAYOUT_FILL_X,0,0,0,0,20,20);
+  accept=new FXButton(navbuttons,NULL,NULL,NULL,0,LAYOUT_FIX_X|LAYOUT_FIX_Y|LAYOUT_FIX_WIDTH|LAYOUT_FIX_HEIGHT,0,0,0,0, 0,0,0,0);
+  new FXLabel(entryblock,"File F&ilter:",NULL,JUSTIFY_LEFT|LAYOUT_CENTER_Y);
+  FXHorizontalFrame *filterframe=new FXHorizontalFrame(entryblock,LAYOUT_FILL_COLUMN|LAYOUT_FILL_X|LAYOUT_FILL_Y,0,0,0,0, 0,0,0,0);
+  filefilter=new FXComboBox(filterframe,10,this,ID_FILEFILTER,COMBOBOX_STATIC|LAYOUT_FILL_X|FRAME_SUNKEN|FRAME_THICK);
+  filefilter->setNumVisible(4);
   readonly=new FXCheckButton(filterframe,"Read Only",NULL,0,ICON_BEFORE_TEXT|JUSTIFY_LEFT|LAYOUT_CENTER_Y);
-  cancel=new FXButton(fields,"&Cancel",NULL,NULL,0,BUTTON_DEFAULT|FRAME_RAISED|FRAME_THICK|LAYOUT_FILL_X,0,0,0,0,20,20);
-  FXHorizontalFrame *frame=new FXHorizontalFrame(this,LAYOUT_SIDE_TOP|LAYOUT_FILL_X|LAYOUT_FILL_Y|FRAME_SUNKEN|FRAME_THICK,0,0,0,0,0,0,0,0);
-  filebox=new FXFileList(frame,this,ID_FILELIST,ICONLIST_MINI_ICONS|ICONLIST_BROWSESELECT|ICONLIST_AUTOSIZE|LAYOUT_FILL_X|LAYOUT_FILL_Y);
-  new FXLabel(buttons,"Directory:",NULL,LAYOUT_CENTER_Y);
-  updiricon=new FXGIFIcon(getApp(),tbuplevel);
-  newdiricon=new FXGIFIcon(getApp(),tbnewfolder);
-  listicon=new FXGIFIcon(getApp(),tblist);
-  iconsicon=new FXGIFIcon(getApp(),tbbigicons);
-  detailicon=new FXGIFIcon(getApp(),tbdetails);
-  homeicon=new FXGIFIcon(getApp(),home);
-  workicon=new FXGIFIcon(getApp(),work);
+  cancel=new FXButton(entryblock,"&Cancel",NULL,NULL,0,BUTTON_DEFAULT|FRAME_RAISED|FRAME_THICK|LAYOUT_FILL_X,0,0,0,0,20,20);
+  fileboxframe=new FXHorizontalFrame(this,LAYOUT_SIDE_TOP|LAYOUT_FILL_X|LAYOUT_FILL_Y|FRAME_SUNKEN|FRAME_THICK,0,0,0,0,0,0,0,0);
+  filebox=new FXFileList(fileboxframe,this,ID_FILELIST,ICONLIST_MINI_ICONS|ICONLIST_BROWSESELECT|ICONLIST_AUTOSIZE|LAYOUT_FILL_X|LAYOUT_FILL_Y);
+  new FXLabel(navbuttons,"Directory:",NULL,LAYOUT_CENTER_Y);
+  updiricon=new FXGIFIcon(getApp(),dirupicon);
+  newdiricon=new FXGIFIcon(getApp(),foldernew);
+  listicon=new FXGIFIcon(getApp(),showsmallicons);
+  iconsicon=new FXGIFIcon(getApp(),showbigicons);
+  detailicon=new FXGIFIcon(getApp(),showdetails);
+  homeicon=new FXGIFIcon(getApp(),gotohome);
+  workicon=new FXGIFIcon(getApp(),gotowork);
   shownicon=new FXGIFIcon(getApp(),fileshown);
   hiddenicon=new FXGIFIcon(getApp(),filehidden);
-  markicon=new FXGIFIcon(getApp(),mark);
-  clearicon=new FXGIFIcon(getApp(),clear);
-  deleteicon=new FXBMPIcon(getApp(),deletefile,0,IMAGE_ALPHAGUESS);
-  moveicon=new FXGIFIcon(getApp(),movefile);
-  copyicon=new FXGIFIcon(getApp(),copyfile);
-  linkicon=new FXGIFIcon(getApp(),linkfile);
-  dirbox=new FXDirBox(buttons,5,this,ID_DIRTREE,FRAME_SUNKEN|FRAME_THICK|LAYOUT_FIX_WIDTH|LAYOUT_CENTER_Y,0,0,160,0);
+  markicon=new FXGIFIcon(getApp(),bookset);
+  clearicon=new FXGIFIcon(getApp(),bookclr);
+  deleteicon=new FXGIFIcon(getApp(),filedelete);
+  moveicon=new FXGIFIcon(getApp(),filemove);
+  copyicon=new FXGIFIcon(getApp(),filecopy);
+  linkicon=new FXGIFIcon(getApp(),filelink);
+  dirbox=new FXDirBox(navbuttons,this,ID_DIRTREE,DIRBOX_NO_OWN_ASSOC|FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_CENTER_Y,0,0,0,0,1,1,1,1);
+  dirbox->setNumVisible(5);
+  dirbox->setAssociations(filebox->getAssociations());
   bookmarks=new FXMenuPane(this,POPUP_SHRINKWRAP);
   new FXMenuCommand(bookmarks,"&Set bookmark\t\tBookmark current directory.",markicon,this,ID_BOOKMARK);
   new FXMenuCommand(bookmarks,"&Clear bookmarks\t\tClear bookmarks.",clearicon,&mrufiles,FXRecentFiles::ID_CLEAR);
@@ -380,30 +230,29 @@ FXFileSelector::FXFileSelector(FXComposite *p,FXObject* tgt,FXSelector sel,FXuin
   new FXMenuCommand(bookmarks,NULL,NULL,&mrufiles,FXRecentFiles::ID_FILE_8);
   new FXMenuCommand(bookmarks,NULL,NULL,&mrufiles,FXRecentFiles::ID_FILE_9);
   new FXMenuCommand(bookmarks,NULL,NULL,&mrufiles,FXRecentFiles::ID_FILE_10);
-  new FXFrame(buttons,LAYOUT_FIX_WIDTH,0,0,4,1);
-  new FXButton(buttons,"\tGo up one directory\tMove up to higher directory.",updiricon,this,ID_DIRECTORY_UP,BUTTON_TOOLBAR|FRAME_RAISED,0,0,0,0, 3,3,3,3);
-  new FXButton(buttons,"\tGo to home directory\tBack to home directory.",homeicon,this,ID_HOME,BUTTON_TOOLBAR|FRAME_RAISED,0,0,0,0, 3,3,3,3);
-  new FXButton(buttons,"\tGo to work directory\tBack to working directory.",workicon,this,ID_WORK,BUTTON_TOOLBAR|FRAME_RAISED,0,0,0,0, 3,3,3,3);
-  new FXMenuButton(buttons,"\tBookmarks\tVisit bookmarked directories.",markicon,bookmarks,MENUBUTTON_NOARROWS|MENUBUTTON_ATTACH_LEFT|MENUBUTTON_TOOLBAR|FRAME_RAISED,0,0,0,0, 3,3,3,3);
-  new FXButton(buttons,"\tCreate new directory\tCreate new directory.",newdiricon,this,ID_NEW,BUTTON_TOOLBAR|FRAME_RAISED,0,0,0,0, 3,3,3,3);
-  new FXButton(buttons,"\tShow list\tDisplay directory with small icons.",listicon,filebox,FXFileList::ID_SHOW_MINI_ICONS,BUTTON_TOOLBAR|FRAME_RAISED,0,0,0,0, 3,3,3,3);
-  new FXButton(buttons,"\tShow icons\tDisplay directory with big icons.",iconsicon,filebox,FXFileList::ID_SHOW_BIG_ICONS,BUTTON_TOOLBAR|FRAME_RAISED,0,0,0,0, 3,3,3,3);
-  new FXButton(buttons,"\tShow details\tDisplay detailed directory listing.",detailicon,filebox,FXFileList::ID_SHOW_DETAILS,BUTTON_TOOLBAR|FRAME_RAISED,0,0,0,0, 3,3,3,3);
-  new FXToggleButton(buttons,"\tShow hidden files\tShow hidden files and directories.","\tHide Hidden Files\tHide hidden files and directories.",hiddenicon,shownicon,filebox,FXFileList::ID_TOGGLE_HIDDEN,TOGGLEBUTTON_TOOLBAR|FRAME_RAISED,0,0,0,0, 3,3,3,3);
+  new FXFrame(navbuttons,LAYOUT_FIX_WIDTH,0,0,4,1);
+  new FXButton(navbuttons,"\tGo up one directory\tMove up to higher directory.",updiricon,this,ID_DIRECTORY_UP,BUTTON_TOOLBAR|FRAME_RAISED,0,0,0,0, 3,3,3,3);
+  new FXButton(navbuttons,"\tGo to home directory\tBack to home directory.",homeicon,this,ID_HOME,BUTTON_TOOLBAR|FRAME_RAISED,0,0,0,0, 3,3,3,3);
+  new FXButton(navbuttons,"\tGo to work directory\tBack to working directory.",workicon,this,ID_WORK,BUTTON_TOOLBAR|FRAME_RAISED,0,0,0,0, 3,3,3,3);
+  new FXMenuButton(navbuttons,"\tBookmarks\tVisit bookmarked directories.",markicon,bookmarks,MENUBUTTON_NOARROWS|MENUBUTTON_ATTACH_LEFT|MENUBUTTON_TOOLBAR|FRAME_RAISED,0,0,0,0, 3,3,3,3);
+  new FXButton(navbuttons,"\tCreate new directory\tCreate new directory.",newdiricon,this,ID_NEW,BUTTON_TOOLBAR|FRAME_RAISED,0,0,0,0, 3,3,3,3);
+  new FXButton(navbuttons,"\tShow list\tDisplay directory with small icons.",listicon,filebox,FXFileList::ID_SHOW_MINI_ICONS,BUTTON_TOOLBAR|FRAME_RAISED,0,0,0,0, 3,3,3,3);
+  new FXButton(navbuttons,"\tShow icons\tDisplay directory with big icons.",iconsicon,filebox,FXFileList::ID_SHOW_BIG_ICONS,BUTTON_TOOLBAR|FRAME_RAISED,0,0,0,0, 3,3,3,3);
+  new FXButton(navbuttons,"\tShow details\tDisplay detailed directory listing.",detailicon,filebox,FXFileList::ID_SHOW_DETAILS,BUTTON_TOOLBAR|FRAME_RAISED,0,0,0,0, 3,3,3,3);
+  new FXToggleButton(navbuttons,"\tShow hidden files\tShow hidden files and directories.","\tHide Hidden Files\tHide hidden files and directories.",hiddenicon,shownicon,filebox,FXFileList::ID_TOGGLE_HIDDEN,TOGGLEBUTTON_TOOLBAR|FRAME_RAISED,0,0,0,0, 3,3,3,3);
   mrufiles.setTarget(this);
   mrufiles.setSelector(ID_VISIT);
-  table=getShell()->getAccelTable();
   readonly->hide();
   if(table){
-    table->addAccel(MKUINT(KEY_BackSpace,0),this,MKUINT(ID_DIRECTORY_UP,SEL_COMMAND));
-    table->addAccel(MKUINT(KEY_Delete,0),this,MKUINT(ID_DELETE,SEL_COMMAND));
-    table->addAccel(MKUINT(KEY_h,CONTROLMASK),this,MKUINT(ID_HOME,SEL_COMMAND));
-    table->addAccel(MKUINT(KEY_w,CONTROLMASK),this,MKUINT(ID_WORK,SEL_COMMAND));
-    table->addAccel(MKUINT(KEY_n,CONTROLMASK),this,MKUINT(ID_NEW,SEL_COMMAND));
-    table->addAccel(MKUINT(KEY_a,CONTROLMASK),filebox,MKUINT(FXFileList::ID_SELECT_ALL,SEL_COMMAND));
-    table->addAccel(MKUINT(KEY_b,CONTROLMASK),filebox,MKUINT(FXFileList::ID_SHOW_BIG_ICONS,SEL_COMMAND));
-    table->addAccel(MKUINT(KEY_s,CONTROLMASK),filebox,MKUINT(FXFileList::ID_SHOW_MINI_ICONS,SEL_COMMAND));
-    table->addAccel(MKUINT(KEY_l,CONTROLMASK),filebox,MKUINT(FXFileList::ID_SHOW_DETAILS,SEL_COMMAND));
+    table->addAccel(MKUINT(KEY_BackSpace,0),this,FXSEL(SEL_COMMAND,ID_DIRECTORY_UP));
+    table->addAccel(MKUINT(KEY_Delete,0),this,FXSEL(SEL_COMMAND,ID_DELETE));
+    table->addAccel(MKUINT(KEY_h,CONTROLMASK),this,FXSEL(SEL_COMMAND,ID_HOME));
+    table->addAccel(MKUINT(KEY_w,CONTROLMASK),this,FXSEL(SEL_COMMAND,ID_WORK));
+    table->addAccel(MKUINT(KEY_n,CONTROLMASK),this,FXSEL(SEL_COMMAND,ID_NEW));
+    table->addAccel(MKUINT(KEY_a,CONTROLMASK),filebox,FXSEL(SEL_COMMAND,FXFileList::ID_SELECT_ALL));
+    table->addAccel(MKUINT(KEY_b,CONTROLMASK),filebox,FXSEL(SEL_COMMAND,FXFileList::ID_SHOW_BIG_ICONS));
+    table->addAccel(MKUINT(KEY_s,CONTROLMASK),filebox,FXSEL(SEL_COMMAND,FXFileList::ID_SHOW_MINI_ICONS));
+    table->addAccel(MKUINT(KEY_l,CONTROLMASK),filebox,FXSEL(SEL_COMMAND,FXFileList::ID_SHOW_DETAILS));
     }
   setSelectMode(SELECTFILE_ANY);    // For backward compatibility, this HAS to be the default!
   setPatternList(allfiles);
@@ -454,9 +303,10 @@ long FXFileSelector::onCmdItemSelected(FXObject*,FXSelector,void* ptr){
 
 // Change in items which are selected
 long FXFileSelector::onCmdItemDeselected(FXObject*,FXSelector,void*){
+  register FXint i;
   FXString text,file;
   if(selectmode==SELECTFILE_MULTIPLE){
-    for(FXint i=0; i<filebox->getNumItems(); i++){
+    for(i=0; i<filebox->getNumItems(); i++){
       if(filebox->isItemSelected(i) && !filebox->isItemDirectory(i)){
         if(!text.empty()) text+=' ';
         text+="\""+filebox->getItemFilename(i)+"\"";
@@ -465,7 +315,7 @@ long FXFileSelector::onCmdItemDeselected(FXObject*,FXSelector,void*){
     filename->setText(text);
     }
   else if(selectmode==SELECTFILE_MULTIPLE_ALL){
-    for(FXint i=0; i<filebox->getNumItems(); i++){
+    for(i=0; i<filebox->getNumItems(); i++){
       if(filebox->isItemSelected(i) && filebox->getItemFilename(i)!=".."){
         if(!text.empty()) text+=' ';
         text+="\""+filebox->getItemFilename(i)+"\"";
@@ -485,14 +335,14 @@ long FXFileSelector::onCmdItemDblClicked(FXObject*,FXSelector,void* ptr){
   if(0<=index){
 
     // If directory, open the directory
-    if(filebox->isItemDirectory(index)){
+    if(filebox->isItemShare(index) || filebox->isItemDirectory(index)){
       setDirectory(filebox->getItemPathname(index));
       return 1;
       }
 
     // Only return if we wanted a file
     if(selectmode!=SELECTFILE_DIRECTORY){
-      if(tgt) tgt->handle(accept,MKUINT(sel,SEL_COMMAND),(void*)(FXuval)1);
+      if(tgt) tgt->handle(accept,FXSEL(SEL_COMMAND,sel),(void*)(FXuval)1);
       }
     }
   return 1;
@@ -504,7 +354,7 @@ long FXFileSelector::onCmdAccept(FXObject*,FXSelector,void*){
   FXSelector sel=accept->getSelector();
   FXObject *tgt=accept->getTarget();
 
-  // Get (first) filename
+  // Get (first) filename or directory
   FXString path=getFilename();
 
   // Only do something if a selection was made
@@ -515,7 +365,7 @@ long FXFileSelector::onCmdAccept(FXObject*,FXSelector,void*){
 
       // In directory mode:- we got our answer!
       if(selectmode==SELECTFILE_DIRECTORY || selectmode==SELECTFILE_MULTIPLE_ALL){
-        if(tgt) tgt->handle(accept,MKUINT(sel,SEL_COMMAND),(void*)(FXuval)1);
+        if(tgt) tgt->handle(accept,FXSEL(SEL_COMMAND,sel),(void*)(FXuval)1);
         return 1;
         }
 
@@ -534,13 +384,13 @@ long FXFileSelector::onCmdAccept(FXObject*,FXSelector,void*){
 
       // In any mode, existing directory part is good enough
       if(selectmode==SELECTFILE_ANY){
-        if(tgt) tgt->handle(accept,MKUINT(sel,SEL_COMMAND),(void*)(FXuval)1);
+        if(tgt) tgt->handle(accept,FXSEL(SEL_COMMAND,sel),(void*)(FXuval)1);
         return 1;
         }
 
       // Otherwise, the whole filename must exist and be a file
       else if(FXFile::exists(path)){
-        if(tgt) tgt->handle(accept,MKUINT(sel,SEL_COMMAND),(void*)(FXuval)1);
+        if(tgt) tgt->handle(accept,FXSEL(SEL_COMMAND,sel),(void*)(FXuval)1);
         return 1;
         }
       }
@@ -581,12 +431,8 @@ long FXFileSelector::onCmdDirectoryUp(FXObject*,FXSelector,void*){
 
 // Can we still go up
 long FXFileSelector::onUpdDirectoryUp(FXObject* sender,FXSelector,void*){
-  if(FXFile::isTopDirectory(filebox->getDirectory())){
-    sender->handle(this,MKUINT(ID_DISABLE,SEL_COMMAND),NULL);
-    }
-  else{
-    sender->handle(this,MKUINT(ID_ENABLE,SEL_COMMAND),NULL);
-    }
+  FXString dir=filebox->getDirectory();
+  sender->handle(this,FXFile::isTopDirectory(dir)?FXSEL(SEL_COMMAND,ID_DISABLE):FXSEL(SEL_COMMAND,ID_ENABLE),NULL);
   return 1;
   }
 
@@ -633,7 +479,7 @@ long FXFileSelector::onCmdDirTree(FXObject*,FXSelector,void* ptr){
 long FXFileSelector::onCmdNew(FXObject*,FXSelector,void*){
   FXString dir=filebox->getDirectory();
   FXString name="DirectoryName";
-  FXGIFIcon newdiricon(getApp(),dlgnewfolder);
+  FXGIFIcon newdiricon(getApp(),bigfolder);
   if(FXInputDialog::getString(name,this,"Create New Directory","Create new directory in: "+dir,&newdiricon)){
     FXString dirname=FXFile::absolute(dir,name);
     if(FXFile::exists(dirname)){
@@ -650,10 +496,7 @@ long FXFileSelector::onCmdNew(FXObject*,FXSelector,void*){
 // Update create new directory
 long FXFileSelector::onUpdNew(FXObject* sender,FXSelector,void*){
   FXString dir=filebox->getDirectory();
-  if(FXFile::isWritable(dir))
-    sender->handle(this,MKUINT(ID_ENABLE,SEL_COMMAND),NULL);
-  else
-    sender->handle(this,MKUINT(ID_DISABLE,SEL_COMMAND),NULL);
+  sender->handle(this,FXFile::isWritable(dir)?FXSEL(SEL_COMMAND,ID_ENABLE):FXSEL(SEL_COMMAND,ID_DISABLE),NULL);
   return 1;
   }
 
@@ -770,11 +613,11 @@ long FXFileSelector::onCmdDelete(FXObject*,FXSelector,void*){
 long FXFileSelector::onUpdSelected(FXObject* sender,FXSelector,void*){
   for(FXint i=0; i<filebox->getNumItems(); i++){
     if(filebox->isItemSelected(i)){
-      sender->handle(this,MKUINT(ID_ENABLE,SEL_COMMAND),NULL);
+      sender->handle(this,FXSEL(SEL_COMMAND,ID_ENABLE),NULL);
       return 1;
       }
     }
-  sender->handle(this,MKUINT(ID_DISABLE,SEL_COMMAND),NULL);
+  sender->handle(this,FXSEL(SEL_COMMAND,ID_DISABLE),NULL);
   return 1;
   }
 
@@ -793,22 +636,26 @@ long FXFileSelector::onPopupMenu(FXObject*,FXSelector,void* ptr){
 
   FXMenuPane sortmenu(this);
   new FXMenuCascade(&filemenu,"Sort by",NULL,&sortmenu);
-  new FXMenuCommand(&sortmenu,"Name",NULL,filebox,FXFileList::ID_SORT_BY_NAME);
-  new FXMenuCommand(&sortmenu,"Type",NULL,filebox,FXFileList::ID_SORT_BY_TYPE);
-  new FXMenuCommand(&sortmenu,"Size",NULL,filebox,FXFileList::ID_SORT_BY_SIZE);
-  new FXMenuCommand(&sortmenu,"Time",NULL,filebox,FXFileList::ID_SORT_BY_TIME);
-  new FXMenuCommand(&sortmenu,"User",NULL,filebox,FXFileList::ID_SORT_BY_USER);
-  new FXMenuCommand(&sortmenu,"Group",NULL,filebox,FXFileList::ID_SORT_BY_GROUP);
-  new FXMenuCommand(&sortmenu,"Reverse",NULL,filebox,FXFileList::ID_SORT_REVERSE);
+  new FXMenuRadio(&sortmenu,"Name",filebox,FXFileList::ID_SORT_BY_NAME);
+  new FXMenuRadio(&sortmenu,"Type",filebox,FXFileList::ID_SORT_BY_TYPE);
+  new FXMenuRadio(&sortmenu,"Size",filebox,FXFileList::ID_SORT_BY_SIZE);
+  new FXMenuRadio(&sortmenu,"Time",filebox,FXFileList::ID_SORT_BY_TIME);
+  new FXMenuRadio(&sortmenu,"User",filebox,FXFileList::ID_SORT_BY_USER);
+  new FXMenuRadio(&sortmenu,"Group",filebox,FXFileList::ID_SORT_BY_GROUP);
+  new FXMenuSeparator(&sortmenu);
+  new FXMenuCheck(&sortmenu,"Reverse",filebox,FXFileList::ID_SORT_REVERSE);
+  new FXMenuCheck(&sortmenu,"Ignore case",filebox,FXFileList::ID_SORT_CASE);
 
   FXMenuPane viewmenu(this);
   new FXMenuCascade(&filemenu,"View",NULL,&viewmenu);
-  new FXMenuCommand(&viewmenu,"Small icons",NULL,filebox,FXFileList::ID_SHOW_MINI_ICONS);
-  new FXMenuCommand(&viewmenu,"Big icons",NULL,filebox,FXFileList::ID_SHOW_BIG_ICONS);
-  new FXMenuCommand(&viewmenu,"Details",NULL,filebox,FXFileList::ID_SHOW_DETAILS);
-  new FXMenuCommand(&viewmenu,"Rows",NULL,filebox,FXFileList::ID_ARRANGE_BY_ROWS);
-  new FXMenuCommand(&viewmenu,"Columns",NULL,filebox,FXFileList::ID_ARRANGE_BY_COLUMNS);
-  new FXMenuCommand(&viewmenu,"Hidden files",NULL,filebox,FXFileList::ID_TOGGLE_HIDDEN);
+  new FXMenuRadio(&viewmenu,"Small icons",filebox,FXFileList::ID_SHOW_MINI_ICONS);
+  new FXMenuRadio(&viewmenu,"Big icons",filebox,FXFileList::ID_SHOW_BIG_ICONS);
+  new FXMenuRadio(&viewmenu,"Details",filebox,FXFileList::ID_SHOW_DETAILS);
+  new FXMenuSeparator(&viewmenu);
+  new FXMenuRadio(&viewmenu,"Rows",filebox,FXFileList::ID_ARRANGE_BY_ROWS);
+  new FXMenuRadio(&viewmenu,"Columns",filebox,FXFileList::ID_ARRANGE_BY_COLUMNS);
+  new FXMenuSeparator(&viewmenu);
+  new FXMenuCheck(&viewmenu,"Hidden files",filebox,FXFileList::ID_TOGGLE_HIDDEN);
 
   FXMenuPane bookmarks(this);
   new FXMenuCascade(&filemenu,"Bookmarks",NULL,&bookmarks);
@@ -845,8 +692,8 @@ long FXFileSelector::onPopupMenu(FXObject*,FXSelector,void* ptr){
 // Strip pattern from text if present
 FXString FXFileSelector::patternFromText(const FXString& pattern){
   FXint beg,end;
-  end=pattern.findb(')');         // Search from the end so we can allow ( ) in the pattern name itself
-  beg=pattern.findb('(',end-1);
+  end=pattern.rfind(')');         // Search from the end so we can allow ( ) in the pattern name itself
+  beg=pattern.rfind('(',end-1);
   if(0<=beg && beg<end) return pattern.mid(beg+1,end-beg-1);
   return pattern;
   }
@@ -912,18 +759,6 @@ void FXFileSelector::setFilename(const FXString& path){
   filebox->setCurrentFile(abspath);
   dirbox->setDirectory(FXFile::directory(abspath));
   filename->setText(FXFile::name(abspath));
-  /*
-  if(selectmode==SELECTFILE_DIRECTORY){
-    filebox->setDirectory(abspath);
-    dirbox->setDirectory(abspath);
-    filename->setText(FXString::null);
-    }
-  else{
-    filebox->setCurrentFile(abspath);
-    dirbox->setDirectory(FXFile::directory(abspath));
-    filename->setText(FXFile::name(abspath));
-    }
-    */
   }
 
 
@@ -995,25 +830,11 @@ FXString* FXFileSelector::getFilenames() const {
   }
 
 
-// Set bunch of patterns
-void FXFileSelector::setPatternList(const FXchar **ptrns){
-  filefilter->clearItems();
-  if(ptrns){
-    while(ptrns[0] && ptrns[1]){
-      filefilter->appendItem(FXStringFormat("%s (%s)",ptrns[0],ptrns[1]));
-      ptrns+=2;
-      }
-    }
-  if(!filefilter->getNumItems()) filefilter->appendItem(allfiles);
-  setCurrentPattern(0);
-  }
-
-
 // Change patterns, each pattern separated by newline
 void FXFileSelector::setPatternList(const FXString& patterns){
   FXString pat;
   filefilter->clearItems();
-  for(FXint i=0; !(pat=patterns.extract(i,'\n')).empty(); i++){
+  for(FXint i=0; !(pat=patterns.section('\n',i)).empty(); i++){
     filefilter->appendItem(pat);
     }
   if(!filefilter->getNumItems()) filefilter->appendItem(allfiles);
@@ -1122,6 +943,18 @@ void FXFileSelector::setSelectMode(FXuint mode){
       break;
     }
   selectmode=mode;
+  }
+
+
+// Change wildcard matching mode
+void FXFileSelector::setMatchMode(FXuint mode){
+  filebox->setMatchMode(mode);
+  }
+
+
+// Return wildcard matching mode
+FXuint FXFileSelector::getMatchMode() const {
+  return filebox->getMatchMode();
   }
 
 
@@ -1236,29 +1069,30 @@ FXFileSelector::~FXFileSelector(){
   delete moveicon;
   delete copyicon;
   delete linkicon;
-  filebox=(FXFileList*)-1;
-  filename=(FXTextField*)-1;
-  filefilter=(FXComboBox*)-1;
-  bookmarks=(FXMenuPane*)-1;
-  readonly=(FXCheckButton*)-1;
-  dirbox=(FXDirBox*)-1;
-  accept=(FXButton*)-1;
-  cancel=(FXButton*)-1;
-  updiricon=(FXIcon*)-1;
-  newdiricon=(FXIcon*)-1;
-  listicon=(FXIcon*)-1;
-  detailicon=(FXIcon*)-1;
-  iconsicon=(FXIcon*)-1;
-  homeicon=(FXIcon*)-1;
-  workicon=(FXIcon*)-1;
-  shownicon=(FXIcon*)-1;
-  hiddenicon=(FXIcon*)-1;
-  markicon=(FXIcon*)-1;
-  clearicon=(FXIcon*)-1;
-  deleteicon=(FXIcon*)-1;
-  moveicon=(FXIcon*)-1;
-  copyicon=(FXIcon*)-1;
-  linkicon=(FXIcon*)-1;
+  filebox=(FXFileList*)-1L;
+  filename=(FXTextField*)-1L;
+  filefilter=(FXComboBox*)-1L;
+  bookmarks=(FXMenuPane*)-1L;
+  readonly=(FXCheckButton*)-1L;
+  dirbox=(FXDirBox*)-1L;
+  accept=(FXButton*)-1L;
+  cancel=(FXButton*)-1L;
+  updiricon=(FXIcon*)-1L;
+  newdiricon=(FXIcon*)-1L;
+  listicon=(FXIcon*)-1L;
+  detailicon=(FXIcon*)-1L;
+  iconsicon=(FXIcon*)-1L;
+  homeicon=(FXIcon*)-1L;
+  workicon=(FXIcon*)-1L;
+  shownicon=(FXIcon*)-1L;
+  hiddenicon=(FXIcon*)-1L;
+  markicon=(FXIcon*)-1L;
+  clearicon=(FXIcon*)-1L;
+  deleteicon=(FXIcon*)-1L;
+  moveicon=(FXIcon*)-1L;
+  copyicon=(FXIcon*)-1L;
+  linkicon=(FXIcon*)-1L;
   }
 
+}
 

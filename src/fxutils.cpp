@@ -3,7 +3,7 @@
 *                          U t i l i t y   F u n c t i o n s                    *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1998,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,16 +19,18 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: fxutils.cpp,v 1.71.4.6 2003/11/07 13:57:53 fox Exp $                         *
+* $Id: fxutils.cpp,v 1.100 2004/04/08 15:09:55 fox Exp $                         *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
 #include "fxdefs.h"
 #include "fxkeys.h"
+#include "FXStream.h"
+#include "FXString.h"
 
 
 /*
-  To do:
+  Notes:
   - Those functions manipulating strings should perhaps become FXString type
     functions?
   - Need to pass buffer-size argument to all those fxdirpart() etc. functions
@@ -37,8 +39,22 @@
   - Revive my old malloc() replacement library to detect memory block overwrites.
 */
 
+
+// Make it larger if you need
+#ifndef MAXMESSAGESIZE
+#define MAXMESSAGESIZE 1024
+#endif
+
+
+using namespace FX;
+
+// Allows GNU autoconfigure to find FOX
+extern "C" FXAPI void fxfindfox(void){ }
+
+
 /*******************************************************************************/
 
+namespace FX {
 
 // Global flag which controls tracing level
 unsigned int fxTraceLevel=0;
@@ -46,13 +62,6 @@ unsigned int fxTraceLevel=0;
 
 // Version number that the library has been compiled with
 const FXuchar fxversion[3]={FOX_MAJOR,FOX_MINOR,FOX_LEVEL};
-
-
-// Allows GNU autoconfigure to find FOX
-extern "C" FXAPI void fxfindfox(void){ }
-
-
-/*******************************************************************************/
 
 
 // Thread-safe, linear congruential random number generator from Knuth & Lewis.
@@ -64,17 +73,7 @@ FXuint fxrandom(FXuint& seed){
 
 #ifdef WIN32
 
-// Missing in CYGWIN
-#ifndef IMAGE_SUBSYSTEM_NATIVE_WINDOWS
-#define IMAGE_SUBSYSTEM_NATIVE_WINDOWS 8
-#endif
-
-#ifndef IMAGE_SUBSYSTEM_WINDOWS_CE_GUI
-#define IMAGE_SUBSYSTEM_WINDOWS_CE_GUI 9
-#endif
-
-// getmodulefilename
-
+// Return TRUE if console application
 FXbool fxisconsole(const FXchar *path){
   IMAGE_OPTIONAL_HEADER optional_header;
   IMAGE_FILE_HEADER     file_header;
@@ -153,6 +152,14 @@ x:  CloseHandle(hImage);
   return flag;
   }
 
+
+#else
+
+// Return TRUE if console application
+FXbool fxisconsole(const FXchar*){
+  return TRUE;
+  }
+
 #endif
 
 
@@ -161,13 +168,13 @@ void fxassert(const char* expression,const char* filename,unsigned int lineno){
 #ifndef WIN32
   fprintf(stderr,"%s:%d: FXASSERT(%s) failed.\n",filename,lineno,expression);
 #else
-  char msg[256];
-  sprintf(msg,"%s(%d): FXASSERT(%s) failed.\n",filename,lineno,expression);
 #ifdef _WINDOWS
+  char msg[MAXMESSAGESIZE];
+  sprintf(msg,"%s(%d): FXASSERT(%s) failed.\n",filename,lineno,expression);
   OutputDebugString(msg);
   fprintf(stderr,"%s",msg); // if a console is available
 #else
-  fprintf(stderr,"%s",msg);
+  fprintf(stderr,"%s(%d): FXASSERT(%s) failed.\n",filename,lineno,expression);
 #endif
 #endif
   }
@@ -182,7 +189,7 @@ void fxmessage(const char* format,...){
   va_end(arguments);
 #else
 #ifdef _WINDOWS
-  char msg[512];
+  char msg[MAXMESSAGESIZE];
   va_list arguments;
   va_start(arguments,format);
   vsnprintf(msg,sizeof(msg),format,arguments);
@@ -209,7 +216,7 @@ void fxerror(const char* format,...){
   abort();
 #else
 #ifdef _WINDOWS
-  char msg[512];
+  char msg[MAXMESSAGESIZE];
   va_list arguments;
   va_start(arguments,format);
   vsnprintf(msg,sizeof(msg),format,arguments);
@@ -238,7 +245,7 @@ void fxwarning(const char* format,...){
   va_end(arguments);
 #else
 #ifdef _WINDOWS
-  char msg[512];
+  char msg[MAXMESSAGESIZE];
   va_list arguments;
   va_start(arguments,format);
   vsnprintf(msg,sizeof(msg),format,arguments);
@@ -266,7 +273,7 @@ void fxtrace(unsigned int level,const char* format,...){
     va_end(arguments);
 #else
 #ifdef _WINDOWS
-    char msg[512];
+    char msg[MAXMESSAGESIZE];
     va_list arguments;
     va_start(arguments,format);
     vsnprintf(msg,sizeof(msg),format,arguments);
@@ -314,105 +321,160 @@ void fxsleep(unsigned int n){
   }
 
 
-#define ISSEP(ch) ((ch)=='+' || (ch)=='-' || (ch)==' ')
-
-
-// Parse for accelerator key codes in a string
-FXHotKey fxparseaccel(const FXchar* string){
-  register const FXuchar *s=(const FXuchar *)string;
+// Parse accelerator from menu
+FXHotKey fxparseAccel(const FXString& string){
   register FXuint code=0,mods=0;
-  if(s){
-    while(s[0] && s[0]!='\t' && s[0]!='\n'){
-      if(ISSEP(s[0])){
-        s++;
-        continue;
-        }
-      if((tolower(s[0])=='c')&&(tolower(s[1])=='t')&&(tolower(s[2])=='l')&&ISSEP(s[3])){
-        mods|=CONTROLMASK;
-        s+=4;
-        continue;
-        }
-      if((tolower(s[0])=='c')&&(tolower(s[1])=='t')&&(tolower(s[2])=='r')&&(tolower(s[3])=='l')&&ISSEP(s[4])){
-        mods|=CONTROLMASK;
-        s+=5;
-        continue;
-        }
-      if((tolower(s[0])=='a')&&(tolower(s[1])=='l')&&(tolower(s[2])=='t')&&ISSEP(s[3])){
-        mods|=ALTMASK;
-        s+=4;
-        continue;
-        }
-      if((tolower(s[0])=='s')&&(tolower(s[1])=='h')&&(tolower(s[2])=='i')&&(tolower(s[3])=='f')&&(tolower(s[4])=='t')&&ISSEP(s[5])){
-        mods|=SHIFTMASK;
-        s+=6;
-        continue;
-        }
-
-      // One-digit function key
-      if(tolower(s[0])=='f' && isdigit(s[1]) && (s[2]=='\0' || s[2]=='\t' || s[2]=='\n')){
-        code=KEY_F1+s[1]-'1';
-        }
-
-      // Two digit function key
-      else if(tolower(s[0])=='f' && isdigit(s[1]) && isdigit(s[2]) && (s[3]=='\0' || s[3]=='\t' || s[3]=='\n')){
-        code=KEY_F1+10*(s[1]-'0')+(s[2]-'0')-1;
-        }
-
-      // One final character
-      else if(s[0] && (s[1]=='\0' || s[1]=='\t' || s[1]=='\n')){
-        if(mods&SHIFTMASK)
-          code=toupper(s[0])+KEY_space-' ';
-        else
-          code=tolower(s[0])+KEY_space-' ';
-        }
-      FXTRACE((150,"fxparseaccel(%s): %08x code = %04x mods=%04x\n",string,MKUINT(code,mods),code,mods));
-      return MKUINT(code,mods);
-      }
-    }
-  return 0;
-  }
-
-
-// Parse for hot key in a string
-FXHotKey fxparsehotkey(const FXchar* string){
-  register const FXuchar *s=(const FXuchar*)string;
-  FXuint code,mods;
-  if(s){
-    while(s[0] && s[0]!='\t'){
-      if(s[0]=='&'){
-        if(s[1]!='&'){
-          if(isalnum(s[1])){
-            mods=ALTMASK;
-            code=tolower(s[1])+KEY_space-' ';
-            FXTRACE((150,"fxparsehotkey(%s): %08x code = %04x mods=%04x\n",string,MKUINT(code,mods),code,mods));
-            return MKUINT(code,mods);
-            }
-          break;
-          }
-        s++;
-        }
-      s++;
-      }
-    }
-  return 0;
-  }
-
-
-// Locate hot key underline offset from begin of string
-FXint fxfindhotkeyoffset(const FXchar* s){
   register FXint pos=0;
-  if(s){
-    while(s[pos] && s[pos]!='\t'){
-      if(s[pos]=='&'){
-        if(s[pos+1]!='&') return pos;
-        pos++;
+
+  // Parse leading space
+  while(pos<string.length() && isspace((FXuchar)string[pos])) pos++;
+
+  // Parse modifiers
+  while(pos<string.length()){
+
+    // Modifier
+    if(comparecase(&string[pos],"ctl",3)==0){ mods|=CONTROLMASK; pos+=3; }
+    else if(comparecase(&string[pos],"ctrl",4)==0){ mods|=CONTROLMASK; pos+=4; }
+    else if(comparecase(&string[pos],"alt",3)==0){ mods|=ALTMASK; pos+=3; }
+    else if(comparecase(&string[pos],"meta",4)==0){ mods|=METAMASK; pos+=4; }
+    else if(comparecase(&string[pos],"shift",5)==0){ mods|=SHIFTMASK; pos+=5; }
+    else break;
+
+    // Separator
+    if(string[pos]=='+' || string[pos]=='-' || isspace((FXuchar)string[pos])) pos++;
+    }
+
+  // Test for some special keys
+  if(comparecase(&string[pos],"home",4)==0){
+    code=KEY_Home;
+    }
+  else if(comparecase(&string[pos],"end",3)==0){
+    code=KEY_End;
+    }
+  else if(comparecase(&string[pos],"pgup",4)==0){
+    code=KEY_Page_Up;
+    }
+  else if(comparecase(&string[pos],"pgdn",4)==0){
+    code=KEY_Page_Down;
+    }
+  else if(comparecase(&string[pos],"left",4)==0){
+    code=KEY_Left;
+    }
+  else if(comparecase(&string[pos],"right",5)==0){
+    code=KEY_Right;
+    }
+  else if(comparecase(&string[pos],"up",2)==0){
+    code=KEY_Up;
+    }
+  else if(comparecase(&string[pos],"down",4)==0){
+    code=KEY_Down;
+    }
+  else if(comparecase(&string[pos],"ins",3)==0){
+    code=KEY_Insert;
+    }
+  else if(comparecase(&string[pos],"del",3)==0){
+    code=KEY_Delete;
+    }
+  else if(comparecase(&string[pos],"esc",3)==0){
+    code=KEY_Escape;
+    }
+  else if(comparecase(&string[pos],"tab",3)==0){
+    code=KEY_Tab;
+    }
+  else if(comparecase(&string[pos],"return",6)==0){
+    code=KEY_Return;
+    }
+  else if(comparecase(&string[pos],"enter",5)==0){
+    code=KEY_Return;
+    }
+  else if(comparecase(&string[pos],"back",4)==0){
+    code=KEY_BackSpace;
+    }
+  else if(comparecase(&string[pos],"spc",3)==0){
+    code=KEY_space;
+    }
+  else if(comparecase(&string[pos],"space",5)==0){
+    code=KEY_space;
+    }
+
+  // Test for function keys
+  else if(tolower((FXuchar)string[pos])=='f' && isdigit((FXuchar)string[pos+1])){
+    if(isdigit((FXuchar)string[pos+2])){
+      code=KEY_F1+10*(string[1]-'0')+(string[2]-'0')-1;
+      }
+    else{
+      code=KEY_F1+string[pos+1]-'1';
+      }
+    }
+
+  // Text if its a single character accelerator
+  else if(isprint((FXuchar)string[pos])){
+    if(mods&SHIFTMASK)
+      code=toupper((FXuchar)string[pos])+KEY_space-' ';
+    else
+      code=tolower((FXuchar)string[pos])+KEY_space-' ';
+    }
+
+  FXTRACE((110,"fxparseAccel(%s) = code=%04x mods=%04x\n",string.text(),code,mods));
+  return MKUINT(code,mods);
+  }
+
+
+// Parse hot key from string
+FXHotKey fxparseHotKey(const FXString& string){
+  register FXuint code=0,mods=0;
+  register FXint pos=0;
+  while(pos<string.length()){
+    if(string[pos]=='&'){
+      if(string[pos+1]!='&'){
+        if(isalnum((FXuchar)string[pos+1])){
+          mods=ALTMASK;
+          code=tolower((FXuchar)string[pos+1])+KEY_space-' ';
+          }
+        break;
         }
       pos++;
       }
+    pos++;
+    }
+  FXTRACE((110,"fxparseHotKey(%s) = code=%04x mods=%04x\n",string.text(),code,mods));
+  return MKUINT(code,mods);
+  }
+
+
+// Obtain hot key offset in string
+FXint fxfindHotKey(const FXString& string){
+  register FXint pos=0;
+  register FXint n=0;
+  while(pos<string.length()){
+    if(string[pos]=='&'){
+      if(string[pos+1]!='&'){
+        return n;
+        }
+      pos++;
+      }
+    pos++;
+    n++;
     }
   return -1;
   }
 
+
+// Strip hot key from string
+FXString fxstripHotKey(const FXString& string){
+  FXString result=string;
+  register FXint len=result.length();
+  register FXint i,j;
+  for(i=j=0; j<len; j++){
+    if(result[j]=='&'){
+      if(result[j+1]!='&') continue;
+      j++;
+      }
+    result[i++]=result[j];
+    }
+  result.trunc(i);
+  return result;
+  }
 
 
 // Get highlight color
@@ -447,96 +509,40 @@ FXColor makeShadowColor(FXColor clr){
   }
 
 
-// Get user name from uid
-FXchar* fxgetusername(FXchar* result,FXuint uid){
-  if(!result){fxerror("fxgetusername: NULL result argument.\n");}
-#ifndef WIN32
-#ifdef FOX_THREAD_SAFE
-  struct passwd pwdresult,*pwd;
-  char buffer[1024];
-  if(getpwuid_r(uid,&pwdresult,buffer,sizeof(buffer),&pwd)==0 && pwd)
-    strcpy(result,pwd->pw_name);
-  else
-    sprintf(result,"%d",uid);
-#else
-  struct passwd *pwd;
-  if((pwd=getpwuid(uid))!=NULL)
-    strcpy(result,pwd->pw_name);
-  else
-    sprintf(result,"%d",uid);
-#endif
-#else
-//sprintf(result,"%d",uid);
-  strcpy(result,"user");
-#endif
-  return result;
+// Convert to MSDOS clipboard format; we add a end
+// of string at the end of the entire buffer.
+FXbool fxtoDOS(FXchar*& string,FXint& len){
+  register FXint f=0,t=0,c;
+  while(f<len){
+    if(string[f++]=='\n') t++;
+    t++;
+    }
+  t++;
+  len=t;
+  if(!FXRESIZE(&string,FXchar,len)) return FALSE;
+  string[--t]='\0';
+  while(0<t){
+    c=string[--f];
+    string[--t]=c;
+    if(c=='\n') string[--t]='\r';
+    }
+  FXASSERT(f==0);
+  FXASSERT(t==0);
+  return TRUE;
   }
 
 
-// Get group name from gid
-FXchar* fxgetgroupname(FXchar* result,FXuint gid){
-  if(!result){fxerror("fxgetgroupname: NULL result argument.\n");}
-#ifndef WIN32
-#ifdef FOX_THREAD_SAFE
-  struct group grpresult,*grp;
-  char buffer[1024];
-  if(getgrgid_r(gid,&grpresult,buffer,sizeof(buffer),&grp)==0 && grp)
-    strcpy(result,grp->gr_name);
-  else
-    sprintf(result,"%d",gid);
-#else
-  struct group *grp;
-  if((grp=getgrgid(gid))!=NULL)
-    strcpy(result,grp->gr_name);
-  else
-    sprintf(result,"%d",gid);
-#endif
-#else
-//sprintf(result,"%d",gid);
-  strcpy(result,"group");
-#endif
-  return result;
-  }
-
-
-// Get permissions string from mode
-FXchar* fxgetpermissions(FXchar* result,FXuint mode){
-  if(!result){fxerror("fxgetpermissions: NULL result argument.\n");}
-#ifndef WIN32
-  result[0]=S_ISLNK(mode) ? 'l' : S_ISREG(mode) ? '-' : S_ISDIR(mode) ? 'd' : S_ISCHR(mode) ? 'c' : S_ISBLK(mode) ? 'b' : S_ISFIFO(mode) ? 'p' : S_ISSOCK(mode) ? 's' : '?';
-  result[1]=(mode&S_IRUSR) ? 'r' : '-';
-  result[2]=(mode&S_IWUSR) ? 'w' : '-';
-  result[3]=(mode&S_ISUID) ? 's' : (mode&S_IXUSR) ? 'x' : '-';
-  result[4]=(mode&S_IRGRP) ? 'r' : '-';
-  result[5]=(mode&S_IWGRP) ? 'w' : '-';
-  result[6]=(mode&S_ISGID) ? 's' : (mode&S_IXGRP) ? 'x' : '-';
-  result[7]=(mode&S_IROTH) ? 'r' : '-';
-  result[8]=(mode&S_IWOTH) ? 'w' : '-';
-  result[9]=(mode&S_ISVTX) ? 't' : (mode&S_IXOTH) ? 'x' : '-';
-  result[10]=0;
-#else
-  result[0]='-';
-#ifdef _S_IFDIR
-  if(mode&_S_IFDIR) result[0]='d';
-#endif
-#ifdef _S_IFCHR
-  if(mode&_S_IFCHR) result[0]='c';
-#endif
-#ifdef _S_IFIFO
-  if(mode&_S_IFIFO) result[0]='p';
-#endif
-  result[1]='r';
-  result[2]='w';
-  result[3]='x';
-  result[4]='r';
-  result[5]='w';
-  result[6]='x';
-  result[7]='r';
-  result[8]='w';
-  result[9]='x';
-  result[10]=0;
-#endif
-  return result;
+// Convert from MSDOS clipboard format; the length passed
+// in is potentially larger than the actual string length,
+// so we scan until the end of string character or the end.
+FXbool fxfromDOS(FXchar*& string,FXint& len){
+  register FXint f=0,t=0,c;
+  while(f<len && string[f]!='\0'){
+    if((c=string[f++])!='\r') string[t++]=c;
+    }
+  len=t;
+  if(!FXRESIZE(&string,FXchar,len)) return FALSE;
+  return TRUE;
   }
 
 
@@ -606,16 +612,13 @@ void fxhsv_to_rgb(FXfloat& r,FXfloat& g,FXfloat& b,FXfloat h,FXfloat s,FXfloat v
 
 
 // Calculate a hash value from a string; algorithm same as in perl
-FXint fxstrhash(const FXchar* str){
-  register FXint h=0;
-  register FXint g;
-  while(*str) {
-    h=(h<<4)+*str++;
-    g=h&0xF0000000;
-    if(g) h^=g>>24;
-    h&=0x0fffffff;
+FXuint fxstrhash(const FXchar* str){
+  register const FXuchar *s=(const FXuchar*)str;
+  register FXuint h=0;
+  register FXuint c;
+  while((c=*s++)!='\0'){
+    h = ((h << 5) + h) ^ c;
     }
-  FXASSERT(h<=0x0fffffff);
   return h;
   }
 
@@ -668,49 +671,146 @@ FXint fxieeedoubleclass(FXdouble number){
   }
 
 
-#ifdef WIN32
+/*******************************************************************************/
 
-// Convert font size (in decipoints) to device logical units
-int fxpointsize_to_height(HDC hdc,unsigned size){
-  // The calls to SetGraphicsMode() and ModifyWorldTransform() have no effect on Win95/98
-  // but that's OK.
-  SetGraphicsMode(hdc,GM_ADVANCED);
-  XFORM xform;
-  ModifyWorldTransform(hdc,&xform,MWT_IDENTITY);
-  SetViewportOrgEx(hdc,0,0,NULL);
-  SetWindowOrgEx(hdc,0,0,NULL);
-  FLOAT cyDpi=(FLOAT)(25.4*GetDeviceCaps(hdc,VERTRES)/GetDeviceCaps(hdc,VERTSIZE));
-  POINT pt;
-  pt.x=0;
-  pt.y=(int)(size*cyDpi/72);
-  DPtoLP(hdc,&pt,1);
-  return -(int)(fabs((double)pt.y)/10.0+0.5);
+
+#if defined(__GNUC__) && defined(__linux__) && defined(__i386__)
+
+
+// Capabilities
+#define CPU_HAS_TSC             0x01
+#define CPU_HAS_MMX             0x02
+#define CPU_HAS_MMXEX           0x04
+#define CPU_HAS_SSE             0x08
+#define CPU_HAS_SSE2            0x10
+#define CPU_HAS_3DNOW           0x20
+#define CPU_HAS_3DNOWEXT        0x40
+
+
+// The CPUID instruction returns stuff in eax, ecx, edx.
+#define cpuid(op,eax,ecx,edx)	\
+  asm volatile ("pushl %%ebx \n\t"    	\
+                "cpuid       \n\t"    	\
+                "popl  %%ebx \n\t"      \
+                : "=a" (eax),		\
+                  "=c" (ecx),           \
+                  "=d" (edx)            \
+                : "a" (op)              \
+                : "cc")
+
+
+/*
+* Find out some useful stuff about the CPU we're running on.
+* We don't care about everything, but just MMX, XMMS, SSE, SSE2, 3DNOW, 3DNOWEXT,
+* for the obvious reasons.
+* If we're generating for Pentium or above then assume CPUID is present; otherwise,
+* test if CPUID is present first using the recommended code...
+*/
+FXuint fxcpuid(){
+  FXuint eax, ecx, edx, caps;
+
+  // Generating code for pentium:- don't bother checking for CPUID presence.
+#if !(defined(__i586__) || defined(__i686__) || defined(__athlon__) || defined(__pentium4__))
+
+  // If EFLAGS bit 21 can be changed, we have CPUID capability.
+  asm volatile ("pushfl                 \n\t"
+                "popl   %0              \n\t"
+                "movl   %0,%1           \n\t"
+                "xorl   $0x200000,%0    \n\t"
+                "pushl  %0              \n\t"
+                "popfl                  \n\t"
+                "pushfl                 \n\t"
+                "popl   %0              \n\t"
+                : "=a" (eax),
+                  "=d" (edx)
+                :
+                : "cc");
+
+  // Yes, we have no CPUID!
+  if(eax==edx) return 0;
+#endif
+
+  // Capabilities
+  caps=0;
+
+  // Get vendor string; this also returns the highest CPUID code in eax.
+  // If highest CPUID code is zero, we can't call any other CPUID functions.
+  cpuid(0x00000000, eax,ecx,edx);
+  if(eax){
+
+    // AMD:   ebx="Auth" edx="enti" ecx="cAMD",
+    // Intel: ebx="Genu" edx="ineI" ecx="ntel"
+    // VIAC3: ebx="Cent" edx="aurH" ecx="auls"
+
+    // Test for AMD
+    if((ecx==0x444d4163) && (edx==0x69746e65)){
+
+      // Any extended capabilities; this returns highest extended CPUID code in eax.
+      cpuid(0x80000000,eax,ecx,edx);
+      if(eax>0x80000000){
+
+        // Test extended athlon capabilities
+        cpuid(0x80000001,eax,ecx,edx);
+        if(edx&0x08000000) caps|=CPU_HAS_MMXEX;
+        if(edx&0x80000000) caps|=CPU_HAS_3DNOW;
+        if(edx&0x40000000) caps|=CPU_HAS_3DNOWEXT;
+        }
+      }
+
+    // Standard CPUID code 1.
+    cpuid(0x00000001,eax,ecx,edx);
+    if(edx&0x00000010) caps|=CPU_HAS_TSC;
+    if(edx&0x00800000) caps|=CPU_HAS_MMX;
+    if(edx&0x02000000) caps|=CPU_HAS_SSE;
+    if(edx&0x04000000) caps|=CPU_HAS_SSE2;
+    }
+
+  // Return capabilities
+  return caps;
   }
 
 
-// Convert logical units to decipoints
-unsigned fxheight_to_pointsize(HDC hdc,int height){
-  // The calls to SetGraphicsMode() and ModifyWorldTransform() have no effect on Win95/98
-  // but that's OK.
-  SetGraphicsMode(hdc,GM_ADVANCED);
-  XFORM xform;
-  xform.eM11=0.0f;
-  xform.eM12=0.0f;
-  xform.eM21=0.0f;
-  xform.eM22=0.0f;
-  xform.eDx=0.0f;
-  xform.eDy=0.0f;
-  ModifyWorldTransform(hdc,&xform,MWT_IDENTITY);
-  SetViewportOrgEx(hdc,0,0,NULL);
-  SetWindowOrgEx(hdc,0,0,NULL);
-  FLOAT cyDpi=(FLOAT)(25.4*GetDeviceCaps(hdc,VERTRES)/GetDeviceCaps(hdc,VERTSIZE));
-  POINT pt;
-  pt.x=0;
-  pt.y=10*height;
-  LPtoDP(hdc,&pt,1);
-  return (FXuint)(72.0*pt.y/cyDpi);
+/*
+* Return clock ticks from x86 TSC register, if present.
+* Execute cpuid, which is serializing, to complete uops first.
+* It is strongly recommended that you know fxcpuid() to return
+* CPU_HAS_TSC before calling this function!
+* Save EBX because its used when generating position independent code;
+* According to i386 ABI, EBP,  EBX, EDI, ESI, ESP need to be saved
+* for caller, EAX, ECX, EDX are for callee to use; since we're only
+* using EBX, that's the only one that needs saving.
+*/
+FXlong fxgetticks(){
+  FXlong value;
+  asm volatile ("pushl %%ebx            \n\t"
+                "xor   %%eax,%%eax      \n\t"
+                "cpuid                  \n\t"
+                "rdtsc                  \n\t"
+                "popl  %%ebx            \n\t"
+                "movl  %%edx,%1         \n\t"
+                "movl  %%eax,%0         \n\t"
+                : "=m" (value), "=m" (*(((char *)&value) + 4))
+                : /* no input */
+                : "eax", "edx", "cc", "memory" );
+  return value;
   }
 
 #endif
 
+#ifdef WIN32
+
+/*
+* Return clock ticks from performance counter.
+*/
+FXlong fxgetticks(){
+  FXlong value;
+  QueryPerformanceCounter((LARGE_INTEGER*)&value);
+  return value;
+  }
+
+#endif
+
+
+
+}
 

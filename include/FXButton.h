@@ -3,7 +3,7 @@
 *                           B u t t o n   W i d g e t                           *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXButton.h,v 1.30 2002/01/18 22:42:51 jeroen Exp $                       *
+* $Id: FXButton.h,v 1.34 2004/02/08 17:17:33 fox Exp $                          *
 ********************************************************************************/
 #ifndef FXBUTTON_H
 #define FXBUTTON_H
@@ -28,6 +28,7 @@
 #include "FXLabel.h"
 #endif
 
+namespace FX {
 
 
 /// Button state bits
@@ -114,5 +115,6 @@ public:
 
   };
 
+}
 
 #endif

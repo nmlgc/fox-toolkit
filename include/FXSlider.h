@@ -3,7 +3,7 @@
 *                           S l i d e r   W i d g e t                           *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXSlider.h,v 1.25 2002/01/18 22:42:54 jeroen Exp $                       *
+* $Id: FXSlider.h,v 1.38 2004/03/25 16:30:25 fox Exp $                          *
 ********************************************************************************/
 #ifndef FXSLIDER_H
 #define FXSLIDER_H
@@ -28,8 +28,7 @@
 #include "FXFrame.h"
 #endif
 
-
-struct FXTimer;
+namespace FX {
 
 
 /// Slider Control styles
@@ -47,7 +46,6 @@ enum {
   SLIDER_TICKS_RIGHT  = SLIDER_TICKS_BOTTOM,      /// Ticks on the right of vertical slider
   SLIDER_NORMAL       = SLIDER_HORIZONTAL
   };
-
 
 
 /**
@@ -70,15 +68,11 @@ protected:
   FXint         headsize;                 // Head size
   FXint         slotsize;                 // Slot size
   FXColor       slotColor;                // Color of slot the head moves in
-  FXTimer      *timer;                    // Timer for auto-sliding
   FXint         dragpoint;                // Where the head is grabbed
   FXString      help;                     // Help string
   FXString      tip;                      // Tip string
 protected:
   FXSlider();
-  virtual void layout();
-  FXint headPos(FXint v) const;
-  FXint headVal(FXint p) const;
   void drawSliderHead(FXDCWindow& dc,FXint x,FXint y,FXint w,FXint h);
   void drawHorzTicks(FXDCWindow& dc,FXint x,FXint y,FXint w,FXint h);
   void drawVertTicks(FXDCWindow& dc,FXint x,FXint y,FXint w,FXint h);
@@ -91,10 +85,10 @@ public:
   long onLeftBtnRelease(FXObject*,FXSelector,void*);
   long onMiddleBtnPress(FXObject*,FXSelector,void*);
   long onMiddleBtnRelease(FXObject*,FXSelector,void*);
+  long onMouseWheel(FXObject*,FXSelector,void*);
   long onUngrabbed(FXObject*,FXSelector,void*);
   long onMotion(FXObject*,FXSelector,void*);
-  long onTimeInc(FXObject*,FXSelector,void*);
-  long onTimeDec(FXObject*,FXSelector,void*);
+  long onAutoSlide(FXObject*,FXSelector,void*);
   long onCmdSetValue(FXObject*,FXSelector,void*);
   long onCmdSetIntValue(FXObject*,FXSelector,void*);
   long onCmdGetIntValue(FXObject*,FXSelector,void*);
@@ -104,12 +98,15 @@ public:
   long onCmdGetIntRange(FXObject*,FXSelector,void*);
   long onCmdSetRealRange(FXObject*,FXSelector,void*);
   long onCmdGetRealRange(FXObject*,FXSelector,void*);
+  long onCmdSetHelp(FXObject*,FXSelector,void*);
+  long onCmdGetHelp(FXObject*,FXSelector,void*);
+  long onCmdSetTip(FXObject*,FXSelector,void*);
+  long onCmdGetTip(FXObject*,FXSelector,void*);
   long onQueryHelp(FXObject*,FXSelector,void*);
   long onQueryTip(FXObject*,FXSelector,void*);
 public:
   enum{
-    ID_AUTOINC=FXFrame::ID_LAST,
-    ID_AUTODEC,
+    ID_AUTOSLIDE=FXFrame::ID_LAST,
     ID_LAST
     };
 public:
@@ -122,6 +119,9 @@ public:
 
   /// Return default height
   virtual FXint getDefaultHeight();
+
+  /// Perform layout
+  virtual void layout();
 
   /// Enable the slider
   virtual void enable();
@@ -178,13 +178,13 @@ public:
   FXColor getSlotColor() const { return slotColor; }
 
   /// Set the help text to be displayed on the status line
-  void setHelpText(const FXString& text);
+  void setHelpText(const FXString& text){ help=text; }
 
   /// Get the current help text
   FXString getHelpText() const { return help; }
 
   /// Set the tip text to be displayed in the tooltip
-  void setTipText(const FXString& text);
+  void setTipText(const FXString& text){ tip=text; }
 
   /// Get the current tooltip text value
   FXString getTipText() const { return tip; }
@@ -199,5 +199,6 @@ public:
   virtual ~FXSlider();
   };
 
+}
 
 #endif

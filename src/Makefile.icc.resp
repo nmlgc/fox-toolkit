@@ -6,6 +6,7 @@ FXBMPIcon.obj
 FXBMPImage.obj
 FXBitmap.obj
 FXButton.obj
+FXBzStream.obj
 FXCURCursor.obj
 FXCanvas.obj
 FXCharSet.obj
@@ -62,7 +63,9 @@ FXGLSphere.obj
 FXGLTriangleMesh.obj
 FXGLViewer.obj
 FXGLVisual.obj
+FXGradientBar.obj
 FXGroupBox.obj
+FXGzStream.obj
 FXHMat.obj
 FXHVec.obj
 FXHeader.obj
@@ -73,6 +76,7 @@ FXIcon.obj
 FXIconList.obj
 FXId.obj
 FXImage.obj
+FXImageFrame.obj
 FXImageView.obj
 FXInputDialog.obj
 FXJPGIcon.obj
@@ -85,7 +89,7 @@ FXMDIChild.obj
 FXMDIClient.obj
 FXMainWindow.obj
 FXMatrix.obj
-FXMenubar.obj
+FXMenuBar.obj
 FXMenuButton.obj
 FXMenuCaption.obj
 FXMenuCascade.obj
@@ -112,7 +116,8 @@ FXQuat.obj
 FXRGBIcon.obj
 FXRGBImage.obj
 FXRadioButton.obj
-FXRange.obj
+FXRangef.obj
+FXRanged.obj
 FXRecentFiles.obj
 FXRectangle.obj
 FXRegion.obj
@@ -120,9 +125,10 @@ FXRegistry.obj
 FXReplaceDialog.obj
 FXRex.obj
 FXRootWindow.obj
+FXRuler.obj
 FXScrollArea.obj
 FXScrollWindow.obj
-FXScrollbar.obj
+FXScrollBar.obj
 FXSearchDialog.obj
 FXSeparator.obj
 FXSettings.obj
@@ -132,7 +138,7 @@ FXSize.obj
 FXSlider.obj
 FXSpinner.obj
 FXSplitter.obj
-FXStatusbar.obj
+FXStatusBar.obj
 FXStatusLine.obj
 FXStream.obj
 FXString.obj
@@ -147,11 +153,11 @@ FXTable.obj
 FXText.obj
 FXTextField.obj
 FXToggleButton.obj
-FXToolbar.obj
-FXToolbarGrip.obj
-FXToolbarShell.obj
-FXToolbarTab.obj
-FXTooltip.obj
+FXToolBar.obj
+FXToolBarGrip.obj
+FXToolBarShell.obj
+FXToolBarTab.obj
+FXToolTip.obj
 FXTopWindow.obj
 FXTreeList.obj
 FXTreeListBox.obj
@@ -161,6 +167,7 @@ FXVec.obj
 FXVerticalFrame.obj
 FXVisual.obj
 FXWindow.obj
+FXWizard.obj
 FXXPMImage.obj
 FXXPMIcon.obj
 fxbmpio.obj
@@ -172,7 +179,9 @@ fxjpegio.obj
 fxpcxio.obj
 fxpngio.obj
 fxpriv.obj
-fxquantize.obj
+fxezquantize.obj
+fxfsquantize.obj
+fxwuquantize.obj
 fxrgbio.obj
 fxtargaio.obj
 fxtifio.obj

@@ -3,7 +3,7 @@
 *                           T a b   I t e m    W i d g e t                      *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXTabItem.cpp,v 1.6.4.1 2002/07/16 22:42:42 fox Exp $                     *
+* $Id: FXTabItem.cpp,v 1.15 2004/02/08 17:29:07 fox Exp $                       *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -32,6 +32,7 @@
 #include "FXRectangle.h"
 #include "FXRegistry.h"
 #include "FXAccelTable.h"
+#include "FXHash.h"
 #include "FXApp.h"
 #include "FXDCWindow.h"
 #include "FXFont.h"
@@ -51,13 +52,18 @@
   - We hide the panes in FXTabBook.  This way, we don't have to change
     the position of each pane when the FXTabBook itself changes.
     Only the active pane needs to be moved.
+  - Maybe honor frame styles.
 */
 
 
 #define TAB_ORIENT_MASK    (TAB_TOP|TAB_LEFT|TAB_RIGHT|TAB_BOTTOM)
 #define TABBOOK_MASK       (TABBOOK_SIDEWAYS|TABBOOK_BOTTOMTABS)
 
+using namespace FX;
+
 /*******************************************************************************/
+
+namespace FX {
 
 // Map
 FXDEFMAP(FXTabItem) FXTabItemMap[]={
@@ -109,7 +115,7 @@ long FXTabItem::onFocusOut(FXObject* sender,FXSelector sel,void* ptr){
 long FXTabItem::onLeftBtnPress(FXObject* sender,FXSelector sel,void* ptr){
   if(!FXLabel::onLeftBtnPress(sender,sel,ptr)){
     if(isEnabled()){
-      getParent()->handle(this,MKUINT(FXTabBar::ID_OPEN_ITEM,SEL_COMMAND),ptr);
+      getParent()->handle(this,FXSEL(SEL_COMMAND,FXTabBar::ID_OPEN_ITEM),ptr);
       flags|=FLAG_PRESSED;
       flags&=~FLAG_UPDATE;
       return 1;
@@ -146,9 +152,9 @@ long FXTabItem::onKeyPress(FXObject*,FXSelector,void* ptr){
   FXEvent* event=(FXEvent*)ptr;
   flags&=~FLAG_TIP;
   if(isEnabled()){
-    if(target && target->handle(this,MKUINT(message,SEL_KEYPRESS),ptr)) return 1;
+    if(target && target->handle(this,FXSEL(SEL_KEYPRESS,message),ptr)) return 1;
     if(event->code==KEY_space || event->code==KEY_KP_Space){
-      getParent()->handle(this,MKUINT(FXTabBar::ID_OPEN_ITEM,SEL_COMMAND),ptr);
+      getParent()->handle(this,FXSEL(SEL_COMMAND,FXTabBar::ID_OPEN_ITEM),ptr);
       return 1;
       }
     }
@@ -160,7 +166,7 @@ long FXTabItem::onKeyPress(FXObject*,FXSelector,void* ptr){
 long FXTabItem::onKeyRelease(FXObject*,FXSelector,void* ptr){
   FXEvent* event=(FXEvent*)ptr;
   if(isEnabled()){
-    if(target && target->handle(this,MKUINT(message,SEL_KEYRELEASE),ptr)) return 1;
+    if(target && target->handle(this,FXSEL(SEL_KEYRELEASE,message),ptr)) return 1;
     if(event->code==KEY_space || event->code==KEY_KP_Space){
       return 1;
       }
@@ -171,10 +177,10 @@ long FXTabItem::onKeyRelease(FXObject*,FXSelector,void* ptr){
 
 // Hot key combination pressed
 long FXTabItem::onHotKeyPress(FXObject*,FXSelector,void* ptr){
-  handle(this,MKUINT(0,SEL_FOCUS_SELF),ptr);
+  handle(this,FXSEL(SEL_FOCUS_SELF,0),ptr);
   flags&=~FLAG_TIP;
   if(isEnabled()){
-    getParent()->handle(this,MKUINT(FXTabBar::ID_OPEN_ITEM,SEL_COMMAND),ptr);
+    getParent()->handle(this,FXSEL(SEL_COMMAND,FXTabBar::ID_OPEN_ITEM),ptr);
     }
   return 1;
   }
@@ -260,7 +266,7 @@ long FXTabItem::onPaint(FXObject*,FXSelector,void* ptr){
       dc.drawIconSunken(icon,ix,iy);
     }
   if(!label.empty()){
-    dc.setTextFont(font);
+    dc.setFont(font);
     if(isEnabled()){
       dc.setForeground(textColor);
       drawLabel(dc,label,hotoff,tx,ty,tw,th);
@@ -295,4 +301,5 @@ void FXTabItem::setTabOrientation(FXuint style){
     }
   }
 
+}
 

@@ -3,7 +3,7 @@
 *                            L a b e l   W i d g e t                            *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXLabel.cpp,v 1.28 2002/01/18 22:43:01 jeroen Exp $                      *
+* $Id: FXLabel.cpp,v 1.49 2004/04/22 20:51:04 fox Exp $                         *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -30,7 +30,9 @@
 #include "FXPoint.h"
 #include "FXRectangle.h"
 #include "FXRegistry.h"
+#include "FXHash.h"
 #include "FXApp.h"
+#include "FXAccelTable.h"
 #include "FXDCWindow.h"
 #include "FXFont.h"
 #include "FXIcon.h"
@@ -49,19 +51,29 @@
 #define JUSTIFY_MASK    (JUSTIFY_HZ_APART|JUSTIFY_VT_APART)
 #define ICON_TEXT_MASK  (ICON_AFTER_TEXT|ICON_BEFORE_TEXT|ICON_ABOVE_TEXT|ICON_BELOW_TEXT)
 
+using namespace FX;
 
 
 /*******************************************************************************/
 
+namespace FX {
+
 // Map
 FXDEFMAP(FXLabel) FXLabelMap[]={
   FXMAPFUNC(SEL_PAINT,0,FXLabel::onPaint),
-  FXMAPFUNC(SEL_KEYPRESS,FXWindow::ID_HOTKEY,FXLabel::onHotKeyPress),
-  FXMAPFUNC(SEL_KEYRELEASE,FXWindow::ID_HOTKEY,FXLabel::onHotKeyRelease),
-  FXMAPFUNC(SEL_COMMAND,FXWindow::ID_SETSTRINGVALUE,FXLabel::onCmdSetStringValue),
-  FXMAPFUNC(SEL_COMMAND,FXWindow::ID_GETSTRINGVALUE,FXLabel::onCmdGetStringValue),
-  FXMAPFUNC(SEL_UPDATE,FXWindow::ID_QUERY_TIP,FXLabel::onQueryTip),
-  FXMAPFUNC(SEL_UPDATE,FXWindow::ID_QUERY_HELP,FXLabel::onQueryHelp),
+  FXMAPFUNC(SEL_KEYPRESS,FXLabel::ID_HOTKEY,FXLabel::onHotKeyPress),
+  FXMAPFUNC(SEL_KEYRELEASE,FXLabel::ID_HOTKEY,FXLabel::onHotKeyRelease),
+  FXMAPFUNC(SEL_COMMAND,FXLabel::ID_SETVALUE,FXLabel::onCmdSetValue),
+  FXMAPFUNC(SEL_COMMAND,FXLabel::ID_SETSTRINGVALUE,FXLabel::onCmdSetStringValue),
+  FXMAPFUNC(SEL_COMMAND,FXLabel::ID_GETSTRINGVALUE,FXLabel::onCmdGetStringValue),
+  FXMAPFUNC(SEL_COMMAND,FXLabel::ID_SETICONVALUE,FXLabel::onCmdSetIconValue),
+  FXMAPFUNC(SEL_COMMAND,FXLabel::ID_GETICONVALUE,FXLabel::onCmdGetIconValue),
+  FXMAPFUNC(SEL_UPDATE,FXLabel::ID_QUERY_TIP,FXLabel::onQueryTip),
+  FXMAPFUNC(SEL_UPDATE,FXLabel::ID_QUERY_HELP,FXLabel::onQueryHelp),
+  FXMAPFUNC(SEL_COMMAND,FXLabel::ID_SETHELPSTRING,FXLabel::onCmdSetHelp),
+  FXMAPFUNC(SEL_COMMAND,FXLabel::ID_GETHELPSTRING,FXLabel::onCmdGetHelp),
+  FXMAPFUNC(SEL_COMMAND,FXLabel::ID_SETTIPSTRING,FXLabel::onCmdSetTip),
+  FXMAPFUNC(SEL_COMMAND,FXLabel::ID_GETTIPSTRING,FXLabel::onCmdGetTip),
   };
 
 
@@ -72,8 +84,8 @@ FXIMPLEMENT(FXLabel,FXFrame,FXLabelMap,ARRAYNUMBER(FXLabelMap))
 // Deserialization
 FXLabel::FXLabel(){
   flags|=FLAG_ENABLED;
-  icon=(FXIcon*)-1;
-  font=(FXFont*)-1;
+  icon=(FXIcon*)-1L;
+  font=(FXFont*)-1L;
   hotkey=0;
   hotoff=0;
   textColor=0;
@@ -83,15 +95,16 @@ FXLabel::FXLabel(){
 // Make a label
 FXLabel::FXLabel(FXComposite* p,const FXString& text,FXIcon* ic,FXuint opts,FXint x,FXint y,FXint w,FXint h,FXint pl,FXint pr,FXint pt,FXint pb):
   FXFrame(p,opts,x,y,w,h,pl,pr,pt,pb){
+  FXString string=text.section('\t',0);
   flags|=FLAG_ENABLED;
-  label=text.extract(0,'\t','&');
-  tip=text.extract(1,'\t');
-  help=text.extract(2,'\t');
+  label=fxstripHotKey(string);
+  tip=text.section('\t',1);
+  help=text.section('\t',2);
   icon=ic;
   font=getApp()->getNormalFont();
   textColor=getApp()->getForeColor();
-  hotkey=fxparsehotkey(text.text());
-  hotoff=fxfindhotkeyoffset(text.text());
+  hotkey=fxparseHotKey(string);
+  hotoff=fxfindHotKey(string);
   addHotKey(hotkey);
   }
 
@@ -132,32 +145,32 @@ void FXLabel::disable(){
 
 // Get height of multi-line label
 FXint FXLabel::labelHeight(const FXString& text) const {
-  register FXuint beg,end;
+  register FXint beg,end;
   register FXint th=0;
   beg=0;
   do{
     end=beg;
-    while(text[end] && text[end]!='\n') end++;
+    while(end<text.length() && text[end]!='\n') end++;
     th+=font->getFontHeight();
     beg=end+1;
     }
-  while(text[end]);
+  while(end<text.length());
   return th;
   }
 
 
 // Get width of multi-line label
 FXint FXLabel::labelWidth(const FXString& text) const {
-  register FXuint beg,end;
+  register FXint beg,end;
   register FXint w,tw=0;
   beg=0;
   do{
     end=beg;
-    while(text[end] && text[end]!='\n') end++;
+    while(end<text.length() && text[end]!='\n') end++;
     if((w=font->getTextWidth(&text[beg],end-beg))>tw) tw=w;
     beg=end+1;
     }
-  while(text[end]);
+  while(end<text.length());
   return tw;
   }
 
@@ -224,7 +237,7 @@ void FXLabel::drawLabel(FXDCWindow& dc,const FXString& text,FXint hot,FXint tx,F
   beg=0;
   do{
     end=beg;
-    while(text[end] && text[end]!='\n') end++;
+    while(end<text.length() && text[end]!='\n') end++;
     if(options&JUSTIFY_LEFT) xx=tx;
     else if(options&JUSTIFY_RIGHT) xx=tx+tw-font->getTextWidth(&text[beg],end-beg);
     else xx=tx+(tw-font->getTextWidth(&text[beg],end-beg))/2;
@@ -235,7 +248,7 @@ void FXLabel::drawLabel(FXDCWindow& dc,const FXString& text,FXint hot,FXint tx,F
     yy+=font->getFontHeight();
     beg=end+1;
     }
-  while(text[end]);
+  while(end<text.length());
   }
 
 
@@ -269,6 +282,13 @@ FXint FXLabel::getDefaultHeight(){
 
 
 // Update value from a message
+long FXLabel::onCmdSetValue(FXObject*,FXSelector,void* ptr){
+  setText((const FXchar*)ptr);
+  return 1;
+  }
+
+
+// Update value from a message
 long FXLabel::onCmdSetStringValue(FXObject*,FXSelector,void* ptr){
   setText(*((FXString*)ptr));
   return 1;
@@ -282,13 +302,27 @@ long FXLabel::onCmdGetStringValue(FXObject*,FXSelector,void* ptr){
   }
 
 
+// Update icon from a message
+long FXLabel::onCmdSetIconValue(FXObject*,FXSelector,void* ptr){
+  setIcon(*((FXIcon**)ptr));
+  return 1;
+  }
+
+
+// Obtain icon from text field
+long FXLabel::onCmdGetIconValue(FXObject*,FXSelector,void* ptr){
+  *((FXIcon**)ptr)=getIcon();
+  return 1;
+  }
+
+
 // Handle repaint
 long FXLabel::onPaint(FXObject*,FXSelector,void* ptr){
   FXEvent   *ev=(FXEvent*)ptr;
   FXDCWindow dc(this,ev);
   FXint      tw=0,th=0,iw=0,ih=0,tx,ty,ix,iy;
   dc.setForeground(backColor);
-  dc.fillRectangle(ev->rect.x,ev->rect.y,ev->rect.w,ev->rect.h);
+  dc.fillRectangle(0,0,width,height);
   if(!label.empty()){
     tw=labelWidth(label);
     th=labelHeight(label);
@@ -306,7 +340,7 @@ long FXLabel::onPaint(FXObject*,FXSelector,void* ptr){
       dc.drawIconSunken(icon,ix,iy);
     }
   if(!label.empty()){
-    dc.setTextFont(font);
+    dc.setFont(font);
     if(isEnabled()){
       dc.setForeground(textColor);
       drawLabel(dc,label,hotoff,tx,ty,tw,th);
@@ -327,18 +361,13 @@ long FXLabel::onPaint(FXObject*,FXSelector,void* ptr){
 // Label widget.  Thus, placing a label with accelerator in front
 // of e.g. a TextField gives a convenient method for getting to it.
 long FXLabel::onHotKeyPress(FXObject*,FXSelector,void* ptr){
-  FXWindow *window=getNext();
-  while(window){
-    if(window->shown()){
-      if(window->isEnabled() && window->canFocus()){
-        window->handle(this,MKUINT(0,SEL_FOCUS_SELF),ptr);
-        return 1;
-        }
-      if(window->isComposite() && window->handle(this,MKUINT(0,SEL_FOCUS_NEXT),ptr)){
-        return 1;
-        }
+  FXWindow *child=getNext();
+  while(child){
+    if(child->shown()){
+      if(child->handle(this,FXSEL(SEL_FOCUS_SELF,0),ptr)) return 1;
+      if(child->handle(this,FXSEL(SEL_FOCUS_NEXT,0),ptr)) return 1;
       }
-    window=window->getNext();
+    child=child->getNext();
     }
   return 1;
   }
@@ -350,10 +379,38 @@ long FXLabel::onHotKeyRelease(FXObject*,FXSelector,void*){
   }
 
 
+// Set help using a message
+long FXLabel::onCmdSetHelp(FXObject*,FXSelector,void* ptr){
+  setHelpText(*((FXString*)ptr));
+  return 1;
+  }
+
+
+// Get help using a message
+long FXLabel::onCmdGetHelp(FXObject*,FXSelector,void* ptr){
+  *((FXString*)ptr)=getHelpText();
+  return 1;
+  }
+
+
+// Set tip using a message
+long FXLabel::onCmdSetTip(FXObject*,FXSelector,void* ptr){
+  setTipText(*((FXString*)ptr));
+  return 1;
+  }
+
+
+// Get tip using a message
+long FXLabel::onCmdGetTip(FXObject*,FXSelector,void* ptr){
+  *((FXString*)ptr)=getTipText();
+  return 1;
+  }
+
+
 // We were asked about status text
 long FXLabel::onQueryHelp(FXObject* sender,FXSelector,void*){
   if(!help.empty() && (flags&FLAG_HELP)){
-    sender->handle(this,MKUINT(ID_SETSTRINGVALUE,SEL_COMMAND),(void*)&help);
+    sender->handle(this,FXSEL(SEL_COMMAND,ID_SETSTRINGVALUE),(void*)&help);
     return 1;
     }
   return 0;
@@ -363,7 +420,7 @@ long FXLabel::onQueryHelp(FXObject* sender,FXSelector,void*){
 // We were asked about tip text
 long FXLabel::onQueryTip(FXObject* sender,FXSelector,void*){
   if(!tip.empty() && (flags&FLAG_TIP)){
-    sender->handle(this,MKUINT(ID_SETSTRINGVALUE,SEL_COMMAND),(void*)&tip);
+    sender->handle(this,FXSEL(SEL_COMMAND,ID_SETSTRINGVALUE),(void*)&tip);
     return 1;
     }
   return 0;
@@ -373,13 +430,13 @@ long FXLabel::onQueryTip(FXObject* sender,FXSelector,void*){
 
 // Change text
 void FXLabel::setText(const FXString& text){
-  FXString str=text.extract(0,'\t','&');
-  if(label!=str){
+  FXString string=fxstripHotKey(text);
+  if(label!=string){
     remHotKey(hotkey);
-    hotkey=fxparsehotkey(text.text());
-    hotoff=fxfindhotkeyoffset(text.text());
+    hotkey=fxparseHotKey(text);
+    hotoff=fxfindHotKey(text);
     addHotKey(hotkey);
-    label=str;
+    label=string;
     recalc();
     update();
     }
@@ -449,18 +506,6 @@ FXuint FXLabel::getIconPosition() const {
   }
 
 
-// Change help text
-void FXLabel::setHelpText(const FXString& text){
-  help=text;
-  }
-
-
-// Change tip text
-void FXLabel::setTipText(const FXString& text){
-  tip=text;
-  }
-
-
 // Save object to stream
 void FXLabel::save(FXStream& store) const {
   FXFrame::save(store);
@@ -492,6 +537,8 @@ void FXLabel::load(FXStream& store){
 // Destroy label
 FXLabel::~FXLabel(){
   remHotKey(hotkey);
-  icon=(FXIcon*)-1;
-  font=(FXFont*)-1;
+  icon=(FXIcon*)-1L;
+  font=(FXFont*)-1L;
   }
+
+}

@@ -3,9 +3,7 @@
 *                      P r o g r e s s B a r   W i d g e t                      *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
-*********************************************************************************
-* Contributed by: Jonathan Bush and Sander Jansen <sxj@cfdrc.com>               *
+* Copyright (C) 1998,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -21,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXProgressBar.cpp,v 1.26.4.3 2003/06/20 19:02:07 fox Exp $                *
+* $Id: FXProgressBar.cpp,v 1.39 2004/02/08 17:29:07 fox Exp $                   *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -32,6 +30,7 @@
 #include "FXPoint.h"
 #include "FXRectangle.h"
 #include "FXRegistry.h"
+#include "FXHash.h"
 #include "FXApp.h"
 #include "FXDCWindow.h"
 #include "FXFont.h"
@@ -47,8 +46,11 @@
 
 #define PROGRESSBAR_MASK (PROGRESSBAR_PERCENTAGE|PROGRESSBAR_VERTICAL|PROGRESSBAR_DIAL)
 
+using namespace FX;
 
 /*******************************************************************************/
+
+namespace FX {
 
 
 // Map
@@ -135,7 +137,7 @@ void FXProgressBar::detach(){
 
 // Update progress value from a message
 long FXProgressBar::onCmdSetValue(FXObject*,FXSelector,void* ptr){
-  setProgress((FXuint)(FXuval)ptr);
+  setProgress((FXuint)(FXival)ptr);
   return 1;
   }
 
@@ -154,15 +156,10 @@ long FXProgressBar::onCmdGetIntValue(FXObject*,FXSelector,void* ptr){
   }
 
 
-// Draw the progress bar
-long FXProgressBar::onPaint(FXObject*,FXSelector,void *ptr){
-  FXEvent *event=(FXEvent*)ptr;
-  FXDCWindow dc(this,event);
+// Draw only the interior, i.e. the part that changes
+void FXProgressBar::drawInterior(FXDCWindow& dc){
   FXint percent,barlength,barfilled,tx,ty,tw,th,n,d;
   FXchar numtext[5];
-
-  // Draw borders if any
-  drawFrame(dc,0,0,width,height);
 
   if(options&PROGRESSBAR_DIAL){
 
@@ -181,9 +178,6 @@ long FXProgressBar::onPaint(FXObject*,FXSelector,void *ptr){
     tx=border+padleft+((tw-d)/2);
     ty=border+padtop+((th-d)/2);
 
-    dc.setForeground(getBaseColor());
-    dc.fillRectangle(border,border,width-(border<<1),height-(border<<1));
-
     if(barfilled!=23040){
       dc.setForeground(barBGColor);
       dc.fillArc(tx,ty,d,d,5760,23040-barfilled);
@@ -193,6 +187,7 @@ long FXProgressBar::onPaint(FXObject*,FXSelector,void *ptr){
       dc.fillArc(tx,ty,d,d,5760,-barfilled);
       }
 
+    // Draw outside circle
     dc.setForeground(borderColor);
     dc.drawArc(tx+1,ty,d,d,90*64,45*64);
     dc.drawArc(tx,ty+1,d,d,135*64,45*64);
@@ -207,14 +202,14 @@ long FXProgressBar::onPaint(FXObject*,FXSelector,void *ptr){
 
     // Draw text
     if(options&PROGRESSBAR_PERCENTAGE){
-      dc.setTextFont(font);
+      dc.setFont(font);
       tw=font->getTextWidth("100%",4);
-      if(tw>(11*d)/16) return 1;
+      if(tw>(10*d)/16) return;
       th=font->getFontHeight();
-      if(th>d/2) return 1;
+      if(th>d/2) return;
       sprintf(numtext,"%d%%",percent);
       n=strlen(numtext);
-      tw=font->getTextWidth(numtext,n-1);       // Not including the % looks better
+      tw=font->getTextWidth(numtext,n);
       th=font->getFontHeight();
       tx=tx+d/2-tw/2;
       ty=ty+d/2+font->getFontAscent()+5;
@@ -251,7 +246,7 @@ long FXProgressBar::onPaint(FXObject*,FXSelector,void *ptr){
 
     // Draw text
     if(options&PROGRESSBAR_PERCENTAGE){
-      dc.setTextFont(font);
+      dc.setFont(font);
       sprintf(numtext,"%d%%",percent);
       n=strlen(numtext);
       tw=font->getTextWidth(numtext,n);
@@ -260,10 +255,12 @@ long FXProgressBar::onPaint(FXObject*,FXSelector,void *ptr){
       tx=(width-tw)/2;
       if(height-border-barfilled>ty){           // In upper side
         dc.setForeground(textNumColor);
+        dc.setClipRectangle(border,border,width-(border<<1),height-(border<<1));
         dc.drawText(tx,ty,numtext,n);
         }
       else if(ty-th>height-border-barfilled){   // In lower side
         dc.setForeground(textAltColor);
+        dc.setClipRectangle(border,border,width-(border<<1),height-(border<<1));
         dc.drawText(tx,ty,numtext,n);
         }
       else{                                     // In between!
@@ -304,19 +301,21 @@ long FXProgressBar::onPaint(FXObject*,FXSelector,void *ptr){
 
     // Draw text
     if(options&PROGRESSBAR_PERCENTAGE){
-      dc.setTextFont(font);
+      dc.setFont(font);
       sprintf(numtext,"%d%%",percent);
       n=strlen(numtext);
-      tw=font->getTextWidth(numtext,n-1); // Not including the % looks better
+      tw=font->getTextWidth(numtext,n);
       th=font->getFontHeight();
       ty=(height-th)/2+font->getFontAscent();
       tx=(width-tw)/2;
       if(border+barfilled<=tx){           // In right side
         dc.setForeground(textNumColor);
+        dc.setClipRectangle(border,border,width-(border<<1),height-(border<<1));
         dc.drawText(tx,ty,numtext,n);
         }
       else if(tx+tw<=border+barfilled){   // In left side
         dc.setForeground(textAltColor);
+        dc.setClipRectangle(border,border,width-(border<<1),height-(border<<1));
         dc.drawText(tx,ty,numtext,n);
         }
       else{                               // In between!
@@ -330,6 +329,23 @@ long FXProgressBar::onPaint(FXObject*,FXSelector,void *ptr){
         }
       }
     }
+  }
+
+
+// Draw the progress bar
+long FXProgressBar::onPaint(FXObject*,FXSelector,void *ptr){
+  FXEvent *event=(FXEvent*)ptr;
+  FXDCWindow dc(this,event);
+
+  // Draw borders if any
+  drawFrame(dc,0,0,width,height);
+
+  // Background
+  dc.setForeground(getBaseColor());
+  dc.fillRectangle(border,border,width-(border<<1),height-(border<<1));
+
+  // Interior
+  drawInterior(dc);
   return 1;
   }
 
@@ -339,8 +355,10 @@ void FXProgressBar::setProgress(FXuint value){
   if(value>total) value=total;
   if(value!=progress){
     progress=value;
-    update(border,border,width-(border<<1),height-(border<<1));
-    repaint(border,border,width-(border<<1),height-(border<<1));
+    if(xid){
+      FXDCWindow dc(this);
+      drawInterior(dc);
+      }
     getApp()->flush();
     }
   }
@@ -348,13 +366,7 @@ void FXProgressBar::setProgress(FXuint value){
 
 // Increment amount of progress
 void FXProgressBar::increment(FXuint value){
-  if(value!=0){
-    progress+=value;
-    if(progress>total) progress=total;
-    update(border,border,width-(border<<1),height-(border<<1));
-    repaint(border,border,width-(border<<1),height-(border<<1));
-    getApp()->flush();
-    }
+  setProgress(progress+value);
   }
 
 
@@ -362,8 +374,10 @@ void FXProgressBar::increment(FXuint value){
 void FXProgressBar::setTotal(FXuint value){
   if(value!=total){
     total=value;
-    update(border,border,width-(border<<1),height-(border<<1));
-    repaint(border,border,width-(border<<1),height-(border<<1));
+    if(xid){
+      FXDCWindow dc(this);
+      drawInterior(dc);
+      }
     getApp()->flush();
     }
   }
@@ -397,7 +411,7 @@ void FXProgressBar::setTextColor(FXColor clr){
 
 
 // Change alternate text color
-void FXProgressBar::setTextAltColor(FXColor clr) {
+void FXProgressBar::setTextAltColor(FXColor clr){
   if(textAltColor!=clr){
     textAltColor=clr;
     update();
@@ -446,7 +460,7 @@ void FXProgressBar::setFont(FXFont *fnt){
   }
 
 
-// Change spinner style
+// Change style of the bar widget
 void FXProgressBar::setBarStyle(FXuint style){
   FXuint opts=(options&~PROGRESSBAR_MASK) | (style&PROGRESSBAR_MASK);
   if(options!=opts){
@@ -456,7 +470,7 @@ void FXProgressBar::setBarStyle(FXuint style){
   }
 
 
-// Get spinner style
+// Get style of the bar widget
 FXuint FXProgressBar::getBarStyle() const {
   return (options&PROGRESSBAR_MASK);
   }
@@ -493,8 +507,7 @@ void FXProgressBar::load(FXStream& store){
 
 // Destroy
 FXProgressBar::~FXProgressBar(){
-  font=(FXFont*)-1;
+  font=(FXFont*)-1L;
   }
 
-
-
+}

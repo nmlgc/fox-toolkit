@@ -3,7 +3,7 @@
 *              D i r e c t o r y   S e l e c t i o n   W i d g e t              *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2000,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 2000,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXDirSelector.h,v 1.11 2002/01/18 22:46:41 jeroen Exp $                  *
+* $Id: FXDirSelector.h,v 1.16 2004/02/08 17:17:33 fox Exp $                     *
 ********************************************************************************/
 #ifndef FXDIRSELECTOR_H
 #define FXDIRSELECTOR_H
@@ -28,12 +28,12 @@
 #include "FXPacker.h"
 #endif
 
+namespace FX {
 
 
 class FXDirList;
 class FXTextField;
 class FXButton;
-class FXDriveBox;
 
 
 /// Directory selection widget
@@ -41,7 +41,6 @@ class FXAPI FXDirSelector : public FXPacker {
   FXDECLARE(FXDirSelector)
 protected:
   FXDirList     *dirbox;          // Directory list widget
-  FXDriveBox    *drivebox;        // Drive selection widget
   FXTextField   *dirname;         // Directory name entry field
   FXButton      *accept;          // Accept button
   FXButton      *cancel;          // Cancel button
@@ -53,12 +52,16 @@ private:
 public:
   long onCmdName(FXObject*,FXSelector,void*);
   long onCmdOpened(FXObject*,FXSelector,void*);
-  long onCmdDriveChanged(FXObject*,FXSelector,void*);
+  long onCmdHome(FXObject*,FXSelector,void*);
+  long onCmdWork(FXObject*,FXSelector,void*);
+  long onCmdDirectoryUp(FXObject*,FXSelector,void*);
 public:
   enum {
     ID_DIRNAME=FXPacker::ID_LAST,
     ID_DIRLIST,
-    ID_DRIVEBOX,
+    ID_HOME,
+    ID_WORK,
+    ID_DIRECTORY_UP,
     ID_LAST
     };
 public:
@@ -94,5 +97,6 @@ public:
   virtual ~FXDirSelector();
   };
 
+}
 
 #endif

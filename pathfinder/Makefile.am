@@ -4,47 +4,60 @@ CXXFLAGS = @CXXFLAGS@ @X_CFLAGS@
 INCLUDES = -I$(top_srcdir)/include -I$(top_builddir)/include
 RESWRAP  = $(top_builddir)/utils/reswrap
 SUFFIXES = .gif .bmp
-LDADD	 = ../src/libFOX.la -lm
+LDADD	 = ../src/libFOX-1.1.la -lm
 
 bin_PROGRAMS	= PathFinder
 
 man_MANS = PathFinder.1
 
 ICONS = \
-        bigicons.bmp \
-        bigpenguin.bmp \
-        clrbook.gif \
-        copy.bmp \
-        copyit.gif \
-        cut.bmp \
-        deleteit.bmp \
-        desktop.bmp \
-        details.bmp \
-        dirup.bmp \
-        goback.bmp \
-        goforw.bmp \
-        gotodir.bmp \
-        home.gif \
-        hosts.bmp \
-        linkit.gif \
-        maphost.bmp \
-        moveit.gif \
-        minipenguin.bmp \
-        paste.bmp \
-        properties.bmp \
-        setbook.gif \
-        smallicons.bmp \
-        unmaphost.bmp \
-        work.gif
+bigicons.bmp \
+closepanel.gif \
+clrbook.gif \
+copy.bmp \
+copyit.gif \
+cut.bmp \
+deleteit.bmp \
+desktop.bmp \
+details.bmp \
+dirup.bmp \
+enter.gif \
+file_gif.gif \
+foxbig.gif \
+foxmini.gif \
+goback.bmp \
+goforw.bmp \
+gotodir.bmp \
+home.gif \
+hosts.bmp \
+iconpath.gif \
+linkit.gif \
+location.gif \
+maphost.bmp \
+moveit.gif \
+paste.bmp \
+pattern_gif.gif \
+properties.bmp \
+quit_gif.gif \
+renameit.gif \
+rotateleft.gif \
+rotateright.gif \
+setbook.gif \
+smallicons.bmp \
+unmaphost.bmp \
+work.gif
 
 PathFinder_SOURCES =  \
-        icons.h \
-        icons.cpp \
-        PathFinder.cpp \
-        PathFinder.h \
-        PropertyDialog.cpp \
-        PropertyDialog.h \
-        $(ICONS)
+icons.h \
+icons.cpp \
+PathFinder.cpp \
+PathFinder.h \
+Preferences.cpp \
+Preferences.h \
+PropertyDialog.cpp \
+PropertyDialog.h \
+LICENSE \
+$(ICONS)
 
 PathFinder.cpp: icons.h icons.cpp
 
@@ -58,6 +71,6 @@ CLEANFILES	= icons.h icons.cpp
 
 EXTRA_DIST = $(man_MANS) \
              Makefile.bc \
+             Makefile.wc \
              Makefile.dmc
-
 

@@ -3,7 +3,7 @@
 *         M u l t i p l e   D o c u m e n t   C l i e n t   W i n d o w         *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1998,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,15 +19,16 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXMDIClient.h,v 1.18 2002/01/18 22:42:53 jeroen Exp $                    *
+* $Id: FXMDIClient.h,v 1.29 2004/02/08 17:17:33 fox Exp $                       *
 ********************************************************************************/
 #ifndef FXMDICLIENT_H
 #define FXMDICLIENT_H
 
-#ifndef FXSCROLLAREA_H
-#include "FXScrollArea.h"
+#ifndef FXCOMPOSITE_H
+#include "FXComposite.h"
 #endif
 
+namespace FX {
 
 
 class FXMDIChild;
@@ -46,29 +47,19 @@ class FXMDIChild;
 * MDI child windows are notified about changes in the active MDI child
 * window by the MDI client.
 */
-class FXAPI FXMDIClient : public FXScrollArea {
+class FXAPI FXMDIClient : public FXComposite {
   FXDECLARE(FXMDIClient)
   friend class FXMDIChild;
 protected:
+  FXMDIChild *active;             // Active child
   FXint       cascadex;           // Cascade offset X
   FXint       cascadey;           // Cascade offset Y
-  FXint       xmin;               // Space taken up by all children
-  FXint       xmax;
-  FXint       ymin;
-  FXint       ymax;
-private:
-  FXMDIChild *mdifirst;
-  FXMDIChild *mdilast;
-  FXMDIChild *active;
 protected:
   FXMDIClient();
-  void recompute();
-  virtual void layout();
 private:
   FXMDIClient(const FXMDIClient&);
   FXMDIClient &operator=(const FXMDIClient&);
 public:
-  long onChanged(FXObject*,FXSelector,void*);
   long onCmdActivateNext(FXObject*,FXSelector,void*);
   long onCmdActivatePrev(FXObject*,FXSelector,void*);
   long onCmdTileHorizontal(FXObject*,FXSelector,void*);
@@ -87,18 +78,16 @@ public:
   long onUpdMenuMinimize(FXObject*,FXSelector,void*);
   long onUpdMaximize(FXObject*,FXSelector,void*);
   long onUpdMenuWindow(FXObject*,FXSelector,void*);
-  long onCmdCloseDocument(FXObject*,FXSelector,void*);
-  long onCmdCloseAllDocuments(FXObject*,FXSelector,void*);
-  long onUpdCloseDocument(FXObject*,FXSelector,void*);
-  long onUpdCloseAllDocuments(FXObject*,FXSelector,void*);
   long onCmdWindowSelect(FXObject*,FXSelector,void*);
   long onUpdWindowSelect(FXObject*,FXSelector,void*);
+  long onCmdOthersWindows(FXObject*,FXSelector,void*);
+  long onUpdOthersWindows(FXObject*,FXSelector,void*);
   long onUpdAnyWindows(FXObject*,FXSelector,void*);
   virtual long onDefault(FXObject*,FXSelector,void*);
 public:
   enum {
     ID_MDI_ANY=65400,
-    ID_MDI_1,
+    ID_MDI_1,           // Select MDI child 1
     ID_MDI_2,
     ID_MDI_3,
     ID_MDI_4,
@@ -108,6 +97,16 @@ public:
     ID_MDI_8,
     ID_MDI_9,
     ID_MDI_10,
+    ID_MDI_OVER_1,      // Sensitize MDI menu when 1 or more children
+    ID_MDI_OVER_2,
+    ID_MDI_OVER_3,
+    ID_MDI_OVER_4,
+    ID_MDI_OVER_5,
+    ID_MDI_OVER_6,
+    ID_MDI_OVER_7,
+    ID_MDI_OVER_8,
+    ID_MDI_OVER_9,
+    ID_MDI_OVER_10,
     ID_LAST
     };
 public:
@@ -115,35 +114,47 @@ public:
   /// Construct MDI Client window
   FXMDIClient(FXComposite* p,FXuint opts=0,FXint x=0,FXint y=0,FXint w=0,FXint h=0);
 
-  /// Recalculate interior for scrollbars
-  virtual void recalc();
+  /// Return default width
+  virtual FXint getDefaultWidth();
 
-  /// Move MDI Children around
-  virtual void moveContents(FXint x,FXint y);
+  /// Return default height
+  virtual FXint getDefaultHeight();
 
-  /// Get first MDI Child
-  FXMDIChild* getMDIChildFirst() const { return mdifirst; }
+  /// Perform layout
+  virtual void layout();
 
-  /// Get last MDI Child
-  FXMDIChild* getMDIChildLast() const { return mdilast; }
-
-  /// Pass message to all MDI Child windows
+  /**
+  * Pass message to all MDI windows, stopping when one of
+  * the MDI windows fails to handle the message.
+  */
   long forallWindows(FXObject* sender,FXSelector sel,void* ptr);
 
-  /// Pass message to all MDI Child windows whose target is document
+  /**
+  * Pass message once to all MDI windows with the same document,
+  * stopping when one of the MDI windows fails to handle the message.
+  */
+  long forallDocuments(FXObject* sender,FXSelector sel,void* ptr);
+
+  /**
+  * Pass message to all MDI Child windows whose target is document,
+  * stopping when one of the MDI windows fails to handle the message.
+  */
   long forallDocWindows(FXObject* document,FXObject* sender,FXSelector sel,void* ptr);
 
-  /// Recompute content width
-  virtual FXint getContentWidth();
-
-  /// Recompute content height
-  virtual FXint getContentHeight();
+  /// Set active MDI Child
+  virtual FXbool setActiveChild(FXMDIChild* child=NULL,FXbool notify=TRUE);
 
   /// Get current active child; may be NULL!
   FXMDIChild* getActiveChild() const { return active; }
 
-  /// Set active MDI Child
-  FXbool setActiveChild(FXMDIChild* child=NULL,FXbool notify=TRUE);
+  // Cascade windows
+  virtual void cascade(FXbool notify=FALSE);
+
+  // Layout horizontally
+  virtual void horizontal(FXbool notify=FALSE);
+
+  // Layout vertically
+  virtual void vertical(FXbool notify=FALSE);
 
   /// Change cascade offset X
   void setCascadeX(FXint off){ cascadex=off; }
@@ -167,5 +178,6 @@ public:
   virtual ~FXMDIClient();
   };
 
+}
 
 #endif

@@ -3,23 +3,23 @@
 *                  F i l e   P r o p e r t i e s   D i a l o g                  *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2000,2001 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 2000,2003 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
-* This library is free software; you can redistribute it and/or                 *
-* modify it under the terms of the GNU Lesser General Public                    *
-* License as published by the Free Software Foundation; either                  *
-* version 2.1 of the License, or (at your option) any later version.            *
+* This program is free software; you can redistribute it and/or modify          *
+* it under the terms of the GNU General Public License as published by          *
+* the Free Software Foundation; either version 2 of the License, or             *
+* (at your option) any later version.                                           *
 *                                                                               *
-* This library is distributed in the hope that it will be useful,               *
+* This program is distributed in the hope that it will be useful,               *
 * but WITHOUT ANY WARRANTY; without even the implied warranty of                *
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU             *
-* Lesser General Public License for more details.                               *
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                 *
+* GNU General Public License for more details.                                  *
 *                                                                               *
-* You should have received a copy of the GNU Lesser General Public              *
-* License along with this library; if not, write to the Free Software           *
+* You should have received a copy of the GNU General Public License             *
+* along with this program; if not, write to the Free Software                   *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: PropertyDialog.cpp,v 1.15 2001/11/27 20:13:07 jeroen Exp $               *
+* $Id: PropertyDialog.cpp,v 1.19 2004/02/08 17:05:34 fox Exp $                  *
 ********************************************************************************/
 #include "xincs.h"
 #include "fx.h"
@@ -31,7 +31,7 @@
 
 /*
   Notes:
-  - Refer to RFC 2045, 2046, 2047, 2048, and 2077.  
+  - Refer to RFC 2045, 2046, 2047, 2048, and 2077.
     The Internet media type registry is at:
     ftp://ftp.iana.org/in-notes/iana/assignments/media-types/
 */
@@ -151,7 +151,7 @@ PropertyDialog::PropertyDialog(FXWindow *owner):
   // List of possible extensions of this file type
   FXGroupBox *extensiongroup=new FXGroupBox(iconsandext,"File Extensions",GROUPBOX_TITLE_LEFT|FRAME_GROOVE|LAYOUT_FILL_X|LAYOUT_FILL_Y);
   FXVerticalFrame *extensionFrame=new FXVerticalFrame(extensiongroup,LAYOUT_FILL_X|LAYOUT_FILL_Y|FRAME_SUNKEN|FRAME_THICK,0,0,0,0, 0,0,0,0);
-  extensions=new FXList(extensionFrame,3,NULL,0,LIST_BROWSESELECT|LAYOUT_FILL_X|LAYOUT_FILL_Y|HSCROLLER_NEVER);
+  extensions=new FXList(extensionFrame,NULL,0,LIST_BROWSESELECT|LAYOUT_FILL_X|LAYOUT_FILL_Y|HSCROLLER_NEVER);
   extensions->appendItem("fox.tar.gz");
   extensions->appendItem("tar.gz");
   extensions->appendItem("gz");
@@ -177,13 +177,13 @@ PropertyDialog::PropertyDialog(FXWindow *owner):
 
   // Mime type
   FXGroupBox *mimegroup=new FXGroupBox(commandandmime,"Mime Types",GROUPBOX_TITLE_LEFT|FRAME_GROOVE|LAYOUT_FILL_X|LAYOUT_FILL_Y);
-  
+
   FXHorizontalFrame *mimebuttons=new FXHorizontalFrame(mimegroup,LAYOUT_SIDE_BOTTOM|LAYOUT_FILL_X|PACK_UNIFORM_WIDTH,0,0,0,0, 0,0,0,0);
   new FXButton(mimebuttons,"Add...",NULL,this,ID_ADD_MIMETYPE,FRAME_RAISED|FRAME_THICK|LAYOUT_CENTER_Y|LAYOUT_CENTER_X);
   new FXButton(mimebuttons,"Remove",NULL,this,ID_REMOVE_MIMETYPE,FRAME_RAISED|FRAME_THICK|LAYOUT_CENTER_Y|LAYOUT_CENTER_X);
 
   FXVerticalFrame *mimeFrame=new FXVerticalFrame(mimegroup,LAYOUT_SIDE_LEFT|LAYOUT_FILL_X|LAYOUT_FILL_Y|FRAME_SUNKEN|FRAME_THICK,0,0,0,0, 0,0,0,0);
-  mimetypes=new FXList(mimeFrame,3,this,ID_CHANGE_MIMETYPE,LIST_BROWSESELECT|LAYOUT_FILL_X|LAYOUT_FILL_Y|HSCROLLER_NEVER);
+  mimetypes=new FXList(mimeFrame,this,ID_CHANGE_MIMETYPE,LIST_BROWSESELECT|LAYOUT_FILL_X|LAYOUT_FILL_Y|HSCROLLER_NEVER);
 
   // Add a few if none exist yet
   mimetypes->appendItem("image/gif");

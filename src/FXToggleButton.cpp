@@ -3,7 +3,7 @@
 *                   T o g g l e    B u t t o n    O b j e c t                   *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1998,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXToggleButton.cpp,v 1.31.4.1 2003/06/20 19:02:07 fox Exp $               *
+* $Id: FXToggleButton.cpp,v 1.48 2004/02/08 17:29:07 fox Exp $                  *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -31,6 +31,7 @@
 #include "FXPoint.h"
 #include "FXRectangle.h"
 #include "FXRegistry.h"
+#include "FXHash.h"
 #include "FXApp.h"
 #include "FXDCWindow.h"
 #include "FXIcon.h"
@@ -41,13 +42,19 @@
   Notes:
   - If the altlabel is empty, the normal label will be used;
     likewise for the icon.
+  - Setting the alt label will also change the alt hotkey.
+  - The fallback logic needs to be properly adhered to in the size computation.
 */
 
 
 // ToggleButton styles
-#define TOGGLEBUTTON_MASK (TOGGLEBUTTON_AUTOGRAY|TOGGLEBUTTON_AUTOHIDE|TOGGLEBUTTON_TOOLBAR)
+#define TOGGLEBUTTON_MASK (TOGGLEBUTTON_AUTOGRAY|TOGGLEBUTTON_AUTOHIDE|TOGGLEBUTTON_TOOLBAR|TOGGLEBUTTON_KEEPSTATE)
+
+using namespace FX;
 
 /*******************************************************************************/
+
+namespace FX {
 
 // Map
 FXDEFMAP(FXToggleButton) FXToggleButtonMap[]={
@@ -62,15 +69,15 @@ FXDEFMAP(FXToggleButton) FXToggleButtonMap[]={
   FXMAPFUNC(SEL_LEFTBUTTONRELEASE,0,FXToggleButton::onLeftBtnRelease),
   FXMAPFUNC(SEL_KEYPRESS,0,FXToggleButton::onKeyPress),
   FXMAPFUNC(SEL_KEYRELEASE,0,FXToggleButton::onKeyRelease),
-  FXMAPFUNC(SEL_KEYPRESS,FXWindow::ID_HOTKEY,FXToggleButton::onHotKeyPress),
-  FXMAPFUNC(SEL_KEYRELEASE,FXWindow::ID_HOTKEY,FXToggleButton::onHotKeyRelease),
-  FXMAPFUNC(SEL_UPDATE,FXWindow::ID_QUERY_TIP,FXToggleButton::onQueryTip),
-  FXMAPFUNC(SEL_UPDATE,FXWindow::ID_QUERY_HELP,FXToggleButton::onQueryHelp),
-  FXMAPFUNC(SEL_COMMAND,FXWindow::ID_CHECK,FXToggleButton::onCheck),
-  FXMAPFUNC(SEL_COMMAND,FXWindow::ID_UNCHECK,FXToggleButton::onUncheck),
-  FXMAPFUNC(SEL_COMMAND,FXWindow::ID_SETVALUE,FXToggleButton::onCmdSetValue),
-  FXMAPFUNC(SEL_COMMAND,FXWindow::ID_SETINTVALUE,FXToggleButton::onCmdSetIntValue),
-  FXMAPFUNC(SEL_COMMAND,FXWindow::ID_GETINTVALUE,FXToggleButton::onCmdGetIntValue),
+  FXMAPFUNC(SEL_KEYPRESS,FXToggleButton::ID_HOTKEY,FXToggleButton::onHotKeyPress),
+  FXMAPFUNC(SEL_KEYRELEASE,FXToggleButton::ID_HOTKEY,FXToggleButton::onHotKeyRelease),
+  FXMAPFUNC(SEL_UPDATE,FXToggleButton::ID_QUERY_TIP,FXToggleButton::onQueryTip),
+  FXMAPFUNC(SEL_UPDATE,FXToggleButton::ID_QUERY_HELP,FXToggleButton::onQueryHelp),
+  FXMAPFUNC(SEL_COMMAND,FXToggleButton::ID_CHECK,FXToggleButton::onCheck),
+  FXMAPFUNC(SEL_COMMAND,FXToggleButton::ID_UNCHECK,FXToggleButton::onUncheck),
+  FXMAPFUNC(SEL_COMMAND,FXToggleButton::ID_SETVALUE,FXToggleButton::onCmdSetValue),
+  FXMAPFUNC(SEL_COMMAND,FXToggleButton::ID_SETINTVALUE,FXToggleButton::onCmdSetIntValue),
+  FXMAPFUNC(SEL_COMMAND,FXToggleButton::ID_GETINTVALUE,FXToggleButton::onCmdGetIntValue),
   };
 
 
@@ -80,7 +87,7 @@ FXIMPLEMENT(FXToggleButton,FXLabel,FXToggleButtonMap,ARRAYNUMBER(FXToggleButtonM
 
 // Deserialization
 FXToggleButton::FXToggleButton(){
-  alticon=(FXIcon*)-1;
+  alticon=(FXIcon*)-1L;
   state=FALSE;
   down=FALSE;
   }
@@ -89,14 +96,15 @@ FXToggleButton::FXToggleButton(){
 // Construct and init
 FXToggleButton::FXToggleButton(FXComposite* p,const FXString& text1,const FXString& text2,FXIcon* icon1,FXIcon* icon2,FXObject* tgt,FXSelector sel,FXuint opts,FXint x,FXint y,FXint w,FXint h,FXint pl,FXint pr,FXint pt,FXint pb):
   FXLabel(p,text1,icon1,opts,x,y,w,h,pl,pr,pt,pb){
+  FXString string=text2.section('\t',0);
   target=tgt;
   message=sel;
-  altlabel=text2.extract(0,'\t','&');
-  alttip=text2.extract(1,'\t');
-  althelp=text2.extract(2,'\t');
+  altlabel=fxstripHotKey(string);
+  alttip=text2.section('\t',1);
+  althelp=text2.section('\t',2);
   alticon=icon2;
-  althotkey=fxparsehotkey(text2.text());
-  althotoff=fxfindhotkeyoffset(text2.text());
+  althotkey=fxparseHotKey(string);
+  althotoff=fxfindHotKey(string);
   addHotKey(althotkey);
   state=FALSE;
   down=FALSE;
@@ -119,28 +127,36 @@ void FXToggleButton::detach(){
 
 // Get default width
 FXint FXToggleButton::getDefaultWidth(){
-  FXint tw=0,iw=0,s=0,w1,w2;
+  FXint tw,iw,s,w1,w2;
+
+  tw=iw=s=0;
   if(!label.empty()) tw=labelWidth(label);
   if(icon) iw=icon->getWidth();
   if(iw && tw) s=4;
   if(!(options&(ICON_AFTER_TEXT|ICON_BEFORE_TEXT))) w1=FXMAX(tw,iw); else w1=tw+iw+s;
-  if(!altlabel.empty()) tw=labelWidth(altlabel); else if(!label.empty()) tw=labelWidth(label);
-  if(alticon) iw=alticon->getWidth(); else if(icon) iw=icon->getWidth();
+
+  if(!altlabel.empty()) tw=labelWidth(altlabel);
+  if(alticon) iw=alticon->getWidth();
   if(iw && tw) s=4;
   if(!(options&(ICON_AFTER_TEXT|ICON_BEFORE_TEXT))) w2=FXMAX(tw,iw); else w2=tw+iw+s;
+
   return FXMAX(w1,w2)+padleft+padright+(border<<1);
   }
 
 
 // Get default height
 FXint FXToggleButton::getDefaultHeight(){
-  FXint th=0,ih=0,h1,h2;
+  FXint th,ih,h1,h2;
+
+  th=ih=0;
   if(!label.empty()) th=labelHeight(label);
   if(icon) ih=icon->getHeight();
   if(!(options&(ICON_ABOVE_TEXT|ICON_BELOW_TEXT))) h1=FXMAX(th,ih); else h1=th+ih;
-  if(!altlabel.empty()) th=labelHeight(altlabel); else if(!label.empty()) th=labelHeight(label);
-  if(alticon) ih=alticon->getHeight(); else if(icon) ih=icon->getHeight();
+
+  if(!altlabel.empty()) th=labelHeight(altlabel);
+  if(alticon) ih=alticon->getHeight();
   if(!(options&(ICON_ABOVE_TEXT|ICON_BELOW_TEXT))) h2=FXMAX(th,ih); else h2=th+ih;
+
   return FXMAX(h1,h2)+padtop+padbottom+(border<<1);
   }
 
@@ -252,11 +268,11 @@ long FXToggleButton::onLeave(FXObject* sender,FXSelector sel,void* ptr){
 
 // Pressed mouse button
 long FXToggleButton::onLeftBtnPress(FXObject*,FXSelector,void* ptr){
-  handle(this,MKUINT(0,SEL_FOCUS_SELF),ptr);
+  handle(this,FXSEL(SEL_FOCUS_SELF,0),ptr);
   flags&=~FLAG_TIP;
   if(isEnabled() && !(flags&FLAG_PRESSED)){
     grab();
-    if(target && target->handle(this,MKUINT(message,SEL_LEFTBUTTONPRESS),ptr)) return 1;
+    if(target && target->handle(this,FXSEL(SEL_LEFTBUTTONPRESS,message),ptr)) return 1;
     press(TRUE);
     flags|=FLAG_PRESSED;
     flags&=~FLAG_UPDATE;
@@ -271,13 +287,13 @@ long FXToggleButton::onLeftBtnRelease(FXObject*,FXSelector,void* ptr){
   FXbool click=down;
   if(isEnabled() && (flags&FLAG_PRESSED)){
     ungrab();
-    if(target && target->handle(this,MKUINT(message,SEL_LEFTBUTTONRELEASE),ptr)) return 1;
+    if(target && target->handle(this,FXSEL(SEL_LEFTBUTTONRELEASE,message),ptr)) return 1;
     press(FALSE);
     flags|=FLAG_UPDATE;
     flags&=~FLAG_PRESSED;
     if(click){
       setState(!state);
-      if(target) target->handle(this,MKUINT(message,SEL_COMMAND),(void*)(long)state);
+      if(target) target->handle(this,FXSEL(SEL_COMMAND,message),(void*)(FXuval)state);
       }
     return 1;
     }
@@ -300,7 +316,7 @@ long FXToggleButton::onKeyPress(FXObject*,FXSelector,void* ptr){
   FXEvent* event=(FXEvent*)ptr;
   flags&=~FLAG_TIP;
   if(isEnabled() && !(flags&FLAG_PRESSED)){
-    if(target && target->handle(this,MKUINT(message,SEL_KEYPRESS),ptr)) return 1;
+    if(target && target->handle(this,FXSEL(SEL_KEYPRESS,message),ptr)) return 1;
     if(event->code==KEY_space || event->code==KEY_KP_Space){
       press(TRUE);
       flags|=FLAG_PRESSED;
@@ -316,13 +332,13 @@ long FXToggleButton::onKeyPress(FXObject*,FXSelector,void* ptr){
 long FXToggleButton::onKeyRelease(FXObject*,FXSelector,void* ptr){
   FXEvent* event=(FXEvent*)ptr;
   if(isEnabled() && (flags&FLAG_PRESSED)){
-    if(target && target->handle(this,MKUINT(message,SEL_KEYRELEASE),ptr)) return 1;
+    if(target && target->handle(this,FXSEL(SEL_KEYRELEASE,message),ptr)) return 1;
     if(event->code==KEY_space || event->code==KEY_KP_Space){
       press(FALSE);
       setState(!state);
       flags|=FLAG_UPDATE;
       flags&=~FLAG_PRESSED;
-      if(target) target->handle(this,MKUINT(message,SEL_COMMAND),(void*)(long)state);
+      if(target) target->handle(this,FXSEL(SEL_COMMAND,message),(void*)(FXuval)state);
       return 1;
       }
     }
@@ -332,7 +348,7 @@ long FXToggleButton::onKeyRelease(FXObject*,FXSelector,void* ptr){
 
 // Hot key combination pressed
 long FXToggleButton::onHotKeyPress(FXObject*,FXSelector,void* ptr){
-  handle(this,MKUINT(0,SEL_FOCUS_SELF),ptr);
+  handle(this,FXSEL(SEL_FOCUS_SELF,0),ptr);
   flags&=~FLAG_TIP;
   FXTRACE((100,"FXToggleButton::onHotKeyPress\n"));
   if(isEnabled() && !(flags&FLAG_PRESSED)){
@@ -352,7 +368,7 @@ long FXToggleButton::onHotKeyRelease(FXObject*,FXSelector,void*){
     flags&=~FLAG_PRESSED;
     press(FALSE);
     setState(!state);
-    if(target) target->handle(this,MKUINT(message,SEL_COMMAND),(void*)(long)state);
+    if(target) target->handle(this,FXSEL(SEL_COMMAND,message),(void*)(FXuval)state);
     }
   return 1;
   }
@@ -363,12 +379,12 @@ long FXToggleButton::onQueryHelp(FXObject* sender,FXSelector,void*){
   if(flags&FLAG_HELP){
     if(state){
       if(!althelp.empty()){
-        sender->handle(this,MKUINT(ID_SETSTRINGVALUE,SEL_COMMAND),(void*)&althelp);
+        sender->handle(this,FXSEL(SEL_COMMAND,ID_SETSTRINGVALUE),(void*)&althelp);
         return 1;
         }
       }
     if(!help.empty()){
-      sender->handle(this,MKUINT(ID_SETSTRINGVALUE,SEL_COMMAND),(void*)&help);
+      sender->handle(this,FXSEL(SEL_COMMAND,ID_SETSTRINGVALUE),(void*)&help);
       return 1;
       }
     }
@@ -381,12 +397,12 @@ long FXToggleButton::onQueryTip(FXObject* sender,FXSelector,void*){
   if(flags&FLAG_TIP){
     if(state){
       if(!alttip.empty()){
-        sender->handle(this,MKUINT(ID_SETSTRINGVALUE,SEL_COMMAND),(void*)&alttip);
+        sender->handle(this,FXSEL(SEL_COMMAND,ID_SETSTRINGVALUE),(void*)&alttip);
         return 1;
         }
       }
     if(!tip.empty()){
-      sender->handle(this,MKUINT(ID_SETSTRINGVALUE,SEL_COMMAND),(void*)&tip);
+      sender->handle(this,FXSEL(SEL_COMMAND,ID_SETSTRINGVALUE),(void*)&tip);
       return 1;
       }
     }
@@ -407,7 +423,7 @@ long FXToggleButton::onPaint(FXObject*,FXSelector,void* ptr){
     if(options&TOGGLEBUTTON_TOOLBAR){
 
       // Enabled and cursor inside and down
-      if(down){
+      if(down || ((options&TOGGLEBUTTON_KEEPSTATE) && state)){
         dc.setForeground(hiliteColor);
         dc.fillRectangle(border,border,width-border*2,height-border*2);
         if(options&FRAME_THICK) drawDoubleSunkenRectangle(dc,0,0,width,height);
@@ -433,7 +449,7 @@ long FXToggleButton::onPaint(FXObject*,FXSelector,void* ptr){
     else{
 
       // Draw sunken if pressed
-      if(down){
+      if(down || ((options&TOGGLEBUTTON_KEEPSTATE) && state)){
         dc.setForeground(hiliteColor);
         dc.fillRectangle(border,border,width-border*2,height-border*2);
         if(options&FRAME_THICK) drawDoubleSunkenRectangle(dc,0,0,width,height);
@@ -479,47 +495,48 @@ long FXToggleButton::onPaint(FXObject*,FXSelector,void* ptr){
   just_y(ty,iy,th,ih);
 
   // Shift a bit when pressed
-  if(down && (options&(FRAME_RAISED|FRAME_SUNKEN))){ ++tx; ++ty; ++ix; ++iy; }
+  if((down || ((options&TOGGLEBUTTON_KEEPSTATE) && state)) && (options&(FRAME_RAISED|FRAME_SUNKEN))){ ++tx; ++ty; ++ix; ++iy; }
 
   // Draw enabled state
   if(isEnabled()){
-    if(state && alticon)
+    if(state && alticon){
       dc.drawIcon(alticon,ix,iy);
-    else if(icon)
+      }
+    else if(icon){
       dc.drawIcon(icon,ix,iy);
+      }
     if(state && !altlabel.empty()){
-      dc.setTextFont(font);
+      dc.setFont(font);
       dc.setForeground(textColor);
       drawLabel(dc,altlabel,althotoff,tx,ty,tw,th);
-      if(hasFocus()){
-        dc.drawFocusRectangle(border+2,border+2,width-2*border-4,height-2*border-4);
-        }
       }
     else if(!label.empty()){
-      dc.setTextFont(font);
+      dc.setFont(font);
       dc.setForeground(textColor);
       drawLabel(dc,label,hotoff,tx,ty,tw,th);
-      if(hasFocus()){
-        dc.drawFocusRectangle(border+2,border+2,width-2*border-4,height-2*border-4);
-        }
+      }
+    if(hasFocus()){
+      dc.drawFocusRectangle(border+1,border+1,width-2*border-2,height-2*border-2);
       }
     }
 
   // Draw grayed-out state
   else{
-    if(state && alticon)
+    if(state && alticon){
       dc.drawIconSunken(alticon,ix,iy);
-    else if(icon)
+      }
+    else if(icon){
       dc.drawIconSunken(icon,ix,iy);
+      }
     if(state && !altlabel.empty()){
-      dc.setTextFont(font);
+      dc.setFont(font);
       dc.setForeground(hiliteColor);
       drawLabel(dc,altlabel,althotoff,tx+1,ty+1,tw,th);
       dc.setForeground(shadowColor);
       drawLabel(dc,altlabel,althotoff,tx,ty,tw,th);
       }
     else if(!label.empty()){
-      dc.setTextFont(font);
+      dc.setFont(font);
       dc.setForeground(hiliteColor);
       drawLabel(dc,label,hotoff,tx+1,ty+1,tw,th);
       dc.setForeground(shadowColor);
@@ -532,9 +549,13 @@ long FXToggleButton::onPaint(FXObject*,FXSelector,void* ptr){
 
 // Change text
 void FXToggleButton::setAltText(const FXString& text){
-  if(altlabel!=text){
-    altlabel=text;
-    hotoff=-1;
+  FXString string=fxstripHotKey(text);
+  if(altlabel!=string){
+    remHotKey(althotkey);
+    althotkey=fxparseHotKey(text);
+    althotoff=fxfindHotKey(text);
+    addHotKey(althotkey);
+    altlabel=string;
     recalc();
     update();
     }
@@ -607,5 +628,7 @@ void FXToggleButton::load(FXStream& store){
 // Destruct
 FXToggleButton::~FXToggleButton(){
   remHotKey(althotkey);
-  alticon=(FXIcon*)-1;
+  alticon=(FXIcon*)-1L;
   }
+
+}

@@ -3,15 +3,15 @@
 *                                 Test MDI Widgets                              *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998 by Jeroen van der Zijp.   All Rights Reserved.             *
+* Copyright (C) 1998,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
-* $Id: mditest.cpp,v 1.11 2001/02/21 21:05:40 jeroen Exp $                      *
+* $Id: mditest.cpp,v 1.31 2004/02/08 16:33:17 fox Exp $                         *
 ********************************************************************************/
 #include "fx.h"
 #include <stdio.h>
 #include <stdlib.h>
 
-
+#include "FXThread.h"
 
 /*******************************************************************************/
 
@@ -19,32 +19,32 @@
 // Mini application object
 class MDITestWindow : public FXMainWindow {
   FXDECLARE(MDITestWindow)
-    
+
 protected:
-  FXMenubar         *menubar;
+  FXMenuBar         *menubar;
   FXMDIClient       *mdiclient;               // MDI Client area
   FXMDIMenu         *mdimenu;                 // MDI Window Menu
-  FXGIFIcon         *mdiicon;                 // MDI Icon
   FXMenuPane        *filemenu;
   FXMenuPane        *windowmenu;
   FXMenuPane        *helpmenu;
   FXFont            *font;
+  FXIcon            *mdiicon;
 protected:
   MDITestWindow(){}
-  
+
 public:
-  
+
   // We define additional ID's, starting from the last one used by the base class+1.
   // This way, we know the ID's are all unique for this particular target.
   enum {
     ID_ABOUT=FXMainWindow::ID_LAST,
     ID_NEW
     };
-    
+
   // Message handlers
   long onCmdAbout(FXObject*,FXSelector,void*);
   long onCmdNew(FXObject*,FXSelector,void*);
-  
+
 public:
   MDITestWindow(FXApp* a);
   virtual void create();
@@ -52,10 +52,10 @@ public:
   };
 
 
-  
+
 /*******************************************************************************/
-  
-  
+
+
 const unsigned char penguin[]={
   0x47,0x49,0x46,0x38,0x37,0x61,0x10,0x00,0x12,0x00,0xf2,0x00,0x00,0xb2,0xc0,0xdc,
   0x80,0x80,0x80,0x00,0x00,0x00,0xc0,0xc0,0xc0,0x10,0x10,0x10,0xff,0xff,0xff,0xe0,
@@ -115,50 +115,50 @@ MDITestWindow::MDITestWindow(FXApp* a):FXMainWindow(a,"MDI Widget Test",NULL,NUL
   FXMDIChild *mdichild;
   FXScrollWindow *scrollwindow;
   FXButton *btn;
-    
+
   font=new FXFont(getApp(),"courier",15,FONTWEIGHT_BOLD);
-  
+
   // Menubar
-  menubar=new FXMenubar(this,LAYOUT_SIDE_TOP|LAYOUT_FILL_X);
-  
+  menubar=new FXMenuBar(this,LAYOUT_SIDE_TOP|LAYOUT_FILL_X);
+
   // Status bar
-  new FXStatusbar(this,LAYOUT_SIDE_BOTTOM|LAYOUT_FILL_X|STATUSBAR_WITH_DRAGCORNER);
-  
+  new FXStatusBar(this,LAYOUT_SIDE_BOTTOM|LAYOUT_FILL_X|STATUSBAR_WITH_DRAGCORNER);
+
   // MDI Client
   mdiclient=new FXMDIClient(this,LAYOUT_FILL_X|LAYOUT_FILL_Y);
-  
+
   // Icon for MDI Child
   mdiicon=new FXGIFIcon(getApp(),penguin);
 
   // Make MDI Menu
   mdimenu=new FXMDIMenu(this,mdiclient);
-  
+
   // MDI buttons in menu:- note the message ID's!!!!!
   // Normally, MDI commands are simply sensitized or desensitized;
   // Under the menubar, however, they're hidden if the MDI Client is
   // not maximized.  To do this, they must have different ID's.
-  new FXMDIWindowButton(menubar,mdiclient,FXMDIClient::ID_MDI_MENUWINDOW,LAYOUT_LEFT);
+  new FXMDIWindowButton(menubar,mdimenu,mdiclient,FXMDIClient::ID_MDI_MENUWINDOW,LAYOUT_LEFT);
   new FXMDIDeleteButton(menubar,mdiclient,FXMDIClient::ID_MDI_MENUCLOSE,FRAME_RAISED|LAYOUT_RIGHT);
   new FXMDIRestoreButton(menubar,mdiclient,FXMDIClient::ID_MDI_MENURESTORE,FRAME_RAISED|LAYOUT_RIGHT);
   new FXMDIMinimizeButton(menubar,mdiclient,FXMDIClient::ID_MDI_MENUMINIMIZE,FRAME_RAISED|LAYOUT_RIGHT);
-  
+
   // Test window #1
-  mdichild=new FXMDIChild(mdiclient,"Child",mdiicon,mdimenu,0,10,10,400,300);
+  mdichild=new FXMDIChild(mdiclient,"Child",mdiicon,mdimenu,MDI_NORMAL|MDI_TRACKING,10,10,400,300);
   scrollwindow=new FXScrollWindow(mdichild,0);
-  btn=new FXButton(scrollwindow,tyger,NULL,NULL,0,LAYOUT_FIX_WIDTH|LAYOUT_FIX_HEIGHT,0,0,600,1000);
+  btn=new FXButton(scrollwindow,tyger,NULL,NULL,0,LAYOUT_BOTTOM|LAYOUT_RIGHT);
   btn->setBackColor(FXRGB(255,255,255));
   btn->setFont(font);
   mdiclient->setActiveChild(mdichild);
 
   // Test window #2
-  mdichild=new FXMDIChild(mdiclient,"Child",mdiicon,mdimenu,0,20,20,400,300);
+  mdichild=new FXMDIChild(mdiclient,"Child",mdiicon,mdimenu,MDI_NORMAL|MDI_TRACKING,20,20,400,300);
   scrollwindow=new FXScrollWindow(mdichild,0);
   btn=new FXButton(scrollwindow,tyger,NULL,NULL,0,LAYOUT_FIX_WIDTH|LAYOUT_FIX_HEIGHT,0,0,600,1000);
   btn->setFont(font);
   btn->setBackColor(FXRGB(255,255,255));
 
   // Test window #3
-  mdichild=new FXMDIChild(mdiclient,"Child",mdiicon,mdimenu,0,30,30,400,300);
+  mdichild=new FXMDIChild(mdiclient,"Child",mdiicon,mdimenu,MDI_NORMAL|MDI_TRACKING,30,30,400,300);
   scrollwindow=new FXScrollWindow(mdichild,0);
   btn=new FXButton(scrollwindow,tyger,NULL,NULL,0,LAYOUT_FIX_WIDTH|LAYOUT_FIX_HEIGHT,0,0,600,1000);
   btn->setFont(font);
@@ -170,14 +170,13 @@ MDITestWindow::MDITestWindow(FXApp* a):FXMainWindow(a,"MDI Widget Test",NULL,NUL
   new FXMenuCommand(filemenu,"&Open\tCtl-O\tOpen document.");
   new FXMenuCommand(filemenu,"&Quit\tCtl-Q\tQuit application.",NULL,getApp(),FXApp::ID_QUIT,0);
   new FXMenuTitle(menubar,"&File",NULL,filemenu);
-    
+
   // Window menu
   windowmenu=new FXMenuPane(this);
   new FXMenuCommand(windowmenu,"Tile &Horizontally",NULL,mdiclient,FXMDIClient::ID_MDI_TILEHORIZONTAL);
   new FXMenuCommand(windowmenu,"Tile &Vertically",NULL,mdiclient,FXMDIClient::ID_MDI_TILEVERTICAL);
   new FXMenuCommand(windowmenu,"C&ascade",NULL,mdiclient,FXMDIClient::ID_MDI_CASCADE);
   new FXMenuCommand(windowmenu,"&Close",NULL,mdiclient,FXMDIClient::ID_MDI_CLOSE);
-  new FXMenuCommand(windowmenu,"Close &All",NULL,mdiclient,FXMDIClient::ID_CLOSE_ALL_DOCUMENTS);
   FXMenuSeparator* sep1=new FXMenuSeparator(windowmenu);
   sep1->setTarget(mdiclient);
   sep1->setSelector(FXMDIClient::ID_MDI_ANY);
@@ -185,22 +184,24 @@ MDITestWindow::MDITestWindow(FXApp* a):FXMainWindow(a,"MDI Widget Test",NULL,NUL
   new FXMenuCommand(windowmenu,NULL,NULL,mdiclient,FXMDIClient::ID_MDI_2);
   new FXMenuCommand(windowmenu,NULL,NULL,mdiclient,FXMDIClient::ID_MDI_3);
   new FXMenuCommand(windowmenu,NULL,NULL,mdiclient,FXMDIClient::ID_MDI_4);
+  new FXMenuCommand(windowmenu,"&Others...",NULL,mdiclient,FXMDIClient::ID_MDI_OVER_5);
   new FXMenuTitle(menubar,"&Window",NULL,windowmenu);
-  
+
   // Help menu
   helpmenu=new FXMenuPane(this);
   new FXMenuCommand(helpmenu,"&About FOX...",NULL,this,ID_ABOUT,0);
   new FXMenuTitle(menubar,"&Help",NULL,helpmenu,LAYOUT_RIGHT);
-  
+
   }
 
 
-// Clean up  
+// Clean up
 MDITestWindow::~MDITestWindow(){
   delete filemenu;
   delete windowmenu;
   delete helpmenu;
   delete font;
+  delete mdiicon;
   }
 
 
@@ -213,9 +214,9 @@ long MDITestWindow::onCmdAbout(FXObject*,FXSelector,void*){
 
 // New
 long MDITestWindow::onCmdNew(FXObject*,FXSelector,void*){
-  FXMDIChild *mdichild=new FXMDIChild(mdiclient,"Child",mdiicon,mdimenu,0,20,20,300,200);
+  FXMDIChild *mdichild=new FXMDIChild(mdiclient,"Child",mdiicon,mdimenu,MDI_NORMAL|MDI_TRACKING,20,20,300,200);
   FXScrollWindow *scrollwindow=new FXScrollWindow(mdichild,0);
-  FXButton* btn=new FXButton(scrollwindow,tyger,NULL,NULL,0,LAYOUT_FIX_WIDTH|LAYOUT_FIX_HEIGHT,0,0,600,1000);
+  FXButton* btn=new FXButton(scrollwindow,tyger,NULL,NULL,0,LAYOUT_CENTER_X|LAYOUT_FILL_Y);
   btn->setBackColor(FXRGB(255,255,255));
   mdichild->create();
   return 1;
@@ -231,22 +232,21 @@ void MDITestWindow::create(){
 
 /*******************************************************************************/
 
-
 // Start the whole thing
 int main(int argc,char *argv[]){
-  
+
   // Make application
   FXApp application("MDIApp","FoxTest");
-  
+
   // Open display
   application.init(argc,argv);
-  
+
   // Make window
   new MDITestWindow(&application);
-  
+
   // Create app
   application.create();
-  
+
   // Run
   return application.run();
   }

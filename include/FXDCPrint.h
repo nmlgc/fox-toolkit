@@ -3,7 +3,7 @@
 *           D e v i c e   C o n t e x t   F o r   P r i n t i n g               *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1998,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXDCPrint.h,v 1.16 2002/01/18 22:42:51 jeroen Exp $                      *
+* $Id: FXDCPrint.h,v 1.24 2004/04/05 14:49:33 fox Exp $                         *
 ********************************************************************************/
 #ifndef FXDCPRINT_H
 #define FXDCPRINT_H
@@ -29,6 +29,8 @@
 #endif
 
 //////////////////////////////  UNDER DEVELOPMENT  //////////////////////////////
+
+namespace FX {
 
 class FXApp;
 class FXDrawable;
@@ -97,7 +99,7 @@ struct FXAPI FXPrinter {
 
 /// Postscript Printer Device Context
 class FXAPI FXDCPrint : public FXDC {
-  friend class FXGLViewer; // This is TEMPORARY!!!
+//  friend class FXGLViewer; // This is TEMPORARY!!!
 protected:
   void      *psout;                   // File Stream for PS output
   FXFont    *font;
@@ -110,9 +112,11 @@ protected:
   FXPSBounds pagebb;                  // Page bounding box
   FXint      pagecount;               // Number of pages printed
   FXint      nchars;                  // Number of characters on a line
+  FXint      pxmin;                   // min X coord in content
+  FXint      pymin;                   // min Y coord in content
+  FXint      pxmax;                   // max X coord in content
+  FXint      pymax;                   // max Y coord in content
 protected:
-  void outhex(FXuint hex);
-  void outf(const char* format,...);
   void bbox(FXfloat x,FXfloat y);
   void tfm(FXfloat& xo,FXfloat& yo,FXfloat xi,FXfloat yi);
 private:
@@ -136,6 +140,8 @@ public:
   /// Generate end of page
   FXbool endPage();
 
+  FXbool setContentRange(FXint pxmin, FXint pymin, FXint pxmax, FXint pymax);
+
   /// Draw points
   virtual void drawPoint(FXint x,FXint y);
   virtual void drawPoints(const FXPoint* points,FXuint npoints);
@@ -158,6 +164,10 @@ public:
   /// Filled rectangles
   virtual void fillRectangle(FXint x,FXint y,FXint w,FXint h);
   virtual void fillRectangles(const FXRectangle* rectangles,FXuint nrectangles);
+
+  /// Fill chord
+  virtual void fillChord(FXint x,FXint y,FXint w,FXint h,FXint ang1,FXint ang2);
+  virtual void fillChords(const FXArc* chords,FXuint nchords);
 
   /// Draw arcs
   virtual void fillArc(FXint x,FXint y,FXint w,FXint h,FXint ang1,FXint ang2);
@@ -247,14 +257,19 @@ public:
   virtual void clearClipMask();
 
   /// Set font to draw text with
-  virtual void setTextFont(FXFont *fnt);
+  virtual void setFont(FXFont *fnt);
 
   /// Clip drawing by child windows
   virtual void clipChildren(FXbool yes);
 
+  /// Temporarily public; do not rely on this!!
+  void outhex(FXuint hex);
+  void outf(const char* format,...);
+  
   /// Cleanup
   virtual ~FXDCPrint();
   };
 
+}
 
 #endif

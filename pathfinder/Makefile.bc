@@ -3,9 +3,9 @@
 #                       FOX:  A Free C++ Class Library for X                 #
 #                                                                            #
 ##############################################################################
-# Copyright (C) 1997 by Jeroen van der Zijp.   All Rights Reserved.          #
+# Copyright (C) 1997,2003 by Jeroen van der Zijp.   All Rights Reserved.     #
 ##############################################################################
-# $Id: Makefile.bc,v 1.8 2002/01/15 06:39:20 jeroen Exp $                   #
+# $Id: Makefile.bc,v 1.17 2004/01/18 16:42:09 fox Exp $                      #
 ##############################################################################
 # This library is free software; you can redistribute it and/or              #
 # modify it under the terms of the GNU Library General Public                #
@@ -31,18 +31,20 @@ DEFINES   = -DNDEBUG -DFOX_BIGENDIAN=0 -DWIN32 -D_WINDOWS
 LD	  = bcc32
 LDFLAGS	  = -laa
 INCDIRS   = -I$(TOPDIR)\include
-FOXLIB    = $(TOPDIR)\src\fox.lib
+FOXLIB    = $(TOPDIR)\src\FOX-1.1.lib
 RESWRAP   = $(TOPDIR)\utils\reswrap.exe
 
 PROGRAMS  = PathFinder.exe
+
 OBJECTS  = \
         PathFinder.obj \
         PropertyDialog.obj \
+        Preferences.obj \
         icons.obj
 
 ICONS = \
         bigicons.bmp \
-        bigpenguin.bmp \
+        closepanel.gif \
         clrbook.gif \
         copy.bmp \
         copyit.gif \
@@ -51,17 +53,27 @@ ICONS = \
         desktop.bmp \
         details.bmp \
         dirup.bmp \
+        enter.gif \
+        file_gif.gif \
+        foxbig.gif \
+        foxmini.gif \
         goback.bmp \
         goforw.bmp \
         gotodir.bmp \
         home.gif \
         hosts.bmp \
+	iconpath.gif \
         linkit.gif \
+        location.gif \
         maphost.bmp \
-        minipenguin.bmp \
         moveit.gif \
         paste.bmp \
+        pattern_gif.gif \
         properties.bmp \
+        quit_gif.gif \
+        renameit.gif \
+        rotateleft.gif \
+        rotateright.gif \
         setbook.gif \
         smallicons.bmp \
         unmaphost.bmp \
@@ -84,4 +96,8 @@ icons.cpp: $(ICONS)
 	$(RESWRAP) -e -o icons.cpp $**
 
 clean:
-	$(RM) *.obj *.exe *.tds icons.cpp icons.h
+	$(RM) *.obj
+	$(RM) *.exe
+	$(RM) *.tds
+	$(RM) icons.cpp
+	$(RM) icons.h

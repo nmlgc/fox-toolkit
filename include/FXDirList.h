@@ -3,7 +3,7 @@
 *                     D i r e c t o r y   L i s t   W i d g e t                 *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1998,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXDirList.h,v 1.30 2002/01/18 22:42:52 jeroen Exp $                      *
+* $Id: FXDirList.h,v 1.59 2004/02/08 17:17:33 fox Exp $                         *
 ********************************************************************************/
 #ifndef FXDIRLIST_H
 #define FXDIRLIST_H
@@ -28,13 +28,13 @@
 #include "FXTreeList.h"
 #endif
 
+namespace FX {
 
 
-struct FXTimer;
 struct FXFileAssoc;
 class  FXFileDict;
 class  FXIcon;
-class FXDirList;
+class  FXDirList;
 
 
 /// Directory List options
@@ -50,14 +50,13 @@ class FXAPI FXDirItem : public FXTreeItem {
   FXDECLARE(FXDirItem)
   friend class FXDirList;
 protected:
-  FXDirItem    *iprev;
-  FXDirItem    *inext;
-  FXDirItem    *list;
-  FXFileAssoc  *assoc;
-  unsigned long size;
-  FXTime        date;
+  FXFileAssoc  *assoc;                // File association
+  FXDirItem    *link;                 // Link to next item
+  FXDirItem    *list;                 // List of child items
+  unsigned long size;                 // File size (if a file)
+  FXTime        date;                 // Time of item
 protected:
-  FXDirItem():iprev(NULL),inext(NULL),list(NULL),assoc(NULL),date(0){}
+  FXDirItem():assoc(NULL),link(NULL),list(NULL),size(0),date(0){}
 protected:
   enum {
     FOLDER      = 512,                // Directory item
@@ -69,17 +68,41 @@ protected:
     SOCK        = 32768               // Socket item
     };
 public:
+
   /// Constructor
-  FXDirItem(const FXString& text,FXIcon* oi=NULL,FXIcon* ci=NULL,void* ptr=NULL):FXTreeItem(text,oi,ci,ptr),iprev(NULL),inext(NULL),list(NULL),assoc(NULL),size(0),date(0){}
+  FXDirItem(const FXString& text,FXIcon* oi=NULL,FXIcon* ci=NULL,void* ptr=NULL):FXTreeItem(text,oi,ci,ptr),assoc(NULL),link(NULL),list(NULL),size(0),date(0){state=HASITEMS;}
+
+  /// Return true if this is a file item
+  FXbool isFile() const { return (state&(FOLDER|BLOCKDEV|CHARDEV|FIFO|SOCK))==0; }
+
+  /// Return true if this is a directory item
   FXbool isDirectory() const { return (state&FOLDER)!=0; }
+
+  /// Return true if this is an executable item
   FXbool isExecutable() const { return (state&EXECUTABLE)!=0; }
+
+  /// Return true if this is a symbolic link item
   FXbool isSymlink() const { return (state&SYMLINK)!=0; }
+
+  /// Return true if this is a character device item
   FXbool isChardev() const { return (state&CHARDEV)!=0; }
+
+  /// Return true if this is a block device item
   FXbool isBlockdev() const { return (state&BLOCKDEV)!=0; }
+
+  /// Return true if this is an FIFO item
   FXbool isFifo() const { return (state&FIFO)!=0; }
+
+  /// Return true if this is a socket
   FXbool isSocket() const { return (state&SOCK)!=0; }
+
+  /// Return the file-association object for this item
   FXFileAssoc* getAssoc() const { return assoc; }
+
+  /// Return the file size for this item
   unsigned long getSize() const { return size; }
+
+  /// Return the date for this item
   FXTime getDate() const { return date; }
   };
 
@@ -89,14 +112,15 @@ class FXAPI FXDirList : public FXTreeList {
   FXDECLARE(FXDirList)
 protected:
   FXFileDict   *associations;         // Association table
+  FXDirItem    *list;                 // Root item list
   FXString      dropdirectory;        // Drop directory
   FXDragAction  dropaction;           // Drop action
   FXString      dragfiles;            // Dragged files
   FXString      pattern;              // Pattern of file names
   FXuint        matchmode;            // File wildcard match mode
-  FXTimer      *refresh;              // Refresh timer
-  FXIcon       *closed_folder;        // Closed folder icon
+  FXuint        counter;              // Refresh counter
   FXIcon       *open_folder;          // Open folder icon
+  FXIcon       *closed_folder;        // Closed folder icon
   FXIcon       *mini_doc;             // Document icon
   FXIcon       *mini_app;             // Application icon
   FXIcon       *cdromicon;
@@ -104,21 +128,16 @@ protected:
   FXIcon       *networkicon;
   FXIcon       *floppyicon;
   FXIcon       *zipdiskicon;
-  FXuint        counter;              // Refresh counter
 protected:
   FXDirList();
+  void listRootItems();
+  void listChildItems(FXDirItem *par);
   virtual FXTreeItem* createItem(const FXString& text,FXIcon* oi,FXIcon* ci,void* ptr);
-  FXchar *getpath(const FXTreeItem* item,FXchar* pathname) const;
-  FXTreeItem* getitem(FXchar* pathname);
-  FXbool scanRootDir(FXbool relist);
-  FXbool scanSubDir(FXDirItem *par,FXchar *pathname,FXbool relist);
-  FXbool listSubDir(FXDirItem *par,FXchar *pathname);
-  FXbool listRoots();
 private:
   FXDirList(const FXDirList&);
   FXDirList &operator=(const FXDirList&);
 public:
-  long onRefresh(FXObject*,FXSelector,void*);
+  long onRefreshTimer(FXObject*,FXSelector,void*);
   long onBeginDrag(FXObject*,FXSelector,void*);
   long onEndDrag(FXObject*,FXSelector,void*);
   long onDragged(FXObject*,FXSelector,void*);
@@ -127,10 +146,6 @@ public:
   long onDNDMotion(FXObject*,FXSelector,void*);
   long onDNDDrop(FXObject*,FXSelector,void*);
   long onDNDRequest(FXObject*,FXSelector,void*);
-  long onOpened(FXObject*,FXSelector,void*);
-  long onClosed(FXObject*,FXSelector,void*);
-  long onExpanded(FXObject*,FXSelector,void*);
-  long onCollapsed(FXObject*,FXSelector,void*);
   long onCmdSetValue(FXObject*,FXSelector,void*);
   long onCmdSetStringValue(FXObject*,FXSelector,void*);
   long onCmdGetStringValue(FXObject*,FXSelector,void*);
@@ -150,12 +165,17 @@ public:
   long onUpdSetPattern(FXObject*,FXSelector,void*);
   long onCmdSortReverse(FXObject*,FXSelector,void*);
   long onUpdSortReverse(FXObject*,FXSelector,void*);
+  long onCmdSortCase(FXObject*,FXSelector,void*);
+  long onUpdSortCase(FXObject*,FXSelector,void*);
+  long onCmdRefresh(FXObject*,FXSelector,void*);
 public:
-  static FXint cmpFName(const FXTreeItem* a,const FXTreeItem* b);
-  static FXint cmpRName(const FXTreeItem* pa,const FXTreeItem* pb);
+  static FXint ascending(const FXTreeItem* a,const FXTreeItem* b);
+  static FXint descending(const FXTreeItem* a,const FXTreeItem* b);
+  static FXint ascendingCase(const FXTreeItem* a,const FXTreeItem* b);
+  static FXint descendingCase(const FXTreeItem* a,const FXTreeItem* b);
 public:
   enum {
-    ID_REFRESH=FXTreeList::ID_LAST,
+    ID_REFRESHTIMER=FXTreeList::ID_LAST,
     ID_SHOW_FILES,
     ID_HIDE_FILES,
     ID_TOGGLE_FILES,
@@ -164,12 +184,14 @@ public:
     ID_TOGGLE_HIDDEN,
     ID_SET_PATTERN,
     ID_SORT_REVERSE,
+    ID_SORT_CASE,
+    ID_REFRESH,
     ID_LAST
     };
 public:
 
   /// Construct a directory list
-  FXDirList(FXComposite *p,FXint nvis,FXObject* tgt=NULL,FXSelector sel=0,FXuint opts=0,FXint x=0,FXint y=0,FXint w=0,FXint h=0);
+  FXDirList(FXComposite *p,FXObject* tgt=NULL,FXSelector sel=0,FXuint opts=0,FXint x=0,FXint y=0,FXint w=0,FXint h=0);
 
   /// Create server-side resources
   virtual void create();
@@ -180,6 +202,9 @@ public:
   /// Destroy server-side resources
   virtual void destroy();
 
+  /// Scan the directories and update the items if needed, or if force is TRUE
+  void scan(FXbool force=TRUE);
+
   /// Return TRUE if item is a directory
   FXbool isItemDirectory(const FXTreeItem* item) const;
 
@@ -189,23 +214,29 @@ public:
   /// Return TRUE if item is executable
   FXbool isItemExecutable(const FXTreeItem* item) const;
 
+  /// Collapse tree
+  virtual FXbool collapseTree(FXTreeItem* tree,FXbool notify=FALSE);
+
+  /// Expand tree
+  virtual FXbool expandTree(FXTreeItem* tree,FXbool notify=FALSE);
+
   /// Set current file
-  void setCurrentFile(const FXString& file);
+  void setCurrentFile(const FXString& file,FXbool notify=FALSE);
 
   /// Return current file
   FXString getCurrentFile() const;
 
   /// Set current directory
-  void setDirectory(const FXString& path);
+  void setDirectory(const FXString& path,FXbool notify=FALSE);
 
   /// Return current directory
   FXString getDirectory() const;
 
-  /// Return name of item
-  FXString getItemFilename(const FXTreeItem* item) const;
-
-  /// Return full pathname of item
+  /// Return absolute pathname of item
   FXString getItemPathname(const FXTreeItem* item) const;
+
+  /// Return the item from the absolute pathname
+  FXTreeItem* getPathnameItem(const FXString& path);
 
   /// Change wildcard matching pattern
   void setPattern(const FXString& ptrn);
@@ -247,5 +278,6 @@ public:
   virtual ~FXDirList();
   };
 
+}
 
 #endif

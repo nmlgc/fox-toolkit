@@ -3,7 +3,7 @@
 *                              D i a l   W i d g e t                            *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1998,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXDial.h,v 1.20 2002/01/18 22:42:52 jeroen Exp $                         *
+* $Id: FXDial.h,v 1.27 2004/02/08 17:17:33 fox Exp $                            *
 ********************************************************************************/
 #ifndef FXDIAL_H
 #define FXDIAL_H
@@ -28,6 +28,7 @@
 #include "FXFrame.h"
 #endif
 
+namespace FX {
 
 
 // Dial style options
@@ -83,6 +84,10 @@ public:
   long onCmdGetIntRange(FXObject*,FXSelector,void*);
   long onCmdSetRealRange(FXObject*,FXSelector,void*);
   long onCmdGetRealRange(FXObject*,FXSelector,void*);
+  long onCmdSetHelp(FXObject*,FXSelector,void*);
+  long onCmdGetHelp(FXObject*,FXSelector,void*);
+  long onCmdSetTip(FXObject*,FXSelector,void*);
+  long onCmdGetTip(FXObject*,FXSelector,void*);
   long onQueryHelp(FXObject*,FXSelector,void*);
   long onQueryTip(FXObject*,FXSelector,void*);
 public:
@@ -168,5 +173,7 @@ public:
   /// Load from stream
   virtual void load(FXStream& store);
   };
+
+}
 
 #endif

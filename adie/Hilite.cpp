@@ -3,195 +3,279 @@
 *                     H i g h l i g h t   E n g i n e                           *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2002 by Jeroen van der Zijp.   All Rights Reserved.             *
+* Copyright (C) 2002,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
-* This library is free software; you can redistribute it and/or                 *
-* modify it under the terms of the GNU Lesser General Public                    *
-* License as published by the Free Software Foundation; either                  *
-* version 2.1 of the License, or (at your option) any later version.            *
+* This program is free software; you can redistribute it and/or modify          *
+* it under the terms of the GNU General Public License as published by          *
+* the Free Software Foundation; either version 2 of the License, or             *
+* (at your option) any later version.                                           *
 *                                                                               *
-* This library is distributed in the hope that it will be useful,               *
+* This program is distributed in the hope that it will be useful,               *
 * but WITHOUT ANY WARRANTY; without even the implied warranty of                *
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU             *
-* Lesser General Public License for more details.                               *
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                 *
+* GNU General Public License for more details.                                  *
 *                                                                               *
-* You should have received a copy of the GNU Lesser General Public              *
-* License along with this library; if not, write to the Free Software           *
+* You should have received a copy of the GNU General Public License             *
+* along with this program; if not, write to the Free Software                   *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: Hilite.cpp,v 1.17 2002/02/08 23:05:06 fox Exp $                          *
+* $Id: Hilite.cpp,v 1.41 2004/05/16 20:35:08 fox Exp $                          *
 ********************************************************************************/
 #include "fx.h"
+#include <new>
 #include "FXRex.h"
+#include "FXArray.h"
 #include "Hilite.h"
 
 
 /*
   Notes:
-  - Basically works
+  - Restart position: place in text which is default style, a few
+    lines of context before the change.
+  - Language mode: use wildcard on filename, or forced explicitly.
+  - Either simple pattern, or begin/end pattern. Special stop pattern
+    to prevent scanning indefinitely.  Patterns may have sub-patterns.
+  - Simple pattern must be non-empty; begin/end patterns of a complex
+    pattern may be zero-width assertions.
+  - Capturing parenthesis are disabled, for speed reasons.
+  - Sample text in FXSyntax is for displaying inside interactive
+    style setup dialog; it is supposed to contain on instance of
+    each pattern matched by the rule base
 */
 
 /*******************************************************************************/
 
 
-struct HLNode {
-  FXRex    pattern;       // Compiled expression
-  FXint    priority;      // Priority
-  FXint    context;       // Lines of context
-  FXint    style;         // Style
-  HLNode  *parent;        // Parent node
-  HLNode  *alt;           // Alternative
-  HLNode  *sub;           // Sub node
-  
-  // Construct node
-  HLNode(const FXchar* rx,FXint st,FXint pr,FXint cx,HLNode* pa);
-
-  // Delete node
- ~HLNode();
+// Default style is all zeroes
+const FXHiliteStyle FXSyntax::defaultStyle={
+  FXRGBA(0,0,0,0),
+  FXRGBA(0,0,0,0),
+  FXRGBA(0,0,0,0),
+  FXRGBA(0,0,0,0),
+  FXRGBA(0,0,0,0),
+  FXRGBA(0,0,0,0),
+  FXRGBA(0,0,0,0),
+  0
   };
 
-  
-// Construct node
-HLNode::HLNode(const FXchar* rx,FXint st,FXint pr,FXint cx,HLNode* pa):pattern(rx,REX_NEWLINE|REX_CAPTURE),priority(pr),context(cx),style(st),parent(pa){
-  alt=NULL;
-  sub=NULL;
+
+FXIMPLEMENT(FXRule,FXObject,NULL,0)
+
+
+// Fill textstyle with style, returns position of last change+1
+static inline void fillstyle(FXchar* textstyle,FXchar style,FXint f,FXint t){
+  while(f<t) textstyle[f++]=style;
   }
 
 
-// Delete node
-HLNode::~HLNode(){
-  register HLNode *n;
-  while(sub){ 
-    n=sub; 
-    sub=sub->alt; 
-    delete n; 
+// Stylize text
+FXbool FXRule::stylize(const FXchar*,FXchar*,FXint,FXint,FXint&,FXint&) const {
+  return FALSE;
+  }
+
+
+// Stylize body, i.e. after begin pattern has been seen
+FXbool FXRule::stylizeBody(const FXchar*,FXchar*,FXint,FXint,FXint&,FXint&) const {
+  return FALSE;
+  }
+
+
+FXIMPLEMENT(FXSimpleRule,FXRule,NULL,0)
+
+// Stylize simple expression
+FXbool FXSimpleRule::stylize(const FXchar* text,FXchar *textstyle,FXint fm,FXint to,FXint& start,FXint& stop) const {
+  if(pat.match(text,to,&start,&stop,REX_NOT_EMPTY|REX_FORWARD,1,fm,fm)){
+    fillstyle(textstyle,style,start,stop);
+    return TRUE;
     }
+  return FALSE;
   }
 
 
-/*******************************************************************************/
+FXIMPLEMENT(FXBracketRule,FXRule,NULL,0)
 
-
-// Stylize recursively
-void Hilite::stylize(const FXchar* text,FXchar *style,FXint fm,FXint to,const HLNode* start) const {
-  register const HLNode *node;
-  register FXint pos;
-  FXint beg[10];
-  FXint end[10];
-  pos=fm;
-  while(pos<to){
-    for(node=start; node; node=node->alt){
-      if(node->pattern.match(text,to,beg,end,REX_NOT_EMPTY|REX_FORWARD,10,pos,pos)){
-        memset(&style[beg[0]],node->style,end[0]-beg[0]);
-        if(node->sub){
-          stylize(text,style,beg[0],end[0],node->sub);  // FIXME need to be able to take advantage of captured text...
-          }
-        pos=end[0];
+// Stylize complex recursive expression
+FXbool FXBracketRule::stylizeBody(const FXchar* text,FXchar *textstyle,FXint fm,FXint to,FXint& start,FXint& stop) const {
+  FXint head,tail,node;
+  start=fm;
+  while(fm<to){
+    for(node=0; node<rules.no(); node++){
+      if(rules[node]->stylize(text,textstyle,fm,to,head,tail)){
+        fm=tail;
         goto nxt;
         }
       }
-    pos++;
+    if(end.match(text,to,&head,&stop,REX_FORWARD,1,fm,fm)){
+      fillstyle(textstyle,style,head,stop);
+      return TRUE;
+      }
+    textstyle[fm++]=style;
 nxt:continue;
     }
+  stop=fm;
+  return TRUE;
   }
-  
+
+
+// Stylize complex recursive expression
+FXbool FXBracketRule::stylize(const FXchar* text,FXchar *textstyle,FXint fm,FXint to,FXint& start,FXint& stop) const {
+  FXint head,tail;
+  if(beg.match(text,to,&start,&tail,REX_FORWARD,1,fm,fm)){
+    fillstyle(textstyle,style,start,tail);
+    FXBracketRule::stylizeBody(text,textstyle,tail,to,head,stop);
+    return TRUE;
+    }
+  return FALSE;
+  }
+
+
+FXIMPLEMENT(FXSafeBracketRule,FXBracketRule,NULL,0)
+
+// Stylize complex recursive expression with termination pattern
+FXbool FXSafeBracketRule::stylizeBody(const FXchar* text,FXchar *textstyle,FXint fm,FXint to,FXint& start,FXint& stop) const {
+  FXint head,tail,node;
+  start=fm;
+  while(fm<to){
+    for(node=0; node<rules.no(); node++){
+      if(rules[node]->stylize(text,textstyle,fm,to,head,tail)){
+        fm=tail;
+        goto nxt;
+        }
+      }
+    if(end.match(text,to,&head,&stop,REX_FORWARD,1,fm,fm)){
+      fillstyle(textstyle,style,head,stop);
+      return TRUE;
+      }
+    if(esc.match(text,to,&head,&stop,REX_FORWARD,1,fm,fm)){
+      fillstyle(textstyle,style,head,stop);
+      return TRUE;
+      }
+    textstyle[fm++]=style;
+nxt:continue;
+    }
+  stop=fm;
+  return TRUE;
+  }
+
+
+// Stylize complex recursive expression with termination pattern
+FXbool FXSafeBracketRule::stylize(const FXchar* text,FXchar *textstyle,FXint fm,FXint to,FXint& start,FXint& stop) const {
+  FXint head,tail;
+  if(beg.match(text,to,&start,&tail,REX_FORWARD,1,fm,fm)){
+    fillstyle(textstyle,style,start,tail);
+    FXSafeBracketRule::stylizeBody(text,textstyle,tail,to,head,stop);
+    return TRUE;
+    }
+  return FALSE;
+  }
+
+
+FXIMPLEMENT(FXMasterRule,FXRule,NULL,0)
+
+// Stylize body
+FXbool FXMasterRule::stylizeBody(const FXchar* text,FXchar *textstyle,FXint fm,FXint to,FXint& start,FXint& stop) const {
+  FXint head,tail,node;
+  start=fm;
+  while(fm<to){
+    for(node=0; node<rules.no(); node++){
+      if(rules[node]->stylize(text,textstyle,fm,to,head,tail)){
+        fm=tail;
+        goto nxt;
+        }
+      }
+    textstyle[fm++]=style;
+nxt:continue;
+    }
+  stop=to;
+  return TRUE;
+  }
+
 
 // Stylize text
-void Hilite::stylize(const FXchar* text,FXchar *style,FXint fm,FXint to) const {
-  memset(&style[fm],0,to-fm);
-  if(root){
-    stylize(text,style,fm,to,root);
+FXbool FXMasterRule::stylize(const FXchar* text,FXchar *textstyle,FXint fm,FXint to,FXint& start,FXint& stop) const {
+  return FXMasterRule::stylizeBody(text,textstyle,fm,to,start,stop);
+  }
+
+
+FXIMPLEMENT(FXSyntax,FXObject,NULL,0)
+
+
+// Construct syntax object; needs at least one master rule
+FXSyntax::FXSyntax(const FXString& lang):language(lang){
+  rules.append(new FXMasterRule("Master",-1,0));
+  delimiters=FXText::textDelimiters;
+  contextLines=1;
+  contextChars=1;
+  }
+
+
+// Match filename against wildcards
+FXbool FXSyntax::matchFilename(const FXString& name) const {
+  return FXFile::match(extensions,name);
+  }
+
+
+// Match contents against regular expression
+FXbool FXSyntax::matchContents(const FXString& text) const {
+  return FXRex(contents).match(text);
+  }
+
+
+// Append simple rule
+FXint FXSyntax::append(const FXString& name,const FXString& rex,FXint parent){
+  register FXint index=rules.no();
+  FXASSERT(0<=parent && parent<rules.no());
+  FXSimpleRule *rule=new FXSimpleRule(name,rex,parent,index);
+  rules.append(rule);
+  rules[parent]->rules.append(rule);
+  return index;
+  }
+
+
+// Append bracket rule
+FXint FXSyntax::append(const FXString& name,const FXString& brex,const FXString& erex,FXint parent){
+  register FXint index=rules.no();
+  FXASSERT(0<=parent && parent<rules.no());
+  FXBracketRule *rule=new FXBracketRule(name,brex,erex,parent,index);
+  rules.append(rule);
+  rules[parent]->rules.append(rule);
+  return index;
+  }
+
+
+// Append safe bracket rule
+FXint FXSyntax::append(const FXString& name,const FXString& brex,const FXString& erex,const FXString& srex,FXint parent){
+  register FXint index=rules.no();
+  FXASSERT(0<=parent && parent<rules.no());
+  FXSafeBracketRule *rule=new FXSafeBracketRule(name,brex,erex,srex,parent,index);
+  rules.append(rule);
+  rules[parent]->rules.append(rule);
+  return index;
+  }
+
+
+// Return true if toplevel rule
+FXbool FXSyntax::isRoot(FXint rule) const {
+  FXASSERT(0<=rule && rule<rules.no());
+  return rule==0 || rules[rule]->parent==0;
+  }
+
+
+// Return true if p is ancestor of c
+FXbool FXSyntax::isAncestor(FXint p,FXint c) const {
+  FXASSERT(0<=p && 0<=c);
+  while(c>0){
+    c=rules[c]->getParent();
+    if(c==p) return TRUE;
     }
-  }
-
-
-
-// Append highlight pattern
-HLNode *Hilite::append(const FXchar* pattern,FXint style,FXint priority,FXint context,HLNode *parent){
-  register HLNode *node=new HLNode(pattern,style,priority,context,parent);
-  register HLNode **nn=parent?&parent->sub:&root;
-  register HLNode *n=*nn;
-  while(n && (node->priority > n->priority)){
-    nn=&n->alt;
-    n=*nn;
-    }
-  node->alt=n;
-  *nn=node;
-  return node;
-  }
-
-
-// Remove highlight pattern
-void Hilite::remove(HLNode* node){
-  register HLNode **nn=node->parent?&node->parent->sub:&root;
-  register HLNode *n=*nn;
-  while(n){
-    if(n==node){
-      *nn=node->alt;
-      delete node;
-      break;
-      }
-    nn=&n->alt;
-    n=*nn;
-    }
-  }
-
-
-// Find pattern node by name
-HLNode *Hilite::find(FXint style) const {
-  register HLNode *node=root;
-  while(node){
-    if(node->style==style){break;}
-    if(node->sub){node=node->sub; continue; }
-    while(!node->alt && node->parent){ node=node->parent; }
-    node=node->alt;
-    }
-  return node;
-  }
-
-
-// Clear all syntax rules
-void Hilite::clear(){
-  register HLNode *n;
-  while(root){
-    n=root; 
-    root=root->alt; 
-    delete n;
-    }
-  }
-
-
-// Return style
-FXint Hilite::style(HLNode *node) const {
-  return node->style;
-  }
-
-
-// Return context
-FXint Hilite::context(HLNode *node) const {
-  return node->context;
-  }
-
-
-// Get parent of node
-HLNode *Hilite::parent(HLNode *node) const {
-  return node->parent;
-  }
-
-
-// Get first alternative of node
-HLNode *Hilite::alternative(HLNode *node) const {
-  return node->alt;
-  }
-
-
-// Get sub node of node
-HLNode *Hilite::sub(HLNode *node) const {
-  return node->sub;
+  return FALSE;
   }
 
 
 // Clean up
-Hilite::~Hilite(){
-  clear();
+FXSyntax::~FXSyntax(){
+  for(int i=0; i<rules.no(); i++) delete rules[i];
   }
+
+
+

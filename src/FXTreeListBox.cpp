@@ -3,7 +3,7 @@
 *                       T r e e  L i s t  B o x  O b j e c t                    *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1999,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1999,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXTreeListBox.cpp,v 1.23 2002/02/11 06:37:27 fox Exp $                   *
+* $Id: FXTreeListBox.cpp,v 1.38 2004/02/08 17:29:07 fox Exp $                   *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -32,6 +32,7 @@
 #include "FXRectangle.h"
 #include "FXRegistry.h"
 #include "FXAccelTable.h"
+#include "FXHash.h"
 #include "FXApp.h"
 #include "FXFont.h"
 #include "FXWindow.h"
@@ -41,7 +42,7 @@
 #include "FXButton.h"
 #include "FXMenuButton.h"
 #include "FXPopup.h"
-#include "FXScrollbar.h"
+#include "FXScrollBar.h"
 #include "FXTreeList.h"
 #include "FXTreeListBox.h"
 
@@ -67,14 +68,18 @@
 
 #define TREELISTBOX_MASK       (0)
 
+using namespace FX;
 
 
 /*******************************************************************************/
+
+namespace FX {
 
 // Map
 FXDEFMAP(FXTreeListBox) FXTreeListBoxMap[]={
   FXMAPFUNC(SEL_FOCUS_UP,0,FXTreeListBox::onFocusUp),
   FXMAPFUNC(SEL_FOCUS_DOWN,0,FXTreeListBox::onFocusDown),
+  FXMAPFUNC(SEL_FOCUS_SELF,0,FXTreeListBox::onFocusSelf),
   FXMAPFUNC(SEL_CHANGED,0,FXTreeListBox::onChanged),
   FXMAPFUNC(SEL_COMMAND,0,FXTreeListBox::onCommand),
   FXMAPFUNC(SEL_UPDATE,FXTreeListBox::ID_TREE,FXTreeListBox::onUpdFmTree),
@@ -89,7 +94,7 @@ FXIMPLEMENT(FXTreeListBox,FXPacker,FXTreeListBoxMap,ARRAYNUMBER(FXTreeListBoxMap
 
 
 // List box
-FXTreeListBox::FXTreeListBox(FXComposite *p,FXint nvis,FXObject* tgt,FXSelector sel,FXuint opts,FXint x,FXint y,FXint w,FXint h,FXint pl,FXint pr,FXint pt,FXint pb):
+FXTreeListBox::FXTreeListBox(FXComposite *p,FXObject* tgt,FXSelector sel,FXuint opts,FXint x,FXint y,FXint w,FXint h,FXint pl,FXint pr,FXint pt,FXint pb):
   FXPacker(p,opts,x,y,w,h, 0,0,0,0, 0,0){
   flags|=FLAG_ENABLED;
   target=tgt;
@@ -97,7 +102,7 @@ FXTreeListBox::FXTreeListBox(FXComposite *p,FXint nvis,FXObject* tgt,FXSelector 
   field=new FXButton(this," ",NULL,this,FXTreeListBox::ID_FIELD,ICON_BEFORE_TEXT|JUSTIFY_LEFT, 0,0,0,0, pl,pr,pt,pb);
   field->setBackColor(getApp()->getBackColor());
   pane=new FXPopup(this,FRAME_LINE);
-  tree=new FXTreeList(pane,nvis,this,FXTreeListBox::ID_TREE,TREELIST_BROWSESELECT|TREELIST_AUTOSELECT|LAYOUT_FILL_X|LAYOUT_FILL_Y|SCROLLERS_TRACK|HSCROLLING_OFF);
+  tree=new FXTreeList(pane,this,FXTreeListBox::ID_TREE,TREELIST_BROWSESELECT|TREELIST_AUTOSELECT|LAYOUT_FILL_X|LAYOUT_FILL_Y|SCROLLERS_TRACK|HSCROLLING_OFF);
   tree->setIndent(0);
   button=new FXMenuButton(this,NULL,NULL,pane,FRAME_RAISED|FRAME_THICK|MENUBUTTON_DOWN|MENUBUTTON_ATTACH_RIGHT, 0,0,0,0, 0,0,0,0);
   button->setXOffset(border);
@@ -181,27 +186,27 @@ void FXTreeListBox::layout(){
 
 // Forward GUI update of tree to target; but only if pane is not popped
 long FXTreeListBox::onUpdFmTree(FXObject*,FXSelector,void*){
-  return target && !isPaneShown() && target->handle(this,MKUINT(message,SEL_UPDATE),NULL);
+  return target && !isPaneShown() && target->handle(this,FXSEL(SEL_UPDATE,message),NULL);
   }
 
 
 // Changed
 long FXTreeListBox::onChanged(FXObject*,FXSelector,void* ptr){
-  if(target) target->handle(this,MKUINT(message,SEL_CHANGED),ptr);
+  if(target) target->handle(this,FXSEL(SEL_CHANGED,message),ptr);
   return 1;
   }
 
 
 // Command
 long FXTreeListBox::onCommand(FXObject*,FXSelector,void* ptr){
-  if(target) target->handle(this,MKUINT(message,SEL_COMMAND),ptr);
+  if(target) target->handle(this,FXSEL(SEL_COMMAND,message),ptr);
   return 1;
   }
 
 
 // Forward changed message from list to target
 long FXTreeListBox::onTreeChanged(FXObject*,FXSelector,void* ptr){
-  handle(this,MKUINT(0,SEL_CHANGED),ptr);
+  handle(this,FXSEL(SEL_CHANGED,0),ptr);
   return 1;
   }
 
@@ -209,11 +214,11 @@ long FXTreeListBox::onTreeChanged(FXObject*,FXSelector,void* ptr){
 // Forward clicked message from list to target
 long FXTreeListBox::onTreeClicked(FXObject*,FXSelector,void* ptr){
   FXTreeItem *item=(FXTreeItem*)ptr;
-  button->handle(this,MKUINT(ID_UNPOST,SEL_COMMAND),NULL);    // Unpost the list
+  button->handle(this,FXSEL(SEL_COMMAND,ID_UNPOST),NULL);    // Unpost the list
   if(item){
     field->setText(tree->getItemText(item));
     field->setIcon(tree->getItemClosedIcon(item));
-    handle(this,MKUINT(0,SEL_COMMAND),(void*)item);
+    handle(this,FXSEL(SEL_COMMAND,0),(void*)item);
     }
   return 1;
   }
@@ -221,8 +226,14 @@ long FXTreeListBox::onTreeClicked(FXObject*,FXSelector,void* ptr){
 
 // Pressed left button in text field
 long FXTreeListBox::onFieldButton(FXObject*,FXSelector,void*){
-  button->handle(this,MKUINT(ID_POST,SEL_COMMAND),NULL);      // Post the list
+  button->handle(this,FXSEL(SEL_COMMAND,ID_POST),NULL);      // Post the list
   return 1;
+  }
+
+
+// Bounce focus to the field
+long FXTreeListBox::onFocusSelf(FXObject* sender,FXSelector,void* ptr){
+  return field->handle(sender,FXSEL(SEL_FOCUS_SELF,0),ptr);
   }
 
 
@@ -237,7 +248,7 @@ long FXTreeListBox::onFocusUp(FXObject*,FXSelector,void*){
     }
   if(item){
     setCurrentItem(item);
-    handle(this,MKUINT(0,SEL_COMMAND),(void*)item);
+    handle(this,FXSEL(SEL_COMMAND,0),(void*)item);
     }
   return 1;
   }
@@ -254,7 +265,7 @@ long FXTreeListBox::onFocusDown(FXObject*,FXSelector,void*){
     }
   if(item){
     setCurrentItem(item);
-    handle(this,MKUINT(0,SEL_COMMAND),(void*)item);
+    handle(this,FXSEL(SEL_COMMAND,0),(void*)item);
     }
   return 1;
   }
@@ -412,6 +423,12 @@ FXbool FXTreeListBox::isItemLeaf(const FXTreeItem* item) const {
   }
 
 
+// Sort all items recursively
+void FXTreeListBox::sortItems(){
+  tree->sortItems();
+  }
+
+
 // Sort item child list
 void FXTreeListBox::sortChildItems(FXTreeItem* item){
   tree->sortChildItems(item);
@@ -419,8 +436,8 @@ void FXTreeListBox::sortChildItems(FXTreeItem* item){
 
 
 // Sort item list
-void FXTreeListBox::sortItems(){
-  tree->sortItems();
+void FXTreeListBox::sortRootItems(){
+  tree->sortRootItems();
   }
 
 
@@ -567,9 +584,10 @@ void FXTreeListBox::load(FXStream& store){
 // Delete it
 FXTreeListBox::~FXTreeListBox(){
   delete pane;
-  pane=(FXPopup*)-1;
-  field=(FXButton*)-1;
-  button=(FXMenuButton*)-1;
-  tree=(FXTreeList*)-1;
+  pane=(FXPopup*)-1L;
+  field=(FXButton*)-1L;
+  button=(FXMenuButton*)-1L;
+  tree=(FXTreeList*)-1L;
   }
 
+}

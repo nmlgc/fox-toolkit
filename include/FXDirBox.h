@@ -3,7 +3,7 @@
 *                    D i r e c t o r y   B o x   W i d g e t                    *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1999,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1999,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXDirBox.h,v 1.13 2002/01/18 22:42:52 jeroen Exp $                       *
+* $Id: FXDirBox.h,v 1.21 2004/02/08 17:17:33 fox Exp $                          *
 ********************************************************************************/
 #ifndef FXDIRBOX_H
 #define FXDIRBOX_H
@@ -28,28 +28,34 @@
 #include "FXTreeListBox.h"
 #endif
 
+namespace FX {
 
 
 class FXIcon;
+class FXFileDict;
+
+/// Directory Box options
+enum {
+  DIRBOX_NO_OWN_ASSOC = 0x00020000      /// Do not create associations for files
+  };
 
 
 /// Directory Box
 class FXAPI FXDirBox : public FXTreeListBox {
   FXDECLARE(FXDirBox)
 protected:
-  FXString    directory;              // Current directory
-  FXIcon     *foldericon;             // Folder icons
-  FXIcon     *cdromicon;
-  FXIcon     *desktopicon;
-  FXIcon     *harddiskicon;
-  FXIcon     *networkicon;
-  FXIcon     *floppyicon;
-  FXIcon     *computericon;
-  FXIcon     *nethoodicon;
-  FXIcon     *zipdiskicon;
+  FXFileDict *associations;     // Association table
+  FXIcon     *foldericon;       // Folder icons
+  FXIcon     *cdromicon;        // CDROM icon
+  FXIcon     *harddiskicon;     // Hard disk icon
+  FXIcon     *netdriveicon;     // Networked drive icon
+  FXIcon     *floppyicon;       // Floppy icon
+  FXIcon     *nethoodicon;      // Network neighborhood icon
+  FXIcon     *zipdiskicon;      // Zip drive icon
 protected:
   FXDirBox(){}
-  FXString itempath(FXTreeItem *item);
+  FXString getItemPathname(FXTreeItem *item) const;
+  FXTreeItem* getPathnameItem(const FXString& path);
 private:
   FXDirBox(const FXDirBox&);
   FXDirBox &operator=(const FXDirBox&);
@@ -62,7 +68,7 @@ public:
 public:
 
   /// Constructor
-  FXDirBox(FXComposite *p,FXint nvis,FXObject* tgt=NULL,FXSelector sel=0,FXuint opts=FRAME_SUNKEN|FRAME_THICK|TREELISTBOX_NORMAL,FXint x=0,FXint y=0,FXint w=0,FXint h=0,FXint pl=DEFAULT_PAD,FXint pr=DEFAULT_PAD,FXint pt=DEFAULT_PAD,FXint pb=DEFAULT_PAD);
+  FXDirBox(FXComposite *p,FXObject* tgt=NULL,FXSelector sel=0,FXuint opts=FRAME_SUNKEN|FRAME_THICK|TREELISTBOX_NORMAL,FXint x=0,FXint y=0,FXint w=0,FXint h=0,FXint pl=DEFAULT_PAD,FXint pr=DEFAULT_PAD,FXint pt=DEFAULT_PAD,FXint pb=DEFAULT_PAD);
 
   /// Create server-side resources
   virtual void create();
@@ -83,11 +89,18 @@ public:
   void setDirectory(const FXString& pathname);
 
   /// Return current directory
-  FXString getDirectory() const { return directory; }
+  FXString getDirectory() const;
+
+  /// Change file associations
+  void setAssociations(FXFileDict* assoc);
+
+  /// Return file associations
+  FXFileDict* getAssociations() const { return associations; }
 
   /// Destructor
   virtual ~FXDirBox();
   };
 
+}
 
 #endif

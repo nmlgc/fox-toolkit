@@ -3,7 +3,7 @@
 *                          P i c k e r   B u t t o n                            *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2001,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 2001,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXPicker.h,v 1.4 2002/01/18 22:42:54 jeroen Exp $                        *
+* $Id: FXPicker.h,v 1.8 2004/02/08 17:17:34 fox Exp $                           *
 ********************************************************************************/
 #ifndef FXPICKER_H
 #define FXPICKER_H
@@ -28,6 +28,7 @@
 #include "FXButton.h"
 #endif
 
+namespace FX {
 
 
 /**
@@ -50,5 +51,7 @@ public:
 public:
   FXPicker(FXComposite* p,const FXString& text,FXIcon* ic=NULL,FXObject* tgt=NULL,FXSelector sel=0,FXuint opts=BUTTON_NORMAL,FXint x=0,FXint y=0,FXint w=0,FXint h=0,FXint pl=DEFAULT_PAD,FXint pr=DEFAULT_PAD,FXint pt=DEFAULT_PAD,FXint pb=DEFAULT_PAD);
   };
+
+}
 
 #endif

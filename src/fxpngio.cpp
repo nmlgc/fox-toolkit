@@ -3,7 +3,7 @@
 *                         P N G    I n p u t / O u t p u t                      *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1998,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,13 +19,14 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: fxpngio.cpp,v 1.15 2002/01/18 22:43:08 jeroen Exp $                      *
+* $Id: fxpngio.cpp,v 1.32 2004/04/08 16:24:48 fox Exp $                         *
 ********************************************************************************/
-#include "xincs.h"
 #include "fxver.h"
 #include "fxdefs.h"
 #include "FXStream.h"
-
+#ifdef HAVE_PNG_H
+#include "png.h"
+#endif
 
 /*
   Notes:
@@ -36,35 +37,18 @@
     http://www.libpng.org/pub/png/
 */
 
+using namespace FX;
 
 /*******************************************************************************/
 
-/// Load a png from a stream
-extern FXAPI FXbool fxloadPNG(FXStream& store,FXuchar*& data,FXColor& transp,FXint& width,FXint& height);
+namespace FX {
 
 
-/// Save a png to a stream
-extern FXAPI FXbool fxsavePNG(FXStream& store,const FXuchar* data,FXColor transp,FXint width,FXint height);
+extern FXAPI FXbool fxloadPNG(FXStream& store,FXColor*& data,FXint& width,FXint& height);
+extern FXAPI FXbool fxsavePNG(FXStream& store,const FXColor* data,FXint width,FXint height);
 
-
-/*******************************************************************************/
 
 #ifdef HAVE_PNG_H
-#include "png.h"
-
-
-// // This function is called when there is a warning, but the library thinks
-// // it can continue anyway.
-// static void user_warning_fn(png_structp, png_const_charp message){
-//   fxwarning("FXPNG: %s\n",message);
-//   }
-//
-//
-// // This is the error handling function.  Note that replacements for
-// // this function MUST NOT RETURN, or the program will likely crash.
-// static void user_error_fn(png_structp, png_const_charp message){
-//   fxerror("FXPNG: %s\n",message);
-//   }
 
 
 // Custom read function, which will read from the stream in our case
@@ -85,21 +69,41 @@ static void user_write_fn(png_structp png_ptr, png_bytep buffer, png_size_t size
 static void user_flush_fn(png_structp ){ }
 
 
+// Custom error handler; this is unrecoverable
+static void user_error_fn(png_structp png_ptr,png_const_charp message){
+  FXStream* store=(FXStream*)png_get_error_ptr(png_ptr);
+  store->setError(FXStreamFormat);                      // Flag this as a format error in FXStream
+  FXTRACE((100,"Error in png: %s\n",message));
+  longjmp(png_ptr->jmpbuf,1);                           // Bail out
+  }
+
+
+// Custom warning handler; we assume this is recoverable
+static void user_warning_fn(png_structp,png_const_charp message){
+  //FXStream* store=(FXStream*)png_get_error_ptr(png_ptr);
+  FXTRACE((100,"Warning in png: %s\n",message));
+  }
+
+
 // Load a PNG image
-FXbool fxloadPNG(FXStream& store,FXuchar*& data,FXColor&,FXint& width,FXint& height){
+FXbool fxloadPNG(FXStream& store,FXColor*& data,FXint& width,FXint& height){
   png_structp png_ptr;
   png_infop info_ptr;
   png_uint_32 ww,hh,i;
   int bit_depth,color_type,interlace_type,number_passes;
   png_bytep *row_pointers;
 
+  // Null out
+  data=NULL;
+  width=0;
+  height=0;
+
   // Create png_struct
-  //png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING,NULL,user_error_fn,user_warning_fn);
-  png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING,NULL,NULL,NULL);
+  png_ptr=png_create_read_struct(PNG_LIBPNG_VER_STRING,&store,user_error_fn,user_warning_fn);
   if(!png_ptr) return FALSE;
 
   // Allocate/initialize the memory for image information
-  info_ptr = png_create_info_struct(png_ptr);
+  info_ptr=png_create_info_struct(png_ptr);
   if(!info_ptr){
     png_destroy_read_struct(&png_ptr,(png_infopp)NULL,(png_infopp)NULL);
     return FALSE;
@@ -117,7 +121,7 @@ FXbool fxloadPNG(FXStream& store,FXuchar*& data,FXColor&,FXint& width,FXint& hei
   png_set_read_fn(png_ptr,(void *)&store,user_read_fn);
 
   // If we have already read some of the signature
-  //png_set_sig_bytes(png_ptr, sig_read);
+  //png_set_sig_bytes(png_ptr,sig_read);
 
   // Get all of the information from the PNG file before the first IDAT (image data chunk).
   png_read_info(png_ptr,info_ptr);
@@ -125,7 +129,7 @@ FXbool fxloadPNG(FXStream& store,FXuchar*& data,FXColor&,FXint& width,FXint& hei
   // Get the goods
   png_get_IHDR(png_ptr,info_ptr,&ww,&hh,&bit_depth,&color_type,&interlace_type,NULL,NULL);
 
-  FXTRACE((100,"FXPNG: width=%d height=%d bit_depth=%d color_type=%d\n",(int)ww,(int)hh,bit_depth,color_type));
+  FXTRACE((100,"fxloadPNG: width=%d height=%d bit_depth=%d color_type=%d\n",(int)ww,(int)hh,bit_depth,color_type));
 
   // tell libpng to strip 16 bit/color files down to 8 bits/color
   png_set_strip_16(png_ptr);
@@ -147,13 +151,13 @@ FXbool fxloadPNG(FXStream& store,FXuchar*& data,FXColor&,FXint& width,FXint& hei
   png_set_filler(png_ptr,0xff,PNG_FILLER_AFTER);
 
   // Turn on interlace handling
-  number_passes = png_set_interlace_handling(png_ptr);
+  number_passes=png_set_interlace_handling(png_ptr);
 
   // Update image info based on transformations
   png_read_update_info(png_ptr,info_ptr);
 
   // Make room for data
-  FXMALLOC(&data,FXuchar,4*hh*ww);
+  FXMALLOC(&data,FXColor,hh*ww);
   if(!data){
     png_destroy_read_struct(&png_ptr,&info_ptr,(png_infopp)NULL);
     return FALSE;
@@ -169,7 +173,7 @@ FXbool fxloadPNG(FXStream& store,FXuchar*& data,FXColor&,FXint& width,FXint& hei
 
   // Set up row pointers
   for(i=0; i<hh; i++){
-    row_pointers[i]=(png_bytep)&data[i*4*ww];
+    row_pointers[i]=(png_bytep)&data[i*ww];
     }
 
   FXTRACE((100,"Reading image...\n"));
@@ -198,19 +202,21 @@ FXbool fxloadPNG(FXStream& store,FXuchar*& data,FXColor&,FXint& width,FXint& hei
 
 
 // Save a PNG image
-FXbool fxsavePNG(FXStream& store,const FXuchar* data,FXColor,FXint width,FXint height){
+FXbool fxsavePNG(FXStream& store,const FXColor* data,FXint width,FXint height){
   png_structp png_ptr;
   png_infop info_ptr;
   png_bytep *row_pointers;
   int i;
 
+  // Must make sense
+  if(!data || width<=0 || height<=0) return FALSE;
+
   // Create and initialize the png_struct with the desired error handler functions.
-  //png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING,NULL,user_error_fn,user_warning_fn);
-  png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING,NULL,NULL,NULL);
+  png_ptr=png_create_write_struct(PNG_LIBPNG_VER_STRING,&store,user_error_fn,user_warning_fn);
   if(!png_ptr) return FALSE;
 
   // Allocate/initialize the image information data.
-  info_ptr = png_create_info_struct(png_ptr);
+  info_ptr=png_create_info_struct(png_ptr);
   if(!info_ptr){
     png_destroy_write_struct(&png_ptr,(png_infopp)NULL);
     return FALSE;
@@ -238,7 +244,7 @@ FXbool fxsavePNG(FXStream& store,const FXuchar* data,FXColor,FXint width,FXint h
 
   // Set up row pointers
   for(i=0; i<height; i++){
-    row_pointers[i]=(png_bytep)&data[i*4*width];
+    row_pointers[i]=(png_bytep)&data[i*width];
     }
 
   // Save entire image
@@ -264,8 +270,7 @@ FXbool fxsavePNG(FXStream& store,const FXuchar* data,FXColor,FXint width,FXint h
 
 
 // Stub routine
-FXbool fxloadPNG(FXStream&,FXuchar*& data,FXColor& transp,FXint& width,FXint& height){
-  register FXint x,y,p;
+FXbool fxloadPNG(FXStream&,FXColor*& data,FXint& width,FXint& height){
   static const FXuchar png_bits[] = {
    0xff, 0xff, 0xff, 0xff, 0x01, 0x00, 0x00, 0x80, 0xfd, 0xff, 0xff, 0xbf,
    0x05, 0x00, 0x00, 0xa0, 0x05, 0x00, 0x00, 0xa0, 0x05, 0x00, 0x00, 0xa0,
@@ -278,27 +283,23 @@ FXbool fxloadPNG(FXStream&,FXuchar*& data,FXColor& transp,FXint& width,FXint& he
    0x45, 0x20, 0x24, 0xa2, 0x45, 0x20, 0xc4, 0xa1, 0x05, 0x00, 0x00, 0xa0,
    0x05, 0x00, 0x00, 0xa0, 0x05, 0x00, 0x00, 0xa0, 0xfd, 0xff, 0xff, 0xbf,
    0x01, 0x00, 0x00, 0x80, 0xff, 0xff, 0xff, 0xff};
-  FXMALLOC(&data,FXuchar,32*32*4);
-  for(y=0; y<32*32*4; y+=32*4){
-    for(x=0; x<32*4; x+=4){
-      p=(png_bits[(y+x)>>5]&(1<<((x>>2)&7)))?0:255;
-      data[y+x+0]=p;
-      data[y+x+1]=p;
-      data[y+x+2]=p;
-      data[y+x+3]=255;
-      }
+  register FXint p;
+  FXMALLOC(&data,FXColor,32*32);
+  for(p=0; p<32*32; p++){
+    data[p]=(png_bits[p>>3]&(1<<(p&7))) ? FXRGB(0,0,0) : FXRGB(255,255,255);
     }
-  transp=0;
   width=32;
   height=32;
-  return FALSE;
+  return TRUE;
   }
 
 
 // Stub routine
-FXbool fxsavePNG(FXStream&,const FXuchar*,FXColor transp,FXint,FXint){
+FXbool fxsavePNG(FXStream&,const FXColor*,FXint,FXint){
   return FALSE;
   }
 
 
 #endif
+
+}

@@ -3,7 +3,7 @@
 *                       F o u r - W a y   S p l i t t e r                       *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1999,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1999,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FX4Splitter.h,v 1.21 2002/01/18 22:42:51 jeroen Exp $                    *
+* $Id: FX4Splitter.h,v 1.25 2004/02/08 17:17:33 fox Exp $                       *
 ********************************************************************************/
 #ifndef FX4SPLITTER_H
 #define FX4SPLITTER_H
@@ -28,7 +28,7 @@
 #include "FXComposite.h"
 #endif
 
-
+namespace FX {
 
 // Splitter options
 enum {
@@ -70,7 +70,6 @@ protected:
   void moveSplit(FXint x,FXint y);
   void drawSplit(FXint x,FXint y);
   void adjustLayout();
-  virtual void layout();
 private:
   FX4Splitter(const FX4Splitter&);
   FX4Splitter &operator=(const FX4Splitter&);
@@ -125,6 +124,9 @@ public:
   /// Change vertical split fraction
   void setVSplit(FXint s);
 
+  /// Perform layout
+  virtual void layout();
+
   /// Get default width
   virtual FXint getDefaultWidth();
 
@@ -156,5 +158,6 @@ public:
   virtual void load(FXStream& store);
   };
 
+}
 
 #endif

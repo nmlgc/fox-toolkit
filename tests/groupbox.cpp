@@ -5,7 +5,7 @@
 *********************************************************************************
 * Copyright (C) 1997 by Jeroen van der Zijp.   All Rights Reserved.             *
 *********************************************************************************
-* $Id: groupbox.cpp,v 1.47.4.1 2003/09/16 02:48:05 fox Exp $                     *
+* $Id: groupbox.cpp,v 1.86 2004/03/25 16:30:25 fox Exp $                        *
 ********************************************************************************/
 #include "fx.h"
 #include <stdio.h>
@@ -22,19 +22,21 @@ class GroupWindow : public FXMainWindow {
 protected:
 
   // Member data
-  FXTooltip*         tooltip;
-  FXMenubar*         menubar;
+  FXToolTip*         tooltip;
+  FXMenuBar*         menubar;
   FXMenuPane*        filemenu;
   FXMenuPane*        popupmenu;
   FXMenuPane*        helpmenu;
   FXMenuPane*        editmenu;
   FXMenuPane*        submenu1;
+  FXScrollPane*      scrollpane;
   FXPopup*           pop;
   FXPopup*           coolpop;
   FXHorizontalFrame* contents;
   FXPacker*          group1;
   FXGroupBox*        group2;
   FXGroupBox*        group3;
+  FXDataTarget       radiotarget;
   FXuint             choice;
 
 protected:
@@ -56,6 +58,8 @@ public:
   long onCmdPopup(FXObject*,FXSelector,void*);
   long onUpdRadio(FXObject*,FXSelector,void*);
   long onCmdOption(FXObject*,FXSelector,void*);
+  long onCmdIconify(FXObject*,FXSelector,void*);
+  long onCmdDeiconify(FXObject*,FXSelector,void*);
 
 public:
 
@@ -64,6 +68,8 @@ public:
     ID_DOWNSIZE=FXMainWindow::ID_LAST,
     ID_POPUP,
     ID_ABOUT,
+    ID_ICONIFY,
+    ID_DEICONIFY,
     ID_DELETE,
     ID_FILEDLG_ANY,
     ID_FILEDLG_EXISTING,
@@ -106,6 +112,8 @@ FXDEFMAP(GroupWindow) GroupWindowMap[]={
   FXMAPFUNC(SEL_COMMAND,  GroupWindow::ID_FILEDLG_MULTIPLE_ALL,              GroupWindow::onCmdFileDlgMultipleAll),
   FXMAPFUNC(SEL_COMMAND,  GroupWindow::ID_FILEDLG_DIRECTORY,                 GroupWindow::onCmdFileDlgDirectory),
   FXMAPFUNC(SEL_COMMAND,  GroupWindow::ID_DIRDLG,                            GroupWindow::onCmdDirDlg),
+  FXMAPFUNC(SEL_COMMAND,  GroupWindow::ID_ICONIFY,                           GroupWindow::onCmdIconify),
+  FXMAPFUNC(SEL_TIMEOUT,  GroupWindow::ID_DEICONIFY,                         GroupWindow::onCmdDeiconify),
   FXMAPFUNCS(SEL_COMMAND, GroupWindow::ID_OPTION1,GroupWindow::ID_OPTION4,   GroupWindow::onCmdOption),
   };
 
@@ -116,6 +124,7 @@ FXIMPLEMENT(GroupWindow,FXMainWindow,GroupWindowMap,ARRAYNUMBER(GroupWindowMap))
 
 
 /*******************************************************************************/
+
 
 const unsigned char minidoc1[]={
   0x47,0x49,0x46,0x38,0x37,0x61,0x10,0x00,0x10,0x00,0xf1,0x00,0x00,0xbf,0xbf,0xbf,
@@ -150,8 +159,10 @@ const unsigned char minifolderclosed[]={
 
 
 // Make some windows
-GroupWindow::GroupWindow(FXApp* a):FXMainWindow(a,"Group Box Test",NULL,NULL,DECOR_ALL,0,0,0,0){
-  tooltip=new FXTooltip(getApp(),0,100,100);
+GroupWindow::GroupWindow(FXApp* a):
+  FXMainWindow(a,"Group Box Test",NULL,NULL,DECOR_ALL,0,0,0,0),
+  radiotarget(choice){
+  tooltip=new FXToolTip(getApp(),0,100,100);
 
 
   FXIcon *doc=new FXGIFIcon(getApp(),minidoc1);
@@ -159,7 +170,7 @@ GroupWindow::GroupWindow(FXApp* a):FXMainWindow(a,"Group Box Test",NULL,NULL,DEC
   FXIcon *folder_closed=new FXGIFIcon(getApp(),minifolderclosed);
 
   // Menubar
-  menubar=new FXMenubar(this,LAYOUT_SIDE_TOP|LAYOUT_FILL_X);
+  menubar=new FXMenuBar(this,LAYOUT_SIDE_TOP|LAYOUT_FILL_X);
   filemenu=new FXMenuPane(this);
     new FXMenuCommand(filemenu,"Open any",folder_open,this,ID_FILEDLG_ANY);
     new FXMenuCommand(filemenu,"Open existing",folder_open,this,ID_FILEDLG_EXISTING);
@@ -167,12 +178,16 @@ GroupWindow::GroupWindow(FXApp* a):FXMainWindow(a,"Group Box Test",NULL,NULL,DEC
     new FXMenuCommand(filemenu,"Open multiple all",folder_open,this,ID_FILEDLG_MULTIPLE_ALL);
     new FXMenuCommand(filemenu,"Open directory",folder_open,this,ID_FILEDLG_DIRECTORY);
     new FXMenuCommand(filemenu,"Open directory dialog",folder_open,this,ID_DIRDLG);
-    new FXMenuCommand(filemenu,"Radio&1",NULL,this,ID_RADIO1,0);
-    new FXMenuCommand(filemenu,"Radio&2",NULL,this,ID_RADIO2,0);
-    new FXMenuCommand(filemenu,"Radio&3",NULL,this,ID_RADIO3,0);
+    new FXMenuRadio(filemenu,"Radio&1",&radiotarget,FXDataTarget::ID_OPTION+1);
+    new FXMenuRadio(filemenu,"Radio&2",&radiotarget,FXDataTarget::ID_OPTION+2);
+    new FXMenuRadio(filemenu,"Radio&3",&radiotarget,FXDataTarget::ID_OPTION+3);
+
     new FXMenuCommand(filemenu,"Delete\tCtl-X",NULL,this,ID_DELETE,0);
     new FXMenuCommand(filemenu,"Downsize\tF5\tResize to minimum",NULL,this,ID_DOWNSIZE,0);
     new FXMenuCommand(filemenu,"&Size",NULL,this,ID_DOWNSIZE,0);
+    new FXMenuCommand(filemenu,"Maximize",NULL,this,ID_MAXIMIZE,0);     // TEST
+    new FXMenuCommand(filemenu,"Minimize",NULL,this,ID_ICONIFY,0);     // TEST
+    new FXMenuCommand(filemenu,"Restore",NULL,this,ID_RESTORE,0);       // TEST
     new FXMenuCommand(filemenu,"Dump Widgets",NULL,getApp(),FXApp::ID_DUMP);
 
     // Make edit popup menu
@@ -198,9 +213,31 @@ GroupWindow::GroupWindow(FXApp* a):FXMainWindow(a,"Group Box Test",NULL,NULL,DEC
     FXTextField* poptext=new FXTextField(popupmenu,10,NULL,0,FRAME_SUNKEN|FRAME_THICK|LAYOUT_SIDE_TOP,0,0,0,0);
     poptext->setText("Popup with text");
 
+  scrollpane=new FXScrollPane(this,10,PACK_UNIFORM_HEIGHT);
+  new FXMenuCommand(scrollpane,"One");
+  new FXMenuCommand(scrollpane,"Two");
+  new FXMenuCommand(scrollpane,"Three");
+  new FXMenuCommand(scrollpane,"Four");
+  new FXMenuCommand(scrollpane,"Five");
+  new FXMenuCommand(scrollpane,"Six");
+  new FXMenuCommand(scrollpane,"Seven");
+  new FXMenuCommand(scrollpane,"Eight");
+  new FXMenuCommand(scrollpane,"Nine");
+  new FXMenuCommand(scrollpane,"Ten");
+  new FXMenuCommand(scrollpane,"Eleven");
+  new FXMenuCommand(scrollpane,"Twelve");
+  new FXMenuCommand(scrollpane,"Thirteen");
+  new FXMenuCommand(scrollpane,"Fourteen");
+  new FXMenuCommand(scrollpane,"Fifteen");
+  new FXMenuCommand(scrollpane,"Sixteen");
+  new FXMenuCommand(scrollpane,"Seventeen");
+  new FXMenuCommand(scrollpane,"Eighteen");
+  new FXMenuCommand(scrollpane,"Nineteen");
+  new FXMenuCommand(scrollpane,"Twenty");
+  new FXMenuTitle(menubar,"&Scroll",NULL,scrollpane);
 
   // Status bar
-  FXStatusbar *status=new FXStatusbar(this,LAYOUT_SIDE_BOTTOM|LAYOUT_FILL_X|STATUSBAR_WITH_DRAGCORNER);
+  FXStatusBar *status=new FXStatusBar(this,LAYOUT_SIDE_BOTTOM|LAYOUT_FILL_X|STATUSBAR_WITH_DRAGCORNER);
 
   new FXLabel(status,"10:15 PM",NULL,LAYOUT_FILL_Y|LAYOUT_RIGHT|FRAME_SUNKEN);
 
@@ -211,12 +248,14 @@ GroupWindow::GroupWindow(FXApp* a):FXMainWindow(a,"Group Box Test",NULL,NULL,DEC
   group2=new FXGroupBox(contents,"Slider Tests",GROUPBOX_TITLE_CENTER|FRAME_RIDGE|LAYOUT_FILL_X|LAYOUT_FILL_Y);
   group3=new FXGroupBox(contents,"Title Right",GROUPBOX_TITLE_RIGHT|FRAME_RIDGE|LAYOUT_FILL_X|LAYOUT_FILL_Y);
 
-  FXLabel *testlabel=new FXLabel(group1,"&This is a multi-line\nlabel widget\nwith a big font",NULL,LAYOUT_CENTER_X|JUSTIFY_CENTER_X);
-  testlabel->setFont(new FXFont(getApp(),"helvetica",24,FONTWEIGHT_BOLD,FONTSLANT_ITALIC,FONTENCODING_DEFAULT));
+  FXLabel *testlabel=new FXLabel(group1,"Big Font",NULL,LAYOUT_CENTER_X|JUSTIFY_CENTER_X);
+  testlabel->setFont(new FXFont(getApp(),"helvetica,240,bold,italic"));
 
   new FXButton(group1,"Small &Button",NULL,NULL,0,FRAME_RAISED|FRAME_THICK);
   new FXButton(group1,"Big Fat Wide Button\nComprising\nthree lines",NULL,NULL,0,FRAME_RAISED|FRAME_THICK);
   new FXToggleButton(group1,"C&losed\tTooltip for closed\tHelp for closed","O&pen\nState\tTooltip for open\tHelp for open",folder_closed,folder_open,NULL,0,ICON_BEFORE_TEXT|JUSTIFY_LEFT|FRAME_RAISED|FRAME_THICK);
+  FXTriStateButton *tsb=new FXTriStateButton(group1,"False","True","Maybe",folder_closed,folder_open,doc,NULL,0,ICON_BEFORE_TEXT|JUSTIFY_LEFT|FRAME_RAISED|FRAME_THICK);
+  tsb->setState(MAYBE);
 
   pop=new FXPopup(this);
 
@@ -280,8 +319,9 @@ GroupWindow::GroupWindow(FXApp* a):FXMainWindow(a,"Group Box Test",NULL,NULL,DEC
   slider=new FXSlider(frame,NULL,0,LAYOUT_FIX_HEIGHT|SLIDER_VERTICAL|SLIDER_ARROW_LEFT|SLIDER_TICKS_LEFT,0,0,30,200);
   slider->setRange(0,10);
   slider=new FXSlider(frame,NULL,0,LAYOUT_FIX_HEIGHT|SLIDER_VERTICAL|SLIDER_INSIDE_BAR|SLIDER_TICKS_LEFT,0,0,20,200);
-  slider->setRange(0,10);
-  new FXScrollbar(frame,NULL,0,SCROLLBAR_VERTICAL|LAYOUT_FIX_HEIGHT|LAYOUT_FIX_WIDTH,0,0,20,300);
+  slider->setRange(0,7);
+  slider->setTickDelta(7);
+  new FXScrollBar(frame,NULL,0,SCROLLBAR_VERTICAL|LAYOUT_FIX_HEIGHT|LAYOUT_FIX_WIDTH,0,0,20,300);
 
   FXVerticalFrame *vframe1=new FXVerticalFrame(frame,LAYOUT_FILL_X|LAYOUT_FILL_Y);
   new FXArrowButton(vframe1,NULL,0,LAYOUT_FILL_X|LAYOUT_FILL_Y|FRAME_RAISED|FRAME_THICK|ARROW_UP);
@@ -295,23 +335,30 @@ GroupWindow::GroupWindow(FXApp* a):FXMainWindow(a,"Group Box Test",NULL,NULL,DEC
   new FXArrowButton(vframe2,NULL,0,LAYOUT_FILL_X|LAYOUT_FILL_Y|FRAME_RAISED|FRAME_THICK|ARROW_RIGHT|ARROW_TOOLBAR);
 
   FXGroupBox *gp=new FXGroupBox(group3,"Group Box",LAYOUT_SIDE_TOP|FRAME_GROOVE|LAYOUT_FILL_X, 0,0,0,0);
-  new FXRadioButton(gp,"Hilversum &1",NULL,0,ICON_BEFORE_TEXT|LAYOUT_SIDE_TOP);
-  new FXRadioButton(gp,"Hilversum &2",NULL,0,ICON_BEFORE_TEXT|LAYOUT_SIDE_TOP);
-  new FXRadioButton(gp,"One multi-line\nRadiobox Widget",NULL,0,JUSTIFY_LEFT|JUSTIFY_TOP|ICON_BEFORE_TEXT|LAYOUT_SIDE_TOP);
-  new FXRadioButton(gp,"Radio Stad Amsterdam",NULL,0,ICON_BEFORE_TEXT|LAYOUT_SIDE_TOP);
+  new FXRadioButton(gp,"Radio &1",&radiotarget,FXDataTarget::ID_OPTION+1,ICON_BEFORE_TEXT|LAYOUT_SIDE_TOP);
+  new FXRadioButton(gp,"Radio &2",&radiotarget,FXDataTarget::ID_OPTION+2,ICON_BEFORE_TEXT|LAYOUT_SIDE_TOP);
+  new FXRadioButton(gp,"Radio &3",&radiotarget,FXDataTarget::ID_OPTION+3,ICON_BEFORE_TEXT|LAYOUT_SIDE_TOP);
 
   FXPacker *vv=new FXGroupBox(group3,"Group Box",LAYOUT_SIDE_TOP|FRAME_GROOVE|LAYOUT_FILL_X, 0,0,0,0);
   new FXCheckButton(vv,"Hilversum 1",NULL,0,ICON_BEFORE_TEXT|LAYOUT_SIDE_TOP);
   new FXCheckButton(vv,"Hilversum 2",NULL,0,ICON_BEFORE_TEXT|LAYOUT_SIDE_TOP);
-  new FXCheckButton(vv,"One multi-line\nCheckbox Widget",NULL,0,JUSTIFY_LEFT|JUSTIFY_TOP|ICON_BEFORE_TEXT|LAYOUT_SIDE_TOP);
-  new FXCheckButton(vv,"Radio Stad Amsterdam",NULL,0,ICON_BEFORE_TEXT|LAYOUT_SIDE_TOP);
+  FXCheckButton *chk1=new FXCheckButton(vv,"One multi-line\nCheckbox Widget",NULL,0,CHECKBUTTON_PLUS|JUSTIFY_LEFT|JUSTIFY_TOP|ICON_BEFORE_TEXT|LAYOUT_SIDE_TOP);
+  chk1->setCheck(MAYBE);
+  FXCheckButton *chk2=new FXCheckButton(vv,"Radio Stad Amsterdam",NULL,0,ICON_BEFORE_TEXT|LAYOUT_SIDE_TOP);
+  chk2->setCheck(MAYBE);
 
   FXSpinner *spinner=new FXSpinner(group3,20,NULL,0,SPIN_NORMAL|FRAME_SUNKEN|FRAME_THICK|LAYOUT_SIDE_TOP);
   spinner->setRange(1,20);
   spinner->setTipText("tip");
   spinner->setHelpText("help");
 
-  FXComboBox* combobox=new FXComboBox(group3,5,5,NULL,0,COMBOBOX_INSERT_LAST|FRAME_SUNKEN|FRAME_THICK|LAYOUT_SIDE_TOP);
+  FXRealSpinner *realspinner=new FXRealSpinner(group3,20,NULL,0,REALSPIN_CYCLIC|FRAME_SUNKEN|FRAME_THICK|LAYOUT_SIDE_TOP);
+  realspinner->setRange(1.0,2.0);
+  realspinner->setValue(1.0);
+  realspinner->setIncrement(0.1);
+
+  FXComboBox* combobox=new FXComboBox(group3,5,NULL,0,COMBOBOX_INSERT_LAST|FRAME_SUNKEN|FRAME_THICK|LAYOUT_SIDE_TOP);
+  combobox->setNumVisible(5);
   combobox->appendItem("Very Wide Item");
   for(int i=0; i<3; i++){
     char name[50];
@@ -319,11 +366,10 @@ GroupWindow::GroupWindow(FXApp* a):FXMainWindow(a,"Group Box Test",NULL,NULL,DEC
     combobox->appendItem(name);
     }
 
-  //FXDebugTarget *debugtarget=new FXDebugTarget;
-
-  FXTreeListBox *treebox=new FXTreeListBox(group3,10,NULL,0,FRAME_SUNKEN|FRAME_THICK|LAYOUT_SIDE_TOP,0,0,200,0);
+  FXTreeListBox *treebox=new FXTreeListBox(group3,NULL,0,FRAME_SUNKEN|FRAME_THICK|LAYOUT_SIDE_TOP,0,0,200,0);
   FXTreeItem *branch,*twig,*leaf,*topmost,*topmost2;
 
+  treebox->setNumVisible(10);
   topmost=treebox->addItemLast(0,"Top",folder_open,folder_closed);
   topmost2=treebox->addItemLast(0,"Top2",folder_open,folder_closed);
            treebox->addItemLast(topmost2,"First",doc,doc);
@@ -364,7 +410,7 @@ GroupWindow::GroupWindow(FXApp* a):FXMainWindow(a,"Group Box Test",NULL,NULL,DEC
   intnumber->setText("1000");
 
   FXDial *dial2=new FXDial(group3,NULL,0,DIAL_CYCLIC|DIAL_HAS_NOTCH|DIAL_HORIZONTAL|LAYOUT_FILL_X|FRAME_RAISED|FRAME_THICK,0,0,120,0);
-  new FXScrollbar(group3,NULL,0,SCROLLBAR_HORIZONTAL|LAYOUT_FIX_HEIGHT|LAYOUT_FIX_WIDTH,0,0,300,20);
+  new FXScrollBar(group3,NULL,0,SCROLLBAR_HORIZONTAL|LAYOUT_FIX_HEIGHT|LAYOUT_FIX_WIDTH,0,0,300,20);
 
   FXProgressBar *pbar=new FXProgressBar(group3,NULL,0,LAYOUT_FILL_X|FRAME_SUNKEN|FRAME_THICK|PROGRESSBAR_PERCENTAGE);
   pbar->setProgress(48);
@@ -453,7 +499,6 @@ long GroupWindow::onCmdFileDlgDirectory(FXObject*,FXSelector,void*){
 // Open
 long GroupWindow::onCmdDirDlg(FXObject*,FXSelector,void*){
    FXDirDialog open(this,"Open some file");
-   open.setDirectory("d:\\");
    if(open.execute()){
      fxmessage("Dir=%s\n",open.getDirectory().text());
      }
@@ -463,7 +508,7 @@ long GroupWindow::onCmdDirDlg(FXObject*,FXSelector,void*){
 
 // Option
 long GroupWindow::onCmdOption(FXObject*,FXSelector sel,void*){
-  fprintf(stderr,"Chose option %d\n",SELID(sel)-ID_OPTION1+1);
+  fprintf(stderr,"Chose option %d\n",FXSELID(sel)-ID_OPTION1+1);
   return 1;
   }
 
@@ -494,15 +539,34 @@ long GroupWindow::onCmdPopup(FXObject*,FXSelector,void*){
 
 // Set choice
 long GroupWindow::onCmdRadio(FXObject*,FXSelector sel,void*){
-  choice=SELID(sel);
+  choice=FXSELID(sel);
+  return 1;
+  }
+
+static int full=FALSE;
+// Test of iconify
+long GroupWindow::onCmdIconify(FXObject*,FXSelector,void*){
+//  minimize();
+//  getApp()->addTimeout(this,ID_DEICONIFY,2000);
+//  FXTRACE((1,"iconify\n"));
+		if (full) setDecorations(DECOR_ALL);
+		else setDecorations(DECOR_NONE);
+		full=!full;
+  return 1;
+  }
+
+
+// Test of deiconify
+long GroupWindow::onCmdDeiconify(FXObject*,FXSelector,void*){
+  restore();
+  FXTRACE((1,"deiconify\n"));
   return 1;
   }
 
 
 // Update menu
 long GroupWindow::onUpdRadio(FXObject* sender,FXSelector sel,void*){
-  FXMenuCommand *cmd=(FXMenuCommand*)sender;
-  (SELID(sel)==choice) ? cmd->checkRadio() : cmd->uncheckRadio();
+  sender->handle(this,(FXSELID(sel)==choice)?FXSEL(SEL_COMMAND,ID_CHECK):FXSEL(SEL_COMMAND,ID_UNCHECK),(void*)&choice);
   return 1;
   }
 

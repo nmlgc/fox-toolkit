@@ -3,7 +3,7 @@
 *                            V i s u a l   C l a s s                            *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1999,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1999,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXGLVisual.h,v 1.14 2002/01/18 22:42:53 jeroen Exp $                     *
+* $Id: FXGLVisual.h,v 1.22 2004/04/21 20:58:36 fox Exp $                        *
 ********************************************************************************/
 #ifndef FXGLVISUAL_H
 #define FXGLVISUAL_H
@@ -28,6 +28,7 @@
 #include "FXVisual.h"
 #endif
 
+namespace FX {
 
 
 class FXFont;
@@ -61,9 +62,6 @@ protected:
   FXint        accumAlphaSize;      // Desired #bits for accum alpha
 protected:
   FXGLVisual();
-#ifdef WIN32
-  void makeOpenGLPalette();
-#endif
 private:
   FXGLVisual(const FXGLVisual&);
   FXGLVisual &operator=(const FXGLVisual&);
@@ -71,6 +69,15 @@ public:
 
   /// Construct default visual
   FXGLVisual(FXApp* a,FXuint flags);
+
+  /**
+  * Test if OpenGL is possible, and what level is supported.
+  * Because of remote display capability, the display server may
+  * support a different level of OpenGL than the client; it may
+  * even support no OpenGL at all!  This function returns the lesser
+  * of the client support level and the display server support level.
+  */
+  static FXbool supported(FXApp* application,int& major,int& minor);
 
   /// Create visual
   virtual void create();
@@ -126,6 +133,9 @@ public:
   /// Is it hardware-accelerated?
   FXbool isAccelerated() const;
 
+  /// Does it swap by copying instead of flipping buffers
+  FXbool isBufferSwapCopy() const;
+
   /// Save visual info to a stream
   virtual void save(FXStream& store) const;
 
@@ -140,6 +150,6 @@ public:
 /// Create a display list of bitmaps from font glyphs in a font
 extern FXAPI void glUseFXFont(FXFont* font,int first,int count,int list);
 
-
+}
 
 #endif

@@ -3,7 +3,7 @@
 *                     R e c e n t   F i l e s   L i s t                         *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1998,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXRecentFiles.cpp,v 1.18 2002/01/18 22:43:02 jeroen Exp $                *
+* $Id: FXRecentFiles.cpp,v 1.27 2004/02/08 17:29:07 fox Exp $                   *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -30,6 +30,7 @@
 #include "FXPoint.h"
 #include "FXRectangle.h"
 #include "FXRegistry.h"
+#include "FXHash.h"
 #include "FXApp.h"
 #include "FXWindow.h"
 #include "FXRecentFiles.h"
@@ -40,10 +41,15 @@
   Notes:
   - Use the auto-hide or auto-gray feature to hide menus which are connected
     to the FXRecentFiles class.
-  -
+  - Probably should get rid of application instance in favor of explicit
+    backlink to FXApp, or backlink to registry.
 */
 
+using namespace FX;
+
 /*******************************************************************************/
+
+namespace FX {
 
 // Message map
 FXDEFMAP(FXRecentFiles) FXRecentFilesMap[] = {
@@ -66,6 +72,23 @@ FXRecentFiles::FXRecentFiles():group("Recent Files"),target(NULL),message(0),max
 
 // Make new Recent Files group
 FXRecentFiles::FXRecentFiles(const FXString& gp,FXObject *tgt,FXSelector sel):group(gp),target(tgt),message(sel),maxfiles(10){
+  }
+
+
+
+// Obtain the filename at index
+FXString FXRecentFiles::getFile(FXint index) const {
+  FXchar key[20];
+  sprintf(key,"FILE%d",index);
+  return FXApp::instance()->reg().readStringEntry(group.text(),key,FXString::null);
+  }
+
+
+// Change the filename at index
+void FXRecentFiles::setFile(FXint index,const FXString& filename){
+  FXchar key[20];
+  sprintf(key,"FILE%d",index);
+  FXApp::instance()->reg().writeStringEntry(group.text(),key,filename.text());
   }
 
 
@@ -127,9 +150,9 @@ long FXRecentFiles::onCmdFile(FXObject*,FXSelector sel,void*){
   const FXchar *filename;
   FXchar key[20];
   if(target){
-    sprintf(key,"FILE%d",(SELID(sel)-ID_FILE_1+1));
+    sprintf(key,"FILE%d",(FXSELID(sel)-ID_FILE_1+1));
     filename=FXApp::instance()->reg().readStringEntry(group.text(),key,NULL);
-    if(filename) target->handle(this,MKUINT(message,SEL_COMMAND),(void*)filename);
+    if(filename) target->handle(this,FXSEL(SEL_COMMAND,message),(void*)filename);
     }
   return 1;
   }
@@ -137,7 +160,7 @@ long FXRecentFiles::onCmdFile(FXObject*,FXSelector sel,void*){
 
 // Update handler for same
 long FXRecentFiles::onUpdFile(FXObject *sender,FXSelector sel,void*){
-  FXint which=SELID(sel)-ID_FILE_1+1;
+  FXint which=FXSELID(sel)-ID_FILE_1+1;
   const FXchar *filename;
   FXString string;
   FXchar key[20];
@@ -149,11 +172,11 @@ long FXRecentFiles::onUpdFile(FXObject *sender,FXSelector sel,void*){
       string.format("&%d %s",which,filename);
     else
       string.format("1&0 %s",filename);
-    sender->handle(this,MKUINT(FXWindow::ID_SETSTRINGVALUE,SEL_COMMAND),(void*)&string);
-    sender->handle(this,MKUINT(FXWindow::ID_SHOW,SEL_COMMAND),NULL);
+    sender->handle(this,FXSEL(SEL_COMMAND,FXWindow::ID_SETSTRINGVALUE),(void*)&string);
+    sender->handle(this,FXSEL(SEL_COMMAND,FXWindow::ID_SHOW),NULL);
     }
   else{
-    sender->handle(this,MKUINT(FXWindow::ID_HIDE,SEL_COMMAND),NULL);
+    sender->handle(this,FXSEL(SEL_COMMAND,FXWindow::ID_HIDE),NULL);
     }
   return 1;
   }
@@ -162,9 +185,9 @@ long FXRecentFiles::onUpdFile(FXObject *sender,FXSelector sel,void*){
 // Show or hide depending on whether there are any files
 long FXRecentFiles::onUpdAnyFiles(FXObject *sender,FXSelector,void*){
   if(FXApp::instance()->reg().readStringEntry(group.text(),"FILE1",NULL))
-    sender->handle(this,MKUINT(FXWindow::ID_SHOW,SEL_COMMAND),NULL);
+    sender->handle(this,FXSEL(SEL_COMMAND,FXWindow::ID_SHOW),NULL);
   else
-    sender->handle(this,MKUINT(FXWindow::ID_HIDE,SEL_COMMAND),NULL);
+    sender->handle(this,FXSEL(SEL_COMMAND,FXWindow::ID_HIDE),NULL);
   return 1;
   }
 
@@ -191,5 +214,7 @@ void FXRecentFiles::load(FXStream& store){
 
 // Destructor
 FXRecentFiles::~FXRecentFiles(){
-  target=(FXObject*)-1;
+  target=(FXObject*)-1L;
   }
+
+}

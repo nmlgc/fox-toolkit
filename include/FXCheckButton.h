@@ -3,7 +3,7 @@
 *                    C h e c k   B u t t o n   W i d g e t                      *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1998,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXCheckButton.h,v 1.20 2002/01/18 22:42:51 jeroen Exp $                  *
+* $Id: FXCheckButton.h,v 1.26 2004/02/17 21:06:01 fox Exp $                     *
 ********************************************************************************/
 #ifndef FXCHECKBUTTON_H
 #define FXCHECKBUTTON_H
@@ -28,12 +28,14 @@
 #include "FXLabel.h"
 #endif
 
+namespace FX {
 
 
 /// CheckButton styles
 enum {
   CHECKBUTTON_AUTOGRAY = 0x00800000,    /// Automatically gray out when not updated
   CHECKBUTTON_AUTOHIDE = 0x01000000,    /// Automatically hide when not updated
+  CHECKBUTTON_PLUS     = 0x02000000,    /// Draw a + for unchecked and - for checked
   CHECKBUTTON_NORMAL   = JUSTIFY_NORMAL|ICON_BEFORE_TEXT
   };
 
@@ -49,9 +51,10 @@ enum {
 class FXAPI FXCheckButton : public FXLabel {
   FXDECLARE(FXCheckButton)
 protected:
-  FXbool   check;
-  FXbool   oldcheck;
-  FXColor  boxColor;
+  FXColor  checkColor;  // Color of check mark
+  FXColor  boxColor;    // Color of check box
+  FXbool   check;       // Check state
+  FXbool   oldcheck;    // Old check state
 protected:
   FXCheckButton();
 private:
@@ -109,6 +112,12 @@ public:
   /// Set the box background color
   void setBoxColor(FXColor clr);
 
+  /// Get the box background color
+  FXColor getCheckColor() const { return checkColor; }
+
+  /// Set the box background color
+  void setCheckColor(FXColor clr);
+
   /// Save check button to a stream
   virtual void save(FXStream& store) const;
 
@@ -116,5 +125,6 @@ public:
   virtual void load(FXStream& store);
   };
 
+}
 
 #endif

@@ -3,7 +3,7 @@
 *                    M u l t i - L i ne   T e x t   O b j e c t                 *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1998,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXText.cpp,v 1.214.4.7 2003/09/13 03:37:02 fox Exp $                         *
+* $Id: FXText.cpp,v 1.285 2004/05/05 16:03:37 fox Exp $                         *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -32,18 +32,19 @@
 #include "FXPoint.h"
 #include "FXRectangle.h"
 #include "FXObject.h"
-#include "FXCharset.h"
 #include "FXRegistry.h"
 #include "FXAccelTable.h"
+#include "FXHash.h"
 #include "FXApp.h"
 #include "FXDCWindow.h"
 #include "FXFont.h"
 #include "FXGIFIcon.h"
-#include "FXScrollbar.h"
+#include "FXScrollBar.h"
 #include "FXText.h"
 #include "FXInputDialog.h"
 #include "FXReplaceDialog.h"
 #include "FXSearchDialog.h"
+#include "icons.h"
 
 
 
@@ -123,6 +124,14 @@
     be used for underlining, strikeouts, and other effects.
   - Sending SEL_CHANGED is pretty useless; should only be sent AFTER text change,
     and void* should contain some sensible info.
+  - When in overstrike mode and having a selection, entering a character should
+    replace the selection, not delete the selection and then overstrike the character
+    after the selection.
+  - Middle mouse paste does not paste inside selection, and does not kill selection.
+  - When pasting or dropping whole lines, insert at begin of line instead of at cursor;
+    question:- how to know we're pasting whole lines?
+  - Need block cursor when in overstrike mode.
+  - Inserting lots of stuff should show cursor.
 */
 
 
@@ -131,8 +140,11 @@
 
 #define TEXT_MASK   (TEXT_FIXEDWRAP|TEXT_WORDWRAP|TEXT_OVERSTRIKE|TEXT_READONLY|TEXT_NO_TABS|TEXT_AUTOINDENT|TEXT_SHOWACTIVE)
 
+using namespace FX;
+
 /*******************************************************************************/
 
+namespace FX {
 
 
 // Map
@@ -142,7 +154,7 @@ FXDEFMAP(FXText) FXTextMap[]={
   FXMAPFUNC(SEL_MOTION,0,FXText::onMotion),
   FXMAPFUNC(SEL_DRAGGED,0,FXText::onDragged),
   FXMAPFUNC(SEL_TIMEOUT,FXText::ID_BLINK,FXText::onBlink),
-  FXMAPFUNC(SEL_TIMEOUT,FXWindow::ID_AUTOSCROLL,FXText::onAutoScroll),
+  FXMAPFUNC(SEL_TIMEOUT,FXText::ID_AUTOSCROLL,FXText::onAutoScroll),
   FXMAPFUNC(SEL_TIMEOUT,FXText::ID_FLASH,FXText::onFlash),
   FXMAPFUNC(SEL_FOCUSIN,0,FXText::onFocusIn),
   FXMAPFUNC(SEL_FOCUSOUT,0,FXText::onFocusOut),
@@ -168,8 +180,8 @@ FXDEFMAP(FXText) FXTextMap[]={
   FXMAPFUNC(SEL_CLIPBOARD_REQUEST,0,FXText::onClipboardRequest),
   FXMAPFUNC(SEL_KEYPRESS,0,FXText::onKeyPress),
   FXMAPFUNC(SEL_KEYRELEASE,0,FXText::onKeyRelease),
-  FXMAPFUNC(SEL_UPDATE,FXWindow::ID_QUERY_HELP,FXText::onQueryHelp),
-  FXMAPFUNC(SEL_UPDATE,FXWindow::ID_QUERY_TIP,FXText::onQueryTip),
+  FXMAPFUNC(SEL_UPDATE,FXText::ID_QUERY_HELP,FXText::onQueryHelp),
+  FXMAPFUNC(SEL_UPDATE,FXText::ID_QUERY_TIP,FXText::onQueryTip),
   FXMAPFUNC(SEL_UPDATE,FXText::ID_TOGGLE_EDITABLE,FXText::onUpdToggleEditable),
   FXMAPFUNC(SEL_UPDATE,FXText::ID_TOGGLE_OVERSTRIKE,FXText::onUpdToggleOverstrike),
   FXMAPFUNC(SEL_UPDATE,FXText::ID_CURSOR_ROW,FXText::onUpdCursorRow),
@@ -178,6 +190,7 @@ FXDEFMAP(FXText) FXTextMap[]={
   FXMAPFUNC(SEL_UPDATE,FXText::ID_COPY_SEL,FXText::onUpdHaveSelection),
   FXMAPFUNC(SEL_UPDATE,FXText::ID_PASTE_SEL,FXText::onUpdYes),
   FXMAPFUNC(SEL_UPDATE,FXText::ID_DELETE_SEL,FXText::onUpdHaveSelection),
+  FXMAPFUNC(SEL_UPDATE,FXText::ID_SELECT_ALL,FXText::onUpdSelectAll),
   FXMAPFUNC(SEL_UPDATE,FXText::ID_UPPER_CASE,FXText::onUpdHaveSelection),
   FXMAPFUNC(SEL_UPDATE,FXText::ID_LOWER_CASE,FXText::onUpdHaveSelection),
   FXMAPFUNC(SEL_COMMAND,FXText::ID_CURSOR_TOP,FXText::onCmdCursorTop),
@@ -190,6 +203,8 @@ FXDEFMAP(FXText) FXTextMap[]={
   FXMAPFUNC(SEL_COMMAND,FXText::ID_CURSOR_DOWN,FXText::onCmdCursorDown),
   FXMAPFUNC(SEL_COMMAND,FXText::ID_CURSOR_WORD_LEFT,FXText::onCmdCursorWordLeft),
   FXMAPFUNC(SEL_COMMAND,FXText::ID_CURSOR_WORD_RIGHT,FXText::onCmdCursorWordRight),
+  FXMAPFUNC(SEL_COMMAND,FXText::ID_CURSOR_WORD_START,FXText::onCmdCursorWordStart),
+  FXMAPFUNC(SEL_COMMAND,FXText::ID_CURSOR_WORD_END,FXText::onCmdCursorWordEnd),
   FXMAPFUNC(SEL_COMMAND,FXText::ID_CURSOR_PAGEDOWN,FXText::onCmdCursorPageDown),
   FXMAPFUNC(SEL_COMMAND,FXText::ID_CURSOR_PAGEUP,FXText::onCmdCursorPageUp),
   FXMAPFUNC(SEL_COMMAND,FXText::ID_CURSOR_SCRNTOP,FXText::onCmdCursorScreenTop),
@@ -207,8 +222,9 @@ FXDEFMAP(FXText) FXTextMap[]={
   FXMAPFUNC(SEL_COMMAND,FXText::ID_INSERT_TAB,FXText::onCmdInsertTab),
   FXMAPFUNC(SEL_COMMAND,FXText::ID_CUT_SEL,FXText::onCmdCutSel),
   FXMAPFUNC(SEL_COMMAND,FXText::ID_COPY_SEL,FXText::onCmdCopySel),
-  FXMAPFUNC(SEL_COMMAND,FXText::ID_PASTE_SEL,FXText::onCmdPasteSel),
   FXMAPFUNC(SEL_COMMAND,FXText::ID_DELETE_SEL,FXText::onCmdDeleteSel),
+  FXMAPFUNC(SEL_COMMAND,FXText::ID_PASTE_SEL,FXText::onCmdPasteSel),
+  FXMAPFUNC(SEL_COMMAND,FXText::ID_PASTE_MIDDLE,FXText::onCmdPasteMiddle),
   FXMAPFUNC(SEL_COMMAND,FXText::ID_SELECT_CHAR,FXText::onCmdSelectChar),
   FXMAPFUNC(SEL_COMMAND,FXText::ID_SELECT_WORD,FXText::onCmdSelectWord),
   FXMAPFUNC(SEL_COMMAND,FXText::ID_SELECT_LINE,FXText::onCmdSelectLine),
@@ -220,23 +236,26 @@ FXDEFMAP(FXText) FXTextMap[]={
   FXMAPFUNC(SEL_COMMAND,FXText::ID_DELETE,FXText::onCmdDelete),
   FXMAPFUNC(SEL_COMMAND,FXText::ID_DELETE_WORD,FXText::onCmdDeleteWord),
   FXMAPFUNC(SEL_COMMAND,FXText::ID_DELETE_EOL,FXText::onCmdDeleteEol),
+  FXMAPFUNC(SEL_COMMAND,FXText::ID_DELETE_ALL,FXText::onCmdDeleteAll),
   FXMAPFUNC(SEL_COMMAND,FXText::ID_DELETE_LINE,FXText::onCmdDeleteLine),
   FXMAPFUNC(SEL_COMMAND,FXText::ID_TOGGLE_EDITABLE,FXText::onCmdToggleEditable),
   FXMAPFUNC(SEL_COMMAND,FXText::ID_TOGGLE_OVERSTRIKE,FXText::onCmdToggleOverstrike),
   FXMAPFUNC(SEL_COMMAND,FXText::ID_CURSOR_ROW,FXText::onCmdCursorRow),
   FXMAPFUNC(SEL_COMMAND,FXText::ID_CURSOR_COLUMN,FXText::onCmdCursorColumn),
-  FXMAPFUNC(SEL_COMMAND,FXWindow::ID_SETSTRINGVALUE,FXText::onCmdSetStringValue),
-  FXMAPFUNC(SEL_COMMAND,FXWindow::ID_GETSTRINGVALUE,FXText::onCmdGetStringValue),
+  FXMAPFUNC(SEL_COMMAND,FXText::ID_SETSTRINGVALUE,FXText::onCmdSetStringValue),
+  FXMAPFUNC(SEL_COMMAND,FXText::ID_GETSTRINGVALUE,FXText::onCmdGetStringValue),
   FXMAPFUNC(SEL_COMMAND,FXText::ID_UPPER_CASE,FXText::onCmdChangeCase),
   FXMAPFUNC(SEL_COMMAND,FXText::ID_LOWER_CASE,FXText::onCmdChangeCase),
   FXMAPFUNC(SEL_COMMAND,FXText::ID_GOTO_MATCHING,FXText::onCmdGotoMatching),
   FXMAPFUNC(SEL_COMMAND,FXText::ID_GOTO_SELECTED,FXText::onCmdGotoSelected),
   FXMAPFUNC(SEL_COMMAND,FXText::ID_GOTO_LINE,FXText::onCmdGotoLine),
   FXMAPFUNC(SEL_COMMAND,FXText::ID_SELECT_MATCHING,FXText::onCmdSelectMatching),
-  FXMAPFUNC(SEL_COMMAND,FXText::ID_SEARCH_FORW_SEL,FXText::onCmdSearchSel),
-  FXMAPFUNC(SEL_COMMAND,FXText::ID_SEARCH_BACK_SEL,FXText::onCmdSearchSel),
   FXMAPFUNC(SEL_COMMAND,FXText::ID_SEARCH,FXText::onCmdSearch),
   FXMAPFUNC(SEL_COMMAND,FXText::ID_REPLACE,FXText::onCmdReplace),
+  FXMAPFUNC(SEL_COMMAND,FXText::ID_SEARCH_FORW,FXText::onCmdSearchNext),
+  FXMAPFUNC(SEL_COMMAND,FXText::ID_SEARCH_BACK,FXText::onCmdSearchNext),
+  FXMAPFUNC(SEL_COMMAND,FXText::ID_SEARCH_FORW_SEL,FXText::onCmdSearchSel),
+  FXMAPFUNC(SEL_COMMAND,FXText::ID_SEARCH_BACK_SEL,FXText::onCmdSearchSel),
   FXMAPFUNCS(SEL_COMMAND,FXText::ID_SELECT_BRACE,FXText::ID_SELECT_ANG,FXText::onCmdSelectBlock),
   FXMAPFUNCS(SEL_COMMAND,FXText::ID_LEFT_BRACE,FXText::ID_LEFT_ANG,FXText::onCmdBlockBeg),
   FXMAPFUNCS(SEL_COMMAND,FXText::ID_RIGHT_BRACE,FXText::ID_RIGHT_ANG,FXText::onCmdBlockEnd),
@@ -247,43 +266,14 @@ FXDEFMAP(FXText) FXTextMap[]={
 // Object implementation
 FXIMPLEMENT(FXText,FXScrollArea,FXTextMap,ARRAYNUMBER(FXTextMap))
 
-/*******************************************************************************/
 
-// Search icon
-const unsigned char searchicon[]={
-  0x47,0x49,0x46,0x38,0x37,0x61,0x20,0x00,0x20,0x00,0xf3,0x00,0x00,0xb2,0xc0,0xdc,
-  0x00,0x00,0x00,0x94,0x99,0x99,0x12,0x12,0x12,0x00,0x00,0xff,0xff,0x00,0x00,0x3f,
-  0x3f,0x40,0x70,0x70,0x71,0x40,0x40,0x41,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x2c,0x00,0x00,
-  0x00,0x00,0x20,0x00,0x20,0x00,0x00,0x04,0x98,0x10,0xc8,0x49,0xab,0xbd,0x38,0xeb,
-  0xcd,0xbb,0xff,0x5f,0x20,0x8e,0x64,0x69,0x8a,0xd9,0xa9,0xaa,0x60,0x0b,0x96,0x2e,
-  0x40,0x4a,0xa2,0x60,0xdb,0xc3,0x40,0x8f,0x1b,0x2f,0x07,0x82,0x8a,0x20,0xa0,0xfb,
-  0x05,0x42,0xc0,0xcb,0xb0,0xd8,0x4a,0x62,0x04,0x4c,0x0e,0x81,0x20,0x0b,0x02,0x0a,
-  0xd8,0x6c,0x41,0x02,0x05,0x4c,0xa9,0x99,0x69,0x55,0xa2,0xcd,0x72,0x75,0xdf,0x8e,
-  0x33,0xd3,0x7d,0x59,0xd9,0x51,0x0d,0x6a,0x0d,0x3b,0x7b,0x50,0x80,0x81,0xb5,0xde,
-  0x6e,0x0d,0xd6,0x14,0x4b,0x31,0x79,0x80,0x00,0x4b,0x43,0x77,0x3e,0x39,0x37,0x38,
-  0x03,0x06,0x07,0x7d,0x72,0x33,0x12,0x39,0x95,0x34,0x08,0x90,0x71,0x83,0x13,0x03,
-  0x98,0x91,0x9b,0x9c,0x9e,0x9a,0x14,0x2b,0x26,0xa1,0x99,0x29,0xa5,0x75,0x79,0xa2,
-  0xa0,0x16,0x9d,0x07,0xa3,0xa0,0x39,0xa9,0xaa,0xa6,0x1c,0xb6,0x2c,0xae,0xbb,0x9b,
-  0x11,0x00,0x3b
-  };
-
-// Goto icon
-const unsigned char gotoicon[]={
-  0x47,0x49,0x46,0x38,0x37,0x61,0x20,0x00,0x20,0x00,0xf1,0x00,0x00,0xb2,0xc0,0xdc,
-  0x00,0x00,0x00,0xff,0x00,0x00,0x00,0x00,0xff,0x2c,0x00,0x00,0x00,0x00,0x20,0x00,
-  0x20,0x00,0x00,0x02,0x4e,0x84,0x8f,0xa9,0xcb,0xed,0x0f,0xa3,0x9c,0x33,0xd8,0x8b,
-  0xb3,0xb6,0x6d,0x7b,0x4f,0x85,0xe2,0x78,0x7c,0x26,0xe7,0x9c,0xe6,0x22,0x90,0x8f,
-  0xd0,0xba,0x09,0x4c,0xb7,0xc3,0x8d,0xe7,0xfa,0x3e,0x1c,0x35,0x0c,0xe0,0x09,0x79,
-  0x0a,0xa0,0x8c,0x75,0x84,0xa8,0x34,0x92,0x65,0x26,0x09,0x8d,0x96,0x9c,0xcf,0x07,
-  0xb5,0x2a,0xcd,0x8e,0xae,0x58,0x06,0x17,0xa3,0x0d,0x53,0xbe,0xdd,0x04,0x19,0x2c,
-  0x4e,0x1b,0x0a,0x00,0x3b
-  };
+// Delimiters
+const FXchar FXText::textDelimiters[]="~.,/\\`'!@#$%^&*()-=+{}|[]\":;<>?";
 
 /*******************************************************************************/
 
 
-// Helper
+// Absolute value
 static inline FXint fxabs(FXint a){ return a<0?-a:a; }
 
 
@@ -307,6 +297,7 @@ FXText::FXText(){
   hiliteendpos=0;
   anchorpos=0;
   cursorpos=0;
+  revertpos=0;
   cursorstart=0;
   cursorend=0;
   cursorrow=0;
@@ -319,10 +310,10 @@ FXText::FXText(){
   barwidth=0;
   barcolumns=0;
   hilitestyles=NULL;
-  blinker=NULL;
-  flasher=NULL;
   textWidth=0;
   textHeight=0;
+  searchflags=SEARCH_EXACT;
+  delimiters=textDelimiters;
   clipbuffer=NULL;
   cliplength=0;
   vrows=0;
@@ -337,8 +328,7 @@ FXText::FXText(){
 
 // Text widget
 FXText::FXText(FXComposite *p,FXObject* tgt,FXSelector sel,FXuint opts,FXint x,FXint y,FXint w,FXint h):
-  FXScrollArea(p,opts,x,y,w,h),
-  delimiters("~.,/\\`'!@#$%^&*()-=+{}|[]\":;<>?"){  // I *swear*, these are delimiters :-)
+  FXScrollArea(p,opts,x,y,w,h){
   flags|=FLAG_ENABLED|FLAG_DROPTARGET;
   target=tgt;
   message=sel;
@@ -359,6 +349,7 @@ FXText::FXText(FXComposite *p,FXObject* tgt,FXSelector sel,FXuint opts,FXint x,F
   hiliteendpos=0;
   anchorpos=0;
   cursorpos=0;
+  revertpos=0;
   cursorstart=0;
   cursorend=0;
   cursorrow=0;
@@ -384,13 +375,13 @@ FXText::FXText(FXComposite *p,FXObject* tgt,FXSelector sel,FXuint opts,FXint x,F
   hilitebackColor=FXRGB(255,128,128);
   hilitetextColor=getApp()->getForeColor();
   activebackColor=backColor;
-  cursorColor=FXRGB(192,0,0);
+  cursorColor=getApp()->getForeColor();
   numberColor=textColor;
   barColor=backColor;
-  blinker=NULL;
-  flasher=NULL;
   textWidth=0;
   textHeight=0;
+  searchflags=SEARCH_EXACT;
+  delimiters=textDelimiters;
   clipbuffer=NULL;
   cliplength=0;
   vrows=0;
@@ -433,6 +424,7 @@ FXbool FXText::canFocus() const { return 1; }
 void FXText::setFocus(){
   FXScrollArea::setFocus();
   setDefault(TRUE);
+  flags&=~FLAG_UPDATE;
   }
 
 
@@ -440,6 +432,7 @@ void FXText::setFocus(){
 void FXText::killFocus(){
   FXScrollArea::killFocus();
   setDefault(MAYBE);
+  flags|=FLAG_UPDATE;
   }
 
 
@@ -744,15 +737,15 @@ FXint FXText::measureText(FXint start,FXint end,FXint& wmax,FXint& hmax) const {
 
 // Find end of previous word
 FXint FXText::leftWord(FXint pos) const {
-  register FXchar ch;
+  register FXint ch;
   if(pos>length) pos=length;
   if(0<pos){
     ch=getChar(pos-1);
-    if(delimiters.has(ch)) return pos-1;
+    if(strchr(delimiters,ch)) return pos-1;
     }
   while(0<pos){
     ch=getChar(pos-1);
-    if(delimiters.has(ch)) return pos;
+    if(strchr(delimiters,ch)) return pos;
     if(isspace(ch)) break;
     pos--;
     }
@@ -767,15 +760,15 @@ FXint FXText::leftWord(FXint pos) const {
 
 // Find begin of next word
 FXint FXText::rightWord(FXint pos) const {
-  register FXchar ch;
+  register FXint ch;
   if(pos<0) pos=0;
   if(pos<length){
     ch=getChar(pos);
-    if(delimiters.has(ch)) return pos+1;
+    if(strchr(delimiters,ch)) return pos+1;
     }
   while(pos<length){
     ch=getChar(pos);
-    if(delimiters.has(ch)) return pos;
+    if(strchr(delimiters,ch)) return pos;
     if(isspace(ch)) break;
     pos++;
     }
@@ -790,7 +783,7 @@ FXint FXText::rightWord(FXint pos) const {
 
 // Find begin of a word
 FXint FXText::wordStart(FXint pos) const {
-  register FXchar c=' ';
+  register FXint c=' ';
   if(pos<=0) return 0;
   if(pos<length) c=getChar(pos); else pos=length;
   if(c==' ' || c=='\t'){
@@ -800,17 +793,17 @@ FXint FXText::wordStart(FXint pos) const {
       pos--;
       }
     }
-  else if(delimiters.has(c)){
+  else if(strchr(delimiters,c)){
     while(0<pos){
       c=getChar(pos-1);
-      if(!delimiters.has(c)) return pos;
+      if(!strchr(delimiters,c)) return pos;
       pos--;
       }
     }
   else{
     while(0<pos){
       c=getChar(pos-1);
-      if(delimiters.has(c) || isspace(c)) return pos;
+      if(strchr(delimiters,c) || isspace(c)) return pos;
       pos--;
       }
     }
@@ -820,7 +813,7 @@ FXint FXText::wordStart(FXint pos) const {
 
 // Find end of word
 FXint FXText::wordEnd(FXint pos) const {
-  register FXchar c=' ';
+  register FXint c=' ';
   if(pos>=length) return length;
   if(0<=pos) c=getChar(pos); else pos=0;
   if(c==' ' || c=='\t'){
@@ -830,17 +823,17 @@ FXint FXText::wordEnd(FXint pos) const {
       pos++;
       }
     }
-  else if(delimiters.has(c)){
+  else if(strchr(delimiters,c)){
     while(pos<length){
       c=getChar(pos);
-      if(!delimiters.has(c)) return pos;
+      if(!strchr(delimiters,c)) return pos;
       pos++;
       }
     }
   else{
     while(pos<length){
       c=getChar(pos);
-      if(delimiters.has(c) || isspace(c)) return pos;
+      if(strchr(delimiters,c) || isspace(c)) return pos;
       pos++;
       }
     }
@@ -1092,20 +1085,12 @@ FXint FXText::findMatching(FXint pos,FXint beg,FXint end,FXchar ch,FXint level) 
 void FXText::flashMatching(){
   FXint matchpos;
   killHighlight();
-  if(flasher) flasher=getApp()->removeTimeout(flasher);
+  getApp()->removeTimeout(this,ID_FLASH);
   if(matchtime && 0<cursorpos){
     matchpos=findMatching(cursorpos-1,visrows[0],visrows[nvisrows],getChar(cursorpos-1),1);
     if(0<=matchpos){
-      flasher=getApp()->addTimeout(matchtime,this,ID_FLASH);
+      getApp()->addTimeout(this,ID_FLASH,matchtime);
       setHighlight(matchpos,1);
-      /*
-      if(matchpos<cursorpos){
-        setHighlight(matchpos,cursorpos-matchpos);
-        }
-      else{
-        setHighlight(cursorpos-1,matchpos-cursorpos+2);
-        }
-      */
       }
     }
   }
@@ -1184,8 +1169,7 @@ FXint FXText::posToLine(FXint pos,FXint ln) const {
 
 // Localize position at x,y
 FXint FXText::getPosAt(FXint x,FXint y) const {
-  register FXint row,ls,le,cx,cw;
-  register FXchar ch;
+  register FXint row,ls,le,cx,cw,ch;
   y=y-pos_y-margintop;
   row=y/font->getFontHeight();
   if(row<0) return 0;               // Before first row
@@ -1220,7 +1204,7 @@ FXint FXText::getPosAt(FXint x,FXint y) const {
   }
 
 
-// Determine x,y from position pos
+// Determine Y from position pos
 FXint FXText::getYOfPos(FXint pos) const {
   register FXint h=font->getFontHeight();
   register FXint n,y;
@@ -1592,7 +1576,7 @@ void FXText::mutation(FXint pos,FXint ncins,FXint ncdel,FXint nrins,FXint nrdel)
 void FXText::replace(FXint pos,FXint m,const FXchar *text,FXint n,FXint style){
   register FXint nrdel,nrins,ncdel,ncins,wbeg,wend,del;
   FXint wdel,hdel,wins,hins;
-  showCursor(0);    // FIXME can we do without this?
+  drawCursor(0);    // FIXME can we do without this?
 
   FXTRACE((150,"pos=%d mdel=%d nins=%d\n",pos,m,n));
 
@@ -1631,21 +1615,27 @@ void FXText::replace(FXint pos,FXint m,const FXchar *text,FXint n,FXint style){
   textHeight=textHeight+hins-hdel;
   textWidth=FXMAX(textWidth,wins);
 
-  // Fix selection end
-  if(pos+m<=selendpos) selendpos+=del;
-  else if(pos<=selendpos) selendpos=pos+n;
+  // Fix selection range
+  FXASSERT(selstartpos<=selendpos);
+  if(pos+m<=selstartpos){
+    selstartpos+=del;
+    selendpos+=del;
+    }
+  else if(pos<selendpos){
+    if(selendpos<=pos+m) selendpos=pos+n; else selendpos+=del;
+    if(pos<=selstartpos) selstartpos=pos+n;
+    }
 
-  // Fix selection start
-  if(pos+m<=selstartpos) selstartpos+=del;
-  else if(pos<=selstartpos) selstartpos=pos+n;
-
-  // Fix highlight end
-  if(pos+m<=hiliteendpos) hiliteendpos+=del;
-  else if(pos<=hiliteendpos) hiliteendpos=pos+n;
-
-  // Fix highlight start
-  if(pos+m<=hilitestartpos) hilitestartpos+=del;
-  else if(pos<=hilitestartpos) hilitestartpos=pos+n;
+  // Fix highlight range
+  FXASSERT(hilitestartpos<=hiliteendpos);
+  if(pos+m<=hilitestartpos){
+    hilitestartpos+=del;
+    hiliteendpos+=del;
+    }
+  else if(pos<hiliteendpos){
+    if(hiliteendpos<=pos+m) hiliteendpos=pos+n; else hiliteendpos+=del;
+    if(pos<=hilitestartpos) hilitestartpos=pos+n;
+    }
 
   // Fix anchor position
   if(pos+m<=anchorpos) anchorpos+=del;
@@ -1682,21 +1672,21 @@ void FXText::replace(FXint pos,FXint m,const FXchar *text,FXint n,FXint style){
 
 // Replace m characters at pos by n characters
 void FXText::replaceStyledText(FXint pos,FXint m,const FXchar *text,FXint n,FXint style,FXbool notify){
-  FXint what[2];
+  FXTextChange textchange;
   if(n<0 || m<0 || pos<0 || length<pos+m){ fxerror("%s::replaceStyledText: bad argument range.\n",getClassName()); }
-  if(notify && target){
-    what[0]=pos;
-    what[1]=m;
-    target->handle(this,MKUINT(message,SEL_DELETED),(void*)what);
-    }
   FXTRACE((130,"replaceStyledText(%d,%d,text,%d)\n",pos,m,n));
+  textchange.pos=pos;
+  textchange.ndel=m;
+  textchange.nins=n;
+  textchange.ins=(FXchar*)text;
+  FXMALLOC(&textchange.del,FXchar,m);
+  extractText(textchange.del,pos,m);
   replace(pos,m,text,n,style);
   if(notify && target){
-    what[0]=pos;
-    what[1]=n;
-    target->handle(this,MKUINT(message,SEL_INSERTED),(void*)what);
-    target->handle(this,MKUINT(message,SEL_CHANGED),(void*)(FXival)cursorpos);
+    target->handle(this,FXSEL(SEL_REPLACED,message),(void*)&textchange);
+    target->handle(this,FXSEL(SEL_CHANGED,message),(void*)(FXival)cursorpos);
     }
+  FXFREE(&textchange.del);
   }
 
 
@@ -1708,15 +1698,18 @@ void FXText::replaceText(FXint pos,FXint m,const FXchar *text,FXint n,FXbool not
 
 // Add text at the end
 void FXText::appendStyledText(const FXchar *text,FXint n,FXint style,FXbool notify){
-  FXint what[2];
+  FXTextChange textchange;
   if(n<0){ fxerror("%s::appendStyledText: bad argument range.\n",getClassName()); }
   FXTRACE((130,"appendStyledText(text,%d)\n",n));
+  textchange.pos=length;
+  textchange.ndel=0;
+  textchange.nins=n;
+  textchange.ins=(FXchar*)text;
+  textchange.del="";
   replace(length,0,text,n,style);
   if(notify && target){
-    what[0]=length-n;   // Place where added; thanks to Sander Jansen <sxj@cfdrc.com>
-    what[1]=n;
-    target->handle(this,MKUINT(message,SEL_INSERTED),(void*)what);
-    target->handle(this,MKUINT(message,SEL_CHANGED),(void*)(FXival)cursorpos);
+    target->handle(this,FXSEL(SEL_INSERTED,message),(void*)&textchange);
+    target->handle(this,FXSEL(SEL_CHANGED,message),(void*)(FXival)cursorpos);
     }
   }
 
@@ -1729,15 +1722,18 @@ void FXText::appendText(const FXchar *text,FXint n,FXbool notify){
 
 // Insert some text at pos
 void FXText::insertStyledText(FXint pos,const FXchar *text,FXint n,FXint style,FXbool notify){
-  FXint what[2];
+  FXTextChange textchange;
   if(n<0 || pos<0 || length<pos){ fxerror("%s::insertStyledText: bad argument range.\n",getClassName()); }
   FXTRACE((130,"insertStyledText(%d,text,%d)\n",pos,n));
+  textchange.pos=pos;
+  textchange.ndel=0;
+  textchange.nins=n;
+  textchange.ins=(FXchar*)text;
+  textchange.del="";
   replace(pos,0,text,n,style);
   if(notify && target){
-    what[0]=pos;
-    what[1]=n;
-    target->handle(this,MKUINT(message,SEL_INSERTED),(void*)what);
-    target->handle(this,MKUINT(message,SEL_CHANGED),(void*)(FXival)cursorpos);
+    target->handle(this,FXSEL(SEL_INSERTED,message),(void*)&textchange);
+    target->handle(this,FXSEL(SEL_CHANGED,message),(void*)(FXival)cursorpos);
     }
   }
 
@@ -1750,18 +1746,21 @@ void FXText::insertText(FXint pos,const FXchar *text,FXint n,FXbool notify){
 
 // Remove some text at pos
 void FXText::removeText(FXint pos,FXint n,FXbool notify){
-  FXint what[2];
+  FXTextChange textchange;
   if(n<0 || pos<0 || length<pos+n){ fxerror("%s::removeText: bad argument range.\n",getClassName()); }
-  if(notify && target){
-    what[0]=pos;
-    what[1]=n;
-    target->handle(this,MKUINT(message,SEL_DELETED),(void*)what);
-    }
   FXTRACE((130,"removeText(%d,%d)\n",pos,n));
+  textchange.pos=pos;
+  textchange.ndel=n;
+  textchange.nins=0;
+  textchange.ins="";
+  FXMALLOC(&textchange.del,FXchar,n);
+  extractText(textchange.del,pos,n);
   replace(pos,n,NULL,0,0);
   if(notify && target){
-    target->handle(this,MKUINT(message,SEL_CHANGED),(void*)(FXival)cursorpos);
+    target->handle(this,FXSEL(SEL_DELETED,message),(void*)&textchange);
+    target->handle(this,FXSEL(SEL_CHANGED,message),(void*)(FXival)cursorpos);
     }
+  FXFREE(&textchange.del);
   }
 
 
@@ -1841,15 +1840,15 @@ void FXText::changeStyle(FXint pos,FXint n,const FXchar* style){
 
 // Change the text in the buffer to new text
 void FXText::setStyledText(const FXchar* text,FXint n,FXint style,FXbool notify){
-  FXint what[2];
-  if(n<0){ fxerror("%s::setText: bad argument range.\n",getClassName()); }
+  FXTextChange textchange;
+  if(n<0){ fxerror("%s::setStyledText: bad argument range.\n",getClassName()); }
   if(!FXRESIZE(&buffer,FXchar,n+MINSIZE)){
-    fxerror("%s::setText: out of memory.\n",getClassName());
+    fxerror("%s::setStyledText: out of memory.\n",getClassName());
     }
   memcpy(buffer,text,n);
   if(sbuffer){
     if(!FXRESIZE(&sbuffer,FXchar,n+MINSIZE)){
-      fxerror("%s::setText: out of memory.\n",getClassName());
+      fxerror("%s::setStyledText: out of memory.\n",getClassName());
       }
     memset(sbuffer,style,n);
     }
@@ -1872,11 +1871,14 @@ void FXText::setStyledText(const FXchar* text,FXint n,FXint style,FXbool notify)
   prefcol=-1;
   pos_x=0;
   pos_y=0;
+  textchange.pos=0;
+  textchange.ndel=0;
+  textchange.nins=n;
+  textchange.ins=(FXchar*)text;
+  textchange.del="";
   if(notify && target){
-    what[0]=0;
-    what[1]=n;
-    target->handle(this,MKUINT(message,SEL_INSERTED),(void*)what);
-    target->handle(this,MKUINT(message,SEL_CHANGED),(void*)(FXival)cursorpos);
+    target->handle(this,FXSEL(SEL_INSERTED,message),(void*)&textchange);
+    target->handle(this,FXSEL(SEL_CHANGED,message),(void*)(FXival)cursorpos);
     }
   recalc();
   layout();
@@ -2067,11 +2069,19 @@ void FXText::position(FXint x,FXint y,FXint w,FXint h){
 /*******************************************************************************/
 
 
+// Blink the cursor
+long FXText::onBlink(FXObject*,FXSelector,void*){
+  drawCursor(flags^FLAG_CARET);
+  getApp()->addTimeout(this,ID_BLINK,getApp()->getBlinkSpeed());
+  return 0;
+  }
+
+
 // Gained focus
 long FXText::onFocusIn(FXObject* sender,FXSelector sel,void* ptr){
   FXScrollArea::onFocusIn(sender,sel,ptr);
-  if(!blinker){blinker=getApp()->addTimeout(getApp()->getBlinkSpeed(),this,ID_BLINK);}
-  showCursor(FLAG_CARET);
+  getApp()->addTimeout(this,ID_BLINK,getApp()->getBlinkSpeed());
+  drawCursor(FLAG_CARET);
   return 1;
   }
 
@@ -2079,18 +2089,17 @@ long FXText::onFocusIn(FXObject* sender,FXSelector sel,void* ptr){
 // Lost focus
 long FXText::onFocusOut(FXObject* sender,FXSelector sel,void* ptr){
   FXScrollArea::onFocusOut(sender,sel,ptr);
-  if(blinker){blinker=getApp()->removeTimeout(blinker);}
-  showCursor(0);
+  getApp()->removeTimeout(this,ID_BLINK);
+  drawCursor(0);
   flags|=FLAG_UPDATE;
   return 1;
   }
 
 
-
 // We were asked about status text
 long FXText::onQueryHelp(FXObject* sender,FXSelector,void*){
   if(!help.empty() && (flags&FLAG_HELP)){
-    sender->handle(this,MKUINT(ID_SETSTRINGVALUE,SEL_COMMAND),(void*)&help);
+    sender->handle(this,FXSEL(SEL_COMMAND,ID_SETSTRINGVALUE),(void*)&help);
     return 1;
     }
   return 0;
@@ -2100,17 +2109,9 @@ long FXText::onQueryHelp(FXObject* sender,FXSelector,void*){
 // We were asked about tip text
 long FXText::onQueryTip(FXObject* sender,FXSelector,void*){
   if(!tip.empty() && (flags&FLAG_TIP)){
-    sender->handle(this,MKUINT(ID_SETSTRINGVALUE,SEL_COMMAND),&tip);
+    sender->handle(this,FXSEL(SEL_COMMAND,ID_SETSTRINGVALUE),&tip);
     return 1;
     }
-  return 0;
-  }
-
-
-// Blink the cursor
-long FXText::onBlink(FXObject*,FXSelector,void*){
-  showCursor(flags^FLAG_CARET);
-  blinker=getApp()->addTimeout(getApp()->getBlinkSpeed(),this,ID_BLINK);
   return 0;
   }
 
@@ -2118,27 +2119,28 @@ long FXText::onBlink(FXObject*,FXSelector,void*){
 // Flash matching brace
 long FXText::onFlash(FXObject*,FXSelector,void*){
   killHighlight();
-  flasher=NULL;
   return 0;
   }
 
 
 // Pressed left button
 long FXText::onLeftBtnPress(FXObject*,FXSelector,void* ptr){
-  FXEvent* ev=(FXEvent*)ptr;
+  FXEvent* event=(FXEvent*)ptr;
   FXint pos;
   flags&=~FLAG_TIP;
-  handle(this,MKUINT(0,SEL_FOCUS_SELF),ptr);
+  handle(this,FXSEL(SEL_FOCUS_SELF,0),ptr);
   if(isEnabled()){
     grab();
-    if(target && target->handle(this,MKUINT(message,SEL_LEFTBUTTONPRESS),ptr)) return 1;
+    if(target && target->handle(this,FXSEL(SEL_LEFTBUTTONPRESS,message),ptr)) return 1;
     flags&=~FLAG_UPDATE;
-    if(ev->click_count==1){
-      pos=getPosAt(ev->win_x,ev->win_y);
-      FXTRACE((150,"getPosAt(%d,%d) = %d getYOfPos(%d) = %d getXOfPos(%d)=%d\n",ev->win_x,ev->win_y,pos,pos,getYOfPos(pos),pos,getXOfPos(pos)));
+
+    // Select characters
+    if(event->click_count==1){
+      pos=getPosAt(event->win_x,event->win_y);
+      FXTRACE((150,"getPosAt(%d,%d) = %d getYOfPos(%d) = %d getXOfPos(%d)=%d\n",event->win_x,event->win_y,pos,pos,getYOfPos(pos),pos,getXOfPos(pos)));
       setCursorPos(pos,TRUE);
       makePositionVisible(pos);
-      if(ev->state&SHIFTMASK){
+      if(event->state&SHIFTMASK){
         extendSelection(pos,SELECT_CHARS,TRUE);
         }
       else{
@@ -2149,14 +2151,14 @@ long FXText::onLeftBtnPress(FXObject*,FXSelector,void* ptr){
       mode=MOUSE_CHARS;
       }
 
-    // Select word by double click
-    else if(ev->click_count==2){
+    // Select words
+    else if(event->click_count==2){
       setAnchorPos(cursorpos);
       extendSelection(cursorpos,SELECT_WORDS,TRUE);
       mode=MOUSE_WORDS;
       }
 
-    // Select line by triple click
+    // Select lines
     else{
       setAnchorPos(cursorpos);
       extendSelection(cursorpos,SELECT_LINES,TRUE);
@@ -2172,10 +2174,9 @@ long FXText::onLeftBtnPress(FXObject*,FXSelector,void* ptr){
 long FXText::onLeftBtnRelease(FXObject*,FXSelector,void* ptr){
   if(isEnabled()){
     ungrab();
-    flags|=FLAG_UPDATE;
     mode=MOUSE_NONE;
     stopAutoScroll();
-    if(target && target->handle(this,MKUINT(message,SEL_LEFTBUTTONRELEASE),ptr)) return 1;
+    if(target && target->handle(this,FXSEL(SEL_LEFTBUTTONRELEASE,message),ptr)) return 1;
     return 1;
     }
   return 0;
@@ -2184,14 +2185,14 @@ long FXText::onLeftBtnRelease(FXObject*,FXSelector,void* ptr){
 
 // Pressed middle button
 long FXText::onMiddleBtnPress(FXObject*,FXSelector,void* ptr){
-  FXEvent* ev=(FXEvent*)ptr;
+  FXEvent* event=(FXEvent*)ptr;
   FXint pos;
   flags&=~FLAG_TIP;
-  handle(this,MKUINT(0,SEL_FOCUS_SELF),ptr);
+  handle(this,FXSEL(SEL_FOCUS_SELF,0),ptr);
   if(isEnabled()){
     grab();
-    if(target && target->handle(this,MKUINT(message,SEL_MIDDLEBUTTONPRESS),ptr)) return 1;
-    pos=getPosAt(ev->win_x,ev->win_y);
+    if(target && target->handle(this,FXSEL(SEL_MIDDLEBUTTONPRESS,message),ptr)) return 1;
+    pos=getPosAt(event->win_x,event->win_y);
 
     // Move over
     setCursorPos(pos,TRUE);
@@ -2200,19 +2201,8 @@ long FXText::onMiddleBtnPress(FXObject*,FXSelector,void* ptr){
     // Start text drag
     if(isPosSelected(pos)){
       mode=MOUSE_TRYDRAG;
-      flags&=~FLAG_UPDATE;
       }
-
-    // Place cursor
-    else if(isEditable()){
-      mode=MOUSE_PASTE;
-      flags&=~FLAG_UPDATE;
-      }
-
-    // Beep
-    else{
-      getApp()->beep();
-      }
+    flags&=~FLAG_UPDATE;
     return 1;
     }
   return 0;
@@ -2221,27 +2211,22 @@ long FXText::onMiddleBtnPress(FXObject*,FXSelector,void* ptr){
 
 // Released middle button
 long FXText::onMiddleBtnRelease(FXObject*,FXSelector,void* ptr){
-  FXuchar *data; FXuint len;
+  FXuint md=mode;
   if(isEnabled()){
     ungrab();
-    flags|=FLAG_UPDATE;
     stopAutoScroll();
-    if(target && target->handle(this,MKUINT(message,SEL_MIDDLEBUTTONRELEASE),ptr)) return 1;
+    mode=MOUSE_NONE;
+    if(target && target->handle(this,FXSEL(SEL_MIDDLEBUTTONRELEASE,message),ptr)) return 1;
 
     // Drop text somewhere
-    if(mode==MOUSE_DRAG){
-      handle(this,MKUINT(0,SEL_ENDDRAG),ptr);
+    if(md==MOUSE_DRAG){
+      handle(this,FXSEL(SEL_ENDDRAG,0),ptr);
       }
 
-    // Paste text from selection
-    else if(mode==MOUSE_PASTE){
-      if(getDNDData(FROM_SELECTION,stringType,data,len)){
-        FXRESIZE(&data,FXchar,len+1); data[len]='\0';
-        handle(this,MKUINT(ID_INSERT_STRING,SEL_COMMAND),(void*)data);
-        FXFREE(&data);
-        }
+    // Paste selection
+    else{
+      handle(this,FXSEL(SEL_COMMAND,ID_PASTE_MIDDLE),NULL);
       }
-    mode=MOUSE_NONE;
     return 1;
     }
   return 0;
@@ -2250,15 +2235,15 @@ long FXText::onMiddleBtnRelease(FXObject*,FXSelector,void* ptr){
 
 // Pressed right button
 long FXText::onRightBtnPress(FXObject*,FXSelector,void* ptr){
-  FXEvent* ev=(FXEvent*)ptr;
+  FXEvent* event=(FXEvent*)ptr;
   flags&=~FLAG_TIP;
-  handle(this,MKUINT(0,SEL_FOCUS_SELF),ptr);
+  handle(this,FXSEL(SEL_FOCUS_SELF,0),ptr);
   if(isEnabled()){
     grab();
-    if(target && target->handle(this,MKUINT(message,SEL_RIGHTBUTTONPRESS),ptr)) return 1;
+    if(target && target->handle(this,FXSEL(SEL_RIGHTBUTTONPRESS,message),ptr)) return 1;
     mode=MOUSE_SCROLL;
-    grabx=ev->win_x-pos_x;
-    graby=ev->win_y-pos_y;
+    grabx=event->win_x-pos_x;
+    graby=event->win_y-pos_y;
     flags&=~FLAG_UPDATE;
     return 1;
     }
@@ -2271,8 +2256,7 @@ long FXText::onRightBtnRelease(FXObject*,FXSelector,void* ptr){
   if(isEnabled()){
     ungrab();
     mode=MOUSE_NONE;
-    flags|=FLAG_UPDATE;
-    if(target && target->handle(this,MKUINT(message,SEL_RIGHTBUTTONRELEASE),ptr)) return 1;
+    if(target && target->handle(this,FXSEL(SEL_RIGHTBUTTONRELEASE,message),ptr)) return 1;
     return 1;
     }
   return 0;
@@ -2291,32 +2275,29 @@ long FXText::onUngrabbed(FXObject* sender,FXSelector sel,void* ptr){
 
 // Autoscroll timer fired
 long FXText::onAutoScroll(FXObject* sender,FXSelector sel,void* ptr){
-  FXEvent* ev=(FXEvent*)ptr;
+  FXEvent* event=(FXEvent*)ptr;
   FXint pos;
   FXScrollArea::onAutoScroll(sender,sel,ptr);
   switch(mode){
     case MOUSE_CHARS:
-      if((fxabs(ev->win_x-ev->click_x)>getApp()->getDragDelta())||(fxabs(ev->win_y-ev->click_y)>getApp()->getDragDelta())){
-        pos=getPosAt(ev->win_x,ev->win_y);
+      if((fxabs(event->win_x-event->click_x)>getApp()->getDragDelta())||(fxabs(event->win_y-event->click_y)>getApp()->getDragDelta())){
+        pos=getPosAt(event->win_x,event->win_y);
         extendSelection(pos,SELECT_CHARS,TRUE);
         setCursorPos(pos,TRUE);
-        //makePositionVisible(pos);
         }
       return 1;
     case MOUSE_WORDS:
-      if((fxabs(ev->win_x-ev->click_x)>getApp()->getDragDelta())||(fxabs(ev->win_y-ev->click_y)>getApp()->getDragDelta())){
-        pos=getPosAt(ev->win_x,ev->win_y);
+      if((fxabs(event->win_x-event->click_x)>getApp()->getDragDelta())||(fxabs(event->win_y-event->click_y)>getApp()->getDragDelta())){
+        pos=getPosAt(event->win_x,event->win_y);
         extendSelection(pos,SELECT_WORDS,TRUE);
         setCursorPos(pos,TRUE);
-        //makePositionVisible(pos);
         }
       return 1;
     case MOUSE_LINES:
-      if((fxabs(ev->win_x-ev->click_x)>getApp()->getDragDelta())||(fxabs(ev->win_y-ev->click_y)>getApp()->getDragDelta())){
-        pos=getPosAt(ev->win_x,ev->win_y);
+      if((fxabs(event->win_x-event->click_x)>getApp()->getDragDelta())||(fxabs(event->win_y-event->click_y)>getApp()->getDragDelta())){
+        pos=getPosAt(event->win_x,event->win_y);
         extendSelection(pos,SELECT_LINES,TRUE);
         setCursorPos(pos,TRUE);
-        //makePositionVisible(pos);
         }
       return 1;
     }
@@ -2326,52 +2307,45 @@ long FXText::onAutoScroll(FXObject* sender,FXSelector sel,void* ptr){
 
 // Handle real or simulated mouse motion
 long FXText::onMotion(FXObject*,FXSelector,void* ptr){
-  FXEvent* ev=(FXEvent*)ptr;
+  FXEvent* event=(FXEvent*)ptr;
   FXint pos;
   switch(mode){
     case MOUSE_CHARS:
-      if(startAutoScroll(ev->win_x,ev->win_y,FALSE)) return 1;
-      if((fxabs(ev->win_x-ev->click_x)>getApp()->getDragDelta())||(fxabs(ev->win_y-ev->click_y)>getApp()->getDragDelta())){
-        pos=getPosAt(ev->win_x,ev->win_y);
+      if(startAutoScroll(event,FALSE)) return 1;
+      if((fxabs(event->win_x-event->click_x)>getApp()->getDragDelta())||(fxabs(event->win_y-event->click_y)>getApp()->getDragDelta())){
+        pos=getPosAt(event->win_x,event->win_y);
         extendSelection(pos,SELECT_CHARS,TRUE);
         setCursorPos(pos,TRUE);
         }
       return 1;
     case MOUSE_WORDS:
-      if(startAutoScroll(ev->win_x,ev->win_y,FALSE)) return 1;
-      if((fxabs(ev->win_x-ev->click_x)>getApp()->getDragDelta())||(fxabs(ev->win_y-ev->click_y)>getApp()->getDragDelta())){
-        pos=getPosAt(ev->win_x,ev->win_y);
+      if(startAutoScroll(event,FALSE)) return 1;
+      if((fxabs(event->win_x-event->click_x)>getApp()->getDragDelta())||(fxabs(event->win_y-event->click_y)>getApp()->getDragDelta())){
+        pos=getPosAt(event->win_x,event->win_y);
         extendSelection(pos,SELECT_WORDS,TRUE);
         setCursorPos(pos,TRUE);
         }
       return 1;
     case MOUSE_LINES:
-      if(startAutoScroll(ev->win_x,ev->win_y,FALSE)) return 1;
-      if((fxabs(ev->win_x-ev->click_x)>getApp()->getDragDelta())||(fxabs(ev->win_y-ev->click_y)>getApp()->getDragDelta())){
-        pos=getPosAt(ev->win_x,ev->win_y);
+      if(startAutoScroll(event,FALSE)) return 1;
+      if((fxabs(event->win_x-event->click_x)>getApp()->getDragDelta())||(fxabs(event->win_y-event->click_y)>getApp()->getDragDelta())){
+        pos=getPosAt(event->win_x,event->win_y);
         extendSelection(pos,SELECT_LINES,TRUE);
         setCursorPos(pos,TRUE);
         }
       return 1;
     case MOUSE_SCROLL:
-      setPosition(ev->win_x-grabx,ev->win_y-graby);
+      setPosition(event->win_x-grabx,event->win_y-graby);
       return 1;
     case MOUSE_DRAG:
-      handle(this,MKUINT(0,SEL_DRAGGED),ptr);
+      handle(this,FXSEL(SEL_DRAGGED,0),ptr);
       return 1;
     case MOUSE_TRYDRAG:
-      if(ev->moved){
+      if(event->moved){
         mode=MOUSE_NONE;
-        if(handle(this,MKUINT(0,SEL_BEGINDRAG),ptr)){
+        if(handle(this,FXSEL(SEL_BEGINDRAG,0),ptr)){
           mode=MOUSE_DRAG;
           }
-        }
-      return 1;
-    case MOUSE_PASTE:
-      if(startAutoScroll(ev->win_x,ev->win_y,FALSE)) return 1;
-      if((fxabs(ev->win_x-ev->click_x)>getApp()->getDragDelta())||(fxabs(ev->win_y-ev->click_y)>getApp()->getDragDelta())){
-        pos=getPosAt(ev->win_x,ev->win_y);
-        setCursorPos(pos,TRUE);
         }
       return 1;
     }
@@ -2428,7 +2402,8 @@ long FXText::onDragged(FXObject* sender,FXSelector sel,void* ptr){
 // Handle drag-and-drop enter
 long FXText::onDNDEnter(FXObject* sender,FXSelector sel,void* ptr){
   FXScrollArea::onDNDEnter(sender,sel,ptr);
-  showCursor(FLAG_CARET);
+  drawCursor(FLAG_CARET);
+  revertpos=cursorpos;
   return 1;
   }
 
@@ -2437,19 +2412,20 @@ long FXText::onDNDEnter(FXObject* sender,FXSelector sel,void* ptr){
 long FXText::onDNDLeave(FXObject* sender,FXSelector sel,void* ptr){
   FXScrollArea::onDNDLeave(sender,sel,ptr);
   stopAutoScroll();
-  showCursor(0);
+  drawCursor(0);
+  setCursorPos(revertpos,TRUE);
   return 1;
   }
 
 
 // Handle drag-and-drop motion
 long FXText::onDNDMotion(FXObject* sender,FXSelector sel,void* ptr){
-  FXEvent* ev=(FXEvent*)ptr;
+  FXEvent* event=(FXEvent*)ptr;
   FXDragAction action;
   FXint pos;
 
   // Scroll into view
-  if(startAutoScroll(ev->win_x,ev->win_y,TRUE)) return 1;
+  if(startAutoScroll(event,TRUE)) return 1;
 
   // Handled elsewhere
   if(FXScrollArea::onDNDMotion(sender,sel,ptr)) return 1;
@@ -2465,7 +2441,7 @@ long FXText::onDNDMotion(FXObject* sender,FXSelector sel,void* ptr){
       if(action==DRAG_COPY || action==DRAG_MOVE){
 
         // Get the suggested drop position
-        pos=getPosAt(ev->win_x,ev->win_y);
+        pos=getPosAt(event->win_x,event->win_y);
 
         // Move cursor to new position
         setCursorPos(pos,TRUE);
@@ -2491,7 +2467,7 @@ long FXText::onDNDDrop(FXObject* sender,FXSelector sel,void* ptr){
 
   // Stop scrolling
   stopAutoScroll();
-  showCursor(0);
+  drawCursor(0);
 
   // Try handling it in base class first
   if(FXScrollArea::onDNDDrop(sender,sel,ptr)) return 1;
@@ -2510,7 +2486,7 @@ long FXText::onDNDDrop(FXObject* sender,FXSelector sel,void* ptr){
         }
 
       // Insert the new text
-      handle(this,MKUINT(ID_INSERT_STRING,SEL_COMMAND),(void*)data);
+      handle(this,FXSEL(SEL_COMMAND,ID_INSERT_STRING),(void*)data);    // FIXME don't kill selection!
       FXFREE(&data);
       }
     return 1;
@@ -2532,14 +2508,14 @@ long FXText::onDNDRequest(FXObject* sender,FXSelector sel,void* ptr){
     len=selendpos-selstartpos;
     FXMALLOC(&data,FXuchar,len);
     extractText((FXchar*)data,selstartpos,len);
-    setDNDData(FROM_DRAGNDROP,stringType,data,len);
+    setDNDData(FROM_DRAGNDROP,textType,data,len);
     return 1;
     }
 
   // Delete dragged text
   if(event->target==deleteType){
     if(isEditable()){
-      handle(this,MKUINT(ID_DELETE_SEL,SEL_COMMAND),NULL);
+      handle(this,FXSEL(SEL_COMMAND,ID_DELETE_SEL),NULL);
       }
     return 1;
     }
@@ -2565,7 +2541,7 @@ long FXText::onSelectionLost(FXObject* sender,FXSelector sel,void* ptr){
   if(target){
     what[0]=selstartpos;
     what[1]=selendpos-selstartpos;
-    target->handle(this,MKUINT(message,SEL_DESELECTED),(void*)what);
+    target->handle(this,FXSEL(SEL_DESELECTED,message),(void*)what);
     }
   updateRange(selstartpos,selendpos);
   selstartpos=0;
@@ -2577,18 +2553,20 @@ long FXText::onSelectionLost(FXObject* sender,FXSelector sel,void* ptr){
 // Somebody wants our selection
 long FXText::onSelectionRequest(FXObject* sender,FXSelector sel,void* ptr){
   FXEvent *event=(FXEvent*)ptr;
-  FXuchar *data; FXuint len;
+  FXchar *data; FXint len;
 
   // Perhaps the target wants to supply its own data for the selection
   if(FXScrollArea::onSelectionRequest(sender,sel,ptr)) return 1;
 
   // Return text of the selection
   if(event->target==stringType || event->target==textType){
-    FXASSERT(selstartpos<=selendpos);
     len=selendpos-selstartpos;
-    FXMALLOC(&data,FXuchar,len);
-    extractText((FXchar*)data,selstartpos,len);
-    setDNDData(FROM_SELECTION,event->target,data,len);
+    FXMALLOC(&data,FXchar,len);
+    extractText(data,selstartpos,len);
+#ifdef WIN32
+    fxtoDOS(data,len);
+#endif
+    setDNDData(FROM_SELECTION,event->target,(FXuchar*)data,(FXuint)len);
     return 1;
     }
 
@@ -2619,27 +2597,20 @@ long FXText::onClipboardLost(FXObject* sender,FXSelector sel,void* ptr){
 // Somebody wants our selection
 long FXText::onClipboardRequest(FXObject* sender,FXSelector sel,void* ptr){
   FXEvent *event=(FXEvent*)ptr;
-  FXuchar *data;
+  FXchar *data; FXint len;
 
   // Try handling it in base class first
   if(FXScrollArea::onClipboardRequest(sender,sel,ptr)) return 1;
 
   // Requested data from clipboard
   if(event->target==stringType || event->target==textType){
-    FXASSERT(cliplength);
-#ifndef WIN32
-    FXMALLOC(&data,FXuchar,cliplength);
-    memcpy(data,clipbuffer,cliplength);
-    setDNDData(FROM_CLIPBOARD,stringType,data,cliplength);
-#else
-    FXint i,j,c;
-    FXCALLOC(&data,FXuchar,2*cliplength+1);
-    for(i=j=0; j<cliplength; j++){
-      c=clipbuffer[j];
-      if(c=='\n'){data[i++]='\r';data[i++]='\n';}else{data[i++]=c;}
-      }
-    setDNDData(FROM_CLIPBOARD,event->target,data,i+1);
+    len=cliplength;
+    FXMALLOC(&data,FXchar,len);
+    memcpy(data,clipbuffer,len);
+#ifdef WIN32
+    fxtoDOS(data,len);
 #endif
+    setDNDData(FROM_CLIPBOARD,event->target,(FXuchar*)data,(FXuint)len);
     return 1;
     }
 
@@ -2654,181 +2625,187 @@ long FXText::onKeyPress(FXObject*,FXSelector,void* ptr){
   flags&=~FLAG_TIP;
   if(!isEnabled()) return 0;
   FXTRACE((200,"%s::onKeyPress keysym=0x%04x state=%04x\n",getClassName(),event->code,event->state));
-  if(target && target->handle(this,MKUINT(message,SEL_KEYPRESS),ptr)) return 1;
+  if(target && target->handle(this,FXSEL(SEL_KEYPRESS,message),ptr)) return 1;
+  flags&=~FLAG_UPDATE;
   switch(event->code){
     case KEY_Shift_L:
     case KEY_Shift_R:
     case KEY_Control_L:
     case KEY_Control_R:
-      if(mode==MOUSE_DRAG){handle(this,MKUINT(0,SEL_DRAGGED),ptr);}
+      if(mode==MOUSE_DRAG){handle(this,FXSEL(SEL_DRAGGED,0),ptr);}
       return 1;
     case KEY_Up:
     case KEY_KP_Up:
       if(event->state&CONTROLMASK){
-        handle(this,MKUINT(ID_SCROLL_UP,SEL_COMMAND),NULL);
+        handle(this,FXSEL(SEL_COMMAND,ID_SCROLL_UP),NULL);
         }
       else{
         if(!(event->state&SHIFTMASK)){
-          handle(this,MKUINT(ID_DESELECT_ALL,SEL_COMMAND),NULL);
+          handle(this,FXSEL(SEL_COMMAND,ID_DESELECT_ALL),NULL);
           }
-        handle(this,MKUINT(ID_CURSOR_UP,SEL_COMMAND),NULL);
+        handle(this,FXSEL(SEL_COMMAND,ID_CURSOR_UP),NULL);
         if(event->state&SHIFTMASK){
-          handle(this,MKUINT(ID_EXTEND,SEL_COMMAND),NULL);
+          handle(this,FXSEL(SEL_COMMAND,ID_EXTEND),NULL);
           }
         else{
-          handle(this,MKUINT(ID_MARK,SEL_COMMAND),NULL);
+          handle(this,FXSEL(SEL_COMMAND,ID_MARK),NULL);
           }
         }
       return 1;
     case KEY_Down:
     case KEY_KP_Down:
       if(event->state&CONTROLMASK){
-        handle(this,MKUINT(ID_SCROLL_DOWN,SEL_COMMAND),NULL);
+        handle(this,FXSEL(SEL_COMMAND,ID_SCROLL_DOWN),NULL);
         }
       else{
         if(!(event->state&SHIFTMASK)){
-          handle(this,MKUINT(ID_DESELECT_ALL,SEL_COMMAND),NULL);
+          handle(this,FXSEL(SEL_COMMAND,ID_DESELECT_ALL),NULL);
           }
-        handle(this,MKUINT(ID_CURSOR_DOWN,SEL_COMMAND),NULL);
+        handle(this,FXSEL(SEL_COMMAND,ID_CURSOR_DOWN),NULL);
         if(event->state&SHIFTMASK){
-          handle(this,MKUINT(ID_EXTEND,SEL_COMMAND),NULL);
+          handle(this,FXSEL(SEL_COMMAND,ID_EXTEND),NULL);
           }
         else{
-          handle(this,MKUINT(ID_MARK,SEL_COMMAND),NULL);
+          handle(this,FXSEL(SEL_COMMAND,ID_MARK),NULL);
           }
         }
       return 1;
     case KEY_Left:
     case KEY_KP_Left:
       if(!(event->state&SHIFTMASK)){
-        handle(this,MKUINT(ID_DESELECT_ALL,SEL_COMMAND),NULL);
+        handle(this,FXSEL(SEL_COMMAND,ID_DESELECT_ALL),NULL);
         }
       if(event->state&CONTROLMASK){
-        handle(this,MKUINT(ID_CURSOR_WORD_LEFT,SEL_COMMAND),NULL);
+        handle(this,FXSEL(SEL_COMMAND,ID_CURSOR_WORD_LEFT),NULL);
         }
       else{
-        handle(this,MKUINT(ID_CURSOR_LEFT,SEL_COMMAND),NULL);
+        handle(this,FXSEL(SEL_COMMAND,ID_CURSOR_LEFT),NULL);
         }
       if(event->state&SHIFTMASK){
-        handle(this,MKUINT(ID_EXTEND,SEL_COMMAND),NULL);
+        handle(this,FXSEL(SEL_COMMAND,ID_EXTEND),NULL);
         }
       else{
-        handle(this,MKUINT(ID_MARK,SEL_COMMAND),NULL);
+        handle(this,FXSEL(SEL_COMMAND,ID_MARK),NULL);
         }
       return 1;
     case KEY_Right:
     case KEY_KP_Right:
       if(!(event->state&SHIFTMASK)){
-        handle(this,MKUINT(ID_DESELECT_ALL,SEL_COMMAND),NULL);
+        handle(this,FXSEL(SEL_COMMAND,ID_DESELECT_ALL),NULL);
         }
       if(event->state&CONTROLMASK){
-        handle(this,MKUINT(ID_CURSOR_WORD_RIGHT,SEL_COMMAND),NULL);
+        handle(this,FXSEL(SEL_COMMAND,ID_CURSOR_WORD_RIGHT),NULL);
         }
       else{
-        handle(this,MKUINT(ID_CURSOR_RIGHT,SEL_COMMAND),NULL);
+        handle(this,FXSEL(SEL_COMMAND,ID_CURSOR_RIGHT),NULL);
         }
       if(event->state&SHIFTMASK){
-        handle(this,MKUINT(ID_EXTEND,SEL_COMMAND),NULL);
+        handle(this,FXSEL(SEL_COMMAND,ID_EXTEND),NULL);
         }
       else{
-        handle(this,MKUINT(ID_MARK,SEL_COMMAND),NULL);
+        handle(this,FXSEL(SEL_COMMAND,ID_MARK),NULL);
         }
       return 1;
     case KEY_Home:
     case KEY_KP_Home:
       if(!(event->state&SHIFTMASK)){
-        handle(this,MKUINT(ID_DESELECT_ALL,SEL_COMMAND),NULL);
+        handle(this,FXSEL(SEL_COMMAND,ID_DESELECT_ALL),NULL);
         }
       if(event->state&CONTROLMASK){
-        handle(this,MKUINT(ID_CURSOR_TOP,SEL_COMMAND),NULL);
+        handle(this,FXSEL(SEL_COMMAND,ID_CURSOR_TOP),NULL);
         }
       else{
-        handle(this,MKUINT(ID_CURSOR_HOME,SEL_COMMAND),NULL);
+        handle(this,FXSEL(SEL_COMMAND,ID_CURSOR_HOME),NULL);
         }
       if(event->state&SHIFTMASK){
-        handle(this,MKUINT(ID_EXTEND,SEL_COMMAND),NULL);
+        handle(this,FXSEL(SEL_COMMAND,ID_EXTEND),NULL);
         }
       else{
-        handle(this,MKUINT(ID_MARK,SEL_COMMAND),NULL);
+        handle(this,FXSEL(SEL_COMMAND,ID_MARK),NULL);
         }
       return 1;
     case KEY_End:
     case KEY_KP_End:
       if(!(event->state&SHIFTMASK)){
-        handle(this,MKUINT(ID_DESELECT_ALL,SEL_COMMAND),NULL);
+        handle(this,FXSEL(SEL_COMMAND,ID_DESELECT_ALL),NULL);
         }
       if(event->state&CONTROLMASK){
-        handle(this,MKUINT(ID_CURSOR_BOTTOM,SEL_COMMAND),NULL);
+        handle(this,FXSEL(SEL_COMMAND,ID_CURSOR_BOTTOM),NULL);
         }
       else{
-        handle(this,MKUINT(ID_CURSOR_END,SEL_COMMAND),NULL);
+        handle(this,FXSEL(SEL_COMMAND,ID_CURSOR_END),NULL);
         }
       if(event->state&SHIFTMASK){
-        handle(this,MKUINT(ID_EXTEND,SEL_COMMAND),NULL);
+        handle(this,FXSEL(SEL_COMMAND,ID_EXTEND),NULL);
         }
       else{
-        handle(this,MKUINT(ID_MARK,SEL_COMMAND),NULL);
+        handle(this,FXSEL(SEL_COMMAND,ID_MARK),NULL);
         }
       return 1;
     case KEY_Page_Up:
     case KEY_KP_Page_Up:
       if(!(event->state&SHIFTMASK)){
-        handle(this,MKUINT(ID_DESELECT_ALL,SEL_COMMAND),NULL);
+        handle(this,FXSEL(SEL_COMMAND,ID_DESELECT_ALL),NULL);
         }
-      handle(this,MKUINT(ID_CURSOR_PAGEUP,SEL_COMMAND),NULL);
+      handle(this,FXSEL(SEL_COMMAND,ID_CURSOR_PAGEUP),NULL);
       if(event->state&SHIFTMASK){
-        handle(this,MKUINT(ID_EXTEND,SEL_COMMAND),NULL);
+        handle(this,FXSEL(SEL_COMMAND,ID_EXTEND),NULL);
         }
       else{
-        handle(this,MKUINT(ID_MARK,SEL_COMMAND),NULL);
+        handle(this,FXSEL(SEL_COMMAND,ID_MARK),NULL);
         }
       return 1;
     case KEY_Page_Down:
     case KEY_KP_Page_Down:
       if(!(event->state&SHIFTMASK)){
-        handle(this,MKUINT(ID_DESELECT_ALL,SEL_COMMAND),NULL);
+        handle(this,FXSEL(SEL_COMMAND,ID_DESELECT_ALL),NULL);
         }
-      handle(this,MKUINT(ID_CURSOR_PAGEDOWN,SEL_COMMAND),NULL);
+      handle(this,FXSEL(SEL_COMMAND,ID_CURSOR_PAGEDOWN),NULL);
       if(event->state&SHIFTMASK){
-        handle(this,MKUINT(ID_EXTEND,SEL_COMMAND),NULL);
+        handle(this,FXSEL(SEL_COMMAND,ID_EXTEND),NULL);
         }
       else{
-        handle(this,MKUINT(ID_MARK,SEL_COMMAND),NULL);
+        handle(this,FXSEL(SEL_COMMAND,ID_MARK),NULL);
         }
       return 1;
     case KEY_Insert:
     case KEY_KP_Insert:
       if(event->state&CONTROLMASK){
-        handle(this,MKUINT(ID_COPY_SEL,SEL_COMMAND),NULL);
+        handle(this,FXSEL(SEL_COMMAND,ID_COPY_SEL),NULL);
         }
       else if(event->state&SHIFTMASK){
         if(isEditable()){
-          handle(this,MKUINT(ID_PASTE_SEL,SEL_COMMAND),NULL);
+          handle(this,FXSEL(SEL_COMMAND,ID_PASTE_SEL),NULL);
           }
         else{
           getApp()->beep();
           }
         }
       else{
-        handle(this,MKUINT(ID_TOGGLE_OVERSTRIKE,SEL_COMMAND),NULL);
+        handle(this,FXSEL(SEL_COMMAND,ID_TOGGLE_OVERSTRIKE),NULL);
         }
       return 1;
     case KEY_Delete:
     case KEY_KP_Delete:
       if(isEditable()){
         if(isPosSelected(cursorpos)){
-          handle(this,MKUINT(ID_DELETE_SEL,SEL_COMMAND),NULL);
-          }
-        else{
-          handle(this,MKUINT(ID_DESELECT_ALL,SEL_COMMAND),NULL);
-          if(event->state&CONTROLMASK){
-            handle(this,MKUINT(ID_DELETE_WORD,SEL_COMMAND),NULL);
-            }
-          else if(event->state&SHIFTMASK){
-            handle(this,MKUINT(ID_DELETE_EOL,SEL_COMMAND),NULL);
+          if(event->state&SHIFTMASK){
+            handle(this,FXSEL(SEL_COMMAND,ID_CUT_SEL),NULL);
             }
           else{
-            handle(this,MKUINT(ID_DELETE,SEL_COMMAND),NULL);
+            handle(this,FXSEL(SEL_COMMAND,ID_DELETE_SEL),NULL);
+            }
+          }
+        else{
+          handle(this,FXSEL(SEL_COMMAND,ID_DESELECT_ALL),NULL);
+          if(event->state&CONTROLMASK){
+            handle(this,FXSEL(SEL_COMMAND,ID_DELETE_WORD),NULL);
+            }
+          else if(event->state&SHIFTMASK){
+            handle(this,FXSEL(SEL_COMMAND,ID_DELETE_EOL),NULL);
+            }
+          else{
+            handle(this,FXSEL(SEL_COMMAND,ID_DELETE),NULL);
             }
           }
         }
@@ -2839,18 +2816,18 @@ long FXText::onKeyPress(FXObject*,FXSelector,void* ptr){
     case KEY_BackSpace:
       if(isEditable()){
         if(isPosSelected(cursorpos)){
-          handle(this,MKUINT(ID_DELETE_SEL,SEL_COMMAND),NULL);
+          handle(this,FXSEL(SEL_COMMAND,ID_DELETE_SEL),NULL);
           }
         else{
-         handle(this,MKUINT(ID_DESELECT_ALL,SEL_COMMAND),NULL);
+         handle(this,FXSEL(SEL_COMMAND,ID_DESELECT_ALL),NULL);
          if(event->state&CONTROLMASK){
-            handle(this,MKUINT(ID_BACKSPACE_WORD,SEL_COMMAND),NULL);
+            handle(this,FXSEL(SEL_COMMAND,ID_BACKSPACE_WORD),NULL);
             }
           else if(event->state&SHIFTMASK){
-            handle(this,MKUINT(ID_BACKSPACE_BOL,SEL_COMMAND),NULL);
+            handle(this,FXSEL(SEL_COMMAND,ID_BACKSPACE_BOL),NULL);
             }
           else{
-            handle(this,MKUINT(ID_BACKSPACE,SEL_COMMAND),NULL);
+            handle(this,FXSEL(SEL_COMMAND,ID_BACKSPACE),NULL);
             }
           }
         }
@@ -2861,13 +2838,7 @@ long FXText::onKeyPress(FXObject*,FXSelector,void* ptr){
     case KEY_Return:
     case KEY_KP_Enter:
       if(isEditable()){
-        if(isPosSelected(cursorpos)){
-          handle(this,MKUINT(ID_DELETE_SEL,SEL_COMMAND),NULL);
-          }
-        else{
-          handle(this,MKUINT(ID_DESELECT_ALL,SEL_COMMAND),NULL);
-          }
-        handle(this,MKUINT(ID_INSERT_NEWLINE,SEL_COMMAND),NULL);
+        handle(this,FXSEL(SEL_COMMAND,ID_INSERT_NEWLINE),NULL);
         }
       else{
         getApp()->beep();
@@ -2876,17 +2847,11 @@ long FXText::onKeyPress(FXObject*,FXSelector,void* ptr){
     case KEY_Tab:
     case KEY_KP_Tab:
       if(isEditable()){
-        if(isPosSelected(cursorpos)){
-          handle(this,MKUINT(ID_DELETE_SEL,SEL_COMMAND),NULL);
-          }
-        else{
-          handle(this,MKUINT(ID_DESELECT_ALL,SEL_COMMAND),NULL);
-          }
         if(event->state&CONTROLMASK){
-          handle(this,MKUINT(ID_INSERT_STRING,SEL_COMMAND),(void*)"\t");
+          handle(this,FXSEL(SEL_COMMAND,ID_INSERT_STRING),(void*)"\t");
           }
         else{
-          handle(this,MKUINT(ID_INSERT_TAB,SEL_COMMAND),NULL);
+          handle(this,FXSEL(SEL_COMMAND,ID_INSERT_TAB),NULL);
           }
         }
       else{
@@ -2895,12 +2860,13 @@ long FXText::onKeyPress(FXObject*,FXSelector,void* ptr){
       return 1;
     case KEY_a:
       if(!(event->state&CONTROLMASK)) goto ins;
-      handle(this,MKUINT(ID_SELECT_ALL,SEL_COMMAND),NULL);
+      handle(this,FXSEL(SEL_COMMAND,ID_SELECT_ALL),NULL);
       return 1;
     case KEY_x:
       if(!(event->state&CONTROLMASK)) goto ins;
+    case KEY_F20:                               // Sun Cut key
       if(isEditable()){
-        handle(this,MKUINT(ID_CUT_SEL,SEL_COMMAND),NULL);
+        handle(this,FXSEL(SEL_COMMAND,ID_CUT_SEL),NULL);
         }
       else{
         getApp()->beep();
@@ -2908,12 +2874,14 @@ long FXText::onKeyPress(FXObject*,FXSelector,void* ptr){
       return 1;
     case KEY_c:
       if(!(event->state&CONTROLMASK)) goto ins;
-      handle(this,MKUINT(ID_COPY_SEL,SEL_COMMAND),NULL);
+    case KEY_F16:                               // Sun Copy key
+      handle(this,FXSEL(SEL_COMMAND,ID_COPY_SEL),NULL);
       return 1;
     case KEY_v:
       if(!(event->state&CONTROLMASK)) goto ins;
+    case KEY_F18:                               // Sun Paste key
       if(isEditable()){
-        handle(this,MKUINT(ID_PASTE_SEL,SEL_COMMAND),NULL);
+        handle(this,FXSEL(SEL_COMMAND,ID_PASTE_SEL),NULL);
         }
       else{
         getApp()->beep();
@@ -2922,17 +2890,11 @@ long FXText::onKeyPress(FXObject*,FXSelector,void* ptr){
     default:
 ins:  if((event->state&(CONTROLMASK|ALTMASK)) || ((FXuchar)event->text[0]<32)) return 0;
       if(isEditable()){
-        if(isPosSelected(cursorpos)){
-          handle(this,MKUINT(ID_DELETE_SEL,SEL_COMMAND),NULL);
-          }
-        else{
-          handle(this,MKUINT(ID_DESELECT_ALL,SEL_COMMAND),NULL);
-          }
         if(options&TEXT_OVERSTRIKE){
-          handle(this,MKUINT(ID_OVERST_STRING,SEL_COMMAND),(void*)event->text.text());
+          handle(this,FXSEL(SEL_COMMAND,ID_OVERST_STRING),(void*)event->text.text());
           }
         else{
-          handle(this,MKUINT(ID_INSERT_STRING,SEL_COMMAND),(void*)event->text.text());
+          handle(this,FXSEL(SEL_COMMAND,ID_INSERT_STRING),(void*)event->text.text());
           }
         }
       else{
@@ -2949,13 +2911,13 @@ long FXText::onKeyRelease(FXObject*,FXSelector,void* ptr){
   FXEvent* event=(FXEvent*)ptr;
   if(!isEnabled()) return 0;
   FXTRACE((200,"%s::onKeyRelease keysym=0x%04x state=%04x\n",getClassName(),event->code,event->state));
-  if(target && target->handle(this,MKUINT(message,SEL_KEYRELEASE),ptr)) return 1;
+  if(target && target->handle(this,FXSEL(SEL_KEYRELEASE,message),ptr)) return 1;
   switch(event->code){
     case KEY_Shift_L:
     case KEY_Shift_R:
     case KEY_Control_L:
     case KEY_Control_R:
-      if(mode==MOUSE_DRAG){handle(this,MKUINT(0,SEL_DRAGGED),ptr);}
+      if(mode==MOUSE_DRAG){handle(this,FXSEL(SEL_DRAGGED,0),ptr);}
       return 1;
     }
   return 0;
@@ -3094,6 +3056,24 @@ long FXText::onCmdCursorWordRight(FXObject*,FXSelector,void*){
   }
 
 
+// Word Start
+long FXText::onCmdCursorWordStart(FXObject*,FXSelector,void*){
+  setCursorPos(wordStart(cursorpos),TRUE);
+  makePositionVisible(cursorpos);
+  flashMatching();
+  return 1;
+  }
+
+
+// Word End
+long FXText::onCmdCursorWordEnd(FXObject*,FXSelector,void*){
+  setCursorPos(wordEnd(cursorpos),TRUE);
+  makePositionVisible(cursorpos);
+  flashMatching();
+  return 1;
+  }
+
+
 // Cursor pos to top of screen
 long FXText::onCmdCursorScreenTop(FXObject*,FXSelector,void*){
   setTopLine(cursorpos);
@@ -3161,49 +3141,56 @@ long FXText::onCmdExtend(FXObject*,FXSelector,void*){
 
 // Overstrike a string
 long FXText::onCmdOverstString(FXObject*,FXSelector,void* ptr){
-  register FXint sindent,oindent,nindent,pos,ch,len;
-  register FXchar* string;
-  string=(FXchar*)ptr;
-  len=strlen(string);
+  FXint sindent,oindent,nindent,pos,ch,reppos,replen;
+  FXchar* string=(FXchar*)ptr;
+  FXint len=strlen(string);
   if(!isEditable()) return 1;
-  sindent=0;
-  pos=lineStart(cursorpos);
-  while(pos<cursorpos){                         // Measure indent of cursorpos
-    if(getChar(pos)=='\t')
-      sindent+=(tabcolumns-sindent%tabcolumns);
-    else
-      sindent+=1;
-    pos++;
+  if(isPosSelected(cursorpos)){
+    reppos=selstartpos;
+    replen=selendpos-selstartpos;
     }
-  nindent=sindent;
-  pos=0;
-  while(pos<len){                               // Measure indent of new string
-    if(string[pos]=='\t')
-      nindent+=(tabcolumns-nindent%tabcolumns);
-    else
-      nindent+=1;
-    pos++;
-    }
-  oindent=sindent;
-  pos=cursorpos;
-  while(pos<length && (ch=getChar(pos))!='\n'){ // Measure indent of old string
-    if(ch=='\t')
-      oindent+=(tabcolumns-oindent%tabcolumns);
-    else
-      oindent+=1;
-    if(oindent==nindent){                       // Same indent
-      pos++;                                    // Include last character
-      break;
+  else{
+    sindent=0;
+    pos=lineStart(cursorpos);
+    while(pos<cursorpos){                               // Measure indent of reppos
+      if(getChar(pos)=='\t')
+        sindent+=(tabcolumns-sindent%tabcolumns);
+      else
+        sindent+=1;
+      pos++;
       }
-    if(oindent>nindent){                        // Greater indent
-      if(ch!='\t') pos++;                       // Don't include last character if it was a tab
-      break;
+    nindent=sindent;
+    pos=0;
+    while(pos<len){                                     // Measure indent of new string
+      if(string[pos]=='\t')
+        nindent+=(tabcolumns-nindent%tabcolumns);
+      else
+        nindent+=1;
+      pos++;
       }
-    pos++;
+    oindent=sindent;
+    pos=cursorpos;
+    while(pos<length && (ch=getChar(pos))!='\n'){       // Measure indent of old string
+      if(ch=='\t')
+        oindent+=(tabcolumns-oindent%tabcolumns);
+      else
+        oindent+=1;
+      if(oindent==nindent){                             // Same indent
+        pos++;                                          // Include last character
+        break;
+        }
+      if(oindent>nindent){                              // Greater indent
+        if(ch!='\t') pos++;                             // Don't include last character if it was a tab
+        break;
+        }
+      pos++;
+      }
+    reppos=cursorpos;
+    replen=pos-reppos;
     }
-  //FXTRACE((100,"onCmdOverstString: sindent=%d oindent=%d nindent=%d cursorpos=%d pos=%d len=%d pad=%d\n",sindent,oindent,nindent,cursorpos,pos,len,pad));
-  replaceText(cursorpos,pos-cursorpos,string,len,TRUE);
-  setCursorPos(cursorpos,TRUE);
+  replaceText(reppos,replen,string,len,TRUE);
+  killSelection(TRUE);
+  setCursorPos(reppos+len,TRUE);
   makePositionVisible(cursorpos);
   flashMatching();
   flags|=FLAG_CHANGED;
@@ -3216,9 +3203,16 @@ long FXText::onCmdOverstString(FXObject*,FXSelector,void* ptr){
 long FXText::onCmdInsertString(FXObject*,FXSelector,void* ptr){
   FXchar* string=(FXchar*)ptr;
   FXint len=strlen(string);
+  FXint reppos=cursorpos;
+  FXint replen=0;
   if(!isEditable()) return 1;
-  insertText(cursorpos,string,len,TRUE);
-  setCursorPos(cursorpos,TRUE);
+  if(isPosSelected(cursorpos)){
+    reppos=selstartpos;
+    replen=selendpos-selstartpos;
+    }
+  replaceText(reppos,replen,string,len,TRUE);
+  killSelection(TRUE);
+  setCursorPos(reppos+len,TRUE);
   makePositionVisible(cursorpos);
   flashMatching();
   flags|=FLAG_CHANGED;
@@ -3229,27 +3223,33 @@ long FXText::onCmdInsertString(FXObject*,FXSelector,void* ptr){
 
 // Insert a character
 long FXText::onCmdInsertNewline(FXObject*,FXSelector,void*){
-  FXint start,end,n;
-  FXchar *text;
+  FXint reppos=cursorpos;
+  FXint replen=0;
+  FXint len=1;
   if(!isEditable()) return 1;
+  if(isPosSelected(cursorpos)){
+    reppos=selstartpos;
+    replen=selendpos-selstartpos;
+    }
   if(options&TEXT_AUTOINDENT){
-    start=lineStart(cursorpos);
-    end=start;
-    while(end<cursorpos){
+    FXint start=lineStart(reppos);
+    FXint end=start;
+    FXchar *string;
+    while(end<reppos){
       if(!isspace(getChar(end))) break;
       end++;
       }
-    n=end-start+1;
-    FXMALLOC(&text,FXchar,n);
-    text[0]='\n';
-    extractText(&text[1],start,end-start);
-    insertText(cursorpos,text,n,TRUE);
-    FXFREE(&text);
+    len=end-start+1;
+    FXMALLOC(&string,FXchar,len);
+    string[0]='\n';
+    extractText(&string[1],start,end-start);
+    replaceText(reppos,replen,string,len,TRUE);
+    FXFREE(&string);
     }
   else{
-    insertText(cursorpos,"\n",1,TRUE);
+    replaceText(reppos,replen,"\n",1,TRUE);
     }
-  setCursorPos(cursorpos,TRUE);
+  setCursorPos(reppos+len,TRUE);
   makePositionVisible(cursorpos);
   flags|=FLAG_CHANGED;
   modified=TRUE;
@@ -3260,29 +3260,35 @@ long FXText::onCmdInsertNewline(FXObject*,FXSelector,void*){
 
 // Insert a character
 long FXText::onCmdInsertTab(FXObject*,FXSelector,void*){
-  FXint start,indent,n;
-  FXchar *text;
+  FXint reppos=cursorpos;
+  FXint replen=0;
+  FXint len=1;
   if(!isEditable()) return 1;
+  if(isPosSelected(cursorpos)){
+    reppos=selstartpos;
+    replen=selendpos-selstartpos;
+    }
   if(options&TEXT_NO_TABS){
-    start=lineStart(cursorpos);
-    indent=0;
-    while(start<cursorpos){
+    FXint start=lineStart(reppos);
+    FXint indent=0;
+    FXchar *string;
+    while(start<reppos){
       if(getChar(start)=='\t')
         indent+=(tabcolumns-indent%tabcolumns);
       else
         indent+=1;
       start++;
       }
-    n=tabcolumns-indent%tabcolumns;
-    FXMALLOC(&text,FXchar,n);
-    memset(text,' ',n);
-    insertText(cursorpos,text,n,TRUE);
-    FXFREE(&text);
+    len=tabcolumns-indent%tabcolumns;
+    FXMALLOC(&string,FXchar,len);
+    memset(string,' ',len);
+    replaceText(reppos,replen,string,len,TRUE);
+    FXFREE(&string);
     }
   else{
-    insertText(cursorpos,"\t",1,TRUE);
+    replaceText(reppos,replen,"\t",1,TRUE);
     }
-  setCursorPos(cursorpos,TRUE);
+  setCursorPos(reppos+len,TRUE);
   makePositionVisible(cursorpos);
   flags|=FLAG_CHANGED;
   modified=TRUE;
@@ -3308,7 +3314,7 @@ long FXText::onCmdCutSel(FXObject*,FXSelector,void*){
           }
         else{
           extractText(clipbuffer,selstartpos,cliplength);
-          handle(this,MKUINT(ID_DELETE_SEL,SEL_COMMAND),NULL);
+          handle(this,FXSEL(SEL_COMMAND,ID_DELETE_SEL),NULL);
           }
         }
       }
@@ -3344,24 +3350,47 @@ long FXText::onCmdCopySel(FXObject*,FXSelector,void*){
   }
 
 
-// Paste
-long FXText::onCmdPasteSel(FXObject*,FXSelector,void*){
-  FXuchar *data; FXuint len;
-  if(isEditable()){
-    if(selstartpos<selendpos){
-      handle(this,MKUINT(ID_DELETE_SEL,SEL_COMMAND),NULL);
+// Delete selection
+long FXText::onCmdDeleteSel(FXObject*,FXSelector,void*){
+  if(selstartpos<selendpos){
+    if(isEditable()){
+      removeText(selstartpos,selendpos-selstartpos,TRUE);
+      killSelection(TRUE);
+      setCursorPos(cursorpos,TRUE);
+      makePositionVisible(cursorpos);
+      flags|=FLAG_CHANGED;
+      modified=TRUE;
       }
-    if(getDNDData(FROM_CLIPBOARD,stringType,data,len)){
-      FXRESIZE(&data,FXuchar,len+1); data[len]='\0';
+    else{
+      getApp()->beep();
+      }
+    }
+  return 1;
+  }
+
+
+// Paste clipboard
+long FXText::onCmdPasteSel(FXObject*,FXSelector,void*){
+  FXchar *string; FXint reppos,replen,len;
+  if(isEditable()){
+    if(getDNDData(FROM_CLIPBOARD,stringType,(FXuchar*&)string,(FXuint&)len)){
 #ifdef WIN32
-      FXuint i,j;
-      FXuchar c;
-      for(i=j=0; j<len; j++){if((c=data[j])!='\r'){data[i++]=c;}}
-      data[i]='\0';
+      fxfromDOS(string,len);
 #endif
-      handle(this,MKUINT(ID_INSERT_STRING,SEL_COMMAND),(void*)data);
-      FXFREE(&data);
-      return 1;
+      reppos=cursorpos;
+      replen=0;
+      if(isPosSelected(cursorpos)){
+        reppos=selstartpos;
+        replen=selendpos-selstartpos;
+        }
+      replaceText(reppos,replen,string,len,TRUE);
+      FXFREE(&string);
+      killSelection(TRUE);
+      setCursorPos(reppos+len,TRUE);
+      makePositionVisible(cursorpos);
+      flashMatching();
+      flags|=FLAG_CHANGED;
+      modified=TRUE;
       }
     }
   else{
@@ -3371,15 +3400,28 @@ long FXText::onCmdPasteSel(FXObject*,FXSelector,void*){
   }
 
 
-// Delete selection
-long FXText::onCmdDeleteSel(FXObject*,FXSelector,void*){
-  if(selstartpos>=selendpos) return 1;
-  removeText(selstartpos,selendpos-selstartpos,TRUE);
-  killSelection(TRUE);
-  setCursorPos(cursorpos,TRUE);
-  makePositionVisible(cursorpos);
-  flags|=FLAG_CHANGED;
-  modified=TRUE;
+// Paste selection
+long FXText::onCmdPasteMiddle(FXObject*,FXSelector,void*){
+  FXchar *string; FXint len;
+  if(selstartpos==selendpos || cursorpos<=selstartpos || selendpos<=cursorpos){ // Avoid paste inside selection
+    if(isEditable()){
+      if(getDNDData(FROM_SELECTION,stringType,(FXuchar*&)string,(FXuint&)len)){
+#ifdef WIN32
+        fxfromDOS(string,len);
+#endif
+        insertText(cursorpos,string,len,TRUE);                                  // Don't kill selection; we may paste again
+        FXFREE(&string);
+        setCursorPos(cursorpos,TRUE);
+        makePositionVisible(cursorpos);
+        flashMatching();
+        flags|=FLAG_CHANGED;
+        modified=TRUE;
+        }
+      }
+    else{
+      getApp()->beep();
+      }
+    }
   return 1;
   }
 
@@ -3488,7 +3530,7 @@ long FXText::onCmdDeleteWord(FXObject*,FXSelector,void*){
   }
 
 
-// Delete end of line
+// Delete to end of line
 long FXText::onCmdDeleteEol(FXObject*,FXSelector,void*){
   if(!isEditable()) return 1;
   FXint num=rowEnd(cursorpos)-cursorpos;
@@ -3515,6 +3557,18 @@ long FXText::onCmdDeleteLine(FXObject*,FXSelector,void*){
   }
 
 
+// Delete all text
+long FXText::onCmdDeleteAll(FXObject*,FXSelector,void*){
+  if(!isEditable()) return 1;
+  removeText(0,length,TRUE);
+  setCursorPos(0,TRUE);
+  makePositionVisible(0);
+  flags|=FLAG_CHANGED;
+  modified=TRUE;
+  return 1;
+  }
+
+
 // Make selected text upper case
 long FXText::onCmdChangeCase(FXObject*,FXSelector sel,void*){
   register FXint i,pos,num;
@@ -3524,7 +3578,7 @@ long FXText::onCmdChangeCase(FXObject*,FXSelector sel,void*){
   num=selendpos-selstartpos;
   FXMALLOC(&text,FXchar,num);
   extractText(text,pos,num);
-  if(SELID(sel)==ID_UPPER_CASE){
+  if(FXSELID(sel)==ID_UPPER_CASE){
     for(i=0; i<num; i++) text[i]=toupper((FXuchar)text[i]);
     }
   else{
@@ -3619,7 +3673,7 @@ long FXText::onCmdShiftText(FXObject*,FXSelector sel,void*){
   FXint start,end,len,amount;
   if(!isEditable()) return 1;
   amount=0;
-  switch(SELID(sel)){
+  switch(FXSELID(sel)){
     case ID_SHIFT_LEFT: amount=-1; break;
     case ID_SHIFT_RIGHT: amount=1; break;
     case ID_SHIFT_TABLEFT: amount=-tabcolumns; break;
@@ -3693,7 +3747,7 @@ static const FXchar lefthand[]="{[(<";
 long FXText::onCmdSelectBlock(FXObject*,FXSelector sel,void*){
   FXint beg,end,what,level=1;
   while(1){
-    what=SELID(sel)-ID_SELECT_BRACE;
+    what=FXSELID(sel)-ID_SELECT_BRACE;
     beg=matchBackward(cursorpos-1,0,lefthand[what],righthand[what],level);
     end=matchForward(cursorpos,length,lefthand[what],righthand[what],level);
     if(0<=beg && beg<end){
@@ -3711,7 +3765,7 @@ long FXText::onCmdSelectBlock(FXObject*,FXSelector sel,void*){
 
 // Goto start of enclosing block
 long FXText::onCmdBlockBeg(FXObject*,FXSelector sel,void*){
-  FXint what=SELID(sel)-ID_LEFT_BRACE;
+  FXint what=FXSELID(sel)-ID_LEFT_BRACE;
   FXint beg=cursorpos-1;
   if(0<beg){
     if(getChar(beg)==lefthand[what]) beg--;
@@ -3729,7 +3783,7 @@ long FXText::onCmdBlockBeg(FXObject*,FXSelector sel,void*){
 
 // Goto end of enclosing block
 long FXText::onCmdBlockEnd(FXObject*,FXSelector sel,void*){
-  FXint what=SELID(sel)-ID_RIGHT_BRACE;
+  FXint what=FXSELID(sel)-ID_RIGHT_BRACE;
   FXint start=cursorpos;
   if(start<length){
     if(getChar(start)==righthand[what]) start++;
@@ -3747,22 +3801,26 @@ long FXText::onCmdBlockEnd(FXObject*,FXSelector sel,void*){
 
 // Search for selected text
 long FXText::onCmdSearchSel(FXObject*,FXSelector sel,void*){
-  FXchar *data; FXuint len;
-  if(getDNDData(FROM_SELECTION,stringType,(FXuchar*&)data,len)){
-    FXString searchstring(data,len);
-    FXuint   searchflags;
-    FXint    beg,end,pos;
-    pos=cursorpos;
+  FXchar *data;
+  FXint len;
+  if(getDNDData(FROM_SELECTION,stringType,(FXuchar*&)data,(FXuint&)len)){
+    FXint pos=cursorpos;
+    FXint beg,end;
+#ifdef WIN32
+    fxfromDOS(data,len);
+#endif
+    searchstring.assign(data,len);
+    searchflags=SEARCH_EXACT;
     FXFREE(&data);
-    if(SELID(sel)==ID_SEARCH_FORW_SEL){
+    if(FXSELID(sel)==ID_SEARCH_FORW_SEL){
       if(isPosSelected(pos)) pos=selendpos;
-      searchflags=SEARCH_WRAP|SEARCH_FORWARD;
+      searchflags&=~SEARCH_BACKWARD;
       }
     else{
       if(isPosSelected(pos)) pos=selstartpos-1;
-      searchflags=SEARCH_WRAP|SEARCH_BACKWARD;
+      searchflags|=SEARCH_BACKWARD;
       }
-    if(findText(searchstring,&beg,&end,pos,searchflags)){
+    if(findText(searchstring,&beg,&end,pos,searchflags|SEARCH_WRAP)){
       if(beg!=selstartpos || end!=selendpos){
         setAnchorPos(beg);
         extendSelection(end,SELECT_CHARS,TRUE);
@@ -3778,17 +3836,29 @@ long FXText::onCmdSearchSel(FXObject*,FXSelector sel,void*){
   }
 
 
-// Goto selected line number
-long FXText::onCmdGotoSelected(FXObject*,FXSelector,void*){
-  FXchar *data; FXuint len; FXint row,num;
-  if(getDNDData(FROM_SELECTION,stringType,(FXuchar*&)data,len)){
-    FXRESIZE(&data,FXchar,len+1); data[len]='\0';
-    num=sscanf(data,"%d",&row);
-    FXFREE(&data);
-    if(num==1){
-      setCursorRow(row-1,TRUE);
-      makePositionVisible(cursorpos);
-      return 1;
+// Search for next occurence
+long FXText::onCmdSearchNext(FXObject*,FXSelector sel,void*){
+  if(!searchstring.empty()){
+    FXint pos=cursorpos;
+    FXint beg[10];
+    FXint end[10];
+    if(FXSELID(sel)==ID_SEARCH_FORW){
+      if(isPosSelected(pos)) pos=selendpos;
+      searchflags&=~SEARCH_BACKWARD;
+      }
+    else{
+      if(isPosSelected(pos)) pos=selstartpos-1;
+      searchflags|=SEARCH_BACKWARD;
+      }
+    if(findText(searchstring,beg,end,pos,searchflags|SEARCH_WRAP,10)){
+      if(beg[0]!=selstartpos || end[0]!=selendpos){
+        setAnchorPos(beg[0]);
+        extendSelection(end[0],SELECT_CHARS,TRUE);
+        setCursorPos(end[0]);
+        makePositionVisible(beg[0]);
+        makePositionVisible(end[0]);
+        return 1;
+        }
       }
     }
   getApp()->beep();
@@ -3800,14 +3870,15 @@ long FXText::onCmdGotoSelected(FXObject*,FXSelector,void*){
 long FXText::onCmdSearch(FXObject*,FXSelector,void*){
   FXGIFIcon icon(getApp(),searchicon);
   FXSearchDialog searchdialog(this,"Search",&icon);
-  FXint beg[10],end[10],pos;
-  FXuint searchflags,code;
-  FXString searchstring;
+  FXint beg[10];
+  FXint end[10];
+  FXint pos;
+  FXuint code;
   do{
     code=searchdialog.execute();
     if(code==FXSearchDialog::DONE) return 1;
-    searchflags=searchdialog.getSearchMode();
     searchstring=searchdialog.getSearchText();
+    searchflags=searchdialog.getSearchMode();
     pos=isPosSelected(cursorpos) ? (searchflags&SEARCH_BACKWARD) ? selstartpos-1 : selendpos : cursorpos;
     if(findText(searchstring,beg,end,pos,searchflags|SEARCH_WRAP,10)){
       setAnchorPos(beg[0]);
@@ -3879,6 +3950,27 @@ long FXText::onCmdReplace(FXObject*,FXSelector,void*){
   }
 
 
+// Goto selected line number
+long FXText::onCmdGotoSelected(FXObject*,FXSelector,void*){
+  FXchar *data; FXint len,row,i;
+  if(getDNDData(FROM_SELECTION,stringType,(FXuchar*&)data,(FXuint&)len)){
+#ifdef WIN32
+    fxfromDOS(data,len);
+#endif
+    for(i=0; i<len && !isdigit((FXuchar)data[i]); i++);
+    for(row=0; i<len && isdigit((FXuchar)data[i]); i++) row=row*10+(data[i]-'0');
+    FXFREE(&data);
+    if(1<=row){
+      setCursorRow(row-1,TRUE);
+      makePositionVisible(cursorpos);
+      return 1;
+      }
+    }
+  getApp()->beep();
+  return 1;
+  }
+
+
 // Goto line number
 long FXText::onCmdGotoLine(FXObject*,FXSelector,void*){
   FXGIFIcon icon(getApp(),gotoicon);
@@ -3903,10 +3995,9 @@ long FXText::onCmdToggleEditable(FXObject*,FXSelector,void*){
 
 // Update editable toggle
 long FXText::onUpdToggleEditable(FXObject* sender,FXSelector,void*){
-  FXuint msg=(options&TEXT_READONLY) ? ID_UNCHECK : ID_CHECK;
-  sender->handle(this,MKUINT(ID_SHOW,SEL_COMMAND),NULL);
-  sender->handle(this,MKUINT(ID_ENABLE,SEL_COMMAND),NULL);
-  sender->handle(this,MKUINT(msg,SEL_COMMAND),NULL);
+  sender->handle(this,(options&TEXT_READONLY)?FXSEL(SEL_COMMAND,ID_UNCHECK):FXSEL(SEL_COMMAND,ID_CHECK),NULL);
+  sender->handle(this,FXSEL(SEL_COMMAND,ID_SHOW),NULL);
+  sender->handle(this,FXSEL(SEL_COMMAND,ID_ENABLE),NULL);
   return 1;
   }
 
@@ -3920,10 +4011,9 @@ long FXText::onCmdToggleOverstrike(FXObject*,FXSelector,void*){
 
 // Update overstrike toggle
 long FXText::onUpdToggleOverstrike(FXObject* sender,FXSelector,void*){
-  FXuint msg=(options&TEXT_OVERSTRIKE) ? ID_CHECK : ID_UNCHECK;
-  sender->handle(this,MKUINT(ID_SHOW,SEL_COMMAND),NULL);
-  sender->handle(this,MKUINT(ID_ENABLE,SEL_COMMAND),NULL);
-  sender->handle(this,MKUINT(msg,SEL_COMMAND),NULL);
+  sender->handle(this,(options&TEXT_OVERSTRIKE)?FXSEL(SEL_COMMAND,ID_CHECK):FXSEL(SEL_COMMAND,ID_UNCHECK),NULL);
+  sender->handle(this,FXSEL(SEL_COMMAND,ID_SHOW),NULL);
+  sender->handle(this,FXSEL(SEL_COMMAND,ID_ENABLE),NULL);
   return 1;
   }
 
@@ -3931,7 +4021,7 @@ long FXText::onUpdToggleOverstrike(FXObject* sender,FXSelector,void*){
 // Move cursor to indicated row
 long FXText::onCmdCursorRow(FXObject* sender,FXSelector,void*){
   FXint row=cursorrow+1;
-  sender->handle(this,MKUINT(FXWindow::ID_GETINTVALUE,SEL_COMMAND),(void*)&row);
+  sender->handle(this,FXSEL(SEL_COMMAND,ID_GETINTVALUE),(void*)&row);
   setCursorRow(row-1,TRUE);
   makePositionVisible(cursorpos);
   return 1;
@@ -3941,7 +4031,7 @@ long FXText::onCmdCursorRow(FXObject* sender,FXSelector,void*){
 // Being asked about current row number
 long FXText::onUpdCursorRow(FXObject* sender,FXSelector,void*){
   FXint row=cursorrow+1;
-  sender->handle(this,MKUINT(FXWindow::ID_SETINTVALUE,SEL_COMMAND),(void*)&row);
+  sender->handle(this,FXSEL(SEL_COMMAND,ID_SETINTVALUE),(void*)&row);
   return 1;
   }
 
@@ -3949,8 +4039,8 @@ long FXText::onUpdCursorRow(FXObject* sender,FXSelector,void*){
 // Move cursor to indicated column
 long FXText::onCmdCursorColumn(FXObject* sender,FXSelector,void*){
   FXint col=cursorcol;
-  sender->handle(this,MKUINT(FXWindow::ID_GETINTVALUE,SEL_COMMAND),(void*)&col);
-  setCursorCol(col,TRUE);
+  sender->handle(this,FXSEL(SEL_COMMAND,ID_GETINTVALUE),(void*)&col);
+  setCursorColumn(col,TRUE);
   makePositionVisible(cursorpos);
   return 1;
   }
@@ -3958,18 +4048,23 @@ long FXText::onCmdCursorColumn(FXObject* sender,FXSelector,void*){
 
 // Being asked about current column
 long FXText::onUpdCursorColumn(FXObject* sender,FXSelector,void*){
-  sender->handle(this,MKUINT(FXWindow::ID_SETINTVALUE,SEL_COMMAND),(void*)&cursorcol);
+  sender->handle(this,FXSEL(SEL_COMMAND,FXWindow::ID_SETINTVALUE),(void*)&cursorcol);
   return 1;
   }
 
 
 // Update somebody who works on the selection
 long FXText::onUpdHaveSelection(FXObject* sender,FXSelector,void* ptr){
-  FXuint msg=(selstartpos<selendpos) ? ID_ENABLE : ID_DISABLE;
-  sender->handle(this,MKUINT(msg,SEL_COMMAND),ptr);
+  sender->handle(this,(selstartpos<selendpos)?FXSEL(SEL_COMMAND,ID_ENABLE):FXSEL(SEL_COMMAND,ID_DISABLE),ptr);
   return 1;
   }
 
+
+// Update somebody who works on the selection
+long FXText::onUpdSelectAll(FXObject* sender,FXSelector,void* ptr){
+  sender->handle(this,(length==0)?FXSEL(SEL_COMMAND,ID_DISABLE):FXSEL(SEL_COMMAND,ID_ENABLE),ptr);
+  return 1;
+  }
 
 /*******************************************************************************/
 
@@ -3977,12 +4072,12 @@ long FXText::onUpdHaveSelection(FXObject* sender,FXSelector,void* ptr){
 // Draw fragment of text in given style
 void FXText::drawBufferText(FXDCWindow& dc,FXint x,FXint y,FXint,FXint,FXint pos,FXint n,FXuint style) const {
   register FXuint index=(style&STYLE_MASK);
-//register FXuint usedstyle=style;                                              // Style flags from style buffer
+  register FXuint usedstyle=style;                                              // Style flags from style buffer
   register FXColor color;
   FXchar str[2];
   color=0;
   if(hilitestyles && index){                                                    // Get colors from style table
-//  usedstyle=hilitestyles[index-1].style;                                      // Style flags now from style table
+    usedstyle=hilitestyles[index-1].style;                                      // Style flags now from style table
     if(style&STYLE_SELECTED) color=hilitestyles[index-1].selectForeColor;
     else if(style&STYLE_HILITE) color=hilitestyles[index-1].hiliteForeColor;
     if(color==0) color=hilitestyles[index-1].normalForeColor;                   // Fall back on normal foreground color
@@ -3999,6 +4094,7 @@ void FXText::drawBufferText(FXDCWindow& dc,FXint x,FXint y,FXint,FXint,FXint pos
     while(pos<gapstart && 0<n){
       str[1]=buffer[pos]|0x40;
       dc.drawText(x,y,str,2);
+      if(usedstyle&STYLE_BOLD) dc.drawText(x+1,y,str,2);
       x+=font->getTextWidth(str,2);
       pos++;
       n--;
@@ -4006,6 +4102,7 @@ void FXText::drawBufferText(FXDCWindow& dc,FXint x,FXint y,FXint,FXint,FXint pos
     while(0<n){
       str[1]=buffer[pos-gapstart+gapend]|0x40;
       dc.drawText(x,y,str,2);
+      if(usedstyle&STYLE_BOLD) dc.drawText(x+1,y,str,2);
       x+=font->getTextWidth(str,2);
       pos++;
       n--;
@@ -4015,14 +4112,17 @@ void FXText::drawBufferText(FXDCWindow& dc,FXint x,FXint y,FXint,FXint,FXint pos
     y+=font->getFontAscent();
     if(pos+n<=gapstart){
       dc.drawText(x,y,&buffer[pos],n);
+      if(usedstyle&STYLE_BOLD) dc.drawText(x+1,y,&buffer[pos],n);
       }
     else if(pos>=gapstart){
       dc.drawText(x,y,&buffer[pos-gapstart+gapend],n);
+      if(usedstyle&STYLE_BOLD) dc.drawText(x+1,y,&buffer[pos-gapstart+gapend],n);
       }
     else{
       dc.drawText(x,y,&buffer[pos],gapstart-pos);
       x+=font->getTextWidth(&buffer[pos],gapstart-pos);
       dc.drawText(x,y,&buffer[gapend],pos+n-gapstart);
+      if(usedstyle&STYLE_BOLD) dc.drawText(x+1,y,&buffer[gapend],pos+n-gapstart);
       }
     }
   }
@@ -4171,51 +4271,56 @@ void FXText::drawTextRow(FXDCWindow& dc,FXint line,FXint left,FXint right) const
   }
 
 
-// Show or hide cursor
-void FXText::showCursor(FXuint state){
-  if((state^flags)&FLAG_CARET){
-    flags^=FLAG_CARET;
-    drawCursor(flags&FLAG_CARET);
-    }
-  }
-
-
 // Draw the cursor
 void FXText::drawCursor(FXuint state){
-  register FXint xx,yt,yb,fh;
-  if(!id()) return;
-  FXASSERT(0<=cursorpos && cursorpos<=length);
-  FXASSERT(0<=cursorrow && cursorrow<=nrows);
-  if(toprow<=cursorrow && cursorrow<toprow+nvisrows){
-    xx=pos_x+marginleft+barwidth+lineWidth(cursorstart,cursorpos-cursorstart)-1;
-    if(barwidth<=xx+3 && xx-2<viewport_w){
-      FXDCWindow dc(this);
-      fh=font->getFontHeight();
-      yt=pos_y+margintop+cursorrow*fh;
-      yb=yt+fh-1;
-      dc.setClipRectangle(barwidth,0,viewport_w-barwidth,viewport_h);
-      if(!(state&FLAG_CARET)){
+  register FXint xx,yt,yb,xlo,xhi,fh;
+  if((state^flags)&FLAG_CARET){
+    if(xid){
+      FXASSERT(0<=cursorpos && cursorpos<=length);
+      FXASSERT(0<=cursorrow && cursorrow<=nrows);
+      if(toprow<=cursorrow && cursorrow<toprow+nvisrows){
+        xx=pos_x+marginleft+barwidth+lineWidth(cursorstart,cursorpos-cursorstart)-1;
+        if(barwidth<=xx+3 && xx-2<viewport_w){
+          FXDCWindow dc(this);
+          fh=font->getFontHeight();
+          yt=pos_y+margintop+cursorrow*fh;
+          yb=yt+fh-1;
 
-        // Repaint cursor in background to erase it
-        dc.setForeground(backColor);
-        dc.fillRectangle(xx,yt,2,yb-yt);
-        dc.fillRectangle(xx-2,yt,6,1);
-        dc.fillRectangle(xx-2,yb,6,1);
+          // Cursor can overhang margins but not line number bar
+          dc.setClipRectangle(barwidth,0,viewport_w-barwidth,viewport_h);
 
-        // Clip repaint of the text to the margins
-        dc.setClipRectangle(marginleft+barwidth,margintop,viewport_w-marginleft-barwidth-marginright,viewport_h-margintop-marginbottom);
+          // Draw I beam
+          if(state&FLAG_CARET){
 
-        // Restore text
-        dc.setTextFont(font);
-        drawTextRow(dc,cursorrow-toprow,xx-3,xx+3);
-        }
-      else{
-        dc.setForeground(cursorColor);
-        dc.fillRectangle(xx,yt,2,yb-yt);
-        dc.fillRectangle(xx-2,yt,6,1);
-        dc.fillRectangle(xx-2,yb,6,1);
+            // Draw I-beam
+            dc.setForeground(cursorColor);
+            dc.fillRectangle(xx,yt,2,yb-yt);
+            dc.fillRectangle(xx-2,yt,6,1);
+            dc.fillRectangle(xx-2,yb,6,1);
+            }
+
+          // Erase I-beam
+          else{
+
+            // Erase I-beam, plus the text immediately surrounding it
+            dc.setForeground(backColor);
+            dc.fillRectangle(xx-2,yt,6,yb-yt+1);
+
+            // Clip the text to the margins AND the rectangle that was
+            // just erased.  We don't want to overdraw any existing
+            // characters, because of ClearType.
+            xlo=FXMAX(xx-2,marginleft+barwidth);
+            xhi=FXMIN(xx+4,viewport_w-marginright);
+            dc.setClipRectangle(xlo,margintop,xhi-xlo,viewport_h-margintop-marginbottom);
+
+            // Restore text
+            dc.setFont(font);
+            drawTextRow(dc,cursorrow-toprow,xx-3,xx+4);
+            }
+          }
         }
       }
+    flags^=FLAG_CARET;
     }
   }
 
@@ -4223,7 +4328,6 @@ void FXText::drawCursor(FXuint state){
 // Erase cursor overhang outside of margins
 void FXText::eraseCursorOverhang(){
   register FXint xx,yt,yb,fh;
-  //FXTRACE((1,"cursorpos=%d cursorrow=%d length=%d nrows=%d\n",cursorpos,cursorrow,length,nrows));
   FXASSERT(0<=cursorpos && cursorpos<=length);
   FXASSERT(0<=cursorrow && cursorrow<=nrows);
   if(toprow<=cursorrow && cursorrow<toprow+nvisrows){
@@ -4292,7 +4396,7 @@ void FXText::drawNumbers(FXDCWindow& dc,FXint x,FXint y,FXint w,FXint h) const {
 
 
 // Repaint text range
-void FXText::updateRange(FXint beg,FXint end){
+void FXText::updateRange(FXint beg,FXint end) const {
   register FXint tl,bl,fc,lc,ty,by,lx,rx,t;
   if(beg>end){t=beg;beg=end;end=t;}
   if(beg<visrows[nvisrows] && visrows[0]<end && beg<end){
@@ -4323,7 +4427,7 @@ void FXText::updateRange(FXint beg,FXint end){
 long FXText::onPaint(FXObject*,FXSelector,void* ptr){
   FXEvent* event=(FXEvent*)ptr;
   FXDCWindow dc(this,event);
-  dc.setTextFont(font);
+  dc.setFont(font);
 //dc.setForeground(FXRGB(255,0,0));
 //dc.fillRectangle(event->rect.x,event->rect.y,event->rect.w,event->rect.h);
 
@@ -4375,7 +4479,7 @@ void FXText::setCursorPos(FXint pos,FXbool notify){
   if(pos>length) pos=length;
   if(pos<0) pos=0;
   if(cursorpos!=pos){
-    showCursor(0);
+    drawCursor(0);
     if(pos<cursorstart || cursorend<=pos){    // Move to other line?
       cursorstartold=cursorstart;
       cursorendold=cursorend;
@@ -4394,11 +4498,10 @@ void FXText::setCursorPos(FXint pos,FXbool notify){
       }
     cursorcol=indentFromPos(cursorstart,pos);
     cursorpos=pos;
-    FXTRACE((150,"setCursorPos(%d): cursorpos=%d cursorrow=%d cursorcol=%d cursorstartold=%d cursorstart=%d\n",pos,cursorpos,cursorrow,cursorcol,cursorstartold,cursorstart));
-    showCursor(FLAG_CARET);
+    drawCursor(FLAG_CARET);
     prefcol=-1;
     if(target && notify){
-      target->handle(this,MKUINT(message,SEL_CHANGED),(void*)(FXival)cursorpos);
+      target->handle(this,FXSEL(SEL_CHANGED,message),(void*)(FXival)cursorpos);
       }
     }
   }
@@ -4425,7 +4528,7 @@ void FXText::setCursorRow(FXint row,FXbool notify){
 
 
 // Set cursor column
-void FXText::setCursorCol(FXint col,FXbool notify){
+void FXText::setCursorColumn(FXint col,FXbool notify){
   FXint newpos;
   if(cursorcol!=col){
     newpos=posFromIndent(cursorstart,col);
@@ -4522,7 +4625,7 @@ FXbool FXText::setSelection(FXint pos,FXint len,FXbool notify){
       if(notify && target){
         what[0]=selstartpos;
         what[1]=selendpos-selstartpos;
-        target->handle(this,MKUINT(message,SEL_DESELECTED),(void*)what);
+        target->handle(this,FXSEL(SEL_DESELECTED,message),(void*)what);
         }
       if(hasSelection()) releaseSelection();
       }
@@ -4548,7 +4651,7 @@ FXbool FXText::setSelection(FXint pos,FXint len,FXbool notify){
       if(notify && target){
         what[0]=selstartpos;
         what[1]=selendpos-selstartpos;
-        target->handle(this,MKUINT(message,SEL_SELECTED),(void*)what);
+        target->handle(this,FXSEL(SEL_SELECTED,message),(void*)what);
         }
       }
     return TRUE;
@@ -4564,7 +4667,7 @@ FXbool FXText::killSelection(FXbool notify){
     if(notify && target){
       what[0]=selstartpos;
       what[1]=selendpos-selstartpos;
-      target->handle(this,MKUINT(message,SEL_DESELECTED),(void*)what);
+      target->handle(this,FXSEL(SEL_DESELECTED,message),(void*)what);
       }
     if(hasSelection()) releaseSelection();
     updateRange(selstartpos,selendpos);
@@ -4787,9 +4890,8 @@ void FXText::setBarColor(FXColor clr){
 // Set cursor color
 void FXText::setCursorColor(FXColor clr){
   if(clr!=cursorColor){
-    showCursor(0);
     cursorColor=clr;
-    showCursor(FLAG_CARET);
+    updateRange(cursorstart,cursorend);
     }
   }
 
@@ -4845,7 +4947,7 @@ void FXText::setHiliteStyles(const FXHiliteStyle* styles){
 
 
 // Change number of visible rows
-void FXText::setVisRows(FXint rows){
+void FXText::setVisibleRows(FXint rows){
   if(rows<0) rows=0;
   if(vrows!=rows){
     vrows=rows;
@@ -4855,7 +4957,7 @@ void FXText::setVisRows(FXint rows){
 
 
 // Change number of visible columns
-void FXText::setVisCols(FXint cols){
+void FXText::setVisibleColumns(FXint cols){
   if(cols<0) cols=0;
   if(vcols!=cols){
     vcols=cols;
@@ -4869,7 +4971,6 @@ void FXText::setVisCols(FXint cols){
 
 // Update value from a message
 long FXText::onCmdSetStringValue(FXObject*,FXSelector,void* ptr){
-  if(ptr==NULL){ fxerror("%s::onCmdSetStringValue: NULL pointer.\n",getClassName()); }
   setText(*((FXString*)ptr));
   return 1;
   }
@@ -4877,7 +4978,6 @@ long FXText::onCmdSetStringValue(FXObject*,FXSelector,void* ptr){
 
 // Obtain value from text
 long FXText::onCmdGetStringValue(FXObject*,FXSelector,void* ptr){
-  if(ptr==NULL){ fxerror("%s::onCmdGetStringValue: NULL pointer.\n",getClassName()); }
   *((FXString*)ptr)=getText();
   return 1;
   }
@@ -4900,7 +5000,6 @@ void FXText::save(FXStream& store) const {
   store << marginbottom;
   store << marginleft;
   store << marginright;
-  store << delimiters;
   store << font;
   store << textColor;
   store << selbackColor;
@@ -4931,7 +5030,6 @@ void FXText::load(FXStream& store){
   store >> marginbottom;
   store >> marginleft;
   store >> marginright;
-  store >> delimiters;
   store >> font;
   store >> textColor;
   store >> selbackColor;
@@ -4947,18 +5045,18 @@ void FXText::load(FXStream& store){
 
 // Clean up
 FXText::~FXText(){
-  if(blinker) getApp()->removeTimeout(blinker);
-  if(flasher) getApp()->removeTimeout(flasher);
+  getApp()->removeTimeout(this,ID_BLINK);
+  getApp()->removeTimeout(this,ID_FLASH);
   FXFREE(&buffer);
   FXFREE(&sbuffer);
   FXFREE(&visrows);
   FXFREE(&clipbuffer);
-  buffer=(FXchar*)-1;
-  sbuffer=(FXchar*)-1;
-  clipbuffer=(FXchar*)-1;
-  visrows=(FXint*)-1;
-  font=(FXFont*)-1;
-  hilitestyles=(FXHiliteStyle*)-1;
-  blinker=(FXTimer*)-1;
-  flasher=(FXTimer*)-1;
+  buffer=(FXchar*)-1L;
+  sbuffer=(FXchar*)-1L;
+  clipbuffer=(FXchar*)-1L;
+  visrows=(FXint*)-1L;
+  font=(FXFont*)-1L;
+  hilitestyles=(FXHiliteStyle*)-1L;
   }
+
+}

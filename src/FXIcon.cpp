@@ -3,7 +3,7 @@
 *                               I c o n - O b j e c t                           *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXIcon.cpp,v 1.47 2002/01/18 22:43:00 jeroen Exp $                       *
+* $Id: FXIcon.cpp,v 1.62 2004/04/28 16:29:07 fox Exp $                          *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -30,6 +30,7 @@
 #include "FXPoint.h"
 #include "FXRectangle.h"
 #include "FXRegistry.h"
+#include "FXHash.h"
 #include "FXApp.h"
 #include "FXVisual.h"
 #include "FXIcon.h"
@@ -45,6 +46,9 @@
     side-by-side in the space of one:- because the bitmaps are typically
     padded to a width of 32 anyway :-)  Either way, the overhead for the
     header will be smaller.
+  - When we make FXImage always to have an alpha channel, add method to set
+    alpha channel to transparent when color is equal to alpha-color.
+    This simplifies the shape/etch mask procedure.
 */
 
 #define DARKCOLOR(r,g,b) (((r)+(g)+(b))<382)
@@ -52,14 +56,18 @@
 
 #define DISPLAY(app) ((Display*)((app)->display))
 
+using namespace FX;
+
 /*******************************************************************************/
+
+namespace FX {
 
 // Object implementation
 FXIMPLEMENT(FXIcon,FXImage,NULL,0)
 
 
 // Initialize nicely
-FXIcon::FXIcon(FXApp* a,const void *pix,FXColor clr,FXuint opts,FXint w,FXint h):
+FXIcon::FXIcon(FXApp* a,const FXColor *pix,FXColor clr,FXuint opts,FXint w,FXint h):
   FXImage(a,pix,opts,w,h){
   FXTRACE((100,"FXIcon::FXIcon %p\n",this));
   shape=0;
@@ -70,21 +78,15 @@ FXIcon::FXIcon(FXApp* a,const void *pix,FXColor clr,FXuint opts,FXint w,FXint h)
 
 // Guess alpha color based on corners; the initial guess is standard GUI color
 FXColor FXIcon::guesstransp(){
-  register FXint tr,bl,br,best,t;
   register FXColor guess=FXRGB(192,192,192);
+  register FXint best,t;
   FXColor color[4];
   if(data && 0<width && 0<height){
     best=-1;
-    if(options&IMAGE_ALPHA){
-      tr=4*(width-1); bl=4*width*(height-1); br=bl+tr;
-      }
-    else{
-      tr=3*(width-1); bl=3*width*(height-1); br=bl+tr;
-      }
-    color[0]=FXRGB(data[0],data[1],data[2]);
-    color[1]=FXRGB(data[tr],data[tr+1],data[tr+2]);
-    color[2]=FXRGB(data[bl],data[bl+1],data[bl+2]);
-    color[3]=FXRGB(data[br],data[br+1],data[br+2]);
+    color[0]=getPixel(0,0);
+    color[1]=getPixel(width-1,0);
+    color[2]=getPixel(0,height-1);
+    color[3]=getPixel(width-1,height-1);
     if((t=((color[0]==color[1])+(color[0]==color[2])+(color[0]==color[3])))>best){ guess=color[0]; best=t; }
     if((t=((color[1]==color[2])+(color[1]==color[3])+(color[1]==color[0])))>best){ guess=color[1]; best=t; }
     if((t=((color[2]==color[3])+(color[2]==color[0])+(color[2]==color[1])))>best){ guess=color[2]; best=t; }
@@ -97,7 +99,7 @@ FXColor FXIcon::guesstransp(){
 // Create icon
 void FXIcon::create(){
   if(!xid){
-    if(getApp()->initialized){
+    if(getApp()->isInitialized()){
       FXTRACE((100,"%s::create %p\n",getClassName(),this));
 #ifndef WIN32
 
@@ -108,15 +110,15 @@ void FXIcon::create(){
       int dd=visual->getDepth();
 
       // Make image pixmap
-      xid=XCreatePixmap(DISPLAY(getApp()),XDefaultRootWindow(DISPLAY(getApp())),width,height,dd);
+      xid=XCreatePixmap(DISPLAY(getApp()),XDefaultRootWindow(DISPLAY(getApp())),FXMAX(width,1),FXMAX(height,1),dd);
       if(!xid){ fxerror("%s::create: unable to create icon.\n",getClassName()); }
 
       // Make shape pixmap
-      shape=XCreatePixmap(DISPLAY(getApp()),XDefaultRootWindow(DISPLAY(getApp())),width,height,1);
+      shape=XCreatePixmap(DISPLAY(getApp()),XDefaultRootWindow(DISPLAY(getApp())),FXMAX(width,1),FXMAX(height,1),1);
       if(!shape){ fxerror("%s::create: unable to create icon.\n",getClassName()); }
 
       // Make etch pixmap
-      etch=XCreatePixmap(DISPLAY(getApp()),XDefaultRootWindow(DISPLAY(getApp())),width,height,1);
+      etch=XCreatePixmap(DISPLAY(getApp()),XDefaultRootWindow(DISPLAY(getApp())),FXMAX(width,1),FXMAX(height,1),1);
       if(!etch){ fxerror("%s::create: unable to create icon.\n",getClassName()); }
 
 #else
@@ -126,16 +128,16 @@ void FXIcon::create(){
 
       // Create a memory DC compatible with current display
       HDC hdc=::GetDC(GetDesktopWindow());
-      xid=CreateCompatibleBitmap(hdc,width,height);
+      xid=CreateCompatibleBitmap(hdc,FXMAX(width,1),FXMAX(height,1));
       ::ReleaseDC(GetDesktopWindow(),hdc);
       if(!xid){ fxerror("%s::create: unable to create image.\n",getClassName()); }
 
       // Make shape bitmap
-      shape=CreateBitmap(width,height,1,1,NULL);
+      shape=CreateBitmap(FXMAX(width,1),FXMAX(height,1),1,1,NULL);
       if(!shape){ fxerror("%s::create: unable to create icon.\n",getClassName()); }
 
       // Make etch bitmap
-      etch=CreateBitmap(width,height,1,1,NULL);
+      etch=CreateBitmap(FXMAX(width,1),FXMAX(height,1),1,1,NULL);
       if(!etch){ fxerror("%s::create: unable to create icon.\n",getClassName()); }
 
 #endif
@@ -143,11 +145,8 @@ void FXIcon::create(){
       // Render pixels
       render();
 
-      // Zap data
-      if(!(options&IMAGE_KEEP) && (options&IMAGE_OWNED)){
-        options&=~IMAGE_OWNED;
-        FXFREE(&data);
-        }
+      // If we're not keeping the pixel buffer, release it
+      if(!(options&IMAGE_KEEP)) release();
       }
     }
   }
@@ -168,7 +167,7 @@ void FXIcon::detach(){
 // Destroy icon
 void FXIcon::destroy(){
   if(xid){
-    if(getApp()->initialized){
+    if(getApp()->isInitialized()){
       FXTRACE((100,"%s::destroy %p\n",getClassName(),this));
 #ifndef WIN32
 
@@ -200,36 +199,32 @@ void FXIcon::render(){
     register Visual *vis;
     register XImage *xim=NULL;
     register FXbool shmi=FALSE;
-    register FXuchar *img;
+    register FXColor *img;
     register FXint x,y;
-    register FXuchar tr,tg,tb;
     XGCValues values;
     GC gc;
-#ifdef HAVE_XSHM
+#ifdef HAVE_XSHM_H
     XShmSegmentInfo shminfo;
 #endif
 
     FXTRACE((100,"%s::render shape %p\n",getClassName(),this));
 
-    // Check for legal size
-    if(width<1 || height<1){ fxerror("%s::render: illegal icon size %dx%d.\n",getClassName(),width,height); }
-
     // Render the image pixels
     FXImage::render();
 
-    // Just leave if black if no data
-    if(data){
+    // Fill with pixels if there is data
+    if(data && 0<width && 0<height){
 
       // Get Visual
       vis=(Visual*)visual->visual;
 
       // Turn it on iff both supported and desired
-#ifdef HAVE_XSHM
+#ifdef HAVE_XSHM_H
       if(options&IMAGE_SHMI) shmi=getApp()->shmi;
 #endif
 
       // First try XShm
-#ifdef HAVE_XSHM
+#ifdef HAVE_XSHM_H
       if(shmi){
         xim=XShmCreateImage(DISPLAY(getApp()),vis,1,ZPixmap,NULL,&shminfo,width,height);
         if(!xim){ shmi=0; }
@@ -278,35 +273,33 @@ void FXIcon::render(){
       FXTRACE((150,"bm bits_per_pixel = %d\n",xim->bits_per_pixel));
 
       // Fill shape mask
-      img=data;
-      if(options&IMAGE_OPAQUE){           // Opaque image
+      if(options&IMAGE_OPAQUE){                                 // Opaque image
         FXTRACE((150,"Shape rectangle\n"));
         memset(xim->data,0xff,xim->bytes_per_line*height);
         }
-      else if(options&IMAGE_ALPHA){       // Transparency channel
-        FXTRACE((150,"Shape from alpha-channel\n"));
+      else if(options&(IMAGE_ALPHACOLOR|IMAGE_ALPHAGUESS)){     // Transparent color
+        FXTRACE((150,"Shape from alpha-color\n"));
+        img=data;
         for(y=0; y<height; y++){
           for(x=0; x<width; x++){
-            XPutPixel(xim,x,y,(img[3]!=0));
-            img+=4;
+            XPutPixel(xim,x,y,(img[x]!=transp));
             }
+          img+=width;
           }
         }
-      else{                               // Transparent color
-        tr=FXREDVAL(transp);
-        tg=FXGREENVAL(transp);
-        tb=FXBLUEVAL(transp);
-        FXTRACE((150,"Shape from alpha-color\n"));
+      else{                                                     // Transparency channel
+        FXTRACE((150,"Shape from alpha-channel\n"));
+        img=data;
         for(y=0; y<height; y++){
           for(x=0; x<width; x++){
-            XPutPixel(xim,x,y,!(img[0]==tr && img[1]==tg && img[2]==tb));
-            img+=3;
+            XPutPixel(xim,x,y,(((FXuchar*)(img+x))[3]!=0));
             }
+          img+=width;
           }
         }
 
       // Transfer image
-#ifdef HAVE_XSHM
+#ifdef HAVE_XSHM_H
       if(shmi){
         XShmPutImage(DISPLAY(getApp()),shape,gc,xim,0,0,0,0,width,height,False);
         XSync(DISPLAY(getApp()),False);
@@ -317,37 +310,36 @@ void FXIcon::render(){
         }
 
       // Fill etch image
-      img=data;
-      if(options&IMAGE_OPAQUE){           // Opaque image
+      if(options&IMAGE_OPAQUE){                                 // Opaque image
+        img=data;
         for(y=0; y<height; y++){
           for(x=0; x<width; x++){
-            XPutPixel(xim,x,y,DARKCOLOR(img[0],img[1],img[2]));
-            img+=channels;
+            XPutPixel(xim,x,y,DARKCOLOR(((FXuchar*)(img+x))[0],((FXuchar*)(img+x))[1],((FXuchar*)(img+x))[2]));
             }
+          img+=width;
           }
         }
-      else if(options&IMAGE_ALPHA){       // Transparency channel
+      else if(options&(IMAGE_ALPHACOLOR|IMAGE_ALPHAGUESS)){     // Transparent color
+        img=data;
         for(y=0; y<height; y++){
           for(x=0; x<width; x++){
-            XPutPixel(xim,x,y,(img[3]!=0) && DARKCOLOR(img[0],img[1],img[2]));
-            img+=4;
+            XPutPixel(xim,x,y,(img[x]!=transp) && DARKCOLOR(((FXuchar*)(img+x))[0],((FXuchar*)(img+x))[1],((FXuchar*)(img+x))[2]));
             }
+          img+=width;
           }
         }
-      else{                               // Transparent color
-        tr=FXREDVAL(transp);
-        tg=FXGREENVAL(transp);
-        tb=FXBLUEVAL(transp);
+      else{                                                     // Transparency channel
+        img=data;
         for(y=0; y<height; y++){
           for(x=0; x<width; x++){
-            XPutPixel(xim,x,y,!(img[0]==tr && img[1]==tg && img[2]==tb) && DARKCOLOR(img[0],img[1],img[2]));
-            img+=3;
+            XPutPixel(xim,x,y,(((FXuchar*)(img+x))[3]!=0) && DARKCOLOR(((FXuchar*)(img+x))[0],((FXuchar*)(img+x))[1],((FXuchar*)(img+x))[2]));
             }
+          img+=width;
           }
         }
 
       // Transfer image
-#ifdef HAVE_XSHM
+#ifdef HAVE_XSHM_H
       if(shmi){
         XShmPutImage(DISPLAY(getApp()),etch,gc,xim,0,0,0,0,width,height,False);
         XSync(DISPLAY(getApp()),False);
@@ -358,7 +350,7 @@ void FXIcon::render(){
         }
 
       // Clean up
-#ifdef HAVE_XSHM
+#ifdef HAVE_XSHM_H
       if(shmi){
         FXTRACE((150,"Bitmap XSHM detached at memory=%p (%d bytes)\n",xim->data,xim->bytes_per_line*xim->height));
         XShmDetach(DISPLAY(getApp()),&shminfo);
@@ -390,23 +382,20 @@ struct BITMAPINFO2 {
 // Render Icon MS-Windows
 void FXIcon::render(){
   if(xid){
-    register FXuchar *maskdata,*etchdata,*msk,*ets,*img;
+    register FXuchar *maskdata,*etchdata,*msk,*ets;
+    register FXColor *img;
     register FXint x,y;
-    register FXuchar tr,tg,tb;
     register FXuint bytes_per_line;
     BITMAPINFO2 bmi;
     HDC hdcmsk;
 
     FXTRACE((100,"%s::render %p\n",getClassName(),this));
 
-    // Check for legal size
-    if(width<1 || height<1){ fxerror("%s::render: illegal icon size %dx%d.\n",getClassName(),width,height); }
-
     // Render the image (color) pixels as usual
     FXImage::render();
 
-    // Just leave if black if no data
-    if(data){
+    // Fill with pixels if there is data
+    if(data && 0<width && 0<height){
 
       // Set up the bitmap info
       bmi.bmiHeader.biSize=sizeof(BITMAPINFOHEADER);
@@ -434,41 +423,40 @@ void FXIcon::render(){
       FXCALLOC(&maskdata,FXuchar,height*bytes_per_line);
       FXCALLOC(&etchdata,FXuchar,height*bytes_per_line);
 
-      img=data;
-      msk=maskdata+(height-1)*bytes_per_line;
-      ets=etchdata+(height-1)*bytes_per_line;
-      if(options&IMAGE_OPAQUE){
+      msk=maskdata+height*bytes_per_line;
+      ets=etchdata+height*bytes_per_line;
+      if(options&IMAGE_OPAQUE){                 // Opaque image
+        img=data;
         for(y=0; y<height; y++){
-          for(x=0; x<width; x++){
-            if(!DARKCOLOR(img[0],img[1],img[2])){ ets[x>>3]|=0x80>>(x&7); }
-            img+=channels;
-            }
           ets-=bytes_per_line;
+          for(x=0; x<width; x++){
+            if(!DARKCOLOR(((FXuchar*)(img+x))[0],((FXuchar*)(img+x))[1],((FXuchar*)(img+x))[2])){ ets[x>>3]|=0x80>>(x&7); }
+            }
+          img+=width;
           }
         }
-      else if(options&IMAGE_ALPHA){
+      else if(options&(IMAGE_ALPHACOLOR|IMAGE_ALPHAGUESS)){     // Transparent color
+        img=data;
         for(y=0; y<height; y++){
-          for(x=0; x<width; x++){
-            if(!DARKCOLOR(img[0],img[1],img[2])){ ets[x>>3]|=0x80>>(x&7); }
-            if(img[3]==0){ msk[x>>3]|=0x80>>(x&7); ets[x>>3]|=0x80>>(x&7); }
-            img+=4;
-            }
           msk-=bytes_per_line;
           ets-=bytes_per_line;
+          for(x=0; x<width; x++){
+            if(!DARKCOLOR(((FXuchar*)(img+x))[0],((FXuchar*)(img+x))[1],((FXuchar*)(img+x))[2])){ ets[x>>3]|=0x80>>(x&7); }
+            if(img[x]==transp){ msk[x>>3]|=0x80>>(x&7); ets[x>>3]|=0x80>>(x&7); }
+            }
+          img+=width;
           }
         }
-      else{
-        tr=FXREDVAL(transp);
-        tg=FXGREENVAL(transp);
-        tb=FXBLUEVAL(transp);
+      else{                                     // Transparency channel
+        img=data;
         for(y=0; y<height; y++){
-          for(x=0; x<width; x++){
-            if(!DARKCOLOR(img[0],img[1],img[2])){ ets[x>>3]|=0x80>>(x&7); }
-            if((img[0]==tr) && (img[1]==tg) && (img[2]==tb)){ msk[x>>3]|=0x80>>(x&7); ets[x>>3]|=0x80>>(x&7); }
-            img+=3;
-            }
           msk-=bytes_per_line;
           ets-=bytes_per_line;
+          for(x=0; x<width; x++){
+            if(!DARKCOLOR(((FXuchar*)(img+x))[0],((FXuchar*)(img+x))[1],((FXuchar*)(img+x))[2])){ ets[x>>3]|=0x80>>(x&7); }
+            if(((FXuchar*)(img+x))[3]==0){ msk[x>>3]|=0x80>>(x&7); ets[x>>3]|=0x80>>(x&7); }
+            }
+          img+=width;
           }
         }
 
@@ -515,8 +503,8 @@ void FXIcon::render(){
 void FXIcon::resize(FXint w,FXint h){
   if(w<1) w=1;
   if(h<1) h=1;
+  FXTRACE((100,"%s::resize(%d,%d) %p\n",getClassName(),w,h,this));
   if(width!=w || height!=h){
-    FXTRACE((100,"%s::resize(%d,%d) %p\n",getClassName(),w,h,this));
 
     // Resize device dependent pixmap
     if(xid){
@@ -564,22 +552,22 @@ void FXIcon::resize(FXint w,FXint h){
       if(!etch){ fxerror("%s::create: unable to create icon.\n",getClassName()); }
 #endif
       }
-
-    // Resize data array iff total size changed
-    if(data && (w*h)!=(width*height)){
-      if(options&IMAGE_OWNED){
-        FXRESIZE(&data,FXuchar,w*h*channels);
-        }
-      else{
-        FXCALLOC(&data,FXuchar,w*h*channels);
-        options|=IMAGE_OWNED;
-        }
-      }
-
-    // Remember new size
-    width=w;
-    height=h;
     }
+
+  // Resize data array
+  if(data){
+    if(!(options&IMAGE_OWNED)){       // Need to own array
+      FXMALLOC(&data,FXColor,w*h);
+      options|=IMAGE_OWNED;
+      }
+    else if(w*h!=width*height){
+      FXRESIZE(&data,FXColor,w*h);
+      }
+    }
+
+  // Remember new size
+  width=w;
+  height=h;
   }
 
 
@@ -589,3 +577,5 @@ FXIcon::~FXIcon(){
   FXTRACE((100,"FXIcon::~FXIcon %p\n",this));
   destroy();
   }
+
+}

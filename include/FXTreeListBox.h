@@ -3,7 +3,7 @@
 *                      T r e e   L i s t   B o x   W i d g e t                  *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1999,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1999,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXTreeListBox.h,v 1.18 2002/02/11 06:37:27 fox Exp $                     *
+* $Id: FXTreeListBox.h,v 1.27 2004/02/08 17:17:34 fox Exp $                     *
 ********************************************************************************/
 #ifndef FXTREELISTBOX_H
 #define FXTREELISTBOX_H
@@ -28,6 +28,7 @@
 #include "FXPacker.h"
 #endif
 
+namespace FX {
 
 
 /// Tree List Box styles
@@ -52,13 +53,13 @@ protected:
   FXPopup       *pane;
 protected:
   FXTreeListBox(){}
-  virtual void layout();
 private:
   FXTreeListBox(const FXTreeListBox&);
   FXTreeListBox& operator=(const FXTreeListBox&);
 public:
   long onFocusUp(FXObject*,FXSelector,void*);
   long onFocusDown(FXObject*,FXSelector,void*);
+  long onFocusSelf(FXObject*,FXSelector,void*);
   long onChanged(FXObject*,FXSelector,void*);
   long onCommand(FXObject*,FXSelector,void*);
   long onFieldButton(FXObject*,FXSelector,void*);
@@ -74,7 +75,7 @@ public:
 public:
 
   /// Construct tree list box
-  FXTreeListBox(FXComposite *p,FXint nvis,FXObject* tgt=NULL,FXSelector sel=0,FXuint opts=FRAME_SUNKEN|FRAME_THICK|TREELISTBOX_NORMAL,FXint x=0,FXint y=0,FXint w=0,FXint h=0,FXint pl=DEFAULT_PAD,FXint pr=DEFAULT_PAD,FXint pt=DEFAULT_PAD,FXint pb=DEFAULT_PAD);
+  FXTreeListBox(FXComposite *p,FXObject* tgt=NULL,FXSelector sel=0,FXuint opts=FRAME_SUNKEN|FRAME_THICK|TREELISTBOX_NORMAL,FXint x=0,FXint y=0,FXint w=0,FXint h=0,FXint pl=DEFAULT_PAD,FXint pr=DEFAULT_PAD,FXint pt=DEFAULT_PAD,FXint pb=DEFAULT_PAD);
 
   /// Create server-side resources
   virtual void create();
@@ -84,6 +85,9 @@ public:
 
   /// Destroy server-side resources
   virtual void destroy();
+
+  /// Perform layout
+  virtual void layout();
 
   /// Enable widget
   virtual void enable();
@@ -157,11 +161,14 @@ public:
   /// Return TRUE if item is leaf-item, i.e. has no children
   FXbool isItemLeaf(const FXTreeItem* item) const;
 
+  /// Sort the toplevel items with the sort function
+  void sortRootItems();
+
+  /// Sort all items recursively
+  void sortItems();
+
   /// Sort child items of item
   void sortChildItems(FXTreeItem* item);
-
-  /// Sort the toplevel items with the sort function
-  void sortItems();
 
   /// Change current item
   void setCurrentItem(FXTreeItem* item,FXbool notify=FALSE);
@@ -236,5 +243,6 @@ public:
   virtual ~FXTreeListBox();
   };
 
+}
 
 #endif

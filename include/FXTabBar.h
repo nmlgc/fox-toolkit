@@ -3,7 +3,7 @@
 *                           T a b  B a r   W i d g e t                          *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXTabBar.h,v 1.3 2002/01/18 22:42:55 jeroen Exp $                        *
+* $Id: FXTabBar.h,v 1.8 2004/02/08 17:17:34 fox Exp $                           *
 ********************************************************************************/
 #ifndef FXTABBAR_H
 #define FXTABBAR_H
@@ -27,6 +27,8 @@
 #ifndef FXPACKER_H
 #include "FXPacker.h"
 #endif
+
+namespace FX {
 
 
 // Tab Book options
@@ -44,9 +46,9 @@ enum {
 /**
 * The tab bar layout manager arranges tab items side by side,
 * and raises the active tab item above the neighboring tab items.
-* The tab bar can be have the tab items on the top or
-* bottom for horizontal arrangement, or on the left or right
-* for vertical arrangement.
+* In a the horizontal arrangement, the tab bar can have the tab
+* items on the top or on the bottom.  In the vertical arrangement,
+* the tabs can be on the left or on the right.
 */
 class FXAPI FXTabBar : public FXPacker {
   FXDECLARE(FXTabBar)
@@ -54,7 +56,6 @@ protected:
   FXint current;
 protected:
   FXTabBar(){}
-  virtual void layout();
 private:
   FXTabBar(const FXTabBar&);
   FXTabBar& operator=(const FXTabBar&);
@@ -99,6 +100,9 @@ public:
   /// Return default height
   virtual FXint getDefaultHeight();
 
+  /// Perform layout
+  virtual void layout();
+
   /**
   * Change currently active tab item;
   * this raises the active tab item slightly above the neighboring
@@ -122,6 +126,6 @@ public:
   virtual void load(FXStream& store);
   };
 
-
+}
 
 #endif

@@ -3,7 +3,7 @@
 *                             B i t m a p    O b j e c t                        *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1998,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXBitmap.h,v 1.19 2002/01/18 22:42:51 jeroen Exp $                       *
+* $Id: FXBitmap.h,v 1.30 2004/03/03 21:34:21 fox Exp $                          *
 ********************************************************************************/
 #ifndef FXBITMAP_H
 #define FXBITMAP_H
@@ -28,6 +28,7 @@
 #include "FXDrawable.h"
 #endif
 
+namespace FX {
 
 // Image rendering hints
 enum {
@@ -41,28 +42,31 @@ enum {
 // Forward declarations
 class FXDC;
 class FXDCWindow;
-class FXDrawable;
-class FXTopWindow;
 
 
 /**
-* Bitmap is a one bit/pixel image used for patterning and
-* stippling operations.
+* A Bitmap is a rectangular array of pixels.  It supports two representations
+* of these pixels: a client-side pixel buffer, and a server-side pixmap which 
+* is stored in an organization directly compatible with the screen, for fast 
+* drawing onto the device.
+* The server-side representation is not directly accessible from the current
+* process as it lives in the process of the X Server or GDI.
+* The client-side pixel array is of size height x (width+7)/8 bytes, in other
+* words 8 pixels packed into a single byte, starting at bit 0 on the left.
 */
 class FXAPI FXBitmap : public FXDrawable {
   FXDECLARE(FXBitmap)
   friend class FXDC;
   friend class FXDCWindow;
-  friend class FXDrawable;
-  friend class FXTopWindow;
 private:
 #ifdef WIN32
   virtual FXID GetDC() const;
   virtual int ReleaseDC(FXID) const;
 #endif
 protected:
-  FXuchar *data;                // Pixel data
-  FXuint   options;             // Options
+  FXuchar *data;        // Pixel data
+  FXint    bytewidth;   // Number of bytes across
+  FXuint   options;     // Options
 protected:
   FXBitmap();
 private:
@@ -70,29 +74,82 @@ private:
   FXBitmap &operator=(const FXBitmap&);
 public:
 
-  /// Create an image
+  /**
+  * Create a bitmap.  If a client-side pixel buffer has been specified,
+  * the bitmap does not own the pixel buffer unless the BITMAP_OWNED flag is
+  * set.  If the BITMAP_OWNED flag is set but a NULL pixel buffer is
+  * passed, a pixel buffer will be automatically created and will be owned
+  * by the bitmap. The flags BITMAP_SHMI and BITMAP_SHMP may be specified for
+  * large bitmaps to instruct render() to use shared memory to communicate
+  * with the server.
+  */
   FXBitmap(FXApp* a,const void *pix=NULL,FXuint opts=0,FXint w=1,FXint h=1);
 
-  /// Create bitmap
-  virtual void create();
+  /// To get to the pixel data
+  FXuchar* getData() const { return data; }
 
-  /// Detach from bitmap
-  virtual void detach();
+  /// To get to the option flags
+  FXuint getOptions() const { return options; }
 
-  /// Destroy bitmap
-  virtual void destroy();
-
-  /// Render pixels
-  virtual void render();
+  /// Change options
+  void setOptions(FXuint opts);
 
   /// Get pixel at x,y
-  FXbool getPixel(FXint x,FXint y) const;
+  FXbool getPixel(FXint x,FXint y) const { return (data[y*bytewidth+(x>>3)]>>(x&7))&1; }
 
   /// Change pixel at x,y
-  void setPixel(FXint x,FXint y,FXbool color);
+  void setPixel(FXint x,FXint y,FXbool color){ color ? data[y*bytewidth+(x>>3)]|=(1<<(x&7)) : data[y*bytewidth+(x>>3)]&=~(1<<(x&7)); }
+
+  /**
+  * Create the server side pixmap, then call render() to fill it with the
+  * pixel data from the client-side buffer.  After the server-side image has
+  * been created, the client-side pixel buffer will be deleted unless
+  * BITMAP_KEEP has been specified.  If the pixel buffer is not owned, i.e.
+  * the flag BITMAP_OWNED is not set, the pixel buffer will not be deleted.
+  */
+  virtual void create();
+
+  /**
+  * Detach the server side pixmap from the Bitmap.
+  * Afterwards, the Bitmap is left as if it never had a server-side resources.
+  */
+  virtual void detach();
+
+  /**
+  * Destroy the server-side pixmap.
+  * The client-side pixel buffer is not affected.
+  */
+  virtual void destroy();
+
+  /**
+  * Render the server-side representation of the bitmap from client-side
+  * pixels. 
+  */
+  virtual void render();
+
+  /**
+  * Release the client-side pixels buffer, free it if it was owned.
+  * If it is not owned, the image just forgets about the buffer.
+  */
+  virtual void release();
 
   /// Resize bitmap to the specified width and height; the contents become undefined
   virtual void resize(FXint w,FXint h);
+
+  /// Rescale pixels to the specified width and height
+  virtual void scale(FXint w,FXint h);
+
+  /// Mirror bitmap horizontally and/or vertically
+  virtual void mirror(FXbool horizontal,FXbool vertical);
+
+  /// Rotate bitmap by degrees ccw
+  virtual void rotate(FXint degrees);
+
+  /// Crop bitmap to given rectangle
+  virtual void crop(FXint x,FXint y,FXint w,FXint h);
+
+  /// Fill bitmap with uniform value
+  virtual void fill(FXbool color);
 
   /// Save object to stream
   virtual void save(FXStream& store) const;
@@ -101,14 +158,15 @@ public:
   virtual void load(FXStream& store);
 
   /// Save pixel data only
-  virtual void savePixels(FXStream& store) const;
+  virtual FXbool savePixels(FXStream& store) const;
 
   /// Load pixel data only
-  virtual void loadPixels(FXStream& store);
+  virtual FXbool loadPixels(FXStream& store);
 
   /// Cleanup
   virtual ~FXBitmap();
   };
 
+}
 
 #endif

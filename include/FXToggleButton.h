@@ -3,7 +3,7 @@
 *                   T o g g l e    B u t t o n    W i d g e t                   *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1998,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXToggleButton.h,v 1.19 2002/01/18 22:42:55 jeroen Exp $                 *
+* $Id: FXToggleButton.h,v 1.26 2004/02/08 17:17:34 fox Exp $                    *
 ********************************************************************************/
 #ifndef FXTOGGLEBUTTON_H
 #define FXTOGGLEBUTTON_H
@@ -28,6 +28,7 @@
 #include "FXLabel.h"
 #endif
 
+namespace FX {
 
 
 /// Toggle button flags
@@ -35,6 +36,7 @@ enum {
   TOGGLEBUTTON_AUTOGRAY = 0x00800000,       /// Automatically gray out when not updated
   TOGGLEBUTTON_AUTOHIDE = 0x01000000,       /// Automatically hide toggle button when not updated
   TOGGLEBUTTON_TOOLBAR  = 0x02000000,       /// Toolbar style toggle button [flat look]
+  TOGGLEBUTTON_KEEPSTATE= 0x04000000,       /// Draw button according to state
   TOGGLEBUTTON_NORMAL   = FRAME_RAISED|FRAME_THICK|JUSTIFY_NORMAL|ICON_BEFORE_TEXT
   };
 
@@ -150,5 +152,6 @@ public:
   virtual ~FXToggleButton();
   };
 
+}
 
 #endif

@@ -5,7 +5,7 @@
 *********************************************************************************
 * Copyright (C) 1998 by Jeroen van der Zijp.   All Rights Reserved.             *
 *********************************************************************************
-* $Id: dirlist.cpp,v 1.11 2001/11/02 06:07:19 jeroen Exp $                      *
+* $Id: dirlist.cpp,v 1.15 2004/02/08 17:05:35 fox Exp $                         *
 ********************************************************************************/
 #include "fx.h"
 #include <stdio.h>
@@ -25,7 +25,7 @@
 class DirListWindow : public FXMainWindow {
   FXDECLARE(DirListWindow)
 protected:
-  FXMenubar*         menubar;
+  FXMenuBar*         menubar;
   FXMenuPane*        filemenu;
   FXMenuPane*        helpmenu;
   FXDirList*         contents;
@@ -46,9 +46,9 @@ public:
   };
 
 
-  
+
 /*******************************************************************************/
-  
+
 // Map
 FXDEFMAP(DirListWindow) DirListWindowMap[]={
   FXMAPFUNC(SEL_COMMAND, DirListWindow::ID_ABOUT, DirListWindow::onCmdAbout),
@@ -61,9 +61,9 @@ FXIMPLEMENT(DirListWindow,FXMainWindow,DirListWindowMap,ARRAYNUMBER(DirListWindo
 
 // Make some windows
 DirListWindow::DirListWindow(FXApp* a):FXMainWindow(a,"Directory List",NULL,NULL,DECOR_ALL,0,0,800,600){
-  
+
   // Make menu bar
-  menubar=new FXMenubar(this,LAYOUT_FILL_X);
+  menubar=new FXMenuBar(this,LAYOUT_FILL_X);
   filemenu=new FXMenuPane(this);
     new FXMenuCommand(filemenu,"&Quit\tCtl-Q",NULL,getApp(),FXApp::ID_QUIT);
     new FXMenuTitle(menubar,"&File",NULL,filemenu);
@@ -73,10 +73,10 @@ DirListWindow::DirListWindow(FXApp* a):FXMainWindow(a,"Directory List",NULL,NULL
 
   // Text field at bottom
   text=new FXTextField(this,10,NULL,0,LAYOUT_SIDE_BOTTOM|LAYOUT_FILL_X|FRAME_SUNKEN|FRAME_THICK);
-  
+
   // Make contents
-  contents=new FXDirList(this,0,NULL,0,HSCROLLING_OFF|TREELIST_SHOWS_LINES|TREELIST_SHOWS_BOXES|FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_FILL_Y,0,0,0,0);
-  
+  contents=new FXDirList(this,NULL,0,HSCROLLING_OFF|TREELIST_SHOWS_LINES|TREELIST_SHOWS_BOXES|TREELIST_BROWSESELECT|FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_FILL_Y,0,0,0,0);
+
   text->setTarget(contents);
   text->setSelector(FXWindow::ID_SETVALUE);
   }
@@ -110,16 +110,16 @@ int main(int argc,char *argv[]){
 
   // Make application
   FXApp application("DirList","FoxTest");
-  
+
   // Open display
   application.init(argc,argv);
 
   // Make window
   new DirListWindow(&application);
-  
-  // Create app  
+
+  // Create app
   application.create();
-  
+
   // Run
   return application.run();
   }

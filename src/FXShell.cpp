@@ -3,7 +3,7 @@
 *                     S h e l l   W i n d o w   O b j e c t                     *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXShell.cpp,v 1.55 2002/01/18 22:43:04 jeroen Exp $                      *
+* $Id: FXShell.cpp,v 1.75 2004/02/08 17:29:07 fox Exp $                         *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -32,6 +32,7 @@
 #include "FXRectangle.h"
 #include "FXRegistry.h"
 #include "FXAccelTable.h"
+#include "FXHash.h"
 #include "FXApp.h"
 #include "FXShell.h"
 
@@ -44,8 +45,11 @@
     For top level windows, we should use size hints rather than force the size.
 */
 
+using namespace FX;
 
 /*******************************************************************************/
+
+namespace FX {
 
 // Map
 FXDEFMAP(FXShell) FXShellMap[]={
@@ -54,6 +58,7 @@ FXDEFMAP(FXShell) FXShellMap[]={
   FXMAPFUNC(SEL_KEYRELEASE,0,FXShell::onKeyRelease),
   FXMAPFUNC(SEL_FOCUS_NEXT,0,FXShell::onFocusNext),
   FXMAPFUNC(SEL_FOCUS_PREV,0,FXShell::onFocusPrev),
+  FXMAPFUNC(SEL_CHORE,FXShell::ID_LAYOUT,FXShell::onLayout),
   };
 
 
@@ -89,10 +94,10 @@ void FXShell::create(){
   }
 
 
-// User determines size of shells
+// Schedule layout to be peformed during idle time
 void FXShell::recalc(){
-  getApp()->refresher=this;       // As long as layout cleanup is done with GUI update
-  getApp()->again=TRUE;
+  getApp()->removeChore(this,ID_LAYOUT);
+  getApp()->addChore(this,ID_LAYOUT);
   flags|=FLAG_DIRTY;
   }
 
@@ -111,24 +116,12 @@ void FXShell::killFocus(){
   }
 
 
-// // Set initial default window
-// void FXShell::setInitialWindow(FXWindow* window){
-//   initialWindow=window;
-//   defaultWindow=window;
-//   if(window) window->setDefault(TRUE);
-//   }
-//
-//
-// // Set default window
-// void FXShell::setDefaultWindow(FXWindow *window){
-//   if(!window) window=initialWindow;
-//   if(defaultWindow!=window){
-//     if(defaultWindow) defaultWindow->setDefault(FALSE);
-//     defaultWindow=window;
-//     if(defaultWindow) defaultWindow->setDefault(TRUE);
-//     }
-//   }
-//
+// Perform layout; return 0 because no GUI update is needed
+long FXShell::onLayout(FXObject*,FXSelector,void*){
+  layout();
+  return 0;
+  }
+
 
 // Handle configure notify
 long FXShell::onConfigure(FXObject* sender,FXSelector sel,void* ptr){
@@ -139,35 +132,45 @@ long FXShell::onConfigure(FXObject* sender,FXSelector sel,void* ptr){
   if((ev->rect.w!=width) || (ev->rect.h!=height)){
     width=ev->rect.w;               // Record new size
     height=ev->rect.h;
-    layout();                       // Do layout
-    //recalc();                     /// FIXME This causes trouble on MSWindows
+    // Delayed layout optimization. The delayed layout optimization
+    // currently only works on UNIX.  On Windows, the program enters
+    // a modal loop during a window-resize operation.  During this
+    // modal loop, which is somewhere inside WIN32 code, we are completely
+    // deaf to other event sources such as timers, chores, file i/o, and
+    // are unable to perform idle processing.  So the chore we would set
+    // in recalc() would never fire until we're all done with the resizing.
+    // We'd love to have a fix for this, but it seems difficult because of
+    // the need to pass "non-client" events over to the DefWindowProc...
+#ifndef WIN32
+    recalc();           // On UNIX, we process idle messages during a resize
+#else
+    layout();           // On Windows, we are in a modal loop and we have to force it
+#endif
     }
   return 1;
   }
 
 
 // Focus moved to next
-long FXShell::onFocusNext(FXObject* sender,FXSelector sel,void* ptr){
+long FXShell::onFocusNext(FXObject* sender,FXSelector,void* ptr){
   FXWindow *child;
   if(getFocus()){
     child=getFocus()->getNext();
     while(child){
-      if(child->isEnabled() && child->canFocus()){
-        child->handle(this,MKUINT(0,SEL_FOCUS_SELF),ptr);
-        return 1;
+      if(child->shown()){
+        if(child->handle(this,FXSEL(SEL_FOCUS_SELF,0),ptr)) return 1;
+        if(child->handle(sender,FXSEL(SEL_FOCUS_NEXT,0),ptr)) return 1;
         }
-      if(child->isComposite() && child->handle(sender,sel,ptr)) return 1;
       child=child->getNext();
       }
     getFocus()->killFocus();
     }
   child=getFirst();
   while(child){
-    if(child->isEnabled() && child->canFocus()){
-      child->handle(this,MKUINT(0,SEL_FOCUS_SELF),ptr);
-      return 1;
+    if(child->shown()){
+      if(child->handle(this,FXSEL(SEL_FOCUS_SELF,0),ptr)) return 1;
+      if(child->handle(sender,FXSEL(SEL_FOCUS_NEXT,0),ptr)) return 1;
       }
-    if(child->isComposite() && child->handle(sender,sel,ptr)) return 1;
     child=child->getNext();
     }
   return 0;
@@ -175,110 +178,29 @@ long FXShell::onFocusNext(FXObject* sender,FXSelector sel,void* ptr){
 
 
 // Focus moved to previous
-long FXShell::onFocusPrev(FXObject* sender,FXSelector sel,void* ptr){
+long FXShell::onFocusPrev(FXObject* sender,FXSelector,void* ptr){
   FXWindow *child;
   if(getFocus()){
     child=getFocus()->getPrev();
     while(child){
-      if(child->isEnabled() && child->canFocus()){
-        child->handle(this,MKUINT(0,SEL_FOCUS_SELF),ptr);
-        return 1;
+      if(child->shown()){
+        if(child->handle(this,FXSEL(SEL_FOCUS_SELF,0),ptr)) return 1;
+        if(child->handle(sender,FXSEL(SEL_FOCUS_PREV,0),ptr)) return 1;
         }
-      if(child->isComposite() && child->handle(sender,sel,ptr)) return 1;
       child=child->getPrev();
       }
     getFocus()->killFocus();
     }
   child=getLast();
   while(child){
-    if(child->isEnabled() && child->canFocus()){
-      child->handle(this,MKUINT(0,SEL_FOCUS_SELF),ptr);
-      return 1;
+    if(child->shown()){
+      if(child->handle(this,FXSEL(SEL_FOCUS_SELF,0),ptr)) return 1;
+      if(child->handle(sender,FXSEL(SEL_FOCUS_PREV,0),ptr)) return 1;
       }
-    if(child->isComposite() && child->handle(sender,sel,ptr)) return 1;
     child=child->getPrev();
     }
   return 0;
   }
-
-
-// // Keyboard press
-// long FXShell::onKeyPress(FXObject* sender,FXSelector sel,void* ptr){
-//   register FXWindow *def;
-//
-//   // Handle normal keys
-//   if(((FXEvent*)ptr)->code!=KEY_Return && ((FXEvent*)ptr)->code!=KEY_KP_Enter){
-//
-//     // Bounce to focus widget
-//     if(getFocus() && getFocus()->handle(sender,sel,ptr)) return 1;
-//
-//     // Try target first
-//     if(isEnabled() && target && target->handle(this,MKUINT(message,SEL_KEYPRESS),ptr)) return 1;
-//
-//     // Check the accelerators
-//     if(getAccelTable() && getAccelTable()->handle(this,sel,ptr)) return 1;
-//
-//     // Otherwise, perform the default keyboard processing
-//     switch(((FXEvent*)ptr)->code){
-//       case KEY_Tab:
-//         if(((FXEvent*)ptr)->state&SHIFTMASK) goto prv;
-//       case KEY_Next:
-//         return handle(this,MKUINT(0,SEL_FOCUS_NEXT),ptr);
-//       case KEY_Prior:
-//       case KEY_ISO_Left_Tab:
-// prv:    return handle(this,MKUINT(0,SEL_FOCUS_PREV),ptr);
-//       case KEY_Up:
-//       case KEY_KP_Up:
-//         return handle(this,MKUINT(0,SEL_FOCUS_UP),ptr);
-//       case KEY_Down:
-//       case KEY_KP_Down:
-//         return handle(this,MKUINT(0,SEL_FOCUS_DOWN),ptr);
-//       case KEY_Left:
-//       case KEY_KP_Left:
-//         return handle(this,MKUINT(0,SEL_FOCUS_LEFT),ptr);
-//       case KEY_Right:
-//       case KEY_KP_Right:
-//         return handle(this,MKUINT(0,SEL_FOCUS_RIGHT),ptr);
-//       }
-//     return 0;
-//     }
-//
-//   // Find default widget
-//   def=findDefault(this);
-//
-//   // Handle default key
-//   if(def && def->handle(sender,sel,ptr)) return 1;
-//
-//   return 0;
-//   }
-
-// // Keyboard release
-// long FXShell::onKeyRelease(FXObject* sender,FXSelector sel,void* ptr){
-//   register FXWindow *def;
-//
-//   // Handle normal keys
-//   if(((FXEvent*)ptr)->code!=KEY_Return && ((FXEvent*)ptr)->code!=KEY_KP_Enter){
-//
-//     // Bounce to focus widget
-//     if(getFocus() && getFocus()->handle(sender,sel,ptr)) return 1;
-//
-//     // Try target first
-//     if(isEnabled() && target && target->handle(this,MKUINT(message,SEL_KEYRELEASE),ptr)) return 1;
-//
-//     // Check the accelerators
-//     if(getAccelTable() && getAccelTable()->handle(this,sel,ptr)) return 1;
-//
-//     return 0;
-//     }
-//
-//   // Find default widget
-//   def=findDefault(this);
-//
-//   // Handle default key
-//   if(def && def->handle(sender,sel,ptr)) return 1;
-//
-//   return 0;
-//   }
 
 
 // Keyboard press
@@ -321,7 +243,9 @@ long FXShell::onKeyRelease(FXObject* sender,FXSelector sel,void* ptr){
 
 // Destruct
 FXShell::~FXShell(){
+  getApp()->removeChore(this,ID_LAYOUT);
   }
 
+}
 
 

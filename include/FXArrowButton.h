@@ -3,7 +3,7 @@
 *                     A r r o w   B u t t o n   W i d g e t                     *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1998,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXArrowButton.h,v 1.22 2002/01/18 22:42:51 jeroen Exp $                  *
+* $Id: FXArrowButton.h,v 1.35 2004/02/08 17:17:33 fox Exp $                     *
 ********************************************************************************/
 #ifndef FXARROWBUTTON_H
 #define FXARROWBUTTON_H
@@ -28,8 +28,7 @@
 #include "FXFrame.h"
 #endif
 
-
-struct FXTimer;
+namespace FX {
 
 
 // Arrow style options
@@ -39,10 +38,11 @@ enum {
   ARROW_DOWN     = 0x00100000,	// Arrow points down
   ARROW_LEFT     = 0x00200000,	// Arrow points left
   ARROW_RIGHT    = 0x00400000,	// Arrow points right
-  ARROW_REPEAT   = 0x00800000,	// Button repeats if held down
-  ARROW_AUTOGRAY = 0x01000000,	// Automatically gray out when not updated
-  ARROW_AUTOHIDE = 0x02000000,	// Automatically hide when not updated
-  ARROW_TOOLBAR  = 0x04000000,	// Button is toolbar-style
+  ARROW_AUTO     = 0x00800000,  // Automatically fire when hovering mouse over button
+  ARROW_REPEAT   = 0x01000000,	// Button repeats if held down
+  ARROW_AUTOGRAY = 0x02000000,	// Automatically gray out when not updated
+  ARROW_AUTOHIDE = 0x04000000,	// Automatically hide when not updated
+  ARROW_TOOLBAR  = 0x08000000,	// Button is toolbar-style
   ARROW_NORMAL   = FRAME_RAISED|FRAME_THICK|ARROW_UP
   };
 
@@ -52,13 +52,14 @@ enum {
 * When clicked, the arrow button sends a SEL_COMMAND to its target.
 * When ARROW_REPEAT is passed, the arrow button sends a SEL_COMMAND
 * repeatedly while the button is pressed.
+* The option ARROW_AUTO together with ARROW_REPEAT makes the arrow
+* button work in repeat mode simply by hovering the cursor over it.
 */
 class FXAPI FXArrowButton : public FXFrame {
   FXDECLARE(FXArrowButton)
 protected:
   FXColor   arrowColor;     // Arrow color
   FXint     arrowSize;      // Arrow size
-  FXTimer  *repeater;       // Timer for auto-repeat
   FXString  tip;            // Tooltip value
   FXString  help;           // Help value
   FXbool    state;          // State of button
@@ -77,15 +78,21 @@ public:
   long onLeftBtnRelease(FXObject*,FXSelector,void*);
   long onUngrabbed(FXObject*,FXSelector,void*);
   long onRepeat(FXObject*,FXSelector,void*);
+  long onAuto(FXObject*,FXSelector,void*);
   long onKeyPress(FXObject*,FXSelector,void*);
   long onKeyRelease(FXObject*,FXSelector,void*);
   long onHotKeyPress(FXObject*,FXSelector,void*);
   long onHotKeyRelease(FXObject*,FXSelector,void*);
+  long onCmdSetHelp(FXObject*,FXSelector,void*);
+  long onCmdGetHelp(FXObject*,FXSelector,void*);
+  long onCmdSetTip(FXObject*,FXSelector,void*);
+  long onCmdGetTip(FXObject*,FXSelector,void*);
   long onQueryHelp(FXObject*,FXSelector,void*);
   long onQueryTip(FXObject*,FXSelector,void*);
 public:
   enum {
     ID_REPEAT=FXFrame::ID_LAST,
+    ID_AUTO,
     ID_LAST
     };
 public:
@@ -160,5 +167,6 @@ public:
   virtual ~FXArrowButton();
   };
 
+}
 
 #endif

@@ -5,7 +5,7 @@
 ##############################################################################
 # Copyright (C) 1997 by Jeroen van der Zijp.   All Rights Reserved.          #
 ##############################################################################
-# $Id: Makefile.bc,v 1.14 2001/12/13 18:41:32 jeroen Exp $                   #
+# $Id: Makefile.bc,v 1.18 2003/09/26 05:01:20 fox Exp $                      #
 ##############################################################################
 # This library is free software; you can redistribute it and/or              #
 # modify it under the terms of the GNU Library General Public                #
@@ -27,12 +27,12 @@ CXX       = bcc32
 CXXFLAGS  = -5 -O2 -w-par -w-csu -w-aus
 RM        = del
 TOPDIR    = ..
-DEFINES   = -DNDEBUG -DFOX_BIGENDIAN=0 -DWIN32 -D_WINDOWS -DHAVE_OPENGL #-DHAVE_PNG_H -DHAVE_JPEG_H -DHAVE_TIFF_H -DXMD_H
+DEFINES   = -DNDEBUG -DFOX_BIGENDIAN=0 -DWIN32 -D_WINDOWS -DHAVE_GL_H -DHAVE_GLU_H #-DHAVE_PNG_H -DHAVE_JPEG_H -DHAVE_TIFF_H -DXMD_H
 LD	  = bcc32
 LDFLAGS	  = -laa
 GLLIBS    = -lopengl32 -lglu32
 INCDIRS   = -I$(TOPDIR)\include
-FOXLIB    = $(TOPDIR)\src\fox.lib
+FOXLIB    = $(TOPDIR)\src\FOX-1.1.lib
 
 PROGRAMS  = \
 	rex.exe \
@@ -58,6 +58,7 @@ PROGRAMS  = \
 	dctest.exe \
 	glviewer.exe \
 	gltest.exe \
+	wizard.exe \
 	imageviewer.exe
 
 .cpp.obj:
@@ -70,6 +71,9 @@ rex.exe: $(FOXLIB) rex.obj
 
 minheritance.exe: $(FOXLIB) minheritance.obj
 	$(LD) $(LDFLAGS) minheritance.obj $(FOXLIB)
+
+wizard.exe: $(FOXLIB) wizard.obj
+	$(LD) $(LDFLAGS) wizard.obj $(FOXLIB)
 
 foursplit.exe: $(FOXLIB) foursplit.obj
 	$(LD) $(LDFLAGS) foursplit.obj $(FOXLIB)

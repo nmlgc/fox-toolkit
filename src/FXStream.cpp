@@ -1,9 +1,9 @@
 /********************************************************************************
 *                                                                               *
-*              P e r s i s t e n t   S t o r a g e   S t r e a m                *
+*       P e r s i s t e n t   S t o r a g e   S t r e a m   C l a s s e s       *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXStream.cpp,v 1.17 2002/01/18 22:43:04 jeroen Exp $                     *
+* $Id: FXStream.cpp,v 1.47 2004/04/05 14:49:33 fox Exp $                        *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -32,18 +32,21 @@
 /*
   Notes:
   - Defer malloc in FXStream::open till object is actually being saved/loaded!
-  - Need some sort of seek() or position() API's.
   - Programming errors are punished by calling fxerror(); for example, saving
     into a stream which is set for loading, NULL buffer pointers, and so on.
   - Status codes are set when a correct program encounters errors such as
     writing to full disk, running out of memory, and so on.
   - Single character insert/extract operators are virtual so subclasses can
     overload these specific cases for greater speed.
-  - Need to redesign a bit some day for greater i/o speed (buffering).
+  - Copy byte at a time because don't know about alignment of stream buffer;
+    unaligned accesses are disallowed on some RISC cpus.
+  - Need to be able to append instead of just overwrite existing file streams.
+  - Buffer can not be written till after first call to writeBuffer().
+  - Need to haul some memory stream stuff up (buffer mgmt).
+  - Need to have load() and save() API's return number of elements ACTUALLY
+    transferred (not bytes but whole numbers of elements!).
 */
 
-
-/*****************************  Definitions  ***********************************/
 
 #define MAXCLASSNAME       256          // Maximum class name length
 #define DEF_HASH_SIZE      32           // Initial table size (MUST be power of 2)
@@ -52,469 +55,805 @@
 #define UNUSEDSLOT         0xffffffff   // Unsused slot marker
 #define CLASSIDFLAG        0x80000000   // Marks it as a class ID
 
-#define HASH1(x,n) (((unsigned int)(long)(x)*13)%(n))           // Number [0..n-1]
-#define HASH2(x,n) (1|(((unsigned int)(long)(x)*17)%((n)-1)))   // Number [1..n-1]
+#define HASH1(x,n) (((FXuint)(FXuval)(x)*13)%(n))         // Number [0..n-1]
+#define HASH2(x,n) (1|(((FXuint)(FXuval)(x)*17)%((n)-1))) // Number [1..n-2]
 
 
+using namespace FX;
 
-/***************************  Stream Implementation  ****************************/
+
+/*******************************************************************************/
+
+namespace FX {
 
 
 // Create PersistentStore object
 FXStream::FXStream(const FXObject *cont){
-  table=NULL;
-  ntable=0;
-  ninit=0;
-  no=0;
-  swap=FALSE;
   parent=cont;
+  table=NULL;
+  begptr=NULL;
+  endptr=NULL;
+  wrptr=NULL;
+  rdptr=NULL;
+  ntable=0;
+  no=0;
+  pos=0;
   dir=FXStreamDead;
   code=FXStreamOK;
-  pos=0;
+  swap=FALSE;
+  owns=FALSE;
   }
 
 
 // Destroy PersistentStore object
 FXStream::~FXStream(){
+  if(owns){FXFREE(&begptr);}
   FXFREE(&table);
-  table=(FXStreamHashEntry*)-1;
+  parent=(const FXObject*)-1L;
+  table=(FXStreamHashEntry*)-1L;
+  begptr=(FXuchar*)-1L;
+  endptr=(FXuchar*)-1L;
+  wrptr=(FXuchar*)-1L;
+  rdptr=(FXuchar*)-1L;
   }
-
-
-// Default implementation is a null-stream
-void FXStream::saveItems(const void *,FXuint){ }
-
-
-// Default implementation is a null-stream
-void FXStream::loadItems(void*,FXuint){ }
-
-
-// Set status code, unless there was a previous code already
-void FXStream::setError(FXStreamStatus err){
-  if(code==FXStreamOK) code=err;
-  }
-
-
-// Swap duplets
-static inline void swap2(void *p){
-  register FXuchar t;
-  t=((FXuchar*)p)[0]; ((FXuchar*)p)[0]=((FXuchar*)p)[1]; ((FXuchar*)p)[1]=t;
-  }
-
-
-// Swap quadruplets
-static inline void swap4(void *p){
-  register FXuchar t;
-  t=((FXuchar*)p)[0]; ((FXuchar*)p)[0]=((FXuchar*)p)[3]; ((FXuchar*)p)[3]=t;
-  t=((FXuchar*)p)[1]; ((FXuchar*)p)[1]=((FXuchar*)p)[2]; ((FXuchar*)p)[2]=t;
-  }
-
-
-// Swap octuplets
-static inline void swap8(void *p){
-  register FXuchar t;
-  t=((FXuchar*)p)[0]; ((FXuchar*)p)[0]=((FXuchar*)p)[7]; ((FXuchar*)p)[7]=t;
-  t=((FXuchar*)p)[1]; ((FXuchar*)p)[1]=((FXuchar*)p)[6]; ((FXuchar*)p)[6]=t;
-  t=((FXuchar*)p)[2]; ((FXuchar*)p)[2]=((FXuchar*)p)[5]; ((FXuchar*)p)[5]=t;
-  t=((FXuchar*)p)[3]; ((FXuchar*)p)[3]=((FXuchar*)p)[4]; ((FXuchar*)p)[4]=t;
-  }
-
-
-/******************************  Save Basic Types  *****************************/
-
-FXStream& FXStream::operator<<(const FXuchar& v){
-  saveItems(&v,1);
-  pos+=1;
-  return *this;
-  }
-
-FXStream& FXStream::operator<<(const FXchar& v){
-  saveItems(&v,1);
-  pos+=1;
-  return *this;
-  }
-
-FXStream& FXStream::operator<<(const FXushort& v){
-  saveItems(&v,2);
-  pos+=2;
-  return *this;
-  }
-
-FXStream& FXStream::operator<<(const FXshort& v){
-  saveItems(&v,2);
-  pos+=2;
-  return *this;
-  }
-
-FXStream& FXStream::operator<<(const FXuint& v){
-  saveItems(&v,4);
-  pos+=4;
-  return *this;
-  }
-
-FXStream& FXStream::operator<<(const FXint& v){
-  saveItems(&v,4);
-  pos+=4;
-  return *this;
-  }
-
-FXStream& FXStream::operator<<(const FXfloat& v){
-  saveItems(&v,4);
-  pos+=4;
-  return *this;
-  }
-
-FXStream& FXStream::operator<<(const FXdouble& v){
-  saveItems(&v,8);
-  pos+=8;
-  return *this;
-  }
-
-#ifdef FX_LONG
-FXStream& FXStream::operator<<(const FXulong& v){
-  saveItems(&v,8);
-  pos+=8;
-  return *this;
-  }
-
-FXStream& FXStream::operator<<(const FXlong& v){
-  saveItems(&v,8);
-  pos+=8;
-  return *this;
-  }
-#endif
-
-/************************  Save Blocks of Basic Types  *************************/
-
-FXStream& FXStream::save(const FXuchar* p,FXuint n){
-  FXASSERT(n==0 || (n>0 && p!=NULL));
-  saveItems(p,n);
-  pos+=n;
-  return *this;
-  }
-
-FXStream& FXStream::save(const FXchar* p,FXuint n){
-  FXASSERT(n==0 || (n>0 && p!=NULL));
-  saveItems(p,n);
-  pos+=n;
-  return *this;
-  }
-
-FXStream& FXStream::save(const FXushort* p,FXuint n){
-  FXASSERT(n==0 || (n>0 && p!=NULL));
-  saveItems(p,n<<1);
-  pos+=(unsigned long)(n<<1);
-  return *this;
-  }
-
-FXStream& FXStream::save(const FXshort* p,FXuint n){
-  FXASSERT(n==0 || (n>0 && p!=NULL));
-  saveItems(p,n<<1);
-  pos+=(unsigned long)(n<<1);
-  return *this;
-  }
-
-FXStream& FXStream::save(const FXuint* p,FXuint n){
-  FXASSERT(n==0 || (n>0 && p!=NULL));
-  saveItems(p,n<<2);
-  pos+=(unsigned long)(n<<2);
-  return *this;
-  }
-
-FXStream& FXStream::save(const FXint* p,FXuint n){
-  FXASSERT(n==0 || (n>0 && p!=NULL));
-  saveItems(p,n<<2);
-  pos+=(unsigned long)(n<<2);
-  return *this;
-  }
-
-FXStream& FXStream::save(const FXfloat* p,FXuint n){
-  FXASSERT(n==0 || (n>0 && p!=NULL));
-  saveItems(p,n<<2);
-  pos+=(unsigned long)(n<<2);
-  return *this;
-  }
-
-FXStream& FXStream::save(const FXdouble* p,FXuint n){
-  FXASSERT(n==0 || (n>0 && p!=NULL));
-  saveItems(p,n<<3);
-  pos+=(unsigned long)(n<<3);
-  return *this;
-  }
-
-#ifdef FX_LONG
-FXStream& FXStream::save(const FXulong* p,FXuint n){
-  FXASSERT(n==0 || (n>0 && p!=NULL));
-  saveItems(p,n<<3);
-  pos+=(unsigned long)(n<<3);
-  return *this;
-  }
-
-FXStream& FXStream::save(const FXlong* p,FXuint n){
-  FXASSERT(n==0 || (n>0 && p!=NULL));
-  saveItems(p,n<<3);
-  pos+=(unsigned long)(n<<3);
-  return *this;
-  }
-#endif
-
-
-/*****************************  Load Basic Types  ******************************/
-
-FXStream& FXStream::operator>>(FXuchar& v){
-  loadItems(&v,1);
-  pos+=1;
-  return *this;
-  }
-
-FXStream& FXStream::operator>>(FXchar& v){
-  loadItems(&v,1);
-  pos+=1;
-  return *this;
-  }
-
-FXStream& FXStream::operator>>(FXushort& v){
-  loadItems(&v,2);
-  pos+=2;
-  if(swap){swap2(&v);}
-  return *this;
-  }
-
-FXStream& FXStream::operator>>(FXshort& v){
-  loadItems(&v,2);
-  pos+=2;
-  if(swap){swap2(&v);}
-  return *this;
-  }
-
-FXStream& FXStream::operator>>(FXuint& v){
-  loadItems(&v,4);
-  pos+=4;
-  if(swap){swap4(&v);}
-  return *this;
-  }
-
-FXStream& FXStream::operator>>(FXint& v){
-  loadItems(&v,4);
-  pos+=4;
-  if(swap){swap4(&v);}
-  return *this;
-  }
-
-FXStream& FXStream::operator>>(FXfloat& v){
-  loadItems(&v,4);
-  pos+=4;
-  if(swap){swap4(&v);}
-  return *this;
-  }
-
-FXStream& FXStream::operator>>(FXdouble& v){
-  loadItems(&v,8);
-  pos+=8;
-  if(swap){swap8(&v);}
-  return *this;
-  }
-
-#ifdef FX_LONG
-FXStream& FXStream::operator>>(FXulong& v){
-  loadItems(&v,8);
-  pos+=8;
-  if(swap){swap8(&v);}
-  return *this;
-  }
-
-FXStream& FXStream::operator>>(FXlong& v){
-  loadItems(&v,8);
-  pos+=8;
-  if(swap){swap8(&v);}
-  return *this;
-  }
-#endif
-
-
-/************************  Load Blocks of Basic Types  *************************/
-
-FXStream& FXStream::load(FXuchar* p,FXuint n){
-  FXASSERT(n==0 || (n>0 && p!=NULL));
-  loadItems(p,n);
-  pos+=n;
-  return *this;
-  }
-
-
-FXStream& FXStream::load(FXchar* p,FXuint n){
-  FXASSERT(n==0 || (n>0 && p!=NULL));
-  loadItems(p,n);
-  pos+=n;
-  return *this;
-  }
-
-FXStream& FXStream::load(FXushort* p,FXuint n){
-  FXASSERT(n==0 || (n>0 && p!=NULL));
-  loadItems(p,n<<1);
-  pos+=(n<<1);
-  if(swap&&n){do{swap2(p++);}while(--n);}
-  return *this;
-  }
-
-FXStream& FXStream::load(FXshort* p,FXuint n){
-  FXASSERT(n==0 || (n>0 && p!=NULL));
-  loadItems(p,n<<1);
-  pos+=(unsigned long)(n<<1);
-  if(swap&&n){do{swap2(p++);}while(--n);}
-  return *this;
-  }
-
-FXStream& FXStream::load(FXuint* p,FXuint n){
-  FXASSERT(n==0 || (n>0 && p!=NULL));
-  loadItems(p,n<<2);
-  pos+=(unsigned long)(n<<2);
-  if(swap&&n){do{swap4(p++);}while(--n);}
-  return *this;
-  }
-
-FXStream& FXStream::load(FXint* p,FXuint n){
-  FXASSERT(n==0 || (n>0 && p!=NULL));
-  loadItems(p,n<<2);
-  pos+=(unsigned long)(n<<2);
-  if(swap&&n){do{swap4(p++);}while(--n);}
-  return *this;
-  }
-
-FXStream& FXStream::load(FXfloat* p,FXuint n){
-  FXASSERT(n==0 || (n>0 && p!=NULL));
-  loadItems(p,n<<2);
-  pos+=(unsigned long)(n<<2);
-  if(swap&&n){do{swap4(p++);}while(--n);}
-  return *this;
-  }
-
-FXStream& FXStream::load(FXdouble* p,FXuint n){
-  FXASSERT(n==0 || (n>0 && p!=NULL));
-  loadItems(p,n<<3);
-  pos+=(unsigned long)(n<<3);
-  if(swap&&n){do{swap8(p++);}while(--n);}
-  return *this;
-  }
-
-#ifdef FX_LONG
-FXStream& FXStream::load(FXulong* p,FXuint n){
-  FXASSERT(n==0 || (n>0 && p!=NULL));
-  loadItems(p,n<<3);
-  pos+=(unsigned long)(n<<3);
-  if(swap&&n){do{swap8(p++);}while(--n);}
-  return *this;
-  }
-
-FXStream& FXStream::load(FXlong* p,FXuint n){
-  FXASSERT(n==0 || (n>0 && p!=NULL));
-  loadItems(p,n<<3);
-  pos+=(unsigned long)(n<<3);
-  if(swap&&n){do{swap8(p++);}while(--n);}
-  return *this;
-  }
-#endif
-
-
-/*******************************************************************************/
-
-
-// Open for save or load
-FXbool FXStream::open(FXStreamDirection save_or_load){
-  unsigned int i,p;
-  if(dir!=FXStreamDead){ fxerror("FXStream::open: stream is already open.\n"); }
-  if(ninit<DEF_HASH_SIZE) ninit=DEF_HASH_SIZE;
-  FXMALLOC(&table,FXStreamHashEntry,ninit);
-  if(!table){code=FXStreamAlloc;return FALSE;}
-  ntable=ninit;
-  for(i=0; i<ntable; i++){table[i].ref=UNUSEDSLOT;}
-  no=0;
-  dir=save_or_load;
-  pos=0;
-  if(parent){
-    if(dir==FXStreamSave){
-      p=HASH1(parent,ntable);
-      FXASSERT(p<ntable);
-      table[p].obj=(FXObject*)parent;
-      table[p].ref=no;
-      }
-    else{
-      table[no].obj=(FXObject*)parent;
-      table[no].ref=no;
-      }
-    no++;
-    }
-  code=FXStreamOK;
-  return TRUE;
-  }
-
-
-// Close store; return TRUE if no errors have been encountered
-FXbool FXStream::close(){
-  if(dir==FXStreamDead){ fxerror("FXStream::close: stream is not open.\n"); }
-  ninit=ntable;
-  while((ninit>>1)>no) ninit>>=1;
-  dir=FXStreamDead;
-  FXFREE(&table);
-  ntable=0;
-  no=0;
-  return code==FXStreamOK;
-  }
-
 
 
 // Grow hash table
 void FXStream::grow(){
   register FXuint i,n,p,x;
   FXStreamHashEntry *h;
+
+  // Double table size
+  FXASSERT(ntable);
   n=ntable<<1;
-  FXMALLOC(&h,FXStreamHashEntry,n);
-  if(!h){code=FXStreamAlloc;return;}
-  switch(dir){
 
-    // Rehash table when FXStreamSave
-    case FXStreamSave:
-      for(i=0; i<n; i++) h[i].ref=UNUSEDSLOT;
-      for(i=0; i<ntable; i++){
-        if(table[i].ref==UNUSEDSLOT) continue;
-        p = HASH1(table[i].obj,n);
-        FXASSERT(p<n);
-        x = HASH2(table[i].obj,n);
-        FXASSERT(1<=x && x<n);
-        while(h[p].ref!=UNUSEDSLOT) p=(p+x)%n;
-        h[p].ref=table[i].ref;
-        h[p].obj=table[i].obj;
-        }
-      break;
+  // Allocate new table
+  if(!FXMALLOC(&h,FXStreamHashEntry,n)){ code=FXStreamAlloc; return; }
 
-    // Simply copy over when FXStreamLoad
-    case FXStreamLoad:
-      for(i=0; i<ntable; i++){
-        h[i].ref=table[i].ref;
-        h[i].obj=table[i].obj;
-        }
-      break;
-
-    // Nothing for FXStreamDead
-    case FXStreamDead:
-      break;
+  // Rehash table when FXStreamSave
+  if(dir==FXStreamSave){
+    for(i=0; i<n; i++) h[i].ref=UNUSEDSLOT;
+    for(i=0; i<ntable; i++){
+      if(table[i].ref==UNUSEDSLOT) continue;
+      p = HASH1(table[i].obj,n);
+      FXASSERT(p<n);
+      x = HASH2(table[i].obj,n);
+      FXASSERT(1<=x && x<n);
+      while(h[p].ref!=UNUSEDSLOT) p=(p+x)%n;
+      h[p].ref=table[i].ref;
+      h[p].obj=table[i].obj;
       }
+    }
+
+  // Simply copy over when FXStreamLoad
+  else if(dir==FXStreamLoad){
+    for(i=0; i<ntable; i++){
+      h[i].ref=table[i].ref;
+      h[i].obj=table[i].obj;
+      }
+    }
 
   // Ditch old table
   FXFREE(&table);
+
+  // Point to new table
   table=h;
   ntable=n;
   }
 
 
+// Write at least count bytes from the buffer; the default
+// implementation simply discards all data in the buffer.
+// It returns the amount of room available to be written.
+unsigned long FXStream::writeBuffer(unsigned long){
+  rdptr=begptr;
+  wrptr=begptr;
+  return endptr-wrptr;
+  }
+
+
+// Read at least count bytes into the buffer; the default
+// implementation reads an endless stream of zero's.
+// It returns the amount of data available to be read.
+unsigned long FXStream::readBuffer(unsigned long){
+  rdptr=begptr;
+  wrptr=endptr;
+  return wrptr-rdptr;
+  }
+
+
+// Set status code
+void FXStream::setError(FXStreamStatus err){
+  code=err;
+  }
+
+
+/// Get available space
+unsigned long FXStream::getSpace() const {
+  return endptr-begptr;
+  }
+
+
+// Set available space
+void FXStream::setSpace(unsigned long size){
+  if(code==FXStreamOK){
+
+    // Changed size?
+    if(begptr+size!=endptr){
+
+      // Old buffer location
+      register FXuchar *oldbegptr=begptr;
+
+      // Only resize if owned
+      if(!owns){ fxerror("FXStream::setSpace: cannot resize external data buffer.\n"); }
+
+      // Resize the buffer
+      if(!FXRESIZE(&begptr,FXuchar,size)){ code=FXStreamAlloc; return; }
+
+      // Adjust pointers, buffer may have moved
+      endptr=begptr+size;
+      wrptr=begptr+(wrptr-oldbegptr);
+      rdptr=begptr+(rdptr-oldbegptr);
+      if(wrptr>endptr) wrptr=endptr;
+      if(rdptr>endptr) rdptr=endptr;
+      }
+    }
+  }
+
+
+// Open for save or load
+FXbool FXStream::open(FXStreamDirection save_or_load,unsigned long size,FXuchar* data){
+  register unsigned int i,p;
+  if(save_or_load!=FXStreamSave && save_or_load!=FXStreamLoad){fxerror("FXStream::open: illegal stream direction.\n");}
+  if(!dir){
+
+    // Allocate hash table
+    if(!FXMALLOC(&table,FXStreamHashEntry,DEF_HASH_SIZE)){ code=FXStreamAlloc; return FALSE; }
+
+    // Initialize table to empty
+    for(i=0; i<DEF_HASH_SIZE; i++){ table[i].ref=UNUSEDSLOT; }
+
+    // Use external buffer space
+    if(data){
+      begptr=data;
+      if(size==ULONG_MAX)
+        endptr=((FXuchar*)NULL)-1;
+      else
+        endptr=begptr+size;
+      wrptr=begptr;
+      rdptr=begptr;
+      owns=FALSE;
+      }
+
+    // Use internal buffer space
+    else{
+      if(!FXCALLOC(&begptr,FXuchar,size)){ FXFREE(&table); code=FXStreamAlloc; return FALSE; }
+      endptr=begptr+size;
+      wrptr=begptr;
+      rdptr=begptr;
+      owns=TRUE;
+      }
+
+    // Set variables
+    ntable=DEF_HASH_SIZE;
+    dir=save_or_load;
+    pos=0;
+    no=0;
+
+    // Append container object to hash table
+    if(parent){
+      if(dir==FXStreamSave){
+        p=HASH1(parent,ntable);
+        FXASSERT(p<ntable);
+        table[p].obj=(FXObject*)parent;
+        table[p].ref=no;
+        }
+      else{
+        table[no].obj=(FXObject*)parent;
+        table[no].ref=no;
+        }
+      no++;
+      }
+
+    // So far, so good
+    code=FXStreamOK;
+
+    return TRUE;
+    }
+  return FALSE;
+  }
+
+
+// Close store; return TRUE if no errors have been encountered
+FXbool FXStream::close(){
+  if(dir){
+    dir=FXStreamDead;
+    if(owns){FXFREE(&begptr);}
+    FXFREE(&table);
+    begptr=NULL;
+    wrptr=NULL;
+    rdptr=NULL;
+    endptr=NULL;
+    ntable=0;
+    no=0;
+    owns=FALSE;
+    return code==FXStreamOK;
+    }
+  return FALSE;
+  }
+
+
+// Flush buffer
+FXbool FXStream::flush(){
+  writeBuffer(0);
+  return code==FXStreamOK;
+  }
+
+
+// Move to position
+FXbool FXStream::position(long offset,FXWhence whence){
+  if(dir==FXStreamDead){fxerror("FXStream::position: stream is not open.\n");}
+  if(code==FXStreamOK){
+    if(whence==FXFromCurrent) offset=offset+pos;
+    else if(whence==FXFromEnd) offset=offset+endptr-begptr;
+    pos=offset;
+    return TRUE;
+    }
+  return FALSE;
+  }
+
+
+/******************************  Save Basic Types  *****************************/
+
+// Write one byte
+FXStream& FXStream::operator<<(const FXuchar& v){
+  if(code==FXStreamOK){
+    FXASSERT(begptr<=rdptr);
+    FXASSERT(rdptr<=wrptr);
+    FXASSERT(wrptr<=endptr);
+    if(wrptr+1>endptr && writeBuffer(1)<1){ code=FXStreamFull; return *this; }
+    FXASSERT(wrptr+1<=endptr);
+    *wrptr++ = v;
+    pos++;
+    }
+  return *this;
+  }
+
+
+// Write one short
+FXStream& FXStream::operator<<(const FXushort& v){
+  if(code==FXStreamOK){
+    FXASSERT(begptr<=rdptr);
+    FXASSERT(rdptr<=wrptr);
+    FXASSERT(wrptr<=endptr);
+    if(wrptr+2>endptr && writeBuffer((wrptr-endptr)+2)<2){ code=FXStreamFull; return *this; }
+    FXASSERT(wrptr+2<=endptr);
+    if(swap){
+      wrptr[0]=((const FXuchar*)&v)[1];
+      wrptr[1]=((const FXuchar*)&v)[0];
+      }
+    else{
+      wrptr[0]=((const FXuchar*)&v)[0];
+      wrptr[1]=((const FXuchar*)&v)[1];
+      }
+    wrptr+=2;
+    pos+=2;
+    }
+  return *this;
+  }
+
+
+// Write one int
+FXStream& FXStream::operator<<(const FXuint& v){
+  if(code==FXStreamOK){
+    FXASSERT(begptr<=rdptr);
+    FXASSERT(rdptr<=wrptr);
+    FXASSERT(wrptr<=endptr);
+    if(wrptr+4>endptr && writeBuffer((wrptr-endptr)+4)<4){ code=FXStreamFull; return *this; }
+    FXASSERT(wrptr+4<=endptr);
+    if(swap){
+      wrptr[0]=((const FXuchar*)&v)[3];
+      wrptr[1]=((const FXuchar*)&v)[2];
+      wrptr[2]=((const FXuchar*)&v)[1];
+      wrptr[3]=((const FXuchar*)&v)[0];
+      }
+    else{
+      wrptr[0]=((const FXuchar*)&v)[0];
+      wrptr[1]=((const FXuchar*)&v)[1];
+      wrptr[2]=((const FXuchar*)&v)[2];
+      wrptr[3]=((const FXuchar*)&v)[3];
+      }
+    wrptr+=4;
+    pos+=4;
+    }
+  return *this;
+  }
+
+
+// Write one double
+FXStream& FXStream::operator<<(const FXdouble& v){
+  if(code==FXStreamOK){
+    FXASSERT(begptr<=rdptr);
+    FXASSERT(rdptr<=wrptr);
+    FXASSERT(wrptr<=endptr);
+    if(wrptr+8>endptr && writeBuffer((wrptr-endptr)+8)<8){ code=FXStreamFull; return *this; }
+    FXASSERT(wrptr+8<=endptr);
+    if(swap){
+      wrptr[0]=((const FXuchar*)&v)[7];
+      wrptr[1]=((const FXuchar*)&v)[6];
+      wrptr[2]=((const FXuchar*)&v)[5];
+      wrptr[3]=((const FXuchar*)&v)[4];
+      wrptr[4]=((const FXuchar*)&v)[3];
+      wrptr[5]=((const FXuchar*)&v)[2];
+      wrptr[6]=((const FXuchar*)&v)[1];
+      wrptr[7]=((const FXuchar*)&v)[0];
+      }
+    else{
+      wrptr[0]=((const FXuchar*)&v)[0];
+      wrptr[1]=((const FXuchar*)&v)[1];
+      wrptr[2]=((const FXuchar*)&v)[2];
+      wrptr[3]=((const FXuchar*)&v)[3];
+      wrptr[4]=((const FXuchar*)&v)[4];
+      wrptr[5]=((const FXuchar*)&v)[5];
+      wrptr[6]=((const FXuchar*)&v)[6];
+      wrptr[7]=((const FXuchar*)&v)[7];
+      }
+    wrptr+=8;
+    pos+=8;
+    }
+  return *this;
+  }
+
+
+/************************  Save Blocks of Basic Types  *************************/
+
+// Write array of bytes
+FXStream& FXStream::save(const FXuchar* p,unsigned long n){
+  if(code==FXStreamOK){
+    FXASSERT(begptr<=rdptr);
+    FXASSERT(rdptr<=wrptr);
+    FXASSERT(wrptr<=endptr);
+    while(0<n){
+      if(wrptr+n>endptr && writeBuffer((wrptr-endptr)+n)<1){ code=FXStreamFull; return *this; }
+      FXASSERT(wrptr<endptr);
+      do{
+        *wrptr++=*p++;
+        pos++;
+        n--;
+        }
+      while(0<n && wrptr<endptr);
+      }
+    }
+  return *this;
+  }
+
+
+// Write array of shorts
+FXStream& FXStream::save(const FXushort* p,unsigned long n){
+  register const FXuchar *q=(const FXuchar*)p;
+  if(code==FXStreamOK){
+    n<<=1;
+    FXASSERT(begptr<=rdptr);
+    FXASSERT(rdptr<=wrptr);
+    FXASSERT(wrptr<=endptr);
+    if(swap){
+      while(0<n){
+        if(wrptr+n>endptr && writeBuffer((wrptr-endptr)+n)<2){ code=FXStreamFull; return *this; }
+        FXASSERT(wrptr+2<=endptr);
+        do{
+          wrptr[0]=q[1];
+          wrptr[1]=q[0];
+          wrptr+=2;
+          pos+=2;
+          q+=2;
+          n-=2;
+          }
+        while(0<n && wrptr+2<=endptr);
+        }
+      }
+    else{
+      while(0<n){
+        if(wrptr+n>endptr && writeBuffer((wrptr-endptr)+n)<2){ code=FXStreamFull; return *this; }
+        FXASSERT(wrptr+2<=endptr);
+        do{
+          wrptr[0]=q[0];
+          wrptr[1]=q[1];
+          wrptr+=2;
+          pos+=2;
+          q+=2;
+          n-=2;
+          }
+        while(0<n && wrptr+2<=endptr);
+        }
+      }
+    }
+  return *this;
+  }
+
+
+// Write array of ints
+FXStream& FXStream::save(const FXuint* p,unsigned long n){
+  register const FXuchar *q=(const FXuchar*)p;
+  if(code==FXStreamOK){
+    n<<=2;
+    FXASSERT(begptr<=rdptr);
+    FXASSERT(rdptr<=wrptr);
+    FXASSERT(wrptr<=endptr);
+    if(swap){
+      while(0<n){
+        if(wrptr+n>endptr && writeBuffer((wrptr-endptr)+n)<4){ code=FXStreamFull; return *this; }
+        FXASSERT(wrptr+4<=endptr);
+        do{
+          wrptr[0]=q[3];
+          wrptr[1]=q[2];
+          wrptr[2]=q[1];
+          wrptr[3]=q[0];
+          wrptr+=4;
+          pos+=4;
+          q+=4;
+          n-=4;
+          }
+        while(0<n && wrptr+4<=endptr);
+        }
+      }
+    else{
+      while(0<n){
+        if(wrptr+n>endptr && writeBuffer((wrptr-endptr)+n)<4){ code=FXStreamFull; return *this; }
+        FXASSERT(wrptr+4<=endptr);
+        do{
+          wrptr[0]=q[0];
+          wrptr[1]=q[1];
+          wrptr[2]=q[2];
+          wrptr[3]=q[3];
+          wrptr+=4;
+          pos+=4;
+          q+=4;
+          n-=4;
+          }
+        while(0<n && wrptr+4<=endptr);
+        }
+      }
+    }
+  return *this;
+  }
+
+
+// Write array of doubles
+FXStream& FXStream::save(const FXdouble* p,unsigned long n){
+  register const FXuchar *q=(const FXuchar*)p;
+  if(code==FXStreamOK){
+    n<<=3;
+    FXASSERT(begptr<=rdptr);
+    FXASSERT(rdptr<=wrptr);
+    FXASSERT(wrptr<=endptr);
+    if(swap){
+      while(0<n){
+        if(wrptr+n>endptr && writeBuffer((wrptr-endptr)+n)<8){ code=FXStreamFull; return *this; }
+        FXASSERT(wrptr+8<=endptr);
+        do{
+          wrptr[0]=q[7];
+          wrptr[1]=q[6];
+          wrptr[2]=q[5];
+          wrptr[3]=q[4];
+          wrptr[4]=q[3];
+          wrptr[5]=q[2];
+          wrptr[6]=q[1];
+          wrptr[7]=q[0];
+          wrptr+=8;
+          pos+=8;
+          q+=8;
+          n-=8;
+          }
+        while(0<n && wrptr+8<=endptr);
+        }
+      }
+    else{
+      while(0<n){
+        if(wrptr+n>endptr && writeBuffer((wrptr-endptr)+n)<8){ code=FXStreamFull; return *this; }
+        FXASSERT(wrptr+8<=endptr);
+        do{
+          wrptr[0]=q[0];
+          wrptr[1]=q[1];
+          wrptr[2]=q[2];
+          wrptr[3]=q[3];
+          wrptr[4]=q[4];
+          wrptr[5]=q[5];
+          wrptr[6]=q[6];
+          wrptr[7]=q[7];
+          wrptr+=8;
+          pos+=8;
+          q+=8;
+          n-=8;
+          }
+        while(0<n && wrptr+8<=endptr);
+        }
+      }
+    }
+  return *this;
+  }
+
+
+/*****************************  Load Basic Types  ******************************/
+
+// Read one byte
+FXStream& FXStream::operator>>(FXuchar& v){
+  if(code==FXStreamOK){
+    FXASSERT(begptr<=rdptr);
+    FXASSERT(rdptr<=wrptr);
+    FXASSERT(wrptr<=endptr);
+    if(rdptr+1>wrptr && readBuffer(1)<1){ code=FXStreamEnd; return *this; }
+    FXASSERT(rdptr+1<=wrptr);
+    v=*rdptr++;
+    pos++;
+    }
+  return *this;
+  }
+
+
+// Read one short
+FXStream& FXStream::operator>>(FXushort& v){
+  if(code==FXStreamOK){
+    FXASSERT(begptr<=rdptr);
+    FXASSERT(rdptr<=wrptr);
+    FXASSERT(wrptr<=endptr);
+    if(rdptr+2>wrptr && readBuffer((rdptr-wrptr)+2)<2){ code=FXStreamEnd; return *this; }
+    FXASSERT(rdptr+2<=wrptr);
+    if(swap){
+      ((FXuchar*)&v)[1]=rdptr[0];
+      ((FXuchar*)&v)[0]=rdptr[1];
+      }
+    else{
+      ((FXuchar*)&v)[0]=rdptr[0];
+      ((FXuchar*)&v)[1]=rdptr[1];
+      }
+    rdptr+=2;
+    pos+=2;
+    }
+  return *this;
+  }
+
+
+// Read one int
+FXStream& FXStream::operator>>(FXuint& v){
+  if(code==FXStreamOK){
+    FXASSERT(begptr<=rdptr);
+    FXASSERT(rdptr<=wrptr);
+    FXASSERT(wrptr<=endptr);
+    if(rdptr+4>wrptr && readBuffer((rdptr-wrptr)+4)<4){ code=FXStreamEnd; return *this; }
+    FXASSERT(rdptr+4<=wrptr);
+    if(swap){
+      ((FXuchar*)&v)[3]=rdptr[0];
+      ((FXuchar*)&v)[2]=rdptr[1];
+      ((FXuchar*)&v)[1]=rdptr[2];
+      ((FXuchar*)&v)[0]=rdptr[3];
+      }
+    else{
+      ((FXuchar*)&v)[0]=rdptr[0];
+      ((FXuchar*)&v)[1]=rdptr[1];
+      ((FXuchar*)&v)[2]=rdptr[2];
+      ((FXuchar*)&v)[3]=rdptr[3];
+      }
+    rdptr+=4;
+    pos+=4;
+    }
+  return *this;
+  }
+
+
+// Read one double
+FXStream& FXStream::operator>>(FXdouble& v){
+  if(code==FXStreamOK){
+    FXASSERT(begptr<=rdptr);
+    FXASSERT(rdptr<=wrptr);
+    FXASSERT(wrptr<=endptr);
+    if(rdptr+8>wrptr && readBuffer((rdptr-wrptr)+8)<8){ code=FXStreamEnd; return *this; }
+    FXASSERT(rdptr+8<=wrptr);
+    if(swap){
+      ((FXuchar*)&v)[7]=rdptr[0];
+      ((FXuchar*)&v)[6]=rdptr[1];
+      ((FXuchar*)&v)[5]=rdptr[2];
+      ((FXuchar*)&v)[4]=rdptr[3];
+      ((FXuchar*)&v)[3]=rdptr[4];
+      ((FXuchar*)&v)[2]=rdptr[5];
+      ((FXuchar*)&v)[1]=rdptr[6];
+      ((FXuchar*)&v)[0]=rdptr[7];
+      }
+    else{
+      ((FXuchar*)&v)[0]=rdptr[0];
+      ((FXuchar*)&v)[1]=rdptr[1];
+      ((FXuchar*)&v)[2]=rdptr[2];
+      ((FXuchar*)&v)[3]=rdptr[3];
+      ((FXuchar*)&v)[4]=rdptr[4];
+      ((FXuchar*)&v)[5]=rdptr[5];
+      ((FXuchar*)&v)[6]=rdptr[6];
+      ((FXuchar*)&v)[7]=rdptr[7];
+      }
+    rdptr+=8;
+    pos+=8;
+    }
+  return *this;
+  }
+
+
+
+/************************  Load Blocks of Basic Types  *************************/
+
+// Read array of bytes
+FXStream& FXStream::load(FXuchar* p,unsigned long n){
+  if(code==FXStreamOK){
+    FXASSERT(begptr<=rdptr);
+    FXASSERT(rdptr<=wrptr);
+    FXASSERT(wrptr<=endptr);
+    while(0<n){
+      if(rdptr+n>wrptr && readBuffer((rdptr-wrptr)+n)<1){ code=FXStreamEnd; return *this; }
+      FXASSERT(rdptr<wrptr);
+      do{
+        *p++=*rdptr++;
+        pos++;
+        n--;
+        }
+      while(0<n && rdptr<wrptr);
+      }
+    }
+  return *this;
+  }
+
+
+/// Read array of shorts
+FXStream& FXStream::load(FXushort* p,unsigned long n){
+  register FXuchar *q=(FXuchar*)p;
+  if(code==FXStreamOK){
+    n<<=1;
+    FXASSERT(begptr<=rdptr);
+    FXASSERT(rdptr<=wrptr);
+    FXASSERT(wrptr<=endptr);
+    if(swap){
+      while(0<n){
+        if(rdptr+n>wrptr && readBuffer((rdptr-wrptr)+n)<2){ code=FXStreamEnd; return *this; }
+        FXASSERT(rdptr+2<=wrptr);
+        do{
+          q[1]=rdptr[0];
+          q[0]=rdptr[1];
+          rdptr+=2;
+          pos+=2;
+          q+=2;
+          n-=2;
+          }
+        while(0<n && rdptr+2<=wrptr);
+        }
+      }
+    else{
+      while(0<n){
+        if(rdptr+n>wrptr && readBuffer((rdptr-wrptr)+n)<2){ code=FXStreamEnd; return *this; }
+        FXASSERT(rdptr+2<=wrptr);
+        do{
+          q[0]=rdptr[0];
+          q[1]=rdptr[1];
+          rdptr+=2;
+          pos+=2;
+          q+=2;
+          n-=2;
+          }
+        while(0<n && rdptr+2<=wrptr);
+        }
+      }
+    }
+  return *this;
+  }
+
+
+// Read array of ints
+FXStream& FXStream::load(FXuint* p,unsigned long n){
+  register FXuchar *q=(FXuchar*)p;
+  if(code==FXStreamOK){
+    n<<=2;
+    FXASSERT(begptr<=rdptr);
+    FXASSERT(rdptr<=wrptr);
+    FXASSERT(wrptr<=endptr);
+    if(swap){
+      while(0<n){
+        if(rdptr+n>wrptr && readBuffer((rdptr-wrptr)+n)<4){ code=FXStreamEnd; return *this; }
+        FXASSERT(rdptr+4<=wrptr);
+        do{
+          q[3]=rdptr[0];
+          q[2]=rdptr[1];
+          q[1]=rdptr[2];
+          q[0]=rdptr[3];
+          rdptr+=4;
+          pos+=4;
+          q+=4;
+          n-=4;
+          }
+        while(0<n && rdptr+4<=wrptr);
+        }
+      }
+    else{
+      while(0<n){
+        if(rdptr+n>wrptr && readBuffer((rdptr-wrptr)+n)<4){ code=FXStreamEnd; return *this; }
+        FXASSERT(rdptr+4<=wrptr);
+        do{
+          q[0]=rdptr[0];
+          q[1]=rdptr[1];
+          q[2]=rdptr[2];
+          q[3]=rdptr[3];
+          rdptr+=4;
+          pos+=4;
+          q+=4;
+          n-=4;
+          }
+        while(0<n && rdptr+4<=wrptr);
+        }
+      }
+    }
+  return *this;
+  }
+
+
+// Read array of doubles
+FXStream& FXStream::load(FXdouble* p,unsigned long n){
+  register FXuchar *q=(FXuchar*)p;
+  if(code==FXStreamOK){
+    n<<=3;
+    FXASSERT(begptr<=rdptr);
+    FXASSERT(rdptr<=wrptr);
+    FXASSERT(wrptr<=endptr);
+    if(swap){
+      while(0<n){
+        if(rdptr+n>wrptr && readBuffer((rdptr-wrptr)+n)<8){ code=FXStreamEnd; return *this; }
+        FXASSERT(rdptr+4<=wrptr);
+        do{
+          q[7]=rdptr[0];
+          q[6]=rdptr[1];
+          q[5]=rdptr[2];
+          q[4]=rdptr[3];
+          q[3]=rdptr[4];
+          q[2]=rdptr[5];
+          q[1]=rdptr[6];
+          q[0]=rdptr[7];
+          rdptr+=8;
+          pos+=8;
+          q+=8;
+          n-=8;
+          }
+        while(0<n && rdptr+8<=wrptr);
+        }
+      }
+    else{
+      while(0<n){
+        if(rdptr+n>wrptr && readBuffer((rdptr-wrptr)+n)<8){ code=FXStreamEnd; return *this; }
+        FXASSERT(rdptr+4<=wrptr);
+        do{
+          q[0]=rdptr[0];
+          q[1]=rdptr[1];
+          q[2]=rdptr[2];
+          q[3]=rdptr[3];
+          q[4]=rdptr[4];
+          q[5]=rdptr[5];
+          q[6]=rdptr[6];
+          q[7]=rdptr[7];
+          rdptr+=8;
+          pos+=8;
+          q+=8;
+          n-=8;
+          }
+        while(0<n && rdptr+8<=wrptr);
+        }
+      }
+    }
+  return *this;
+  }
+
+
+/*******************************  Save Objects  ********************************/
+
 // Save object
 FXStream& FXStream::saveObject(const FXObject* v){
-  const FXMetaClass *cls;
+  register const FXMetaClass *cls;
   register FXuint p,x;
   FXuint tag,esc=0;
   if(dir!=FXStreamSave){ fxerror("FXStream::saveObject: wrong stream direction.\n"); }
   if(code==FXStreamOK){
-    if(v==NULL){
+    if(v==NULL){                                // Its a NULL
       tag=0;
       *this << tag;
       return *this;
@@ -523,28 +862,28 @@ FXStream& FXStream::saveObject(const FXObject* v){
     FXASSERT(p<ntable);
     x=HASH2(v,ntable);
     FXASSERT(1<=x && x<ntable);
-    while(table[p].ref!=UNUSEDSLOT){
+    while(table[p].ref!=UNUSEDSLOT){            // Check hash table
       if(table[p].obj==v){
         FXASSERT(table[p].ref<=no);
         tag=table[p].ref|0x80000000;
-        *this << tag;
+        *this << tag;                           // Was in table, save reference only
         return *this;
         }
-      p = (p+x)%ntable;
+      p=(p+x)%ntable;
       }
     table[p].obj=(FXObject*)v;
     table[p].ref=no++;
     FXASSERT(no<ntable);
     if((100*no)>=(MAX_LOAD*ntable)) grow();
     cls=v->getMetaClass();
-    tag=cls->namelen;
-    if(tag>MAXCLASSNAME){
-      code=FXStreamFormat;                    // Class name too long
+    tag=cls->getClassNameLength();
+    if(tag>MAXCLASSNAME){                       // Class name too long
+      code=FXStreamFormat;
       return *this;
       }
-    *this << tag;
-    *this << esc;                             // Escape code for future expension; must be 0 for now
-    save(cls->className,cls->namelen);
+    *this << tag;                               // Save tag
+    *this << esc;                               // Escape is zero for now
+    save(cls->getClassName(),cls->getClassNameLength());
     FXTRACE((100,"saveObject(%s)\n",v->getClassName()));
     v->save(*this);
     }
@@ -552,53 +891,48 @@ FXStream& FXStream::saveObject(const FXObject* v){
   }
 
 
+/*******************************  Load Objects  ********************************/
+
 // Load object
 FXStream& FXStream::loadObject(FXObject*& v){
-  const FXMetaClass *cls;
-  FXchar obnam[MAXCLASSNAME];
+  register const FXMetaClass *cls;
+  FXchar obnam[MAXCLASSNAME+1];
   FXuint tag,esc;
   if(dir!=FXStreamLoad){ fxerror("FXStream::loadObject: wrong stream direction.\n"); }
   if(code==FXStreamOK){
     *this >> tag;
-    if(tag==0){
+    if(tag==0){                                 // Was a NULL
       v=NULL;
       return *this;
       }
     if(tag&0x80000000){
       tag&=0x7fffffff;
-      if(tag>=no){                            // Out-of-range reference number
-        code=FXStreamFormat;                  // Bad format in stream
+      if(tag>=no){                              // Out-of-range reference number
+        code=FXStreamFormat;                    // Bad format in stream
         return *this;
         }
-      if(table[tag].ref!=tag){                // We should have constructed the object already!
-        code=FXStreamFormat;                  // Bad format in stream
-        return *this;
-        }
-      FXASSERT(tag<ntable);
       v=table[tag].obj;
-      FXASSERT(v);
       return *this;
       }
-    if(tag>MAXCLASSNAME){                     // Out-of-range class name string
-      code=FXStreamFormat;                    // Bad format in stream
+    if(tag>MAXCLASSNAME){                       // Class name too long
+      code=FXStreamFormat;                      // Bad format in stream
       return *this;
       }
-    *this >> esc;                             // Read but ignore escape code
-    load(obnam,tag);
+    *this >> esc;                               // Read escape code
+    if(esc!=0){                                 // Escape code is wrong
+      code=FXStreamFormat;                      // Bad format in stream
+      return *this;
+      }
+    load(obnam,tag);                            // Load name
     cls=FXMetaClass::getMetaClassFromName(obnam);
-    if(cls==NULL){                            // No FXMetaClass with this class name
-      code=FXStreamUnknown;                   // Unknown class
+    if(cls==NULL){                              // No FXMetaClass with this class name
+      code=FXStreamUnknown;                     // Unknown class
       return *this;
       }
-    v=cls->makeInstance();                    // Build some object!!
-    if(v==NULL){
-      code=FXStreamAlloc;                     // Unable to construct object
-      return *this;
-      }
+    v=cls->makeInstance();                      // Build some object!!
     FXASSERT(no<ntable);
-    table[no].obj=v;                          // Save pointer in table
-    table[no].ref=no;                         // Save reference number also!
-    no++;
+    table[no].obj=v;                            // Save pointer in table
+    table[no].ref=no++;                         // Save reference number also!
     if(no>=ntable) grow();
     FXTRACE((100,"loadObject(%s)\n",v->getClassName()));
     v->load(*this);
@@ -606,341 +940,4 @@ FXStream& FXStream::loadObject(FXObject*& v){
   return *this;
   }
 
-
-// Move to position
-FXbool FXStream::position(unsigned long p){
-  if(dir==FXStreamDead){fxerror("FXStream::position: stream is not open.\n");}
-  if(code==FXStreamOK){
-    pos=p;
-    return TRUE;
-    }
-  return FALSE;
-  }
-
-
-/*************************  File Store Implementation  *************************/
-
-
-// Initialize file stream
-FXFileStream::FXFileStream(const FXObject* cont):FXStream(cont){
-  file=NULL;
-  }
-
-
-// Save to a file
-void FXFileStream::saveItems(const void *buf,FXuint n){
-  if(dir!=FXStreamSave){ fxerror("FXFileStream::saveItems: wrong stream direction.\n"); }
-  if(code==FXStreamOK){
-    if(fwrite(buf,1,n,(FILE*)file)!=n){code=FXStreamFull;}
-    }
-  }
-
-
-// Load from file
-void FXFileStream::loadItems(void *buf,FXuint n){
-  if(dir!=FXStreamLoad){ fxerror("FXFileStream::loadItems: wrong stream direction.\n"); }
-  if(code==FXStreamOK){
-    if(fread(buf,1,n,(FILE*)file)!=n){code=FXStreamEnd;}
-    }
-  }
-
-
-// Try open file stream
-FXbool FXFileStream::open(const FXString& filename,FXStreamDirection save_or_load){
-
-  // Stream should not yet be open
-  if(dir!=FXStreamDead){ fxerror("FXFileStream::open: stream is already open.\n"); }
-
-  // Open for read
-  if(save_or_load==FXStreamLoad){
-    file=fopen(filename.text(),"rb");
-    if(file==NULL){code=FXStreamNoRead;return FALSE;}
-    }
-
-  // Open for write
-  else{
-    file=fopen(filename.text(),"wb");
-    if(file==NULL){code=FXStreamNoWrite;return FALSE;}
-    }
-
-  // Do the generic book-keeping
-  return FXStream::open(save_or_load);
-  }
-
-
-// Close file stream
-FXbool FXFileStream::close(){
-  if(file){fclose((FILE*)file);file=NULL;}
-  return FXStream::close();
-  }
-
-
-// Some systems don't have it
-#ifndef SEEK_SET
-#define SEEK_SET 0
-#endif
-
-
-// Move to position
-FXbool FXFileStream::position(unsigned long p){
-  if(dir==FXStreamDead){ fxerror("FXFileStream::position: stream is not open.\n"); }
-  if(code==FXStreamOK){
-
-    // Seek file from beginning
-    if(dir==FXStreamSave){
-      if(fseek((FILE*)file,p,SEEK_SET)!=0){ code=FXStreamFull; return FALSE; }
-      }
-    else{
-      if(fseek((FILE*)file,p,SEEK_SET)!=0){ code=FXStreamEnd; return FALSE; }
-      }
-
-    // Read back to make sure we're in sync
-    pos=ftell((FILE*)file);
-    return TRUE;
-    }
-  return FALSE;
-  }
-
-
-FXStream& FXFileStream::operator<<(const FXuchar& v){
-  if(code==FXStreamOK){
-    register FXint c=putc(v,(FILE*)file);
-    if(c==EOF){code=FXStreamFull;}
-    }
-  pos+=1;
-  return *this;
-  }
-
-
-FXStream& FXFileStream::operator<<(const FXchar& v){
-  if(code==FXStreamOK){
-    register FXint c=putc(v,(FILE*)file);
-    if(c==EOF){code=FXStreamFull;}
-    }
-  pos+=1;
-  return *this;
-  }
-
-
-FXStream& FXFileStream::operator>>(FXuchar& v){
-  if(code==FXStreamOK){
-    register FXint c=getc((FILE*)file);
-    if(c==EOF){code=FXStreamEnd;}
-    v=c;
-    }
-  pos+=1;
-  return *this;
-  }
-
-
-FXStream& FXFileStream::operator>>(FXchar& v){
-  if(code==FXStreamOK){
-    register FXint c=getc((FILE*)file);
-    if(c==EOF){code=FXStreamEnd;}
-    v=c;
-    }
-  pos+=1;
-  return *this;
-  }
-
-
-// Close file stream
-FXFileStream::~FXFileStream(){
-  if(file){fclose((FILE*)file);}
-  file=(void*)-1;
-  }
-
-
-/***********************  Memory Store Implementation  *************************/
-
-
-// Initialize memory stream
-FXMemoryStream::FXMemoryStream(const FXObject* cont):FXStream(cont){
-  ptr=NULL;
-  space=0;
-  owns=FALSE;
-  }
-
-
-// Set available space
-void FXMemoryStream::setSpace(FXuint sp){
-  if(!owns){ fxerror("FXMemoryStream::setSpace: cannot resize non-owned data buffer.\n"); }
-  if(sp!=space){
-    if(!FXRESIZE(&ptr,FXuchar,sp)){code=FXStreamAlloc;return;}
-    space=sp;
-    }
-  }
-
-
-// Save stuff into the data buffer
-void FXMemoryStream::saveItems(const void *buf,FXuint n){
-  if(dir!=FXStreamSave){fxerror("FXMemoryStream::saveItems: wrong stream direction.\n");}
-  if(code==FXStreamOK){
-    if(n){
-      if(pos+n>space){
-        if(!owns){code=FXStreamFull;return;}
-        setSpace(pos+n);
-        if(pos+n>space) return;
-        }
-      FXASSERT(pos+n<=space);
-      memcpy(&ptr[pos],buf,n);
-      }
-    }
-  }
-
-
-// Load stuff from data buffer
-void FXMemoryStream::loadItems(void *buf,FXuint n){
-  if(dir!=FXStreamLoad){ fxerror("FXMemoryStream::loadItems: wrong stream direction.\n"); }
-  if(code==FXStreamOK){
-    if(n){
-      if(pos+n>space){code=FXStreamEnd;return;}
-      FXASSERT(pos+n<=space);
-      memcpy(buf,&ptr[pos],n);
-      }
-    }
-  }
-
-FXStream& FXMemoryStream::operator<<(const FXuchar& v){
-  if(code==FXStreamOK){
-    if(pos>=space){
-      if(!owns){code=FXStreamFull;return *this;}
-      setSpace(pos+1);
-      if(pos>=space) return *this;
-      }
-    ptr[pos]=v;
-    }
-  pos+=1;
-  return *this;
-  }
-
-
-FXStream& FXMemoryStream::operator<<(const FXchar& v){
-  if(code==FXStreamOK){
-    if(pos>=space){
-      if(!owns){code=FXStreamFull;return *this;}
-      setSpace(pos+1);
-      if(pos>=space) return *this;
-      }
-    ptr[pos]=(FXuchar)v;
-    }
-  pos+=1;
-  return *this;
-  }
-
-
-FXStream& FXMemoryStream::operator>>(FXuchar& v){
-  if(code==FXStreamOK){
-    if(pos>=space){code=FXStreamEnd;return *this;}
-    v=ptr[pos];
-    }
-  pos+=1;
-  return *this;
-  }
-
-
-FXStream& FXMemoryStream::operator>>(FXchar& v){
-  if(code==FXStreamOK){
-    if(pos>=space){code=FXStreamEnd;return *this;}
-    v=(FXchar)ptr[pos];
-    }
-  pos+=1;
-  return *this;
-  }
-
-
-// Open a stream, possibly with an initial data array
-FXbool FXMemoryStream::open(FXuchar* data,FXStreamDirection save_or_load){
-  if(data){
-    ptr=data;
-    space=4294967295U;
-    owns=FALSE;
-    }
-  else{
-    FXCALLOC(&ptr,FXuchar,1);
-    if(!ptr){code=FXStreamAlloc;return FALSE;}
-    space=1;
-    owns=TRUE;
-    }
-  return FXStream::open(save_or_load);
-  }
-
-
-// Open a stream, possibly with initial data array of certain size
-FXbool FXMemoryStream::open(FXuchar* data,FXuint sp,FXStreamDirection save_or_load){
-  if(data){
-    ptr=data;
-    space=sp;
-    owns=FALSE;
-    }
-  else{
-    if(sp==0) sp=1;
-    FXCALLOC(&ptr,FXuchar,sp);
-    if(!ptr){code=FXStreamAlloc;return FALSE;}
-    space=sp;
-    owns=TRUE;
-    }
-  return FXStream::open(save_or_load);
-  }
-
-
-// Take buffer away from stream
-void FXMemoryStream::takeBuffer(FXuchar*& buffer,FXuint& sp){
-  buffer=ptr;
-  sp=space;
-  ptr=NULL;
-  space=0;
-  owns=FALSE;
-  }
-
-
-// Give buffer to stream
-void FXMemoryStream::giveBuffer(FXuchar *buffer,FXuint sp){
-  if(buffer==NULL){ fxerror("FXMemoryStream::giveBuffer: NULL buffer argument.\n"); }
-  if(owns){FXFREE(&ptr);}
-  ptr=buffer;
-  space=sp;
-  owns=TRUE;
-  }
-
-
-// Close the stream
-FXbool FXMemoryStream::close(){
-  if(owns){FXFREE(&ptr);}
-  ptr=NULL;
-  space=0;
-  owns=FALSE;
-  return FXStream::close();
-  }
-
-
-// Move to position; if saving and we own the buffer, try to resize
-// and 0-fill the space; if loading and not out of range, move the pointer;
-// otherwise, return error code.
-FXbool FXMemoryStream::position(unsigned long p){
-  if(dir==FXStreamDead){ fxerror("FXMemoryStream::position: stream is not open.\n"); }
-  if(code==FXStreamOK){
-    if(dir==FXStreamSave){
-      if(p>space){
-        if(!owns){ code=FXStreamFull; return FALSE; }
-        setSpace(p);
-        if(p>space) return FALSE;
-        }
-      }
-    else{
-      if(p>space){ code=FXStreamEnd; return FALSE; }
-      }
-    pos=p;
-    return TRUE;
-    }
-  return FALSE;
-  }
-
-
-// Cleanup of memory stream
-FXMemoryStream::~FXMemoryStream(){
-  if(owns){FXFREE(&ptr);}
-  ptr=(FXuchar*)-1;
-  }
-
-
+}

@@ -3,7 +3,7 @@
 *                          I C O   I m a g e   O b j e c t                      *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2001,2002 by Janusz Ganczarski.   All Rights Reserved.          *
+* Copyright (C) 2001,2004 by Janusz Ganczarski.   All Rights Reserved.          *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,17 +19,19 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXICOImage.cpp,v 1.4 2002/01/18 22:46:43 jeroen Exp $                    *
+* $Id: FXICOImage.cpp,v 1.17 2004/02/08 17:29:06 fox Exp $                      *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
 #include "fxdefs.h"
 #include "FXStream.h"
+#include "FXMemoryStream.h"
 #include "FXString.h"
 #include "FXSize.h"
 #include "FXPoint.h"
 #include "FXRectangle.h"
 #include "FXRegistry.h"
+#include "FXHash.h"
 #include "FXApp.h"
 #include "FXICOImage.h"
 
@@ -39,8 +41,11 @@
   Notes:
 */
 
+using namespace FX;
 
 /*******************************************************************************/
+
+namespace FX {
 
 // Object implementation
 FXIMPLEMENT(FXICOImage,FXImage,NULL,0)
@@ -48,13 +53,12 @@ FXIMPLEMENT(FXICOImage,FXImage,NULL,0)
 
 
 // Initialize
-FXICOImage::FXICOImage(FXApp* a,const void *pix,FXuint opts,FXint w,FXint h):
-  FXImage(a,NULL,opts&~IMAGE_ALPHA,w,h){
+FXICOImage::FXICOImage(FXApp* a,const void *pix,FXuint opts,FXint w,FXint h):FXImage(a,NULL,opts,w,h){
   if(pix){
     FXMemoryStream ms;
-    FXColor clearcolor;
-    ms.open((FXuchar*)pix,FXStreamLoad);
-    fxloadICO(ms,data,clearcolor,width,height);
+    FXint hotx,hoty;
+    ms.open(FXStreamLoad,(FXuchar*)pix);
+    fxloadICO(ms,data,width,height,hotx,hoty);
     options|=IMAGE_OWNED;
     ms.close();
     }
@@ -62,19 +66,19 @@ FXICOImage::FXICOImage(FXApp* a,const void *pix,FXuint opts,FXint w,FXint h):
 
 
 // Save pixel data only
-void FXICOImage::savePixels(FXStream& store) const {
-  FXASSERT(!(options&IMAGE_ALPHA));
-  fxsaveICO(store,data,0,width,height);
+FXbool FXICOImage::savePixels(FXStream& store) const {
+  if(!fxsaveICO(store,data,width,height,0,0)) return FALSE;
+  return TRUE;
   }
 
 
 // Load pixel data only
-void FXICOImage::loadPixels(FXStream& store){
-  FXColor clearcolor;
+FXbool FXICOImage::loadPixels(FXStream& store){
+  FXint hotx,hoty;
   if(options&IMAGE_OWNED){FXFREE(&data);}
-  fxloadICO(store,data,clearcolor,width,height);
-  options&=~IMAGE_ALPHA;
+  if(!fxloadICO(store,data,width,height,hotx,hoty)) return FALSE;
   options|=IMAGE_OWNED;
+  return TRUE;
   }
 
 
@@ -82,5 +86,6 @@ void FXICOImage::loadPixels(FXStream& store){
 FXICOImage::~FXICOImage(){
   }
 
+}
 
 

@@ -3,7 +3,7 @@
 *                           O p e n G L   O b j e c t                           *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1998,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,17 +19,18 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXGLObject.cpp,v 1.18 2002/01/18 22:43:00 jeroen Exp $                   *
+* $Id: FXGLObject.cpp,v 1.28 2004/03/15 06:49:46 fox Exp $                      *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
 #include "fxdefs.h"
 #include "FXStream.h"
-#include "FXVec.h"
-#include "FXHVec.h"
-#include "FXQuat.h"
-#include "FXHMat.h"
-#include "FXRange.h"
+#include "FXVec2f.h"
+#include "FXVec3f.h"
+#include "FXVec4f.h"
+#include "FXQuatf.h"
+#include "FXMat4f.h"
+#include "FXRangef.h"
 #include "FXString.h"
 #include "FXSize.h"
 #include "FXPoint.h"
@@ -37,6 +38,7 @@
 #include "FXRegistry.h"
 #include "FXAccelTable.h"
 #include "FXObjectList.h"
+#include "FXHash.h"
 #include "FXApp.h"
 #include "FXGLViewer.h"
 #include "FXGLObject.h"
@@ -93,11 +95,15 @@
     GL.glGetFloatv(GL_MODELVIEW_MATRIX, ModelView) ).  I have not profiled the
     difference between them, but I would assume a cached matrix would be faster.
 
+using namespace FX;
 
 */
 
+using namespace FX;
+
 /*******************************************************************************/
 
+namespace FX {
 
 // Object implementation
 FXIMPLEMENT(FXGLObject,FXObject,NULL,0)
@@ -106,8 +112,10 @@ FXIMPLEMENT(FXGLObject,FXObject,NULL,0)
 
 
 // Get bounding box
-void FXGLObject::bounds(FXRange& box){
-  box[0][0]=box[0][1]=box[1][0]=box[1][1]=box[2][0]=box[2][1]=0.0;
+void FXGLObject::bounds(FXRangef& box){
+  box.upper.x=box.lower.x=0.0f;
+  box.upper.y=box.lower.y=0.0f;
+  box.upper.z=box.lower.z=0.0f;
   }
 
 
@@ -149,16 +157,17 @@ FXIMPLEMENT(FXGLGroup,FXGLObject,NULL,0)
 
 
 // Get bounding box
-void FXGLGroup::bounds(FXRange& box){
-  if(list.no()==0){
-    box[0][0]=box[0][1]=box[1][0]=box[1][1]=box[2][0]=box[2][1]=0.0;
-    }
-  else{
-    box=FXRange(FLT_MAX,-FLT_MAX,FLT_MAX,-FLT_MAX,FLT_MAX,-FLT_MAX);
-    for(FXint i=0; i<list.no(); i++){
-      FXRange r;
-      list[i]->bounds(r);
-      box.include(r);
+void FXGLGroup::bounds(FXRangef& box){
+  register FXint i;
+  FXRangef b;
+  box.lower.x=box.lower.y=box.lower.z=0.0f;
+  box.upper.x=box.upper.y=box.upper.z=0.0f;
+  if(0<list.no()){
+    box.lower.x=box.lower.y=box.lower.z= FLT_MAX;
+    box.upper.x=box.upper.y=box.upper.z=-FLT_MAX;
+    for(i=0; i<list.no(); i++){
+      list[i]->bounds(b);
+      box.include(b);
       }
     }
   }
@@ -172,7 +181,7 @@ void FXGLGroup::draw(FXGLViewer* viewer){
 
 // Draw for hit
 void FXGLGroup::hit(FXGLViewer* viewer){
-#ifdef HAVE_OPENGL
+#ifdef HAVE_GL_H
   glPushName(0xffffffff);
   for(FXint i=0; i<list.no(); i++){
     glLoadName(i);
@@ -254,16 +263,16 @@ FXGLPoint::FXGLPoint(FXfloat x,FXfloat y,FXfloat z):pos(x,y,z){
 
 
 // Get bounding box
-void FXGLPoint::bounds(FXRange& box){
-  box[0][0]=box[0][1]=pos[0];
-  box[1][0]=box[1][1]=pos[1];
-  box[2][0]=box[2][1]=pos[2];
+void FXGLPoint::bounds(FXRangef& box){
+  box.upper.x=box.lower.x=pos.x;
+  box.upper.y=box.lower.y=pos.y;
+  box.upper.z=box.lower.z=pos.z;
   }
 
 
 // Draw
 void FXGLPoint::draw(FXGLViewer* ){
-#ifdef HAVE_OPENGL
+#ifdef HAVE_GL_H
   glColor3f(0.0,0.0,1.0);
   glPointSize(HANDLE_SIZE);
   glBegin(GL_POINTS);
@@ -275,7 +284,7 @@ void FXGLPoint::draw(FXGLViewer* ){
 
 // Draw for hit
 void FXGLPoint::hit(FXGLViewer* ){
-#ifdef HAVE_OPENGL
+#ifdef HAVE_GL_H
   glBegin(GL_POINTS);
   glVertex3fv(pos);
   glEnd();
@@ -324,16 +333,16 @@ FXGLLine::FXGLLine(FXfloat fx,FXfloat fy,FXfloat fz,FXfloat tx,FXfloat ty,FXfloa
 
 
 // Get bounding box
-void FXGLLine::bounds(FXRange& box){
-  FXMINMAX(box[0][0],box[0][1],fm.pos[0],to.pos[0]);
-  FXMINMAX(box[1][0],box[1][1],fm.pos[1],to.pos[1]);
-  FXMINMAX(box[2][0],box[2][1],fm.pos[2],to.pos[2]);
+void FXGLLine::bounds(FXRangef& box){
+  FXMINMAX(box.lower.x,box.upper.x,fm.pos.x,to.pos.x);
+  FXMINMAX(box.lower.y,box.upper.y,fm.pos.y,to.pos.y);
+  FXMINMAX(box.lower.z,box.upper.z,fm.pos.z,to.pos.z);
   }
 
 
 // Draw
 void FXGLLine::draw(FXGLViewer* ){
-#ifdef HAVE_OPENGL
+#ifdef HAVE_GL_H
   glColor3f(1.0,0.0,0.0);
   glPointSize(HANDLE_SIZE);
   glBegin(GL_LINES);
@@ -346,7 +355,7 @@ void FXGLLine::draw(FXGLViewer* ){
 
 // Draw for hit
 void FXGLLine::hit(FXGLViewer* ){
-#ifdef HAVE_OPENGL
+#ifdef HAVE_GL_H
   glBegin(GL_LINES);
   glVertex3fv(fm.pos);
   glVertex3fv(to.pos);
@@ -376,3 +385,4 @@ void FXGLLine::load(FXStream& store){
   to.load(store);
   }
 
+}

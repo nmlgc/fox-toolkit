@@ -5,7 +5,7 @@
 ##############################################################################
 # Copyright (C) 1997 by Jeroen van der Zijp.   All Rights Reserved.          #
 ##############################################################################
-# $Id: Makefile.bc,v 1.6 2001/10/16 23:08:56 jeroen Exp $                   #
+# $Id: Makefile.bc,v 1.8 2003/08/21 22:15:27 fox Exp $                       #
 ##############################################################################
 # This library is free software; you can redistribute it and/or              #
 # modify it under the terms of the GNU Library General Public                #
@@ -43,7 +43,7 @@ OBJECTS = $(SOURCES:.cpp=.obj)
 
 all: $(PROGRAMS)
 
-reswrap.exe: $(FOXLIB) reswrap.obj
+reswrap.exe: reswrap.obj
 	$(CXX) $(LDFLAGS) $(LIBDIRS) reswrap.obj
 
 clean:

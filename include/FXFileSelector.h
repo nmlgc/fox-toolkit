@@ -3,7 +3,7 @@
 *                  F i l e   S e l e c t i o n   W i d g e t                    *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1998,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXFileSelector.h,v 1.38 2002/02/26 17:20:12 fox Exp $                 *
+* $Id: FXFileSelector.h,v 1.48 2004/03/18 15:25:20 fox Exp $                    *
 ********************************************************************************/
 #ifndef FXFILESELECTOR_H
 #define FXFILESELECTOR_H
@@ -28,6 +28,7 @@
 #include "FXPacker.h"
 #endif
 
+namespace FX {
 
 class FXFileList;
 class FXTextField;
@@ -37,6 +38,8 @@ class FXButton;
 class FXIcon;
 class FXMenuPane;
 class FXCheckButton;
+class FXMatrix;
+class FXHorizontalFrame;
 
 
 /// File selection modes
@@ -53,35 +56,36 @@ enum {
 class FXAPI FXFileSelector : public FXPacker {
   FXDECLARE(FXFileSelector)
 protected:
-  FXFileList    *filebox;         // File list widget
-  FXTextField   *filename;        // File name entry field
-  FXComboBox    *filefilter;      // Combobox for pattern list
-  FXMenuPane    *bookmarks;       // Menu for bookmarks
-  FXCheckButton *readonly;        // Open file as read only
-  FXDirBox      *dirbox;          // Directory hierarchy list
-  FXButton      *accept;          // Accept button
-  FXButton      *cancel;          // Cancel button
-  FXIcon        *updiricon;       // Up directory icon
-  FXIcon        *newdiricon;      // New directory icon
-  FXIcon        *listicon;        // List mode icon
-  FXIcon        *detailicon;      // Detail mode icon
-  FXIcon        *iconsicon;       // Icon mode icon
-  FXIcon        *homeicon;        // Go home icon
-  FXIcon        *workicon;        // Go home icon
-  FXIcon        *shownicon;       // Files shown icon
-  FXIcon        *hiddenicon;      // Files hidden icon
-  FXIcon        *markicon;        // Book mark icon
-  FXIcon        *clearicon;       // Book clear icon
-  FXIcon        *deleteicon;      // Delete file icon
-  FXIcon        *moveicon;        // Rename file icon
-  FXIcon        *copyicon;        // Copy file icon
-  FXIcon        *linkicon;        // Link file icon
-  FXRecentFiles  mrufiles;        // Recently visited places
-  FXuint         selectmode;      // Select mode
+  FXFileList        *filebox;           // File list widget
+  FXTextField       *filename;          // File name entry field
+  FXComboBox        *filefilter;        // Combobox for pattern list
+  FXMenuPane        *bookmarks;         // Menu for bookmarks
+  FXHorizontalFrame *navbuttons;        // Navigation buttons
+  FXHorizontalFrame *fileboxframe;      // Frame around file list
+  FXMatrix          *entryblock;        // Entry block
+  FXCheckButton     *readonly;          // Open file as read only
+  FXDirBox          *dirbox;            // Directory hierarchy list
+  FXButton          *accept;            // Accept button
+  FXButton          *cancel;            // Cancel button
+  FXIcon            *updiricon;         // Up directory icon
+  FXIcon            *newdiricon;        // New directory icon
+  FXIcon            *listicon;          // List mode icon
+  FXIcon            *detailicon;        // Detail mode icon
+  FXIcon            *iconsicon;         // Icon mode icon
+  FXIcon            *homeicon;          // Go home icon
+  FXIcon            *workicon;          // Go home icon
+  FXIcon            *shownicon;         // Files shown icon
+  FXIcon            *hiddenicon;        // Files hidden icon
+  FXIcon            *markicon;          // Book mark icon
+  FXIcon            *clearicon;         // Book clear icon
+  FXIcon            *deleteicon;        // Delete file icon
+  FXIcon            *moveicon;          // Rename file icon
+  FXIcon            *copyicon;          // Copy file icon
+  FXIcon            *linkicon;          // Link file icon
+  FXRecentFiles      mrufiles;          // Recently visited places
+  FXuint             selectmode;        // Select mode
 protected:
   FXFileSelector(){}
-  static FXString patternFromText(const FXString& pattern);
-  static FXString extensionFromPattern(const FXString& pattern);
 private:
   FXFileSelector(const FXFileSelector&);
   FXFileSelector &operator=(const FXFileSelector&);
@@ -170,13 +174,6 @@ public:
   */
   void setPatternList(const FXString& patterns);
 
-  /**
-  * Set list of patterns as name,pattern pairs.
-  * The list should be terminated with a final NULL string.
-  * (DEPRECATED)
-  */
-  void setPatternList(const FXchar **ptrns);
-
   /// Return list of patterns
   FXString getPatternList() const;
 
@@ -194,6 +191,21 @@ public:
 
   /// Change pattern text for pattern number
   void setPatternText(FXint patno,const FXString& text);
+
+  /**
+  * Given filename pattern of the form "GIF Format (*.gif)",
+  * returns the pattern only, i.e. "*.gif" in this case.
+  * If the parentheses are not found then returns the entire
+  * input pattern.
+  */
+  static FXString patternFromText(const FXString& pattern);
+
+  /**
+  * Given a pattern of the form "*.gif,*.GIF", return
+  * the first extension of the pattern, i.e. "gif" in this
+  * example. Returns empty string if it doesn't work out.
+  */
+  static FXString extensionFromPattern(const FXString& pattern);
 
   /// Change directory
   void setDirectory(const FXString& path);
@@ -219,6 +231,12 @@ public:
   /// Return file selection mode
   FXuint getSelectMode() const { return selectmode; }
 
+  /// Change wildcard matching mode
+  void setMatchMode(FXuint mode);
+
+  /// Return wildcard matching mode
+  FXuint getMatchMode() const;
+
   /// Show readonly button
   void showReadOnly(FXbool show);
 
@@ -241,5 +259,6 @@ public:
   virtual ~FXFileSelector();
   };
 
+}
 
 #endif

@@ -3,7 +3,7 @@
 *                        F o n t   S e l e c t i o n   B o x                    *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1999,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1999,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXFontSelector.cpp,v 1.28.4.1 2003/06/20 19:02:07 fox Exp $               *
+* $Id: FXFontSelector.cpp,v 1.42 2004/02/08 17:05:35 fox Exp $                  *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -32,6 +32,7 @@
 #include "FXSettings.h"
 #include "FXRegistry.h"
 #include "FXAccelTable.h"
+#include "FXHash.h"
 #include "FXApp.h"
 #include "FXId.h"
 #include "FXFont.h"
@@ -53,7 +54,7 @@
 #include "FXMatrix.h"
 #include "FXCanvas.h"
 #include "FXShell.h"
-#include "FXScrollbar.h"
+#include "FXScrollBar.h"
 #include "FXScrollArea.h"
 #include "FXScrollWindow.h"
 #include "FXList.h"
@@ -65,8 +66,11 @@
   Notes:
 */
 
+using namespace FX;
+
 /*******************************************************************************/
 
+namespace FX {
 
 // Map
 FXDEFMAP(FXFontSelector) FXFontSelectorMap[]={
@@ -114,7 +118,7 @@ FXFontSelector::FXFontSelector(FXComposite *p,FXObject* tgt,FXSelector sel,FXuin
   new FXLabel(controls,"&Family:",NULL,JUSTIFY_LEFT|LAYOUT_FILL_X|LAYOUT_FILL_COLUMN);
   family=new FXTextField(controls,10,NULL,0,TEXTFIELD_READONLY|FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_FILL_COLUMN);
   FXHorizontalFrame *familyframe=new FXHorizontalFrame(controls,FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_Y|LAYOUT_FILL_X|LAYOUT_FILL_COLUMN|LAYOUT_FILL_ROW,0,0,0,0, 0,0,0,0);
-  familylist=new FXList(familyframe,0,this,ID_FAMILY,LIST_BROWSESELECT|LAYOUT_FILL_Y|LAYOUT_FILL_X|HSCROLLER_NEVER|VSCROLLER_ALWAYS);
+  familylist=new FXList(familyframe,this,ID_FAMILY,LIST_BROWSESELECT|LAYOUT_FILL_Y|LAYOUT_FILL_X|HSCROLLER_NEVER|VSCROLLER_ALWAYS);
 
   // Initial focus on list
   familylist->setFocus();
@@ -123,25 +127,26 @@ FXFontSelector::FXFontSelector(FXComposite *p,FXObject* tgt,FXSelector sel,FXuin
   new FXLabel(controls,"&Weight:",NULL,JUSTIFY_LEFT|LAYOUT_FILL_X|LAYOUT_FILL_COLUMN);
   weight=new FXTextField(controls,4,NULL,0,TEXTFIELD_READONLY|FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_FILL_COLUMN);
   FXHorizontalFrame *weightframe=new FXHorizontalFrame(controls,FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_Y|LAYOUT_FILL_X|LAYOUT_FILL_ROW|LAYOUT_FILL_COLUMN,0,0,0,0, 0,0,0,0);
-  weightlist=new FXList(weightframe,0,this,ID_WEIGHT,LIST_BROWSESELECT|LAYOUT_FILL_Y|LAYOUT_FILL_X|HSCROLLER_NEVER|VSCROLLER_ALWAYS);
+  weightlist=new FXList(weightframe,this,ID_WEIGHT,LIST_BROWSESELECT|LAYOUT_FILL_Y|LAYOUT_FILL_X|HSCROLLER_NEVER|VSCROLLER_ALWAYS);
 
   // Font styles
   new FXLabel(controls,"&Style:",NULL,JUSTIFY_LEFT|LAYOUT_FILL_X|LAYOUT_FILL_COLUMN);
   style=new FXTextField(controls,6,NULL,0,TEXTFIELD_READONLY|FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_FILL_COLUMN);
   FXHorizontalFrame *styleframe=new FXHorizontalFrame(controls,FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_Y|LAYOUT_FILL_X|LAYOUT_FILL_ROW|LAYOUT_FILL_COLUMN,0,0,0,0, 0,0,0,0);
-  stylelist=new FXList(styleframe,0,this,ID_STYLE,LIST_BROWSESELECT|LAYOUT_FILL_Y|LAYOUT_FILL_X|HSCROLLER_NEVER|VSCROLLER_ALWAYS);
+  stylelist=new FXList(styleframe,this,ID_STYLE,LIST_BROWSESELECT|LAYOUT_FILL_Y|LAYOUT_FILL_X|HSCROLLER_NEVER|VSCROLLER_ALWAYS);
 
   // Font sizes, to be filled later
   new FXLabel(controls,"Si&ze:",NULL,JUSTIFY_LEFT|LAYOUT_FILL_X|LAYOUT_FILL_COLUMN);
   size=new FXTextField(controls,2,this,ID_SIZE_TEXT,FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_FILL_COLUMN);
   FXHorizontalFrame *sizeframe=new FXHorizontalFrame(controls,FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_Y|LAYOUT_FILL_X|LAYOUT_FILL_ROW|LAYOUT_FILL_COLUMN,0,0,0,0, 0,0,0,0);
-  sizelist=new FXList(sizeframe,0,this,ID_SIZE,LIST_BROWSESELECT|LAYOUT_FILL_Y|LAYOUT_FILL_X|HSCROLLER_NEVER|VSCROLLER_ALWAYS);
+  sizelist=new FXList(sizeframe,this,ID_SIZE,LIST_BROWSESELECT|LAYOUT_FILL_Y|LAYOUT_FILL_X|HSCROLLER_NEVER|VSCROLLER_ALWAYS);
 
   FXMatrix *attributes=new FXMatrix(this,2,LAYOUT_SIDE_TOP|LAYOUT_FILL_X,0,0,0,0, DEFAULT_SPACING,DEFAULT_SPACING,DEFAULT_SPACING,DEFAULT_SPACING, DEFAULT_SPACING,0);
 
   // Character set choice
   new FXLabel(attributes,"Character Set:",NULL,LAYOUT_CENTER_Y|LAYOUT_FILL_COLUMN);
-  charset=new FXComboBox(attributes,8,10,this,ID_CHARSET,COMBOBOX_STATIC|FRAME_SUNKEN|FRAME_THICK|LAYOUT_CENTER_Y|LAYOUT_FILL_COLUMN);
+  charset=new FXComboBox(attributes,8,this,ID_CHARSET,COMBOBOX_STATIC|FRAME_SUNKEN|FRAME_THICK|LAYOUT_CENTER_Y|LAYOUT_FILL_COLUMN);
+  charset->setNumVisible(10);
   charset->appendItem("Any",(void*)FONTENCODING_DEFAULT);
   charset->appendItem("West European",(void*)FONTENCODING_WESTEUROPE);
   charset->appendItem("East European",(void*)FONTENCODING_EASTEUROPE);
@@ -157,11 +162,22 @@ FXFontSelector::FXFontSelector(FXComposite *p,FXObject* tgt,FXSelector sel,FXuin
   charset->appendItem("Baltic",(void*)FONTENCODING_BALTIC);
   charset->appendItem("Celtic",(void*)FONTENCODING_CELTIC);
   charset->appendItem("Russian",(void*)FONTENCODING_KOI8);
+  charset->appendItem("Central European (cp1250)",(void*)FONTENCODING_CP1250);
+  charset->appendItem("Russian (cp1251)",(void*)FONTENCODING_CP1251);
+  charset->appendItem("Latin1 (cp1252)",(void*)FONTENCODING_CP1252);
+  charset->appendItem("Greek (cp1253)",(void*)FONTENCODING_CP1253);
+  charset->appendItem("Turkish (cp1254)",(void*)FONTENCODING_CP1254);
+  charset->appendItem("Hebrew (cp1255)",(void*)FONTENCODING_CP1255);
+  charset->appendItem("Arabic (cp1256)",(void*)FONTENCODING_CP1256);
+  charset->appendItem("Baltic (cp1257)",(void*)FONTENCODING_CP1257);
+  charset->appendItem("Vietnam (cp1258)",(void*)FONTENCODING_CP1258);
+  charset->appendItem("Thai (cp874)",(void*)FONTENCODING_CP874);
   charset->setCurrentItem(0);
 
   // Set width
   new FXLabel(attributes,"Set Width:",NULL,LAYOUT_CENTER_Y|LAYOUT_FILL_COLUMN);
-  setwidth=new FXComboBox(attributes,9,10,this,ID_SETWIDTH,COMBOBOX_STATIC|FRAME_SUNKEN|FRAME_THICK|LAYOUT_CENTER_Y|LAYOUT_FILL_COLUMN);
+  setwidth=new FXComboBox(attributes,9,this,ID_SETWIDTH,COMBOBOX_STATIC|FRAME_SUNKEN|FRAME_THICK|LAYOUT_CENTER_Y|LAYOUT_FILL_COLUMN);
+  setwidth->setNumVisible(10);
   setwidth->appendItem("Any",(void*)FONTSETWIDTH_DONTCARE);
   setwidth->appendItem("Ultra condensed",(void*)FONTSETWIDTH_ULTRACONDENSED);
   setwidth->appendItem("Extra condensed",(void*)FONTSETWIDTH_EXTRACONDENSED);
@@ -176,7 +192,8 @@ FXFontSelector::FXFontSelector(FXComposite *p,FXObject* tgt,FXSelector sel,FXuin
 
   // Pitch
   new FXLabel(attributes,"Pitch:",NULL,LAYOUT_CENTER_Y|LAYOUT_FILL_COLUMN);
-  pitch=new FXComboBox(attributes,5,3,this,ID_PITCH,COMBOBOX_STATIC|FRAME_SUNKEN|FRAME_THICK|LAYOUT_CENTER_Y|LAYOUT_FILL_COLUMN);
+  pitch=new FXComboBox(attributes,5,this,ID_PITCH,COMBOBOX_STATIC|FRAME_SUNKEN|FRAME_THICK|LAYOUT_CENTER_Y|LAYOUT_FILL_COLUMN);
+  pitch->setNumVisible(3);
   pitch->appendItem("Any",(void*)0);
   pitch->appendItem("Fixed",(void*)FONTPITCH_FIXED);
   pitch->appendItem("Variable",(void*)FONTPITCH_VARIABLE);
@@ -674,23 +691,24 @@ void FXFontSelector::load(FXStream& store){
 // Cleanup
 FXFontSelector::~FXFontSelector(){
   delete previewfont;
-  family=(FXTextField*)-1;
-  familylist=(FXList*)-1;
-  weight=(FXTextField*)-1;
-  weightlist=(FXList*)-1;
-  style=(FXTextField*)-1;
-  stylelist=(FXList*)-1;
-  size=(FXTextField*)-1;
-  sizelist=(FXList*)-1;
-  charset=(FXComboBox*)-1;
-  setwidth=(FXComboBox*)-1;
-  pitch=(FXComboBox*)-1;
-  scalable=(FXCheckButton*)-1;
-  allfonts=(FXCheckButton*)-1;
-  preview=(FXLabel*)-1;
-  previewfont=(FXFont*)-1;
-  accept=(FXButton*)-1;
-  cancel=(FXButton*)-1;
+  family=(FXTextField*)-1L;
+  familylist=(FXList*)-1L;
+  weight=(FXTextField*)-1L;
+  weightlist=(FXList*)-1L;
+  style=(FXTextField*)-1L;
+  stylelist=(FXList*)-1L;
+  size=(FXTextField*)-1L;
+  sizelist=(FXList*)-1L;
+  charset=(FXComboBox*)-1L;
+  setwidth=(FXComboBox*)-1L;
+  pitch=(FXComboBox*)-1L;
+  scalable=(FXCheckButton*)-1L;
+  allfonts=(FXCheckButton*)-1L;
+  preview=(FXLabel*)-1L;
+  previewfont=(FXFont*)-1L;
+  accept=(FXButton*)-1L;
+  cancel=(FXButton*)-1L;
   }
 
+}
 

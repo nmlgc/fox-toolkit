@@ -3,7 +3,7 @@
 *                        C o l o r W h e e l   W i d g e t                      *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2001,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 2001,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXColorWheel.h,v 1.15 2002/01/18 22:42:51 jeroen Exp $                   *
+* $Id: FXColorWheel.h,v 1.23 2004/02/08 17:17:33 fox Exp $                      *
 ********************************************************************************/
 #ifndef FXCOLORWHEEL_H
 #define FXCOLORWHEEL_H
@@ -28,6 +28,7 @@
 #include "FXFrame.h"
 #endif
 
+namespace FX {
 
 
 class FXImage;
@@ -54,7 +55,6 @@ protected:
   void movespot(FXint x,FXint y);
   FXbool hstoxy(FXint& x,FXint& y,FXfloat h,FXfloat s) const;
   FXbool xytohs(FXfloat& h,FXfloat& s,FXint x,FXint y) const;
-  virtual void layout();
 private:
   FXColorWheel(const FXColorWheel&);
   FXColorWheel &operator=(const FXColorWheel&);
@@ -63,6 +63,11 @@ public:
   long onLeftBtnPress(FXObject*,FXSelector,void*);
   long onLeftBtnRelease(FXObject*,FXSelector,void*);
   long onMotion(FXObject*,FXSelector,void*);
+  long onMouseWheel(FXObject*,FXSelector,void*);
+  long onCmdSetHelp(FXObject*,FXSelector,void*);
+  long onCmdGetHelp(FXObject*,FXSelector,void*);
+  long onCmdSetTip(FXObject*,FXSelector,void*);
+  long onCmdGetTip(FXObject*,FXSelector,void*);
   long onQueryHelp(FXObject*,FXSelector,void*);
   long onQueryTip(FXObject*,FXSelector,void*);
 public:
@@ -75,6 +80,9 @@ public:
 
   /// Detach server-side resources
   virtual void detach();
+
+  /// Perform layout
+  virtual void layout();
 
   /// Return default width
   virtual FXint getDefaultWidth();
@@ -122,5 +130,6 @@ public:
   virtual ~FXColorWheel();
   };
 
+}
 
 #endif

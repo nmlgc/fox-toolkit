@@ -3,7 +3,7 @@
 *                   M a t r i x   C o n t a i n e r   W i d g e t               *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXMatrix.h,v 1.12 2002/01/18 22:42:53 jeroen Exp $                       *
+* $Id: FXMatrix.h,v 1.17 2004/02/08 17:17:33 fox Exp $                          *
 ********************************************************************************/
 #ifndef FXMATRIX_H
 #define FXMATRIX_H
@@ -28,6 +28,7 @@
 #include "FXPacker.h"
 #endif
 
+namespace FX {
 
 
 /// Matrix packing options
@@ -61,7 +62,6 @@ protected:
   FXint  num;
 protected:
   FXMatrix(){}
-  virtual void layout();
 private:
   FXMatrix(const FXMatrix&);
   FXMatrix &operator=(const FXMatrix&);
@@ -75,6 +75,9 @@ public:
   /// Construct a matrix layout manager with n rows or columns
   FXMatrix(FXComposite *p,FXint n=1,FXuint opts=MATRIX_BY_ROWS,FXint x=0,FXint y=0,FXint w=0,FXint h=0,FXint pl=DEFAULT_SPACING,FXint pr=DEFAULT_SPACING,FXint pt=DEFAULT_SPACING,FXint pb=DEFAULT_SPACING,FXint hs=DEFAULT_SPACING,FXint vs=DEFAULT_SPACING);
 
+  /// Perform layout
+  virtual void layout();
+
   /// Return default width
   virtual FXint getDefaultWidth();
 
@@ -85,10 +88,10 @@ public:
   FXWindow* childAtRowCol(FXint r,FXint c) const;
 
   /// Return the row in which the given child is placed
-  FXint rowOfChild(FXWindow* child) const;
+  FXint rowOfChild(const FXWindow* child) const;
 
   /// Return the column in which the given child is placed
-  FXint colOfChild(FXWindow* child) const;
+  FXint colOfChild(const FXWindow* child) const;
 
   /// Change the matrix style
   void setMatrixStyle(FXuint ph);
@@ -109,5 +112,6 @@ public:
   FXint getNumColumns() const;
   };
 
+}
 
 #endif

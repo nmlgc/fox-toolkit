@@ -5,7 +5,7 @@
 *********************************************************************************
 * Copyright (C) 1997 by Jeroen van der Zijp.   All Rights Reserved.             *
 *********************************************************************************
-* $Id: tabbook.cpp,v 1.11.4.1 2003/06/20 19:02:07 fox Exp $                      *
+* $Id: tabbook.cpp,v 1.19 2004/02/13 22:48:37 fox Exp $                         *
 ********************************************************************************/
 #include "fx.h"
 
@@ -16,7 +16,7 @@ class TabBookWindow : public FXMainWindow {
 protected:
 
   // Member data
-  FXMenubar*         menubar;
+  FXMenuBar*         menubar;
   FXMenuPane*        filemenu;
   FXMenuPane*        tabmenu;
   FXHorizontalFrame* contents;
@@ -79,12 +79,13 @@ FXIMPLEMENT(TabBookWindow,FXMainWindow,TabBookWindowMap,ARRAYNUMBER(TabBookWindo
 
 // Make some windows
 TabBookWindow::TabBookWindow(FXApp *a):FXMainWindow(a,"Tab Book Test",NULL,NULL,DECOR_ALL,0,0,600,400){
+  FXHorizontalFrame *boxframe;
 
   // Tooltip
-  new FXTooltip(getApp());
+  new FXToolTip(getApp());
 
   // Menubar
-  menubar=new FXMenubar(this,LAYOUT_SIDE_TOP|LAYOUT_FILL_X);
+  menubar=new FXMenuBar(this,LAYOUT_SIDE_TOP|LAYOUT_FILL_X);
 
   // Separator
   new FXHorizontalSeparator(this,LAYOUT_SIDE_TOP|LAYOUT_FILL_X|SEPARATOR_GROOVE);
@@ -93,12 +94,13 @@ TabBookWindow::TabBookWindow(FXApp *a):FXMainWindow(a,"Tab Book Test",NULL,NULL,
   contents=new FXHorizontalFrame(this,LAYOUT_SIDE_TOP|FRAME_NONE|LAYOUT_FILL_X|LAYOUT_FILL_Y|PACK_UNIFORM_WIDTH);
 
   // Switcher
-  tabbook=new FXTabBook(contents,this,ID_PANEL,LAYOUT_FILL_X|LAYOUT_FILL_Y|LAYOUT_RIGHT);
+  tabbook=new FXTabBook(contents,this,ID_PANEL,PACK_UNIFORM_WIDTH|PACK_UNIFORM_HEIGHT|LAYOUT_FILL_X|LAYOUT_FILL_Y|LAYOUT_RIGHT);
 
   // First item is a list
   tab1=new FXTabItem(tabbook,"&Simple List",NULL);
   listframe=new FXHorizontalFrame(tabbook,FRAME_THICK|FRAME_RAISED);
-  simplelist=new FXList(listframe,1,NULL,0,LIST_EXTENDEDSELECT|LAYOUT_FILL_X|LAYOUT_FILL_Y);
+  boxframe=new FXHorizontalFrame(listframe,FRAME_THICK|FRAME_SUNKEN|LAYOUT_FILL_X|LAYOUT_FILL_Y, 0,0,0,0, 0,0,0,0);
+  simplelist=new FXList(boxframe,NULL,0,LIST_EXTENDEDSELECT|LAYOUT_FILL_X|LAYOUT_FILL_Y);
   simplelist->appendItem("First Entry");
   simplelist->appendItem("Second Entry");
   simplelist->appendItem("Third Entry");
@@ -107,12 +109,14 @@ TabBookWindow::TabBookWindow(FXApp *a):FXMainWindow(a,"Tab Book Test",NULL,NULL,
   // Second item is a file list
   tab2=new FXTabItem(tabbook,"F&ile List",NULL);
   fileframe=new FXHorizontalFrame(tabbook,FRAME_THICK|FRAME_RAISED);
-  filelist=new FXFileList(fileframe,NULL,0,ICONLIST_EXTENDEDSELECT|LAYOUT_FILL_X|LAYOUT_FILL_Y);
+  boxframe=new FXHorizontalFrame(fileframe,FRAME_THICK|FRAME_SUNKEN|LAYOUT_FILL_X|LAYOUT_FILL_Y, 0,0,0,0, 0,0,0,0);
+  filelist=new FXFileList(boxframe,NULL,0,ICONLIST_EXTENDEDSELECT|LAYOUT_FILL_X|LAYOUT_FILL_Y);
 
   // Third item is a directory list
   tab3=new FXTabItem(tabbook,"T&ree List",NULL);
   dirframe=new FXHorizontalFrame(tabbook,FRAME_THICK|FRAME_RAISED);
-  dirlist=new FXDirList(dirframe,0,NULL,0,DIRLIST_SHOWFILES|TREELIST_SHOWS_LINES|TREELIST_SHOWS_BOXES|LAYOUT_FILL_X|LAYOUT_FILL_Y);
+  boxframe=new FXHorizontalFrame(dirframe,FRAME_THICK|FRAME_SUNKEN|LAYOUT_FILL_X|LAYOUT_FILL_Y, 0,0,0,0, 0,0,0,0);
+  dirlist=new FXDirList(boxframe,NULL,0,DIRLIST_SHOWFILES|TREELIST_SHOWS_LINES|TREELIST_SHOWS_BOXES|LAYOUT_FILL_X|LAYOUT_FILL_Y);
 
   // File Menu
   filemenu=new FXMenuPane(this);
@@ -143,7 +147,7 @@ TabBookWindow::~TabBookWindow(){
 
 // Switch tab orientations
 long TabBookWindow::onCmdTabOrient(FXObject*,FXSelector sel,void*){
-  FXuint sid=SELID(sel);
+  FXuint sid=FXSELID(sel);
   switch(sid){
     case ID_TABS_TOP:
       tabbook->setTabStyle(TABBOOK_TOPTABS);
@@ -192,7 +196,7 @@ long TabBookWindow::onCmdHideShow(FXObject*,FXSelector,void*){
 
 // Active panel switched
 long TabBookWindow::onCmdPanel(FXObject*,FXSelector,void* ptr){
-  FXTRACE((1,"Panel = %d\n",(FXint)(FXival)ptr));
+  FXTRACE((1,"Panel = %d\n",(FXint)(long)ptr));
   return 1;
   }
 

@@ -3,29 +3,29 @@
 #
 
 all:
-	cd ..\..\utils
-	smake -f Makefile.dmc
-	cd ..\src
-	smake -f Makefile.dmc
+	cd ..\utils
+	smake -fMakefile.dmc
+	cd ..\..\src
+	smake -fMakefile.dmc
 	cd ..\tests
-	smake -f Makefile.dmc
+	smake -fMakefile.dmc
 	cd ..\adie
-	smake -f Makefile.dmc
+	smake -fMakefile.dmc
 	cd ..\pathfinder
-	smake -f Makefile.dmc
+	smake -fMakefile.dmc
 	cd ..\calculator
-	smake -f Makefile.dmc
+	smake -fMakefile.dmc
 
 clean:
-	cd ..\..\utils
-	smake -f Makefile.dmc clean
-	cd ..\src
-	smake -f Makefile.dmc clean
+	cd ..\..\src
+	smake -fMakefile.dmc clean
+	cd ..\utils
+	smake -fMakefile.dmc clean
 	cd ..\tests
-	smake -f Makefile.dmc clean
+	smake -fMakefile.dmc clean
 	cd ..\adie
-	smake -f Makefile.dmc clean
+	smake -fMakefile.dmc clean
 	cd ..\pathfinder
-	smake -f Makefile.dmc clean
+	smake -fMakefile.dmc clean
 	cd ..\calculator
-	smake -f Makefile.dmc clean
+	smake -fMakefile.dmc clean

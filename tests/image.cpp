@@ -4,12 +4,26 @@
 *                                                                               *
 ********************************************************************************/
 #include "fx.h"
+#ifdef HAVE_PNG_H
+#include "FXPNGImage.h"
+#endif
+#ifdef HAVE_JPEG_H
+#include "FXJPGImage.h"
+#endif
+#ifdef HAVE_TIFF_H
+#include "FXTIFImage.h"
+#endif
+#include "FXICOImage.h"
+#include "FXTGAImage.h"
+#include "FXRGBImage.h"
+
+#include "FXGradientBar.h"
 
 
-FXuchar grey_ramp[512*50*3];                 // Created images
-FXuchar red_ramp[512*50*3];
-FXuchar green_ramp[512*50*3];
-FXuchar blue_ramp[512*50*3];
+FXColor grey_ramp[512*50];                 // Created images
+FXColor red_ramp[512*50];
+FXColor green_ramp[512*50];
+FXColor blue_ramp[512*50];
 
 
 // Event Handler Object
@@ -32,7 +46,7 @@ private:
   FXImage         *red_nodither;
   FXImage         *green_nodither;
   FXImage         *blue_nodither;
-  FXBMPImage      *picture;                   // Complete picture
+  FXImage         *picture;                   // Complete picture
   FXFont          *font;                      // Font for text
 
 protected:
@@ -62,7 +76,7 @@ public:
 
   // Initialize
   virtual void create();
-  
+
   // ImageWindow destructor
   virtual ~ImageWindow();
   };
@@ -93,6 +107,30 @@ ImageWindow::ImageWindow(FXApp* a):FXMainWindow(a,"Image Application",NULL,NULL,
   FXHorizontalFrame *contents;
 
   FXColorDialog *colordlg=new FXColorDialog(this,"Color Dialog");
+
+  FXHorizontalFrame *hf=new FXHorizontalFrame(this,LAYOUT_SIDE_BOTTOM|LAYOUT_FILL_X,0,0,0,0, 0,0,0,0);
+
+  //new FXGradientBar(this,NULL,0,GRADIENTBAR_VERTICAL|GRADIENTBAR_CONTROLS_LEFT|FRAME_SUNKEN|LAYOUT_SIDE_LEFT|LAYOUT_FILL_Y,0,0,0,0, 15,15,15,15);
+  new FXGradientBar(this,NULL,0,GRADIENTBAR_VERTICAL|GRADIENTBAR_CONTROLS_LEFT|GRADIENTBAR_CONTROLS_RIGHT|FRAME_SUNKEN|LAYOUT_SIDE_LEFT|LAYOUT_FILL_Y,0,0,0,0, 15,15,15,15);
+  //new FXGradientBar(this,NULL,0,GRADIENTBAR_VERTICAL|GRADIENTBAR_CONTROLS_RIGHT|FRAME_SUNKEN|LAYOUT_SIDE_LEFT|LAYOUT_FILL_Y,0,0,0,0, 15,15,15,15);
+  //new FXGradientBar(this,NULL,0,GRADIENTBAR_VERTICAL|FRAME_SUNKEN|LAYOUT_SIDE_LEFT|LAYOUT_FILL_Y,0,0,0,0, 15,15,15,15);
+
+  //new FXGradientBar(this,NULL,0,GRADIENTBAR_HORIZONTAL|GRADIENTBAR_CONTROLS_BOTTOM|FRAME_SUNKEN|LAYOUT_SIDE_BOTTOM|LAYOUT_FILL_X,0,0,0,0, 15,15,15,15);
+  FXGradientBar *gb=new FXGradientBar(this,NULL,0,GRADIENTBAR_HORIZONTAL|GRADIENTBAR_CONTROLS_TOP|GRADIENTBAR_CONTROLS_BOTTOM|FRAME_SUNKEN|LAYOUT_SIDE_BOTTOM|LAYOUT_FILL_X,0,0,0,0, 15,15,15,15);
+  //new FXGradientBar(this,NULL,0,GRADIENTBAR_HORIZONTAL|GRADIENTBAR_CONTROLS_TOP|GRADIENTBAR_CONTROLS_BOTTOM|FRAME_SUNKEN|LAYOUT_SIDE_BOTTOM|LAYOUT_FILL_X,0,0,0,0, 15,15,15,15);
+  //new FXGradientBar(this,NULL,0,GRADIENTBAR_HORIZONTAL|FRAME_SUNKEN|LAYOUT_SIDE_BOTTOM|LAYOUT_FILL_X,0,0,0,0, 15,15,15,15);
+
+  new FXRadioButton(hf,"Linear blend",gb,FXGradientBar::ID_BLEND_LINEAR,LAYOUT_CENTER_Y|ICON_BEFORE_TEXT);
+  new FXRadioButton(hf,"Power law blend",gb,FXGradientBar::ID_BLEND_POWER,LAYOUT_CENTER_Y|ICON_BEFORE_TEXT);
+  new FXRadioButton(hf,"Sine blend",gb,FXGradientBar::ID_BLEND_SINE,LAYOUT_CENTER_Y|ICON_BEFORE_TEXT);
+  new FXRadioButton(hf,"Increasing blend",gb,FXGradientBar::ID_BLEND_INCREASING,LAYOUT_CENTER_Y|ICON_BEFORE_TEXT);
+  new FXRadioButton(hf,"Decreasing blend",gb,FXGradientBar::ID_BLEND_DECREASING,LAYOUT_CENTER_Y|ICON_BEFORE_TEXT);
+  new FXColorWell(hf,FXRGB(0,0,0),gb,FXGradientBar::ID_LOWER_COLOR,LAYOUT_CENTER_Y);
+  new FXColorWell(hf,FXRGB(0,0,0),gb,FXGradientBar::ID_UPPER_COLOR,LAYOUT_CENTER_Y);
+  new FXButton(hf,"Recenter",NULL,gb,FXGradientBar::ID_RECENTER,FRAME_RAISED|FRAME_THICK|LAYOUT_CENTER_Y|ICON_BEFORE_TEXT);
+  new FXButton(hf,"Split",NULL,gb,FXGradientBar::ID_SPLIT,FRAME_RAISED|FRAME_THICK|LAYOUT_CENTER_Y|ICON_BEFORE_TEXT);
+  new FXButton(hf,"Merge",NULL,gb,FXGradientBar::ID_MERGE,FRAME_RAISED|FRAME_THICK|LAYOUT_CENTER_Y|ICON_BEFORE_TEXT);
+  new FXButton(hf,"Uniform",NULL,gb,FXGradientBar::ID_UNIFORM,FRAME_RAISED|FRAME_THICK|LAYOUT_CENTER_Y|ICON_BEFORE_TEXT);
 
   contents=new FXHorizontalFrame(this,LAYOUT_SIDE_TOP|LAYOUT_FILL_X|LAYOUT_FILL_Y,0,0,0,0, 0,0,0,0);
 
@@ -149,30 +187,31 @@ ImageWindow::ImageWindow(FXApp* a):FXMainWindow(a,"Image Application",NULL,NULL,
   blue_nodither=new FXImage(getApp(),blue_ramp,IMAGE_NEAREST|IMAGE_SHMI|IMAGE_SHMP,512,50);
 
   // Result image
-  picture=new FXBMPImage(getApp(),NULL,IMAGE_SHMI|IMAGE_SHMP,850,600);
-  //picture=new FXBMPImage(getApp(),NULL,0,850,600);
+//  picture=new FXBMPImage(getApp(),NULL,IMAGE_SHMI|IMAGE_SHMP,850,600);
+//  picture=new FXXPMImage(getApp(),NULL,IMAGE_SHMI|IMAGE_SHMP,850,600);
+//  picture=new FXGIFImage(getApp(),NULL,IMAGE_SHMI|IMAGE_SHMP,850,600);
+//  picture=new FXPNGImage(getApp(),NULL,IMAGE_SHMI|IMAGE_SHMP,850,600);
+//  picture=new FXRGBImage(getApp(),NULL,IMAGE_SHMI|IMAGE_SHMP,850,600);
+//  picture=new FXPCXImage(getApp(),NULL,IMAGE_SHMI|IMAGE_SHMP,850,600);
+//  picture=new FXTGAImage(getApp(),NULL,IMAGE_SHMI|IMAGE_SHMP,850,600);
+//  picture=new FXICOImage(getApp(),NULL,IMAGE_SHMI|IMAGE_SHMP,64,64);
+//  picture=new FXJPGImage(getApp(),NULL,IMAGE_SHMI|IMAGE_SHMP,850,600);
+//  picture=new FXTIFImage(getApp(),NULL,IMAGE_SHMI|IMAGE_SHMP,850,600);
+  picture=new FXGIFImage(getApp(),NULL,IMAGE_SHMI|IMAGE_SHMP,850,600);
 
   // Fill the ramps
   for(x=0; x<512; x++){
     for(y=0; y<50; y++){
-      grey_ramp[3*(y*512+x)]=x/2;
-      grey_ramp[3*(y*512+x)+1]=x/2;
-      grey_ramp[3*(y*512+x)+2]=x/2;
+      grey_ramp[y*512+x]=FXRGB(x/2,x/2,x/2);
       }
     for(y=0; y<50; y++){
-      red_ramp[3*(y*512+x)]=x/2;
-      red_ramp[3*(y*512+x)+1]=0;
-      red_ramp[3*(y*512+x)+2]=0;
+      red_ramp[y*512+x]=FXRGB(x/2,0,0);
       }
     for(y=0; y<50; y++){
-      green_ramp[3*(y*512+x)]=0;
-      green_ramp[3*(y*512+x)+1]=x/2;
-      green_ramp[3*(y*512+x)+2]=0;
+      green_ramp[y*512+x]=FXRGB(0,x/2,0);
       }
     for(y=0; y<50; y++){
-      blue_ramp[3*(y*512+x)]=0;
-      blue_ramp[3*(y*512+x)+1]=0;
-      blue_ramp[3*(y*512+x)+2]=x/2;
+      blue_ramp[y*512+x]=FXRGB(0,0,x/2);
       }
     }
 
@@ -180,9 +219,8 @@ ImageWindow::ImageWindow(FXApp* a):FXMainWindow(a,"Image Application",NULL,NULL,
   font=new FXFont(getApp(),"times",36,FONTWEIGHT_BOLD);
 
   // Make a tip
-  new FXTooltip(getApp());
+  new FXToolTip(getApp());
   }
-
 
 
 // Destroy ImageWindow
@@ -281,7 +319,7 @@ long ImageWindow::onCanvasRepaint(FXObject*,FXSelector,void* ptr){
     dc.drawRectangle(10,490,512,50);
 
     // Draw text
-    dc.setTextFont(font);
+    dc.setFont(font);
     dc.setForeground(textwell->getRGBA());
     dc.drawText(540,60,"Grey",4);
     dc.drawText(540,180,"Red",3);
@@ -297,8 +335,11 @@ long ImageWindow::onCanvasRepaint(FXObject*,FXSelector,void* ptr){
   sdc.setForeground(backwell->getRGBA());
   sdc.fillRectangle(0,0,canvas->getWidth(),canvas->getHeight());
 
-  // Paint image
-  sdc.drawImage(picture,0,0);
+  // Draw using drawImage, which is simple
+  //sdc.drawImage(picture,0,0);
+
+  // Or use drawArea, which is more flexible
+  sdc.drawArea(picture,0,0,picture->getWidth(),picture->getHeight(),0,0);
 
   return 1;
   }

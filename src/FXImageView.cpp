@@ -3,7 +3,7 @@
 *                       I m a g e   V i e w   W i d g e t                       *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2000,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 2000,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXImageView.cpp,v 1.13 2002/01/18 22:43:01 jeroen Exp $                  *
+* $Id: FXImageView.cpp,v 1.26 2004/03/01 16:43:58 fox Exp $                     *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -31,6 +31,7 @@
 #include "FXRectangle.h"
 #include "FXRegistry.h"
 #include "FXAccelTable.h"
+#include "FXHash.h"
 #include "FXApp.h"
 #include "FXDCWindow.h"
 #include "FXImage.h"
@@ -38,7 +39,7 @@
 #include "FXComposite.h"
 #include "FXCanvas.h"
 #include "FXButton.h"
-#include "FXScrollbar.h"
+#include "FXScrollBar.h"
 #include "FXImageView.h"
 
 
@@ -51,8 +52,11 @@
 #define MOUSE_NONE    0                // None in effect
 #define MOUSE_SCROLL  1                // Scrolling mode
 
+using namespace FX;
 
 /*******************************************************************************/
+
+namespace FX {
 
 
 // Map
@@ -71,7 +75,7 @@ FXIMPLEMENT(FXImageView,FXScrollArea,FXImageViewMap,ARRAYNUMBER(FXImageViewMap))
 // Deserialization
 FXImageView::FXImageView(){
   flags|=FLAG_ENABLED;
-  image=(FXImage*)-1;
+  image=NULL;
   grabx=0;
   graby=0;
   }
@@ -132,15 +136,39 @@ void FXImageView::layout(){
 long FXImageView::onPaint(FXObject*,FXSelector,void* ptr){
   FXEvent* event=(FXEvent*)ptr;
   FXDCWindow dc(this,event);
+  FXint xx,yy,ww,hh;
+  FXint xl,xr,yt,yb;
   if(image){
-    dc.drawImage(image,pos_x,pos_y);
+    ww=image->getWidth();
+    hh=image->getHeight();
+    xx=pos_x;
+    yy=pos_y;
+    if(ww<viewport_w){
+      if(options&IMAGEVIEW_LEFT) xx=0;
+      else if(options&IMAGEVIEW_RIGHT) xx=viewport_w-ww;
+      else xx=(viewport_w-ww)/2;
+      }
+    if(hh<viewport_h){
+      if(options&IMAGEVIEW_TOP) yy=0;
+      else if(options&IMAGEVIEW_BOTTOM) yy=viewport_h-hh;
+      else yy=(viewport_h-hh)/2;
+      }
+    dc.setForeground(FXRGB(255,255,255));
+    dc.setBackground(FXRGB(0,0,0));
+    dc.drawImage(image,xx,yy);
     dc.setForeground(backColor);
-    dc.fillRectangle(pos_x+image->getWidth(), 0, viewport_w-pos_x-image->getWidth(), image->getHeight());
-    dc.fillRectangle(0, pos_y+image->getHeight(), viewport_w, viewport_h-pos_y-image->getHeight());
+    xl=xx; xr=xx+ww;
+    yt=yy; yb=yy+hh;
+    if(xl<0) xl=0; if(xr>viewport_w) xr=viewport_w;
+    if(yt<0) yt=0; if(yb>viewport_h) yb=viewport_h;
+    dc.fillRectangle(0,0,xr,yt);
+    dc.fillRectangle(0,yt,xl,viewport_h-yt);
+    dc.fillRectangle(xr,0,viewport_w-xr,yb);
+    dc.fillRectangle(xl,yb,viewport_w-xl,viewport_h-yb);
     }
   else{
     dc.setForeground(backColor);
-    dc.fillRectangle(0,0,viewport_w,viewport_h);
+    dc.fillRectangle(0,0,width,height);
     }
   return 1;
   }
@@ -150,10 +178,10 @@ long FXImageView::onPaint(FXObject*,FXSelector,void* ptr){
 long FXImageView::onRightBtnPress(FXObject*,FXSelector,void* ptr){
   FXEvent* ev=(FXEvent*)ptr;
   flags&=~FLAG_TIP;
-  handle(this,MKUINT(0,SEL_FOCUS_SELF),ptr);
+  handle(this,FXSEL(SEL_FOCUS_SELF,0),ptr);
   if(isEnabled()){
     grab();
-    if(target && target->handle(this,MKUINT(message,SEL_RIGHTBUTTONPRESS),ptr)) return 1;
+    if(target && target->handle(this,FXSEL(SEL_RIGHTBUTTONPRESS,message),ptr)) return 1;
     flags&=~FLAG_UPDATE;
     flags|=FLAG_PRESSED|FLAG_SCROLLING;
     grabx=ev->win_x-pos_x;
@@ -170,7 +198,7 @@ long FXImageView::onRightBtnRelease(FXObject*,FXSelector,void* ptr){
     ungrab();
     flags&=~(FLAG_PRESSED|FLAG_SCROLLING);
     flags|=FLAG_UPDATE;
-    if(target && target->handle(this,MKUINT(message,SEL_RIGHTBUTTONRELEASE),ptr)) return 1;
+    if(target && target->handle(this,FXSEL(SEL_RIGHTBUTTONRELEASE,message),ptr)) return 1;
     return 1;
     }
   return 0;
@@ -196,6 +224,22 @@ void FXImageView::setImage(FXImage* img){
   }
 
 
+// Set the current alignment.
+void FXImageView::setAlignment(FXuint mode){
+  FXuint opts=(options&~(IMAGEVIEW_LEFT|IMAGEVIEW_RIGHT|IMAGEVIEW_TOP|IMAGEVIEW_BOTTOM)) | (mode&(IMAGEVIEW_LEFT|IMAGEVIEW_RIGHT|IMAGEVIEW_TOP|IMAGEVIEW_BOTTOM));
+  if(options!=opts){
+    options=opts;
+    update();
+    }
+  }
+
+
+// Get the current alignment.
+FXuint FXImageView::getAlignment() const {
+  return (options&(IMAGEVIEW_LEFT|IMAGEVIEW_RIGHT|IMAGEVIEW_TOP|IMAGEVIEW_BOTTOM));
+  }
+
+
 // Save object to stream
 void FXImageView::save(FXStream& store) const {
   FXScrollArea::save(store);
@@ -212,5 +256,7 @@ void FXImageView::load(FXStream& store){
 
 // Destroy
 FXImageView::~FXImageView(){
-  image=(FXImage*)-1;
+  image=(FXImage*)-1L;
   }
+
+}

@@ -3,7 +3,7 @@
 *                        F o n t   S e l e c t i o n   B o x                    *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1999,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1999,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXFontSelector.h,v 1.12 2002/01/18 22:42:53 jeroen Exp $                 *
+* $Id: FXFontSelector.h,v 1.16 2004/02/08 17:17:33 fox Exp $                    *
 ********************************************************************************/
 #ifndef FXFONTSELECTOR_H
 #define FXFONTSELECTOR_H
@@ -28,6 +28,7 @@
 #include "FXPacker.h"
 #endif
 
+namespace FX {
 
 
 class FXTextField;
@@ -133,5 +134,6 @@ public:
   virtual ~FXFontSelector();
   };
 
+}
 
 #endif

@@ -3,7 +3,7 @@
 *                      C l i p p i n g   R e g i o n                            *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2000,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 2000,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,11 +19,12 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXRegion.h,v 1.6 2002/01/18 22:42:54 jeroen Exp $                        *
+* $Id: FXRegion.h,v 1.12 2004/02/11 20:33:36 fox Exp $                          *
 ********************************************************************************/
 #ifndef FXREGION_H
 #define FXREGION_H
 
+namespace FX {
 
 /// Region
 class FXAPI FXRegion {
@@ -39,8 +40,14 @@ public:
   /// Construct new region copied from region r
   FXRegion(const FXRegion& r);
 
-  /// Construct new region set to given rectangle
+  /// Construct new region from rectangle rect
+  FXRegion(const FXRectangle& rect);
+
+  /// Construct rectangle region
   FXRegion(FXint x,FXint y,FXint w,FXint h);
+
+  /// Construct polygon region
+  FXRegion(const FXPoint* points,FXuint npoints,FXbool winding=FALSE);
 
   /// Assign region r to this one
   FXRegion &operator=(const FXRegion& r);
@@ -90,9 +97,13 @@ public:
   /// Return TRUE if region not equal to this one
   friend FXAPI FXbool operator!=(const FXRegion& r1,const FXRegion& r2);
 
+  /// Reset region to empty
+  void reset();
+  
   /// Destroy region
  ~FXRegion();
   };
 
+}
 
 #endif

@@ -3,7 +3,7 @@
 *                      P r o g r e s s   D i a l o g   B o x                    *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2001,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 2001,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXProgressDialog.h,v 1.6 2002/01/18 22:42:54 jeroen Exp $                *
+* $Id: FXProgressDialog.h,v 1.12 2004/02/08 17:17:34 fox Exp $                  *
 ********************************************************************************/
 #ifndef FXPROGRESSDIALOG_H
 #define FXPROGRESSDIALOG_H
@@ -28,6 +28,7 @@
 #include "FXDialogBox.h"
 #endif
 
+namespace FX {
 
 
 enum {
@@ -56,7 +57,7 @@ protected:
   FXButton              *cancel;      // Cancel button
   FXbool                 cancelled;   // User hit cancel
 protected:
-  FXProgressDialog(){}
+  FXProgressDialog();
 private:
   FXProgressDialog(const FXProgressDialog&);
   FXProgressDialog &operator=(const FXProgressDialog&);
@@ -78,6 +79,12 @@ public:
   /// Get progress message
   FXString getMessage() const;
 
+  /// Change style of the progress bar widget
+  void setBarStyle(FXuint style);
+
+  /// Get style of the progress bar widget
+  FXuint getBarStyle() const;
+
   /// Change the amount of progress
   void setProgress(FXuint value);
 
@@ -96,10 +103,13 @@ public:
   /// Has operation been cancelled?
   FXbool isCancelled() const { return cancelled; }
 
+  /// Change cancelled flag
+  void setCancelled(FXbool flg){ cancelled=flg; }
+
   /// Destroy
   virtual ~FXProgressDialog();
   };
 
-
+}
 
 #endif

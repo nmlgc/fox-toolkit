@@ -5,7 +5,7 @@
 *********************************************************************************
 * Copyright (C) 1999 by Jeroen van der Zijp.   All Rights Reserved.             *
 *********************************************************************************
-* $Id: foursplit.cpp,v 1.11 2001/06/14 21:40:58 jeroen Exp $                    *
+* $Id: foursplit.cpp,v 1.14 2002/06/11 06:10:09 fox Exp $                       *
 ********************************************************************************/
 #include "fx.h"
 
@@ -18,7 +18,7 @@
 class FourSplitWindow : public FXMainWindow {
   FXDECLARE(FourSplitWindow)
 protected:
-  FXMenubar*         menubar;
+  FXMenuBar*         menubar;
   FXMenuPane*        filemenu;
   FXMenuPane*        expandmenu;
   FX4Splitter*       splitter;
@@ -32,9 +32,9 @@ public:
   };
 
 
-  
+
 /*******************************************************************************/
-  
+
 
 // Object implementation
 FXIMPLEMENT(FourSplitWindow,FXMainWindow,NULL,0)
@@ -43,20 +43,20 @@ FXIMPLEMENT(FourSplitWindow,FXMainWindow,NULL,0)
 // Make some windows
 FourSplitWindow::FourSplitWindow(FXApp *a):FXMainWindow(a,"4-Way Splitter Test",NULL,NULL,DECOR_ALL,0,0,800,600,0,0){
   FXButton *temp;
-  
+
   // Menu bar
-  menubar=new FXMenubar(this,LAYOUT_SIDE_TOP|LAYOUT_FILL_X);
-  
+  menubar=new FXMenuBar(this,LAYOUT_SIDE_TOP|LAYOUT_FILL_X);
+
   // Status bar
-  new FXStatusbar(this,LAYOUT_SIDE_BOTTOM|LAYOUT_FILL_X|STATUSBAR_WITH_DRAGCORNER);
-  
+  new FXStatusBar(this,LAYOUT_SIDE_BOTTOM|LAYOUT_FILL_X|STATUSBAR_WITH_DRAGCORNER);
+
   splitter=new FX4Splitter(this,LAYOUT_SIDE_TOP|LAYOUT_FILL_X|LAYOUT_FILL_Y|FOURSPLITTER_TRACKING);
-  
+
   // File menu
   filemenu=new FXMenuPane(this);
   new FXMenuCommand(filemenu,"&Quit\tCtl-Q\tQuit the application.",NULL,getApp(),FXApp::ID_QUIT);
   new FXMenuTitle(menubar,"&File",NULL,filemenu);
-  
+
   // Expand menu
   expandmenu=new FXMenuPane(this);
   new FXMenuCommand(expandmenu,"All four",NULL,splitter,FX4Splitter::ID_EXPAND_ALL);
@@ -66,7 +66,7 @@ FourSplitWindow::FourSplitWindow(FXApp *a):FXMainWindow(a,"4-Way Splitter Test",
   new FXMenuCommand(expandmenu,"Bottom/right",NULL,splitter,FX4Splitter::ID_EXPAND_BOTTOMRIGHT);
   new FXMenuTitle(menubar,"&Expand",NULL,expandmenu);
 
-  
+
   // Four widgets in the four splitter
   new FXButton(splitter,"Top &Left\tThis splitter tracks",NULL,NULL,0,FRAME_RAISED|FRAME_THICK);
   new FXButton(splitter,"Top &Right\tThis splitter tracks",NULL,NULL,0,FRAME_RAISED|FRAME_THICK);
@@ -84,12 +84,12 @@ FourSplitWindow::FourSplitWindow(FXApp *a):FXMainWindow(a,"4-Way Splitter Test",
   temp=new FXButton(subsplitter,"&arbitrarily!\tThis splitter does NOT track",NULL,NULL,0,FRAME_SUNKEN|FRAME_THICK);
   temp->setBackColor(FXRGB(128,128,0));
   temp->setTextColor(FXRGB(255,255,255));
-  
-  new FXTooltip(getApp());
+
+  new FXToolTip(getApp());
   }
 
 
-// Clean up  
+// Clean up
 FourSplitWindow::~FourSplitWindow(){
   delete filemenu;
   delete expandmenu;

@@ -3,7 +3,7 @@
 *                 R e g u l a r   E x p r e s s i o n   C l a s s               *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1999,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1999,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXRex.cpp,v 1.71.4.2 2003/02/19 06:37:33 fox Exp $                           *
+* $Id: FXRex.cpp,v 1.83 2004/04/08 15:09:55 fox Exp $                           *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -64,7 +64,7 @@
           without the REX_NOT_EMPTY option, this matches "" and not the "a".
         o Another convenient feature is the ability to compile verbatim strings.
           This is practical as it allows FXRex to be populated with a simple
-          string with interpretation of special characters ^*?+{}()\$.[].
+          string with no interpretation of special characters ^*?+{}()\$.[].
         o Note that FXRex's implementation would naturally move to wide
           character support...
 
@@ -96,7 +96,7 @@
   explicit jump instruction.  Because it works with 32-bit offsets, there
   is no need to distinguish between forward and backward jumps.
 
-  Henry Spencer's implemented a trick to "prefix" simple single-character matching
+  Henry Spencer implemented a trick to "prefix" simple single-character matching
   opcodes with a closure operator, by shifting down already generated code and
   inserting the closure operator in front of it.
 
@@ -115,8 +115,7 @@
         o When an alternative is found, we insert a branch node in front, and a jump
           node behind the already generated code.  This can be done easily as
           branches and jumps within the shifted block of code are relative, and have
-          already been resolved! [I used this trick in BICC, the single-pass compiler
-          I wrote some time ago].
+          already been resolved!
 
         o The matching algorithm for a branch opcode simplifies as well:- either
           it matches the first branch, or it continues after the jump.
@@ -264,9 +263,11 @@
 #define ISIN(set,ch) (set[((FXuchar)(ch))>>5]&(1<<(((FXuchar)(ch))&31)))
 #define CLEAR(set)   (set[0]=set[1]=set[2]=set[3]=set[4]=set[5]=set[6]=set[7]=0)
 
+using namespace FX;
 
 /*******************************************************************************/
 
+namespace {
 
 // Opcodes of the engine
 enum {
@@ -399,37 +400,10 @@ struct FXCompile {
 
 /*******************************************************************************/
 
-
-// Table of error messages
-const FXchar *const FXRex::errors[]={
-  "OK",
-  "Empty pattern",
-  "Unmatched parenthesis",
-  "Unmatched bracket",
-  "Unmatched brace",
-  "Bad character range",
-  "Bad escape sequence",
-  "Bad counted repeat",
-  "No atom preceding repetition",
-  "Repeat following repeat",
-  "Bad backward reference",
-  "Bad character class",
-  "Expression too complex",
-  "Out of memory",
-  "Illegal token"
-  };
-
-
-// Default program always fails
-const FXint FXRex::fallback[]={2,OP_FAIL};
-
-
-/*******************************************************************************/
-
 #ifndef NDEBUG
 
 // Dump program
-static void dump(FXint *prog){
+void dump(FXint *prog){
   FXint op,min,max,no,val;
   fxmessage("\n");
   fxmessage("Program:\n");
@@ -754,7 +728,7 @@ x:fxmessage("end\n");
 // FXCompile members
 
 // Parse hex escape code
-static FXint hex(const FXchar*& pat){
+FXint hex(const FXchar*& pat){
   register FXint ch,n,c;
   for(ch=0,n=2; isxdigit((FXuchar)*pat) && n; n--){
     c=(FXuchar)toupper((FXuchar)*pat++);
@@ -765,7 +739,7 @@ static FXint hex(const FXchar*& pat){
 
 
 // Parse octal escape code
-static FXint oct(const FXchar*& pat){
+FXint oct(const FXchar*& pat){
   register FXint ch,n;
   for(ch=0,n=3; '0'<=((FXuchar)*pat) && ((FXuchar)*pat)<='7' && n; n--){
     ch=(ch<<3)+(*pat++-'0');
@@ -1362,13 +1336,13 @@ x:    if(1<len && (*pat=='*' || *pat=='+' || *pat=='?' || *pat=='{')){
 
 
 // TRUE if character is a word character
-static inline int isword(int ch){
-  return isalnum(ch) || ch=='_';
+inline int isword(int ch){
+  return isalnum((FXuchar)ch) || ch=='_';
   }
 
 
 // TRUE if character is punctuation (delimiter) character
-static inline int isdelim(int ch){
+inline int isdelim(int ch){
   return ispunct(ch) && ch!='_';
   }
 
@@ -1433,7 +1407,7 @@ in: last=*pat++;
           first=-1;
           continue;
         case 'l':
-          for(i=0; i<256; i++){ if(isalpha(i)) INCL(set,i); }
+          for(i=0; i<256; i++){ if(isalpha((FXuchar)i)) INCL(set,i); }
           first=-1;
           continue;
         case 'L':
@@ -2273,13 +2247,41 @@ FXbool FXExecute::execute(const FXchar* fm,const FXchar* to){
   return FALSE;
   }
 
+}
+
 /*******************************************************************************/
+
+namespace FX {
+
+// Table of error messages
+const FXchar *const FXRex::errors[]={
+  "OK",
+  "Empty pattern",
+  "Unmatched parenthesis",
+  "Unmatched bracket",
+  "Unmatched brace",
+  "Bad character range",
+  "Bad escape sequence",
+  "Bad counted repeat",
+  "No atom preceding repetition",
+  "Repeat following repeat",
+  "Bad backward reference",
+  "Bad character class",
+  "Expression too complex",
+  "Out of memory",
+  "Illegal token"
+  };
+
+
+// Default program always fails
+const FXint FXRex::fallback[]={2,OP_FAIL};
+
 
 // Copy regex object
 FXRex::FXRex(const FXRex& orig){
   code=(FXint*)fallback;
   if(orig.code!=fallback){
-    FXMEMDUP(&code,FXint,orig.code,orig.code[0]);
+    FXMEMDUP(&code,orig.code,FXint,orig.code[0]);
     }
   }
 
@@ -2304,7 +2306,7 @@ FXRex& FXRex::operator=(const FXRex& orig){
     if(code!=fallback) FXFREE(&code);
     code=(FXint*)fallback;
     if(orig.code!=fallback){
-      FXMEMDUP(&code,FXint,orig.code,orig.code[0]);
+      FXMEMDUP(&code,orig.code,FXint,orig.code[0]);
       }
     }
   return *this;
@@ -2477,3 +2479,5 @@ FXStream& operator>>(FXStream& store,FXRex& s){
 FXRex::~FXRex(){
   if(code!=fallback) FXFREE(&code);
   }
+
+}

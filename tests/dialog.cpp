@@ -5,7 +5,7 @@
 *********************************************************************************
 * Copyright (C) 1997 by Jeroen van der Zijp.   All Rights Reserved.             *
 *********************************************************************************
-* $Id: dialog.cpp,v 1.10 2001/12/20 19:01:16 jeroen Exp $                        *
+* $Id: dialog.cpp,v 1.15 2002/07/30 19:03:56 fox Exp $                          *
 ********************************************************************************/
 #include "fx.h"
 #include <stdio.h>
@@ -41,7 +41,7 @@ class DialogTester : public FXMainWindow {
 protected:
 
   // Member data
-  FXMenubar*         menubar;
+  FXMenuBar*         menubar;
   FXMenuPane*        filemenu;
   FXHorizontalFrame* contents;
   FXTestDialog*      dialog;
@@ -122,10 +122,10 @@ FXTestDialog::FXTestDialog(FXWindow* owner):
   new FXMenuButton(contents,"&Menu",NULL,menu,MENUBUTTON_DOWN|JUSTIFY_LEFT|LAYOUT_TOP|FRAME_RAISED|FRAME_THICK|ICON_AFTER_TEXT|LAYOUT_CENTER_X|LAYOUT_CENTER_Y);
 
   // Accept
-  new FXButton(buttons,"&Accept",NULL,this,ID_ACCEPT,FRAME_RAISED|FRAME_THICK|LAYOUT_RIGHT|LAYOUT_CENTER_Y);
+ new FXButton(buttons,"&Accept",NULL,this,ID_ACCEPT,BUTTON_DEFAULT|BUTTON_INITIAL|FRAME_RAISED|FRAME_THICK|LAYOUT_RIGHT|LAYOUT_CENTER_Y);
 
   // Cancel
-  new FXButton(buttons,"&Cancel",NULL,this,ID_CANCEL,FRAME_RAISED|FRAME_THICK|LAYOUT_RIGHT|LAYOUT_CENTER_Y);
+  new FXButton(buttons,"&Cancel",NULL,this,ID_CANCEL,BUTTON_DEFAULT|FRAME_RAISED|FRAME_THICK|LAYOUT_RIGHT|LAYOUT_CENTER_Y);
   }
 
 
@@ -157,17 +157,17 @@ FXIMPLEMENT(DialogTester,FXMainWindow,DialogTesterMap,ARRAYNUMBER(DialogTesterMa
 DialogTester::DialogTester(FXApp* a):FXMainWindow(a,"Group Box Test",NULL,NULL,DECOR_ALL,0,0,400,200){
 
   // Tooltip
-  new FXTooltip(getApp());
+  new FXToolTip(getApp());
 
   // Menubar
-  menubar=new FXMenubar(this,LAYOUT_SIDE_TOP|LAYOUT_FILL_X);
+  menubar=new FXMenuBar(this,LAYOUT_SIDE_TOP|LAYOUT_FILL_X);
 
   // Separator
   new FXHorizontalSeparator(this,LAYOUT_SIDE_TOP|LAYOUT_FILL_X|SEPARATOR_GROOVE);
 
   // File Menu
   filemenu=new FXMenuPane(this);
-  new FXMenuCommand(filemenu,"&Quit",NULL,getApp(),FXApp::ID_QUIT,0);
+  new FXMenuCommand(filemenu,"&Quit\tCtl-Q",NULL,getApp(),FXApp::ID_QUIT,0);
   new FXMenuTitle(menubar,"&File",NULL,filemenu);
 
   // Contents

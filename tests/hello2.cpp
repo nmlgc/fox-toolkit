@@ -508,7 +508,7 @@ int main(int argc,char **argv){
   FXMainWindow *main=new FXMainWindow(&application,"Hello",NULL,NULL,DECOR_ALL);
   FXIcon *icon=new FXGIFIcon(&application,FRONT,0,IMAGE_KEEP);
   new FXButton(main,"&Hello, World!\tWow, FOX is really cool!\nClick on the icon to quit the application.",icon,&application,FXApp::ID_QUIT,ICON_UNDER_TEXT|JUSTIFY_BOTTOM);
-  new FXTooltip(&application);
+  new FXToolTip(&application);
   application.create();
   main->show(PLACEMENT_SCREEN);
   return application.run();

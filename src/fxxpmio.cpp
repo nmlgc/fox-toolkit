@@ -3,7 +3,7 @@
 *                          X P M   I n p u t / O u t p u t                      *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2000,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 2000,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: fxxpmio.cpp,v 1.17.4.1 2003/05/12 11:04:35 fox Exp $                      *
+* $Id: fxxpmio.cpp,v 1.44 2004/04/24 14:10:30 fox Exp $                         *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -28,114 +28,170 @@
 #include "fxpriv.h"
 
 
-
 /*
   Notes:
   - The transparent color hopefully does not occur in the image.
   - If the image is rendered opaque, the transparent is close to white.
-  - References:
-      http://www-sop.inria.fr/koala/lehors/xpm.html
+  - References: http://www-sop.inria.fr/koala/lehors/xpm.html
+  - XPM reader/writer is tweaked so that an XPM written to FXStream
+    can be read back in and read exactly as many bytes as were written.
+  - There may be other comment blocks in the file
 */
 
-#define MAXPRINTABLE  92
-#define MAXVALUE      96
-#define ALPHA_COLOR   FXRGB(252,253,254)
-//#define ALPHA_COLOR   FXRGB(178,192,220)
+#define MAXPRINTABLE    92
+#define MAXVALUE        96
+#define HASH1(x,n)      (((unsigned int)(x)*13)%(n))            // Number [0..n-1]
+#define HASH2(x,n)      (1|(((unsigned int)(x)*17)%((n)-1)))    // Number [1..n-2]
 
-
-#define HASH1(x,n) (((unsigned int)(x)*13)%(n))           // Number [0..n-1]
-#define HASH2(x,n) (1|(((unsigned int)(x)*17)%((n)-1)))   // Number [1..n-1]
-
-
-/*******************************************************************************/
-
-/// Load an X Pixmap from array of strings
-extern FXAPI FXbool fxloadXPM(const FXchar **pix,FXuchar*& data,FXColor& transp,FXint& width,FXint& height);
-
-
-/// Load an X Pixmap file from a stream
-extern FXAPI FXbool fxloadXPM(FXStream& store,FXuchar*& data,FXColor& transp,FXint& width,FXint& height);
-
-
-/// Save an X Pixmap file to a stream
-extern FXAPI FXbool fxsaveXPM(FXStream& store,const FXuchar *data,FXColor transp,FXint width,FXint height);
+using namespace FX;
 
 
 /*******************************************************************************/
+
+namespace FX {
+
+
+extern FXAPI FXbool fxloadXPM(const FXchar **pix,FXColor*& data,FXint& width,FXint& height);
+extern FXAPI FXbool fxloadXPM(FXStream& store,FXColor*& data,FXint& width,FXint& height);
+extern FXAPI FXbool fxsaveXPM(FXStream& store,const FXColor *data,FXint width,FXint height,FXbool fast=TRUE);
+
+
+
+// Read till end of line
+static void readline(FXStream& store,FXchar* buffer,FXuint size){
+  register FXuint i=0;
+  while(!store.eof() && i<size){
+    store >> buffer[i];
+    if(buffer[i]=='\r') continue;
+    if(buffer[i]=='\n') break;
+    i++;
+    }
+  buffer[i]=0;
+  }
+
+
+// Read quoted text
+static void readtext(FXStream& store,FXchar* buffer,FXuint size){
+  register FXuint i=0;
+  FXchar ch;
+  store >> ch;
+  while(!store.eof() && ch!='"') store >> ch;
+  while(!store.eof() && i<size){
+    store >> ch;
+    if(ch=='"') break;
+    buffer[i++]=ch;
+    }
+  buffer[i]=0;
+  }
+
+
+// Parse next word
+static FXint nextword(const FXchar*& src,FXchar* dst){
+  register FXchar *ptr=dst;
+  while(*src && isspace((FXuchar)*src)) src++;
+  while(*src && !isspace((FXuchar)*src)) *ptr++=*src++;
+  *ptr=0;
+  return ptr-dst;
+  }
+
+
+// Is key
+static FXbool iskey(const FXchar *str){
+  return ((str[0]=='c' || str[0]=='s' || str[0]=='m' || str[0]=='g') && str[1]==0) || (str[0]=='g' && str[1]=='4' && str[2]==0);
+  }
 
 
 // Load image from array of strings
-FXbool fxloadXPM(const FXchar **pixels,FXuchar*& data,FXColor& transp,FXint& width,FXint& height){
-  FXuint    ncolortable,index,ncolors,cpp,c;
-  FXColor  *colortable=NULL;
-  FXint     ww,hh,i,j;
-  FXchar    name[100];
-  FXchar    type[10];
-  const FXchar *ptr;
-  FXuchar  *pix;
-  FXColor   color;
+FXbool fxloadXPM(const FXchar **pixels,FXColor*& data,FXint& width,FXint& height){
+  FXchar  lookuptable[1024][8],name[100],word[100],flag,best;
+  FXColor colortable[16384],*pix,color;
+  const FXchar *src,*line;
+  FXint   i,j,ncolors,cpp,c;
 
+  // Null out
   data=NULL;
-  ptr=*pixels++;
+  width=0;
+  height=0;
 
-  // Parse values
-  sscanf(ptr,"%d %d %u %u",&ww,&hh,&ncolors,&cpp);
+  // NULL pointer passed in
+  if(!pixels) return FALSE;
 
-  //FXTRACE((150,"fxloadXPM: width=%d height=%d ncolors=%d cpp=%d\n",ww,hh,ncolors,cpp));
+  // Read pointer
+  line=*pixels++;
+
+  // No size description line
+  if(!line) return FALSE;
+
+  // Parse size description
+  sscanf(line,"%d %d %u %u",&width,&height,&ncolors,&cpp);
 
   // Check size
-  if(ww<1 || hh<1 || ww>16384 || hh>16384) return FALSE;
+  if(width<1 || height<1 || width>16384 || height>16384) return FALSE;
 
-  // Check number of colors, and number of characters/color
-  if(cpp<1 || cpp>2 || ncolors<1 || ncolors>9216) return FALSE;
+  // Sensible inputs
+  if(cpp<1 || cpp>8 || ncolors<1) return FALSE;
 
-  // Color lookup table
-  ncolortable = (cpp==1) ? MAXVALUE : MAXVALUE*MAXVALUE;
+  // Limited number of colors for long lookup strings
+  if(cpp>2 && ncolors>1024) return FALSE;
 
-  // Check if characters/color is consistent with number of colors
-  if(ncolortable<ncolors) return FALSE;
+  // Allow more colors for short lookup strings
+  if(ncolors>16384) return FALSE;
 
-  // Make color table
-  FXMALLOC(&colortable,FXColor,ncolortable);
-  if(!colortable){return FALSE;}
+  FXTRACE((50,"fxloadXPM: width=%d height=%d ncolors=%d cpp=%d\n",width,height,ncolors,cpp));
 
   // Read the color table
   for(c=0; c<ncolors; c++){
-    ptr=*pixels++;
-    if(!ptr){FXFREE(&colortable);return FALSE;}
-    index=*ptr++ - ' ';
-    if(cpp==2) index=index+MAXVALUE*(*ptr++ - ' ');
-    if(index>ncolortable){FXFREE(&colortable);return FALSE;}
-    sscanf(ptr,"%s %s",type,name);
-    if(type[0]!='c') sscanf(ptr,"%*s %*s %s %s",type,name);
-    color=fxcolorfromname(name);
-    if(color==0) color=transp=ALPHA_COLOR;
-    colortable[index]=color;
-    //FXTRACE((150,"fxloadXPM: color %d: index=%d type=%s name=%s color=#%08x\n",c,index,type,name,color));
-    }
-
-  // Allocate pixels
-  FXMALLOC(&data,FXuchar,3*ww*hh);
-  if(!data){FXFREE(&colortable);return FALSE;}
-
-  // Read the pixels
-  for(i=0,pix=data; i<hh; i++){
-    ptr=*pixels++;
-    if(!ptr){FXFREE(&colortable);FXFREE(&data);return FALSE;}
-    for(j=0; j<ww; j++){
-      index=*ptr++ - ' ';
-      if(cpp==2) index=index+MAXVALUE*(*ptr++ - ' ');
-      if(index>ncolortable){FXFREE(&colortable);FXFREE(&data);return FALSE;}
-      color=colortable[index];
-      *pix++=FXREDVAL(color);
-      *pix++=FXGREENVAL(color);
-      *pix++=FXBLUEVAL(color);
+    line=*pixels++;
+    src=line+cpp;
+    nextword(src,word);
+    best='z';
+    while(iskey(word)){
+      flag=word[0];
+      name[0]=0;
+      while(nextword(src,word) && !iskey(word)){
+        strcat(name,word);
+        }
+      if(flag<best){                    // c < g < m < s
+        color=fxcolorfromname(name);
+        best=flag;
+        }
+      }
+    if(cpp==1){
+      colortable[(FXuchar)line[0]]=color;
+      }
+    else if(cpp==2){
+      colortable[(((FXuchar)line[1])<<7)+(FXuchar)line[0]]=color;
+      }
+    else{
+      colortable[c]=color;
+      strncpy(lookuptable[c],line,cpp);
       }
     }
-  FXFREE(&colortable);
-  width=ww;
-  height=hh;
-  //FXTRACE((150,"fxloadXPM: done\n"));
+
+  // Try allocate pixels
+  if(!FXMALLOC(&data,FXColor,width*height)){
+    return FALSE;
+    }
+
+  // Read the pixels
+  for(i=0,pix=data; i<height; i++){
+    line=*pixels++;
+    for(j=0; j<width; j++){
+      if(cpp==1){
+        color=colortable[(FXuchar)line[0]];
+        }
+      else if(cpp==2){
+        color=colortable[(((FXuchar)line[1])<<7)+(FXuchar)line[0]];
+        }
+      else{
+        for(c=0; c<ncolors; c++){
+          if(strncmp(lookuptable[c],line,cpp)==0){ color=colortable[c]; break; }
+          }
+        }
+      line+=cpp;
+      *pix++=color;
+      }
+    }
   return TRUE;
   }
 
@@ -143,94 +199,104 @@ FXbool fxloadXPM(const FXchar **pixels,FXuchar*& data,FXColor& transp,FXint& wid
 /*******************************************************************************/
 
 
-static void readbuffer(FXStream& store,FXchar* buffer,FXuint size){
-  FXchar ch;
-  while((store.status()!=FXStreamEnd) && (store>>ch,ch!='"'));
-  while((store.status()!=FXStreamEnd) && (store>>ch,ch!='"') && size--) *buffer++=ch;
-  while((store.status()!=FXStreamEnd) && (store>>ch,ch!='\n'));
-  *buffer=0;
-  }
-
-
 // Load image from stream
-FXbool fxloadXPM(FXStream& store,FXuchar*& data,FXColor& transp,FXint& width,FXint& height){
-  FXuint    ncolortable,index,ncolors,cpp,c;
-  FXColor  *colortable=NULL;
-  FXint     ww,hh,i,j;
-  FXchar    header[256];
-  FXchar    name[100];
-  FXchar    type[10];
-  FXchar    ch;
-  FXchar   *ptr;
-  FXuchar  *pix;
-  FXColor   color;
+FXbool fxloadXPM(FXStream& store,FXColor*& data,FXint& width,FXint& height){
+  FXchar  lookuptable[1024][8],line[100],name[100],word[100],flag,best,ch;
+  FXColor colortable[16384],*pix,color;
+  const FXchar *src;
+  FXint   i,j,ncolors,cpp,c;
 
+  // Null out
   data=NULL;
+  width=0;
+  height=0;
 
-  readbuffer(store,header,sizeof(header));
-  if(store.status()!=FXStreamOK) return FALSE;
+  // Read header line
+  readline(store,name,sizeof(name));
+  if(!strstr(name,"XPM")) return FALSE;
 
-  // Parse values
-  sscanf(header,"%d %d %u %u",&ww,&hh,&ncolors,&cpp);
+  // Read description
+  readtext(store,line,sizeof(line));
 
-  //FXTRACE((150,"fxloadXPM: width=%d height=%d ncolors=%d cpp=%d\n",ww,hh,ncolors,cpp));
+  // Parse size description
+  if(sscanf(line,"%d %d %u %u",&width,&height,&ncolors,&cpp)!=4) return FALSE;
 
   // Check size
-  if(ww<1 || hh<1 || ww>16384 || hh>16384) return FALSE;
+  if(width<1 || height<1 || width>16384 || height>16384) return FALSE;
 
-  // Check number of colors, and number of characters/color
-  if(cpp<1 || cpp>2 || ncolors<1 || ncolors>9216) return FALSE;
+  // Sensible inputs
+  if(cpp<1 || cpp>8 || ncolors<1) return FALSE;
 
-  // Color lookup table
-  ncolortable = (cpp==1) ? MAXVALUE : MAXVALUE*MAXVALUE;
+  // Limited number of colors for long lookup strings
+  if(cpp>2 && ncolors>1024) return FALSE;
 
-  // Check if characters/color is consistent with number of colors
-  if(ncolortable<ncolors) return FALSE;
+  // Allow more colors for short lookup strings
+  if(ncolors>16384) return FALSE;
 
-  // Make color table
-  FXMALLOC(&colortable,FXColor,ncolortable);
-  if(!colortable){return FALSE;}
+  FXTRACE((50,"fxloadXPM: width=%d height=%d ncolors=%d cpp=%d\n",width,height,ncolors,cpp));
 
   // Read the color table
   for(c=0; c<ncolors; c++){
-    readbuffer(store,header,sizeof(header));
-    if(store.status()!=FXStreamOK) return FALSE;
-    ptr=header;
-    index=*ptr++ - ' ';
-    if(cpp==2) index=index+MAXVALUE*(*ptr++ - ' ');
-    if(index>ncolortable){FXFREE(&colortable);return FALSE;}
-    sscanf(ptr,"%s %s",type,name);
-    if(type[0]!='c') sscanf(ptr,"%*s %*s %s %s",type,name);
-    color=fxcolorfromname(name);
-    if(color==0) color=transp=ALPHA_COLOR;
-    colortable[index]=color;
-    //FXTRACE((150,"fxloadXPM: color %d: index=%d type=%s name=%s color=#%08x\n",c,index,type,name,color));
+    readtext(store,line,sizeof(line));
+    src=line+cpp;
+    nextword(src,word);
+    best='z';
+    while(iskey(word)){
+      flag=word[0];
+      name[0]=0;
+      while(nextword(src,word) && !iskey(word)){
+        strcat(name,word);
+        }
+      if(flag<best){                    // c < g < m < s
+        color=fxcolorfromname(name);
+        best=flag;
+        }
+      }
+    if(cpp==1){
+      colortable[(FXuchar)line[0]]=color;
+      }
+    else if(cpp==2){
+      colortable[(((FXuchar)line[1])<<7)+(FXuchar)line[0]]=color;
+      }
+    else{
+      colortable[c]=color;
+      strncpy(lookuptable[c],line,cpp);
+      }
     }
 
-  // Allocate pixels
-  FXMALLOC(&data,FXuchar,3*ww*hh);
-  if(!data){FXFREE(&colortable);return FALSE;}
+  // Try allocate pixels
+  if(!FXMALLOC(&data,FXColor,width*height)){
+    return FALSE;
+    }
 
   // Read the pixels
-  for(i=0,pix=data; i<hh; i++){
-    while((store.status()!=FXStreamEnd) && (store>>ch,ch!='"'));
-    for(j=0; j<ww; j++){
-      store >> ch;
-      index=ch-' ';
-      if(cpp==2){ store >> ch; index=index+MAXVALUE*(ch-' '); }
-      if(index>ncolortable){FXFREE(&colortable);FXFREE(&data);return FALSE;}
-      color=colortable[index];
-      *pix++=FXREDVAL(color);
-      *pix++=FXGREENVAL(color);
-      *pix++=FXBLUEVAL(color);
+  for(i=0,pix=data; i<height; i++){
+    while(!store.eof() && (store>>ch,ch!='"'));
+    for(j=0; j<width; j++){
+      store.load(line,cpp);
+      if(cpp==1){
+        color=colortable[(FXuchar)line[0]];
+        }
+      else if(cpp==2){
+        color=colortable[(((FXuchar)line[1])<<7)+(FXuchar)line[0]];
+        }
+      else{
+        for(c=0; c<ncolors; c++){
+          if(strncmp(lookuptable[c],line,cpp)==0){ color=colortable[c]; break; }
+          }
+        }
+      *pix++=color;
       }
-    while((store.status()!=FXStreamEnd) && (store>>ch,ch!='\n'));
-    if(store.status()!=FXStreamOK) return FALSE;
+    while(!store.eof() && (store>>ch,ch!='"'));
     }
-  FXFREE(&colortable);
-  width=ww;
-  height=hh;
-  //FXTRACE((150,"fxloadXPM: done\n"));
+
+  // We got the image, but we're not done yet; need to read few more bytes
+  // the number of bytes read here must match the number of bytes written
+  // by fxsaveXPM() so that the stream won't get out of sync
+  while(!store.eof()){
+    store >> ch;
+    if(ch=='\n') break;
+    }
   return TRUE;
   }
 
@@ -239,31 +305,33 @@ FXbool fxloadXPM(FXStream& store,FXuchar*& data,FXColor& transp,FXint& width,FXi
 
 
 // Save image to a stream
-FXbool fxsaveXPM(FXStream& store,const FXuchar *data,FXColor transp,FXint width,FXint height){
+FXbool fxsaveXPM(FXStream& store,const FXColor *data,FXint width,FXint height,FXbool fast){
   const FXchar printable[]=" .XoO+@#$%&*=-;:>,<1234567890qwertyuipasdfghjklzxcvbnmMNBVCZASDFGHJKLPIUYTREWQ!~^/()_`'][{}|";
   const FXchar quote='"';
   const FXchar comma=',';
   const FXchar newline='\n';
-  FXuchar   rmap[256];      // Red colormap
-  FXuchar   gmap[256];      // Green colormap
-  FXuchar   bmap[256];      // Blue colormap
+  FXColor   colormap[256];
   FXint     numpixels=width*height;
-  FXint     ncolors,cpp,len,i,j,c1,c2,ok;
-  FXchar    header[200];
+  FXint     ncolors,cpp,len,i,j,c1,c2;
+  FXchar    buffer[200];
   FXColor   color;
   FXuchar  *pixels,*ptr,pix;
+
+  // Must make sense
+  if(!data || width<=0 || height<=0) return FALSE;
 
   // Allocate temp buffer for pixels
   if(!FXMALLOC(&pixels,FXuchar,numpixels)) return FALSE;
 
   // First, try EZ quantization, because it is exact; a previously
   // loaded XPM will be re-saved with exactly the same colors.
-  ok=fxezquantize(pixels,data,rmap,gmap,bmap,ncolors,width,height,256);
-
-  if(!ok){
-
-    // Floyd-Steinberg quantize full 24 bpp to 256 colors, organized as 3:3:2
-    fxfsquantize(pixels,data,rmap,gmap,bmap,ncolors,width,height,256);
+  if(!fxezquantize(pixels,data,colormap,ncolors,width,height,256)){
+    if(fast){
+      fxfsquantize(pixels,data,colormap,ncolors,width,height,256);
+      }
+    else{
+      fxwuquantize(pixels,data,colormap,ncolors,width,height,256);
+      }
     }
 
   FXASSERT(ncolors<=256);
@@ -271,27 +339,25 @@ FXbool fxsaveXPM(FXStream& store,const FXuchar *data,FXColor transp,FXint width,
   // How many characters needed to represent one pixel, characters per line
   cpp=(ncolors>MAXPRINTABLE)?2:1;
 
-  //FXTRACE((150,"fxsaveXPM: width=%d height=%d ncolors=%d cpp=%d\n",width,height,ncolors,cpp));
-
   // Save header
   store.save("/* XPM */\nstatic char * image[] = {\n",36);
 
   // Save values
-  len=sprintf(header,"\"%d %d %d %d\",\n",width,height,ncolors,cpp);
-  store.save(header,len);
+  len=sprintf(buffer,"\"%d %d %d %d\",\n",width,height,ncolors,cpp);
+  store.save(buffer,len);
 
   // Save the colors
   for(i=0; i<ncolors; i++){
-    color=FXRGB(rmap[i],gmap[i],bmap[i]);
+    color=colormap[i];
     c1=printable[i%MAXPRINTABLE];
     c2=printable[i/MAXPRINTABLE];
-    if(color!=transp){
-      len=sprintf(header,"\"%c%c c #%02x%02x%02x\",\n",c1,c2,rmap[i],gmap[i],bmap[i]);
-      store.save(header,len);
+    if(FXALPHAVAL(color)){
+      len=sprintf(buffer,"\"%c%c c #%02x%02x%02x\",\n",c1,c2,FXREDVAL(color),FXGREENVAL(color),FXBLUEVAL(color));
+      store.save(buffer,len);
       }
     else{
-      len=sprintf(header,"\"%c%c c None\",\n",c1,c2);
-      store.save(header,len);
+      len=sprintf(buffer,"\"%c%c c None\",\n",c1,c2);
+      store.save(buffer,len);
       }
     }
 
@@ -314,9 +380,8 @@ FXbool fxsaveXPM(FXStream& store,const FXuchar *data,FXColor transp,FXint width,
     }
   store.save("};\n",3);
   FXFREE(&pixels);
-  //FXTRACE((150,"fxsaveXPM: done\n"));
   return TRUE;
   }
 
-
+}
 

@@ -3,7 +3,7 @@
 *                              D a t a   T a r g e t                            *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1998,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXDataTarget.h,v 1.14 2002/01/18 22:42:52 jeroen Exp $                   *
+* $Id: FXDataTarget.h,v 1.19 2004/02/08 17:17:33 fox Exp $                      *
 ********************************************************************************/
 #ifndef FXDATATARGET_H
 #define FXDATATARGET_H
@@ -28,6 +28,7 @@
 #include "FXObject.h"
 #endif
 
+namespace FX {
 
 
 /**
@@ -155,8 +156,11 @@ public:
 
   /// Associate with string variable
   void connect(FXString& value){ type=DT_STRING; data=&value; }
+
+  /// Destroy
+  virtual ~FXDataTarget();
   };
 
-
+}
 
 #endif

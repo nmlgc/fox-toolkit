@@ -3,7 +3,7 @@
 *                P a c k e r   C o n t a i n e r   O b j e c t                  *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXPacker.cpp,v 1.24.4.2 2003/09/18 13:54:29 fox Exp $                     *
+* $Id: FXPacker.cpp,v 1.38 2004/02/08 17:29:07 fox Exp $                        *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -30,6 +30,7 @@
 #include "FXPoint.h"
 #include "FXRectangle.h"
 #include "FXRegistry.h"
+#include "FXHash.h"
 #include "FXApp.h"
 #include "FXDCWindow.h"
 #include "FXPacker.h"
@@ -54,9 +55,11 @@
 // Frame styles
 #define FRAME_MASK        (FRAME_SUNKEN|FRAME_RAISED|FRAME_THICK)
 
+using namespace FX;
 
 /*******************************************************************************/
 
+namespace FX {
 
 // Map
 FXDEFMAP(FXPacker) FXPackerMap[]={
@@ -103,81 +106,105 @@ void FXPacker::drawBorderRectangle(FXDCWindow& dc,FXint x,FXint y,FXint w,FXint 
 
 
 void FXPacker::drawRaisedRectangle(FXDCWindow& dc,FXint x,FXint y,FXint w,FXint h){
-  dc.setForeground(shadowColor);
-  dc.fillRectangle(x,y+h-1,w,1);
-  dc.fillRectangle(x+w-1,y,1,h);
-  dc.setForeground(hiliteColor);
-  dc.fillRectangle(x,y,w,1);
-  dc.fillRectangle(x,y,1,h);
+  if(0<w && 0<h){
+    dc.setForeground(shadowColor);
+    dc.fillRectangle(x,y+h-1,w,1);
+    dc.fillRectangle(x+w-1,y,1,h);
+    dc.setForeground(hiliteColor);
+    dc.fillRectangle(x,y,w,1);
+    dc.fillRectangle(x,y,1,h);
+    }
   }
 
 
 void FXPacker::drawSunkenRectangle(FXDCWindow& dc,FXint x,FXint y,FXint w,FXint h){
-  dc.setForeground(shadowColor);
-  dc.fillRectangle(x,y,w,1);
-  dc.fillRectangle(x,y,1,h);
-  dc.setForeground(hiliteColor);
-  dc.fillRectangle(x,y+h-1,w,1);
-  dc.fillRectangle(x+w-1,y,1,h);
+  if(0<w && 0<h){
+    dc.setForeground(shadowColor);
+    dc.fillRectangle(x,y,w,1);
+    dc.fillRectangle(x,y,1,h);
+    dc.setForeground(hiliteColor);
+    dc.fillRectangle(x,y+h-1,w,1);
+    dc.fillRectangle(x+w-1,y,1,h);
+    }
   }
 
 
 void FXPacker::drawRidgeRectangle(FXDCWindow& dc,FXint x,FXint y,FXint w,FXint h){
-  dc.setForeground(hiliteColor);
-  dc.fillRectangle(x,y,w,1);
-  dc.fillRectangle(x,y,1,h);
-  dc.fillRectangle(x+1,y+h-2,w-2,1);
-  dc.fillRectangle(x+w-2,y+1,1,h-2);
-  dc.setForeground(shadowColor);
-  dc.fillRectangle(x+1,y+1,w-3,1);
-  dc.fillRectangle(x+1,y+1,1,h-3);
-  dc.fillRectangle(x,y+h-1,w,1);
-  dc.fillRectangle(x+w-1,y,1,h);
+  if(0<w && 0<h){
+    dc.setForeground(hiliteColor);
+    dc.fillRectangle(x,y,w,1);
+    dc.fillRectangle(x,y,1,h);
+    dc.setForeground(shadowColor);
+    dc.fillRectangle(x,y+h-1,w,1);
+    dc.fillRectangle(x+w-1,y,1,h);
+    if(1<w && 1<h){
+      dc.setForeground(hiliteColor);
+      dc.fillRectangle(x+1,y+h-2,w-2,1);
+      dc.fillRectangle(x+w-2,y+1,1,h-2);
+      dc.setForeground(shadowColor);
+      dc.fillRectangle(x+1,y+1,w-3,1);
+      dc.fillRectangle(x+1,y+1,1,h-3);
+      }
+    }
   }
 
 
 void FXPacker::drawGrooveRectangle(FXDCWindow& dc,FXint x,FXint y,FXint w,FXint h){
-  dc.setForeground(shadowColor);
-  dc.fillRectangle(x,y,w,1);
-  dc.fillRectangle(x,y,1,h);
-  dc.fillRectangle(x+1,y+h-2,w-2,1);
-  dc.fillRectangle(x+w-2,y+1,1,h-2);
-  dc.setForeground(hiliteColor);
-  dc.fillRectangle(x+1,y+1,w-3,1);
-  dc.fillRectangle(x+1,y+1,1,h-3);
-  dc.fillRectangle(x,y+h-1,w,1);
-  dc.fillRectangle(x+w-1,y,1,h);
+  if(0<w && 0<h){
+    dc.setForeground(shadowColor);
+    dc.fillRectangle(x,y,w,1);
+    dc.fillRectangle(x,y,1,h);
+    dc.setForeground(hiliteColor);
+    dc.fillRectangle(x,y+h-1,w,1);
+    dc.fillRectangle(x+w-1,y,1,h);
+    if(1<w && 1<h){
+      dc.setForeground(shadowColor);
+      dc.fillRectangle(x+1,y+h-2,w-2,1);
+      dc.fillRectangle(x+w-2,y+1,1,h-2);
+      dc.setForeground(hiliteColor);
+      dc.fillRectangle(x+1,y+1,w-3,1);
+      dc.fillRectangle(x+1,y+1,1,h-3);
+      }
+    }
   }
 
 
 void FXPacker::drawDoubleRaisedRectangle(FXDCWindow& dc,FXint x,FXint y,FXint w,FXint h){
-  dc.setForeground(hiliteColor);
-  dc.fillRectangle(x,y,w-1,1);
-  dc.fillRectangle(x,y,1,h-1);
-  dc.setForeground(baseColor);
-  dc.fillRectangle(x+1,y+1,w-2,1);
-  dc.fillRectangle(x+1,y+1,1,h-2);
-  dc.setForeground(shadowColor);
-  dc.fillRectangle(x+1,y+h-2,w-2,1);
-  dc.fillRectangle(x+w-2,y+1,1,h-1);
-  dc.setForeground(borderColor);
-  dc.fillRectangle(x,y+h-1,w,1);
-  dc.fillRectangle(x+w-1,y,1,h);
+  if(0<w && 0<h){
+    dc.setForeground(borderColor);
+    dc.fillRectangle(x,y+h-1,w,1);
+    dc.fillRectangle(x+w-1,y,1,h);
+    dc.setForeground(hiliteColor);
+    dc.fillRectangle(x,y,w-1,1);
+    dc.fillRectangle(x,y,1,h-1);
+    if(1<w && 1<h){
+      dc.setForeground(baseColor);
+      dc.fillRectangle(x+1,y+1,w-2,1);
+      dc.fillRectangle(x+1,y+1,1,h-2);
+      dc.setForeground(shadowColor);
+      dc.fillRectangle(x+1,y+h-2,w-2,1);
+      dc.fillRectangle(x+w-2,y+1,1,h-2);
+      }
+    }
   }
 
 void FXPacker::drawDoubleSunkenRectangle(FXDCWindow& dc,FXint x,FXint y,FXint w,FXint h){
-  dc.setForeground(shadowColor);
-  dc.fillRectangle(x,y,w-1,1);
-  dc.fillRectangle(x,y,1,h-1);
-  dc.setForeground(borderColor);
-  dc.fillRectangle(x+1,y+1,w-3,1);
-  dc.fillRectangle(x+1,y+1,1,h-3);
-  dc.setForeground(hiliteColor);
-  dc.fillRectangle(x,y+h-1,w,1);
-  dc.fillRectangle(x+w-1,y,1,h);
-  dc.setForeground(baseColor);
-  dc.fillRectangle(x+1,y+h-2,w-2,1);
-  dc.fillRectangle(x+w-2,y+1,1,h-2);
+  if(0<w && 0<h){
+    dc.setForeground(hiliteColor);
+    dc.fillRectangle(x,y+h-1,w,1);
+    dc.fillRectangle(x+w-1,y,1,h);
+    dc.setForeground(shadowColor);
+    dc.fillRectangle(x,y,w-1,1);
+    dc.fillRectangle(x,y,1,h-1);
+    if(1<w && 1<h){
+      dc.setForeground(borderColor);
+      dc.fillRectangle(x+1,y+1,w-3,1);
+      dc.fillRectangle(x+1,y+1,1,h-3);
+      dc.setForeground(baseColor);
+      dc.fillRectangle(x+1,y+h-2,w-2,1);
+      dc.fillRectangle(x+w-2,y+1,1,h-2);
+      }
+    }
   }
 
 
@@ -336,7 +363,7 @@ void FXPacker::setVSpacing(FXint vs){
 
 
 // Focus moved up
-long FXPacker::onFocusUp(FXObject*,FXSelector sel,void* ptr){
+long FXPacker::onFocusUp(FXObject*,FXSelector,void* ptr){
   FXWindow *child,*c;
   FXint cury,childy;
   if(getFocus()){
@@ -348,11 +375,8 @@ long FXPacker::onFocusUp(FXObject*,FXSelector sel,void* ptr){
         if(c->shown() && c->getY()<cury && childy<c->getY()){ childy=c->getY(); child=c; }
         }
       if(!child) return 0;
-      if(child->isEnabled() && child->canFocus()){
-        child->handle(this,MKUINT(0,SEL_FOCUS_SELF),ptr);
-        return 1;
-        }
-      if(child->isComposite() && child->handle(this,sel,ptr)) return 1;
+      if(child->handle(this,FXSEL(SEL_FOCUS_SELF,0),ptr)) return 1;
+      if(child->handle(this,FXSEL(SEL_FOCUS_UP,0),ptr)) return 1;
       cury=childy;
       }
     }
@@ -360,11 +384,8 @@ long FXPacker::onFocusUp(FXObject*,FXSelector sel,void* ptr){
     child=getLast();
     while(child){
       if(child->shown()){
-        if(child->isEnabled() && child->canFocus()){
-          child->handle(this,MKUINT(0,SEL_FOCUS_SELF),ptr);
-          return 1;
-          }
-        if(child->isComposite() && child->handle(this,sel,ptr)) return 1;
+        if(child->handle(this,FXSEL(SEL_FOCUS_SELF,0),ptr)) return 1;
+        if(child->handle(this,FXSEL(SEL_FOCUS_UP,0),ptr)) return 1;
         }
       child=child->getPrev();
       }
@@ -374,7 +395,7 @@ long FXPacker::onFocusUp(FXObject*,FXSelector sel,void* ptr){
 
 
 // Focus moved down
-long FXPacker::onFocusDown(FXObject*,FXSelector sel,void* ptr){
+long FXPacker::onFocusDown(FXObject*,FXSelector,void* ptr){
   FXWindow *child,*c;
   FXint cury,childy;
   if(getFocus()){
@@ -386,11 +407,8 @@ long FXPacker::onFocusDown(FXObject*,FXSelector sel,void* ptr){
         if(c->shown() && cury<c->getY() && c->getY()<childy){ childy=c->getY(); child=c; }
         }
       if(!child) return 0;
-      if(child->isEnabled() && child->canFocus()){
-        child->handle(this,MKUINT(0,SEL_FOCUS_SELF),ptr);
-        return 1;
-        }
-      if(child->isComposite() && child->handle(this,sel,ptr)) return 1;
+      if(child->handle(this,FXSEL(SEL_FOCUS_SELF,0),ptr)) return 1;
+      if(child->handle(this,FXSEL(SEL_FOCUS_DOWN,0),ptr)) return 1;
       cury=childy;
       }
     }
@@ -398,11 +416,8 @@ long FXPacker::onFocusDown(FXObject*,FXSelector sel,void* ptr){
     child=getFirst();
     while(child){
       if(child->shown()){
-        if(child->isEnabled() && child->canFocus()){
-          child->handle(this,MKUINT(0,SEL_FOCUS_SELF),ptr);
-          return 1;
-          }
-        if(child->isComposite() && child->handle(this,sel,ptr)) return 1;
+        if(child->handle(this,FXSEL(SEL_FOCUS_SELF,0),ptr)) return 1;
+        if(child->handle(this,FXSEL(SEL_FOCUS_DOWN,0),ptr)) return 1;
         }
       child=child->getNext();
       }
@@ -412,7 +427,7 @@ long FXPacker::onFocusDown(FXObject*,FXSelector sel,void* ptr){
 
 
 // Focus moved to left
-long FXPacker::onFocusLeft(FXObject*,FXSelector sel,void* ptr){
+long FXPacker::onFocusLeft(FXObject*,FXSelector,void* ptr){
   FXWindow *child,*c;
   FXint curx,childx;
   if(getFocus()){
@@ -424,11 +439,8 @@ long FXPacker::onFocusLeft(FXObject*,FXSelector sel,void* ptr){
         if(c->shown() && c->getX()<curx && childx<c->getX()){ childx=c->getX(); child=c; }
         }
       if(!child) return 0;
-      if(child->isEnabled() && child->canFocus()){
-        child->handle(this,MKUINT(0,SEL_FOCUS_SELF),ptr);
-        return 1;
-        }
-      if(child->isComposite() && child->handle(this,sel,ptr)) return 1;
+      if(child->handle(this,FXSEL(SEL_FOCUS_SELF,0),ptr)) return 1;
+      if(child->handle(this,FXSEL(SEL_FOCUS_LEFT,0),ptr)) return 1;
       curx=childx;
       }
     }
@@ -436,11 +448,8 @@ long FXPacker::onFocusLeft(FXObject*,FXSelector sel,void* ptr){
     child=getLast();
     while(child){
       if(child->shown()){
-        if(child->isEnabled() && child->canFocus()){
-          child->handle(this,MKUINT(0,SEL_FOCUS_SELF),ptr);
-          return 1;
-          }
-        if(child->isComposite() && child->handle(this,sel,ptr)) return 1;
+        if(child->handle(this,FXSEL(SEL_FOCUS_SELF,0),ptr)) return 1;
+        if(child->handle(this,FXSEL(SEL_FOCUS_LEFT,0),ptr)) return 1;
         }
       child=child->getPrev();
       }
@@ -450,7 +459,7 @@ long FXPacker::onFocusLeft(FXObject*,FXSelector sel,void* ptr){
 
 
 // Focus moved to right
-long FXPacker::onFocusRight(FXObject*,FXSelector sel,void* ptr){
+long FXPacker::onFocusRight(FXObject*,FXSelector,void* ptr){
   FXWindow *child,*c;
   FXint curx,childx;
   if(getFocus()){
@@ -462,11 +471,8 @@ long FXPacker::onFocusRight(FXObject*,FXSelector sel,void* ptr){
         if(c->shown() && curx<c->getX() && c->getX()<childx){ childx=c->getX(); child=c; }
         }
       if(!child) return 0;
-      if(child->isEnabled() && child->canFocus()){
-        child->handle(this,MKUINT(0,SEL_FOCUS_SELF),ptr);
-        return 1;
-        }
-      if(child->isComposite() && child->handle(this,sel,ptr)) return 1;
+      if(child->handle(this,FXSEL(SEL_FOCUS_SELF,0),ptr)) return 1;
+      if(child->handle(this,FXSEL(SEL_FOCUS_RIGHT,0),ptr)) return 1;
       curx=childx;
       }
     }
@@ -474,11 +480,8 @@ long FXPacker::onFocusRight(FXObject*,FXSelector sel,void* ptr){
     child=getFirst();
     while(child){
       if(child->shown()){
-        if(child->isEnabled() && child->canFocus()){
-          child->handle(this,MKUINT(0,SEL_FOCUS_SELF),ptr);
-          return 1;
-          }
-        if(child->isComposite() && child->handle(this,sel,ptr)) return 1;
+        if(child->handle(this,FXSEL(SEL_FOCUS_SELF,0),ptr)) return 1;
+        if(child->handle(this,FXSEL(SEL_FOCUS_RIGHT,0),ptr)) return 1;
         }
       child=child->getNext();
       }
@@ -663,3 +666,5 @@ void FXPacker::load(FXStream& store){
   store >> hspacing >> vspacing;
   store >> border;
   }
+
+}

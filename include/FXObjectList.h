@@ -3,7 +3,7 @@
 *                            O b j e c t   L i s t                              *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,18 +19,21 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXObjectList.h,v 1.16 2002/01/18 22:42:54 jeroen Exp $                   *
+* $Id: FXObjectList.h,v 1.24 2004/02/08 17:17:34 fox Exp $                      *
 ********************************************************************************/
 #ifndef FXOBJECTLIST_H
 #define FXOBJECTLIST_H
 
+#ifndef FXOBJECT_H
+#include "FXObject.h"
+#endif
+
+namespace FX {
 
 /// List of pointers to objects
 class FXAPI FXObjectList {
 protected:
-  FXObject  **data;		/// List of items
-  FXint       num;		/// Used slots
-  FXint       max;		/// Total slots
+  FXObject **data;
 public:
 
   /// Default constructor
@@ -39,20 +42,20 @@ public:
   /// Copy constructor
   FXObjectList(const FXObjectList& orig);
 
+  /// Construct and init with single object
+  FXObjectList(FXObject* object);
+
+  /// Construct and init with list of objects
+  FXObjectList(FXObject** objects,FXint n);
+
   /// Assignment operator
   FXObjectList& operator=(const FXObjectList& orig);
 
-  /// Return number of elements
-  FXint no() const { return num; }
+  /// Return number of objects
+  FXint no() const { return *((FXint*)(data-1)); }
 
-  /// Set number of elements
-  void no(FXint n);
-
-  /// Return size of list
-  FXint size() const { return max; }
-
-  /// Set max number of elements
-  void size(FXint m);
+  /// Set number of objects
+  void no(FXint num);
 
   /// Indexing operator
   FXObject*& operator[](FXint i){ return data[i]; }
@@ -65,32 +68,65 @@ public:
   /// Access to content array
   FXObject** list() const { return data; }
 
-  /// Insert element at certain position
-  void insert(FXint pos,FXObject* p);
+  /// Assign object p to list
+  FXObjectList& assign(FXObject* object);
 
-  /// Prepend element
-  void prepend(FXObject* p);
+  /// Assign n objects to list
+  FXObjectList& assign(FXObject** objects,FXint n);
 
-  /// Append element
-  void append(FXObject* p);
+  /// Assign objects to list
+  FXObjectList& assign(FXObjectList& objects);
 
-  /// Replace element
-  void replace(FXint pos,FXObject* p);
+  /// Insert object at certain position
+  FXObjectList& insert(FXint pos,FXObject* object);
 
-  /// Remove element at pos
-  void remove(FXint pos);
+  /// Insert n objects at specified position
+  FXObjectList& insert(FXint pos,FXObject** objects,FXint n);
 
-  /// Remove element p
-  void remove(const FXObject* p);
+  /// Insert objects at specified position
+  FXObjectList& insert(FXint pos,FXObjectList& objects);
+
+  /// Prepend object
+  FXObjectList& prepend(FXObject* object);
+
+  /// Prepend n objects
+  FXObjectList& prepend(FXObject** objects,FXint n);
+
+  /// Prepend objects
+  FXObjectList& prepend(FXObjectList& objects);
+
+  /// Append object
+  FXObjectList& append(FXObject* object);
+
+  /// Append n objects
+  FXObjectList& append(FXObject** objects,FXint n);
+
+  /// Append objects
+  FXObjectList& append(FXObjectList& objects);
+
+  /// Replace object at position by given object
+  FXObjectList& replace(FXint pos,FXObject* object);
+
+  /// Replaces the m objects at pos with n objects
+  FXObjectList& replace(FXint pos,FXint m,FXObject** objects,FXint n);
+
+  /// Replace the m objects at pos with objects
+  FXObjectList& replace(FXint pos,FXint m,FXObjectList& objects);
+
+  /// Remove object at pos
+  FXObjectList& remove(FXint pos,FXint n=1);
+
+  /// Remove object
+  FXObjectList& remove(const FXObject* object);
 
   /// Find object in list, searching forward; return position or -1
-  FXint findf(const FXObject *p,FXint pos=0) const;
+  FXint find(const FXObject *object,FXint pos=0) const;
 
   /// Find object in list, searching backward; return position or -1
-  FXint findb(const FXObject *p,FXint pos=2147483647) const;
+  FXint rfind(const FXObject *object,FXint pos=2147483647) const;
 
-  /// Remove all elements
-  void clear();
+  /// Remove all objects
+  FXObjectList& clear();
 
   /// Save to a stream
   void save(FXStream& store) const;
@@ -120,5 +156,7 @@ public:
   /// Access to content array
   TYPE** list() const { return (TYPE**)data; }
   };
+
+}
 
 #endif

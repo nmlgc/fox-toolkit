@@ -3,7 +3,7 @@
 *                       D e l e g a t o r   T a r g e t                         *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2000,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 2000,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXDelegator.cpp,v 1.7 2002/01/18 22:42:59 jeroen Exp $                   *
+* $Id: FXDelegator.cpp,v 1.12 2004/02/08 17:29:06 fox Exp $                     *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -36,16 +36,19 @@
     from the controls can be switched around to another.
 */
 
+using namespace FX;
 
 /*******************************************************************************/
 
+namespace FX {
 
 // Object implementation
 FXIMPLEMENT(FXDelegator,FXObject,NULL,0)
 
 
-// Check the menu button
+// Delegate message to another target
 long FXDelegator::onDefault(FXObject* sender,FXSelector sel,void* ptr){
   return delegate && delegate->handle(sender,sel,ptr);
   }
 
+}

@@ -3,7 +3,7 @@
 *                         I n p u t   D i a l o g   B o x                       *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2000,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 2000,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXInputDialog.cpp,v 1.17 2002/01/18 22:43:01 jeroen Exp $                *
+* $Id: FXInputDialog.cpp,v 1.22 2004/02/08 17:29:06 fox Exp $                   *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -31,6 +31,7 @@
 #include "FXRectangle.h"
 #include "FXRegistry.h"
 #include "FXAccelTable.h"
+#include "FXHash.h"
 #include "FXApp.h"
 #include "FXGIFIcon.h"
 #include "FXSeparator.h"
@@ -52,9 +53,11 @@
 #define HORZ_PAD 20
 #define VERT_PAD 2
 
+using namespace FX;
 
 /*******************************************************************************/
 
+namespace FX {
 
 // Map
 FXDEFMAP(FXInputDialog) FXInputDialogMap[]={
@@ -203,3 +206,4 @@ FXbool FXInputDialog::getReal(FXdouble& result,FXWindow* owner,const FXString& c
   return FALSE;
   }
 
+}

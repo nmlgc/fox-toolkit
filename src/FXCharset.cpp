@@ -3,7 +3,7 @@
 *                           C h a r a c t e r   S e t s                         *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2000,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 2000,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXCharset.cpp,v 1.6 2002/01/18 22:42:58 jeroen Exp $                     *
+* $Id: FXCharset.cpp,v 1.17 2004/02/08 17:29:06 fox Exp $                       *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -29,6 +29,11 @@
 #include "FXString.h"
 #include "FXCharset.h"
 
+using namespace FX;
+
+/*******************************************************************************/
+
+namespace FX {
 
 // Initialize set with set of characters
 FXCharset::FXCharset(const FXString& characters){
@@ -81,3 +86,5 @@ FXStream& operator>>(FXStream& store,FXCharset& cs){
   store >> cs.s[0] >> cs.s[1] >> cs.s[2] >> cs.s[3] >> cs.s[4] >> cs.s[5] >> cs.s[6] >> cs.s[7];;
   return store;
   }
+
+}

@@ -3,7 +3,7 @@
 *                   O p e n G L   S h a p e   O b j e c t                       *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1998,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXGLShape.h,v 1.14 2002/01/18 22:42:53 jeroen Exp $                      *
+* $Id: FXGLShape.h,v 1.22 2004/02/20 16:29:39 fox Exp $                         *
 ********************************************************************************/
 #ifndef FXGLSHAPE_H
 #define FXGLSHAPE_H
@@ -28,6 +28,7 @@
 #include "FXGLObject.h"
 #endif
 
+namespace FX {
 
 
 class FXGLViewer;
@@ -55,9 +56,9 @@ enum {
 class FXAPI FXGLShape : public FXGLObject {
   FXDECLARE_ABSTRACT(FXGLShape)
 protected:
-  FXVec		position;	      // Middle of the Bounding Box
+  FXVec3f       position;             // Middle of the Bounding Box
   FXMaterial    material[2];          // Front and back material properties
-  FXRange       range;                // Range box
+  FXRangef      range;                // Range box
   FXuint	options;              // Drawing options
   FXString	tip;
 protected:
@@ -108,7 +109,7 @@ public:
   FXGLShape(const FXGLShape& orig);
 
   /// Called by the viewer to get bounds for this object
-  virtual void bounds(FXRange& box);
+  virtual void bounds(FXRangef& box);
 
   /// Draw this object in a viewer
   virtual void draw(FXGLViewer* viewer);
@@ -146,6 +147,8 @@ public:
   /// Load shape from a stream
   virtual void load(FXStream& store);
   };
+
+}
 
 #endif
 

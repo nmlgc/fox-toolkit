@@ -10,6 +10,8 @@
 # even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 # PARTICULAR PURPOSE.
 
+#htmldir = $(prefix)/@PACKAGE@/html
+
 
 SHELL = @SHELL@
 
@@ -87,21 +89,16 @@ STRIP = @STRIP@
 VERSION = @VERSION@
 X_BASE_LIBS = @X_BASE_LIBS@
 
-htmldir = $(prefix)/@PACKAGE@/html
+htmldir = $(datadir)/doc/fox-1.1/html
 
 SUBDIRS = art screenshots
 
 # Human-written HTML files
-HTML_FILES =                adie.html               app.html               calc.html               datatarget.html               doc.html               download.html               draganddrop.html               faq.html               filefuncs.html               focus.html               fonts.html               foreword.html               fox.html               goals.html               guiupdate.html               icons.html               introduction.html               layout.html               messages.html               news.html               oldfox.html               pathfinder.html               projects.html               registry.html               rex.html               screenshots.html               serialization.html               styles.css               timers.html               widgets.html               window.html               xml.html               win32.html
-
-
-# Icons
-ICON_FILES =                art/bigpenguin.png               art/foxlogo.png               art/foxstart.png               art/freespeach.gif               art/ill.gif               art/ilr.gif               art/innernerd.gif               art/iul.gif               art/iur.gif               art/nerd_inside.gif               art/oll.gif               art/olr.gif               art/opengl_logo.png               art/oul.gif               art/oul_grey.gif               art/our.gif               art/progress.png               art/scribble.png               art/sgitextedit.png               art/slingerzbutton1.gif               art/win32-libraries.png               art/win32-linkoutput.png               art/win32-postbuild.png               art/win32-preprocessor.png               art/win32-project.png               art/win32-tooloptions.png               art/wintextedit.png               screenshots/adie_colors.jpg               screenshots/adie_del.jpg               screenshots/adie_edit.jpg               screenshots/adie_font.jpg               screenshots/adie.jpg               screenshots/adie_pat.jpg               screenshots/colordialog.png               screenshots/dirdialog.png               screenshots/filedialog.png               screenshots/fontdialog.png               screenshots/foxcalc.jpg               screenshots/foxcalc_prefdialog_01_small.jpg               screenshots/foxcalc_prefdialog_02_small.jpg               screenshots/foxcalc_prefdialog_03_small.jpg               screenshots/pathfinder.png               screenshots/printdialog.png               screenshots/replacedialog.png               screenshots/searchdialog.png
+HTML_FILES =  adie.html app.html calc.html consulting.html clipboard.html datatarget.html doc.html download.html doxygen.cfg draganddrop.html faq.html filefuncs.html filter.pl focus.html fonts.html footer.html foreword.html fox.html goals.html guiupdate.html header.html home.html icons.html install.html introduction.html layout.html license.html menu.css menu.html messages.html news.html news1.html oldfox.html page.css pathfinder.html projects.html references.html registry.html rex.html screenshots.html serialization.html styles.css timers.html widgets.html top.html widgets.html win32.html window.html xml.html
 
 
 # Complete documentation package
-#html_DATA = $(HTML_FILES) $(ICON_FILES)
-html_DATA = $(HTML_FILES) 
+html_DATA = $(HTML_FILES)
 
 EXTRA_DIST = $(html_DATA)
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
@@ -328,6 +325,9 @@ uninstall-am uninstall all-redirect all-am all installdirs-am \
 installdirs mostlyclean-generic distclean-generic clean-generic \
 maintainer-clean-generic clean mostlyclean distclean maintainer-clean
 
+
+docs:
+	doxygen doxygen.cfg
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

@@ -3,7 +3,7 @@
 *                          D i c t i o n a r y    C l a s s                     *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1998,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXDict.cpp,v 1.17.4.1 2002/03/19 14:11:00 fox Exp $                       *
+* $Id: FXDict.cpp,v 1.26 2004/02/08 17:29:06 fox Exp $                          *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -50,12 +50,26 @@
 #define DEF_HASH_SIZE      4                // Initial table size (MUST be power of 2)
 #define MAX_LOAD           80               // Maximum hash table load factor (%)
 #define MIN_LOAD           10               // Minimum hash table load factor (%)
-#define HASH1(x,n) (((unsigned int)(x)*13)%(n))           // Probe Position [0..n-1]
-#define HASH2(x,n) (1|(((unsigned int)(x)*17)%((n)-1)))   // Probe Distance [1..n-1]
+#define HASH1(x,n) (((unsigned int)(x))%(n))              // Probe Position [0..n-1]
+#define HASH2(x,n) (1|(((unsigned int)(x)*17)%((n)-1)))   // Probe Distance [1..n-2]
 
-
+using namespace FX;
 
 /*******************************************************************************/
+
+namespace FX {
+
+
+// Hash function for string
+static inline FXint strhash(const FXchar* str){
+  register const FXuchar *s=(const FXuchar*)str;
+  register FXint h=0;
+  register FXint c;
+  while((c=*s++)!='\0'){
+    h = ((h << 5) + h) ^ c;
+    }
+  return h&0x7fffffff;
+  }
 
 
 // Object implementation
@@ -120,7 +134,7 @@ void* FXDict::insert(const FXchar* ky,const void* pdata,FXbool mrk){
   register void *ptr;
   if(!ky){ fxerror("FXDict::insert: NULL key argument.\n"); }
   FXASSERT(number<total);
-  h=fxstrhash(ky);
+  h=strhash(ky);
   FXASSERT(0<=h);
   p=HASH1(h,total);
   FXASSERT(0<=p && p<total);
@@ -158,7 +172,7 @@ void* FXDict::replace(const FXchar* ky,const void* pdata,FXbool mrk){
   register void *ptr;
   if(!ky){ fxerror("FXDict::replace: NULL key argument.\n"); }
   FXASSERT(number<total);
-  h=fxstrhash(ky);
+  h=strhash(ky);
   FXASSERT(0<=h);
   p=HASH1(h,total);
   FXASSERT(0<=p && p<total);
@@ -201,7 +215,7 @@ void* FXDict::remove(const FXchar* ky){
   register FXint p,x,h,n;
   if(!ky){ fxerror("FXDict::remove: NULL key argument.\n"); }
   if(0<number){
-    h=fxstrhash(ky);
+    h=strhash(ky);
     FXASSERT(0<=h);
     p=HASH1(h,total);
     FXASSERT(0<=p && p<total);
@@ -236,7 +250,7 @@ void* FXDict::find(const FXchar* ky) const {
   register FXint p,x,h,n;
   if(!ky){ fxerror("FXDict::find: NULL key argument.\n"); }
   if(0<number){
-    h=fxstrhash(ky);
+    h=strhash(ky);
     FXASSERT(0<=h);
     p=HASH1(h,total);
     FXASSERT(0<=p && p<total);
@@ -310,8 +324,8 @@ void FXDict::clear(){
 FXDict::~FXDict(){
   clear();
   FXFREE(&dict);
-  dict=(FXDictEntry*)-1;
+  dict=(FXDictEntry*)-1L;
   }
 
-
+}
 

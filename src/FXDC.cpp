@@ -3,9 +3,7 @@
 *               D e v i c e   C o n t e x t   B a s e   C l a s s               *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
-*********************************************************************************
-* Major Contributions for Windows NT by Lyle Johnson                            *
+* Copyright (C) 1998,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -21,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXDC.cpp,v 1.18 2002/01/18 22:42:59 jeroen Exp $                         *
+* $Id: FXDC.cpp,v 1.27 2004/02/08 17:29:06 fox Exp $                            *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -33,6 +31,7 @@
 #include "FXRectangle.h"
 #include "FXSettings.h"
 #include "FXRegistry.h"
+#include "FXHash.h"
 #include "FXApp.h"
 #include "FXId.h"
 #include "FXVisual.h"
@@ -42,6 +41,8 @@
 
 /*
   Notes:
+
+  - Major Contributions for Windows NT by Lyle Johnson.
 
   - This is not an abstract base class; rather, its a NULL-implementation,
     i.e. drawing commands to FXDC will go to into the bit bucket.
@@ -98,12 +99,15 @@
     This also means it is possible to make your own, simply by subclassing FXDC!
 */
 
+using namespace FX;
 
 /*******************************************************************************/
 
+namespace FX {
 
 // Initialize nicely
 FXDC::FXDC(FXApp* a):app(a){
+  ctx=NULL;
   font=NULL;
   pattern=STIPPLE_NONE;
   stipple=NULL;
@@ -134,55 +138,55 @@ FXDC::FXDC(FXApp* a):app(a){
 
 
 // Read back pixel
-FXColor FXDC::readPixel(FXint ,FXint ){ return FXRGBA(0,0,0,0); }
+FXColor FXDC::readPixel(FXint,FXint){ return FXRGBA(0,0,0,0); }
 
 
 // Draw a point in the current pen color
-void FXDC::drawPoint(FXint ,FXint ){ }
+void FXDC::drawPoint(FXint,FXint){ }
 
 
 // Draw points in the current pen color.
 // Each point's position is relative to the drawable's origin (as usual).
-void FXDC::drawPoints(const FXPoint* ,FXuint ){ }
+void FXDC::drawPoints(const FXPoint*,FXuint){ }
 
 
 // Draw points in the current pen color. The first point's position is
 // relative to the drawable's origin, but each subsequent point's position
 // is relative to the previous point's position; each FXPoint defines
 // the relative coordinates. Think LOGO.
-void FXDC::drawPointsRel(const FXPoint* ,FXuint ){ }
+void FXDC::drawPointsRel(const FXPoint*,FXuint){ }
 
 
 // Draw a line
-void FXDC::drawLine(FXint ,FXint ,FXint ,FXint ){ }
+void FXDC::drawLine(FXint,FXint,FXint,FXint){ }
 
 
 
 // Draw multiple lines. All points are drawn connected.
 // Each point is specified relative to Drawable's origin.
-void FXDC::drawLines(const FXPoint* ,FXuint ){ }
+void FXDC::drawLines(const FXPoint*,FXuint){ }
 
 
 
 // Draw multiple lines. All points are drawn connected.
 // First point's coordinate is relative to drawable's origin, but
 // subsequent points' coordinates are relative to previous point.
-void FXDC::drawLinesRel(const FXPoint* ,FXuint ){ }
+void FXDC::drawLinesRel(const FXPoint*,FXuint){ }
 
 
 // Draw unconnected line segments
-void FXDC::drawLineSegments(const FXSegment* ,FXuint ){ }
+void FXDC::drawLineSegments(const FXSegment*,FXuint){ }
 
 
 // Draw unfilled rectangle
-void FXDC::drawRectangle(FXint ,FXint ,FXint ,FXint ){ }
+void FXDC::drawRectangle(FXint,FXint,FXint,FXint){ }
 
 
-void FXDC::drawRectangles(const FXRectangle* ,FXuint ){ }
+void FXDC::drawRectangles(const FXRectangle*,FXuint){ }
 
 
 // Draw arc
-void FXDC::drawArc(FXint ,FXint ,FXint ,FXint ,FXint ,FXint ){ }
+void FXDC::drawArc(FXint,FXint,FXint,FXint,FXint,FXint){ }
 
 
 // Draw arcs
@@ -190,63 +194,71 @@ void FXDC::drawArcs(const FXArc*,FXuint){ }
 
 
 // Filled rectangle
-void FXDC::fillRectangle(FXint ,FXint ,FXint ,FXint ){ }
+void FXDC::fillRectangle(FXint,FXint,FXint,FXint){ }
 
 
 // Filled rectangles
-void FXDC::fillRectangles(const FXRectangle* ,FXuint ){ }
+void FXDC::fillRectangles(const FXRectangle*,FXuint){ }
+
+
+// Fill chord
+void FXDC::fillChord(FXint,FXint,FXint,FXint,FXint,FXint){ }
+
+
+// Fill chords
+void FXDC::fillChords(const FXArc*,FXuint){ }
 
 
 // Fill arc
-void FXDC::fillArc(FXint ,FXint ,FXint ,FXint ,FXint ,FXint ){ }
+void FXDC::fillArc(FXint,FXint,FXint,FXint,FXint,FXint){ }
 
 
 // Fill arcs
-void FXDC::fillArcs(const FXArc* ,FXuint ){ }
+void FXDC::fillArcs(const FXArc*,FXuint){ }
 
 
 // Filled simple polygon
-void FXDC::fillPolygon(const FXPoint* ,FXuint ){ }
+void FXDC::fillPolygon(const FXPoint*,FXuint){ }
 
 
 // Fill concave polygon
-void FXDC::fillConcavePolygon(const FXPoint* ,FXuint ){ }
+void FXDC::fillConcavePolygon(const FXPoint*,FXuint){ }
 
 
 // Fill complex (self-intersecting) polygon
-void FXDC::fillComplexPolygon(const FXPoint* ,FXuint ){ }
+void FXDC::fillComplexPolygon(const FXPoint*,FXuint){ }
 
 
 // Filled simple polygon with relative points
-void FXDC::fillPolygonRel(const FXPoint* ,FXuint ){ }
+void FXDC::fillPolygonRel(const FXPoint*,FXuint){ }
 
 
 // Fill concave polygon
-void FXDC::fillConcavePolygonRel(const FXPoint* ,FXuint ){ }
+void FXDC::fillConcavePolygonRel(const FXPoint*,FXuint){ }
 
 
 // Fill complex (self-intersecting) polygon
-void FXDC::fillComplexPolygonRel(const FXPoint* ,FXuint ){ }
+void FXDC::fillComplexPolygonRel(const FXPoint*,FXuint){ }
 
 
 // Draw string (only foreground bits)
-void FXDC::drawText(FXint,FXint,const FXchar* ,FXuint ){ }
+void FXDC::drawText(FXint,FXint,const FXchar*,FXuint){ }
 
 
 // Draw string (both foreground and background bits)
-void FXDC::drawImageText(FXint ,FXint ,const FXchar* ,FXuint ){ }
+void FXDC::drawImageText(FXint,FXint,const FXchar*,FXuint){ }
 
 
 // Draw area from source
-void FXDC::drawArea(const FXDrawable* ,FXint ,FXint ,FXint ,FXint ,FXint ,FXint ){ }
+void FXDC::drawArea(const FXDrawable*,FXint,FXint,FXint,FXint,FXint,FXint){ }
 
 
 // Draw image
-void FXDC::drawImage(const FXImage* ,FXint ,FXint ){ }
+void FXDC::drawImage(const FXImage*,FXint,FXint){ }
 
 
 // Draw bitmap
-void FXDC::drawBitmap(const FXBitmap* ,FXint ,FXint ){ }
+void FXDC::drawBitmap(const FXBitmap*,FXint,FXint){ }
 
 
 // Draw icon
@@ -407,7 +419,7 @@ void FXDC::clearClipMask(){
 
 
 // Set font to draw text with
-void FXDC::setTextFont(FXFont *fnt){
+void FXDC::setFont(FXFont *fnt){
   font=fnt;
   }
 
@@ -419,4 +431,4 @@ void FXDC::clipChildren(FXbool){ }
 // Clean up
 FXDC::~FXDC(){ }
 
-
+}

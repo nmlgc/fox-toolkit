@@ -3,7 +3,7 @@
 *                        G L  C o n t e x t   C l a s s                         *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2000,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 2000,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXGLContext.cpp,v 1.17 2002/01/18 22:43:00 jeroen Exp $                  *
+* $Id: FXGLContext.cpp,v 1.30 2004/04/05 14:49:33 fox Exp $                     *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -32,6 +32,7 @@
 #include "FXSettings.h"
 #include "FXRegistry.h"
 #include "FXAccelTable.h"
+#include "FXHash.h"
 #include "FXApp.h"
 #include "FXVisual.h"
 #include "FXGLVisual.h"
@@ -62,8 +63,11 @@
 
 //#define DISPLAY(app) ((Display*)((app)->display))
 
+using namespace FX;
+
 /*******************************************************************************/
 
+namespace FX {
 
 // Object implementation
 FXIMPLEMENT(FXGLContext,FXId,NULL,0)
@@ -96,11 +100,11 @@ FXbool FXGLContext::isShared() const { return sgnext!=this; }
 // Create GL context
 void FXGLContext::create(){
   ///visual->create();    // Should we call this here?
-#ifdef HAVE_OPENGL
+#ifdef HAVE_GL_H
   register FXGLContext *context;
   register void *sharedctx=NULL;
   if(!xid){
-    if(getApp()->initialized){
+    if(getApp()->isInitialized()){
       FXTRACE((100,"FXGLContext::create %p\n",this));
 
       // The visual should be OpenGL capable
@@ -131,7 +135,7 @@ void FXGLContext::create(){
       // afterwards, the window is no longer needed and will be deleted.
       // Yes, I'm painfully aware that this sucks, but we intend to keep the
       // logical model clean come hell or high water....
-      HWND wnd=CreateWindow("FXPopup",NULL,WS_CHILD|WS_VISIBLE|WS_CLIPSIBLINGS|WS_CLIPCHILDREN|WS_POPUP,0,0,2,2,GetDesktopWindow(),0,(HINSTANCE)FXApp::hInstance,this);
+      HWND wnd=CreateWindow("FXPopup",NULL,WS_CHILD|WS_VISIBLE|WS_CLIPSIBLINGS|WS_CLIPCHILDREN|WS_POPUP,0,0,2,2,GetDesktopWindow(),0,(HINSTANCE)(getApp()->display),this);
       if(!wnd){ fxerror("FXGLContext::create(): CreateWindow() failed.\n"); }
 
       // Get the window's device context
@@ -149,7 +153,7 @@ void FXGLContext::create(){
       // I hope I didn't get this backward; the new context obviously has no
       // display lists yet, but the old one may have, as it has already been around
       // for a while.  If you see this fail and can't explain why, then that might
-      // be what's going on.  Report this to jvz@fox-toolkit.org
+      // be what's going on.  Report this to jeroen@fox-toolkit.org
       if(sharedctx && !wglShareLists((HGLRC)sharedctx,(HGLRC)ctx)){ fxerror("FXGLContext::create(): wglShareLists() failed.\n"); }
 
       // Release window's device context
@@ -168,7 +172,7 @@ void FXGLContext::create(){
 
 // Detach the GL context
 void FXGLContext::detach(){
-#ifdef HAVE_OPENGL
+#ifdef HAVE_GL_H
   if(xid){
     FXTRACE((100,"FXGLContext::detach %p\n",this));
     xid=0;
@@ -179,9 +183,9 @@ void FXGLContext::detach(){
 
 // Destroy the GL context
 void FXGLContext::destroy(){
-#ifdef HAVE_OPENGL
+#ifdef HAVE_GL_H
   if(xid){
-    if(getApp()->initialized){
+    if(getApp()->isInitialized()){
       FXTRACE((100,"FXGLContext::destroy %p\n",this));
 #ifndef WIN32
       glXDestroyContext((Display*)getApp()->getDisplay(),(GLXContext)ctx);
@@ -199,7 +203,7 @@ void FXGLContext::destroy(){
 
 //  Make the rendering context of drawable current
 FXbool FXGLContext::begin(FXDrawable *drawable){
-#ifdef HAVE_OPENGL
+#ifdef HAVE_GL_H
   if(!drawable){ fxerror("FXGLContext::begin: NULL drawable.\n"); }
   if(!drawable->id()){ fxerror("FXGLContext::begin: drawable not created yet.\n"); }
   if(visual!=drawable->getVisual()){ fxerror("FXGLContext::begin: visuals do not match.\n"); }
@@ -212,8 +216,8 @@ FXbool FXGLContext::begin(FXDrawable *drawable){
 #else
     //HDC hdc=drawable->GetDC();  // Obtain DC in a way appropriate for the drawable!
     HDC hdc=::GetDC((HWND)drawable->id());  // FIXME:- it should probably be the line above, but need to check about ReleaseDC first!
-    if(visual->hPalette){
-      SelectPalette(hdc,(HPALETTE)visual->hPalette,FALSE);
+    if(visual->colormap){
+      SelectPalette(hdc,(HPALETTE)visual->colormap,FALSE);
       RealizePalette(hdc);
       }
     if(wglMakeCurrent(hdc,(HGLRC)ctx)){
@@ -230,7 +234,7 @@ FXbool FXGLContext::begin(FXDrawable *drawable){
 // Make the rendering context of drawable non-current
 FXbool FXGLContext::end(){
   FXbool bRet=FALSE;
-#ifdef HAVE_OPENGL
+#ifdef HAVE_GL_H
   if(xid){
 #ifndef WIN32
     bRet=glXMakeCurrent((Display*)getApp()->getDisplay(),None,(GLXContext)NULL);
@@ -252,7 +256,7 @@ FXbool FXGLContext::end(){
 
 // Used by GL to swap the buffers in double buffer mode, or flush a single buffer
 void FXGLContext::swapBuffers(){
-#ifdef HAVE_OPENGL
+#ifdef HAVE_GL_H
   if(!surface){ fxerror("FXGLContext::swapBuffers: not connected to drawable.\n"); }
 #ifndef WIN32
   glXSwapBuffers((Display*)getApp()->getDisplay(),surface->id());
@@ -269,14 +273,14 @@ void FXGLContext::swapBuffers(){
 
 
 // This function only available on Mesa
-void FXGLContext::swapSubBuffers(FXint x,FXint y,FXint w,FXint h){
+void FXGLContext::swapSubBuffers(FXint,FXint,FXint,FXint){
 
 // FIXME: Put the swap hack back!!
 // FIXME: bool bUseSwapHack = ! strncmp("Mesa", glGetString(GL_RENDERER), 4);
 
 // FIXME: how to get proc address by name, since we don't know which shared lib we're going to get!
 
-// #ifdef HAVE_OPENGL
+// #ifdef HAVE_GL_H
 // #ifdef HAVE_MESA
 // #ifdef GLX_MESA_copy_sub_buffer
 //   glXCopySubBufferMESA(getApp()->display,xid,x,height-y-h-1,w,h);
@@ -312,9 +316,11 @@ FXGLContext::~FXGLContext(){
   destroy();
   sgnext->sgprev=sgprev;
   sgprev->sgnext=sgnext;
-  visual=(FXGLVisual*)-1;
-  surface=(FXDrawable*)-1;
-  sgnext=(FXGLContext*)-1;
-  sgprev=(FXGLContext*)-1;
-  ctx=(void*)-1;
+  visual=(FXGLVisual*)-1L;
+  surface=(FXDrawable*)-1L;
+  sgnext=(FXGLContext*)-1L;
+  sgprev=(FXGLContext*)-1L;
+  ctx=(void*)-1L;
   }
+
+}

@@ -2,14 +2,21 @@
 
 CXXFLAGS = @CXXFLAGS@ @X_CFLAGS@
 INCLUDES = -I$(top_srcdir)/include -I$(top_builddir)/include
+RESWRAP  = $(top_builddir)/utils/reswrap
+SUFFIXES = .gif .bmp
 
-lib_LTLIBRARIES = libFOX.la
+lib_LTLIBRARIES = libFOX-1.1.la
 
-libFOX_la_LIBADD  = $(X_LIBS) $(X_BASE_LIBS) $(X_EXTRA_LIBS) $(GL_LIBS)
+libFOX_1_1_la_LIBADD  = $(X_LIBS) $(X_BASE_LIBS) $(X_EXTRA_LIBS) $(GL_LIBS)
 
-libFOX_la_LDFLAGS = \
+libFOX_1_1_la_LDFLAGS = \
         -version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)    \
-	-release $(LT_RELEASE)
+	-export-dynamic
+
+#libFOX_la_LDFLAGS = \
+#        -version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)    \
+#	-release $(LT_RELEASE) \
+#	-export-dynamic
 
 
 CURSORS = \
@@ -26,12 +33,22 @@ dontdrop_mask.xbm \
 drag.xbm \
 drag_mask.xbm \
 gray.xbm \
+hand.xbm \
+hand_mask.xbm \
+helparrow.xbm \
+helparrow_mask.xbm \
 hsplit.xbm \
 hsplit_mask.xbm \
 move.xbm \
 move_mask.xbm \
-resize.xbm \
-resize_mask.xbm \
+ne.xbm \
+ne_mask.xbm \
+se.xbm \
+se_mask.xbm \
+sw.xbm \
+sw_mask.xbm \
+nw.xbm \
+nw_mask.xbm \
 resizeleft.xbm \
 resizeleft_mask.xbm \
 resizetop.xbm \
@@ -47,23 +64,72 @@ swatch_mask.xbm \
 vsplit.xbm \
 vsplit_mask.xbm \
 xsplit.xbm \
-xsplit_mask.xbm \
-ne.xbm \
-ne_mask.xbm \
-se.xbm \
-se_mask.xbm \
-sw.xbm \
-sw_mask.xbm \
-nw.xbm \
-nw_mask.xbm \
-translate.xbm \
-translate_mask.xbm \
-zoom.xbm \
-zoom_mask.xbm
+xsplit_mask.xbm
+
+ICONS = \
+arrownext.gif \
+arrowprev.gif \
+bigapp.gif \
+bigcdrom.gif \
+bigcomputer.gif \
+bigdesktop.gif \
+bigdoc.gif \
+bigfloppy.gif \
+bigfolder.gif \
+bigfolderopen.gif \
+bignetdrive.gif \
+bignethood.gif \
+bookset.gif \
+bookclr.gif \
+cmymode.gif \
+dialmode.gif \
+dirupicon.gif \
+deleteicon.gif \
+entericon.gif \
+erroricon.gif \
+eyedrop.gif \
+filecopy.gif \
+filemove.gif \
+filehidden.gif \
+filelink.gif \
+filerename.gif \
+filedelete.gif \
+fileshown.gif \
+foldernew.gif \
+gotohome.gif \
+gotoicon.gif \
+gotowork.gif \
+hsvmode.gif \
+infoicon.gif \
+landscape.gif \
+listmode.gif \
+miniapp.gif \
+minicdrom.gif \
+minicomputer.gif \
+minidesktop.gif \
+minidoc.gif \
+minifloppy.gif \
+minifolder.gif \
+minifolderopen.gif \
+miniharddisk.gif \
+mininetdrive.gif \
+mininethood.gif \
+minizipdrive.gif \
+portrait.gif \
+questionicon.gif \
+rgbmode.gif \
+searchicon.gif \
+showbigicons.gif \
+showdetails.gif \
+showsmallicons.gif \
+warningicon.gif \
+winclose.gif \
+winmaximize.gif \
+winminimize.gif \
+winrestore.gif
 
 
-
-libFOX_la_SOURCES = \
+libFOX_1_1_la_SOURCES = \
 FX4Splitter.cpp \
 FXAccelTable.cpp \
 FXApp.cpp \
@@ -71,7 +137,10 @@ FXArrowButton.cpp \
 FXBMPIcon.cpp \
 FXBMPImage.cpp \
 FXBitmap.cpp \
+FXBitmapFrame.cpp \
+FXBitmapView.cpp \
 FXButton.cpp \
+FXBZStream.cpp \
 FXCURCursor.cpp \
 FXCanvas.cpp \
 FXCharset.cpp \
@@ -88,10 +157,7 @@ FXCursor.cpp \
 FXDC.cpp \
 FXDCPrint.cpp \
 FXDCWindow.cpp \
-FXDHMat.cpp \
-FXDHVec.cpp \
-FXDQuat.cpp \
-FXDVec.cpp \
+FXDLL.cpp \
 FXDataTarget.cpp \
 FXDebugTarget.cpp \
 FXDelegator.cpp \
@@ -112,6 +178,8 @@ FXFileDialog.cpp \
 FXFileDict.cpp \
 FXFileList.cpp \
 FXFileSelector.cpp \
+FXFileStream.cpp \
+FXFoldingList.cpp \
 FXFont.cpp \
 FXFontDialog.cpp \
 FXFontSelector.cpp \
@@ -130,9 +198,10 @@ FXGLSphere.cpp \
 FXGLTriangleMesh.cpp \
 FXGLViewer.cpp \
 FXGLVisual.cpp \
+FXGradientBar.cpp \
 FXGroupBox.cpp \
-FXHMat.cpp \
-FXHVec.cpp \
+FXGZStream.cpp \
+FXHash.cpp \
 FXHeader.cpp \
 FXHorizontalFrame.cpp \
 FXICOIcon.cpp \
@@ -141,6 +210,7 @@ FXIcon.cpp \
 FXIconList.cpp \
 FXId.cpp \
 FXImage.cpp \
+FXImageFrame.cpp \
 FXImageView.cpp \
 FXInputDialog.cpp \
 FXJPGIcon.cpp \
@@ -152,11 +222,18 @@ FXMDIButton.cpp \
 FXMDIChild.cpp \
 FXMDIClient.cpp \
 FXMainWindow.cpp \
+FXMat3d.cpp \
+FXMat4d.cpp \
+FXMat3f.cpp \
+FXMat4f.cpp \
 FXMatrix.cpp \
-FXMenubar.cpp \
+FXMemoryStream.cpp \
+FXMenuBar.cpp \
 FXMenuButton.cpp \
 FXMenuCaption.cpp \
 FXMenuCascade.cpp \
+FXMenuCheck.cpp \
+FXMenuRadio.cpp \
 FXMenuCommand.cpp \
 FXMenuPane.cpp \
 FXMenuSeparator.cpp \
@@ -169,6 +246,8 @@ FXPCXIcon.cpp \
 FXPCXImage.cpp \
 FXPNGIcon.cpp \
 FXPNGImage.cpp \
+FXPPMIcon.cpp \
+FXPPMImage.cpp \
 FXPacker.cpp \
 FXPicker.cpp \
 FXPopup.cpp \
@@ -176,11 +255,15 @@ FXPoint.cpp \
 FXPrintDialog.cpp \
 FXProgressBar.cpp \
 FXProgressDialog.cpp \
-FXQuat.cpp \
+FXQuatd.cpp \
+FXQuatf.cpp \
 FXRGBIcon.cpp \
 FXRGBImage.cpp \
 FXRadioButton.cpp \
-FXRange.cpp \
+FXRangef.cpp \
+FXRanged.cpp \
+FXRealSlider.cpp \
+FXRealSpinner.cpp \
 FXRecentFiles.cpp \
 FXRectangle.cpp \
 FXRegion.cpp \
@@ -188,9 +271,11 @@ FXRegistry.cpp \
 FXReplaceDialog.cpp \
 FXRex.cpp \
 FXRootWindow.cpp \
+FXRuler.cpp \
 FXScrollArea.cpp \
+FXScrollBar.cpp \
+FXScrollPane.cpp \
 FXScrollWindow.cpp \
-FXScrollbar.cpp \
 FXSearchDialog.cpp \
 FXSeparator.cpp \
 FXSettings.cpp \
@@ -199,9 +284,12 @@ FXShutter.cpp \
 FXSize.cpp \
 FXSlider.cpp \
 FXSpinner.cpp \
+FXSpheref.cpp \
+FXSphered.cpp \
 FXSplitter.cpp \
-FXStatusbar.cpp \
-FXStatusline.cpp \
+FXSpring.cpp \
+FXStatusBar.cpp \
+FXStatusLine.cpp \
 FXStream.cpp \
 FXString.cpp \
 FXStringDict.cpp \
@@ -215,46 +303,78 @@ FXTabBook.cpp \
 FXTabItem.cpp \
 FXTable.cpp \
 FXText.cpp \
+FXTextCodec.cpp \
 FXTextField.cpp \
+FXThread.cpp \
 FXToggleButton.cpp \
-FXToolbar.cpp \
-FXToolbarGrip.cpp \
-FXToolbarShell.cpp \
-FXToolbarTab.cpp \
-FXTooltip.cpp \
+FXToolBar.cpp \
+FXToolBarGrip.cpp \
+FXToolBarShell.cpp \
+FXToolBarTab.cpp \
+FXToolTip.cpp \
 FXTopWindow.cpp \
 FXTreeList.cpp \
 FXTreeListBox.cpp \
+FXTriStateButton.cpp \
 FXUndoList.cpp \
 FXURL.cpp \
-FXVec.cpp \
+FXUTF8Codec.cpp \
+FXUTF16Codec.cpp \
+FXUTF32Codec.cpp \
+FXVec2d.cpp \
+FXVec2f.cpp \
+FXVec3d.cpp \
+FXVec3f.cpp \
+FXVec4d.cpp \
+FXVec4f.cpp \
 FXVerticalFrame.cpp \
 FXVisual.cpp \
 FXWindow.cpp \
+FXWizard.cpp \
+FXWString.cpp \
+FXXBMIcon.cpp \
+FXXBMImage.cpp \
 FXXPMIcon.cpp \
 FXXPMImage.cpp \
 fxbmpio.cpp \
-fxcurio.cpp \
 fxfilematch.cpp \
 fxgifio.cpp \
 fxicoio.cpp \
 fxjpegio.cpp \
+fxparsegeometry.cpp \
 fxpcxio.cpp \
 fxpngio.cpp \
+fxppmio.cpp \
 fxpriv.h \
 fxpriv.cpp \
-fxquantize.cpp \
+fxpsio.cpp \
+fxfsquantize.cpp \
+fxezquantize.cpp \
+fxwuquantize.cpp \
 fxrgbio.cpp \
 fxtargaio.cpp \
 fxtifio.cpp \
 fxutils.cpp \
 fxwinkbd.cpp \
+fxxbmio.cpp \
 fxxpmio.cpp \
+icons.h \
+icons.cpp \
 jitter.h \
 version.rc \
 version.rc.in \
 vsscanf.cpp \
-$(CURSORS)
+$(CURSORS) \
+$(ICONS)
+
+FXApp.cpp: icons.h
+
+icons.h: $(ICONS)
+	$(RESWRAP) -i -n FX -o icons.h $^
+
+
+icons.cpp: $(ICONS)
+	$(RESWRAP) -e -n FX -o icons.cpp $^
 
 
 EXTRA_DIST = Makefile.bc \
@@ -262,5 +382,6 @@ EXTRA_DIST = Makefile.bc \
              Makefile.icc \
              Makefile.icc.resp \
              Makefile.dmc \
+             Makefile.wc \
              Makefile.dmc.resp
 

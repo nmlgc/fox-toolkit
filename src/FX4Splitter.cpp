@@ -3,7 +3,7 @@
 *                       F o u r - W a y   S p l i t t e r                       *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1999,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1999,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FX4Splitter.cpp,v 1.22.4.1 2003/01/16 17:41:08 fox Exp $                  *
+* $Id: FX4Splitter.cpp,v 1.36 2004/04/05 14:49:33 fox Exp $                     *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -31,6 +31,7 @@
 #include "FXRectangle.h"
 #include "FXSettings.h"
 #include "FXRegistry.h"
+#include "FXHash.h"
 #include "FXApp.h"
 #include "FXDCWindow.h"
 #include "FX4Splitter.h"
@@ -42,6 +43,7 @@
     resizes, each sub pane gets proportionally resized also.
   - Should we send SEL_CHANGED and SEL_COMMAND also when splitter arrangement
     was changed programmatically?
+  - If we're just re-sizing a split, do we need to incur a GUI-Update?
 */
 
 
@@ -58,7 +60,12 @@
 #define ONCENTER     (ONVERTICAL|ONHORIZONTAL)
 
 
+using namespace FX;
+
+
 /*******************************************************************************/
+
+namespace FX {
 
 // Map
 FXDEFMAP(FX4Splitter) FX4SplitterMap[]={
@@ -258,16 +265,16 @@ void FX4Splitter::adjustLayout(){
   fver=(height>barsize) ? (10000*splity+(height-barsize-1))/(height-barsize) : 0;
   rightw=width-barsize-splitx;
   bottomh=height-barsize-splity;
-  if((win=getTopLeft())){
+  if((win=getTopLeft())!=NULL){
     win->position(0,0,splitx,splity);
     }
-  if((win=getTopRight())){
+  if((win=getTopRight())!=NULL){
     win->position(splitx+barsize,0,rightw,splity);
     }
-  if((win=getBottomLeft())){
+  if((win=getBottomLeft())!=NULL){
     win->position(0,splity+barsize,splitx,bottomh);
     }
-  if((win=getBottomRight())){
+  if((win=getBottomRight())!=NULL){
     win->position(splitx+barsize,splity+barsize,rightw,bottomh);
     }
   }
@@ -278,7 +285,7 @@ long FX4Splitter::onLeftBtnPress(FXObject*,FXSelector,void* ptr){
   FXEvent* ev=(FXEvent*)ptr;
   if(isEnabled()){
     grab();
-    if(target && target->handle(this,MKUINT(message,SEL_LEFTBUTTONPRESS),ptr)) return 1;
+    if(target && target->handle(this,FXSEL(SEL_LEFTBUTTONPRESS,message),ptr)) return 1;
     mode=getMode(ev->win_x,ev->win_y);
     if(mode){
       offx=ev->win_x-splitx;
@@ -304,17 +311,17 @@ long FX4Splitter::onLeftBtnRelease(FXObject*,FXSelector,void* ptr){
     flags&=~FLAG_CHANGED;
     flags&=~FLAG_PRESSED;
     mode=NOWHERE;
-    if(target && target->handle(this,MKUINT(message,SEL_LEFTBUTTONRELEASE),ptr)) return 1;
+    if(target && target->handle(this,FXSEL(SEL_LEFTBUTTONRELEASE,message),ptr)) return 1;
     if(flgs&FLAG_PRESSED){
       if(!(options&FOURSPLITTER_TRACKING)){
         drawSplit(splitx,splity);
         adjustLayout();
         if(flgs&FLAG_CHANGED){
-          if(target) target->handle(this,MKUINT(message,SEL_CHANGED),NULL);
+          if(target) target->handle(this,FXSEL(SEL_CHANGED,message),NULL);
           }
         }
       if(flgs&FLAG_CHANGED){
-        if(target) target->handle(this,MKUINT(message,SEL_COMMAND),NULL);
+        if(target) target->handle(this,FXSEL(SEL_COMMAND,message),NULL);
         }
       }
     return 1;
@@ -348,7 +355,7 @@ long FX4Splitter::onMotion(FXObject*,FXSelector,void* ptr){
         }
       else{
         adjustLayout();
-        if(target) target->handle(this,MKUINT(message,SEL_CHANGED),NULL);
+        if(target) target->handle(this,FXSEL(SEL_CHANGED,message),NULL);
         }
       flags|=FLAG_CHANGED;
       }
@@ -378,28 +385,27 @@ long FX4Splitter::onMotion(FXObject*,FXSelector,void* ptr){
 
 
 // Focus moved up
-long FX4Splitter::onFocusUp(FXObject*,FXSelector sel,void* ptr){
+long FX4Splitter::onFocusUp(FXObject*,FXSelector,void* ptr){
   FXWindow *child=NULL;
   if(getFocus()){
     if(getFocus()==getBottomLeft()) child=getTopLeft();
     else if(getFocus()==getBottomRight()) child=getTopRight();
     }
   else{
-    child=getFirst();
+    child=getLast();
     }
   if(child){
-    if(child->isEnabled() && child->canFocus()){
-      child->handle(this,MKUINT(0,SEL_FOCUS_SELF),ptr);
-      return 1;
+    if(child->shown()){
+      if(child->handle(this,FXSEL(SEL_FOCUS_SELF,0),ptr)) return 1;
+      if(child->handle(this,FXSEL(SEL_FOCUS_UP,0),ptr)) return 1;
       }
-    if(child->isComposite() && child->handle(this,sel,ptr)) return 1;
     }
   return 0;
   }
 
 
 // Focus moved down
-long FX4Splitter::onFocusDown(FXObject*,FXSelector sel,void* ptr){
+long FX4Splitter::onFocusDown(FXObject*,FXSelector,void* ptr){
   FXWindow *child=NULL;
   if(getFocus()){
     if(getFocus()==getTopLeft()) child=getBottomLeft();
@@ -409,39 +415,37 @@ long FX4Splitter::onFocusDown(FXObject*,FXSelector sel,void* ptr){
     child=getFirst();
     }
   if(child){
-    if(child->isEnabled() && child->canFocus()){
-      child->handle(this,MKUINT(0,SEL_FOCUS_SELF),ptr);
-      return 1;
+    if(child->shown()){
+      if(child->handle(this,FXSEL(SEL_FOCUS_SELF,0),ptr)) return 1;
+      if(child->handle(this,FXSEL(SEL_FOCUS_DOWN,0),ptr)) return 1;
       }
-    if(child->isComposite() && child->handle(this,sel,ptr)) return 1;
     }
   return 0;
   }
 
 
 // Focus moved to left
-long FX4Splitter::onFocusLeft(FXObject*,FXSelector sel,void* ptr){
+long FX4Splitter::onFocusLeft(FXObject*,FXSelector,void* ptr){
   FXWindow *child=NULL;
   if(getFocus()){
     if(getFocus()==getTopRight()) child=getTopLeft();
     else if(getFocus()==getBottomRight()) child=getBottomLeft();
     }
   else{
-    child=getFirst();
+    child=getLast();
     }
   if(child){
-    if(child->isEnabled() && child->canFocus()){
-      child->handle(this,MKUINT(0,SEL_FOCUS_SELF),ptr);
-      return 1;
+    if(child->shown()){
+      if(child->handle(this,FXSEL(SEL_FOCUS_SELF,0),ptr)) return 1;
+      if(child->handle(this,FXSEL(SEL_FOCUS_LEFT,0),ptr)) return 1;
       }
-    if(child->isComposite() && child->handle(this,sel,ptr)) return 1;
     }
   return 0;
   }
 
 
 // Focus moved to right
-long FX4Splitter::onFocusRight(FXObject*,FXSelector sel,void* ptr){
+long FX4Splitter::onFocusRight(FXObject*,FXSelector,void* ptr){
   FXWindow *child=NULL;
   if(getFocus()){
     if(getFocus()==getTopLeft()) child=getTopRight();
@@ -451,11 +455,10 @@ long FX4Splitter::onFocusRight(FXObject*,FXSelector sel,void* ptr){
     child=getFirst();
     }
   if(child){
-    if(child->isEnabled() && child->canFocus()){
-      child->handle(this,MKUINT(0,SEL_FOCUS_SELF),ptr);
-      return 1;
+    if(child->shown()){
+      if(child->handle(this,FXSEL(SEL_FOCUS_SELF,0),ptr)) return 1;
+      if(child->handle(this,FXSEL(SEL_FOCUS_RIGHT,0),ptr)) return 1;
       }
-    if(child->isComposite() && child->handle(this,sel,ptr)) return 1;
     }
   return 0;
   }
@@ -463,7 +466,7 @@ long FX4Splitter::onFocusRight(FXObject*,FXSelector sel,void* ptr){
 
 // Show the pane(s)
 long FX4Splitter::onCmdExpand(FXObject*,FXSelector sel,void*){
-  FXint ex=SELID(sel)-ID_EXPAND_ALL-1;
+  FXint ex=FXSELID(sel)-ID_EXPAND_ALL-1;
   setExpanded(ex);
   return 1;
   }
@@ -471,11 +474,8 @@ long FX4Splitter::onCmdExpand(FXObject*,FXSelector sel,void*){
 
 // Update show pane
 long FX4Splitter::onUpdExpand(FXObject* sender,FXSelector sel,void*){
-  FXint ex=SELID(sel)-ID_EXPAND_ALL-1;
-  if(expanded==ex)
-    sender->handle(this,MKUINT(ID_CHECK,SEL_COMMAND),NULL);
-  else
-    sender->handle(this,MKUINT(ID_UNCHECK,SEL_COMMAND),NULL);
+  register FXint ex=FXSELID(sel)-ID_EXPAND_ALL-1;
+  sender->handle(this,(expanded==ex)?FXSEL(SEL_COMMAND,ID_CHECK):FXSEL(SEL_COMMAND,ID_UNCHECK),NULL);
   return 1;
   }
 
@@ -566,3 +566,5 @@ void FX4Splitter::setBarSize(FXint bs){
     recalc();
     }
   }
+
+}

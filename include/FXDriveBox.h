@@ -3,7 +3,7 @@
 *                        D r i v e   B o x   W i d g e t                        *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1999,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1999,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXDriveBox.h,v 1.9 2002/02/05 03:59:27 fox Exp $                      *
+* $Id: FXDriveBox.h,v 1.15 2004/02/08 17:17:33 fox Exp $                        *
 ********************************************************************************/
 #ifndef FXDRIVEBOX_H
 #define FXDRIVEBOX_H
@@ -28,24 +28,30 @@
 #include "FXListBox.h"
 #endif
 
+namespace FX {
 
 
 class FXIcon;
+class FXFileDict;
+
+/// Drive Box options
+enum {
+  DRIVEBOX_NO_OWN_ASSOC = 0x00020000    /// Do not create associations for files
+  };
 
 
 /// Directory Box
 class FXAPI FXDriveBox : public FXListBox {
   FXDECLARE(FXDriveBox)
 protected:
-  FXIcon     *foldericon;             // Folder icons
-  FXIcon     *cdromicon;
-  FXIcon     *desktopicon;
-  FXIcon     *harddiskicon;
-  FXIcon     *networkicon;
-  FXIcon     *floppyicon;
-  FXIcon     *computericon;
-  FXIcon     *nethoodicon;
-  FXIcon     *zipdiskicon;
+  FXFileDict *associations;     // Association table
+  FXIcon     *foldericon;       // Folder icons
+  FXIcon     *cdromicon;        // CDROM icon
+  FXIcon     *harddiskicon;     // Hard disk icon
+  FXIcon     *netdriveicon;     // Networked drive icon
+  FXIcon     *floppyicon;       // Floppy icon
+  FXIcon     *nethoodicon;      // Network neighborhood icon
+  FXIcon     *zipdiskicon;      // Zip drive icon
 protected:
   FXDriveBox(){}
   void listDrives();
@@ -61,7 +67,7 @@ public:
 public:
 
   /// Constructor
-  FXDriveBox(FXComposite *p,FXint nvis,FXObject* tgt=NULL,FXSelector sel=0,FXuint opts=FRAME_SUNKEN|FRAME_THICK|LISTBOX_NORMAL,FXint x=0,FXint y=0,FXint w=0,FXint h=0,FXint pl=DEFAULT_PAD,FXint pr=DEFAULT_PAD,FXint pt=DEFAULT_PAD,FXint pb=DEFAULT_PAD);
+  FXDriveBox(FXComposite *p,FXObject* tgt=NULL,FXSelector sel=0,FXuint opts=FRAME_SUNKEN|FRAME_THICK|LISTBOX_NORMAL,FXint x=0,FXint y=0,FXint w=0,FXint h=0,FXint pl=DEFAULT_PAD,FXint pr=DEFAULT_PAD,FXint pt=DEFAULT_PAD,FXint pb=DEFAULT_PAD);
 
   /// Create server-side resources
   virtual void create();
@@ -84,9 +90,16 @@ public:
   /// Return current drive
   FXString getDrive() const;
 
+  /// Change file associations
+  void setAssociations(FXFileDict* assoc);
+
+  /// Return file associations
+  FXFileDict* getAssociations() const { return associations; }
+
   /// Destructor
   virtual ~FXDriveBox();
   };
 
+}
 
 #endif

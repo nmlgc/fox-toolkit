@@ -3,7 +3,7 @@
 *                            T a b l e   W i d g e t                            *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1999,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1999,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXTable.h,v 1.79 2002/01/18 22:42:55 jeroen Exp $                        *
+* $Id: FXTable.h,v 1.130 2004/03/29 17:39:40 fox Exp $                          *
 ********************************************************************************/
 #ifndef FXTABLE_H
 #define FXTABLE_H
@@ -28,27 +28,30 @@
 #include "FXScrollArea.h"
 #endif
 
+namespace FX {
 
 
 //////////////////////////////  UNDER DEVELOPMENT  //////////////////////////////
 
-struct FXTimer;
 class FXIcon;
 class FXFont;
 class FXTable;
+class FXHeader;
+class FXButton;
 
 
 /// Default cell margin
-#define DEFAULT_MARGIN  2
+enum { DEFAULT_MARGIN = 2 };
 
 
 
 /// Table options
 enum {
-  TABLE_COL_SIZABLE   = 0x00100000,   /// Columns are resizable
-  TABLE_ROW_SIZABLE   = 0x00200000,   /// Rows are resizable
-  TABLE_NO_COLSELECT  = 0x00400000,   /// Disallow column selections
-  TABLE_NO_ROWSELECT  = 0x00800000    /// Disallow row selections
+  TABLE_COL_SIZABLE     = 0x00100000,   /// Columns are resizable
+  TABLE_ROW_SIZABLE     = 0x00200000,   /// Rows are resizable
+  TABLE_HEADERS_SIZABLE = 0x00400000,   /// Headers are sizable
+  TABLE_NO_COLSELECT    = 0x00900000,   /// Disallow column selections
+  TABLE_NO_ROWSELECT    = 0x01000000    /// Disallow row selections
   };
 
 
@@ -72,13 +75,14 @@ class FXAPI FXTableItem : public FXObject {
   friend class FXTable;
 protected:
   FXString    label;
-  FXIcon*     icon;
+  FXIcon     *icon;
   void       *data;
   FXuint      state;
 protected:
   FXTableItem():icon(NULL),data(NULL),state(0){}
+  FXint textWidth(const FXTable* table) const;
+  FXint textHeight(const FXTable* table) const;
   virtual void draw(const FXTable* table,FXDC& dc,FXint x,FXint y,FXint w,FXint h) const;
-  virtual void drawButton(const FXTable* table,FXDC& dc,FXint x,FXint y,FXint w,FXint h) const;
   virtual void drawBorders(const FXTable* table,FXDC& dc,FXint x,FXint y,FXint w,FXint h) const;
   virtual void drawContent(const FXTable* table,FXDC& dc,FXint x,FXint y,FXint w,FXint h) const;
   virtual void drawPattern(const FXTable* table,FXDC& dc,FXint x,FXint y,FXint w,FXint h) const;
@@ -89,16 +93,18 @@ protected:
     FOCUS      = 0x00000002,
     DISABLED   = 0x00000004,
     DRAGGABLE  = 0x00000008,
-    BUTTON     = 0x00000010,
-    PRESSED    = 0x00000020,
+    RESERVED1  = 0x00000010,
+    RESERVED2  = 0x00000020,
     ICONOWNED  = 0x00000040
     };
 public:
   enum{
     RIGHT      = 0x00002000,      /// Align on right
     LEFT       = 0x00004000,      /// Align on left
+    CENTER_X   = 0,               /// Aling centered horizontally (default)
     TOP        = 0x00008000,      /// Align on top
     BOTTOM     = 0x00010000,      /// Align on bottom
+    CENTER_Y   = 0,               /// Aling centered vertically (default)
     BEFORE     = 0x00020000,      /// Icon before the text
     AFTER      = 0x00040000,      /// Icon after the text
     ABOVE      = 0x00080000,      /// Icon above the text
@@ -111,7 +117,7 @@ public:
 public:
   FXTableItem(const FXString& text,FXIcon* ic=NULL,void* ptr=NULL):label(text),icon(ic),data(ptr),state(FXTableItem::RIGHT){}
   virtual void setText(const FXString& txt){ label=txt; }
-  FXString getText() const { return label; }
+  const FXString& getText() const { return label; }
   virtual void setIcon(FXIcon* icn){ icon=icn; }
   FXIcon* getIcon() const { return icon; }
   void setData(void* ptr){ data=ptr; }
@@ -130,12 +136,8 @@ public:
   FXuint getIconPosition() const { return state&(BEFORE|AFTER|ABOVE|BELOW); }
   void setBorders(FXuint borders);
   FXuint getBorders() const { return state&(LBORDER|RBORDER|TBORDER|BBORDER); }
-  void setStipple(FXStipplePattern pat);
+  void setStipple(FXStipplePattern pattern);
   FXStipplePattern getStipple() const;
-  void setButton(FXbool button);
-  FXbool isButton() const { return (state&BUTTON)!=0; }
-  void setPressed(FXbool pressed);
-  FXbool isPressed() const { return (state&PRESSED)!=0; }
   virtual void setIconOwned(FXuint owned=ICONOWNED);
   FXuint isIconOwned() const { return (state&ICONOWNED); }
   virtual FXint getWidth(const FXTable* table) const;
@@ -154,12 +156,13 @@ public:
 class FXAPI FXTable : public FXScrollArea {
   FXDECLARE(FXTable)
 protected:
+  FXHeader     *colHeader;              // Column header
+  FXHeader     *rowHeader;              // Row header
+  FXButton     *cornerButton;           // Corner button
   FXTableItem **cells;                  // Cells
-  FXint        *col_x;                  // Vertical grid line positions
-  FXint        *row_y;                  // Horizontal grid line positions
   FXFont       *font;                   // Font
-  FXint         nrows;                  // Logically allocated rows
-  FXint         ncols;                  // Logically allocated columns
+  FXint         nrows;                  // Number of rows
+  FXint         ncols;                  // Number of columns
   FXint         visiblerows;            // Visible rows
   FXint         visiblecols;            // Visible columns
   FXint         margintop;              // Margin top
@@ -178,62 +181,44 @@ protected:
   FXColor       cellBorderColor;        // Cell border color
   FXint         cellBorderWidth;        // Cell border width
   FXColor       cellBackColor[2][2];    // Row/Column even/odd background color
-  FXint         defColumnWidth;         // Default column width [if uniform columns]
+  FXint         defColWidth;            // Default column width [if uniform columns]
   FXint         defRowHeight;           // Default row height [if uniform rows]
-  FXint         leading_rows;           // Leading fixed rows
-  FXint         leading_cols;           // Leading fixed columns
-  FXint         scrolling_rows;         // Scrolling rows
-  FXint         scrolling_cols;         // Scrolling columns
-  FXint         trailing_rows;          // Trailing fixed rows
-  FXint         trailing_cols;          // Trailing fixed columns
-  FXint         scrollable_left;        // Left side of scrollable part of table
-  FXint         scrollable_right;       // Right edge of scrollable part of table
-  FXint         scrollable_top;         // Top side of scrollable part of table
-  FXint         scrollable_bottom;      // Bottom side of scrollable part of table
-  FXint         table_left;             // Left side of table
-  FXint         table_right;            // Right edge of right side of table
-  FXint         table_top;              // Top side of table
-  FXint         table_bottom;           // Bottom side of bottom of table
-  FXTableRange  selection;              // Selected cell range
   FXTablePos    current;                // Current position
   FXTablePos    anchor;                 // Anchor position
-  FXTablePos    extent;                 // Extent position
-  FXint         cellcursor;             // Cursor position in cell
-  FXint         cellanchor;             // Anchor position in cell
-  FXint         cellscroll;             // Scolled amount in cell
+  FXTableRange  selection;              // Range of selected cells
+  FXchar       *clipbuffer;             // Clipped text
+  FXint         cliplength;             // Length of clipped text
   FXbool        hgrid;                  // Horizontal grid lines shown
   FXbool        vgrid;                  // Vertical grid lines shown
-  FXuchar       mode;                   // Mode we're in
+  FXuchar       mode;                   // Mode widget is in
   FXint         grabx;                  // Grab point x
   FXint         graby;                  // Grab point y
   FXint         rowcol;                 // Row or column being resized
-  FXTimer      *blinker;                // Blink timer
   FXString      help;
 public:
   static FXDragType csvType;
   static const FXchar csvTypeName[];
 protected:
   FXTable();
-  virtual void layout();
-  void drawCursor(FXuint state);
-  FXRectangle cellRect(FXint r,FXint c) const;
-  virtual void drawCell(FXDC& dc,FXint xlo,FXint xhi,FXint ylo,FXint yhi,FXint xoff,FXint yoff,FXint sr,FXint er,FXint sc,FXint ec);
-  virtual void drawRange(FXDC& dc,FXint xlo,FXint xhi,FXint ylo,FXint yhi,FXint xoff,FXint yoff,FXint rlo,FXint rhi,FXint clo,FXint chi);
-  virtual FXTableItem* createItem(const FXString& text,FXIcon* icon,void* ptr);
   FXint startRow(FXint row,FXint col) const;
   FXint startCol(FXint row,FXint col) const;
   FXint endRow(FXint row,FXint col) const;
   FXint endCol(FXint row,FXint col) const;
-  FXint nearestCol(FXint col,FXint x) const;
-  FXint nearestRow(FXint row,FXint y) const;
+  void spanningRange(FXint& sr,FXint& er,FXint& sc,FXint& ec,FXint anchrow,FXint anchcol,FXint currow,FXint curcol);
+  virtual void moveContents(FXint x,FXint y);
+  virtual void drawCell(FXDC& dc,FXint sr,FXint er,FXint sc,FXint ec);
+  virtual void drawRange(FXDC& dc,FXint rlo,FXint rhi,FXint clo,FXint chi);
+  virtual void drawHGrid(FXDC& dc,FXint rlo,FXint rhi,FXint clo,FXint chi);
+  virtual void drawVGrid(FXDC& dc,FXint rlo,FXint rhi,FXint clo,FXint chi);
+  virtual void drawContents(FXDC& dc,FXint x,FXint y,FXint w,FXint h);
+  virtual FXTableItem* createItem(const FXString& text,FXIcon* icon,void* ptr);
+  void countText(FXint& nr,FXint& nc,const FXchar* text,FXint size,FXchar cs='\t',FXchar rs='\n') const;
 protected:
   enum {
     MOUSE_NONE,
     MOUSE_SCROLL,
     MOUSE_DRAG,
     MOUSE_SELECT,
-    MOUSE_COL_SELECT,
-    MOUSE_ROW_SELECT,
     MOUSE_COL_SIZE,
     MOUSE_ROW_SIZE
     };
@@ -252,9 +237,12 @@ public:
   long onRightBtnPress(FXObject*,FXSelector,void*);
   long onRightBtnRelease(FXObject*,FXSelector,void*);
   long onUngrabbed(FXObject*,FXSelector,void*);
-  long onBlink(FXObject*,FXSelector,void*);
   long onSelectionLost(FXObject*,FXSelector,void*);
   long onSelectionGained(FXObject*,FXSelector,void*);
+  long onSelectionRequest(FXObject*,FXSelector,void* ptr);
+  long onClipboardLost(FXObject*,FXSelector,void*);
+  long onClipboardGained(FXObject*,FXSelector,void*);
+  long onClipboardRequest(FXObject*,FXSelector,void*);
   long onAutoScroll(FXObject*,FXSelector,void*);
   long onCommand(FXObject*,FXSelector,void*);
   long onClicked(FXObject*,FXSelector,void*);
@@ -295,9 +283,17 @@ public:
   long onCmdSelectCell(FXObject*,FXSelector,void*);
   long onCmdSelectRow(FXObject*,FXSelector,void*);
   long onCmdSelectColumn(FXObject*,FXSelector,void*);
+  long onCmdSelectRowIndex(FXObject*,FXSelector,void*);
+  long onCmdSelectColumnIndex(FXObject*,FXSelector,void*);
   long onCmdSelectAll(FXObject*,FXSelector,void*);
   long onCmdDeselectAll(FXObject*,FXSelector,void*);
 
+  // Manipulation Selection
+  long onCmdCutSel(FXObject*,FXSelector,void*);
+  long onCmdCopySel(FXObject*,FXSelector,void*);
+  long onCmdDeleteSel(FXObject*,FXSelector,void*);
+  long onCmdPasteSel(FXObject*,FXSelector,void*);
+  long onUpdHaveSelection(FXObject*,FXSelector,void*);
 public:
 
   enum {
@@ -307,6 +303,8 @@ public:
     ID_DELETE_ROW,
     ID_INSERT_COLUMN,
     ID_INSERT_ROW,
+    ID_SELECT_COLUMN_INDEX,
+    ID_SELECT_ROW_INDEX,
     ID_SELECT_COLUMN,
     ID_SELECT_ROW,
     ID_SELECT_CELL,
@@ -327,17 +325,41 @@ public:
     ID_CUT_SEL,
     ID_COPY_SEL,
     ID_PASTE_SEL,
-    ID_BLINK,
+    ID_DELETE_SEL,
     ID_LAST
     };
 
 public:
 
-  /// Make new table with nr visible rows and nc visible columns; the table
-  /// is initially empty, i.e. contains no cells (nrows=0, ncols=0)
-  FXTable(FXComposite *p,FXint nr,FXint nc,FXObject* tgt=NULL,FXSelector sel=0,FXuint opts=0,FXint x=0,FXint y=0,FXint w=0,FXint h=0,FXint pl=DEFAULT_MARGIN,FXint pr=DEFAULT_MARGIN,FXint pt=DEFAULT_MARGIN,FXint pb=DEFAULT_MARGIN);
+  /**
+  * Construct a new table.
+  * The table is initially empty, and reports a default size based on
+  * the scroll areas's scrollbar placement policy.
+  */
+  FXTable(FXComposite *p,FXObject* tgt=NULL,FXSelector sel=0,FXuint opts=0,FXint x=0,FXint y=0,FXint w=0,FXint h=0,FXint pl=DEFAULT_MARGIN,FXint pr=DEFAULT_MARGIN,FXint pt=DEFAULT_MARGIN,FXint pb=DEFAULT_MARGIN);
+
+  /// Return default width
+  virtual FXint getDefaultWidth();
+
+  /// Return default height
+  virtual FXint getDefaultHeight();
+
+  /// Computes content width
+  virtual FXint getContentWidth();
+
+  /// Computes content height
+  virtual FXint getContentHeight();
+
+  /// Create the server-side resources
   virtual void create();
+
+  /// Detach the server-side resources
   virtual void detach();
+
+  /// Perform layout
+  virtual void layout();
+
+  /// Mark this window's layout as dirty
   virtual void recalc();
 
   /// Table widget can receive focus
@@ -349,86 +371,82 @@ public:
   /// Remove the focus from this window
   virtual void killFocus();
 
+  /// Return column header control
+  FXHeader* getColumnHeader() const { return colHeader; }
+
+  /// Return row header control
+  FXHeader* getRowHeader() const { return rowHeader; }
+
   /// Change visible rows/columns
   void setVisibleRows(FXint nvrows);
   FXint getVisibleRows() const { return visiblerows; }
-  void setVisibleCols(FXint nvcols);
-  FXint getVisibleCols() const { return visiblecols; }
-
-  /// Is horizontal grid shown
-  FXbool isHorzGridShown() const { return hgrid; }
-
-  /// Is vertical grid shown
-  FXbool isVertGridShown() const { return vgrid; }
+  void setVisibleColumns(FXint nvcols);
+  FXint getVisibleColumns() const { return visiblecols; }
 
   /// Show or hide horizontal grid
   void showHorzGrid(FXbool on=TRUE);
 
+  /// Is horizontal grid shown
+  FXbool isHorzGridShown() const { return hgrid; }
+
   /// Show or hide vertical grid
   void showVertGrid(FXbool on=TRUE);
 
-  /// Report default size, which is determined based on the
-  /// visible rows/columns and the default width/height
-  virtual FXint getDefaultWidth();
-  virtual FXint getDefaultHeight();
-
-  /// Compute content size
-  virtual FXint getContentWidth();
-  virtual FXint getContentHeight();
-
-  /// Scroll contents
-  virtual void moveContents(FXint x,FXint y);
-
-  /// Resize the table content to nr rows and nc columns
-  void setTableSize(FXint nr,FXint nc,FXbool notify=FALSE);
+  /// Is vertical grid shown
+  FXbool isVertGridShown() const { return vgrid; }
 
   /// Get number of rows
   FXint getNumRows() const { return nrows; }
 
   /// Get number of columns
-  FXint getNumCols() const { return ncols; }
+  FXint getNumColumns() const { return ncols; }
 
-  /// Change cell margins
+  /// Change top cell margin
   void setMarginTop(FXint pt);
+
+  /// Return top cell margin
   FXint getMarginTop() const { return margintop; }
+
+  /// Change bottom cell margin
   void setMarginBottom(FXint pb);
+
+  /// Return bottom cell margin
   FXint getMarginBottom() const { return marginbottom; }
+
+  /// Change left cell margin
   void setMarginLeft(FXint pl);
+
+  /// Return left cell margin
   FXint getMarginLeft() const { return marginleft; }
+
+  /// Change right cell margin
   void setMarginRight(FXint pr);
+
+  /// Return right cell margin
   FXint getMarginRight() const { return marginright; }
 
-  /// Change table style
-  FXuint getTableStyle() const;
-  void setTableStyle(FXuint style);
-
-  /// Get/set leading rows
-  virtual void setLeadingRows(FXint leadrows);
-  FXint getLeadingRows() const { return leading_rows; }
-
-  /// Get/set leading columns
-  virtual void setLeadingCols(FXint leadcols);
-  FXint getLeadingCols() const { return leading_cols; }
-
-  /// Get/set trailing rows
-  virtual void setTrailingRows(FXint trailrows);
-  FXint getTrailingRows() const { return trailing_rows; }
-
-  /// Get/set trailing columns
-  virtual void setTrailingCols(FXint trailcols);
-  FXint getTrailingCols() const { return trailing_cols; }
-
-  /// Determine row containing y; returns -1 if y outside of table
+  /**
+  * Determine row containing y.
+  * Returns -1 if y above first row, and nrows if y below last row;
+  * otherwise, returns row in table containing y.
+  */
   FXint rowAtY(FXint y) const;
 
-  /// Determine column containing x; returns -1 if x outside of table
+  /**
+  * Determine column containing x.
+  * Returns -1 if x left of first column, and ncols if x right of last column;
+  * otherwise, returns columns in table containing x.
+  */
   FXint colAtX(FXint x) const;
 
   /// Return the item at the given index
   FXTableItem *getItem(FXint row,FXint col) const;
 
   /// Replace the item with a [possibly subclassed] item
-  void setItem(FXint row,FXint col,FXTableItem* item);
+  void setItem(FXint row,FXint col,FXTableItem* item,FXbool notify=FALSE);
+
+  /// Set the table size to nr rows and nc columns; all existing items will be removed
+  virtual void setTableSize(FXint nr,FXint nc,FXbool notify=FALSE);
 
   /// Insert new row
   virtual void insertRows(FXint row,FXint nr=1,FXbool notify=FALSE);
@@ -442,35 +460,96 @@ public:
   /// Remove column of cells
   virtual void removeColumns(FXint col,FXint nc=1,FXbool notify=FALSE);
 
-  /// Remove single cell
+  /// Clear single cell
   virtual void removeItem(FXint row,FXint col,FXbool notify=FALSE);
+
+  /// Clear all cells in the given range
+  virtual void removeRange(FXint startrow,FXint endrow,FXint startcol,FXint endcol,FXbool notify=FALSE);
+
+  /// Remove all items from table
+  virtual void clearItems(FXbool notify=FALSE);
 
   /// Scroll to make cell at r,c fully visible
   void makePositionVisible(FXint r,FXint c);
 
+  // Return TRUE if item partially visible
+  FXbool isItemVisible(FXint r,FXint c) const;
+
+  /**
+  * Change column header height mode to fixed or variable.
+  * In variable height mode, the column header will size to
+  * fit the contents in it.  In fixed mode, the size is
+  * explicitly set using setColumnHeaderHeight().
+  */
+  void setColumnHeaderMode(FXuint hint=LAYOUT_FIX_HEIGHT);
+
+  /// Return column header height mode
+  FXuint getColumnHeaderMode() const;
+
+  /**
+  * Change row header width mode to fixed or variable.
+  * In variable width mode, the row header will size to
+  * fit the contents in it.  In fixed mode, the size is
+  * explicitly set using setRowHeaderWidth().
+  */
+  void setRowHeaderMode(FXuint hint=LAYOUT_FIX_WIDTH);
+
+  /// Return row header width mode
+  FXuint getRowHeaderMode() const;
+
+  /// Change column header height
+  void setColumnHeaderHeight(FXint h);
+
+  /// Return column header height
+  FXint getColumnHeaderHeight() const;
+
+  /// Change row header width
+  void setRowHeaderWidth(FXint w);
+
+  /// Return row header width
+  FXint getRowHeaderWidth() const;
+
   /// Change column width
-  void setColumnWidth(FXint col,FXint cwidth);
+  virtual void setColumnWidth(FXint col,FXint cwidth);
   FXint getColumnWidth(FXint col) const;
 
   /// Change row height
-  void setRowHeight(FXint row,FXint rheight);
+  virtual void setRowHeight(FXint row,FXint rheight);
   FXint getRowHeight(FXint row) const;
 
   /// Change X coordinate of column c
-  void setColumnX(FXint col,FXint x);
+  virtual void setColumnX(FXint col,FXint x);
   FXint getColumnX(FXint col) const;
 
   /// Change Y coordinate of row r
-  void setRowY(FXint row,FXint y);
+  virtual void setRowY(FXint row,FXint y);
   FXint getRowY(FXint row) const;
 
   /// Change default column width
   void setDefColumnWidth(FXint cwidth);
-  FXint getDefColumnWidth() const { return defColumnWidth; }
+  FXint getDefColumnWidth() const { return defColWidth; }
 
   /// Change default row height
   void setDefRowHeight(FXint rheight);
   FXint getDefRowHeight() const { return defRowHeight; }
+
+  /// Return minimum row height
+  FXint getMinRowHeight(FXint r) const;
+
+  /// Return minimum column width
+  FXint getMinColumnWidth(FXint c) const;
+
+  /// Change column header
+  void setColumnText(FXint index,const FXString& text);
+
+  /// Return text of column header at index
+  FXString getColumnText(FXint index) const;
+
+  /// Change row header
+  void setRowText(FXint index,const FXString& text);
+
+  /// Return text of row header at index
+  FXString getRowText(FXint index) const;
 
   /// Modify cell text
   void setItemText(FXint r,FXint c,const FXString& text);
@@ -484,46 +563,118 @@ public:
   void setItemData(FXint r,FXint c,void* ptr);
   void* getItemData(FXint r,FXint c) const;
 
-  /// Is cell selected, current, visible, enabled
-  FXbool isItemSelected(FXint r,FXint c) const;
-  FXbool isItemCurrent(FXint r,FXint c) const;
-  FXbool isItemVisible(FXint r,FXint c) const;
-  FXbool isItemEnabled(FXint r,FXint c) const;
+  /// Extract cells from given range as text.
+  void extractText(FXchar*& text,FXint& size,FXint startrow,FXint endrow,FXint startcol,FXint endcol,FXchar cs='\t',FXchar rs='\n') const;
+
+  /// Overlay text over given cell range
+  void overlayText(FXint startrow,FXint endrow,FXint startcol,FXint endcol,const FXchar* text,FXint size,FXchar cs='\t',FXchar rs='\n');
+
+  /// Return TRUE if its a spanning cell
+  FXbool isItemSpanning(FXint r,FXint c) const;
 
   /// Repaint cells between grid lines sr,er and grid lines sc,ec
-  void updateRange(FXint sr,FXint er,FXint sc,FXint ec);
+  void updateRange(FXint sr,FXint er,FXint sc,FXint ec) const;
 
   /// Repaint cell at r,c
-  void updateItem(FXint r,FXint c);
+  void updateItem(FXint r,FXint c) const;
 
-  /// Enable, disable, select, deselect, toggle cell
+  /// Enable item
   FXbool enableItem(FXint r,FXint c);
-  FXbool disableItem(FXint r,FXint c);
-  FXbool selectItem(FXint r,FXint c,FXbool notify=FALSE);
-  FXbool deselectItem(FXint r,FXint c,FXbool notify=FALSE);
-  FXbool toggleItem(FXint r,FXint c,FXbool notify=FALSE);
 
-  /// Change current cell
-  void setCurrentItem(FXint r,FXint c,FXbool notify=FALSE);
+  /// Disable item
+  FXbool disableItem(FXint r,FXint c);
+
+  // Is item enabled
+  FXbool isItemEnabled(FXint r,FXint c) const;
+
+  /// Change item justification
+  void setItemJustify(FXint r,FXint c,FXuint justify);
+
+  /// Return item justification
+  FXuint getItemJustify(FXint r,FXint c) const;
+
+  /// Change relative position of icon and text of item
+  void setItemIconPosition(FXint r,FXint c,FXuint mode);
+
+  /// Return relative icon and text position
+  FXuint getItemIconPosition(FXint r,FXint c) const;
+
+  /// Change item border style
+  void setItemBorders(FXint r,FXint c,FXuint borders);
+
+  /// Return item border style
+  FXuint getItemBorders(FXint r,FXint c) const;
+
+  /// Change item background stipple style
+  void setItemStipple(FXint r,FXint c,FXStipplePattern pat);
+
+  /// return item background stipple style
+  FXStipplePattern getItemStipple(FXint r,FXint c) const;
+
+  /// Change current item
+  virtual void setCurrentItem(FXint r,FXint c,FXbool notify=FALSE);
+
+  /// Get row number of current item
   FXint getCurrentRow() const { return current.row; }
+
+  /// Get column number of current item
   FXint getCurrentColumn() const { return current.col; }
 
-  /// Change anchored cell
+  // Is item current
+  FXbool isItemCurrent(FXint r,FXint c) const;
+
+  /// Change anchor item
   void setAnchorItem(FXint r,FXint c);
+
+  /// Get row number of anchor item
   FXint getAnchorRow() const { return anchor.row; }
+
+  /// Get column number of anchor item
   FXint getAnchorColumn() const { return anchor.col; }
 
+  /// Get selection start row; returns -1 if no selection
+  FXint getSelStartRow() const { return selection.fm.row; }
+
+  /// Get selection start column; returns -1 if no selection
+  FXint getSelStartColumn() const { return selection.fm.col; }
+
+  /// Get selection end row; returns -1 if no selection
+  FXint getSelEndRow() const { return selection.to.row; }
+
+  /// Get selection end column; returns -1 if no selection
+  FXint getSelEndColumn() const { return selection.to.col; }
+
+  /// Is cell selected
+  FXbool isItemSelected(FXint r,FXint c) const;
+
+  /// Is row of cells selected
+  FXbool isRowSelected(FXint r) const;
+
+  /// Is column selected
+  FXbool isColumnSelected(FXint c) const;
+
+  /// Is anything selected
+  FXbool isAnythingSelected() const;
+
+  /// Select a row
+  virtual FXbool selectRow(FXint row,FXbool notify=FALSE);
+
+  /// Select a column
+  virtual FXbool selectColumn(FXint col,FXbool notify=FALSE);
+
   /// Select range
-  FXbool selectRange(FXint sr,FXint er,FXint sc,FXint ec,FXbool notify=FALSE);
+  virtual FXbool selectRange(FXint startrow,FXint endrow,FXint startcol,FXint endcol,FXbool notify=FALSE);
 
   /// Extend selection
-  FXbool extendSelection(FXint r,FXint c,FXbool notify=FALSE);
+  virtual FXbool extendSelection(FXint r,FXint c,FXbool notify=FALSE);
 
   /// Kill selection
-  FXbool killSelection(FXbool notify=FALSE);
+  virtual FXbool killSelection(FXbool notify=FALSE);
 
   /// Change font
   void setFont(FXFont* fnt);
+
+  /// Return current font
   FXFont* getFont() const { return font; }
 
   /// Obtain colors of various parts
@@ -562,8 +713,14 @@ public:
   /// Return cell border width
   FXint getCellBorderWidth() const { return cellBorderWidth; }
 
+  /// Change table style
+  void setTableStyle(FXuint style);
+
+  /// Return table style
+  FXuint getTableStyle() const;
+
   /// Change help text
-  void setHelpText(const FXString& text);
+  void setHelpText(const FXString& text){ help=text; }
   FXString getHelpText() const { return help; }
 
   /// Serialize
@@ -573,6 +730,6 @@ public:
   virtual ~FXTable();
   };
 
-
+}
 
 #endif

@@ -3,7 +3,7 @@
 *                           T a b   I t e m    W i d g e t                      *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXTabItem.h,v 1.3 2002/01/18 22:42:55 jeroen Exp $                       *
+* $Id: FXTabItem.h,v 1.7 2004/02/08 17:17:34 fox Exp $                          *
 ********************************************************************************/
 #ifndef FXTABITEM_H
 #define FXTABITEM_H
@@ -28,9 +28,10 @@
 #include "FXLabel.h"
 #endif
 
+namespace FX {
 
 
-// Tab Item orientations which affect border
+/// Tab Item orientations which affect border
 enum {
   TAB_TOP          = 0,           // Top side tabs
   TAB_LEFT         = 0x00800000,  // Left side tabs
@@ -86,5 +87,7 @@ public:
   /// Change tab item orientation
   void setTabOrientation(FXuint style);
   };
+
+}
 
 #endif

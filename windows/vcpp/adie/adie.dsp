@@ -44,8 +44,8 @@ RSC=rc.exe
 # PROP Target_Dir ""
 F90=df.exe
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /YX /FD /c
-# ADD CPP /nologo /MT /W3 /GX /O2 /I "..\..\..\include" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /FD /c
-# SUBTRACT CPP /YX
+# ADD CPP /MT /W3 /GR /GX /O2 /I "..\..\..\include" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /FD /c
+# SUBTRACT CPP /nologo /YX
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
@@ -55,8 +55,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /machine:I386
-# ADD LINK32 winspool.lib comctl32.lib wsock32.lib ws2_32.lib kernel32.lib user32.lib gdi32.lib advapi32.lib shell32.lib mpr.lib /nologo /entry:"mainCRTStartup" /subsystem:windows /machine:I386
-# SUBTRACT LINK32 /pdb:none /incremental:yes
+# ADD LINK32 winspool.lib comctl32.lib wsock32.lib ws2_32.lib kernel32.lib user32.lib gdi32.lib advapi32.lib shell32.lib mpr.lib /nologo /entry:"mainCRTStartup" /subsystem:windows /pdb:none /machine:I386
 
 !ELSEIF  "$(CFG)" == "adie - Win32 Debug"
 
@@ -73,8 +72,7 @@ LINK32=link.exe
 # PROP Target_Dir ""
 F90=df.exe
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /YX /FD /GZ /c
-# ADD CPP /MT /W3 /Gm /GR /GX /ZI /Od /I "..\..\..\include" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /FD /GZ /c
-# SUBTRACT CPP /YX
+# ADD CPP /MTd /W3 /GR /GX /ZI /Od /I "..\..\..\include" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /FD /c
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
@@ -256,6 +254,10 @@ SOURCE=..\..\..\adie\lang_gif.gif
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\adie\main.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\adie\new_gif.gif
 # End Source File
 # Begin Source File
@@ -265,6 +267,10 @@ SOURCE=..\..\..\adie\open_gif.gif
 # Begin Source File
 
 SOURCE=..\..\..\adie\palette_gif.gif
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\adie\parsesyntax.cpp
 # End Source File
 # Begin Source File
 
@@ -341,6 +347,14 @@ SOURCE=..\..\..\adie\styles_gif.gif
 # Begin Source File
 
 SOURCE=..\..\..\adie\syntax_gif.gif
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\adie\TextWindow.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\adie\TextWindow.h
 # End Source File
 # Begin Source File
 

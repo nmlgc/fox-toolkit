@@ -5,7 +5,7 @@
 ##############################################################################
 # Contributed by: Andre Fornacon <afo@zlug.org>                              #
 ##############################################################################
-# $Id: Makefile.dmc,v 1.1.2.3 2002/07/26 02:41:54 fox Exp $                  #
+# $Id: Makefile.dmc,v 1.8 2003/09/26 05:01:20 fox Exp $                      #
 ##############################################################################
 # This library is free software; you can redistribute it and/or              #
 # modify it under the terms of the GNU Library General Public                #
@@ -27,13 +27,13 @@ CXX       = sc
 CXXFLAGS  = -mn -5 -a8
 RM        = del
 TOPDIR    = ..
-DEFINES   = -DNDEBUG -DFOX_BIGENDIAN=0 -DWIN32 -D_WINDOWS -DHAVE_OPENGL
+DEFINES   = -DNDEBUG -DFOX_BIGENDIAN=0 -DWIN32 -D_WINDOWS
 LD	  = sc
 LDFLAGS	  =
 LIBS	  = advapi32.lib+shell32.lib+gdi32.lib+wsock32.lib
 GLLIBS    = opengl32.lib glu32.lib
 INCDIRS   = -I$(TOPDIR)\include
-FOXLIB    = $(TOPDIR)\src\fox.lib
+FOXLIB    = $(TOPDIR)\src\FOX-1.1.lib
 RESWRAP   = $(TOPDIR)\utils\reswrap.exe
 
 PROGRAMS  = calculator.exe
@@ -52,8 +52,11 @@ all: $(PROGRAMS)
 calculator.exe: $(OBJECTS) $(FOXLIB)
 	$(LD) $(LDFLAGS) $(OBJECTS) $(FOXLIB) $(LIBS)
 
-
 calculator.obj: icons.cpp
+
+icons.h: $(ICONS)
+	$(RM) $@
+	$(RESWRAP) -i -oa $@ $(ICONS)
 
 icons.cpp: $(ICONS)
 	$(RM) $@

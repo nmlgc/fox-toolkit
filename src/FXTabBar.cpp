@@ -3,7 +3,7 @@
 *                               T a b   O b j e c t                             *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXTabBar.cpp,v 1.4.4.1 2003/06/20 19:02:07 fox Exp $                      *
+* $Id: FXTabBar.cpp,v 1.15 2004/02/08 17:29:07 fox Exp $                        *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -32,6 +32,7 @@
 #include "FXRectangle.h"
 #include "FXRegistry.h"
 #include "FXAccelTable.h"
+#include "FXHash.h"
 #include "FXApp.h"
 #include "FXDCWindow.h"
 #include "FXFont.h"
@@ -50,14 +51,18 @@
   - We hide the panes in FXTabBook.  This way, we don't have to change
     the position of each pane when the FXTabBook itself changes.
     Only the active pane needs to be moved.
+  - Fix setCurrent() to be like FXSwitcher.
 */
 
 
 #define TAB_ORIENT_MASK    (TAB_TOP|TAB_LEFT|TAB_RIGHT|TAB_BOTTOM)
 #define TABBOOK_MASK       (TABBOOK_SIDEWAYS|TABBOOK_BOTTOMTABS)
 
+using namespace FX;
+
 /*******************************************************************************/
 
+namespace FX {
 
 // Map
 FXDEFMAP(FXTabBar) FXTabBarMap[]={
@@ -69,9 +74,9 @@ FXDEFMAP(FXTabBar) FXTabBarMap[]={
   FXMAPFUNC(SEL_FOCUS_LEFT,0,FXTabBar::onFocusLeft),
   FXMAPFUNC(SEL_FOCUS_RIGHT,0,FXTabBar::onFocusRight),
   FXMAPFUNC(SEL_COMMAND,FXTabBar::ID_OPEN_ITEM,FXTabBar::onCmdOpenItem),
-  FXMAPFUNC(SEL_COMMAND,FXWindow::ID_SETVALUE,FXTabBar::onCmdSetValue),
-  FXMAPFUNC(SEL_COMMAND,FXWindow::ID_SETINTVALUE,FXTabBar::onCmdSetIntValue),
-  FXMAPFUNC(SEL_COMMAND,FXWindow::ID_GETINTVALUE,FXTabBar::onCmdGetIntValue),
+  FXMAPFUNC(SEL_COMMAND,FXTabBar::ID_SETVALUE,FXTabBar::onCmdSetValue),
+  FXMAPFUNC(SEL_COMMAND,FXTabBar::ID_SETINTVALUE,FXTabBar::onCmdSetIntValue),
+  FXMAPFUNC(SEL_COMMAND,FXTabBar::ID_GETINTVALUE,FXTabBar::onCmdGetIntValue),
   FXMAPFUNCS(SEL_UPDATE,FXTabBar::ID_OPEN_FIRST,FXTabBar::ID_OPEN_LAST,FXTabBar::onUpdOpen),
   FXMAPFUNCS(SEL_COMMAND,FXTabBar::ID_OPEN_FIRST,FXTabBar::ID_OPEN_LAST,FXTabBar::onCmdOpen),
   };
@@ -270,7 +275,7 @@ void FXTabBar::layout(){
 void FXTabBar::setCurrent(FXint panel,FXbool notify){
   if(0<=panel && panel!=current){
     current=panel;
-    if(notify && target){ target->handle(this,MKUINT(message,SEL_COMMAND),(void*)(FXival)current); }
+    if(notify && target){ target->handle(this,FXSEL(SEL_COMMAND,message),(void*)(FXival)current); }
     recalc();
     }
   }
@@ -294,7 +299,7 @@ long FXTabBar::onFocusNext(FXObject*,FXSelector,void* ptr){
   while(child && !child->shown()) child=child->getNext();
   if(child){
     setCurrent(indexOfChild(child),TRUE);
-    child->handle(this,MKUINT(0,SEL_FOCUS_SELF),ptr);
+    child->handle(this,FXSEL(SEL_FOCUS_SELF,0),ptr);
     return 1;
     }
   return 0;
@@ -308,7 +313,7 @@ long FXTabBar::onFocusPrev(FXObject*,FXSelector,void* ptr){
   while(child && !child->shown()) child=child->getPrev();
   if(child){
     setCurrent(indexOfChild(child),TRUE);
-    child->handle(this,MKUINT(0,SEL_FOCUS_SELF),ptr);
+    child->handle(this,FXSEL(SEL_FOCUS_SELF,0),ptr);
     return 1;
     }
   return 0;
@@ -318,7 +323,7 @@ long FXTabBar::onFocusPrev(FXObject*,FXSelector,void* ptr){
 // Focus moved up
 long FXTabBar::onFocusUp(FXObject*,FXSelector,void* ptr){
   if(options&TABBOOK_SIDEWAYS){
-    return handle(this,MKUINT(0,SEL_FOCUS_PREV),ptr);
+    return handle(this,FXSEL(SEL_FOCUS_PREV,0),ptr);
     }
   return 0;
   }
@@ -327,7 +332,7 @@ long FXTabBar::onFocusUp(FXObject*,FXSelector,void* ptr){
 // Focus moved down
 long FXTabBar::onFocusDown(FXObject*,FXSelector,void* ptr){
   if(options&TABBOOK_SIDEWAYS){
-    return handle(this,MKUINT(0,SEL_FOCUS_NEXT),ptr);
+    return handle(this,FXSEL(SEL_FOCUS_NEXT,0),ptr);
     }
   return 0;
   }
@@ -336,7 +341,7 @@ long FXTabBar::onFocusDown(FXObject*,FXSelector,void* ptr){
 // Focus moved left
 long FXTabBar::onFocusLeft(FXObject*,FXSelector,void* ptr){
   if(!(options&TABBOOK_SIDEWAYS)){
-    return handle(this,MKUINT(0,SEL_FOCUS_PREV),ptr);
+    return handle(this,FXSEL(SEL_FOCUS_PREV,0),ptr);
     }
   return 0;
   }
@@ -345,7 +350,7 @@ long FXTabBar::onFocusLeft(FXObject*,FXSelector,void* ptr){
 // Focus moved right
 long FXTabBar::onFocusRight(FXObject*,FXSelector,void* ptr){
   if(!(options&TABBOOK_SIDEWAYS)){
-    return handle(this,MKUINT(0,SEL_FOCUS_NEXT),ptr);
+    return handle(this,FXSEL(SEL_FOCUS_NEXT,0),ptr);
     }
   return 0;
   }
@@ -374,15 +379,14 @@ long FXTabBar::onCmdGetIntValue(FXObject*,FXSelector,void* ptr){
 
 // Open item
 long FXTabBar::onCmdOpen(FXObject*,FXSelector sel,void*){
-  setCurrent(SELID(sel)-ID_OPEN_FIRST,TRUE);
+  setCurrent(FXSELID(sel)-ID_OPEN_FIRST,TRUE);
   return 1;
   }
 
 
 // Update the nth button
-long FXTabBar::onUpdOpen(FXObject* sender,FXSelector sel,void* ptr){
-  FXuint msg=((SELID(sel)-ID_OPEN_FIRST)==current) ? ID_CHECK : ID_UNCHECK;
-  sender->handle(this,MKUINT(msg,SEL_COMMAND),ptr);
+long FXTabBar::onUpdOpen(FXObject* sender,FXSelector sel,void*){
+  sender->handle(this,((FXSELID(sel)-ID_OPEN_FIRST)==current)?FXSEL(SEL_COMMAND,ID_CHECK):FXSEL(SEL_COMMAND,ID_UNCHECK),NULL);
   return 1;
   }
 
@@ -424,3 +428,4 @@ void FXTabBar::load(FXStream& store){
   store >> current;
   }
 
+}

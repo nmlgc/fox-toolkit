@@ -6,37 +6,41 @@
 Systems Which are Supported or Known to work:
 =============================================
 
-  o LINUX
-  o Windows 2000, Windows NT 4, Windows 9x, (VC++, Cygwin1.1 or MinGW,
-    Borland C++)
-  o Digital Unix/COMPAQ Tru64  OSF1 3.2, 4.0x
-  o SGI IRIX 5.3, 6.1, 6.2, 6.4, 6.5 (MIPS Pro C++)
-  o SUN Solaris, SunOS (gcc, SUN WorkShop Compiler)
-  o HP-UX 9.x, 10.x and 11.00
+  o Linux (gcc, INTEL C++), x86, IA64 (Itanium), x86-64 (Opteron).
+  o Windows XP, 2K, NT, Windows 9x, (VC++, Cygwin, MinGW,
+    Borland C++, Digital Mars C++, OpenWatcom C++, ... )
+  o Digital Unix/COMPAQ Tru64  OSF1 3.2, 4.0x, 5.0x (gcc and DEC cxx).
+  o SGI IRIX 5.3, 6.1, 6.2, 6.4, 6.5 (gcc and MIPS Pro C++)
+  o SUN Solaris, SunOS (gcc, SUN WorkShop Compiler, SUN Forte C++)
+  o HP-UX PA-RISC 9.x, 10.x and B.11.00, (gcc and aCC).
+  o HP-UX B.11.22 Intel Itanium (IA64) using aCC.
   o AIX 4.2, 4.3
   o FreeBSD
   o Sequent DYNIX/ptx 4.4.7
   o IBM VisualAge C++ 3.5 (Windows)
+  o Apple MAC OS-X.  You will need an X-Server, either Apple's or XFree.
 
 
 
 For most UNIX systems.
 ======================
 
-For most unix systems which have OpenGL installed, you can type:
+For most unix systems you can configure simply as:
 
 
-  ./configure
+        ./configure
 
 
-You can disable OpenGL support with --with-opengl=no.  You can also force MESA
-if your system has both; this is useful if e.g. OpenGL is broken.  To force
-MESA, use --with-opengl=mesa.
+You can disable OpenGL support by configuring as:
+
+
+        ./configure --disable-opengl.
+
 
 After configure runs its course, simply type ``make'' to build the library,
 and ``make install'' to install it.
 
-FOX should compile on most unix platforms; we have tested the following:
+FOX should compile on most UNIX platforms; we have tested the following:
 SGI, IBM, HP, SUN, DEC, LINUX, all with gcc; however, FOX uses a fairly
 conservative subset of C++, and should be no problem to port to other, more
 primitive, C++ compilers.
@@ -54,6 +58,34 @@ window header files.
 You may of course need other system headers ("stdio.h", "gl.h", etc).
 
 
+Building for Debug or Release.
+==============================
+
+Normal builds [w/o any special arguments to configure] will include assert and
+trace statements into the library, but no debug symbols.  This mode compiles
+the fastest and allows for tracing of the FOX library.  This mode is the
+recommended way to develop FOX applications, as it allows for resource tracing
+and internal consistency checks.
+
+Building for debug will add debug symbols as needed by your debugger.  It also
+includes assert and tracing into the library.  This setting is recommended if
+you need to debug the FOX library itself.  Full debug executables are build by
+configuring with:
+
+
+        ./configure --enable-debug
+
+
+
+Release builds strip all debug information, asserts, and tracing, and generates
+optimized code.  The resulting library is the smallest/fastest, and this is the
+recommended setting for production code.  To build for release, use:
+
+
+        ./configure --enable-release
+
+
+
 
 Building Shared or Non-Shared Libraries.
 ========================================
@@ -62,79 +94,73 @@ You can build FOX either as shared library, static library, or both.  The
 default is both.  To build static library only [this may be necessary on
 certain systems where shared library support is lacking]:
 
-
-  ./configure --disable-shared
-
+        ./configure --disable-shared
 
 to build shared library only:
 
-
-  ./configure  --disable-static
-
-
-
-Building for Debug or Release.
-==============================
-
-FOX can be built with three levels of debugging.  Full debug executables are
-build by configuring with:
-
-
-  ./configure --enable-debug
-
-
-Building for debug will add debug symbols as needed by your debugger.  It also
-includes assert and tracing into the library.  This setting is recommended if
-you need to debug the FOX library itself.
-
-
-Normal builds [w/o any special arguments to configure] will include assert and
-trace statements into the library, but no debug symbols.  This mode compiles
-the fastest and allows for tracing of the FOX library.  This mode is the
-recommended way to develop FOX applications, as it allows for resource tracing
-and internal consistency checks.
-
-
-To build for release, use:
-
-
-  ./configure --enable-release
-
-
-Release builds strip all debug information, asserts, and tracing, and generates
-optimized code.  The resulting library is the smallest/fastest, and this is the
-recommended setting for production code.
+        ./configure  --disable-static
 
 
 
-For LINUX systems.
-==================
+Image File Format Support.
+==========================
 
-You will need to install the Mesa graphics library.  FOX is being developed
-on Mandrake 8.1 and Mesa 3.x.  It is known to work with older versions of RedHat
-or Mesa.  I recommend Mesa 2.6 or above.
+FOX needs external libraries for JPEG, TIFF, and PNG image format. On
+some systems, such as Linux, *BSD, these are likely already installed
+on your system.  On Windows or older UNIX systems, they need to be
+compiled and installed first.  See below on how to override default
+locations on UNIX systems.
 
-With regard to 3D, FOX may be build three ways:
+The JPEG support is provided by jpegsrc.v6b.tar.gz, the PNG support
+by libpng-1.2.5.tar.gz (or a newer version).  The TIFF support is
+in tiff-v3.5.7.tar.gz (or later).  All these files are available on
+ftp.fox-toolkit.org.
 
+After these libraries have been compiled and installed, compile FOX
+with HAVE_TIFF_H=1, HAVE_PNG_H=1, HAVE_JPEG_H=1.
 
-No 3D support whatsoever:
-
-  ./configure --with-opengl=no
-
-
-Linking against Mesa:
-
-  ./configure --with-opengl=mesa
-
-
-Linking against Native OpenGL:
-
-  ./configure --with-opengl=opengl
+The TIFF library may also need the JPEG library (JPEG is one of the
+tags supported in the TIFF format), so compile the JPEG library first.
+TIFF also needs the GNU compression library zlib (available as
+zlib-1.1.4.tar.gz (or later) on ftp.fox-toolkit.org).
 
 
-Under normal circumstances, configuration will find OpenGL if it is available
-on the machine, and will build the libraries to use it; on Linux, however,
-Mesa is detected, but the libraries are called libGL, and not libMesaGL.
+Compression Library Support.
+============================
+
+Compressed FXStream support is enabled by installing zlib-1.1.4.tar.gz
+and bzip2-1.0.2.tar.gz (or later), then compiling FOX with HAVE_ZLIB_H=1
+and HAVE_BZ2LIB_H=1, respectively.  You do not need to install them on
+Linux, *BSD, but you probably do on Windows and older UNIX systems.
+
+
+
+
+Overriding Libraries.
+=====================
+
+The default libraries determined by configurations are not always the ones you
+want to use; therefore, there is a mechanism to override the default choices
+of the configuration system.
+
+The override is done simply by setting environment variables prior to running
+configure; make sure config.cache is removed if you've ran configure before.
+
+Configure allows for the following overrides:
+
+
+        Environment Variable    Default value if not set
+        ====================    ========================
+
+        LIBJPEG                 -ljpeg
+        LIBPNG                  -lpng
+        LIBTIFF                 -ltiff
+        LIBZ                    -lz
+        LIBBZ2                  -lbz2
+        LIBGL                   -lopengl32      (win32)
+        LIBGLU                  -lglu32         (win32)
+        LIBGL                   -lGL            (unix)
+        LIBGLU                  -lGLU           (unix)
 
 
 
@@ -145,24 +171,22 @@ On SGI IRIX 6.x
 On SGI Systems where MIPS Pro C++ compiler is used instead of GCC, you will
 need to set the environment variable CXX to:
 
-
-  CC -n32
-
+        CC -n32
 
 and then run:
 
-  ./configure --with-opengl=opengl --x-libraries=/usr/lib32
+        ./configure --x-libraries=/usr/lib32
 
 
 or, you can also build FOX for the 64 bit model, and set CXX to:
 
 
-  CC -64
+        CC -64
 
 
 and run configure with:
 
-  ./configure --with-opengl=opengl --x-libraries=/usr/lib64
+        ./configure --x-libraries=/usr/lib64
 
 
 The first argument is only needed if you also have MESA on your system.
@@ -173,6 +197,7 @@ library from http://www.graphicswiz.com/png/ and compile it, and pass the
 appropriate flags for your compiler to find the new version.
 If compiling without PNG, pass the flag:  --disable-png; likewise, you
 can disable JPEG with the flag: --disable-jpeg.
+
 
 Using gcc 2.95.2 on IRIX 6.x (Thanks to Theo Venker)
 ====================================================
@@ -187,9 +212,27 @@ report this to the g++ maintainers. May be you will.
 
 The work-arround is:
 
-  export CC="g++ -D__LANGUAGE_C_PLUS_PLUS -D_LANGUAGE_C_PLUS_PLUS"
+        export CC="g++ -D__LANGUAGE_C_PLUS_PLUS -D_LANGUAGE_C_PLUS_PLUS"
 
 and then run configure.
+
+
+
+
+Building 64-bit code on Linux for x86-64 (AMD Opteron, Athlon64)
+================================================================
+
+Linux for AMD Opteron supports execution of both 32 and 64 bit code
+on the same system; consequenly, two sets of libraries are installed.
+To configure properly, you will need to let ld search the right set
+of directories.  Here's how:
+
+
+        export LDFLAGS="-L/usr/lib64 -L/usr/X11R6/lib64 -L/lib64"
+        ./configure <other options>
+
+
+No other issues are known at this time.
 
 
 
@@ -208,8 +251,8 @@ When compiling with gcc on Digital Unix, you may want to enable gradual
 underflow support for IEEE754 conformant floating point operations:
 
 
-    export CXX="gcc -mieee"
-    ./configure ....
+        export CXX="gcc -mieee"
+        ./configure ....
 
 
 If this flag is NOT set, floating point operations which yield underflows
@@ -229,13 +272,15 @@ conformant floating arithmetic.
 
 
 
-Compiling FOX with the SUN WorkShop Compiler
+Compiling FOX on the SUN
 ============================================
 
-To use the SUN compilers, simply configure FOX as follows:
+To use the SUN WorkShop Compiler compilers, simply configure
+FOX as follows:
 
   > cd fox
   > env CC=cc CXX=CC LD=CC ./configure
+
 
 
 Explanation:
@@ -250,8 +295,7 @@ To get around this problem, the configure script invokes 'CC' with the
 argument '-instances=global', thus including template instances in the
 object file instead of using a template repository. This works fine and
 'ar' can be used to build a static object library.
-
-Daniel Gehriger <gehriger@epfl.ch>
+Thanks to: Daniel Gehriger <gehriger@epfl.ch>
 
 
 
@@ -273,8 +317,24 @@ The "+DA2.0W" flag tells it to compile as 64 bit. The "+W740,749,863" option
 suppresses a few warning messages that we believe are safe to ignore ;)
 
 
-Windows 95/98/NT Builds
-=======================
+
+Compiling FOX using the HP/UX Itanium^2 aCC C++ Compiler
+========================================================
+
+Assuming the aCC is installed in the recommended place:
+
+
+    export CXX="aCC -fast -mt +DD64 -DHAVE_VSSCANF=1 -DHPOGL_SUPPRESS_FAST_API=1
+                   -I/opt/aCC/include -I/opt/graphics/OpenGL/include -L/lib/hpux64
+                   -L/usr/lib/hpux64 -L/opt/graphics/OpenGL/lib/hpux64"
+
+
+You may want to build the image support libraries also if you need them.
+
+
+
+Windows 95/98/ME/NT/XP Builds
+=============================
 
 We currently build FOX on a regular basis using Microsoft Visual C++ 6.0.
 There is also support for Mingw32, the latest net release of Cygwin (v1.1)
@@ -305,6 +365,18 @@ A few things to keep in mind:
     standard library. If you get some unresolved symbols at link time (esp.
     with names beginning with "Reg") try adding advapi32.lib to the list
     of libraries.
+
+ 4. To build or use FOX as a DLL, the symbol FOXDLL must be defined; for
+    building the core FOX library, FOXDLL_EXPORTS must also be defined.
+    If FOXDLL_EXPORTS must NOT be not defined when you are just using FOX
+    as a DLL.
+
+ 5. It is recommended that extension DLL's are compiled with FOXDLL but
+    that you define your own symbol to signify export; for example, the
+    CHART library is build with CHARTDLL_EXPORTS; since the CHART library
+    USES FOX, it must import the core FOX library, yet export its own
+    functions.
+
 
 
 Building with Microsoft Visual C++
@@ -368,8 +440,27 @@ flags. Also note that the DLL must be in your search path for the program to
 run!
 
 
+Building FOX using OpenWatcom C++
+=================================
+
+The OpenWatcom C++ compiler can be downloaded free of charge from:
+
+
+         http://www.openwatcom.org.
+
+
+To use the OpenWatcom "patch" with a fresh copy of FOX vx.y.zz, please make
+sure you've installed OpenWatcom C++ v1.0 and executed the SETVARS.BAT file
+found in the OpenWatcom installation directory.
+The Makefile.wc files rely on a Watcom environment variable, %WATCOM%, to
+determine the location of the COMCTL32.LIB file.  Use the Makefile provided
+in windows/watcom/Makefile.
+Thanks to mikael@lyngvig.org for this port.
+
+
+
 Building FOX using MinGW
-==========================
+========================
 
 Please see the standard FOX documentation file, "Developing Win32 GUI
 Applications Using FOX", available in this distribution as the file
@@ -396,14 +487,58 @@ It should compile out-of-the-box by typing:
 
 
 
+Building FOX on QNX
+===================
+
+
+For those interested in using FOX with QNX, before running configure for
+FOX on QNX it might be a good idea to run:
+
+        automake --add-missing
+        libtoolize -f
+
+Doing so will ensure that the configuration files needed to detect QNX
+are present.  
+
+Also, for now it is probably best to disable shared libraries when
+building FOX on QNX.  Programs linked with the FOX shared library will
+not run, but instead will segfault.  I plan on looking into a fix for
+this eventually.  
+
+Dustin Graves <dgraves@computer.org>
+
+
+
+Building on MAC OS-X
+====================
+
+
+When building on Mac OS-X, the following might help:
+
+
+        CXX="c++ -I/sw/include -L/sw/lib
+        ./configure <otheroptions>
+
+
+This might help; no guarantees, I can not test this myself....
+
+
+
 Image Formats in File Browser
 =============================
 
-By default, only GIF, BMP, and XPM icons are supported in the File and Directory
-Browsers.  This can be easily amended by the new compiler flag:
+By default, all available image formats are supported in the File and
+Directory Browsers.  Some of these image formats require external
+library support and consequently the size of your application executables
+may be reduced by limiting the supported formats to those supported in
+the core library; the image formats supported in the core library do
+not require external libraries and therefore supporting them does not
+incur any additional "code bloat".
+
+To support only the core image formats, pass the compiler flag:
 
 
-    -DALL_IMAGE_FORMATS=1
+        -DCORE_IMAGE_FORMATS=1
 
 
 This will enable all available image formats.  This will necessitate every FOX

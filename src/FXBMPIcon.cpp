@@ -3,7 +3,7 @@
 *                        B M P   I c o n   O b j e c t                          *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,12 +19,13 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXBMPIcon.cpp,v 1.14 2002/01/18 22:42:58 jeroen Exp $                    *
+* $Id: FXBMPIcon.cpp,v 1.26 2004/02/08 17:29:06 fox Exp $                       *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
 #include "fxdefs.h"
 #include "FXStream.h"
+#include "FXMemoryStream.h"
 #include "FXString.h"
 #include "FXSize.h"
 #include "FXPoint.h"
@@ -32,6 +33,7 @@
 #include "FXObject.h"
 #include "FXSettings.h"
 #include "FXRegistry.h"
+#include "FXHash.h"
 #include "FXApp.h"
 #include "FXId.h"
 #include "FXDrawable.h"
@@ -47,7 +49,12 @@
   - If that doesn't work, you can force a specific transparency color.
 */
 
+using namespace FX;
+
 /*******************************************************************************/
+
+namespace FX {
+
 
 // Object implementation
 FXIMPLEMENT(FXBMPIcon,FXIcon,NULL,0)
@@ -55,10 +62,10 @@ FXIMPLEMENT(FXBMPIcon,FXIcon,NULL,0)
 
 // Initialize nicely
 FXBMPIcon::FXBMPIcon(FXApp* a,const void *pix,FXColor clr,FXuint opts,FXint w,FXint h):
-  FXIcon(a,NULL,clr,opts&~IMAGE_ALPHA,w,h){
+  FXIcon(a,NULL,clr,opts,w,h){
   if(pix){
     FXMemoryStream ms;
-    ms.open((FXuchar*)pix,FXStreamLoad);
+    ms.open(FXStreamLoad,(FXuchar*)pix);
     loadPixels(ms);
     ms.close();
     }
@@ -66,22 +73,19 @@ FXBMPIcon::FXBMPIcon(FXApp* a,const void *pix,FXColor clr,FXuint opts,FXint w,FX
 
 
 // Save object to stream
-void FXBMPIcon::savePixels(FXStream& store) const {
-  FXASSERT(!(options&IMAGE_ALPHA));
-  fxsaveBMP(store,data,transp,width,height);
+FXbool FXBMPIcon::savePixels(FXStream& store) const {
+  if(!fxsaveBMP(store,data,width,height)) return FALSE;
+  return TRUE;
   }
 
 
 // Load object from stream
-void FXBMPIcon::loadPixels(FXStream& store){
-  FXColor clearcolor=0;
-  if(options&IMAGE_OWNED){FXFREE(&data);}
-  fxloadBMP(store,data,clearcolor,width,height);
-  if(!(options&IMAGE_ALPHACOLOR)) transp=clearcolor;
+FXbool FXBMPIcon::loadPixels(FXStream& store){
+  if(options&IMAGE_OWNED){ FXFREE(&data); }
+  if(!fxloadBMP(store,data,width,height)) return FALSE;
   if(options&IMAGE_ALPHAGUESS) transp=guesstransp();
-  if(transp==0) options|=IMAGE_OPAQUE;
-  options&=~IMAGE_ALPHA;
   options|=IMAGE_OWNED;
+  return TRUE;
   }
 
 
@@ -89,4 +93,4 @@ void FXBMPIcon::loadPixels(FXStream& store){
 FXBMPIcon::~FXBMPIcon(){
   }
 
-
+}

@@ -3,7 +3,7 @@
 *                               S i z e    C l a s s                            *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1994,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1994,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,11 +19,13 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXSize.h,v 1.3 2002/01/18 22:42:54 jeroen Exp $                          *
+* $Id: FXSize.h,v 1.8 2004/02/08 17:17:34 fox Exp $                             *
 ********************************************************************************/
 #ifndef FXSIZE_H
 #define FXSIZE_H
 
+
+namespace FX {
 
 /// Size
 class FXAPI FXSize {
@@ -68,5 +70,6 @@ public:
   friend FXAPI FXStream& operator>>(FXStream& store,FXSize& s);
   };
 
+}
 
 #endif

@@ -3,7 +3,7 @@
 *                      O p e n G L   S h a p e   O b j e c t                    *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1999,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1999,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * Contributed by: Angel-Ventura Mendo Gomez <ventura@labri.u-bordeaux.fr>       *
 *********************************************************************************
@@ -21,17 +21,18 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXGLShape.cpp,v 1.20.4.1 2003/07/27 01:15:11 fox Exp $                    *
+* $Id: FXGLShape.cpp,v 1.35 2004/02/20 16:29:39 fox Exp $                       *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
 #include "fxdefs.h"
 #include "FXStream.h"
-#include "FXVec.h"
-#include "FXHVec.h"
-#include "FXQuat.h"
-#include "FXHMat.h"
-#include "FXRange.h"
+#include "FXVec2f.h"
+#include "FXVec3f.h"
+#include "FXVec4f.h"
+#include "FXQuatf.h"
+#include "FXMat4f.h"
+#include "FXRangef.h"
 #include "FXString.h"
 #include "FXSize.h"
 #include "FXPoint.h"
@@ -39,6 +40,7 @@
 #include "FXRegistry.h"
 #include "FXAccelTable.h"
 #include "FXObjectList.h"
+#include "FXHash.h"
 #include "FXApp.h"
 #include "FXGLViewer.h"
 #include "FXGLShape.h"
@@ -47,8 +49,11 @@
 #define FACTOR  0.5f
 #define BIAS    0.002f
 
+using namespace FX;
 
 /*******************************************************************************/
+
+namespace FX {
 
 // Drop
 FXDEFMAP(FXGLShape) FXGLShapeMap[]={
@@ -77,55 +82,67 @@ FXIMPLEMENT_ABSTRACT(FXGLShape,FXGLObject,FXGLShapeMap,ARRAYNUMBER(FXGLShapeMap)
 
 // Serialization
 FXGLShape::FXGLShape(){
-
-  position=FXVec(0.0,0.0,0.0);
-
-  material[0].ambient=FXHVec(0.2f,0.2f,0.2f,1.0);      // Front facing material
-  material[0].diffuse=FXHVec(0.8f,0.8f,0.8f,1.0);
-  material[0].specular=FXHVec(1.0,1.0,1.0,1.0);
-  material[0].emission=FXHVec(0.0,0.0,0.0,1.0);
-  material[0].shininess=30.0;
-
-  material[1].ambient=FXHVec(0.2f,0.2f,0.2f,1.0);      // Back facing material
-  material[1].diffuse=FXHVec(0.8f,0.8f,0.8f,1.0);
-  material[1].specular=FXHVec(1.0,1.0,1.0,1.0);
-  material[1].emission=FXHVec(0.0,0.0,0.0,1.0);
+  position.x=0.0f;
+  position.y=0.0f;
+  position.z=0.0f;
+  material[0].ambient=FXVec4f(0.2f,0.2f,0.2f,1.0f);
+  material[0].diffuse=FXVec4f(0.8f,0.8f,0.8f,1.0f);
+  material[0].specular=FXVec4f(1.0f,1.0f,1.0f,1.0f);
+  material[0].emission=FXVec4f(0.0f,0.0f,0.0f,1.0f);
+  material[0].shininess=30.0f;
+  material[1].ambient=FXVec4f(0.2f,0.2f,0.2f,1.0f);
+  material[1].diffuse=FXVec4f(0.8f,0.8f,0.8f,1.0f);
+  material[1].specular=FXVec4f(1.0f,1.0f,1.0f,1.0f);
+  material[1].emission=FXVec4f(0.0f,0.0f,0.0f,1.0f);
   material[1].shininess=30.0;
-
-  range=FXRange(-1.0,1.0,-1.0,1.0,-1.0,1.0);       // Ample bounding box
-
+  range.lower.x=-1.0f;
+  range.lower.y=-1.0f;
+  range.lower.z=-1.0f;
+  range.upper.x= 1.0f;
+  range.upper.y= 1.0f;
+  range.upper.z= 1.0f;
   options=SHADING_SMOOTH|STYLE_SURFACE;
   }
 
 
 // Create initialized shape
 FXGLShape::FXGLShape(FXfloat x,FXfloat y,FXfloat z,FXuint opts){
-  position[0]=x;
-  position[1]=y;
-  position[2]=z;
-  material[0].ambient=FXHVec(0.2f,0.2f,0.2f,1.0);
-  material[0].diffuse=FXHVec(0.8f,0.8f,0.8f,1.0);
-  material[0].specular=FXHVec(1.0,1.0,1.0,1.0);
-  material[0].emission=FXHVec(0.0,0.0,0.0,1.0);
-  material[0].shininess=30.0;
-  material[1].ambient=FXHVec(0.2f,0.2f,0.2f,1.0);
-  material[1].diffuse=FXHVec(0.8f,0.8f,0.8f,1.0);
-  material[1].specular=FXHVec(1.0,1.0,1.0,1.0);
-  material[1].emission=FXHVec(0.0,0.0,0.0,1.0);
-  material[1].shininess=30.0;
-  range=FXRange(-1.0,1.0,-1.0,1.0,-1.0,1.0);
+  position.x=x;
+  position.y=y;
+  position.z=z;
+  material[0].ambient=FXVec4f(0.2f,0.2f,0.2f,1.0f);
+  material[0].diffuse=FXVec4f(0.8f,0.8f,0.8f,1.0f);
+  material[0].specular=FXVec4f(1.0f,1.0f,1.0f,1.0f);
+  material[0].emission=FXVec4f(0.0f,0.0f,0.0f,1.0f);
+  material[0].shininess=30.0f;
+  material[1].ambient=FXVec4f(0.2f,0.2f,0.2f,1.0f);
+  material[1].diffuse=FXVec4f(0.8f,0.8f,0.8f,1.0f);
+  material[1].specular=FXVec4f(1.0f,1.0f,1.0f,1.0f);
+  material[1].emission=FXVec4f(0.0f,0.0f,0.0f,1.0f);
+  material[1].shininess=30.0f;
+  range.lower.x=-1.0f;
+  range.lower.y=-1.0f;
+  range.lower.z=-1.0f;
+  range.upper.x= 1.0f;
+  range.upper.y= 1.0f;
+  range.upper.z= 1.0f;
   options=opts;
   }
 
 
 // Create initialized shape
 FXGLShape::FXGLShape(FXfloat x,FXfloat y,FXfloat z,FXuint opts,const FXMaterial& front,const FXMaterial& back){
-  position[0]=x;
-  position[1]=y;
-  position[2]=z;
+  position.x=x;
+  position.y=y;
+  position.z=z;
   material[0]=front;
   material[1]=back;
-  range=FXRange(-1.0,1.0,-1.0,1.0,-1.0,1.0);
+  range.lower.x=-1.0f;           
+  range.lower.y=-1.0f;
+  range.lower.z=-1.0f;
+  range.upper.x= 1.0f;
+  range.upper.y= 1.0f;
+  range.upper.z= 1.0f;
   options=opts;
   }
 
@@ -157,7 +174,7 @@ FXbool FXGLShape::canDelete() const { return TRUE; }
 
 // Handle drag-and-drop drop
 long FXGLShape::onDNDDrop(FXObject* sender,FXSelector,void*){
-  FXushort *clr; FXuint len; FXHVec color;
+  FXushort *clr; FXuint len; FXVec4f color;
   if(((FXWindow*)sender)->getDNDData(FROM_DRAGNDROP,FXWindow::colorType,(FXuchar*&)clr,len)){
     color[0]=clr[0]/65535.0f;
     color[1]=clr[1]/65535.0f;
@@ -182,7 +199,7 @@ long FXGLShape::onDNDMotion(FXObject*,FXSelector,void*){
 
 // We were asked about tip text
 long FXGLShape::onQueryTip(FXObject* sender,FXSelector,void*){
-  sender->handle(this,MKUINT(FXWindow::ID_SETSTRINGVALUE,SEL_COMMAND),(void*)&tip);
+  sender->handle(this,FXSEL(SEL_COMMAND,FXWindow::ID_SETSTRINGVALUE),(void*)&tip);
   return 1;
   }
 
@@ -210,26 +227,23 @@ long FXGLShape::onCmdShadeSmooth(FXObject*,FXSelector,void*){
   }
 
 // Update shading off button
-long FXGLShape::onUpdShadeOff(FXObject* sender,FXSelector,void* ptr){
-  FXuint msg = (options&(SHADING_FLAT|SHADING_SMOOTH))? FXWindow::ID_UNCHECK : FXWindow::ID_CHECK;
-  sender->handle(this,MKUINT(FXWindow::ID_ENABLE,SEL_COMMAND),ptr);
-  sender->handle(this,MKUINT(msg,SEL_COMMAND),ptr);
+long FXGLShape::onUpdShadeOff(FXObject* sender,FXSelector,void*){
+  sender->handle(this,FXSEL(SEL_COMMAND,FXWindow::ID_ENABLE),NULL);
+  sender->handle(this,(options&(SHADING_FLAT|SHADING_SMOOTH))?FXSEL(SEL_COMMAND,FXWindow::ID_UNCHECK):FXSEL(SEL_COMMAND,FXWindow::ID_CHECK),NULL);
   return 1;
   }
 
 // Update shading on button
-long FXGLShape::onUpdShadeOn(FXObject* sender,FXSelector,void* ptr){
-  FXuint msg = (options&SHADING_FLAT)? FXWindow::ID_CHECK : FXWindow::ID_UNCHECK;
-  sender->handle(this,MKUINT(FXWindow::ID_ENABLE,SEL_COMMAND),ptr);
-  sender->handle(this,MKUINT(msg,SEL_COMMAND),ptr);
+long FXGLShape::onUpdShadeOn(FXObject* sender,FXSelector,void*){
+  sender->handle(this,FXSEL(SEL_COMMAND,FXWindow::ID_ENABLE),NULL);
+  sender->handle(this,(options&SHADING_FLAT)?FXSEL(SEL_COMMAND,FXWindow::ID_CHECK):FXSEL(SEL_COMMAND,FXWindow::ID_UNCHECK),NULL);
   return 1;
   }
 
 // Update shading smooth button
-long FXGLShape::onUpdShadeSmooth(FXObject* sender,FXSelector,void* ptr){
-  FXuint msg = (options&SHADING_SMOOTH)? FXWindow::ID_CHECK : FXWindow::ID_UNCHECK;
-  sender->handle(this,MKUINT(FXWindow::ID_ENABLE,SEL_COMMAND),ptr);
-  sender->handle(this,MKUINT(msg,SEL_COMMAND),ptr);
+long FXGLShape::onUpdShadeSmooth(FXObject* sender,FXSelector,void*){
+  sender->handle(this,FXSEL(SEL_COMMAND,FXWindow::ID_ENABLE),NULL);
+  sender->handle(this,(options&SHADING_SMOOTH)?FXSEL(SEL_COMMAND,FXWindow::ID_CHECK):FXSEL(SEL_COMMAND,FXWindow::ID_UNCHECK),NULL);
   return 1;
   }
 
@@ -237,8 +251,8 @@ long FXGLShape::onUpdShadeSmooth(FXObject* sender,FXSelector,void* ptr){
 // Drag shape around
 FXbool FXGLShape::drag(FXGLViewer* viewer,FXint fx,FXint fy,FXint tx,FXint ty){
   FXfloat zz=viewer->worldToEyeZ(position);
-  FXVec wf=viewer->eyeToWorld(viewer->screenToEye(fx,fy,zz));
-  FXVec wt=viewer->eyeToWorld(viewer->screenToEye(tx,ty,zz));
+  FXVec3f wf=viewer->eyeToWorld(viewer->screenToEye(fx,fy,zz));
+  FXVec3f wt=viewer->eyeToWorld(viewer->screenToEye(tx,ty,zz));
   position+=wt-wf;
   return TRUE;
   }
@@ -246,9 +260,11 @@ FXbool FXGLShape::drag(FXGLViewer* viewer,FXint fx,FXint fy,FXint tx,FXint ty){
 
 // Draw
 void FXGLShape::draw(FXGLViewer* viewer){
-#ifdef HAVE_OPENGL
+#ifdef HAVE_GL_H
 
   // Save attributes and matrix
+//  glPushAttrib(GL_ENABLE_BIT|GL_CURRENT_BIT|GL_LIGHTING_BIT|GL_POINT_BIT|GL_LINE_BIT|GL_POLYGON_BIT);
+//  glPushAttrib(GL_ENABLE_BIT|GL_CURRENT_BIT|GL_LIGHTING_BIT|GL_POINT_BIT|GL_LINE_BIT);
   glPushAttrib(GL_CURRENT_BIT|GL_LIGHTING_BIT|GL_POINT_BIT|GL_LINE_BIT);
   glPushMatrix();
 
@@ -392,35 +408,35 @@ void FXGLShape::hit(FXGLViewer* viewer){
 
 
 // Get bounding box
-void FXGLShape::bounds(FXRange& box){
-  box[0][0]=position[0]+range[0][0]; box[0][1]=position[0]+range[0][1];
-  box[1][0]=position[1]+range[1][0]; box[1][1]=position[1]+range[1][1];
-  box[2][0]=position[2]+range[2][0]; box[2][1]=position[2]+range[2][1];
+void FXGLShape::bounds(FXRangef& box){
+  box.lower.x=position.x+range.lower.x; box.upper.x=position.x+range.upper.x;
+  box.lower.y=position.y+range.lower.y; box.upper.y=position.y+range.upper.y;
+  box.lower.z=position.z+range.lower.z; box.upper.z=position.z+range.upper.z;
   }
 
 
 // Draw a box
 void FXGLShape::drawbox(){
-#ifdef HAVE_OPENGL
+#ifdef HAVE_GL_H
   glBegin(GL_LINE_LOOP);
-  glVertex3f(range[0][1], range[1][0], range[2][0]);
-  glVertex3f(range[0][1], range[1][0], range[2][1]);
-  glVertex3f(range[0][0], range[1][0], range[2][1]);
-  glVertex3f(range[0][0], range[1][1], range[2][1]);
-  glVertex3f(range[0][1], range[1][1], range[2][1]);
-  glVertex3f(range[0][1], range[1][1], range[2][0]);
-  glVertex3f(range[0][0], range[1][1], range[2][0]);
-  glVertex3f(range[0][0], range[1][0], range[2][0]);
+  glVertex3f(range.upper.x, range.lower.y, range.lower.z);
+  glVertex3f(range.upper.x, range.lower.y, range.upper.z);
+  glVertex3f(range.lower.x, range.lower.y, range.upper.z);
+  glVertex3f(range.lower.x, range.upper.y, range.upper.z);
+  glVertex3f(range.upper.x, range.upper.y, range.upper.z);
+  glVertex3f(range.upper.x, range.upper.y, range.lower.z);
+  glVertex3f(range.lower.x, range.upper.y, range.lower.z);
+  glVertex3f(range.lower.x, range.lower.y, range.lower.z);
   glEnd();
   glBegin(GL_LINES);
-  glVertex3f(range[0][0], range[1][0], range[2][0]);
-  glVertex3f(range[0][0], range[1][0], range[2][1]);
-  glVertex3f(range[0][0], range[1][1], range[2][0]);
-  glVertex3f(range[0][0], range[1][1], range[2][1]);
-  glVertex3f(range[0][1], range[1][0], range[2][0]);
-  glVertex3f(range[0][1], range[1][1], range[2][0]);
-  glVertex3f(range[0][1], range[1][0], range[2][1]);
-  glVertex3f(range[0][1], range[1][1], range[2][1]);
+  glVertex3f(range.lower.x, range.lower.y, range.lower.z);
+  glVertex3f(range.lower.x, range.lower.y, range.upper.z);
+  glVertex3f(range.lower.x, range.upper.y, range.lower.z);
+  glVertex3f(range.lower.x, range.upper.y, range.upper.z);
+  glVertex3f(range.upper.x, range.lower.y, range.lower.z);
+  glVertex3f(range.upper.x, range.upper.y, range.lower.z);
+  glVertex3f(range.upper.x, range.lower.y, range.upper.z);
+  glVertex3f(range.upper.x, range.upper.y, range.upper.z);
   glEnd();
 #endif
   }
@@ -428,16 +444,16 @@ void FXGLShape::drawbox(){
 
 // Draw handles
 void FXGLShape::drawhandles(){
-#ifdef HAVE_OPENGL
+#ifdef HAVE_GL_H
   glBegin(GL_POINTS);
-  glVertex3f(range[0][0], range[1][0], range[2][0]);
-  glVertex3f(range[0][0], range[1][0], range[2][1]);
-  glVertex3f(range[0][0], range[1][1], range[2][0]);
-  glVertex3f(range[0][0], range[1][1], range[2][1]);
-  glVertex3f(range[0][1], range[1][0], range[2][0]);
-  glVertex3f(range[0][1], range[1][0], range[2][1]);
-  glVertex3f(range[0][1], range[1][1], range[2][0]);
-  glVertex3f(range[0][1], range[1][1], range[2][1]);
+  glVertex3f(range.lower.x, range.lower.y, range.lower.z);
+  glVertex3f(range.lower.x, range.lower.y, range.upper.z);
+  glVertex3f(range.lower.x, range.upper.y, range.lower.z);
+  glVertex3f(range.lower.x, range.upper.y, range.upper.z);
+  glVertex3f(range.upper.x, range.lower.y, range.lower.z);
+  glVertex3f(range.upper.x, range.lower.y, range.upper.z);
+  glVertex3f(range.upper.x, range.upper.y, range.lower.z);
+  glVertex3f(range.upper.x, range.upper.y, range.upper.z);
   glEnd();
 #endif
   }
@@ -452,7 +468,7 @@ long FXGLShape::onCmdFrontMaterial(FXObject*,FXSelector,void *ptr){
 
 // Update material editor
 long FXGLShape::onUpdFrontMaterial(FXObject *sender,FXSelector,void*){
-  sender->handle(this,MKUINT(FXWindow::ID_SETVALUE,SEL_COMMAND),(void *)&material[0]);
+  sender->handle(this,FXSEL(SEL_COMMAND,FXWindow::ID_SETVALUE),(void*)&material[0]);
   return 1;
   }
 
@@ -466,7 +482,7 @@ long FXGLShape::onCmdBackMaterial(FXObject*,FXSelector,void *ptr){
 
 // Update material editor
 long FXGLShape::onUpdBackMaterial(FXObject *sender,FXSelector,void*){
-  sender->handle(this,MKUINT(FXWindow::ID_SETVALUE,SEL_COMMAND),(void *)&material[1]);
+  sender->handle(this,FXSEL(SEL_COMMAND,FXWindow::ID_SETVALUE),(void*)&material[1]);
   return 1;
   }
 
@@ -485,8 +501,7 @@ void FXGLShape::getMaterial(FXint side,FXMaterial& mtl) const {
 
 // Drawing style toggles
 long FXGLShape::onCmdDrawingStyle(FXObject*,FXSelector sel,void*){
-  FXuint sid=SELID(sel);
-  switch(sid){
+  switch(FXSELID(sel)){
     case ID_STYLE_SURFACE: options^=STYLE_SURFACE; break;
     case ID_STYLE_POINTS: options^=STYLE_POINTS; break;
     case ID_STYLE_WIREFRAME: options^=STYLE_WIREFRAME; break;
@@ -498,16 +513,15 @@ long FXGLShape::onCmdDrawingStyle(FXObject*,FXSelector sel,void*){
 
 // Update drawing style toggles
 long FXGLShape::onUpdDrawingStyle(FXObject *sender,FXSelector sel,void*){
-  FXuint msg=FXWindow::ID_UNCHECK;
-  FXuint sid=SELID(sel);
-  switch(sid){
-    case ID_STYLE_SURFACE: if(options&STYLE_SURFACE) msg=FXWindow::ID_CHECK; break;
-    case ID_STYLE_POINTS: if(options&STYLE_POINTS) msg=FXWindow::ID_CHECK; break;
-    case ID_STYLE_WIREFRAME: if(options&STYLE_WIREFRAME) msg=FXWindow::ID_CHECK; break;
-    case ID_STYLE_BOUNDINGBOX: if(options&STYLE_BOUNDBOX) msg=FXWindow::ID_CHECK; break;
+  FXSelector msg=FXSEL(SEL_COMMAND,FXWindow::ID_UNCHECK);
+  switch(FXSELID(sel)){
+    case ID_STYLE_SURFACE: if(options&STYLE_SURFACE) msg=FXSEL(SEL_COMMAND,FXWindow::ID_CHECK); break;
+    case ID_STYLE_POINTS: if(options&STYLE_POINTS) msg=FXSEL(SEL_COMMAND,FXWindow::ID_CHECK); break;
+    case ID_STYLE_WIREFRAME: if(options&STYLE_WIREFRAME) msg=FXSEL(SEL_COMMAND,FXWindow::ID_CHECK); break;
+    case ID_STYLE_BOUNDINGBOX: if(options&STYLE_BOUNDBOX) msg=FXSEL(SEL_COMMAND,FXWindow::ID_CHECK); break;
     }
-  sender->handle(this,MKUINT(msg,SEL_COMMAND),NULL);
-  sender->handle(this,MKUINT(FXWindow::ID_ENABLE,SEL_COMMAND),NULL);
+  sender->handle(this,msg,NULL);
+  sender->handle(this,FXSEL(SEL_COMMAND,FXWindow::ID_ENABLE),NULL);
   return 1;
   }
 
@@ -550,3 +564,5 @@ void FXGLShape::load(FXStream& store){
   store >> options;
   store >> tip;
   }
+
+}

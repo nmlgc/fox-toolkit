@@ -3,7 +3,7 @@
 *                       C o m b o   B o x   W i d g e t                         *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXComboBox.h,v 1.22 2002/02/11 06:38:02 fox Exp $                        *
+* $Id: FXComboBox.h,v 1.33 2004/02/08 17:17:33 fox Exp $                        *
 ********************************************************************************/
 #ifndef FXCOMBOBOX_H
 #define FXCOMBOBOX_H
@@ -28,6 +28,7 @@
 #include "FXPacker.h"
 #endif
 
+namespace FX {
 
 
 // ComboBox styles
@@ -59,13 +60,13 @@ protected:
   FXPopup       *pane;
 protected:
   FXComboBox(){}
-  virtual void layout();
 private:
   FXComboBox(const FXComboBox&);
   FXComboBox &operator=(const FXComboBox&);
 public:
   long onFocusUp(FXObject*,FXSelector,void*);
   long onFocusDown(FXObject*,FXSelector,void*);
+  long onFocusSelf(FXObject*,FXSelector,void*);
   long onTextButton(FXObject*,FXSelector,void*);
   long onTextChanged(FXObject*,FXSelector,void*);
   long onTextCommand(FXObject*,FXSelector,void*);
@@ -81,7 +82,7 @@ public:
 public:
 
   /// Constructor
-  FXComboBox(FXComposite *p,FXint cols,FXint nvis,FXObject* tgt=NULL,FXSelector sel=0,FXuint opts=COMBOBOX_NORMAL,FXint x=0,FXint y=0,FXint w=0,FXint h=0,FXint pl=DEFAULT_PAD,FXint pr=DEFAULT_PAD,FXint pt=DEFAULT_PAD,FXint pb=DEFAULT_PAD);
+  FXComboBox(FXComposite *p,FXint cols,FXObject* tgt=NULL,FXSelector sel=0,FXuint opts=COMBOBOX_NORMAL,FXint x=0,FXint y=0,FXint w=0,FXint h=0,FXint pl=DEFAULT_PAD,FXint pr=DEFAULT_PAD,FXint pt=DEFAULT_PAD,FXint pb=DEFAULT_PAD);
 
   /// Create server-side resources
   virtual void create();
@@ -103,6 +104,9 @@ public:
 
   /// Return default height
   virtual FXint getDefaultHeight();
+
+  /// Perform layout
+  virtual void layout();
 
   /// Return true if combobox is editable
   FXbool isEditable() const;
@@ -141,25 +145,34 @@ public:
   FXint getCurrentItem() const;
 
   /// Return the item at the given index
-  FXString retrieveItem(FXint index) const;
+  FXString getItem(FXint index) const;
 
   /// Replace the item at index
-  void replaceItem(FXint index,const FXString& text,void* ptr=NULL);
+  FXint setItem(FXint index,const FXString& text,void* ptr=NULL);
 
   /// Insert a new item at index
-  void insertItem(FXint index,const FXString& text,void* ptr=NULL);
+  FXint insertItem(FXint index,const FXString& text,void* ptr=NULL);
 
   /// Append an item to the list
-  void appendItem(const FXString& text,void* ptr=NULL);
+  FXint appendItem(const FXString& text,void* ptr=NULL);
 
   /// Prepend an item to the list
-  void prependItem(const FXString& text,void* ptr=NULL);
+  FXint prependItem(const FXString& text,void* ptr=NULL);
+
+  /// Move item from oldindex to newindex
+  FXint moveItem(FXint newindex,FXint oldindex);
 
   /// Remove this item from the list
   void removeItem(FXint index);
 
   /// Remove all items from the list
   void clearItems();
+
+  /**
+  * Search items for item by name, starting from start item; the
+  * flags argument controls the search direction, and case sensitivity.
+  */
+  FXint findItem(const FXString& text,FXint start=-1,FXuint flags=SEARCH_FORWARD|SEARCH_WRAP) const;
 
   /// Set text for specified item
   void setItemText(FXint index,const FXString& text);
@@ -243,6 +256,6 @@ public:
   virtual ~FXComboBox();
   };
 
-
+}
 
 #endif

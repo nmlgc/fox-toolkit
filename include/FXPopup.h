@@ -3,7 +3,7 @@
 *                     P o p u p   W i n d o w   W i d g e t                     *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1998,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXPopup.h,v 1.26 2002/01/18 22:42:54 jeroen Exp $                        *
+* $Id: FXPopup.h,v 1.32 2004/02/08 17:17:34 fox Exp $                           *
 ********************************************************************************/
 #ifndef FXPOPUP_H
 #define FXPOPUP_H
@@ -28,6 +28,7 @@
 #include "FXShell.h"
 #endif
 
+namespace FX {
 
 
 /// Popup internal orientation
@@ -42,16 +43,18 @@ enum {
 /// Popup window
 class FXAPI FXPopup : public FXShell {
   FXDECLARE(FXPopup)
+private:
+  FXPopup  *prevActive;         // Popup below this one in stack
+  FXPopup  *nextActive;         // Popup above this one in stack
 protected:
-  FXWindow *grabowner;            // Window which will get grabbed when outside
+  FXWindow *grabowner;          // Window which will get grabbed when outside
   FXColor   baseColor;
   FXColor   hiliteColor;
   FXColor   shadowColor;
   FXColor   borderColor;
   FXint     border;
 protected:
-  FXPopup(){}
-  virtual void layout();
+  FXPopup();
   virtual FXbool doesOverrideRedirect() const;
   void drawBorderRectangle(FXDCWindow& dc,FXint x,FXint y,FXint w,FXint h);
   void drawRaisedRectangle(FXDCWindow& dc,FXint x,FXint y,FXint w,FXint h);
@@ -102,11 +105,26 @@ public:
   /// Return the default height of this window
   virtual FXint getDefaultHeight();
 
+  /// Perform layout
+  virtual void layout();
+
+  /// Return a pointer to the prior active popup
+  FXPopup* getPrevActive() const { return prevActive; }
+
+  /// Return a pointer to the next active popup
+  FXPopup* getNextActive() const { return nextActive; }
+
   /// Move the focus to this window
   virtual void setFocus();
 
   /// Remove the focus from this window
   virtual void killFocus();
+
+  /// Show this window
+  virtual void show();
+
+  /// Hide this window
+  virtual void hide();
 
   /// Change frame style
   void setFrameStyle(FXuint style);
@@ -174,5 +192,6 @@ public:
   virtual ~FXPopup();
   };
 
+}
 
 #endif

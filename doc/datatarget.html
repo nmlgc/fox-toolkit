@@ -1,322 +1,271 @@
 <html>
 <head>
-<LINK REL="stylesheet" HREF="styles.css" TYPE="text/css">
-<title>FOX-Toolkit</title>
-<!-- HTML Copyright 2001 Paul Laufer -->
+<link rel="stylesheet" href="page.css" type="text/css">
+<title>Documentation: DataTargets</title>
 </head>
+<body bgcolor=#ffffff link=#990033 vlink=#990033 alink=#990033 text=#000000>
 
-<body bgcolor=#ffffff link=#990033 vlink=#4a73ad alink=#ed004f text=#000000>
-
-<!--header-->
-<table align=center border=0 cellpadding=0 cellspacing=0 width=100% >
-  <tr><td bgcolor=silver colspan=5 align=right height=50><img src=art/oul_grey.gif align=left valign=top width=8 height=8><img src=art/foxlogo.png valign=bottom alt="FOX Toolkit" height=50 width=500 border=0 ></td>
-  	<td bgcolor=#557faa valign=top align=right><img src=art/our.gif width=8 height=8></td>
-  </tr>
-<!-- end header -->
-  <tr>
-    <td bgcolor=#557faa colspan=2 valign=top align=left>&nbsp;</td>
-    <td bgcolor=#557faa colspan=3><font color=#ffffff size=+1><center>
-<!-- Page Title -->
-Documentation: DataTargets
-<!-- End Page Title -->
-    </center></font></td>
-    <td bgcolor=#557faa valign=top align=right>&nbsp;</td>
-  </tr>
-  <tr>
-    <td bgcolor=#557faa colspan=2>&nbsp;</td>
-    <td bgcolor=#ffffff valign=top align=left><img src=art/iul.gif width=8 height=8></td>
-    <td bgcolor=#ffffff>&nbsp;</td>
-    <td bgcolor=#ffffff valign=top align=right><img src=art/iur.gif width=8 height=8></td>
-    <td bgcolor=#557faa width=15>&nbsp;</td>
-  </tr>
-  <tr>
-    <td width=8 bgcolor=#557faa>&nbsp;</td>
-    <td valign=top bgcolor=#557faa link=#ffffff width=150>
-
-<!-- start navbar content -->
-
-	<a href=fox.html><font color=#ffffff>Home</font></a><br>
-	<a href=news.html><font color=#ffffff>News</font></a><br>
-	<a href=download.html><font color=#ffffff>Download</font></a><br>
-	<a href=goals.html><font color=#ffffff>Goals & Approach</font></a><br>
-	<a href=doc.html><font color=#ffffff>Documentation</font></a><br>
-	<a href=faq.html><font color=#ffffff>FAQ</font></a><br>
-	<a href=rex.html><font color=#ffffff>FXRex</font></a><br>
-	<a href=screenshots.html><font color=#ffffff>Screenshots</font></a><br>
-	<br>
-	<a href=adie.html><font color=#ffffff>Adie</font></a><br>
-	<a href=pathfinder.html><font color=#ffffff>PathFinder</font></a><br>
-	<a href=calc.html><font color=#ffffff>FOX Calculator</font></a><br>
-	<br>
-	<a href=projects.html><font color=#ffffff>Projects</font></a><br>
-	<br>
-	<a href='http://fxpy.sourceforge.net'><font color=#ffffff>FXPy</font></a><br>
-	<a href='http://fxruby.sourceforge.net'><font color=#ffffff>FXRuby</font></a><br>
-	<a href='http://eiffelfox.sourceforge.net'><font color=#ffffff>EiffelFox</font></a><br>
-        <a href='http://eevolved.com/foxhole/'><font color=#ffffff>The FOX Hole</font></a><br>
-        <a href='http://takahr.dhis.portside.net/cgi-bin/rwiki.cgi?cmd=view;name=FOX+FAQ'><font color=#ffffff>Japanese Docs</font></a><br>
-	<br>
-	<center>
-	<a href="http://www.eff.org/br"><img SRC="art/freespeach.gif" border=0></a>
-	<p>
-	<a href="http://www.slashdot.org"><img SRC="art/slingerzbutton1.gif" border=0></a>
-	</center>
-
-
-
-<!-- end navbar content -->
-
-    </td>
-    <td bgcolor=#ffffff>&nbsp;</td>
-    <td valign=top>
-
-<!-- start main window content -->
-<center><img src='art/foxstart.png'>
-<BR><B>Documentation: DataTargets</B>
-</center>
-<p>
-<p>
-<b>Using FXDataTarget</b>
-<hr>
-<font color="#000000">A common application of GUI development is the
+<!---- TOPIC TITLE WITH LOGO--->
+<table border=0 cellpadding= cellspacing=2 width=100% ><tr><td><a href='http://www.fox-toolkit.org' target=_top><img src='art/foxlogo_small.jpg' border=0></a></td><td width=100% valign=bottom id="HEADLINE"><b>
+Documentation: DataTargets  <A href='datatarget.html' target="_top" align=left><font  size=-2>[Remove Frame]</font></a>
+<br><img src='art/line.gif' width=100% height=1></b></td></tr></table>
+</p>
+<!--- TOPIC TITLE WITH LOGO --->
+<ul>
+<p>A common application of GUI development is the
 collection of inputs from the user in the form of booleans, numbers and
 strings of text.&nbsp; This usually involves building a dialog panel with
 a collection of controls such as text fields, sliders, and other input
 controls.&nbsp; The GUI developer then would write callback handler functions
 so as to be notified when any of these controls changes value.&nbsp; Often,
 the developer is forced to fill up these controls to reflect the initial
-suggested values.</font>
-<p><font color="#000000">This process is common enough that we have found
+suggested values.</p>
+
+<p>This process is common enough that we have found
 that it makes sense to support it with a much more declarative programming
 style:-&nbsp; instead of writing many callback routines, and routines to
 preset the GUI controls with their initial value, we have implemented a
-more easy to use method in the form of the FOX FXDataTarget class.</font>
-<p><font color="#000000">The FXDataTarget acts as an intermediary between
+more easy to use method in the form of the FOX FXDataTarget class.
+
+<p>The FXDataTarget acts as an intermediary between
 a program variable, such as an integer or string, and a FOX widget such
 as a FXTextField or FXSlider.&nbsp;&nbsp; The FXDataTarget works by associating
 a variable in the application code with one or more control widgets in
 the GUI.&nbsp; Several controls may be connected to the same data target,
-although each data target is associated with only one variable at a time.</font>
-<p><font color="#000000">A FXDataTarget forms a bi-directional channel
-through which a GUI control can communicate with a variable in an application
+although each data target is associated with only one variable at a time.</p>
+
+<p>A FXDataTarget forms a bi-directional channel through which a GUI control can communicate
+with a variable in an application
 program.&nbsp; Thus, once the GUI is created and connected via the FXDataTarget,
 the GUI controls will automatically display the current value of that variable,
 and when the user starts interacting with a control, the variable will
 be automatically changed.&nbsp; Moreover, if several GUI controls are connected
 to one single FXDataTarget, each of these controls will automatically update
-when the variable has been changed.</font>
+when the variable has been changed.</p>
+</ul>
 
+<!--- TOPIC TITLE -->
 <p>
-<p>
-<b>Example Usage</b>
-<hr>
-<font color="#000000">Suppose you are writing a program to enter personnel
+<table width=100% cellpadding=0 cellspacing=2><tr><td width=100% valign=bottom id=HEADLINE><b>
+Example Usage
+<br><img src='art/line.gif' width=100% height=1></b></td></tr></table>
+</p>
+<!--- TOPIC TITLE -->
+<ul>
+
+<p>Suppose you are writing a program to enter personnel
 data by means of a dialog.&nbsp; One or the first things you may want to
-do is to design a data structure which is to hold this information:</font>
-<br>&nbsp;
-<center><table BORDER CELLSPACING=0 COLS=1 WIDTH="90%" BGCOLOR="#FFF8E1" NOSAVE >
-<tr>
-<td><tt>// Employee record</tt>
-<br><tt>struct Employee {</tt>
-<br><tt>&nbsp; FXString name;</tt>
-<br><tt>&nbsp; FXint&nbsp;&nbsp;&nbsp; number;</tt>
-<br><tt>&nbsp; FXdouble salary;</tt>
-<br><tt>&nbsp; FXString address;</tt>
-<br><tt>&nbsp; };</tt></td>
-</tr>
-</table></center>
+do is to design a data structure which is to hold this information:</p>
+
+<pre>
+// Employee record
+struct Employee {
+  FXString name;
+  FXint    number;
+  FXdouble salary;
+  FXString address;
+  };
+</pre>
+
 
 <p>Lets make a dialog box which obtains this information from the user,
 and of course we'll use the FXDataTargets to eliminate as much coding as
 possible; first comes the header file (we'll omit some details in the interest
-of brevity):
-<br>&nbsp;
-<br>&nbsp;
-<center><table BORDER CELLSPACING=0 COLS=1 WIDTH="90%" BGCOLOR="#FFF8E1" NOSAVE >
-<tr>
-<td><tt>/* EmployeeEntry.h */</tt>
-<p><tt>// Employee Information Entry Dialog</tt>
-<br><tt>class EmployeeEntry : public FXDialogBox {</tt>
-<br><tt>&nbsp; FXDECLARE(EmployeeEntry)</tt>
-<br><tt>public:</tt>
-<br><tt>&nbsp; Employee record;&nbsp;&nbsp; // Record we'll be modifying</tt>
-<br><tt>private:</tt>
-<br><tt>&nbsp; FXDataTarget nameTarget;</tt>
-<br><tt>&nbsp; FXDataTarget numberTarget;</tt>
-<br><tt>&nbsp; FXDataTarget salaryTarget;</tt>
-<br><tt>&nbsp; FXDataTarget addressTarget;</tt>
-<br><tt>public:</tt>
-<br><tt>&nbsp; EmployeeEntry(FXWindow* owner);</tt>
-<br><tt>&nbsp; };</tt></td>
-</tr>
-</table></center>
+of brevity):</p>
 
-<p>Well, that's basically it.&nbsp; Now for the implementation file:
-<br>&nbsp;
-<br>&nbsp;
-<center><table BORDER CELLSPACING=0 COLS=1 WIDTH="90%" BGCOLOR="#FFF8E1" NOSAVE >
-<tr>
-<td><tt>/* EmployeeEntry.cpp */</tt>
-<br><tt>#include "EmployeeEntry.h"</tt>
-<p><tt>FXIMPLEMENT(EmployeeEntry,FXDialogBox,NULL,0)</tt>
-<p><tt>EmployeeEntry::EmployeeEntry(FXWindow* owner):</tt>
-<br><tt>&nbsp; FXDialogBox(owner,"Enter Employee Information"),</tt>
-<br><tt>&nbsp; nameTarget(record.name),</tt>
-<br><tt>&nbsp; numberTarget(record.number),</tt>
-<br><tt>&nbsp; salaryTarget(record.salary),</tt>
-<br><tt>&nbsp; addressTarget(record.address){</tt>
-<p><tt>&nbsp; ...</tt>
-<br><tt>&nbsp; new FXTextField(frame,5,&amp;nameTarget,FXDataTarget::ID_VALUE,...);</tt>
-<br><tt>&nbsp; new FXSpinner(frame,5,&amp;numberTarget_target,FXDataTarget::ID_VALUE,...);</tt>
-<br><tt>&nbsp; new FXTextField(frame,5,&amp;addressTarget,FXDataTarget::ID_VALUE,...);</tt>
-<br><tt>&nbsp; new FXSlider(frame,&amp;salaryTarget,FXDataTarget::ID_VALUE,...);</tt>
-<br><tt>&nbsp; new FXTextField(frame,5,&amp;salaryTarget,FXDataTarget::ID_VALUE,...);</tt>
-<br><tt>&nbsp; ...</tt>
-<br><tt>&nbsp; new FXButton(frame,"Cancal",NULL,this,FXDialogBox::ID_CANCEL,...);</tt>
-<br><tt>&nbsp; new FXButton(frame,"Accept",NULL,this,FXDialogBox::ID_ACCEPT,...);</tt>
-<br><tt>&nbsp; }</tt></td>
-</tr>
-</table></center>
+<pre>
+/* EmployeeEntry.h */
+
+// Employee Information Entry Dialog
+class EmployeeEntry : public FXDialogBox {
+  FXDECLARE(EmployeeEntry)
+public:
+  Employee record;   // Record we'll be modifying
+private:
+  FXDataTarget nameTarget;
+  FXDataTarget numberTarget;
+  FXDataTarget salaryTarget;
+  FXDataTarget addressTarget;
+public:
+  EmployeeEntry(FXWindow* owner);
+  };
+
+</pre>
+
+
+<p>Well, that's basically it.&nbsp; Now for the implementation file:</p>
+
+<pre>
+/* EmployeeEntry.cpp */
+#include "EmployeeEntry.h"
+
+FXIMPLEMENT(EmployeeEntry,FXDialogBox,NULL,0)
+
+EmployeeEntry::EmployeeEntry(FXWindow* owner):
+  FXDialogBox(owner,"Enter Employee Information"),
+  nameTarget(record.name),
+  numberTarget(record.number),
+  salaryTarget(record.salary),
+  addressTarget(record.address){
+
+  ...
+  new FXTextField(frame,5,&nameTarget,FXDataTarget::ID_VALUE,...);
+  new FXSpinner(frame,5,&numberTarget_target,FXDataTarget::ID_VALUE,...);
+  new FXTextField(frame,5,&addressTarget,FXDataTarget::ID_VALUE,...);
+  new FXSlider(frame,&salaryTarget,FXDataTarget::ID_VALUE,...);
+  new FXTextField(frame,5,&salaryTarget,FXDataTarget::ID_VALUE,...);
+  ...
+  new FXButton(frame,"Cancal",NULL,this,FXDialogBox::ID_CANCEL,...);
+  new FXButton(frame,"Accept",NULL,this,FXDialogBox::ID_ACCEPT,...);
+  }
+
+</pre>
+
 
 <p>We have of course omitted some details here regarding the layout and
 other&nbsp; visual&nbsp; paraphernalia.&nbsp; Note that we have connected
 the data target controlling the <b>salary </b>member to both a text field
 as well as a slider, so we can set the salary either way.&nbsp; So far,
 it sounds rediculously simple, doesn't it? The secret is, it really is!
-<p>Next, we're getting ready to use this new panel.&nbsp; Here's how we
+Next, we're getting ready to use this new panel.&nbsp; Here's how we
 would do that.&nbsp; Lets say we have selected the employee from a big
 array of employee records, and we enter the following callback handler
-to edit one of the entries in this array:
-<br>&nbsp;
-<br>&nbsp;
-<center><table BORDER CELLSPACING=0 COLS=1 WIDTH="90%" BGCOLOR="#FFF8E1" NOSAVE >
-<tr>
-<td><tt>/* EmployeeDatabase.cpp */</tt>
-<br><tt>#include "EmployeeEntry.h"</tt>
-<p><tt>&nbsp; ...</tt>
-<p><tt>Employee *employeedatabase;&nbsp;&nbsp;&nbsp;&nbsp; // Database
-of records</tt>
-<br><tt>int&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; currentemployee;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-// Current employee number we're going to edit</tt>
-<br><tt>int&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; numberofemployees;&nbsp;&nbsp;&nbsp;
-// Total number</tt>
-<p><tt>&nbsp; ...</tt>
-<p><tt>long EmployeeDatabase::onCmdChangeInformation(FXObject*,FXSelector,void*){</tt>
-<br><tt>&nbsp; EmployeeEntry dialog(mainwindow);</tt>
-<br><tt>&nbsp; dialog.record=employeedatabase[currentemployee];&nbsp;&nbsp;&nbsp;
-// We will work on the copy</tt>
-<br><tt>&nbsp; if(dialog.execute()){</tt>
-<br><tt>&nbsp;&nbsp;&nbsp; employeedatabase[currentemployee]=dialog.record;&nbsp;
-// We accept the change</tt>
-<br><tt>&nbsp;&nbsp;&nbsp; }</tt>
-<br><tt>&nbsp; return 1;</tt>
-<br><tt>&nbsp; }</tt></td>
-</tr>
-</table></center>
+to edit one of the entries in this array:</p>
+
+<pre>
+/* EmployeeDatabase.cpp */
+#include "EmployeeEntry.h"
+
+  ...
+
+Employee *employeedatabase;     // Database of records
+int       currentemployee;      // Current employee number we're going to edit
+int       numberofemployees;    // Total number
+
+  ...
+
+long EmployeeDatabase::onCmdChangeInformation(FXObject*,FXSelector,void*){
+  EmployeeEntry dialog(mainwindow);
+  dialog.record=employeedatabase[currentemployee];    // We will work on the copy
+  if(dialog.execute()){
+    employeedatabase[currentemployee]=dialog.record;  // We accept the change
+    }
+  return 1;
+  }
+</pre>
 
 <p>In the above code, we <i>copy</i> the employee record from the database,
 and then pop up the EmployeeEntry dialog by calling its <b>execute()</b>
 member function.
-<p>When this dialog shows up, it will initially display the old information
+When this dialog shows up, it will initially display the old information
 from <b><tt>employeedatabase[currentemployee]</tt></b>.&nbsp; After editing
 it with the dialog, if the user hits the <b>Accept</b> button, <b>execute()
 </b>will return <b>true</b> and we copy the changed record back into the
 database; if the user hit the <b>Cancel</b> button, <b>execute()</b> we
 will simply do nothing and return from the callback.
-<p>The EmployeeEntry dialog's destructors will automatically clean up the
-mess.
+The EmployeeEntry dialog's destructors will automatically clean up the
+mess.</p>
+
+</ul>
+
+
+<!--- TOPIC TITLE -->
 <p>
-<p>
-<b>More Advanced Usage</b>
-<hr>
-<font color="#000000">The above shows the most basic usage of FXDataTarget.&nbsp;
+<table width=100% cellpadding=0 cellspacing=2><tr><td width=100% valign=bottom id=HEADLINE><b>
+More Advanced Usage
+<br><img src='art/line.gif' width=100% height=1></b></td></tr></table>
+</p>
+<!--- TOPIC TITLE -->
+<ul>
+
+<p>The above shows the most basic usage of FXDataTarget.&nbsp;
 It uses the <b>ID_VALUE</b> message.&nbsp; When a FXDataTarget receives
 this message, it will ask the sender of the message for the desired value,
 and then place that value into the connected program variable.</font>
 <br><font color="#000000">However, the FXDataTarget also understands the
 <b>ID_OPTION</b> messages.&nbsp; With these messages, the actual value
 is encoded in the message ID itself, by adding the value to the message
-ID.</font>
-<br><font color="#000000">For example, to set a program variable to the
+ID.</p>
+
+<p>For example, to set a program variable to the
 value <b>10</b>, we could send the FXDataTarget a message <b>ID_OPTION+10</b>.&nbsp;
 With the ID_OPTION messages we can for example connect a FXDataTarget to
 a number of <b>FXRadioButtons</b>, and set a program variable by clicking
-on one of several radio buttons:</font>
-<br><font color="#000000"></font>&nbsp;
-<br>&nbsp;
-<center><table BORDER CELLSPACING=0 COLS=1 WIDTH="90%" BGCOLOR="#FFF8E1" NOSAVE >
-<tr>
-<td><tt>&nbsp; enum Color {Red, Green, Blue};</tt><tt></tt>
-<p><tt>&nbsp; FXint color;</tt>
-<br><tt>&nbsp; FXDataTarget colorTarget(color);</tt>
-<br><tt>&nbsp; color=Red;</tt><tt></tt>
-<p><tt>&nbsp; new FXRadioButton(matrix,"Red",option_target,FXDataTarget::ID_OPTION+Red,...);</tt>
-<br><tt>&nbsp; new FXRadioButton(matrix,"Green",option_target,FXDataTarget::ID_OPTION+Green,...);</tt>
-<br><tt>&nbsp; new FXRadioButton(matrix,"Blue",option_target,FXDataTarget::ID_OPTION+Blue,...);</tt></td>
-</tr>
-</table></center>
+on one of several radio buttons:</p>
+
+<pre>
+  enum Color {Red, Green, Blue};
+
+  FXint color;
+  FXDataTarget colorTarget(color);
+  color=Red;
+
+  new FXRadioButton(matrix,"Red",option_target,FXDataTarget::ID_OPTION+Red,...);
+  new FXRadioButton(matrix,"Green",option_target,FXDataTarget::ID_OPTION+Green,...);
+  new FXRadioButton(matrix,"Blue",option_target,FXDataTarget::ID_OPTION+Blue,...);
+</pre>
 
 <p>Here we set the variable <b>color</b> to one of the three values <b>{Red,
 Green, Blue}</b> by directly connecting the FXDataTarget to three FXRadioButtons.
 <br>When the FXDataTarget receives an ID_OPTION message, it changes the
 program variable to (message-<b>ID_OPTION</b>).&nbsp; Using this method,
 its easy to input<b> yes/no</b> values, lists of <b>choices</b>, and so
-on, all without having to write explicit callback handlers.
+on, all without having to write explicit callback handlers.</p>
+
+</ul>
+
+<!--- TOPIC TITLE -->
 <p>
-<p>
-<b>How It Works</b>
-<hr>
-<font color="#000000">The FXDataTarget idea works because of FOX's built-in
+<table width=100% cellpadding=0 cellspacing=2><tr><td width=100% valign=bottom id=HEADLINE><b>
+How It Works
+<br><img src='art/line.gif' width=100% height=1></b></td></tr></table>
+</p>
+<!--- TOPIC TITLE -->
+<ul>
+
+<p>The FXDataTarget idea works because of FOX's built-in
 GUI Update mechanism.&nbsp; The GUI Update mechanism is responsible for
 refreshing the state of each widget in your program, based on the state
 of your application data structures.&nbsp; Basically, each widget periodically
-inquires about its state by sending its target a <b>SEL_UPDATE</b> message.</font><font color="#000000"></font>
-<p><font color="#000000">When an FXDataTarget receives a message of type
+inquires about its state by sending its target a <b>SEL_UPDATE</b> message.</p>
+
+<p>When an FXDataTarget receives a message of type
 SEL_UPDATE, it reads the value of its associated variable and updates the
 sender of the message by means of another message.&nbsp; Note that the
-FXDataTarget does not need to know what type of Widget did the sending.</font><font color="#000000"></font>
-<p><font color="#000000">There are two ways the FXDataTarget can receive
+FXDataTarget does not need to know what type of Widget did the sending.</p>
+
+<p>There are two ways the FXDataTarget can receive
 updates: by an <b>ID_VALUE</b> message or an&nbsp; <b>ID_OPTION</b> message.&nbsp;
 The former type is usually generated by a <b>valuator control</b>, such
 as an FXSlider.&nbsp; When a message from a valuator control is received,
 FXDataTarget responds by sending back an <b>ID_SETINTVALUE, ID_SETREALVALUE,
-</b>or<b> ID_SETSTRINGVALUE</b> message to the sender of the request.</font><font color="#000000"></font>
-<p><font color="#000000">When a FXDataTarget receives a message of the
+</b>or<b> ID_SETSTRINGVALUE</b> message to the sender of the request.</p>
+
+<p>When a FXDataTarget receives a message of the
 form (<b>ID_OPTION+i</b>),&nbsp; it resonds by sending back one of two
 messages: <b>ID_CHECK</b> or <b>ID_UNCHECK,</b> depending on whether the
-value of the associated variable is equal to<b> i</b>.</font><font color="#000000"></font>
-<p><font color="#000000">In the example above, the "Red" radio button will
+value of the associated variable is equal to<b> i</b>.</p>
+
+<p>In the example above, the "Red" radio button will
 receive an <b>ID_CHECK</b> message, because the initial value of the variable
 color is red.&nbsp; The other radio buttons will receive the <b>ID_UNCHECK</b>
-message.</font>
+message.</p>
+
 <p>All of these methods explained here are deployed in the <b>datatarget</b>
-example program.
+example program.</p>
+
+
+</ul>
+
+<!--- COPYRIGHT -->
 <p>
-<!-- end main window content -->
+<table width=100% cellpadding=0 cellspacing=0><tr><td width=100% valign=top id=HEADLINE align=right>
+<img src='art/line.gif' width=100% height=1><font size=-1>
+Copyright &copy; 1997-2004 Jeroen van der Zijp</font>
+</td></tr></table>
+</p>
+<!--- COPYRIGHT -->
 
-    </td>
-    <td bgcolor=#ffffff>&nbsp;</td>
-    <td bgcolor=#557faa width=15>&nbsp;</td>
-  </tr>
-  <tr>
-    <td colspan=2 bgcolor="#557faa" align=center>&nbsp;
-     </td>
-    <td bgcolor=#ffffff valign=bottom align=left><img src=art/ill.gif width=8 height=8></td>
-    <td bgcolor=#ffffff>&nbsp;</td>
-    <td bgcolor=#ffffff valign=bottom align=right><img src=art/ilr.gif width=8 height=8></td>
-    <td bgcolor=#557faa width=15>&nbsp;</td>
-  </tr>
-  <tr>
-    <td valign=bottom align=left bgcolor=#557faa><img src=art/oll.gif width=8 height=8></td>
-    <td colspan=4 bgcolor=#557faa>&nbsp;</td>
-    <td valign=bottom align=right bgcolor=#557faa><img src=art/olr.gif width=8 height=8></td>
-  </tr>
-</table>
 
-<address>Copyright 1997-2002 <a href=mailto:jeroen@fox-toolkit.org>Jeroen van der Zijp</a></address>
-<!-- Created: Mon Apr 10 11:20:32 CEST 2000 -->
-<!-- hhmts start -->
-
-<!-- hhmts end -->
 </body>
 </html>

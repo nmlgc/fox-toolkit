@@ -3,7 +3,7 @@
 *               D e v i c e   C o n t e x t   B a s e   C l a s s               *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1999,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1999,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,11 +19,12 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXDC.h,v 1.22 2002/01/18 22:42:51 jeroen Exp $                           *
+* $Id: FXDC.h,v 1.29 2004/02/08 17:17:33 fox Exp $                              *
 ********************************************************************************/
 #ifndef FXDC_H
 #define FXDC_H
 
+namespace FX {
 
 /// Drawing (BITBLT) functions
 enum FXFunction {
@@ -154,6 +155,7 @@ class FXAPI FXDC {
 private:
   FXApp           *app;         // Application
 protected:
+  void            *ctx;         // Context handle
   FXFont          *font;        // Drawing font
   FXStipplePattern pattern;     // Stipple pattern
   FXBitmap        *stipple;     // Stipple bitmap
@@ -188,6 +190,9 @@ public:
   /// Get application
   FXApp* getApp() const { return app; }
 
+  /// Get context handle
+  void* context() const { return ctx; }
+
   /// Read back pixel
   virtual FXColor readPixel(FXint x,FXint y);
 
@@ -220,6 +225,10 @@ public:
   /// Filled rectangles
   virtual void fillRectangle(FXint x,FXint y,FXint w,FXint h);
   virtual void fillRectangles(const FXRectangle* rectangles,FXuint nrectangles);
+
+  /// Fill chord
+  virtual void fillChord(FXint x,FXint y,FXint w,FXint h,FXint ang1,FXint ang2);
+  virtual void fillChords(const FXArc* chords,FXuint nchords);
 
   /// Draw arcs
   virtual void fillArc(FXint x,FXint y,FXint w,FXint h,FXint ang1,FXint ang2);
@@ -383,10 +392,10 @@ public:
   virtual void clearClipMask();
 
   /// Set font to draw text with
-  virtual void setTextFont(FXFont *fnt);
+  virtual void setFont(FXFont *fnt);
 
   /// Get text font
-  FXFont* getTextFont() const { return font; }
+  FXFont* getFont() const { return font; }
 
   /// Clip against child windows
   virtual void clipChildren(FXbool yes);
@@ -395,5 +404,6 @@ public:
   virtual ~FXDC();
   };
 
+}
 
 #endif

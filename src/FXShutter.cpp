@@ -1,11 +1,9 @@
 /********************************************************************************
 *                                                                               *
-*                 V e r t i c a l   C o n t a i n e r   O b j e c t             *
+*                 S h u t t e r   C o n t a i n e r   W i d g e t               *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
-*********************************************************************************
-* Contributed by: Charles W. Warren                                             *
+* Copyright (C) 1998,2004 by Charles W. Warren.   All Rights Reserved.          *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -21,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXShutter.cpp,v 1.18.4.2 2003/06/20 19:02:07 fox Exp $                    *
+* $Id: FXShutter.cpp,v 1.34 2004/02/08 17:29:07 fox Exp $                       *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -33,6 +31,7 @@
 #include "FXRectangle.h"
 #include "FXRegistry.h"
 #include "FXAccelTable.h"
+#include "FXHash.h"
 #include "FXApp.h"
 #include "FXIcon.h"
 #include "FXFrame.h"
@@ -40,7 +39,7 @@
 #include "FXVerticalFrame.h"
 #include "FXLabel.h"
 #include "FXButton.h"
-#include "FXScrollbar.h"
+#include "FXScrollBar.h"
 #include "FXScrollWindow.h"
 #include "FXShutter.h"
 
@@ -51,8 +50,11 @@
     Advantage: You can make it connect to other widgets.
 */
 
+using namespace FX;
 
 /*******************************************************************************/
+
+namespace FX {
 
 // Map
 FXDEFMAP(FXShutterItem) FXShutterItemMap[]={
@@ -77,7 +79,7 @@ FXShutterItem::FXShutterItem(FXShutter* p,const FXString& text,FXIcon* icon,FXui
 
 // Button Pressed
 long FXShutterItem::onCmdButton(FXObject*,FXSelector,void* ptr){
-  getParent()->handle(this,MKUINT(FXShutter::ID_OPEN_SHUTTERITEM,SEL_COMMAND),ptr);
+  getParent()->handle(this,FXSEL(SEL_COMMAND,FXShutter::ID_OPEN_SHUTTERITEM),ptr);
   return 1;
   }
 
@@ -121,9 +123,9 @@ FXString FXShutterItem::getTipText() const {
 
 // Thrash it
 FXShutterItem::~FXShutterItem(){
-  button=(FXButton*)-1;
-  scrollWindow=(FXScrollWindow*)-1;
-  content=(FXVerticalFrame*)-1;
+  button=(FXButton*)-1L;
+  scrollWindow=(FXScrollWindow*)-1L;
+  content=(FXVerticalFrame*)-1L;
   }
 
 
@@ -136,9 +138,9 @@ FXDEFMAP(FXShutter) FXShutterMap[]={
   FXMAPFUNCS(SEL_UPDATE,FXShutter::ID_OPEN_FIRST,FXShutter::ID_OPEN_LAST,FXShutter::onUpdOpen),
   FXMAPFUNC(SEL_TIMEOUT,FXShutter::ID_SHUTTER_TIMEOUT,FXShutter::onTimeout),
   FXMAPFUNC(SEL_COMMAND,FXShutter::ID_OPEN_SHUTTERITEM,FXShutter::onOpenItem),
-  FXMAPFUNC(SEL_COMMAND,FXWindow::ID_SETVALUE,FXShutter::onCmdSetValue),
-  FXMAPFUNC(SEL_COMMAND,FXWindow::ID_SETINTVALUE,FXShutter::onCmdSetIntValue),
-  FXMAPFUNC(SEL_COMMAND,FXWindow::ID_GETINTVALUE,FXShutter::onCmdGetIntValue),
+  FXMAPFUNC(SEL_COMMAND,FXShutter::ID_SETVALUE,FXShutter::onCmdSetValue),
+  FXMAPFUNC(SEL_COMMAND,FXShutter::ID_SETINTVALUE,FXShutter::onCmdSetIntValue),
+  FXMAPFUNC(SEL_COMMAND,FXShutter::ID_GETINTVALUE,FXShutter::onCmdGetIntValue),
   FXMAPFUNCS(SEL_COMMAND,FXShutter::ID_OPEN_FIRST,FXShutter::ID_OPEN_LAST,FXShutter::onCmdOpen),
   };
 
@@ -155,7 +157,6 @@ FXShutter::FXShutter(FXComposite* p,FXObject* tgt,FXSelector sel,FXuint opts,FXi
   heightIncrement=1;
   closingHeight=0;
   closingHadScrollbar=FALSE;
-  timer=NULL;
   current=0;
   closing=-1;
   }
@@ -171,7 +172,6 @@ long FXShutter::onFocusUp(FXObject* sender,FXSelector sel,void* ptr){
 long FXShutter::onFocusDown(FXObject* sender,FXSelector sel,void* ptr){
   return FXVerticalFrame::onFocusNext(sender,sel,ptr);
   }
-
 
 // Update value from a message
 long FXShutter::onCmdSetValue(FXObject*,FXSelector,void* ptr){
@@ -196,15 +196,14 @@ long FXShutter::onCmdGetIntValue(FXObject*,FXSelector,void* ptr){
 
 // Open item
 long FXShutter::onCmdOpen(FXObject*,FXSelector sel,void*){
-  setCurrent(SELID(sel)-ID_OPEN_FIRST);
+  setCurrent(FXSELID(sel)-ID_OPEN_FIRST);
   return 1;
   }
 
 
 // Update the nth button
 long FXShutter::onUpdOpen(FXObject* sender,FXSelector sel,void* ptr){
-  FXuint msg=((SELID(sel)-ID_OPEN_FIRST)==current) ? ID_CHECK : ID_UNCHECK;
-  sender->handle(this,MKUINT(msg,SEL_COMMAND),ptr);
+  sender->handle(this,((FXSELID(sel)-ID_OPEN_FIRST)==current) ? FXSEL(SEL_COMMAND,ID_CHECK) : FXSEL(SEL_COMMAND,ID_UNCHECK),ptr);
   return 1;
   }
 
@@ -212,17 +211,21 @@ long FXShutter::onUpdOpen(FXObject* sender,FXSelector sel,void* ptr){
 // The sender of the message is the item to open up
 long FXShutter::onOpenItem(FXObject* sender,FXSelector,void*){
   FXint which=indexOfChild((FXWindow*)sender);
+  FXuint speed=getApp()->getAnimSpeed();
   FXShutterItem *closingItem;
-  if(current==which) which--;     // clicking on title button of currently active item should close it; "Markus Fleck" <fleck@gnu.org>
+  if(current==which) which--;     // Clicking on title button of currently active item should close it; "Markus Fleck" <fleck@gnu.org>
   if(0<=which){
-    closing=current;
+    if(speed){
+      closing=current;
+      heightIncrement=1;
+      closingItem=(FXShutterItem*)childAtIndex(closing);
+      closingHeight=closingItem->getHeight();
+      closingHadScrollbar=closingItem->scrollWindow->verticalScrollBar()->shown();
+      getApp()->addTimeout(this,ID_SHUTTER_TIMEOUT,speed);
+      }
     current=which;
-    heightIncrement=1;
-    closingItem=(FXShutterItem*)childAtIndex(closing);
-    closingHeight=closingItem->getHeight();
-    closingHadScrollbar=closingItem->scrollWindow->verticalScrollbar()->shown();
-    timer=getApp()->addTimeout(getApp()->getAnimSpeed(),this,FXShutter::ID_SHUTTER_TIMEOUT);
-    if(target) target->handle(this,MKUINT(message,SEL_COMMAND),(void*)(FXival)current);
+    recalc();
+    if(target) target->handle(this,FXSEL(SEL_COMMAND,message),(void*)(FXival)current);
     }
   return 1;
   }
@@ -230,9 +233,6 @@ long FXShutter::onOpenItem(FXObject* sender,FXSelector,void*){
 
 // Shutter Item Animation
 long FXShutter::onTimeout(FXObject*,FXSelector,void*){
-
-  // Timer has expired
-  timer=NULL;
 
   // Closing item got deleted
   if(closing<0) return 0;
@@ -246,7 +246,7 @@ long FXShutter::onTimeout(FXObject*,FXSelector,void*){
 
   // Still not fully closed?
   if(closingHeight>0){
-    timer=getApp()->addTimeout(getApp()->getAnimSpeed(),this,FXShutter::ID_SHUTTER_TIMEOUT);
+    getApp()->addTimeout(this,ID_SHUTTER_TIMEOUT,getApp()->getAnimSpeed());
     return 1;
     }
 
@@ -306,8 +306,8 @@ void FXShutter::setCurrent(FXint panel){
 
 // Clean up
 FXShutter::~FXShutter() {
-  if(timer) getApp()->removeTimeout(timer);
-  timer=(FXTimer*)-1;
+  getApp()->removeTimeout(this,ID_SHUTTER_TIMEOUT);
   }
 
+}
 

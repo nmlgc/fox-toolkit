@@ -3,23 +3,23 @@
 *                  F O X   D e s k t o p   C a l c u l a t o r                  *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2001 by Jeroen van der Zijp.   All Rights Reserved.             *
+* Copyright (C) 2001,2003 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
-* This library is free software; you can redistribute it and/or                 *
-* modify it under the terms of the GNU Lesser General Public                    *
-* License as published by the Free Software Foundation; either                  *
-* version 2.1 of the License, or (at your option) any later version.            *
+* This program is free software; you can redistribute it and/or modify          *
+* it under the terms of the GNU General Public License as published by          *
+* the Free Software Foundation; either version 2 of the License, or             *
+* (at your option) any later version.                                           *
 *                                                                               *
-* This library is distributed in the hope that it will be useful,               *
+* This program is distributed in the hope that it will be useful,               *
 * but WITHOUT ANY WARRANTY; without even the implied warranty of                *
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU             *
-* Lesser General Public License for more details.                               *
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                 *
+* GNU General Public License for more details.                                  *
 *                                                                               *
-* You should have received a copy of the GNU Lesser General Public              *
-* License along with this library; if not, write to the Free Software           *
+* You should have received a copy of the GNU General Public License             *
+* along with this program; if not, write to the Free Software                   *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: Calculator.cpp,v 1.36.4.2 2003/06/20 19:02:07 fox Exp $                   *
+* $Id: Calculator.cpp,v 1.50 2004/03/02 16:37:19 fox Exp $                      *
 ********************************************************************************/
 #include "fx.h"
 #include "fxkeys.h"
@@ -42,6 +42,9 @@
 #define DECIMAL_LIMIT     16                      // +1.234567890123456E-308
 #define HEXADECIMAL_LIMIT 8                       // 8 hexadecimal digits
 
+#define GOLDEN            1.6180339887498948482045868343        // Golden ratio
+#define INVGOLDEN         (1.0/GOLDEN)                          // Inverse golden ratio
+
 #define	DEG2RAD(x)	  (((2.0*PI)/360.0)*(x))  // Degrees to radians
 #define	GRA2RAD(x)	  ((PI/200.0)*(x))        // Grad to radians
 #define	RAD2DEG(x)	  ((360.0/(2.0*PI))*(x))  // Radians to degrees
@@ -51,12 +54,14 @@
 /*
   Notes:
 
-  - on window enter, direct keyboard focus to numeric input buttons
-  - when clicking on the display focus should stay on buttons
-  - on resize I'd like x-y aspect to remain the same
-  - would be nice if font size more or less follows window size
-  - history option in display to retrieve back earlier results
+  - On window enter, direct keyboard focus to numeric input buttons
+  - When clicking on the display focus should stay on buttons
+  - On resize I'd like x-y aspect to remain the same
+  - Would be nice if font size more or less follows window size
+  - History option in display to retrieve back earlier results
     (stored when pressing '=')
+  - Add button to return largest prime smaller than x.
+  - Add buttons for lcm/gcd.
 */
 
 /*******************************************************************************/
@@ -65,8 +70,6 @@
 
 // Map
 FXDEFMAP(Calculator) CalculatorMap[]={
-  FXMAPFUNC(SEL_CLOSE,0,Calculator::onClose),
-  FXMAPFUNC(SEL_SIGNAL,Calculator::ID_QUIT,Calculator::onClose),
   FXMAPFUNCS(SEL_COMMAND,Calculator::ID_MODE,Calculator::ID_GRA,Calculator::onCmdAngle),
   FXMAPFUNCS(SEL_UPDATE,Calculator::ID_MODE,Calculator::ID_GRA,Calculator::onUpdAngle),
   FXMAPFUNCS(SEL_COMMAND,Calculator::ID_BASE,Calculator::ID_HEX,Calculator::onCmdBase),
@@ -150,10 +153,6 @@ FXDEFMAP(Calculator) CalculatorMap[]={
 // Implementation
 FXIMPLEMENT(Calculator,FXMainWindow,CalculatorMap,ARRAYNUMBER(CalculatorMap))
 
-
-// Double precision limits (normalized)
-static const FXdouble dblmax=1.7976931348623158e+308;
-static const FXdouble dblmin=2.2250738585072010e-308;
 
 // Use a trick to get a nan
 #if FOX_BIGENDIAN
@@ -359,15 +358,15 @@ Calculator::Calculator(FXApp* a):FXMainWindow(a,"FOX Calculator",NULL,NULL,DECOR
   hyper->addHotKey(MKUINT(KEY_h,0));
 
   // Add accelerators
-  getAccelTable()->addAccel(MKUINT(KEY_Q,0),this,MKUINT(0,SEL_CLOSE));
-  getAccelTable()->addAccel(MKUINT(KEY_q,0),this,MKUINT(0,SEL_CLOSE));
-  getAccelTable()->addAccel(MKUINT(KEY_q,CONTROLMASK),this,MKUINT(0,SEL_CLOSE));
-  getAccelTable()->addAccel(MKUINT(KEY_Escape,0),this,MKUINT(ID_CLEAR,SEL_COMMAND));
-  getAccelTable()->addAccel(MKUINT(KEY_BackSpace,0),this,MKUINT(ID_DELETE,SEL_COMMAND));
-  getAccelTable()->addAccel(MKUINT(KEY_Delete,0),this,MKUINT(ID_DELETE,SEL_COMMAND));
-  getAccelTable()->addAccel(MKUINT(KEY_KP_Delete,0),this,MKUINT(ID_DELETE,SEL_COMMAND));
-  getAccelTable()->addAccel(MKUINT(KEY_Return,0),this,MKUINT(ID_ENTER,SEL_COMMAND));
-  getAccelTable()->addAccel(MKUINT(KEY_KP_Enter,0),this,MKUINT(ID_ENTER,SEL_COMMAND));
+  getAccelTable()->addAccel(MKUINT(KEY_Q,0),this,FXSEL(SEL_COMMAND,ID_CLOSE));
+  getAccelTable()->addAccel(MKUINT(KEY_q,0),this,FXSEL(SEL_COMMAND,ID_CLOSE));
+  getAccelTable()->addAccel(MKUINT(KEY_q,CONTROLMASK),this,FXSEL(SEL_COMMAND,ID_CLOSE));
+  getAccelTable()->addAccel(MKUINT(KEY_Escape,0),this,FXSEL(SEL_COMMAND,ID_CLEAR));
+  getAccelTable()->addAccel(MKUINT(KEY_BackSpace,0),this,FXSEL(SEL_COMMAND,ID_DELETE));
+  getAccelTable()->addAccel(MKUINT(KEY_Delete,0),this,FXSEL(SEL_COMMAND,ID_DELETE));
+  getAccelTable()->addAccel(MKUINT(KEY_KP_Delete,0),this,FXSEL(SEL_COMMAND,ID_DELETE));
+  getAccelTable()->addAccel(MKUINT(KEY_Return,0),this,FXSEL(SEL_COMMAND,ID_ENTER));
+  getAccelTable()->addAccel(MKUINT(KEY_KP_Enter,0),this,FXSEL(SEL_COMMAND,ID_ENTER));
 
   // Initialize stuff
   display->setText("0");
@@ -557,6 +556,7 @@ FXColor Calculator::getClearAllColor() const {
 // Set display color
 void Calculator::setDisplayColor(FXColor clr){
   display->setBackColor(clr);
+  display->setSelTextColor(clr);
   display->setHiliteColor(makeHiliteColor(clr));
   display->setShadowColor(makeShadowColor(clr));
   }
@@ -565,6 +565,19 @@ void Calculator::setDisplayColor(FXColor clr){
 // Get display color
 FXColor Calculator::getDisplayColor() const {
   return display->getBackColor();
+  }
+
+
+// Set display color
+void Calculator::setDisplayNumberColor(FXColor clr){
+  display->setTextColor(clr);
+  display->setSelBackColor(clr);
+  }
+
+
+// Get display color
+FXColor Calculator::getDisplayNumberColor() const {
+  return display->getTextColor();
   }
 
 
@@ -622,8 +635,7 @@ FXFont* Calculator::getDisplayFont() const {
 
 // Read registry
 void Calculator::readRegistry(){
-  FXFontDesc fontdesc;
-  const FXchar* fontspec;
+  FXString fontspec;
 
   // Position
   FXint xx=getApp()->reg().readIntEntry("SETTINGS","x",50);
@@ -642,6 +654,7 @@ void Calculator::readRegistry(){
   FXColor clearclr=getApp()->reg().readColorEntry("SETTINGS","clearcolor",FXRGB(238,148,0));
   FXColor clearallclr=getApp()->reg().readColorEntry("SETTINGS","clearallcolor",FXRGB(238,118,0));
   FXColor displayclr=getApp()->reg().readColorEntry("SETTINGS","displaycolor",FXRGB(255,255,255));
+  FXColor numberclr=getApp()->reg().readColorEntry("SETTINGS","displaynumbercolor",FXRGB(0,0,0));
   FXColor numbaseclr=getApp()->reg().readColorEntry("SETTINGS","numbasecolor",FXRGB(203,203,203));
   FXColor angmodeclr=getApp()->reg().readColorEntry("SETTINGS","anglemodecolor",FXRGB(203,203,203));
 
@@ -655,7 +668,7 @@ void Calculator::readRegistry(){
   FXbool expmode=(FXExponent)getApp()->reg().readIntEntry("SETTINGS","exponent",MAYBE);
 
   // Precision
-  FXint prec=getApp()->reg().readIntEntry("SETTINGS","precision",16);
+  FXint prec=getApp()->reg().readIntEntry("SETTINGS","precision",10);
 
   // Beep
   FXbool noise=getApp()->reg().readIntEntry("SETTINGS","beep",TRUE);
@@ -664,9 +677,9 @@ void Calculator::readRegistry(){
   recall=getApp()->reg().readRealEntry("SETTINGS","memory",0.0);
 
   // Font
-  fontspec=getApp()->reg().readStringEntry("SETTINGS","font",NULL);
-  if(fontspec && fxparsefontdesc(fontdesc,fontspec)){
-    font=new FXFont(getApp(),fontdesc);
+  fontspec=getApp()->reg().readStringEntry("SETTINGS","displayfont","");
+  if(!fontspec.empty()){
+    font=new FXFont(getApp(),fontspec);
     setDisplayFont(font);
     }
 
@@ -680,6 +693,7 @@ void Calculator::readRegistry(){
   setClearColor(clearclr);
   setClearAllColor(clearallclr);
   setDisplayColor(displayclr);
+  setDisplayNumberColor(numberclr);
   setBaseColor(numbaseclr);
   setAngleColor(angmodeclr);
 
@@ -699,8 +713,7 @@ void Calculator::readRegistry(){
 
 // Write registry
 void Calculator::writeRegistry(){
-  FXFontDesc fontdesc;
-  FXchar fontspec[200];
+  FXString fontspec;
 
   // Position
   getApp()->reg().writeIntEntry("SETTINGS","x",getX());
@@ -719,6 +732,7 @@ void Calculator::writeRegistry(){
   getApp()->reg().writeColorEntry("SETTINGS","clearcolor",getClearColor());
   getApp()->reg().writeColorEntry("SETTINGS","clearallcolor",getClearAllColor());
   getApp()->reg().writeColorEntry("SETTINGS","displaycolor",getDisplayColor());
+  getApp()->reg().writeColorEntry("SETTINGS","displaynumbercolor",getDisplayNumberColor());
   getApp()->reg().writeColorEntry("SETTINGS","numbasecolor",getBaseColor());
   getApp()->reg().writeColorEntry("SETTINGS","anglemodecolor",getAngleColor());
 
@@ -741,9 +755,8 @@ void Calculator::writeRegistry(){
   getApp()->reg().writeRealEntry("SETTINGS","memory",recall);
 
   // Font
-  getDisplayFont()->getFontDesc(fontdesc);
-  fxunparsefontdesc(fontspec,fontdesc);
-  getApp()->reg().writeStringEntry("SETTINGS","font",fontspec);
+  fontspec=getDisplayFont()->getFont();
+  getApp()->reg().writeStringEntry("SETTINGS","displayfont",fontspec.text());
   }
 
 
@@ -1064,6 +1077,7 @@ void Calculator::unary(FXuchar op){
   modifiers=0;
   }
 
+
 // Perform operator
 void Calculator::dyop(FXuchar op){
   FXdouble acc,val;
@@ -1176,10 +1190,9 @@ void Calculator::rparen(){
 /*******************************************************************************/
 
 // Close the window and save registry
-long Calculator::onClose(FXObject* sender,FXSelector sel,void* ptr){
+FXbool Calculator::close(FXbool notify){
   writeRegistry();
-  FXMainWindow::onClose(sender,sel,ptr);
-  return 1;
+  return FXMainWindow::close(notify);
   }
 
 
@@ -1196,8 +1209,9 @@ long Calculator::onCmdPreferences(FXObject*,FXSelector,void*){
 // Change colors
 long Calculator::onCmdColor(FXObject*,FXSelector sel,void* ptr){
   FXColor clr=(FXColor)(FXuval)ptr;
-  switch(SELID(sel)){
+  switch(FXSELID(sel)){
     case ID_COLOR_DISPLAY: setDisplayColor(clr); break;
+    case ID_COLOR_DISPLAYNUMBER: setDisplayNumberColor(clr); break;
     case ID_COLOR_DIGITS: setDigitColor(clr); break;
     case ID_COLOR_HEXDIGITS: setHexDigitColor(clr); break;
     case ID_COLOR_OPERATORS: setOperatorColor(clr); break;
@@ -1217,8 +1231,9 @@ long Calculator::onCmdColor(FXObject*,FXSelector sel,void* ptr){
 // Update colors
 long Calculator::onUpdColor(FXObject* sender,FXSelector sel,void*){
   FXColor clr;
-  switch(SELID(sel)){
+  switch(FXSELID(sel)){
     case ID_COLOR_DISPLAY: clr=getDisplayColor(); break;
+    case ID_COLOR_DISPLAYNUMBER: clr=getDisplayNumberColor(); break;
     case ID_COLOR_DIGITS: clr=getDigitColor(); break;
     case ID_COLOR_HEXDIGITS: clr=getHexDigitColor(); break;
     case ID_COLOR_OPERATORS: clr=getOperatorColor(); break;
@@ -1231,7 +1246,7 @@ long Calculator::onUpdColor(FXObject* sender,FXSelector sel,void*){
     case ID_COLOR_CLEARALL: clr=getClearAllColor(); break;
     case ID_COLOR_CLEAR: clr=getClearColor(); break;
     }
-  sender->handle(this,MKUINT(ID_SETINTVALUE,SEL_COMMAND),(void*)&clr);
+  sender->handle(this,FXSEL(SEL_COMMAND,ID_SETINTVALUE),(void*)&clr);
   return 1;
   }
 
@@ -1256,8 +1271,8 @@ long Calculator::onCmdFont(FXObject*,FXSelector,void*){
 
 // Change exponential notation
 long Calculator::onCmdExponent(FXObject*,FXSelector sel,void* ptr){
-  if(SELID(sel)==ID_EXPONENT_ALWAYS && ptr) setExponentMode(TRUE);
-  else if(SELID(sel)==ID_EXPONENT_NEVER && ptr) setExponentMode(FALSE);
+  if(FXSELID(sel)==ID_EXPONENT_ALWAYS && ptr) setExponentMode(TRUE);
+  else if(FXSELID(sel)==ID_EXPONENT_NEVER && ptr) setExponentMode(FALSE);
   else setExponentMode(MAYBE);
   return 1;
   }
@@ -1265,12 +1280,12 @@ long Calculator::onCmdExponent(FXObject*,FXSelector sel,void* ptr){
 
 // Update exponential notation
 long Calculator::onUpdExponent(FXObject* sender,FXSelector sel,void*){
-  if(SELID(sel)==ID_EXPONENT_ALWAYS && exponent==TRUE)
-    sender->handle(this,MKUINT(ID_CHECK,SEL_COMMAND),NULL);
-  else if(SELID(sel)==ID_EXPONENT_NEVER && exponent==FALSE)
-    sender->handle(this,MKUINT(ID_CHECK,SEL_COMMAND),NULL);
+  if(FXSELID(sel)==ID_EXPONENT_ALWAYS && exponent==TRUE)
+    sender->handle(this,FXSEL(SEL_COMMAND,ID_CHECK),NULL);
+  else if(FXSELID(sel)==ID_EXPONENT_NEVER && exponent==FALSE)
+    sender->handle(this,FXSEL(SEL_COMMAND,ID_CHECK),NULL);
   else
-    sender->handle(this,MKUINT(ID_UNCHECK,SEL_COMMAND),NULL);
+    sender->handle(this,FXSEL(SEL_COMMAND,ID_UNCHECK),NULL);
   return 1;
   }
 
@@ -1278,7 +1293,7 @@ long Calculator::onUpdExponent(FXObject* sender,FXSelector sel,void*){
 // Change precision
 long Calculator::onCmdPrecision(FXObject* sender,FXSelector,void*){
   FXint prec=16;
-  sender->handle(this,MKUINT(ID_GETINTVALUE,SEL_COMMAND),(void*)&prec);
+  sender->handle(this,FXSEL(SEL_COMMAND,ID_GETINTVALUE),(void*)&prec);
   setPrecision(prec);
   return 1;
   }
@@ -1286,7 +1301,7 @@ long Calculator::onCmdPrecision(FXObject* sender,FXSelector,void*){
 
 // Update precision
 long Calculator::onUpdPrecision(FXObject* sender,FXSelector,void*){
-  sender->handle(this,MKUINT(ID_SETINTVALUE,SEL_COMMAND),(void*)&precision);
+  sender->handle(this,FXSEL(SEL_COMMAND,ID_SETINTVALUE),(void*)&precision);
   return 1;
   }
 
@@ -1300,7 +1315,7 @@ long Calculator::onCmdBeep(FXObject*,FXSelector,void*){
 
 // Update beep mode
 long Calculator::onUpdBeep(FXObject* sender,FXSelector,void*){
-  sender->handle(this,beep ? MKUINT(ID_CHECK,SEL_COMMAND) : MKUINT(ID_UNCHECK,SEL_COMMAND), NULL);
+  sender->handle(this,beep ? FXSEL(SEL_COMMAND,ID_CHECK) : FXSEL(SEL_COMMAND,ID_UNCHECK), NULL);
   return 1;
   }
 
@@ -1320,35 +1335,35 @@ long Calculator::onCmdQuestion(FXObject*,FXSelector,void*){
 
 // Change angle mode
 long Calculator::onCmdAngle(FXObject*,FXSelector sel,void*){
-  angles=(SELID(sel)-ID_MODE);
+  angles=(FXSELID(sel)-ID_MODE);
   return 1;
   }
 
 
 // Update radio button for angle mode
 long Calculator::onUpdAngle(FXObject* sender,FXSelector sel,void*){
-  sender->handle(this,angles==(SELID(sel)-ID_MODE) ? MKUINT(ID_CHECK,SEL_COMMAND) : MKUINT(ID_UNCHECK,SEL_COMMAND), NULL);
+  sender->handle(this,angles==(FXSELID(sel)-ID_MODE) ? FXSEL(SEL_COMMAND,ID_CHECK) : FXSEL(SEL_COMMAND,ID_UNCHECK), NULL);
   return 1;
   }
 
 
 // Change angle mode
 long Calculator::onCmdBase(FXObject*,FXSelector sel,void*){
-  setBase(SELID(sel)-ID_BASE);
+  setBase(FXSELID(sel)-ID_BASE);
   return 1;
   }
 
 
 // Update radio button for angle mode
 long Calculator::onUpdBase(FXObject* sender,FXSelector sel,void*){
-  sender->handle(this,base==(SELID(sel)-ID_BASE) ? MKUINT(ID_CHECK,SEL_COMMAND) : MKUINT(ID_UNCHECK,SEL_COMMAND), NULL);
+  sender->handle(this,base==(FXSELID(sel)-ID_BASE) ? FXSEL(SEL_COMMAND,ID_CHECK) : FXSEL(SEL_COMMAND,ID_UNCHECK), NULL);
   return 1;
   }
 
 
 // Update digits based on base
 long Calculator::onUpdDigit(FXObject* sender,FXSelector sel,void*){
-  sender->handle(this,(SELID(sel)-ID_0)<base ? MKUINT(ID_ENABLE,SEL_COMMAND) : MKUINT(ID_DISABLE,SEL_COMMAND), NULL);
+  sender->handle(this,(FXSELID(sel)-ID_0)<base ? FXSEL(SEL_COMMAND,ID_ENABLE) : FXSEL(SEL_COMMAND,ID_DISABLE), NULL);
   return 1;
   }
 
@@ -1358,19 +1373,19 @@ long Calculator::onCmdDigit(FXObject*,FXSelector sel,void*){
   FXString text=getDisplayText();
   FXint pos;
   if(!(modifiers&MOD_ENT)){ text=""; digits=0; }
-  if((base==10) && (pos=text.findf('E'))>=0){
+  if((base==10) && (pos=text.find('E'))>=0){
     pos++;                                          // Skip 'E'
     if(text[pos]=='-' || text[pos]=='+') pos++;     // Skip sign
     if(text[pos]=='0' || (text[pos] && text[pos+1] && text[pos+2])){
       while(text[pos+1]){ text[pos]=text[pos+1]; pos++; }
-      text[pos]=FXString::HEX[SELID(sel)-ID_0];
+      text[pos]=FXString::HEX[FXSELID(sel)-ID_0];
       }
     else{
-      text.append(FXString::HEX[SELID(sel)-ID_0]);
+      text.append(FXString::HEX[FXSELID(sel)-ID_0]);
       }
     }
   else if(digits<limit){
-    text+=FXString::HEX[SELID(sel)-ID_0];
+    text+=FXString::HEX[FXSELID(sel)-ID_0];
     digits++;
     }
   setDisplayText(text);
@@ -1384,7 +1399,7 @@ long Calculator::onCmdDigit(FXObject*,FXSelector sel,void*){
 long Calculator::onCmdPoint(FXObject*,FXSelector,void*){
   FXString text=getDisplayText();
   if(!(modifiers&MOD_ENT)){ text="0"; digits=1; }
-  if(base==10 && text.findf('.')<0 && text.findf('E')<0) text+='.';
+  if(base==10 && text.find('.')<0 && text.find('E')<0) text+='.';
   setDisplayText(text);
   setnum(getDisplayValue());
   modifiers|=MOD_ENT;
@@ -1394,7 +1409,7 @@ long Calculator::onCmdPoint(FXObject*,FXSelector,void*){
 
 // Update decimal point
 long Calculator::onUpdPoint(FXObject* sender,FXSelector,void*){
-  sender->handle(this,(base==10) ? MKUINT(ID_ENABLE,SEL_COMMAND) : MKUINT(ID_DISABLE,SEL_COMMAND),NULL);
+  sender->handle(this,(base==10) ? FXSEL(SEL_COMMAND,ID_ENABLE) : FXSEL(SEL_COMMAND,ID_DISABLE),NULL);
   return 1;
   }
 
@@ -1403,7 +1418,7 @@ long Calculator::onUpdPoint(FXObject* sender,FXSelector,void*){
 long Calculator::onCmdExp(FXObject*,FXSelector,void*){
   FXString text=getDisplayText();
   if(!(modifiers&MOD_ENT)){ text="0"; digits=1; }
-  if(base==10 && text.findf('E')<0) text+="E+0";
+  if(base==10 && text.find('E')<0) text+="E+0";
   setDisplayText(text);
   setnum(getDisplayValue());
   modifiers|=MOD_ENT;
@@ -1413,7 +1428,7 @@ long Calculator::onCmdExp(FXObject*,FXSelector,void*){
 
 // Update exponent
 long Calculator::onUpdExp(FXObject* sender,FXSelector,void*){
-  sender->handle(this,(base==10) ? MKUINT(ID_ENABLE,SEL_COMMAND) : MKUINT(ID_DISABLE,SEL_COMMAND),NULL);
+  sender->handle(this,(base==10) ? FXSEL(SEL_COMMAND,ID_ENABLE) : FXSEL(SEL_COMMAND,ID_DISABLE),NULL);
   return 1;
   }
 
@@ -1423,7 +1438,7 @@ long Calculator::onCmdPlusMin(FXObject*,FXSelector,void*){
   FXString text=getDisplayText();
   FXint pos;
   if(modifiers&MOD_ENT){
-    if((base==10) && (pos=text.findf('E'))>=0){
+    if((base==10) && (pos=text.find('E'))>=0){
       if(text[pos+1]=='+') text[pos+1]='-';
       else if(text[pos+1]=='-') text[pos+1]='+';
       else text.insert(pos+1,'-');
@@ -1450,7 +1465,7 @@ long Calculator::onCmdDelete(FXObject*,FXSelector,void*){
   if(modifiers&MOD_ENT){
     len=text.length();
     if(0<len){
-      if(base==10 && text.findf('E')>=0){
+      if(base==10 && text.find('E')>=0){
         len--;
         if(0<len && (text[len-1]=='+' || text[len-1]=='-')) len--;
         if(0<len && text[len-1]=='E') len--;
@@ -1518,8 +1533,8 @@ long Calculator::onUpdSin(FXObject* sender,FXSelector,void*){
   FXString label="sin";
   if(modifiers&MOD_INV) label.prepend('a');
   if(modifiers&MOD_HYP) label.append('h');
-  sender->handle(this,MKUINT(ID_SETSTRINGVALUE,SEL_COMMAND),(void*)&label);
-  sender->handle(this,(base==10) ? MKUINT(ID_ENABLE,SEL_COMMAND) : MKUINT(ID_DISABLE,SEL_COMMAND),NULL);
+  sender->handle(this,FXSEL(SEL_COMMAND,ID_SETSTRINGVALUE),(void*)&label);
+  sender->handle(this,(base==10) ? FXSEL(SEL_COMMAND,ID_ENABLE) : FXSEL(SEL_COMMAND,ID_DISABLE),NULL);
   return 1;
   }
 
@@ -1536,8 +1551,8 @@ long Calculator::onUpdCos(FXObject* sender,FXSelector,void*){
   FXString label="cos";
   if(modifiers&MOD_INV) label.prepend('a');
   if(modifiers&MOD_HYP) label.append('h');
-  sender->handle(this,MKUINT(ID_SETSTRINGVALUE,SEL_COMMAND),(void*)&label);
-  sender->handle(this,(base==10) ? MKUINT(ID_ENABLE,SEL_COMMAND) : MKUINT(ID_DISABLE,SEL_COMMAND),NULL);
+  sender->handle(this,FXSEL(SEL_COMMAND,ID_SETSTRINGVALUE),(void*)&label);
+  sender->handle(this,(base==10) ? FXSEL(SEL_COMMAND,ID_ENABLE) : FXSEL(SEL_COMMAND,ID_DISABLE),NULL);
   return 1;
   }
 
@@ -1554,8 +1569,8 @@ long Calculator::onUpdTan(FXObject* sender,FXSelector,void*){
   FXString label="tan";
   if(modifiers&MOD_INV) label.prepend('a');
   if(modifiers&MOD_HYP) label.append('h');
-  sender->handle(this,MKUINT(ID_SETSTRINGVALUE,SEL_COMMAND),(void*)&label);
-  sender->handle(this,(base==10) ? MKUINT(ID_ENABLE,SEL_COMMAND) : MKUINT(ID_DISABLE,SEL_COMMAND),NULL);
+  sender->handle(this,FXSEL(SEL_COMMAND,ID_SETSTRINGVALUE),(void*)&label);
+  sender->handle(this,(base==10) ? FXSEL(SEL_COMMAND,ID_ENABLE) : FXSEL(SEL_COMMAND,ID_DISABLE),NULL);
   return 1;
   }
 
@@ -1570,8 +1585,8 @@ long Calculator::onCmdLog(FXObject*,FXSelector,void*){
 // Update Log button
 long Calculator::onUpdLog(FXObject* sender,FXSelector,void*){
   FXString label=(modifiers&MOD_INV)?"10^x":"log";
-  sender->handle(this,MKUINT(ID_SETSTRINGVALUE,SEL_COMMAND),(void*)&label);
-  sender->handle(this,(base==10) ? MKUINT(ID_ENABLE,SEL_COMMAND) : MKUINT(ID_DISABLE,SEL_COMMAND),NULL);
+  sender->handle(this,FXSEL(SEL_COMMAND,ID_SETSTRINGVALUE),(void*)&label);
+  sender->handle(this,(base==10) ? FXSEL(SEL_COMMAND,ID_ENABLE) : FXSEL(SEL_COMMAND,ID_DISABLE),NULL);
   return 1;
   }
 
@@ -1586,15 +1601,15 @@ long Calculator::onCmdLn(FXObject*,FXSelector,void*){
 // Update Ln button
 long Calculator::onUpdLn(FXObject* sender,FXSelector,void*){
   FXString label=(modifiers&MOD_INV)?"e^x":"ln";
-  sender->handle(this,MKUINT(ID_SETSTRINGVALUE,SEL_COMMAND),(void*)&label);
-  sender->handle(this,(base==10) ? MKUINT(ID_ENABLE,SEL_COMMAND) : MKUINT(ID_DISABLE,SEL_COMMAND),NULL);
+  sender->handle(this,FXSEL(SEL_COMMAND,ID_SETSTRINGVALUE),(void*)&label);
+  sender->handle(this,(base==10) ? FXSEL(SEL_COMMAND,ID_ENABLE) : FXSEL(SEL_COMMAND,ID_DISABLE),NULL);
   return 1;
   }
 
 
 // Update PI button
 long Calculator::onCmdPi(FXObject*,FXSelector,void*){
-  setnum((modifiers&MOD_INV)?EULER:PI);
+  setnum((modifiers&MOD_HYP)?((modifiers&MOD_INV)?INVGOLDEN:GOLDEN):((modifiers&MOD_INV)?EULER:PI));
   setDisplayValue(getnum());
   modifiers=0;
   return 1;
@@ -1603,9 +1618,9 @@ long Calculator::onCmdPi(FXObject*,FXSelector,void*){
 
 // Update PI button
 long Calculator::onUpdPi(FXObject* sender,FXSelector,void*){
-  FXString label=(modifiers&MOD_INV)?"e":"pi";
-  sender->handle(this,MKUINT(ID_SETSTRINGVALUE,SEL_COMMAND),(void*)&label);
-  sender->handle(this,(base==10) ? MKUINT(ID_ENABLE,SEL_COMMAND) : MKUINT(ID_DISABLE,SEL_COMMAND),NULL);
+  FXString label=(modifiers&MOD_HYP) ? (modifiers&MOD_INV) ? "1/phi" : "phi" : (modifiers&MOD_INV) ? "e" : "pi";
+  sender->handle(this,FXSEL(SEL_COMMAND,ID_SETSTRINGVALUE),(void*)&label);
+  sender->handle(this,(base==10) ? FXSEL(SEL_COMMAND,ID_ENABLE) : FXSEL(SEL_COMMAND,ID_DISABLE),NULL);
   return 1;
   }
 
@@ -1619,7 +1634,7 @@ long Calculator::onCmdFac(FXObject*,FXSelector,void*){
 
 // Update factorial
 long Calculator::onUpdFac(FXObject* sender,FXSelector,void*){
-  sender->handle(this,(base==10) ? MKUINT(ID_ENABLE,SEL_COMMAND) : MKUINT(ID_DISABLE,SEL_COMMAND),NULL);
+  sender->handle(this,(base==10) ? FXSEL(SEL_COMMAND,ID_ENABLE) : FXSEL(SEL_COMMAND,ID_DISABLE),NULL);
   return 1;
   }
 
@@ -1633,7 +1648,7 @@ long Calculator::onCmdPer(FXObject*,FXSelector,void*){
 
 // Update permutations
 long Calculator::onUpdPer(FXObject* sender,FXSelector,void*){
-  sender->handle(this,(base==10) ? MKUINT(ID_ENABLE,SEL_COMMAND) : MKUINT(ID_DISABLE,SEL_COMMAND),NULL);
+  sender->handle(this,(base==10) ? FXSEL(SEL_COMMAND,ID_ENABLE) : FXSEL(SEL_COMMAND,ID_DISABLE),NULL);
   return 1;
   }
 
@@ -1647,7 +1662,7 @@ long Calculator::onCmdCom(FXObject*,FXSelector,void*){
 
 // Update combinations
 long Calculator::onUpdCom(FXObject* sender,FXSelector,void*){
-  sender->handle(this,(base==10) ? MKUINT(ID_ENABLE,SEL_COMMAND) : MKUINT(ID_DISABLE,SEL_COMMAND),NULL);
+  sender->handle(this,(base==10) ? FXSEL(SEL_COMMAND,ID_ENABLE) : FXSEL(SEL_COMMAND,ID_DISABLE),NULL);
   return 1;
   }
 
@@ -1661,7 +1676,7 @@ long Calculator::onCmdRecip(FXObject*,FXSelector,void*){
 
 // Update reciprocal
 long Calculator::onUpdRecip(FXObject* sender,FXSelector,void*){
-  sender->handle(this,(base==10) ? MKUINT(ID_ENABLE,SEL_COMMAND) : MKUINT(ID_DISABLE,SEL_COMMAND),NULL);
+  sender->handle(this,(base==10) ? FXSEL(SEL_COMMAND,ID_ENABLE) : FXSEL(SEL_COMMAND,ID_DISABLE),NULL);
   return 1;
   }
 
@@ -1676,8 +1691,8 @@ long Calculator::onCmdXToY(FXObject*,FXSelector,void*){
 // Update X ^ Y
 long Calculator::onUpdXToY(FXObject* sender,FXSelector,void*){
   FXString label=(modifiers&MOD_INV)?"x^1/y":"x^y";
-  sender->handle(this,MKUINT(ID_SETSTRINGVALUE,SEL_COMMAND),(void*)&label);
-  sender->handle(this,(base==10) ? MKUINT(ID_ENABLE,SEL_COMMAND) : MKUINT(ID_DISABLE,SEL_COMMAND),NULL);
+  sender->handle(this,FXSEL(SEL_COMMAND,ID_SETSTRINGVALUE),(void*)&label);
+  sender->handle(this,(base==10) ? FXSEL(SEL_COMMAND,ID_ENABLE) : FXSEL(SEL_COMMAND,ID_DISABLE),NULL);
   return 1;
   }
 
@@ -1692,8 +1707,8 @@ long Calculator::onCmdSqrt(FXObject*,FXSelector,void*){
 // Update Sqrt
 long Calculator::onUpdSqrt(FXObject* sender,FXSelector,void*){
   FXString label=(modifiers&MOD_INV)?"x^2":"sqrt";
-  sender->handle(this,MKUINT(ID_SETSTRINGVALUE,SEL_COMMAND),(void*)&label);
-  sender->handle(this,(base==10) ? MKUINT(ID_ENABLE,SEL_COMMAND) : MKUINT(ID_DISABLE,SEL_COMMAND),NULL);
+  sender->handle(this,FXSEL(SEL_COMMAND,ID_SETSTRINGVALUE),(void*)&label);
+  sender->handle(this,(base==10) ? FXSEL(SEL_COMMAND,ID_ENABLE) : FXSEL(SEL_COMMAND,ID_DISABLE),NULL);
   return 1;
   }
 
@@ -1708,7 +1723,7 @@ long Calculator::onCmdShl(FXObject*,FXSelector,void*){
 // Update Shift left
 long Calculator::onUpdShl(FXObject* sender,FXSelector,void*){
   FXString label="SHL";
-  sender->handle(this,MKUINT(ID_SETSTRINGVALUE,SEL_COMMAND),(void*)&label);
+  sender->handle(this,FXSEL(SEL_COMMAND,ID_SETSTRINGVALUE),(void*)&label);
   return 1;
   }
 
@@ -1723,7 +1738,7 @@ long Calculator::onCmdShr(FXObject*,FXSelector,void*){
 // Update Shift right
 long Calculator::onUpdShr(FXObject* sender,FXSelector,void*){
   FXString label=(modifiers&MOD_INV)?"SAR":"SHR";
-  sender->handle(this,MKUINT(ID_SETSTRINGVALUE,SEL_COMMAND),(void*)&label);
+  sender->handle(this,FXSEL(SEL_COMMAND,ID_SETSTRINGVALUE),(void*)&label);
   return 1;
   }
 
@@ -1738,8 +1753,8 @@ long Calculator::onCmd2Log(FXObject*,FXSelector,void*){
 // Update Base 2 log
 long Calculator::onUpd2Log(FXObject* sender,FXSelector,void*){
   FXString label=(modifiers&MOD_INV)?"2^x":"2log";
-  sender->handle(this,MKUINT(ID_SETSTRINGVALUE,SEL_COMMAND),(void*)&label);
-  sender->handle(this,(base==10) ? MKUINT(ID_ENABLE,SEL_COMMAND) : MKUINT(ID_DISABLE,SEL_COMMAND),NULL);
+  sender->handle(this,FXSEL(SEL_COMMAND,ID_SETSTRINGVALUE),(void*)&label);
+  sender->handle(this,(base==10) ? FXSEL(SEL_COMMAND,ID_ENABLE) : FXSEL(SEL_COMMAND,ID_DISABLE),NULL);
   return 1;
   }
 
@@ -1810,8 +1825,8 @@ long Calculator::onCmdMod(FXObject*,FXSelector,void*){
 // Update mod
 long Calculator::onUpdMod(FXObject* sender,FXSelector,void*){
   FXString label=(modifiers&MOD_INV)?"div":"mod";
-  sender->handle(this,MKUINT(ID_SETSTRINGVALUE,SEL_COMMAND),(void*)&label);
-  sender->handle(this,(base==10) ? MKUINT(ID_ENABLE,SEL_COMMAND) : MKUINT(ID_DISABLE,SEL_COMMAND),NULL);
+  sender->handle(this,FXSEL(SEL_COMMAND,ID_SETSTRINGVALUE),(void*)&label);
+  sender->handle(this,(base==10) ? FXSEL(SEL_COMMAND,ID_ENABLE) : FXSEL(SEL_COMMAND,ID_DISABLE),NULL);
   return 1;
   }
 

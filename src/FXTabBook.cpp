@@ -3,7 +3,7 @@
 *                         T a b   B o o k   W i d g e t                         *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXTabBook.cpp,v 1.4 2002/01/18 22:43:05 jeroen Exp $                     *
+* $Id: FXTabBook.cpp,v 1.14 2004/02/08 17:29:07 fox Exp $                       *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -32,6 +32,7 @@
 #include "FXRectangle.h"
 #include "FXRegistry.h"
 #include "FXAccelTable.h"
+#include "FXHash.h"
 #include "FXApp.h"
 #include "FXDCWindow.h"
 #include "FXFont.h"
@@ -50,12 +51,17 @@
   - We hide the panes in FXTabBook.  This way, we don't have to change
     the position of each pane when the FXTabBook itself changes.
     Only the active pane needs to be moved.
+  - Fix setCurrent() to be like FXSwitcher.
 */
 
 
 #define TABBOOK_MASK       (TABBOOK_SIDEWAYS|TABBOOK_BOTTOMTABS)
 
+using namespace FX;
+
 /*******************************************************************************/
+
+namespace FX {
 
 FXDEFMAP(FXTabBook) FXTabBookMap[]={
   FXMAPFUNC(SEL_PAINT,0,FXTabBook::onPaint),
@@ -349,10 +355,13 @@ long FXTabBook::onFocusNext(FXObject*,FXSelector,void* ptr){
     child=getFirst();
     which=0;
     }
-  while(child && !child->shown()){ child=child->getNext(); which++; }
+  while(child && child->getNext() && !(child->shown() && child->isEnabled())){
+    child=child->getNext()->getNext();
+    which+=2;
+    }
   if(child){
     setCurrent(which>>1,TRUE);
-    child->handle(this,MKUINT(0,SEL_FOCUS_SELF),ptr);
+    child->handle(this,FXSEL(SEL_FOCUS_SELF,0),ptr);
     return 1;
     }
   return 0;
@@ -367,27 +376,22 @@ long FXTabBook::onFocusPrev(FXObject*,FXSelector,void* ptr){
     child=child->getPrev();
     if(!child) return 0;
     which=indexOfChild(child);
-    if(which&1){
-      child=child->getPrev();
-      }
     }
   else{
     child=getLast();
     if(!child) return 0;
     which=indexOfChild(child);
-    if(which&1){
-      child=child->getPrev();
-      }
     }
   if(which&1){
-    while(child && child->getPrev() && !child->shown()){ child=child->getPrev()->getPrev(); which-=2; }
+    child=child->getPrev();
     }
-  else{
-    while(child && !child->shown()){ child=child->getPrev(); which--; }
+  while(child && child->getPrev() && !(child->shown() && child->isEnabled())){
+    child=child->getPrev()->getPrev();
+    which-=2;
     }
   if(child){
     setCurrent(which>>1,TRUE);
-    child->handle(this,MKUINT(0,SEL_FOCUS_SELF),ptr);
+    child->handle(this,FXSEL(SEL_FOCUS_SELF,0),ptr);
     return 1;
     }
   return 0;
@@ -395,9 +399,9 @@ long FXTabBook::onFocusPrev(FXObject*,FXSelector,void* ptr){
 
 
 // Focus moved up
-long FXTabBook::onFocusUp(FXObject*,FXSelector sel,void* ptr){
+long FXTabBook::onFocusUp(FXObject*,FXSelector,void* ptr){
   if(options&TABBOOK_SIDEWAYS){
-    return handle(this,MKUINT(0,SEL_FOCUS_PREV),ptr);
+    return handle(this,FXSEL(SEL_FOCUS_PREV,0),ptr);
     }
   if(getFocus()){
     FXWindow *child=NULL;
@@ -408,13 +412,8 @@ long FXTabBook::onFocusUp(FXObject*,FXSelector sel,void* ptr){
       if(options&TABBOOK_BOTTOMTABS) child=getFocus()->getNext();
       }
     if(child){
-      if(child->isEnabled() && child->canFocus()){
-        child->handle(this,MKUINT(0,SEL_FOCUS_SELF),ptr);
-        return 1;
-        }
-      if(child->isComposite() && child->handle(this,sel,ptr)){
-        return 1;
-        }
+      if(child->handle(this,FXSEL(SEL_FOCUS_SELF,0),ptr)) return 1;
+      if(child->handle(this,FXSEL(SEL_FOCUS_UP,0),ptr)) return 1;
       }
     }
   return 0;
@@ -422,9 +421,9 @@ long FXTabBook::onFocusUp(FXObject*,FXSelector sel,void* ptr){
 
 
 // Focus moved down
-long FXTabBook::onFocusDown(FXObject*,FXSelector sel,void* ptr){
+long FXTabBook::onFocusDown(FXObject*,FXSelector,void* ptr){
   if(options&TABBOOK_SIDEWAYS){
-    return handle(this,MKUINT(0,SEL_FOCUS_NEXT),ptr);
+    return handle(this,FXSEL(SEL_FOCUS_NEXT,0),ptr);
     }
   if(getFocus()){
     FXWindow *child=NULL;
@@ -435,13 +434,8 @@ long FXTabBook::onFocusDown(FXObject*,FXSelector sel,void* ptr){
       if(!(options&TABBOOK_BOTTOMTABS)) child=getFocus()->getNext();
       }
     if(child){
-      if(child->isEnabled() && child->canFocus()){
-        child->handle(this,MKUINT(0,SEL_FOCUS_SELF),ptr);
-        return 1;
-        }
-      if(child->isComposite() && child->handle(this,sel,ptr)){
-        return 1;
-        }
+      if(child->handle(this,FXSEL(SEL_FOCUS_SELF,0),ptr)) return 1;
+      if(child->handle(this,FXSEL(SEL_FOCUS_DOWN,0),ptr)) return 1;
       }
     }
   return 0;
@@ -449,9 +443,9 @@ long FXTabBook::onFocusDown(FXObject*,FXSelector sel,void* ptr){
 
 
 // Focus moved left
-long FXTabBook::onFocusLeft(FXObject*,FXSelector sel,void* ptr){
+long FXTabBook::onFocusLeft(FXObject*,FXSelector,void* ptr){
   if(!(options&TABBOOK_SIDEWAYS)){
-    return handle(this,MKUINT(0,SEL_FOCUS_PREV),ptr);
+    return handle(this,FXSEL(SEL_FOCUS_PREV,0),ptr);
     }
   if(getFocus()){
     FXWindow *child=NULL;
@@ -462,13 +456,8 @@ long FXTabBook::onFocusLeft(FXObject*,FXSelector sel,void* ptr){
       if(options&TABBOOK_BOTTOMTABS) child=getFocus()->getNext();
       }
     if(child){
-      if(child->isEnabled() && child->canFocus()){
-        child->handle(this,MKUINT(0,SEL_FOCUS_SELF),ptr);
-        return 1;
-        }
-      if(child->isComposite() && child->handle(this,sel,ptr)){
-        return 1;
-        }
+      if(child->handle(this,FXSEL(SEL_FOCUS_SELF,0),ptr)) return 1;
+      if(child->handle(this,FXSEL(SEL_FOCUS_LEFT,0),ptr)) return 1;
       }
     }
   return 0;
@@ -476,9 +465,9 @@ long FXTabBook::onFocusLeft(FXObject*,FXSelector sel,void* ptr){
 
 
 // Focus moved right
-long FXTabBook::onFocusRight(FXObject*,FXSelector sel,void* ptr){
+long FXTabBook::onFocusRight(FXObject*,FXSelector,void* ptr){
   if(!(options&TABBOOK_SIDEWAYS)){
-    return handle(this,MKUINT(0,SEL_FOCUS_NEXT),ptr);
+    return handle(this,FXSEL(SEL_FOCUS_NEXT,0),ptr);
     }
   if(getFocus()){
     FXWindow *child=NULL;
@@ -489,15 +478,11 @@ long FXTabBook::onFocusRight(FXObject*,FXSelector sel,void* ptr){
       if(!(options&TABBOOK_BOTTOMTABS)) child=getFocus()->getNext();
       }
     if(child){
-      if(child->isEnabled() && child->canFocus()){
-        child->handle(this,MKUINT(0,SEL_FOCUS_SELF),ptr);
-        return 1;
-        }
-      if(child->isComposite() && child->handle(this,sel,ptr)){
-        return 1;
-        }
+      if(child->handle(this,FXSEL(SEL_FOCUS_SELF,0),ptr)) return 1;
+      if(child->handle(this,FXSEL(SEL_FOCUS_RIGHT,0),ptr)) return 1;
       }
     }
   return 0;
   }
 
+}

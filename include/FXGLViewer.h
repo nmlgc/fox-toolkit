@@ -3,7 +3,7 @@
 *                      O p e n G L   V i e w e r   W i d g e t                  *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXGLViewer.h,v 1.50 2002/01/18 22:42:53 jeroen Exp $                     *
+* $Id: FXGLViewer.h,v 1.69 2004/02/20 16:29:39 fox Exp $                        *
 ********************************************************************************/
 #ifndef FXGLVIEWER_H
 #define FXGLVIEWER_H
@@ -28,22 +28,19 @@
 #include "FXGLCanvas.h"
 #endif
 
+namespace FX {
 
 
 class FXDCPrint;
 class FXGLObject;
-
-
-// Pick tolerance
-#define PICK_TOL  3
+class FXGLVisual;
 
 
 // GL Viewer options
 enum {
-  VIEWER_LOCKED      = 0x00008000,    /// Mouse based view manipulation is locked
-  VIEWER_LIGHTING    = 0x00010000,    /// Lighting is on
-  VIEWER_FOG         = 0x00020000,    /// Fog mode on
-  VIEWER_DITHER      = 0x00040000     /// Dithering
+  VIEWER_LIGHTING = 0x00008000,    /// Lighting is on
+  VIEWER_FOG      = 0x00010000,    /// Fog mode on
+  VIEWER_DITHER   = 0x00020000     /// Dithering
   };
 
 
@@ -61,11 +58,11 @@ struct FXViewport {
 
 // OpenGL Light Source
 struct FXAPI FXLight {
-  FXHVec     ambient;           // Ambient light color
-  FXHVec     diffuse;           // Diffuse light color
-  FXHVec     specular;          // Specular light color
-  FXHVec     position;          // Light position
-  FXVec      direction;         // Spot direction
+  FXVec4f    ambient;           // Ambient light color
+  FXVec4f    diffuse;           // Diffuse light color
+  FXVec4f    specular;          // Specular light color
+  FXVec4f    position;          // Light position
+  FXVec3f    direction;         // Spot direction
   FXfloat    exponent;          // Spotlight exponent
   FXfloat    cutoff;            // Spotlight cutoff angle
   FXfloat    c_attn;            // Constant attenuation factor
@@ -76,10 +73,10 @@ struct FXAPI FXLight {
 
 // OpenGL Material Description
 struct FXAPI FXMaterial {
-  FXHVec     ambient;           // Ambient material color
-  FXHVec     diffuse;           // Diffuse material color
-  FXHVec     specular;          // Specular material color
-  FXHVec     emission;          // Emissive material color
+  FXVec4f    ambient;           // Ambient material color
+  FXVec4f    diffuse;           // Diffuse material color
+  FXVec4f    specular;          // Specular material color
+  FXVec4f    emission;          // Emissive material color
   FXfloat    shininess;         // Specular shininess
   };
 
@@ -97,36 +94,34 @@ class FXAPI FXGLViewer : public FXGLCanvas {
   friend class FXGLObject;
 protected:
   FXViewport      wvt;              // Window viewport transform
-  FXHMat          transform;        // Current transformation matrix
-  FXHMat          itransform;       // Inverse of current transformation matrix
+  FXMat4f         transform;        // Current transformation matrix
+  FXMat4f         itransform;       // Inverse of current transformation matrix
   FXuint          projection;       // Projection mode
-  FXQuat          rotation;         // Viewer orientation
+  FXQuatf         rotation;         // Viewer orientation
   FXdouble        fov;              // Field of view
   FXdouble        zoom;             // Zoom factor
-  FXdouble        offset;           // Offset for lines on surfaces
-  FXVec           center;           // Model center
-  FXVec           scale;            // Model scale
+  FXVec3f         center;           // Model center
+  FXVec3f         scale;            // Model scale
   FXdouble        worldpx;          // Pixel size in world
   FXdouble        modelpx;          // Pixel size in model
-  FXuint          op;               // Operation being performed
   FXint           maxhits;          // Maximum number of hits
   FXdouble        ax,ay;            // Quick view->world coordinate mapping
   FXdouble        diameter;         // Size of model diameter ( always > 0)
   FXdouble        distance;         // Distance of PRP to target
-  FXHVec          background;       // Background color
-  FXHVec          ambient;          // Global ambient light
+  FXVec4f         background[2];    // Background colors
+  FXVec4f         ambient;          // Global ambient light
   FXLight         light;            // Light source
   FXMaterial      material;         // Base material properties
   FXint           dial[3];          // Dial positions
-  FXTimer        *timer;            // Motion timer
   FXString        help;             // Status help
   FXString        tip;              // Tooltip for background
-  FXbool          doesturbo;        // Doing turbo mode
-  FXbool          turbomode;        // Turbo mode
   FXGLObject     *dropped;          // Object being dropped on
   FXGLObject     *selection;        // Current object
   FXZSortFunc     zsortfunc;        // Routine to sort feedback buffer
   FXGLObject     *scene;            // What we're looking at
+  FXbool          doesturbo;        // Doing turbo mode
+  FXbool          turbomode;        // Turbo mode
+  FXuchar         mode;             // Mode the widget is in
 public:
 
   // Common DND types
@@ -157,8 +152,8 @@ protected:
   void glsetup();
   void updateProjection();
   void updateTransform();
-  FXVec spherePoint(FXint px,FXint py);
-  FXQuat turn(FXint fx,FXint fy,FXint tx,FXint ty);
+  FXVec3f spherePoint(FXint px,FXint py);
+  FXQuatf turn(FXint fx,FXint fy,FXint tx,FXint ty);
   void drawWorld(FXViewport& wv);
   void drawAnti(FXViewport& wv);
   void drawLasso(FXint x0,FXint y0,FXint x1,FXint y1);
@@ -167,7 +162,6 @@ protected:
   void drawFeedback(FXDCPrint& pdc,const FXfloat* buffer,FXint used);
   virtual FXGLObject* processHits(FXuint *pickbuffer,FXint nhits);
   void setOp(FXuint o);
-  virtual void layout();
 private:
   FXGLViewer(const FXGLViewer&);
   FXGLViewer &operator=(const FXGLViewer&);
@@ -229,8 +223,6 @@ public:
   long onDNDMotion(FXObject*,FXSelector,void*);
   long onDNDDrop(FXObject*,FXSelector,void*);
   long onTipTimer(FXObject*,FXSelector,void*);
-  long onQueryHelp(FXObject*,FXSelector,void*);
-  long onQueryTip(FXObject*,FXSelector,void*);
   long onCmdXYZDial(FXObject*,FXSelector,void*);
   long onUpdXYZDial(FXObject*,FXSelector,void*);
   long onCmdRollPitchYaw(FXObject*,FXSelector,void*);
@@ -245,10 +237,10 @@ public:
   long onUpdDeleteSel(FXObject*,FXSelector,void*);
   long onCmdBackColor(FXObject*,FXSelector,void*);
   long onUpdBackColor(FXObject*,FXSelector,void*);
+  long onCmdGradientBackColor(FXObject*,FXSelector,void*);
+  long onUpdGradientBackColor(FXObject*,FXSelector,void*);
   long onCmdAmbientColor(FXObject*,FXSelector,void*);
   long onUpdAmbientColor(FXObject*,FXSelector,void*);
-  long onCmdLock(FXObject*,FXSelector,void*);
-  long onUpdLock(FXObject*,FXSelector,void*);
   long onCmdLighting(FXObject*,FXSelector,void*);
   long onUpdLighting(FXObject*,FXSelector,void*);
   long onCmdFog(FXObject*,FXSelector,void*);
@@ -271,6 +263,8 @@ public:
   long onCmdPrintVector(FXObject*,FXSelector,void*);
   long onCmdLassoZoom(FXObject*,FXSelector,void*);
   long onCmdLassoSelect(FXObject*,FXSelector,void*);
+  long onQueryHelp(FXObject*,FXSelector,void*);
+  long onQueryTip(FXObject*,FXSelector,void*);
   virtual long onDefault(FXObject*,FXSelector,void*);
 
 public:
@@ -279,12 +273,6 @@ public:
   enum {
     PARALLEL,		  // Parallel projection
     PERSPECTIVE		  // Perspective projection
-    };
-
-  // Precompiled display lists [DEPRECATED]
-  enum {
-    OFFSETPROJECTION  = 1,
-    SURFACEPROJECTION = 2
     };
 
   // Messages
@@ -299,7 +287,8 @@ public:
     ID_BOTTOM,
     ID_RESETVIEW,
     ID_FITVIEW,
-    ID_TIPTIMER,
+    ID_TOP_COLOR,
+    ID_BOTTOM_COLOR,
     ID_BACK_COLOR,
     ID_AMBIENT_COLOR,
     ID_LIGHT_AMBIENT,
@@ -320,7 +309,6 @@ public:
     ID_YAW,
     ID_FOV,
     ID_ZOOM,
-    ID_LOCK,
     ID_CUT_SEL,
     ID_COPY_SEL,
     ID_PASTE_SEL,
@@ -351,6 +339,9 @@ public:
   /// Detach server-side resources
   virtual void detach();
 
+  /// Perform layout
+  virtual void layout();
+
   /// Return size of pixel in world coordinates
   FXdouble worldPix() const { return worldpx; }
 
@@ -367,34 +358,34 @@ public:
   virtual FXGLObject* pick(FXint x,FXint y);
 
   /// Change the model bounding box; this adjusts the viewer
-  FXbool setBounds(const FXRange& box);
+  FXbool setBounds(const FXRangef& box);
 
   /// Fit viewer to the given bounding box
-  FXbool fitToBounds(const FXRange& box);
+  FXbool fitToBounds(const FXRangef& box);
 
   /// Return the viewer's viewport
   void getViewport(FXViewport& v) const;
 
   /// Translate eye-coordinate to screen coordinate
-  void eyeToScreen(FXint& sx,FXint& sy,FXVec e);
+  void eyeToScreen(FXint& sx,FXint& sy,FXVec3f e);
 
   /// Translate screen coordinate to eye coordinate at the given depth
-  FXVec screenToEye(FXint sx,FXint sy,FXfloat eyez=0.0);
+  FXVec3f screenToEye(FXint sx,FXint sy,FXfloat eyez=0.0);
 
   /// Translate screen coordinate to eye coordinate at the target point depth
-  FXVec screenToTarget(FXint sx,FXint sy);
+  FXVec3f screenToTarget(FXint sx,FXint sy);
 
   /// Translate world coordinate to eye coordinate
-  FXVec worldToEye(FXVec w);
+  FXVec3f worldToEye(FXVec3f w);
 
   /// Translate world coordinate to eye coordinate depth
-  FXfloat worldToEyeZ(FXVec w);
+  FXfloat worldToEyeZ(FXVec3f w);
 
   /// Translate eye coordinate to eye coordinate
-  FXVec eyeToWorld(FXVec e);
+  FXVec3f eyeToWorld(FXVec3f e);
 
   /// Calculate world coordinate vector from screen movement
-  FXVec worldVector(FXint fx,FXint fy,FXint tx,FXint ty);
+  FXVec3f worldVector(FXint fx,FXint fy,FXint tx,FXint ty);
 
   ///  Change default object material setting
   void setMaterial(const FXMaterial &mtl);
@@ -421,34 +412,34 @@ public:
   FXdouble getDistance() const { return distance; }
 
   /// Change unequal model scaling factors
-  void setScale(FXVec s);
+  void setScale(FXVec3f s);
 
   /// Return current scaling factors
-  FXVec getScale() const { return scale; }
+  const FXVec3f& getScale() const { return scale; }
 
   /// Change camera orientation from quaternion
-  void setOrientation(FXQuat rot);
+  void setOrientation(FXQuatf rot);
 
   /// Return current camera orientation quaternion
-  FXQuat getOrientation() const { return rotation; }
+  const FXQuatf& getOrientation() const { return rotation; }
 
   /// Change object center (tranlation)
-  void setCenter(FXVec cntr);
+  void setCenter(FXVec3f cntr);
 
   /// Return object center
-  const FXVec& getCenter() const { return center; }
+  const FXVec3f& getCenter() const { return center; }
 
   /// Translate object center
-  void translate(FXVec vec);
+  void translate(FXVec3f vec);
 
   /// Return boresight vector
-  FXbool getBoreVector(FXint sx,FXint sy,FXVec& point,FXVec& dir);
+  FXbool getBoreVector(FXint sx,FXint sy,FXVec3f& point,FXVec3f& dir);
 
   /// Return eyesight vector
-  FXVec getEyeVector() const;
+  FXVec3f getEyeVector() const;
 
   /// Return eye position
-  FXVec getEyePosition() const;
+  FXVec3f getEyePosition() const;
 
   /// Change help text
   void setHelpText(const FXString& text);
@@ -462,17 +453,11 @@ public:
   /// Return tip text
   FXString getTipText() const { return tip; }
 
-  /// Change line offset
-  void setOffset(FXdouble offs);
-
-  /// Return line offset
-  FXdouble getOffset() const { return offset; }
-
   /// Return the current transformation matrix
-  const FXHMat& getTransform() const { return transform; }
+  const FXMat4f& getTransform() const { return transform; }
 
   /// Return the inverse of the current transformation matrix
-  const FXHMat& getInvTransform() const { return itransform; }
+  const FXMat4f& getInvTransform() const { return itransform; }
 
   /// Change the scene, i.e. the object being displayed.
   void setScene(FXGLObject* sc);
@@ -492,28 +477,29 @@ public:
   /// Return the projection mode
   FXuint getProjection() const { return projection; }
 
-  /// Lock the viewer, i.e. prevent mouse-based viewing operations
-  void setViewLock(FXbool lock=TRUE);
+  /// Change top or bottom or both background colors
+  void setBackgroundColor(const FXVec4f& clr,FXbool bottom=MAYBE);
 
-  /// Return viewer lock status
-  FXbool getViewLock() const;
-
-  /// Change window background color
-  void setBackgroundColor(const FXHVec& clr);
-
-  /// Return window background color
-  FXHVec getBackgroundColor() const { return background; }
+  /// Return top or bottom window background color.
+  const FXVec4f& getBackgroundColor(FXbool bottom=FALSE) const { return background[bottom]; }
 
   /// Change global ambient light color
-  void setAmbientColor(const FXHVec& clr);
+  void setAmbientColor(const FXVec4f& clr);
 
   /// Return global ambient light color
-  FXHVec getAmbientColor() const { return ambient; }
+  const FXVec4f& getAmbientColor() const { return ambient; }
 
-  /// Read the pixels off the screen as R,G,B tuples.
-  FXbool readPixels(FXuchar*& buffer,FXint x,FXint y,FXint w,FXint h);
+  /**
+  * Read the pixels off the screen as array of FXColor;
+  * this array can be directly passed to fxsaveBMP and other image
+  * output routines.
+  */
+  FXbool readPixels(FXColor*& buffer,FXint x,FXint y,FXint w,FXint h);
 
-  /// Read the feedback buffer containing the current scene, returning used and allocated size
+  /**
+  * Read the feedback buffer containing the current scene, returning used
+  * and allocated size.
+  */
   FXbool readFeedback(FXfloat*& buffer,FXint& used,FXint& size,FXint x,FXint y,FXint w,FXint h);
 
   /**
@@ -564,6 +550,7 @@ public:
   virtual ~FXGLViewer();
   };
 
+}
 
 #endif
 

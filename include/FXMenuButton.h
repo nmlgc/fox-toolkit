@@ -1,9 +1,9 @@
 /********************************************************************************
 *                                                                               *
-*                        M e n u   B u t t o n   W i d g e t                    *
+*                        M e n u B u t t o n   W i d g e t                      *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1998,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXMenuButton.h,v 1.14 2002/01/18 22:42:53 jeroen Exp $                   *
+* $Id: FXMenuButton.h,v 1.20 2004/02/08 17:17:33 fox Exp $                      *
 ********************************************************************************/
 #ifndef FXMENUBUTTON_H
 #define FXMENUBUTTON_H
@@ -28,6 +28,7 @@
 #include "FXLabel.h"
 #endif
 
+namespace FX {
 
 
 class FXPopup;
@@ -124,7 +125,7 @@ public:
   virtual FXbool contains(FXint parentx,FXint parenty) const;
 
   /// Change the popup menu
-  void setMenu(FXPopup *pup){ pane = pup; }
+  void setMenu(FXPopup *pup){ pane=pup; }
 
   /// Return current popup menu
   FXPopup* getMenu() const { return pane; }
@@ -168,5 +169,7 @@ public:
   /// Destructor
   virtual ~FXMenuButton();
   };
+
+}
 
 #endif

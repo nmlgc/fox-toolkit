@@ -3,7 +3,7 @@
 *                        P r i n t   J o b   D i a l o g                        *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1999,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1999,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXPrintDialog.h,v 1.11 2002/01/18 22:55:03 jeroen Exp $                  *
+* $Id: FXPrintDialog.h,v 1.15 2004/02/08 17:17:34 fox Exp $                     *
 ********************************************************************************/
 #ifndef FXPRINTDIALOG_H
 #define FXPRINTDIALOG_H
@@ -28,6 +28,7 @@
 #include "FXDialogBox.h"
 #endif
 
+namespace FX {
 
 
 class FXRadioButton;
@@ -151,5 +152,6 @@ public:
   virtual ~FXPrintDialog();
   };
 
+}
 
 #endif

@@ -3,9 +3,7 @@
 *           D e v i c e   C o n t e x t   F o r   P r i n t i n g               *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
-*********************************************************************************
-* Contributed by celer@ipro.lug.usf.edu                                         *
+* Copyright (C) 1997,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -21,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXDCPrint.cpp,v 1.26.4.2 2004/03/03 19:02:17 fox Exp $                    *
+* $Id: FXDCPrint.cpp,v 1.41 2004/03/10 23:19:41 fox Exp $                       *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -35,6 +33,7 @@
 #include "FXSettings.h"
 #include "FXRegistry.h"
 #include "FXAccelTable.h"
+#include "FXHash.h"
 #include "FXApp.h"
 #include "FXId.h"
 #include "FXFont.h"
@@ -55,6 +54,7 @@
 
 /*
   Notes:
+  - Contributed by celer@ipro.lug.usf.edu.
   - Coordinate system starts in upper left corner, same as screen [which is
     different from the way PostScript normally does things].
   - Implement the many missing functions.
@@ -70,17 +70,21 @@
     psdc.endPrint();
   - Perhaps feed into FXStream instead of FILE* this might be
     cool to drag and drop [E]PS into apps...
+  - Do we still need the enum's in FXMediaSize if mediasize
+    indexes into the registry database's paper size list?
 */
 
-
+using namespace FX;
 
 /*******************************************************************************/
+
+namespace FX {
 
 
 // Construct
 FXDCPrint::FXDCPrint(FXApp* a):FXDC(a){
   font=getApp()->getNormalFont();
-  psout=NULL;
+  psout=NULL;   // FIXME use ctx for this
   mediawidth=0.0;
   mediaheight=0.0;
   mediabb.xmin=0.0;
@@ -132,16 +136,58 @@ void FXDCPrint::bbox(FXfloat x,FXfloat y){
   }
 
 
+// Send the range of coordinates that will be sent
+FXbool FXDCPrint::setContentRange(FXint pxminArg, FXint pyminArg, FXint pxmaxArg, FXint pymaxArg){
+  pxmin=pxminArg;
+  pymin=pyminArg;
+  pxmax=pxmaxArg;
+  pymax=pymaxArg;
+  return TRUE;    // Should we check for appropriate ranges?
+  }
+
+
 // Transform point
 void FXDCPrint::tfm(FXfloat& xo,FXfloat& yo,FXfloat xi,FXfloat yi){
+/*
   if(flags&PRINT_LANDSCAPE){
     xo=yi;
-    yo=xi;
-//    yo=mediaheight-xi;
+    yo=(FXfloat)(mediaheight-xi);
     }
   else{
     xo=xi;
-    yo=mediaheight-yi;
+    yo=(FXfloat)(mediaheight-yi);
+    }
+*/
+  FXfloat pxrange=static_cast<FXfloat>(pxmax-pxmin);
+  FXfloat pyrange=static_cast<FXfloat>(pymax-pymin);
+  FXfloat mxmin,mxmax,mymin,mymax,mxrange,myrange;
+
+  if(flags&PRINT_LANDSCAPE){
+    mxmin=static_cast<FXfloat>(mediabb.ymin);
+    mxmax=static_cast<FXfloat>(mediabb.ymax);
+    mymin=static_cast<FXfloat>(mediawidth-mediabb.xmax);
+    mymax=static_cast<FXfloat>(mediawidth-mediabb.xmin);
+    mxrange=mxmax-mxmin;
+    myrange=mymax-mymin;
+    //xo=xi;
+    //yo=mediawidth-yi;
+    }
+  else{
+    mxmin=static_cast<FXfloat>(mediabb.xmin);
+    mxmax=static_cast<FXfloat>(mediabb.xmax);
+    mymin=static_cast<FXfloat>(mediabb.ymin);
+    mymax=static_cast<FXfloat>(mediabb.ymax);
+    mxrange=mxmax-mxmin;
+    myrange=mymax-mymin;
+    }
+
+  if (pyrange/pxrange<=myrange/mxrange) { // short/wide
+    xo=mxmin+((xi-pxmin)/pxrange)*mxrange;
+    yo=mymin+.5f*(myrange-pyrange*(mxrange/pxrange))+(pyrange-yi)*(mxrange/pxrange);
+    }
+  else {// tall/thin
+    xo=mxmin+.5f*(mxrange-pxrange*(myrange/pyrange))+xi*(myrange/pyrange);
+    yo=mymin+((pyrange-yi)/pyrange)*myrange;
     }
   }
 
@@ -216,16 +262,6 @@ FXbool FXDCPrint::beginPrint(FXPrinter& job){
     docbb.ymin=(FXfloat)job.bottommargin;
     docbb.ymax=(FXfloat)(job.mediaheight-job.topmargin);
     outf("%%%%BoundingBox: %d %d %d %d\n",(int)docbb.xmin,(int)docbb.ymin,(int)docbb.xmax,(int)docbb.ymax);
-    }
-
-  // Portrait/landscape
-  if(flags&PRINT_LANDSCAPE){
-    outf("%%%%Orientation: Landscape\n");
-    }
-  else{
-    // I am not sure this should be here, so I leave it commented out
-    // (portrait seems to be default anyway)
-    //outf("%%%%Orientation: Portrait\n");
     }
 
   // Calculate number of pages
@@ -461,13 +497,11 @@ FXbool FXDCPrint::beginPage(FXuint page){
   outf("%%%%EndPageSetup\n");
   outf("gsave\n");
 
-/*
   // Maybe in landscape?
   if(flags&PRINT_LANDSCAPE){
     outf("%g %g translate\n",mediawidth,0.0);
     outf("90 rotate\n");
     }
-*/
 
   return TRUE;
   }
@@ -659,6 +693,17 @@ void FXDCPrint::fillRectangles(const FXRectangle* rectangles,FXuint nrectangles)
   }
 
 
+// Fill chord
+void FXDCPrint::fillChord(FXint,FXint,FXint,FXint,FXint,FXint){
+  }
+
+
+// Fill chords
+void FXDCPrint::fillChords(const FXArc*,FXuint){
+  }
+
+
+
 // Fill arc
 void FXDCPrint::fillArc(FXint,FXint,FXint,FXint,FXint,FXint){
   }
@@ -714,6 +759,7 @@ void FXDCPrint::fillComplexPolygonRel(const FXPoint*,FXuint){
 // Draw string (only foreground bits)
 // Contributed by S. Ancelot <sancelot@online.fr>
 void FXDCPrint::drawText(FXint x,FXint y,const FXchar* string,FXuint len){
+/*
   FXfloat xx,yy;
   tfm(xx,yy,(FXfloat)x,(FXfloat)y);
   bbox(xx,yy);
@@ -730,6 +776,89 @@ void FXDCPrint::drawText(FXint x,FXint y,const FXchar* string,FXuint len){
     }
   outf(") show\n");
   outf("grestore\n");
+*/
+  FXfloat xx,yy;
+  tfm(xx,yy,(FXfloat)x,(FXfloat)y);
+
+  // old font size was hardcoded...
+  //outf("(%s) %g %g %d /Courier drawText\n",string,xx,yy,15);
+
+  FXfloat pxrange=static_cast<FXfloat>(pxmax-pxmin);
+  FXfloat pyrange=static_cast<FXfloat>(pymax-pymin);
+  FXfloat mxmin,mxmax,mymin,mymax,mxrange,myrange;
+
+  if(flags&PRINT_LANDSCAPE){
+    mxmin=static_cast<FXfloat>(mediabb.ymin);
+    mxmax=static_cast<FXfloat>(mediabb.ymax);
+    mymin=static_cast<FXfloat>(mediawidth-mediabb.xmax);
+    mymax=static_cast<FXfloat>(mediawidth-mediabb.xmin);
+    mxrange=mxmax-mxmin;
+    myrange=mymax-mymin;
+    }
+  else{
+    mxmin=static_cast<FXfloat>(mediabb.xmin);
+    mxmax=static_cast<FXfloat>(mediabb.xmax);
+    mymin=static_cast<FXfloat>(mediabb.ymin);
+    mymax=static_cast<FXfloat>(mediabb.ymax);
+    mxrange=mxmax-mxmin;
+    myrange=mymax-mymin;
+    }
+  FXfloat fsize=0.1f*font->getSize();
+  // Hack...
+  // Account for dpi and scale up or down with graph...
+  // Perhaps override screen resolution via registry
+  FXint screenres=getApp()->reg().readUnsignedEntry("SETTINGS","screenres",100);
+  // Validate
+  if(screenres<50) screenres=50;
+  if(screenres>200) screenres=200;
+
+  if(pyrange/pxrange<=myrange/mxrange){ // short/wide
+    fsize *= (mxrange/pxrange)*(screenres/72.f);
+    }
+  else{// tall/thin
+    fsize *= (myrange/pyrange)*(screenres/72.f);
+    }
+
+
+  FXString fname=font->getName();
+  if(fname=="times"){
+    fname="Times";
+    }
+  else if(fname=="helvetica"){
+    fname="Helvetica";
+    }
+  else if(fname=="courier"){
+    fname="Courier";
+    }
+  else{
+    fname="Courier";
+    }
+  if(font->getWeight()==FONTWEIGHT_BOLD){
+    if(font->getSlant()==FONTSLANT_ITALIC){
+      fname+="-BoldItalic";
+      }
+    else if(font->getSlant()==FONTSLANT_OBLIQUE){
+      fname+="-BoldOblique";
+      }
+    else {
+      fname+="-Bold";
+      }
+    }
+  else{
+    if(font->getSlant()==FONTSLANT_ITALIC){
+      fname+="-Italic";
+      }
+    else if(font->getSlant()==FONTSLANT_OBLIQUE){
+      fname+="-Oblique";
+      }
+    }
+  if(fname=="Times"){
+    fname+="-Roman";
+    }
+
+
+  //outf("(%s) %g %g %d /Courier drawText\n",string,xx,yy,(int)fsize);
+  outf("(%s) %g %g %d /%s drawText\n",string,xx,yy,(int)fsize,fname.text());
   }
 
 
@@ -750,7 +879,7 @@ void FXDCPrint::drawImage(const FXImage *img,FXint dx,FXint dy){
   if(opts&IMAGE_OWNED){
     FXint    width  = img->getWidth();
     FXint    height = img->getHeight();
-    FXuchar *buffer = img->getData();
+    FXuchar *buffer = (FXuchar*)img->getData();
 
     outf("/picstr %d string def\n",width*3);
     outf("%d %d translate\n",dx,height-dy);
@@ -761,11 +890,8 @@ void FXDCPrint::drawImage(const FXImage *img,FXint dx,FXint dy){
     outf("false %d\n",3);
     outf("colorimage\n");
 
-    int bpp=3;
-    if(opts&IMAGE_ALPHA) bpp=4;
-
-    int end=width*height*bpp;
-    for(int i=0; i<end ; i+=bpp){
+    int end=width*height;
+    for(int i=0; i<end ; i+=4){
       outhex(buffer[i]);
       outhex(buffer[i+1]);
       outhex(buffer[i+2]);
@@ -776,7 +902,7 @@ void FXDCPrint::drawImage(const FXImage *img,FXint dx,FXint dy){
 
 
 // Draw bitmap
-void FXDCPrint::drawBitmap(const FXBitmap* bitmap,FXint dx,FXint dy){
+void FXDCPrint::drawBitmap(const FXBitmap*,FXint,FXint){
   }
 
 
@@ -933,7 +1059,7 @@ void FXDCPrint::clearClipMask(){
 
 
 // Set font to draw text with
-void FXDCPrint::setTextFont(FXFont *fnt){
+void FXDCPrint::setFont(FXFont *fnt){
   font=fnt;
   }
 
@@ -1033,3 +1159,6 @@ FXint FXSetup::DoNTPrint(FXPrinter& printInfo){
   }
 
 */
+
+}
+

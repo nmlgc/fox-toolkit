@@ -3,7 +3,7 @@
 *                            B M P   I m a g e   O b j e c t                    *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1998,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXBMPImage.h,v 1.7 2002/01/18 22:42:51 jeroen Exp $                      *
+* $Id: FXBMPImage.h,v 1.15 2004/02/08 17:17:33 fox Exp $                        *
 ********************************************************************************/
 #ifndef FXBMPIMAGE_H
 #define FXBMPIMAGE_H
@@ -28,6 +28,7 @@
 #include "FXImage.h"
 #endif
 
+namespace FX {
 
 
 /// Microsoft Bitmap image
@@ -44,22 +45,29 @@ public:
   FXBMPImage(FXApp* a,const void *pix=NULL,FXuint opts=0,FXint w=1,FXint h=1);
 
   /// Save pixels into stream in Microsoft bitmap format
-  virtual void savePixels(FXStream& store) const;
+  virtual FXbool savePixels(FXStream& store) const;
 
   /// Load pixels from stream in Microsoft bitmap format
-  virtual void loadPixels(FXStream& store);
+  virtual FXbool loadPixels(FXStream& store);
 
   /// Destroy icon
   virtual ~FXBMPImage();
   };
 
 
-/// Load a bmp file from a stream
-extern FXAPI FXbool fxloadBMP(FXStream& store,FXuchar*& data,FXColor& transp,FXint& width,FXint& height);
+/**
+* Load an BMP (Microsoft Bitmap) file from a stream.
+* Upon successful return, the pixel array and size are returned.
+* If an error occurred, the pixel array is set to NULL.
+*/
+extern FXAPI FXbool fxloadBMP(FXStream& store,FXColor*& data,FXint& width,FXint& height);
 
 
-/// Save a bmp file to a stream
-extern FXAPI FXbool fxsaveBMP(FXStream& store,const FXuchar *data,FXColor transp,FXint width,FXint height);
+/**
+* Save an BMP (Microsoft Bitmap) file to a stream.
+*/
+extern FXAPI FXbool fxsaveBMP(FXStream& store,const FXColor *data,FXint width,FXint height);
 
+}
 
 #endif

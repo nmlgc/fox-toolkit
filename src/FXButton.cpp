@@ -3,7 +3,7 @@
 *                           B u t t o n    O b j e c t s                        *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXButton.cpp,v 1.41.4.3 2003/06/20 19:02:07 fox Exp $                     *
+* $Id: FXButton.cpp,v 1.54 2004/02/08 17:29:06 fox Exp $                        *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -32,6 +32,7 @@
 #include "FXRectangle.h"
 #include "FXSettings.h"
 #include "FXRegistry.h"
+#include "FXHash.h"
 #include "FXApp.h"
 #include "FXDCWindow.h"
 #include "FXIcon.h"
@@ -55,9 +56,13 @@
 */
 
 // Button styles
-#define BUTTON_MASK (BUTTON_AUTOGRAY|BUTTON_AUTOHIDE|BUTTON_TOOLBAR|BUTTON_DEFAULT)
+#define BUTTON_MASK (BUTTON_AUTOGRAY|BUTTON_AUTOHIDE|BUTTON_TOOLBAR|BUTTON_DEFAULT|BUTTON_INITIAL)
+
+using namespace FX;
 
 /*******************************************************************************/
+
+namespace FX {
 
 // Map
 FXDEFMAP(FXButton) FXButtonMap[]={
@@ -226,11 +231,11 @@ long FXButton::onLeave(FXObject* sender,FXSelector sel,void* ptr){
 
 // Pressed mouse button
 long FXButton::onLeftBtnPress(FXObject*,FXSelector,void* ptr){
-  handle(this,MKUINT(0,SEL_FOCUS_SELF),ptr);
+  handle(this,FXSEL(SEL_FOCUS_SELF,0),ptr);
   flags&=~FLAG_TIP;
   if(isEnabled() && !(flags&FLAG_PRESSED)){
     grab();
-    if(target && target->handle(this,MKUINT(message,SEL_LEFTBUTTONPRESS),ptr)) return 1;
+    if(target && target->handle(this,FXSEL(SEL_LEFTBUTTONPRESS,message),ptr)) return 1;
     if(state!=STATE_ENGAGED) setState(STATE_DOWN);
     flags|=FLAG_PRESSED;
     flags&=~FLAG_UPDATE;
@@ -245,11 +250,11 @@ long FXButton::onLeftBtnRelease(FXObject*,FXSelector,void* ptr){
   FXbool click=(state==STATE_DOWN);
   if(isEnabled() && (flags&FLAG_PRESSED)){
     ungrab();
-    if(target && target->handle(this,MKUINT(message,SEL_LEFTBUTTONRELEASE),ptr)) return 1;
+    if(target && target->handle(this,FXSEL(SEL_LEFTBUTTONRELEASE,message),ptr)) return 1;
     flags|=FLAG_UPDATE;
     flags&=~FLAG_PRESSED;
     if(state!=STATE_ENGAGED) setState(STATE_UP);
-    if(click && target){ target->handle(this,MKUINT(message,SEL_COMMAND),(void*)1); }
+    if(click && target){ target->handle(this,FXSEL(SEL_COMMAND,message),(void*)(FXuval)1); }
     return 1;
     }
   return 0;
@@ -271,7 +276,7 @@ long FXButton::onKeyPress(FXObject*,FXSelector,void* ptr){
   FXEvent* event=(FXEvent*)ptr;
   flags&=~FLAG_TIP;
   if(isEnabled() && !(flags&FLAG_PRESSED)){
-    if(target && target->handle(this,MKUINT(message,SEL_KEYPRESS),ptr)) return 1;
+    if(target && target->handle(this,FXSEL(SEL_KEYPRESS,message),ptr)) return 1;
     if((event->code==KEY_space || event->code==KEY_KP_Space) || (isDefault() && (event->code==KEY_Return || event->code==KEY_KP_Enter))){
       if(state!=STATE_ENGAGED) setState(STATE_DOWN);
       flags|=FLAG_PRESSED;
@@ -288,12 +293,12 @@ long FXButton::onKeyRelease(FXObject*,FXSelector,void* ptr){
   FXEvent* event=(FXEvent*)ptr;
   FXbool click=(state==STATE_DOWN);
   if(isEnabled() && (flags&FLAG_PRESSED)){
-    if(target && target->handle(this,MKUINT(message,SEL_KEYRELEASE),ptr)) return 1;
+    if(target && target->handle(this,FXSEL(SEL_KEYRELEASE,message),ptr)) return 1;
     if((event->code==KEY_space || event->code==KEY_KP_Space) || (isDefault() && (event->code==KEY_Return || event->code==KEY_KP_Enter))){
       if(state!=STATE_ENGAGED) setState(STATE_UP);
       flags|=FLAG_UPDATE;
       flags&=~FLAG_PRESSED;
-      if(click && target){ target->handle(this,MKUINT(message,SEL_COMMAND),(void*)1); }
+      if(click && target){ target->handle(this,FXSEL(SEL_COMMAND,message),(void*)(FXuval)1); }
       return 1;
       }
     }
@@ -304,7 +309,7 @@ long FXButton::onKeyRelease(FXObject*,FXSelector,void* ptr){
 // Hot key combination pressed
 long FXButton::onHotKeyPress(FXObject*,FXSelector,void* ptr){
   flags&=~FLAG_TIP;
-  handle(this,MKUINT(0,SEL_FOCUS_SELF),ptr);
+  handle(this,FXSEL(SEL_FOCUS_SELF,0),ptr);
   if(isEnabled() && !(flags&FLAG_PRESSED)){
     if(state!=STATE_ENGAGED) setState(STATE_DOWN);
     flags&=~FLAG_UPDATE;
@@ -321,7 +326,7 @@ long FXButton::onHotKeyRelease(FXObject*,FXSelector,void*){
     if(state!=STATE_ENGAGED) setState(STATE_UP);
     flags|=FLAG_UPDATE;
     flags&=~FLAG_PRESSED;
-    if(click && target) target->handle(this,MKUINT(message,SEL_COMMAND),(void*)1);
+    if(click && target) target->handle(this,FXSEL(SEL_COMMAND,message),(void*)(FXuval)1);
     }
   return 1;
   }
@@ -441,31 +446,35 @@ long FXButton::onPaint(FXObject*,FXSelector,void* ptr){
     iw=icon->getWidth();
     ih=icon->getHeight();
     }
+
   just_x(tx,ix,tw,iw);
   just_y(ty,iy,th,ih);
 
   // Shift a bit when pressed
   if(state && (options&(FRAME_RAISED|FRAME_SUNKEN))){ ++tx; ++ty; ++ix; ++iy; }
 
-  // Draw the icon
-  if(icon){
-    if(isEnabled())
+  // Draw enabled state
+  if(isEnabled()){
+    if(icon){
       dc.drawIcon(icon,ix,iy);
-    else
-      dc.drawIconSunken(icon,ix,iy);
-    }
-
-  // Draw the text
-  if(!label.empty()){
-    dc.setTextFont(font);
-    if(isEnabled()){
+      }
+    if(!label.empty()){
+      dc.setFont(font);
       dc.setForeground(textColor);
       drawLabel(dc,label,hotoff,tx,ty,tw,th);
-      if(hasFocus()){
-        dc.drawFocusRectangle(border+1,border+1,width-2*border-2,height-2*border-2);
-        }
       }
-    else{
+    if(hasFocus()){
+      dc.drawFocusRectangle(border+1,border+1,width-2*border-2,height-2*border-2);
+      }
+    }
+
+  // Draw grayed-out state
+  else{
+    if(icon){
+      dc.drawIconSunken(icon,ix,iy);
+      }
+    if(!label.empty()){
+      dc.setFont(font);
       dc.setForeground(hiliteColor);
       drawLabel(dc,label,hotoff,tx+1,ty+1,tw,th);
       dc.setForeground(shadowColor);
@@ -491,3 +500,4 @@ FXuint FXButton::getButtonStyle() const {
   return (options&BUTTON_MASK);
   }
 
+}

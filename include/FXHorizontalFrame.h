@@ -3,7 +3,7 @@
 *              H o r i z o n t a l   C o n t a i n e r   W i d g e t            *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXHorizontalFrame.h,v 1.11 2002/01/18 22:46:41 jeroen Exp $              *
+* $Id: FXHorizontalFrame.h,v 1.15 2004/02/08 17:17:33 fox Exp $                 *
 ********************************************************************************/
 #ifndef FXHORIZONTALFRAME_H
 #define FXHORIZONTALFRAME_H
@@ -28,6 +28,7 @@
 #include "FXPacker.h"
 #endif
 
+namespace FX {
 
 
 /**
@@ -39,7 +40,6 @@ class FXAPI FXHorizontalFrame : public FXPacker {
   FXDECLARE(FXHorizontalFrame)
 protected:
   FXHorizontalFrame(){}
-  virtual void layout();
 private:
   FXHorizontalFrame(const FXHorizontalFrame&);
   FXHorizontalFrame &operator=(const FXHorizontalFrame&);
@@ -48,6 +48,9 @@ public:
   /// Construct a horizontal frame layout manager
   FXHorizontalFrame(FXComposite *p,FXuint opts=0,FXint x=0,FXint y=0,FXint w=0,FXint h=0,FXint pl=DEFAULT_SPACING,FXint pr=DEFAULT_SPACING,FXint pt=DEFAULT_SPACING,FXint pb=DEFAULT_SPACING,FXint hs=DEFAULT_SPACING,FXint vs=DEFAULT_SPACING);
 
+  /// Perform layout
+  virtual void layout();
+
   /// Return default width
   virtual FXint getDefaultWidth();
 
@@ -55,6 +58,6 @@ public:
   virtual FXint getDefaultHeight();
   };
 
-
+}
 
 #endif

@@ -3,7 +3,7 @@
 *                        I C O   I c o n   O b j e c t                          *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2001,2002 by Janusz Ganczarski.   All Rights Reserved.          *
+* Copyright (C) 2001,2004 by Janusz Ganczarski.   All Rights Reserved.          *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXICOIcon.h,v 1.5 2002/01/18 22:46:41 jeroen Exp $                       *
+* $Id: FXICOIcon.h,v 1.14 2004/01/15 01:38:04 fox Exp $                         *
 ********************************************************************************/
 #ifndef FXICOICON_H
 #define FXICOICON_H
@@ -28,9 +28,10 @@
 #include "FXIcon.h"
 #endif
 
+namespace FX {
 
 
-/// ICO icon
+/// ICO (Microsoft icon format) icon
 class FXAPI FXICOIcon : public FXIcon {
   FXDECLARE(FXICOIcon)
 protected:
@@ -40,26 +41,39 @@ private:
   FXICOIcon &operator=(const FXICOIcon&);
 public:
 
-  /// Construct icon from memory stream formatted in Microsoft ICO format
+  /// Construct icon from memory stream formatted in Microsoft icon format
   FXICOIcon(FXApp* a,const void *pix=NULL,FXColor clr=FXRGB(192,192,192),FXuint opts=0,FXint w=1,FXint h=1);
 
-  /// Save pixels into stream in ICO file format
-  virtual void savePixels(FXStream& store) const;
+  /// Save pixels into stream in Microsoft icon format format
+  virtual FXbool savePixels(FXStream& store) const;
 
-  /// Load pixels from stream in ICO file format
-  virtual void loadPixels(FXStream& store);
+  /// Load pixels from stream in Microsoft icon format format
+  virtual FXbool loadPixels(FXStream& store);
 
   /// Destroy icon
   virtual ~FXICOIcon();
   };
 
 
-/// Load a ICO file from a stream
-extern FXAPI FXbool fxloadICO(FXStream& store,FXuchar*& data,FXColor& transp,FXint& width,FXint& height);
+#ifndef FXLOADICO
+#define FXLOADICO
+
+/**
+* Load an ICO (Microsoft icon format) file from a stream.
+* Upon successful return, the pixel array and size are returned.
+* If an error occurred, the pixel array is set to NULL.
+*/
+extern FXAPI FXbool fxloadICO(FXStream& store,FXColor*& data,FXint& width,FXint& height,FXint& xspot,FXint& yspot);
 
 
-/// Save a ICO file to a stream
-extern FXAPI FXbool fxsaveICO(FXStream& store,const FXuchar *data,FXColor transp,FXint width,FXint height);
+/**
+* Save an ICO (Microsoft icon format) file to a stream.
+* If no hot-spot given, save as an ICO instead of a CUR resource.
+*/
+extern FXAPI FXbool fxsaveICO(FXStream& store,const FXColor *data,FXint width,FXint height,FXint xspot=-1,FXint yspot=-1);
 
+#endif
+
+}
 
 #endif

@@ -3,7 +3,7 @@
 *                         C u r s o r - O b j e c t                             *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXCursor.h,v 1.13 2002/01/18 22:42:51 jeroen Exp $                       *
+* $Id: FXCursor.h,v 1.23 2004/03/06 21:21:23 fox Exp $                          *
 ********************************************************************************/
 #ifndef FXCURSOR_H
 #define FXCURSOR_H
@@ -28,34 +28,39 @@
 #include "FXId.h"
 #endif
 
+namespace FX {
 
 
 // Stock cursors
 enum FXStockCursor {
-  CURSOR_ARROW=1,                   // Default left pointing arrow
-  CURSOR_RARROW,                    // Right arrow
-  CURSOR_IBEAM,                     // Text I-Beam
-  CURSOR_WATCH,                     // Stopwatch or hourglass
-  CURSOR_CROSS,                     // Crosshair
-  CURSOR_UPDOWN,                    // Move up, down
-  CURSOR_LEFTRIGHT,                 // Move left, right
-  CURSOR_MOVE                       // Move up,down,left,right
+  CURSOR_ARROW=1,               /// Default left pointing arrow
+  CURSOR_RARROW,                /// Right arrow
+  CURSOR_IBEAM,                 /// Text I-Beam
+  CURSOR_WATCH,                 /// Stopwatch or hourglass
+  CURSOR_CROSS,                 /// Crosshair
+  CURSOR_UPDOWN,                /// Move up, down
+  CURSOR_LEFTRIGHT,             /// Move left, right
+  CURSOR_MOVE                   /// Move up,down,left,right
   };
 
+
+/// Cursor options
+enum {
+  CURSOR_KEEP  = 0x00000100,    /// Keep pixel data in client
+  CURSOR_OWNED = 0x00000200     /// Pixel data is owned by image
+  };
 
 
 /// Cursor class
 class FXAPI FXCursor : public FXId {
   FXDECLARE(FXCursor)
 protected:
-  FXuchar *source;            // Source data
-  FXuchar *mask;              // Mask data
-  FXint    width;             // Width
-  FXint    height;            // Height
-  FXint    hotx;              // Hot spot x
-  FXint    hoty;              // Hot spot y
-  FXuchar  glyph;             // Glyph type cursor (stock cursor)
-  FXbool   owned;             // Owns data
+  FXColor *data;        // Source data
+  FXint    width;       // Width
+  FXint    height;      // Height
+  FXint    hotx;        // Hot spot x
+  FXint    hoty;        // Hot spot y
+  FXuint   options;     // Options
 protected:
   FXCursor();
 private:
@@ -67,19 +72,25 @@ public:
   FXCursor(FXApp* a,FXStockCursor curid=CURSOR_ARROW);
 
   /// Make cursor from source and mask; cursor size should at most 32x32 for portability!
-  FXCursor(FXApp* a,const void* src,const void* msk,FXint w=32,FXint h=32,FXint hx=-1,FXint hy=-1);
+  FXCursor(FXApp* a,const FXuchar* src,const FXuchar* msk,FXint w=32,FXint h=32,FXint hx=0,FXint hy=0);
 
-  /// Width of cursor
+  /// Make cursor from FXColor pixels; cursor size should be at most 32x32 for portability!
+  FXCursor(FXApp* a,const FXColor* pix,FXint w=32,FXint h=32,FXint hx=0,FXint hy=0);
+
+  /// Width of cursor; returns 0 for stock cursors
   FXint getWidth() const { return width; }
 
-  /// Height or cursor
+  /// Height of cursor; returns 0 for stock cursors
   FXint getHeight() const { return height; }
 
-  /// Get hotspot x
+  /// Get hotspot x; returns 0 for stock cursors
   FXint getHotX() const { return hotx; }
 
-  /// Get hotspot y
+  /// Get hotspot y; returns 0 for stock cursors
   FXint getHotY() const { return hoty; }
+
+  /// Check if there is color in the cursor
+  FXbool isColor() const;
 
   /// Create cursor
   virtual void create();
@@ -90,11 +101,14 @@ public:
   /// Destroy cursor
   virtual void destroy();
 
+  /// Release pixels buffer if it was owned
+  virtual void release();
+
   /// Save pixel data only
-  virtual void savePixels(FXStream& store) const;
+  virtual FXbool savePixels(FXStream& store) const;
 
   /// Load pixel data only
-  virtual void loadPixels(FXStream& store);
+  virtual FXbool loadPixels(FXStream& store);
 
   /// Save cursor to a stream
   virtual void save(FXStream& store) const;
@@ -106,5 +120,6 @@ public:
   virtual ~FXCursor();
   };
 
+}
 
 #endif

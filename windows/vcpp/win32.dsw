@@ -21,6 +21,21 @@ Package=<4>
 
 ###############################################################################
 
+Project: "bitmapviewer"=.\bitmapviewer\bitmapviewer.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name fox
+    End Project Dependency
+}}}
+
+###############################################################################
+
 Project: "button"=.\button\button.dsp - Package Owner=<4>
 
 Package=<5>
@@ -50,6 +65,18 @@ Package=<4>
     Begin Project Dependency
     Project_Dep_Name reswrap
     End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "chart"=.\chart\chart.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
 }}}
 
 ###############################################################################
@@ -288,6 +315,21 @@ Package=<4>
 
 ###############################################################################
 
+Project: "layout"=.\layout\layout.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name fox
+    End Project Dependency
+}}}
+
+###############################################################################
+
 Project: "mditest"=.\mditest\mditest.dsp - Package Owner=<4>
 
 Package=<5>
@@ -329,6 +371,21 @@ Package=<4>
     Begin Project Dependency
     Project_Dep_Name reswrap
     End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name fox
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "ratio"=.\ratio\ratio.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
     Begin Project Dependency
     Project_Dep_Name fox
     End Project Dependency
@@ -381,6 +438,24 @@ Package=<4>
 
 ###############################################################################
 
+Project: "shutterbug"=.\shutterbug\shutterbug.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name fox
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name reswrap
+    End Project Dependency
+}}}
+
+###############################################################################
+
 Project: "splitter"=.\splitter\splitter.dsp - Package Owner=<4>
 
 Package=<5>
@@ -427,6 +502,21 @@ Package=<4>
 ###############################################################################
 
 Project: "table"=.\table\table.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name fox
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "wizard"=.\wizard\wizard.dsp - Package Owner=<4>
 
 Package=<5>
 {{{

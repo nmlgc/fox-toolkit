@@ -5,7 +5,7 @@
 *********************************************************************************
 * Copyright (C) 1997 by Jeroen van der Zijp.   All Rights Reserved.             *
 *********************************************************************************
-* $Id: table.cpp,v 1.36.4.2 2003/01/24 18:28:33 fox Exp $                           *
+* $Id: table.cpp,v 1.61 2004/03/29 15:08:37 fox Exp $                           *
 ********************************************************************************/
 #include "fx.h"
 #include <stdio.h>
@@ -24,8 +24,8 @@ class TableWindow : public FXMainWindow {
 protected:
 
   // Member data
-  FXTooltip*         tooltip;
-  FXMenubar*         menubar;
+  FXToolTip*         tooltip;
+  FXMenuBar*         menubar;
   FXMenuPane*        filemenu;
   FXMenuPane*        tablemenu;
   FXMenuPane*        manipmenu;
@@ -107,13 +107,13 @@ TableWindow::TableWindow(FXApp* a):FXMainWindow(a,"Table Widget Test",NULL,NULL,
   FXint r,c;
 
   // Tooltip
-  tooltip=new FXTooltip(getApp());
+  tooltip=new FXToolTip(getApp());
 
   penguinicon=new FXBMPIcon(getApp(),penguin,0,IMAGE_ALPHAGUESS);
   //penguinicon=new FXBMPIcon(getApp(),penguin,0,IMAGE_OPAQUE);
 
   // Menubar
-  menubar=new FXMenubar(this,LAYOUT_SIDE_TOP|LAYOUT_FILL_X);
+  menubar=new FXMenuBar(this,LAYOUT_SIDE_TOP|LAYOUT_FILL_X);
 
   // Separator
   new FXHorizontalSeparator(this,LAYOUT_SIDE_TOP|LAYOUT_FILL_X|SEPARATOR_GROOVE);
@@ -124,18 +124,38 @@ TableWindow::TableWindow(FXApp* a):FXMainWindow(a,"Table Widget Test",NULL,NULL,
   frame=new FXVerticalFrame(contents,FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_FILL_Y, 0,0,0,0, 0,0,0,0);
 
   // Table
-  //table=new FXTable(frame,50,13,NULL,0,TABLE_HOR_GRIDLINES|TABLE_VER_GRIDLINES|LAYOUT_FILL_X|LAYOUT_FILL_Y,0,0,0,0, 2,2,2,2);
-  table=new FXTable(frame,20,8,this,ID_TABLE,TABLE_COL_SIZABLE|TABLE_ROW_SIZABLE|LAYOUT_FILL_X|LAYOUT_FILL_Y,0,0,0,0, 2,2,2,2);
+  table=new FXTable(frame,this,ID_TABLE,TABLE_COL_SIZABLE|TABLE_ROW_SIZABLE|LAYOUT_FILL_X|LAYOUT_FILL_Y,0,0,0,0, 2,2,2,2);
+  table->setVisibleRows(20);
+  table->setVisibleColumns(8);
+//  table->setRowHeaderMode(0);
   table->setTableSize(50,14);
+  table->setBackColor(FXRGB(255,255,255));
   table->setCellColor(0,0,FXRGB(255,255,255));
   table->setCellColor(0,1,FXRGB(255,240,240));
   table->setCellColor(1,0,FXRGB(240,255,240));
   table->setCellColor(1,1,FXRGB(240,240,255));
-  table->setLeadingRows(1);
-  table->setLeadingCols(1);
-  table->setTrailingRows(1);
-  table->setTrailingCols(1);
 
+  // Initialize scrollable part of table
+  for(r=0; r<50; r++){
+    for(c=0; c<14; c++){
+      table->setItemText(r,c,"r:"+FXStringVal(r)+" c:"+FXStringVal(c));
+      }
+    }
+
+  // Initialize column headers
+  for(c=0; c<12; c++){
+    table->setColumnText(c,months[c]);
+    }
+
+  // Initialize row headers
+  for(r=0; r<50; r++){
+    table->setRowText(r,"Row"+FXStringVal(r));
+    }
+/*
+  table->setLeadingRows(1);
+  table->setLeadingColumns(1);
+  table->setTrailingRows(1);
+  table->setTrailingColumns(1);
   // Init corners
   table->setItemText(0,0,FXString::null);
   table->setItemText(0,13,FXString::null);
@@ -146,49 +166,43 @@ TableWindow::TableWindow(FXApp* a):FXMainWindow(a,"Table Widget Test",NULL,NULL,
   for(c=1; c<=12; c++){
     table->setItemText(0,c,months[c-1]);
     table->setItemText(49,c,months[c-1]);
-    table->getItem(0,c)->setButton(TRUE);
+    table->setItemButton(0,c,TRUE);
+    table->setItemJustify(0,c,FXTableItem::LEFT|FXTableItem::CENTER_Y);
     }
-  table->getItem(0,0)->setButton(TRUE);
-  table->getItem(0,13)->setButton(TRUE);
+  table->setItemButton(0,0,TRUE);
+  table->setItemButton(0,13,TRUE);
 
   // Initialize first/last fixed columns
   for(r=1; r<=48; r++){
     table->setItemText(r,0,FXStringVal(r));
     table->setItemText(r,13,FXStringVal(r));
-    table->getItem(r,0)->setButton(TRUE);
+    table->setItemButton(r,0,TRUE);
     }
-  table->getItem(49,0)->setButton(TRUE);
-  table->getItem(4,0)->setPressed(TRUE);
-
-  // Initialize scrollable part of table
-  for(r=1; r<=48; r++){
-    for(c=1; c<=12; c++){
-      table->setItemText(r,c,"r:"+FXStringVal(r)+" c:"+FXStringVal(c));
-      }
-    }
-
+  table->setItemButton(49,0,TRUE);
+*/
   table->setItemText(10,10,"This is multi-\nline text");
-  table->setRowHeight(10,35);
-  table->getItem(10,10)->setJustify(0);
+//  table->setRowHeight(10,35);
+  table->setItemJustify(10,10,FXTableItem::CENTER_X|FXTableItem::CENTER_Y);
 
   table->setItem(3,3,NULL);
   table->setItem(5,6,table->getItem(5,5));      // FIXME this is not the right way to make spanning cells
   table->setItem(5,7,table->getItem(5,5));
   table->setItemText(5,5,"Spanning Item");
-  table->getItem(5,5)->setJustify(0);
+  table->setItemJustify(5,5,FXTableItem::CENTER_X|FXTableItem::CENTER_Y);
 
-  table->getItem(9,9)->setBorders(FXTableItem::TBORDER|FXTableItem::LBORDER|FXTableItem::BBORDER);
-  table->getItem(9,10)->setBorders(FXTableItem::TBORDER|FXTableItem::RBORDER|FXTableItem::BBORDER);
+  table->setItemBorders(9,9,FXTableItem::TBORDER|FXTableItem::LBORDER|FXTableItem::BBORDER);
+  table->setItemBorders(9,10,FXTableItem::TBORDER|FXTableItem::RBORDER|FXTableItem::BBORDER);
 
-  table->getItem(40,13)->setBorders(FXTableItem::LBORDER|FXTableItem::TBORDER|FXTableItem::RBORDER|FXTableItem::BBORDER);
-  table->getItem(49,13)->setBorders(FXTableItem::LBORDER|FXTableItem::TBORDER|FXTableItem::RBORDER|FXTableItem::BBORDER);
-  table->getItem(5,0)->setBorders(FXTableItem::LBORDER|FXTableItem::TBORDER|FXTableItem::RBORDER|FXTableItem::BBORDER);
 
-  table->getItem(6,6)->setIcon(penguinicon);
-  table->getItem(6,6)->setIconPosition(FXTableItem::ABOVE);
-  table->getItem(6,6)->setJustify(0);
+  table->setItemBorders(40,13,FXTableItem::LBORDER|FXTableItem::TBORDER|FXTableItem::RBORDER|FXTableItem::BBORDER);
+  table->setItemBorders(49,13,FXTableItem::LBORDER|FXTableItem::TBORDER|FXTableItem::RBORDER|FXTableItem::BBORDER);
+  table->setItemBorders(5,0,FXTableItem::LBORDER|FXTableItem::TBORDER|FXTableItem::RBORDER|FXTableItem::BBORDER);
 
-  table->getItem(3,4)->setStipple(STIPPLE_CROSSDIAG);
+  table->setItemIcon(6,6,penguinicon);
+  table->setItemIconPosition(6,6,FXTableItem::ABOVE);
+  table->setItemJustify(6,6,FXTableItem::CENTER_X|FXTableItem::CENTER_Y);
+
+  table->setItemStipple(3,4,STIPPLE_CROSSDIAG);
 
   // File Menu
   filemenu=new FXMenuPane(this);
@@ -197,8 +211,8 @@ TableWindow::TableWindow(FXApp* a):FXMainWindow(a,"Table Widget Test",NULL,NULL,
 
   // Tab side
   tablemenu=new FXMenuPane(this);
-  new FXMenuCommand(tablemenu,"Horizontal grid",NULL,table,FXTable::ID_HORZ_GRID);
-  new FXMenuCommand(tablemenu,"Vertical grid",NULL,table,FXTable::ID_VERT_GRID);
+  new FXMenuCheck(tablemenu,"Horizontal grid",table,FXTable::ID_HORZ_GRID);
+  new FXMenuCheck(tablemenu,"Vertical grid",table,FXTable::ID_VERT_GRID);
   new FXMenuTitle(menubar,"&Options",NULL,tablemenu);
 
   manipmenu=new FXMenuPane(this);
@@ -215,6 +229,10 @@ TableWindow::TableWindow(FXApp* a):FXMainWindow(a,"Table Widget Test",NULL,NULL,
   new FXMenuCommand(selectmenu,"Select Row",NULL,table,FXTable::ID_SELECT_ROW);
   new FXMenuCommand(selectmenu,"Select Column",NULL,table,FXTable::ID_SELECT_COLUMN);
   new FXMenuCommand(selectmenu,"Deselect All",NULL,table,FXTable::ID_DESELECT_ALL);
+  new FXMenuCommand(selectmenu,"Cut to clipboard",NULL,table,FXTable::ID_CUT_SEL);
+  new FXMenuCommand(selectmenu,"Copy to clipboard",NULL,table,FXTable::ID_COPY_SEL);
+  new FXMenuCommand(selectmenu,"Paste from clipboard",NULL,table,FXTable::ID_PASTE_SEL);
+  new FXMenuCommand(selectmenu,"Delete",NULL,table,FXTable::ID_DELETE_SEL);
   new FXMenuTitle(menubar,"&Selection",NULL,selectmenu);
   }
 
@@ -246,7 +264,7 @@ long TableWindow::onCmdResizeTable(FXObject*,FXSelector,void*){
   new FXButton(frame,"  OK  ",NULL,&dlg,FXDialogBox::ID_ACCEPT,FRAME_RAISED|FRAME_THICK|LAYOUT_SIDE_LEFT|LAYOUT_CENTER_Y);
   FXint oldnr,oldnc;
   oldnr=table->getNumRows();
-  oldnc=table->getNumCols();
+  oldnc=table->getNumColumns();
   rows->setText(FXStringVal(oldnr));
   cols->setText(FXStringVal(oldnc));
   if(dlg.execute()){
@@ -258,7 +276,7 @@ long TableWindow::onCmdResizeTable(FXObject*,FXSelector,void*){
     table->setTableSize(nr,nc);
     for(r=0; r<nr; r++){
       for(c=0; c<nc; c++){
-        table->setItemText(r,c,"r:"+FXStringVal(r+1)+" c:"+FXStringVal(c+1));
+        //table->setItemText(r,c,"r:"+FXStringVal(r+1)+" c:"+FXStringVal(c+1));
         }
       }
     }

@@ -1,205 +1,130 @@
 <html>
 <head>
-<LINK REL="stylesheet" HREF="styles.css" TYPE="text/css">
-<title>FOX-Toolkit</title>
-<!-- HTML Copyright 2001 Paul Laufer -->
+<link rel="stylesheet" href="page.css" type="text/css">
+<title>Documentation: Fonts</title>
 </head>
+<body bgcolor=#ffffff link=#990033 vlink=#990033 alink=#990033 text=#000000>
 
-<body bgcolor=#ffffff link=#990033 vlink=#4a73ad alink=#ed004f text=#000000>
-
-<!--header-->
-<table align=center border=0 cellpadding=0 cellspacing=0 width=100% >
-  <tr><td bgcolor=silver colspan=5 align=right height=50><img src=art/oul_grey.gif align=left valign=top width=8 height=8><img src=art/foxlogo.png valign=bottom alt="FOX Toolkit" height=50 width=500 border=0 ></td>
-  	<td bgcolor=#557faa valign=top align=right><img src=art/our.gif width=8 height=8></td>
-  </tr>
-<!-- end header -->
-  <tr>
-    <td bgcolor=#557faa colspan=2 valign=top align=left>&nbsp;</td>
-    <td bgcolor=#557faa colspan=3><font color=#ffffff size=+1><center>
-<!-- Page Title -->
-Documentation: Fonts
-<!-- End Page Title -->
-    </center></font></td>
-    <td bgcolor=#557faa valign=top align=right>&nbsp;</td>
-  </tr>
-  <tr>
-    <td bgcolor=#557faa colspan=2>&nbsp;</td>
-    <td bgcolor=#ffffff valign=top align=left><img src=art/iul.gif width=8 height=8></td>
-    <td bgcolor=#ffffff>&nbsp;</td>
-    <td bgcolor=#ffffff valign=top align=right><img src=art/iur.gif width=8 height=8></td>
-    <td bgcolor=#557faa width=15>&nbsp;</td>
-  </tr>
-  <tr>
-    <td width=8 bgcolor=#557faa>&nbsp;</td>
-    <td valign=top bgcolor=#557faa link=#ffffff width=150>
-
-<!-- start navbar content -->
-
-	<a href=fox.html><font color=#ffffff>Home</font></a><br>
-	<a href=news.html><font color=#ffffff>News</font></a><br>
-	<a href=download.html><font color=#ffffff>Download</font></a><br>
-	<a href=goals.html><font color=#ffffff>Goals & Approach</font></a><br>
-	<a href=doc.html><font color=#ffffff>Documentation</font></a><br>
-	<a href=faq.html><font color=#ffffff>FAQ</font></a><br>
-	<a href=rex.html><font color=#ffffff>FXRex</font></a><br>
-	<a href=screenshots.html><font color=#ffffff>Screenshots</font></a><br>
-	<br>
-	<a href=adie.html><font color=#ffffff>Adie</font></a><br>
-	<a href=pathfinder.html><font color=#ffffff>PathFinder</font></a><br>
-	<a href=calc.html><font color=#ffffff>FOX Calculator</font></a><br>
-	<br>
-	<a href=projects.html><font color=#ffffff>Projects</font></a><br>
-	<br>
-	<a href='http://fxpy.sourceforge.net'><font color=#ffffff>FXPy</font></a><br>
-	<a href='http://fxruby.sourceforge.net'><font color=#ffffff>FXRuby</font></a><br>
-	<a href='http://eiffelfox.sourceforge.net'><font color=#ffffff>EiffelFox</font></a><br>
-        <a href='http://eevolved.com/foxhole/'><font color=#ffffff>The FOX Hole</font></a><br>
-        <a href='http://takahr.dhis.portside.net/cgi-bin/rwiki.cgi?cmd=view;name=FOX+FAQ'><font color=#ffffff>Japanese Docs</font></a><br>
-	<br>
-	<center>
-	<a href="http://www.eff.org/br"><img SRC="art/freespeach.gif" border=0></a>
-	<p>
-	<a href="http://www.slashdot.org"><img SRC="art/slingerzbutton1.gif" border=0></a>
-	</center>
-
-
-
-<!-- end navbar content -->
-
-    </td>
-    <td bgcolor=#ffffff>&nbsp;</td>
-    <td valign=top>
-
-<!-- start main window content -->
-<center><img src='art/foxstart.png'>
-<BR><B>Documentation: Fonts</B>
-</center>
-<p>
-<p>
-<b>Fonts</b>
-<hr>
-Type faces in FOX are manipulated using <B>FXFont</B> objects.&nbsp;
+<!---- TOPIC TITLE WITH LOGO--->
+<table border=0 cellpadding= cellspacing=2 width=100% ><tr><td><a href='http://www.fox-toolkit.org' target=_top><img src='art/foxlogo_small.jpg' border=0></a></td><td width=100% valign=bottom id="HEADLINE"><b>
+Documentation: Fonts  <A href='fonts.html' target="_top" align=left><font  size=-2>[Remove Frame]</font></a>
+<br><img src='art/line.gif' width=100% height=1></b></td></tr></table>
+</p>
+<!--- TOPIC TITLE WITH LOGO --->
+<ul>
+<p>Type faces in FOX are manipulated using <B>FXFont</B> objects.&nbsp;
 To provide a consistent look and feel for all applications, most FOX widgets
 normally share one common font object, which is automatically adopted when
 the widget is constructed.&nbsp; However, a widget's font is readily changed
 using the setFont() member function.&nbsp; Changing fonts on widgets will
 automatically cause an adjustment in layout so that the new size of the
-widget is accomodated.
-<P>As with most other resources such as FXIcon and FXCursor etc., building
+widget is accomodated.</p>
+<p>As with most other resources such as FXIcon and FXCursor etc., building
 FXFont objects also takes <B><I>two</I></B> steps:- <B><I>construction</I></B>
 of the client-side part of the font object, followed by <B><I>creation</I></B>
 of the corresponding server-side part.&nbsp;&nbsp; During construction,
 all necessary information is supplied to the FXFont object so that the
 desired font may be located and loaded into memory during the creation.
-<P>In most cases, the font objects are automatically created when the widget
+In most cases, the font objects are automatically created when the widget
 that uses it is being created.&nbsp; If you have constructed a new FXFont
 object later on, however, you may have to make a call to the font object's
-<TT>create()</TT>
-member function to make sure the font object is fully initialized.
-<P>As different computer systems may have different fonts, it is possible
+<TT>create()</TT> member function to make sure the font object is fully initialized.
+As different computer systems may have different fonts, it is possible
 that the specific font your application needs may not be available.&nbsp;
 Since you probably still would like this application to run anyway, alternative
-fonts must be found.
+fonts must be found.</p>
 <P>FOX supports mechanisms to localize fonts which are ``close'' [in some
 easthetic sense] to the desired font, so that applications will typically
 not fail simply because of missing fonts.&nbsp; Keep in mind, however,
 that the information you supplied to the FXFont contructor may not accurately
 reflect the font that is actually being used in your application.
 <P>Also note that information about a font will not be available until
-after the font has been created using <TT>create()</TT>.
-<p>
-<p>
-<b>Using Font Objects</b>
-<hr>
-Using fonts is really very easy.&nbsp; For example, to build a Button
-Control with a different Font for the caption, you would use the following
-C++ code:
-<BR>&nbsp;
-<BR>&nbsp;
-<CENTER><TABLE BORDER CELLSPACING=0 COLS=1 WIDTH="90%" BGCOLOR="#FFF8E1" NOSAVE >
-<TR>
-<TD><TT>FXButton *button = new FXButton(parent,"&amp;Caption");</TT>
-<P><TT>FXFont* captionfont = new FXFont(app,"times",24);</TT>
-<P><TT>button->setFont(captionfont);</TT>
-<BR>&nbsp;</TD>
-</TR>
-</TABLE></CENTER>
+after the font has been created using <TT>create()</TT>.</p>
+</ul>
 
-<P>This statements will create a Button with caption ``<B><FONT FACE="Times New Roman,Times"><FONT SIZE=+2><U>C</U>aption</FONT></FONT></B>''
+
+<!--- TOPIC TITLE -->
+<p>
+<table width=100% cellpadding=0 cellspacing=2><tr><td width=100% valign=bottom id=HEADLINE><b>
+Using Font Objects
+<br><img src='art/line.gif' width=100% height=1></b></td></tr></table>
+</p>
+<!--- TOPIC TITLE -->
+<ul>
+  <p>Using fonts is really very easy.&nbsp; For example, to build a Button
+  Control with a different Font for the caption, you would use the following
+  C++ code:</p>
+
+<pre>
+FXButton *button = new FXButton(parent,"&amp;Caption");
+FXFont* captionfont = new FXFont(app,"times",24);
+button->setFont(captionfont);
+</pre>
+
+<P>This statements will create a Button with caption ``<B><FONT SIZE=+2><U>C</U>aption</FONT></B>''
 and use a font of <B><I>24</I></B> points <B><I>Times</I></B>.&nbsp; Note
 that in this case we assume that the captionfont will be created in the
 process of creating the Button; if you were to change fonts after the application
 has already started running, you would want to call <TT>captionfont->create()</TT>
 to make sure the font resources are created.
-<P>Also note that font objects may be <B><I>shared</I></B> between several
+Also note that font objects may be <B><I>shared</I></B> between several
 controls; thus, you don't have to create a different font object for each
 control [unless of course you want to use a different font!].
-<P>In the above example, we have taken default values for many parameters
-influencing the choice of font. The above call is actually equivalent to:
-<BR>&nbsp;
-<BR>&nbsp;
-<CENTER><TABLE BORDER CELLSPACING=0 COLS=1 WIDTH="90%" BGCOLOR="#FFF8E1" NOSAVE >
-<TR>
-<TD><TT>FXFont* captionfont = new FXFont(app,</TT>
-<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-"times",</TT>
-<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-24,</TT>
-<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-FONTWEIGHT_NORMAL,</TT>
-<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-FONTSLANT_REGULAR,</TT>
-<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-FONTENCODING_DEFAULT,</TT>
-<BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-0);</TT>
-<BR>&nbsp;</TD>
-</TR>
-</TABLE></CENTER>
+In the above example, we have taken default values for many parameters
+influencing the choice of font. The above call is actually equivalent to:</p>
+
+<pre>
+FXFont* captionfont = new FXFont(app,
+                                 "times",
+                                 24,
+                                 FONTWEIGHT_NORMAL,
+                                 FONTSLANT_REGULAR,
+                                 FONTENCODING_DEFAULT,
+                                 0);
+</pre>
 
 <P>That is to say, construct a font with face name ``times,'' 24 points,
 normal weight [not bold], no italics, and use whatever character encoding
 is available for this font; finally, the zero (0) indicates there are no
-hints.
-<P>Besides the above platform-independent font constructor, FXFont also
+hints.</p>
+Besides the above platform-independent font constructor, FXFont also
 has an alternative constructor which is only applicable to the X11 Window
 System; this method bypasses the font matching algorithm.
-<P>Assuming that our display was 75 dots per inch (dpi), the alternative
-method of contructing fonts using the X11 font string would have been:
-<BR>&nbsp;
-<BR>&nbsp;
-<CENTER><TABLE BORDER CELLSPACING=0 COLS=1 WIDTH="90%" BGCOLOR="#FFF8E1" NOSAVE >
-<TR>
-<TD><TT>FXFont* captionfont = new FXFont(app,"-adobe-times-medium-r-normal--24-240-75-75-p-124-iso8859-1");</TT>
-<BR>&nbsp;</TD>
-</TR>
-</TABLE></CENTER>
+Assuming that our display was 75 dots per inch (dpi), the alternative
+method of contructing fonts using the X11 font string would have been:</p>
+
+<pre>
+FXFont* captionfont = new FXFont(app,"-adobe-times-medium-r-normal--24-240-75-75-p-124-iso8859-1");
+</pre>
+
 
 <P>Besides being harder to remember, this method would not port over very
 well to other systems, or systems where this particular font is not available.&nbsp;
-However, there are a few reasons why sometimes you may need this method:
-<BR>&nbsp;
+However, there are a few reasons why sometimes you may need this method:</p>
 <OL>
 <LI>
 You want to make sure you obtain a <I>specific font</I>, and do not want
 the matching algorithm to get in the way;</LI>
-
 <LI>
 You need to obtain certain raster-based <I>system fonts,</I> for example
 "9x15bold."</LI>
 </OL>
+</ul>
 
+<!--- TOPIC TITLE -->
 <p>
-<p>
-<b>Font Matching and Substitution</b>
-<hr>
-In order to be able to write applications which may be ported to a large
+<table width=100% cellpadding=0 cellspacing=2><tr><td width=100% valign=bottom id=HEADLINE><b>
+Font Matching and Substitution
+<br><img src='art/line.gif' width=100% height=1></b></td></tr></table>
+</p>
+<!--- TOPIC TITLE -->
+<ul>
+<p>In order to be able to write applications which may be ported to a large
 variety of computer systems and software environments, it is necessary
 to make sure that the absence of certain fonts is handled gracefully.
 <BR>The FXFont implementation offers a number of benefits that allow you
 to get your application running under a wide variety of&nbsp; environments,
-even on systems where very few fonts have been installed:
-<BR>&nbsp;
+even on systems where very few fonts have been installed:</p>
 <OL>
 <LI>
 <B>Font Substitution.</B>&nbsp; Font substitution is used to map type face
@@ -224,24 +149,21 @@ than others.</LI>
 specified also.&nbsp; This method is not recommended unless you need to
 select a specific font, and are not interested in portability.</LI>
 </OL>
-Before trying to acquire a list of available fonts for a certain type face,
+
+<p>Before trying to acquire a list of available fonts for a certain type face,
 the FXFont implementation first tries a substitution for the <B><I>type
 face nam</I></B>e.&nbsp; The standard FOX registry is used to make this
 association.&nbsp; The substitute font is found in the section FONTSUBSTITUTIONS
 of the registry.
 <BR>For example, the following fragment decribes the registry settings
 which would replace ``swiss'' by ``helvetica'' and ``new century schoolbook''
-by ``courier'':
-<BR>&nbsp;
-<BR>&nbsp;
-<CENTER><TABLE BORDER CELLSPACING=0 COLS=1 WIDTH="90%" BGCOLOR="#FFF8E1" NOSAVE >
-<TR>
-<TD>[FONTSUBSTITUTIONS]
-<BR>swiss = helvetica
-<BR>new century schoolbook =&nbsp; courier
-<BR>&nbsp;</TD>
-</TR>
-</TABLE></CENTER>
+by ``courier'':</p>
+
+<pre>
+[FONTSUBSTITUTIONS]
+swiss = helvetica
+new century schoolbook =  courier
+</pre>
 
 <P>&nbsp;Thus, you can easily give a FOX application another font even
 if you might not have the source code around!
@@ -252,7 +174,9 @@ care'' value are considered matched.&nbsp; For example, if you specify
 FONTWEIGHT_DONTCARE for the font weight, all font weights would match and
 the resulting font will be based on other parameters.
 <P>Not all parameters have the same priority as far as matching goes; the
-importance of the parameters is as follows:
+importance of the parameters is as follows:</p>
+
+
 <BR>&nbsp;
 <OL>
 <LI>
@@ -305,10 +229,10 @@ Resolution</A>'' below].</LI>
 <LI>
 <B>Set Width. </B>Wide or narrow (condensed) printing.</LI>
 </OL>
-After having tried all the members of the specified type face, if no match
+
+<p>After having tried all the members of the specified type face, if no match
 is found at all, the FXFont implementation tries a number of other common
-fonts, based on additional hints:
-<BR>&nbsp;
+fonts, based on additional hints:</P>
 <UL>
 <LI>
 If no hints are given, or if the hint <B>FONTHINT_SWISS</B> is given, the
@@ -330,24 +254,33 @@ the face ``gothic'' or its substitution will be tried;</LI>
 Finally, if all else fails, the implementation will try a number of ``fallback
 fonts'' which have been determined to be commonly available.</LI>
 </UL>
-If all the above failed, yet there is at least one font on your system,
-then you should report this problem on the FOX mailing list...
-<BR>&nbsp;
-<P><A NAME="SCREENRES"></A>
+
+<p>If all the above failed, yet there is at least one font on your system,
+then you should report this problem on the FOX mailing list...</p>
+
+</ul>
+
+
+
+<!--- TOPIC TITLE -->
 <p>
-<p>
-<b>Screen Resolution</b>
-<hr>
-Since current-day analog monitors can stretch and shrink the visible
+<table width=100% cellpadding=0 cellspacing=2><tr><td width=100% valign=bottom id=HEADLINE><b>
+Screen Resolution
+<br><img src='art/line.gif' width=100% height=1></b></td></tr></table>
+</p>
+<!--- TOPIC TITLE -->
+<ul>
+<p>Since current-day analog monitors can stretch and shrink the visible
 field of the display, the actual resolution is typically not exactly 75dpi
 or 100dpi.&nbsp; To get a font's point size as close to the desired pointsize
 as possible, FOX adjusts for the actual screen dpi relative to the font's
-dpi.
-<BR>For example, suppose we have a font such as:
-<BR>&nbsp;
-<BLOCKQUOTE><TT>-adobe-helvetica-bold-r-normal--12-<B><FONT COLOR="#FF6666">120</FONT></B>-<B><FONT COLOR="#FF6666">75</FONT></B>-<B><FONT COLOR="#FF6666">75</FONT></B>-p-70-iso8859-1</TT></BLOCKQUOTE>
+dpi.For example, suppose we have a font such as:</p>
 
-<P><BR>This font is a <B><I>12-point</I></B> font designed for a <B><I>75
+<pre>
+-adobe-helvetica-bold-r-normal--12-<B><FONT COLOR="#FF6666">120</FONT></B>-<B><FONT COLOR="#FF6666">75</FONT></B>-<B><FONT COLOR="#FF6666">75</FONT></B>-p-70-iso8859-1
+</pre>
+
+<P>This font is a <B><I>12-point</I></B> font designed for a <B><I>75
 dpi</I></B> device.&nbsp; If your monitor however is set to display 90
 dpi, the font would be too small.&nbsp; The implementation can correct
 for this by multiplying the font's point size by (75/90) which means visually
@@ -355,7 +288,7 @@ this font would actually be more like 10-points on your monitor.&nbsp;
 Thus, to get a font <I>designed</I> for 100 dpi to <I>display</I> as 12
 points on your monitor, we should search for a font which is slightly <I>larger</I>
 than 12-point; to be exact, we should be looking for a font (90/75)*12
-= 14.4-point font.
+= 14.4-point font.</p>
 <P>On many systems such as work stations, the machine is shipped with accurate
 information about the particular monitor supplied with the system;&nbsp;
 on such systems, the font implementation of FOX will correctly determine
@@ -365,49 +298,28 @@ causing fonts to bigger or smaller than requested.
 <P>When the system reports the wrong resolution, you can easily correct
 that by setting the resolution yourself using the registry database. On
 my system, for example, the XFree86 X Server reports 75 dpi, while I really
-have 100dpi.&nbsp; So I change my registry database as follows:
-<BR>&nbsp;
-<BR>&nbsp;
-<CENTER><TABLE BORDER CELLSPACING=0 COLS=1 WIDTH="90%" BGCOLOR="#FFF8E1" NOSAVE >
-<TR>
-<TD>
-<BR>[SETTINGS]
-<BR>screenxres = 100
-<BR>screenyres =&nbsp; 100
-<BR>&nbsp;</TD>
-</TR>
-</TABLE></CENTER>
+have 100dpi.&nbsp; So I change my registry database as follows:</p>
+
+<pre>
+[SETTINGS]
+screenxres = 100
+screenyres =&nbsp; 100
+</pre>
+
 
 <P>These entries need to go into the ``<B><I>Desktop</I></B>'' file so
 that all FOX programs will be aware of this, regardless of vendor or application
-name.&nbsp; For more about the registry, see the section on <A HREF="registry.html#REGISTRY">FXRegistry</A>.
-<P>
+name.&nbsp; For more about the registry, see the section on <A HREF="registry.html#REGISTRY">FXRegistry</A>.</p>
+</ul>
+<!--- COPYRIGHT -->
+<p>
+<table width=100% cellpadding=0 cellspacing=0><tr><td width=100% valign=top id=HEADLINE align=right>
+<img src='art/line.gif' width=100% height=1><font size=-1>
+Copyright &copy; 1997-2004 Jeroen van der Zijp</font>
+</td></tr></table>
+</p>
+<!--- COPYRIGHT -->
 
-<!-- end main window content -->
 
-    </td>
-    <td bgcolor=#ffffff>&nbsp;</td>
-    <td bgcolor=#557faa width=15>&nbsp;</td>
-  </tr>
-  <tr>
-    <td colspan=2 bgcolor="#557faa" align=center>&nbsp;
-     </td>
-    <td bgcolor=#ffffff valign=bottom align=left><img src=art/ill.gif width=8 height=8></td>
-    <td bgcolor=#ffffff>&nbsp;</td>
-    <td bgcolor=#ffffff valign=bottom align=right><img src=art/ilr.gif width=8 height=8></td>
-    <td bgcolor=#557faa width=15>&nbsp;</td>
-  </tr>
-  <tr>
-    <td valign=bottom align=left bgcolor=#557faa><img src=art/oll.gif width=8 height=8></td>
-    <td colspan=4 bgcolor=#557faa>&nbsp;</td>
-    <td valign=bottom align=right bgcolor=#557faa><img src=art/olr.gif width=8 height=8></td>
-  </tr>
-</table>
-
-<address>Copyright 1997-2002 <a href=mailto:jeroen@fox-toolkit.org>Jeroen van der Zijp</a></address>
-<!-- Created: Mon Apr 10 11:20:32 CEST 2000 -->
-<!-- hhmts start -->
-
-<!-- hhmts end -->
 </body>
 </html>

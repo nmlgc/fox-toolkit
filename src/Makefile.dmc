@@ -5,7 +5,7 @@
 ##############################################################################
 # Contributed by: Andre Fornacon <afo@zlug.org>                              #
 ##############################################################################
-# $Id: Makefile.dmc,v 1.1.2.2 2002/07/23 06:10:24 fox Exp $		     #
+# $Id: Makefile.dmc,v 1.17 2004/04/24 02:19:23 fox Exp $		     #
 ##############################################################################
 # This library is free software; you can redistribute it and/or 	     #
 # modify it under the terms of the GNU Library General Public		     #
@@ -29,10 +29,30 @@ LIB	  = lib
 RCC	  = rcc
 TOPDIR	  = ..
 CXXFLAGS  = -mn -WD -5 -a8
-DEFINES   = -DFOX_BIGENDIAN=0 -DNDEBUG -D_WINDOWS -DWIN32 -DHAVE_OPENGL #-DHAVE_PNG_H -DHAVE_JPEG_H -DHAVE_TIFF_H -DXMD_H
+#DEFINES   = -DFOX_BIGENDIAN=0 -DNDEBUG -D_WINDOWS -DWIN32 -DHAVE_OPENGL #-DHAVE_PNG_H -DHAVE_JPEG_H -DHAVE_TIFF_H -DXMD_H -DHAVE_ZLIB_H -DHAVE_BZ2LIB_H
+DEFINES   = -DFOX_BIGENDIAN=0 -DNDEBUG -D_WINDOWS -DWIN32 -DHAVE_OPENGL -DHAVE_PNG_H -DHAVE_JPEG_H -DHAVE_ZLIB_H #-DHAVE_TIFF_H -DXMD_H -DHAVE_BZ2LIB_H
 INCDIRS   = -I$(TOPDIR)/include
-FOXLIB	  = $(TOPDIR)\src\fox.lib
+FOXLIB	  = $(TOPDIR)\src\FOX-1.1.lib
+RESWRAP	  = $(TOPDIR)\utils\reswrap.exe
+SUFFIXES  = .gif .bmp
 
+
+ICONS_1=arrownext.gif arrowprev.gif bigapp.gif bigcdrom.gif bigcomputer.gif \
+	bigdesktop.gif bigdoc.gif bigfloppy.gif bigfolder.gif bigfolderopen.gif \
+	bignetdrive.gif bignethood.gif bookset.gif bookclr.gif cmymode.gif
+
+ICONS_2=dialmode.gif dirupicon.gif deleteicon.gif entericon.gif erroricon.gif \
+	eyedrop.gif filecopy.gif filemove.gif filehidden.gif filelink.gif \
+	filerename.gif filedelete.gif fileshown.gif foldernew.gif gotohome.gif
+
+ICONS_3 = gotoicon.gif gotowork.gif hsvmode.gif infoicon.gif landscape.gif \
+	listmode.gif miniapp.gif minicdrom.gif minicomputer.gif minidesktop.gif \
+	minidoc.gif minifloppy.gif minifolder.gif minifolderopen.gif
+
+ICONS_4 = miniharddisk.gif mininetdrive.gif mininethood.gif minizipdrive.gif \
+	portrait.gif questionicon.gif rgbmode.gif searchicon.gif showbigicons.gif \
+	showdetails.gif showsmallicons.gif warningicon.gif winclose.gif \
+	winmaximize.gif winminimize.gif winrestore.gif
 
 .SUFFIXES: .cpp .c
 
@@ -44,6 +64,7 @@ SOURCES = FX4Splitter.cpp \
 	  FXBMPImage.cpp \
 	  FXBitmap.cpp \
 	  FXButton.cpp \
+	  FXBZStream.cpp \
 	  FXCURCursor.cpp \
 	  FXCanvas.cpp \
 	  FXCharset.cpp \
@@ -60,10 +81,7 @@ SOURCES = FX4Splitter.cpp \
 	  FXDC.cpp \
 	  FXDCPrint.cpp \
 	  FXDCWindow.cpp \
-	  FXDHMat.cpp \
-	  FXDHVec.cpp \
-	  FXDQuat.cpp \
-	  FXDVec.cpp \
+          FXDLL.cpp \
 	  FXDataTarget.cpp \
 	  FXDebugTarget.cpp \
 	  FXDelegator.cpp \
@@ -84,6 +102,8 @@ SOURCES = FX4Splitter.cpp \
 	  FXFileDict.cpp \
 	  FXFileList.cpp \
 	  FXFileSelector.cpp \
+	  FXFileStream.cpp \
+	  FXFoldingList.cpp \
 	  FXFont.cpp \
 	  FXFontDialog.cpp \
 	  FXFontSelector.cpp \
@@ -102,9 +122,9 @@ SOURCES = FX4Splitter.cpp \
 	  FXGLTriangleMesh.cpp \
 	  FXGLViewer.cpp \
 	  FXGLVisual.cpp \
+	  FXGradientBar.cpp \
 	  FXGroupBox.cpp \
-	  FXHMat.cpp \
-	  FXHVec.cpp \
+	  FXGZStream.cpp \
 	  FXHeader.cpp \
 	  FXHorizontalFrame.cpp \
 	  FXICOIcon.cpp \
@@ -113,6 +133,7 @@ SOURCES = FX4Splitter.cpp \
 	  FXIconList.cpp \
 	  FXId.cpp \
 	  FXImage.cpp \
+	  FXImageFrame.cpp \
 	  FXImageView.cpp \
 	  FXInputDialog.cpp \
 	  FXJPGIcon.cpp \
@@ -124,11 +145,18 @@ SOURCES = FX4Splitter.cpp \
 	  FXMDIChild.cpp \
 	  FXMDIClient.cpp \
 	  FXMainWindow.cpp \
+          FXMat3d.cpp \
+          FXMat4d.cpp \
+          FXMat3f.cpp \
+          FXMat4f.cpp \
 	  FXMatrix.cpp \
-	  FXMenubar.cpp \
+	  FXMemoryStream.cpp \
+	  FXMenuBar.cpp \
 	  FXMenuButton.cpp \
 	  FXMenuCaption.cpp \
 	  FXMenuCascade.cpp \
+          FXMenuCheck.cpp \
+          FXMenuRadio.cpp \
 	  FXMenuCommand.cpp \
 	  FXMenuPane.cpp \
 	  FXMenuSeparator.cpp \
@@ -141,6 +169,8 @@ SOURCES = FX4Splitter.cpp \
 	  FXPCXImage.cpp \
 	  FXPNGIcon.cpp \
 	  FXPNGImage.cpp \
+          FXPPMIcon.cpp \
+          FXPPMImage.cpp \
 	  FXPacker.cpp \
 	  FXPicker.cpp \
 	  FXPopup.cpp \
@@ -148,11 +178,15 @@ SOURCES = FX4Splitter.cpp \
 	  FXPrintDialog.cpp \
 	  FXProgressBar.cpp \
 	  FXProgressDialog.cpp \
-	  FXQuat.cpp \
-	  FXRGBIcon.cpp \
+          FXQuatd.cpp \
+          FXQuatf.cpp \
+          FXRGBIcon.cpp \
 	  FXRGBImage.cpp \
 	  FXRadioButton.cpp \
-	  FXRange.cpp \
+	  FXRangef.cpp \
+	  FXRanged.cpp \
+	  FXRealSlider.cpp \
+	  FXRealSpinner.cpp \
 	  FXRecentFiles.cpp \
 	  FXRectangle.cpp \
 	  FXRegion.cpp \
@@ -160,9 +194,10 @@ SOURCES = FX4Splitter.cpp \
 	  FXReplaceDialog.cpp \
 	  FXRex.cpp \
 	  FXRootWindow.cpp \
+	  FXRuler.cpp \
 	  FXScrollArea.cpp \
 	  FXScrollWindow.cpp \
-	  FXScrollbar.cpp \
+	  FXScrollBar.cpp \
 	  FXSearchDialog.cpp \
 	  FXSeparator.cpp \
 	  FXSettings.cpp \
@@ -172,8 +207,9 @@ SOURCES = FX4Splitter.cpp \
 	  FXSlider.cpp \
 	  FXSpinner.cpp \
 	  FXSplitter.cpp \
-	  FXStatusbar.cpp \
-	  FXStatusline.cpp \
+	  FXSpring.cpp \
+	  FXStatusBar.cpp \
+	  FXStatusLine.cpp \
 	  FXStream.cpp \
 	  FXString.cpp \
 	  FXStringDict.cpp \
@@ -187,22 +223,36 @@ SOURCES = FX4Splitter.cpp \
 	  FXTabItem.cpp \
 	  FXTable.cpp \
 	  FXText.cpp \
+          FXTextCodec.cpp \
 	  FXTextField.cpp \
 	  FXToggleButton.cpp \
-	  FXToolbar.cpp \
-	  FXToolbarGrip.cpp \
-	  FXToolbarShell.cpp \
-	  FXToolbarTab.cpp \
-	  FXTooltip.cpp \
+	  FXToolBar.cpp \
+	  FXToolBarGrip.cpp \
+	  FXToolBarShell.cpp \
+	  FXToolBarTab.cpp \
+	  FXToolTip.cpp \
 	  FXTopWindow.cpp \
 	  FXTreeList.cpp \
 	  FXTreeListBox.cpp \
+	  FXTriStateButton.cpp \
 	  FXUndoList.cpp \
 	  FXURL.cpp \
-	  FXVec.cpp \
-	  FXVerticalFrame.cpp \
+          FXUTF8Codec.cpp \
+          FXUTF16Codec.cpp \
+          FXUTF32Codec.cpp \
+          FXVec2d.cpp \
+          FXVec2f.cpp \
+          FXVec3d.cpp \
+          FXVec3f.cpp \
+          FXVec4d.cpp \
+          FXVec4f.cpp \
+          FXVerticalFrame.cpp \
 	  FXVisual.cpp \
 	  FXWindow.cpp \
+	  FXWizard.cpp \
+          FXWString.cpp \
+	  FXXBMIcon.cpp \
+	  FXXBMImage.cpp \
 	  FXXPMIcon.cpp \
 	  FXXPMImage.cpp \
 	  fxbmpio.cpp \
@@ -211,16 +261,22 @@ SOURCES = FX4Splitter.cpp \
 	  fxgifio.cpp \
 	  fxicoio.cpp \
 	  fxjpegio.cpp \
+	  fxparsegeometry.cpp \
 	  fxpcxio.cpp \
 	  fxpngio.cpp \
+          fxppmio.cpp \
 	  fxpriv.cpp \
-	  fxquantize.cpp \
+	  fxezquantize.cpp \
+	  fxfsquantize.cpp \
+	  fxwuquantize.cpp \
 	  fxrgbio.cpp \
 	  fxtargaio.cpp \
 	  fxtifio.cpp \
 	  fxutils.cpp \
 	  fxwinkbd.cpp \
+	  fxxbmio.cpp \
 	  fxxpmio.cpp \
+	  icons.cpp \
 	  vsscanf.cpp
 
 OBJECTS = $(SOURCES:.cpp=.obj)
@@ -229,6 +285,21 @@ OBJECTS = $(SOURCES:.cpp=.obj)
 	$(CXX) -c $(INCDIRS) $(CXXFLAGS) $(DEFINES) $<
 
 all: $(FOXLIB)
+
+
+FXApp.cpp: icons.cpp
+
+icons.h: $(ICONS)
+	$(RESWRAP) -i -n FX -o icons.h $^
+
+
+icons.cpp: $(ICONS)
+	$(RM) $@
+	echo ^#include "icons.h" > $@
+	$(RESWRAP) -n FX -oa $@ $(ICONS_1)
+	$(RESWRAP) -n FX -oa $@ $(ICONS_2)
+	$(RESWRAP) -n FX -oa $@ $(ICONS_3)
+	$(RESWRAP) -n FX -oa $@ $(ICONS_4)
 
 clean:
 	del $(FOXLIB)

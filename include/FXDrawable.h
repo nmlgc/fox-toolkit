@@ -3,7 +3,7 @@
 *                           D r a w a b l e   A r e a                           *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXDrawable.h,v 1.17 2002/01/18 22:42:52 jeroen Exp $                     *
+* $Id: FXDrawable.h,v 1.23 2004/02/08 17:17:33 fox Exp $                        *
 ********************************************************************************/
 #ifndef FXDRAWABLE_H
 #define FXDRAWABLE_H
@@ -28,6 +28,7 @@
 #include "FXId.h"
 #endif
 
+namespace FX {
 
 
 class FXVisual;
@@ -82,5 +83,6 @@ public:
   virtual ~FXDrawable();
   };
 
+}
 
 #endif

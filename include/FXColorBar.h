@@ -3,7 +3,7 @@
 *                         C o l o r B a r   W i d g e t                         *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2001,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 2001,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXColorBar.h,v 1.6.4.1 2003/01/16 18:32:07 fox Exp $                      *
+* $Id: FXColorBar.h,v 1.16 2004/02/08 17:17:33 fox Exp $                        *
 ********************************************************************************/
 #ifndef FXCOLORBAR_H
 #define FXCOLORBAR_H
@@ -28,6 +28,7 @@
 #include "FXFrame.h"
 #endif
 
+namespace FX {
 
 
 /// Color bar orientation
@@ -54,7 +55,6 @@ protected:
 protected:
   FXColorBar();
   void updatebar();
-  virtual void layout();
 private:
   FXColorBar(const FXColorBar&);
   FXColorBar &operator=(const FXColorBar&);
@@ -63,6 +63,10 @@ public:
   long onLeftBtnPress(FXObject*,FXSelector,void*);
   long onLeftBtnRelease(FXObject*,FXSelector,void*);
   long onMotion(FXObject*,FXSelector,void*);
+  long onCmdSetHelp(FXObject*,FXSelector,void*);
+  long onCmdGetHelp(FXObject*,FXSelector,void*);
+  long onCmdSetTip(FXObject*,FXSelector,void*);
+  long onCmdGetTip(FXObject*,FXSelector,void*);
   long onQueryHelp(FXObject*,FXSelector,void*);
   long onQueryTip(FXObject*,FXSelector,void*);
 public:
@@ -81,6 +85,9 @@ public:
 
   /// Return default height
   virtual FXint getDefaultHeight();
+
+  /// Perform layout
+  virtual void layout();
 
   /// Change hue
   void setHue(FXfloat h);
@@ -128,5 +135,6 @@ public:
   virtual ~FXColorBar();
   };
 
+}
 
 #endif

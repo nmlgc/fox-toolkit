@@ -3,7 +3,7 @@
 *                     M a i n   W i n d o w   W i d g e t                       *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1998,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXMainWindow.h,v 1.9 2002/01/18 22:42:53 jeroen Exp $                    *
+* $Id: FXMainWindow.h,v 1.18 2004/02/08 17:17:33 fox Exp $                      *
 ********************************************************************************/
 #ifndef FXMAINWINDOW_H
 #define FXMAINWINDOW_H
@@ -28,9 +28,18 @@
 #include "FXTopWindow.h"
 #endif
 
+namespace FX {
 
 
-/// Main application window
+/**
+* Main application window.  There may be any number of
+* MainWindows in an application.
+* When a MainWindow is closed, it sends a SEL_CLOSE message to
+* its target; the target should return 0 if there is no objection
+* against proceeding with the close, and 1 otherwise.
+* After the SEL_CLOSE message has been sent and no objection was
+* raised, the MainWindow will delete itself.
+*/
 class FXAPI FXMainWindow : public FXTopWindow {
   FXDECLARE(FXMainWindow)
 protected:
@@ -39,17 +48,17 @@ private:
   FXMainWindow(const FXMainWindow&);
   FXMainWindow &operator=(const FXMainWindow&);
 public:
-  long onClose(FXObject*,FXSelector,void*);
-public:
 
   /// Construct a main window
   FXMainWindow(FXApp* a,const FXString& name,FXIcon *ic=NULL,FXIcon *mi=NULL,FXuint opts=DECOR_ALL,FXint x=0,FXint y=0,FXint w=0,FXint h=0,FXint pl=0,FXint pr=0,FXint pt=0,FXint pb=0,FXint hs=0,FXint vs=0);
+
+  /// Create server-side resources
+  virtual void create();
 
   /// Destructor
   virtual ~FXMainWindow();
   };
 
-
-
+}
 
 #endif

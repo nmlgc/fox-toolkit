@@ -3,7 +3,7 @@
 *                        G I F   C u r s o r   O b j e c t                      *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2000,2002 by Daniel Gehriger.   All Rights Reserved.            *
+* Copyright (C) 2000,2004 by Daniel Gehriger.   All Rights Reserved.            *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,79 +19,73 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXGIFCursor.cpp,v 1.10 2002/01/18 22:43:00 jeroen Exp $                   *
+* $Id: FXGIFCursor.cpp,v 1.24 2004/01/14 14:21:28 fox Exp $                     *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
 #include "fxdefs.h"
 #include "FXStream.h"
+#include "FXMemoryStream.h"
 #include "FXString.h"
 #include "FXSize.h"
 #include "FXPoint.h"
 #include "FXRectangle.h"
 #include "FXSettings.h"
 #include "FXRegistry.h"
+#include "FXHash.h"
 #include "FXApp.h"
 #include "FXGIFCursor.h"
 
 
 /*
   Notes:
-  Jeroen's notes for FXGIFIcon also apply to FXGIFCursor:
-
-  - Best is to use the actual alpha color from the GIF file.
-  - Next, one can try the background color from the GIF file.
-  - You can also let the system guess a transparancy color based on the corners.
+  - Tossed old code now that FXCursor has an RGBA representation.
+  - Now uses actual alpha color from the GIF file.
+  - Need function to force alpha channel based on transparent color.
+  - Optionally let system guess a transparancy color based on the corners.
   - If that doesn't work, you can force a specific transparency color.
-  - Want to add some similar options like in FXIcon w.r.t. when pixel buffer
-    gets thrown away, and to force certain alpha colors or opaqueness etc.
-  - We could then extend the collection to include XPM (particularly
-    interesting as that would allow making cursors with nother other than vi).
-  - Maybe want to have some API to turn FXBitmap into FXCursor.
 */
 
+
+using namespace FX;
+
 /*******************************************************************************/
+
+namespace FX {
 
 // Object implementation
 FXIMPLEMENT(FXGIFCursor,FXCursor,NULL,0)
 
 
-/*-----------------------------------------------------------------*\
- *
- * Constructor
- *
-\*-----------------------------------------------------------------*/
-FXGIFCursor::FXGIFCursor(FXApp* a,const void *pix,FXint hx,FXint hy):FXCursor(a,NULL,NULL,0,0,hx,hy){
+// Constructor
+FXGIFCursor::FXGIFCursor(FXApp* a,const void *pix,FXint hx,FXint hy):FXCursor(a,NULL,0,0,0,0){
   if(pix){
-    FXuchar* pbData;
-    FXColor  clrPixel,clrTransp;
-    FXint    h,w,nWidth,nHeight,nWidthBytes,nOffset;
     FXMemoryStream ms;
-    ms.open((FXuchar*)pix,FXStreamLoad);
-    if(fxloadGIF(ms,pbData,clrTransp,nWidth,nHeight)){
-      if(nWidth>32 || nHeight>32){ fxerror("%s::create: cursor exceeds maximum size of 32x32 pixels\n",getClassName()); }
-      width=nWidth;
-      height=nHeight;
-      nWidthBytes=(nWidth+7)/8;
-      FXCALLOC(&source,FXuchar,nWidthBytes*nHeight);
-      FXCALLOC(&mask,FXuchar,nWidthBytes*nHeight);
-      owned=TRUE;
-      for(h=0; h<nHeight; ++h){
-        for(w=0; w<nWidth; ++w){
-          nOffset=3*(w+nWidth*h);
-          clrPixel=FXRGB(pbData[nOffset],pbData[nOffset+1],pbData[nOffset+2]);
-          if(clrPixel==FXRGB(0,0,0)){
-            source[(w+nWidth*h)/8]|=1<<(w%8);
-            }
-          if(clrPixel!=clrTransp){
-            mask[(w+nWidth*h)/8]|=1<<(w%8);
-            }
-          }
-        }
-      FXFREE(&pbData);    // Free original pixels
-      }
+    ms.open(FXStreamLoad,(FXuchar*)pix);
+    fxloadGIF(ms,data,width,height);
+    hotx=FXCLAMP(0,hx,width-1);
+    hoty=FXCLAMP(0,hy,height-1);
+    options|=CURSOR_OWNED;
     ms.close();
     }
   }
+
+
+// Save object to stream
+FXbool FXGIFCursor::savePixels(FXStream& store) const {
+  if(!fxsaveGIF(store,data,width,height)) return FALSE;
+  return TRUE;
+  }
+
+
+// Load object from stream
+FXbool FXGIFCursor::loadPixels(FXStream& store){
+  if(options&CURSOR_OWNED){FXFREE(&data);}
+  if(!fxloadGIF(store,data,width,height)) return FALSE;
+  options|=CURSOR_OWNED;
+  return TRUE;
+  }
+
+}
 
 

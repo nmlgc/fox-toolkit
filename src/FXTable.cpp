@@ -3,7 +3,7 @@
 *                            T a b l e   W i d g e t                            *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1999,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1999,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * Contributions from: Pierre Cyr <pcyr@po-box.mcgill.ca>                        *
 *********************************************************************************
@@ -21,7 +21,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXTable.cpp,v 1.103.4.7 2003/05/21 15:04:44 fox Exp $                     *
+* $Id: FXTable.cpp,v 1.184 2004/04/05 14:49:33 fox Exp $                        *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -34,11 +34,14 @@
 #include "FXRectangle.h"
 #include "FXRegistry.h"
 #include "FXAccelTable.h"
+#include "FXHash.h"
 #include "FXApp.h"
 #include "FXDCWindow.h"
 #include "FXFont.h"
 #include "FXIcon.h"
-#include "FXScrollbar.h"
+#include "FXScrollBar.h"
+#include "FXButton.h"
+#include "FXHeader.h"
 #include "FXTable.h"
 
 
@@ -174,22 +177,36 @@
 
     - Set cell width/height in terms of character width/font height.
 
-  - Allow for NULL in cell[].
-
   - Selection modes:
     Browse, single, multiple, extended. (like FXList).
     Column only, Row only, Both rows and columns, no selectability.
+  - Current item has icon and label and data.  Virtualizing could
+    bring down the cost/item from about 20 bytes/item to about 8 bytes/item
+    or basically, the state+vtable.  The normal table would then use
+    abstract FXTableItems, and the substitute items with string, icon,
+    and void* data elsewhere.
+  - Have a mode where (certain) columns and rows resize when the table does.
+  - Maybe have a mode where all cells sized as wide (tall) as largest cell.
+  - Allow for different font based on cell type (e.g. button modes).
+  - See FXIconList about dragging and autoscrolling.
+  - Selection should be a rectangle; selection should acquire primary
+    selection; also, clipboard support needed (message handlers).
+  - If we maintain rectangular selection, ranges can be selected
+    whether or not we have items in them.
 */
 
 
-#define DEFAULTCOLUMNWIDTH  100     // Initial value for defColumnWidth
+#define DEFAULTCOLWIDTH     100     // Initial value for defColWidth
 #define DEFAULTROWHEIGHT    20      // Initial value for defRowHeight
 #define FUDGE               1
 
-#define TABLE_MASK          (TABLE_COL_SIZABLE|TABLE_ROW_SIZABLE)
+#define TABLE_MASK          (TABLE_COL_SIZABLE|TABLE_ROW_SIZABLE|TABLE_HEADERS_SIZABLE)
 
+using namespace FX;
 
 /*******************************************************************************/
+
+namespace FX {
 
 // Object implementation
 FXIMPLEMENT(FXTableItem,FXObject,NULL,0)
@@ -200,55 +217,6 @@ void FXTableItem::drawBackground(const FXTable* table,FXDC& dc,FXint x,FXint y,F
   register FXbool hg=table->isHorzGridShown();
   register FXbool vg=table->isVertGridShown();
   dc.fillRectangle(x+vg,y+hg,w-vg,h-hg);
-  }
-
-
-// Draw a button
-void FXTableItem::drawButton(const FXTable* table,FXDC& dc,FXint x,FXint y,FXint w,FXint h) const {
-  register FXbool hg=table->isHorzGridShown();
-  register FXbool vg=table->isVertGridShown();
-
-  // Adjust to stay inside grid lines
-  x+=vg;
-  y+=hg;
-  w-=vg;
-  h-=hg;
-
-  // Background
-  dc.setForeground(table->getBaseColor());
-  dc.fillRectangle(x,y,w,h);
-
-  // Button is pressed
-  if(state&PRESSED){
-    dc.setForeground(table->getShadowColor());
-    dc.fillRectangle(x,y,w-1,1);
-    dc.fillRectangle(x,y,1,h-1);
-    dc.setForeground(table->getBorderColor());
-    dc.fillRectangle(x+1,y+1,w-3,1);
-    dc.fillRectangle(x+1,y+1,1,h-3);
-    dc.setForeground(table->getHiliteColor());
-    dc.fillRectangle(x,y+h-1,w,1);
-    dc.fillRectangle(x+w-1,y,1,h);
-    dc.setForeground(table->getBaseColor());
-    dc.fillRectangle(x+1,y+h-2,w-2,1);
-    dc.fillRectangle(x+w-2,y+1,1,h-2);
-    }
-
-  // Button is up
-  else{
-    dc.setForeground(table->getHiliteColor());
-    dc.fillRectangle(x,y,w-1,1);
-    dc.fillRectangle(x,y,1,h-1);
-    dc.setForeground(table->getBaseColor());
-    dc.fillRectangle(x+1,y+1,w-2,1);
-    dc.fillRectangle(x+1,y+1,1,h-2);
-    dc.setForeground(table->getShadowColor());
-    dc.fillRectangle(x+1,y+h-2,w-2,1);
-    dc.fillRectangle(x+w-2,y+1,1,h-1);
-    dc.setForeground(table->getBorderColor());
-    dc.fillRectangle(x,y+h-1,w,1);
-    dc.fillRectangle(x+w-1,y,1,h);
-    }
   }
 
 
@@ -284,7 +252,9 @@ void FXTableItem::drawBorders(const FXTable* table,FXDC& dc,FXint x,FXint y,FXin
 // Draw content
 void FXTableItem::drawContent(const FXTable* table,FXDC& dc,FXint x,FXint y,FXint w,FXint h) const {
   register FXint tx,ty,tw,th,ix,iy,iw,ih,s,ml,mr,mt,mb,beg,end,t,xx,yy;
-  register FXFont *font=dc.getTextFont();
+  register FXFont *font=dc.getFont();
+  FXString lbl=getText();
+  FXIcon  *icn=getIcon();
 
   // Get margins
   ml=table->getMarginLeft();
@@ -296,18 +266,18 @@ void FXTableItem::drawContent(const FXTable* table,FXDC& dc,FXint x,FXint y,FXin
   beg=tw=th=0;
   do{
     end=beg;
-    while(label[end] && label[end]!='\n') end++;
-    if((t=font->getTextWidth(&label[beg],end-beg))>tw) tw=t;
+    while(end<lbl.length() && lbl[end]!='\n') end++;
+    if((t=font->getTextWidth(&lbl[beg],end-beg))>tw) tw=t;
     th+=font->getFontHeight();
     beg=end+1;
     }
-  while(label[end]);
+  while(end<lbl.length());
 
   // Icon size
   iw=ih=0;
-  if(icon){
-    iw=icon->getWidth();
-    ih=icon->getHeight();
+  if(icn){
+    iw=icn->getWidth();
+    ih=icn->getHeight();
     }
 
   // Icon-text spacing
@@ -348,18 +318,13 @@ void FXTableItem::drawContent(const FXTable* table,FXDC& dc,FXint x,FXint y,FXin
     else{ iy=y+mt+(h-mb-mt-ih)/2; ty=y+mt+(h-mb-mt-th)/2; }
     }
 
-  // Offset a bit when pressed
-  if(state&PRESSED){ tx++; ty++; ix++; iy++; }
-
   // Paint icon
-  if(icon){
-    dc.drawIcon(icon,ix,iy);
+  if(icn){
+    dc.drawIcon(icn,ix,iy);
     }
 
   // Text color
-  if(state&BUTTON)
-    dc.setForeground(table->getTextColor());
-  else if(state&SELECTED)
+  if(state&SELECTED)
     dc.setForeground(table->getSelTextColor());
   else
     dc.setForeground(table->getTextColor());
@@ -369,46 +334,32 @@ void FXTableItem::drawContent(const FXTable* table,FXDC& dc,FXint x,FXint y,FXin
   beg=0;
   do{
     end=beg;
-    while(label[end] && label[end]!='\n') end++;
+    while(end<lbl.length() && lbl[end]!='\n') end++;
     if(state&LEFT) xx=tx;
-    else if(state&RIGHT) xx=tx+tw-font->getTextWidth(&label[beg],end-beg);
-    else xx=tx+(tw-font->getTextWidth(&label[beg],end-beg))/2;
-    dc.drawText(xx,yy,&label[beg],end-beg);
+    else if(state&RIGHT) xx=tx+tw-font->getTextWidth(&lbl[beg],end-beg);
+    else xx=tx+(tw-font->getTextWidth(&lbl[beg],end-beg))/2;
+    dc.drawText(xx,yy,&lbl[beg],end-beg);
     yy+=font->getFontHeight();
     beg=end+1;
     }
-  while(label[end]);
+  while(end<lbl.length());
   }
 
 
 // Draw item
 void FXTableItem::draw(const FXTable* table,FXDC& dc,FXint x,FXint y,FXint w,FXint h) const {
 
-  // Draw as a button
-  if(state&BUTTON){
+  // Draw background
+  drawBackground(table,dc,x,y,w,h);
 
-    // Draw button frame
-    drawButton(table,dc,x,y,w,h);
+  // Draw hatch pattern
+  drawPattern(table,dc,x,y,w,h);
 
-    // Draw cell content
-    drawContent(table,dc,x,y,w,h);
-    }
+  // Draw cell content
+  drawContent(table,dc,x,y,w,h);
 
-  // Draw as a normal cell
-  else{
-
-    // Draw background
-    drawBackground(table,dc,x,y,w,h);
-
-    // Draw hatch pattern
-    drawPattern(table,dc,x,y,w,h);
-
-    // Draw cell content
-    drawContent(table,dc,x,y,w,h);
-
-    // Draw borders
-    drawBorders(table,dc,x,y,w,h);
-    }
+  // Draw borders
+  drawBorders(table,dc,x,y,w,h);
   }
 
 
@@ -459,26 +410,14 @@ void FXTableItem::setBorders(FXuint borders){
 
 
 // Set stipple pattern
-void FXTableItem::setStipple(FXStipplePattern pat) {
-  state=(state&0xffffe0ff)|((pat<<8));
+void FXTableItem::setStipple(FXStipplePattern pattern) {
+  state=(state&0xffffe0ff)|((pattern<<8));
   }
 
 
 // Get stipple pattern
 FXStipplePattern FXTableItem::getStipple() const {
   return (FXStipplePattern)((state>>8)&0x1f);
-  }
-
-
-// Change button mode
-void FXTableItem::setButton(FXbool button){
-  if(button) state|=BUTTON; else state&=~BUTTON;
-  }
-
-
-// Set button state
-void FXTableItem::setPressed(FXbool pressed){
-  if(pressed) state|=PRESSED; else state&=~PRESSED;
   }
 
 
@@ -501,11 +440,54 @@ void FXTableItem::detach(){
 
 
 // Get width of item
-FXint FXTableItem::getWidth(const FXTable*) const { return 1; }
+FXint FXTableItem::getWidth(const FXTable* table) const {
+  register FXFont *font=table->getFont();
+  register FXint beg,end,tw,iw,s,w,t;
+  register FXint ml=table->getMarginLeft();
+  register FXint mr=table->getMarginRight();
+  FXString lbl=getText();
+  FXIcon  *icn=getIcon();
+  tw=iw=beg=s=0;
+  if(icn) iw=icn->getWidth();
+  do{
+    end=beg;
+    while(end<lbl.length() && lbl[end]!='\n') end++;
+    if((t=font->getTextWidth(&lbl[beg],end-beg))>tw) tw=t;
+    beg=end+1;
+    }
+  while(end<lbl.length());
+  if(iw && tw) s=4;
+  if(state&(BEFORE|AFTER))
+    w=iw+tw+s;
+  else
+    w=FXMAX(iw,tw);
+  return ml+mr+w;
+  }
 
 
 // Get height of item
-FXint FXTableItem::getHeight(const FXTable*) const { return 1; }
+FXint FXTableItem::getHeight(const FXTable* table) const {
+  register FXFont *font=table->getFont();
+  register FXint beg,end,th,ih,h;
+  register FXint mt=table->getMarginTop();
+  register FXint mb=table->getMarginBottom();
+  FXString lbl=getText();
+  FXIcon  *icn=getIcon();
+  th=ih=beg=0;
+  if(icn) ih=icn->getHeight();
+  do{
+    end=beg;
+    while(end<lbl.length() && lbl[end]!='\n') end++;
+    th+=font->getFontHeight();
+    beg=end+1;
+    }
+  while(end<lbl.length());
+  if(state&(ABOVE|BELOW))
+    h=ih+th;
+  else
+    h=FXMAX(ih,th);
+  return h+mt+mb;
+  }
 
 
 // Save data
@@ -529,6 +511,7 @@ void FXTableItem::load(FXStream& store){
 // Delete icon if owned
 FXTableItem::~FXTableItem(){
   if(state&ICONOWNED) delete icon;
+  icon=(FXIcon*)-1L;
   }
 
 
@@ -537,7 +520,6 @@ FXTableItem::~FXTableItem(){
 // Map
 FXDEFMAP(FXTable) FXTableMap[]={
   FXMAPFUNC(SEL_PAINT,0,FXTable::onPaint),
-  FXMAPFUNC(SEL_TIMEOUT,FXTable::ID_BLINK,FXTable::onBlink),
   FXMAPFUNC(SEL_MOTION,0,FXTable::onMotion),
   FXMAPFUNC(SEL_TIMEOUT,FXWindow::ID_AUTOSCROLL,FXTable::onAutoScroll),
   FXMAPFUNC(SEL_UNGRABBED,0,FXTable::onUngrabbed),
@@ -551,6 +533,10 @@ FXDEFMAP(FXTable) FXTableMap[]={
   FXMAPFUNC(SEL_FOCUSOUT,0,FXTable::onFocusOut),
   FXMAPFUNC(SEL_SELECTION_LOST,0,FXTable::onSelectionLost),
   FXMAPFUNC(SEL_SELECTION_GAINED,0,FXTable::onSelectionGained),
+  FXMAPFUNC(SEL_SELECTION_REQUEST,0,FXTable::onSelectionRequest),
+  FXMAPFUNC(SEL_CLIPBOARD_LOST,0,FXTable::onClipboardLost),
+  FXMAPFUNC(SEL_CLIPBOARD_GAINED,0,FXTable::onClipboardGained),
+  FXMAPFUNC(SEL_CLIPBOARD_REQUEST,0,FXTable::onClipboardRequest),
   FXMAPFUNC(SEL_CLICKED,0,FXTable::onClicked),
   FXMAPFUNC(SEL_DOUBLECLICKED,0,FXTable::onDoubleClicked),
   FXMAPFUNC(SEL_TRIPLECLICKED,0,FXTable::onTripleClicked),
@@ -577,6 +563,8 @@ FXDEFMAP(FXTable) FXTableMap[]={
   FXMAPFUNC(SEL_COMMAND,FXTable::ID_MOVE_PAGEDOWN,FXTable::onCmdMovePageDown),
   FXMAPFUNC(SEL_COMMAND,FXTable::ID_MOVE_PAGEUP,FXTable::onCmdMovePageUp),
 
+  FXMAPFUNC(SEL_COMMAND,FXTable::ID_SELECT_ROW_INDEX,FXTable::onCmdSelectRowIndex),
+  FXMAPFUNC(SEL_COMMAND,FXTable::ID_SELECT_COLUMN_INDEX,FXTable::onCmdSelectColumnIndex),
   FXMAPFUNC(SEL_COMMAND,FXTable::ID_SELECT_COLUMN,FXTable::onCmdSelectColumn),
   FXMAPFUNC(SEL_COMMAND,FXTable::ID_SELECT_ROW,FXTable::onCmdSelectRow),
   FXMAPFUNC(SEL_COMMAND,FXTable::ID_SELECT_CELL,FXTable::onCmdSelectCell),
@@ -584,6 +572,14 @@ FXDEFMAP(FXTable) FXTableMap[]={
   FXMAPFUNC(SEL_COMMAND,FXTable::ID_DESELECT_ALL,FXTable::onCmdDeselectAll),
   FXMAPFUNC(SEL_COMMAND,FXTable::ID_MARK,FXTable::onCmdMark),
   FXMAPFUNC(SEL_COMMAND,FXTable::ID_EXTEND,FXTable::onCmdExtend),
+
+  FXMAPFUNC(SEL_COMMAND,FXTable::ID_CUT_SEL,FXTable::onCmdCutSel),
+  FXMAPFUNC(SEL_UPDATE,FXTable::ID_CUT_SEL,FXTable::onUpdHaveSelection),
+  FXMAPFUNC(SEL_COMMAND,FXTable::ID_COPY_SEL,FXTable::onCmdCopySel),
+  FXMAPFUNC(SEL_UPDATE,FXTable::ID_COPY_SEL,FXTable::onUpdHaveSelection),
+  FXMAPFUNC(SEL_COMMAND,FXTable::ID_DELETE_SEL,FXTable::onCmdDeleteSel),
+  FXMAPFUNC(SEL_UPDATE,FXTable::ID_DELETE_SEL,FXTable::onUpdHaveSelection),
+  FXMAPFUNC(SEL_COMMAND,FXTable::ID_PASTE_SEL,FXTable::onCmdPasteSel),
   };
 
 
@@ -602,10 +598,10 @@ FXDragType FXTable::csvType=0;
 // Serialization
 FXTable::FXTable(){
   flags|=FLAG_ENABLED;
-  cells=(FXTableItem**)-1;
-  col_x=(FXint*)-1;
-  row_y=(FXint*)-1;
-  font=(FXFont*)-1;
+  colHeader=(FXHeader*)-1L;
+  rowHeader=(FXHeader*)-1L;
+  cells=(FXTableItem**)-1L;
+  font=(FXFont*)-1L;
   nrows=0;
   ncols=0;
   visiblerows=0;
@@ -625,59 +621,42 @@ FXTable::FXTable(){
   stippleColor=0;
   cellBorderColor=0;
   cellBorderWidth=0;
-  defColumnWidth=DEFAULTCOLUMNWIDTH;
+  defColWidth=DEFAULTCOLWIDTH;
   defRowHeight=DEFAULTROWHEIGHT;
-  leading_rows=0;
-  leading_cols=0;
-  scrolling_rows=0;
-  scrolling_cols=0;
-  trailing_rows=0;
-  trailing_cols=0;
-  scrollable_left=0;
-  scrollable_right=0;
-  scrollable_top=0;
-  scrollable_bottom=0;
-  table_left=0;
-  table_right=0;
-  table_top=0;
-  table_bottom=0;
-  selection.fm.row=0;
-  selection.fm.col=0;
+  current.row=-1;
+  current.col=-1;
+  anchor.row=-1;
+  anchor.col=-1;
+  selection.fm.row=-1;
+  selection.fm.col=-1;
   selection.to.row=-1;
   selection.to.col=-1;
-  current.row=0;
-  current.col=0;
-  anchor.row=0;
-  anchor.col=0;
-  extent.row=0;
-  extent.col=0;
-  cellcursor=0;
-  cellanchor=0;
-  cellscroll=0;
+  clipbuffer=NULL;
+  cliplength=0;
   mode=MOUSE_NONE;
   vgrid=TRUE;
   hgrid=TRUE;
   grabx=0;
   graby=0;
   rowcol=0;
-  blinker=NULL;
   }
 
 
 // Build table
-FXTable::FXTable(FXComposite *p,FXint nr,FXint nc,FXObject* tgt,FXSelector sel,FXuint opts,FXint x,FXint y,FXint w,FXint h,FXint pl,FXint pr,FXint pt,FXint pb):
+FXTable::FXTable(FXComposite *p,FXObject* tgt,FXSelector sel,FXuint opts,FXint x,FXint y,FXint w,FXint h,FXint pl,FXint pr,FXint pt,FXint pb):
   FXScrollArea(p,opts,x,y,w,h){
   flags|=FLAG_ENABLED;
   target=tgt;
   message=sel;
+  colHeader=new FXHeader(this,this,FXTable::ID_SELECT_COLUMN_INDEX,HEADER_TRACKING|HEADER_BUTTON|FRAME_RAISED|FRAME_THICK|LAYOUT_FIX_HEIGHT,0,0,0,DEFAULTROWHEIGHT);
+  rowHeader=new FXHeader(this,this,FXTable::ID_SELECT_ROW_INDEX,HEADER_VERTICAL|HEADER_TRACKING|HEADER_BUTTON|FRAME_RAISED|FRAME_THICK|LAYOUT_FIX_WIDTH,0,0,DEFAULTCOLWIDTH,0);
+  cornerButton=new FXButton(this,FXString::null,NULL,this,FXTable::ID_SELECT_ALL,FRAME_RAISED|FRAME_THICK);
   FXCALLOC(&cells,FXTableItem*,1);
-  FXCALLOC(&col_x,FXint,1);
-  FXCALLOC(&row_y,FXint,1);
   font=getApp()->getNormalFont();
   nrows=0;
   ncols=0;
-  visiblerows=FXMAX(nr,0);
-  visiblecols=FXMAX(nc,0);
+  visiblerows=0;
+  visiblecols=0;
   margintop=pt;
   marginbottom=pb;
   marginleft=pl;
@@ -697,42 +676,30 @@ FXTable::FXTable(FXComposite *p,FXint nr,FXint nc,FXObject* tgt,FXSelector sel,F
   cellBackColor[0][1]=getApp()->getBackColor(); // Even row, odd column
   cellBackColor[1][0]=getApp()->getBackColor(); // Odd row, even column
   cellBackColor[1][1]=getApp()->getBackColor(); // Odd row, odd column
-  defColumnWidth=DEFAULTCOLUMNWIDTH;
+  defColWidth=DEFAULTCOLWIDTH;
   defRowHeight=DEFAULTROWHEIGHT;
-  leading_rows=0;
-  leading_cols=0;
-  scrolling_rows=0;
-  scrolling_cols=0;
-  trailing_rows=0;
-  trailing_cols=0;
-  scrollable_left=0;
-  scrollable_right=0;
-  scrollable_top=0;
-  scrollable_bottom=0;
-  table_left=0;
-  table_right=0;
-  table_top=0;
-  table_bottom=0;
-  selection.fm.row=0;
-  selection.fm.col=0;
+  current.row=-1;
+  current.col=-1;
+  anchor.row=-1;
+  anchor.col=-1;
+  selection.fm.row=-1;
+  selection.fm.col=-1;
   selection.to.row=-1;
   selection.to.col=-1;
-  current.row=0;
-  current.col=0;
-  anchor.row=0;
-  anchor.col=0;
-  extent.row=0;
-  extent.col=0;
-  cellcursor=0;
-  cellanchor=0;
-  cellscroll=0;
+  clipbuffer=NULL;
+  cliplength=0;
   vgrid=TRUE;
   hgrid=TRUE;
   mode=MOUSE_NONE;
   grabx=0;
   graby=0;
   rowcol=0;
-  blinker=NULL;
+  }
+
+
+// Create item
+FXTableItem* FXTable::createItem(const FXString& text,FXIcon* icon,void* ptr){
+  return new FXTableItem(text,icon,ptr);
   }
 
 
@@ -741,6 +708,7 @@ void FXTable::create(){
   register FXint n=nrows*ncols;
   register FXint i;
   FXScrollArea::create();
+  if(!deleteType){ deleteType=getApp()->registerDragType(deleteTypeName); }
   if(!textType) textType=getApp()->registerDragType(textTypeName);
   if(!csvType) csvType=getApp()->registerDragType(csvTypeName);
   for(i=0; i<n; i++){ if(cells[i]) cells[i]->create(); }
@@ -755,6 +723,9 @@ void FXTable::detach(){
   FXScrollArea::detach();
   for(i=0; i<n; i++){ if(cells[i]) cells[i]->detach(); }
   font->detach();
+  deleteType=0;
+  textType=0;
+  csvType=0;
   }
 
 
@@ -776,21 +747,75 @@ void FXTable::killFocus(){
   }
 
 
-// Get default width
+// Move content
+void FXTable::moveContents(FXint x,FXint y){
+  register FXint dx=x-pos_x;
+  register FXint dy=y-pos_y;
+
+  // Update position
+  pos_x=x;
+  pos_y=y;
+
+  // Scroll headers
+  colHeader->setPosition(x);
+  rowHeader->setPosition(y);
+
+  // Scroll table
+  scroll(colHeader->getX(),rowHeader->getY(),colHeader->getTotalSize()+vgrid,rowHeader->getTotalSize()+hgrid,dx,dy);
+  }
+
+
+// Determine scrollable content width
+FXint FXTable::getContentWidth(){
+  register FXint w=colHeader->getTotalSize()+vgrid;
+  if(rowHeader->getLayoutHints()&LAYOUT_FIX_WIDTH) w+=rowHeader->getWidth();
+  else w+=rowHeader->getDefaultWidth();
+  return w;
+  }
+
+
+// Determine scrollable content height
+FXint FXTable::getContentHeight(){
+  register FXint h=rowHeader->getTotalSize()+hgrid;
+  if(colHeader->getLayoutHints()&LAYOUT_FIX_HEIGHT) h+=colHeader->getHeight();
+  else h+=colHeader->getDefaultHeight();
+  return h;
+  }
+
+
+// Get default width; logic is as follows:
+// If we don't honor the visible columns, calculate as FXScrollArea.
+// If we honor visible columns, calculate the size based on that;
+// if there MAY be a horizontal scroller AND its minimum size exceeds
+// this, then that will determine its size.
+// Finally, if there MAY be a vertical scroller we assume it will be
+// included in the calculation.
 FXint FXTable::getDefaultWidth(){
-  return visiblecols ? visiblecols*defColumnWidth : FXScrollArea::getDefaultWidth();
+  register FXint w,t;
+  if(0<visiblecols){
+    w=visiblecols*defColWidth+vgrid;
+    if(rowHeader->getLayoutHints()&LAYOUT_FIX_WIDTH) w+=rowHeader->getWidth();
+    else w+=rowHeader->getDefaultWidth();
+    if(!(options&HSCROLLER_NEVER) && (t=horizontal->getDefaultWidth())>w) w=t;
+    if(!(options&VSCROLLER_NEVER)) w+=vertical->getDefaultWidth();
+    return w;
+    }
+  return FXScrollArea::getDefaultWidth();
   }
 
 
-// Get default height
+// Get default height; similar logic as above
 FXint FXTable::getDefaultHeight(){
-  return visiblerows ? visiblerows*defRowHeight : FXScrollArea::getDefaultHeight();
-  }
-
-
-// Create item
-FXTableItem* FXTable::createItem(const FXString& text,FXIcon* icon,void* ptr){
-  return new FXTableItem(text,icon,ptr);
+  register FXint h,t;
+  if(0<visiblerows){
+    h=visiblerows*defRowHeight+hgrid;
+    if(colHeader->getLayoutHints()&LAYOUT_FIX_HEIGHT) h+=colHeader->getHeight();
+    else h+=colHeader->getDefaultHeight();
+    if(!(options&VSCROLLER_NEVER) && (t=vertical->getDefaultHeight())>h) h=t;
+    if(!(options&HSCROLLER_NEVER)) h+=horizontal->getDefaultHeight();
+    return h;
+    }
+  return FXScrollArea::getDefaultHeight();
   }
 
 
@@ -801,48 +826,48 @@ void FXTable::recalc(){
   }
 
 
+// Recalculate layout determines item locations and sizes
+void FXTable::layout(){
+  register FXint roww,colh;
 
-// Move content
-void FXTable::moveContents(FXint x,FXint y){
-  FXint dx=x-pos_x;
-  FXint dy=y-pos_y;
+  // Calculate contents
+  FXScrollArea::layout();
 
-  // Hide cursor
-  drawCursor(0);
+  // Size up column header height
+  if(colHeader->getLayoutHints()&LAYOUT_FIX_HEIGHT) colh=colHeader->getHeight();
+  else colh=colHeader->getDefaultHeight();
 
-  // Update position
-  pos_x=x;
-  pos_y=y;
+  // Size up row header width
+  if(rowHeader->getLayoutHints()&LAYOUT_FIX_WIDTH) roww=rowHeader->getWidth();
+  else roww=rowHeader->getDefaultWidth();
 
-  // Scroll leading fixed rows
-  if(leading_rows){
-    scroll(scrollable_left+vgrid,table_top,scrollable_right-scrollable_left-vgrid,scrollable_top+hgrid-table_top,dx,0);
-    }
+  // Place headers
+  colHeader->position(roww,0,viewport_w-roww,colh);
+  rowHeader->position(0,colh,roww,viewport_h-colh);
+  cornerButton->position(0,0,roww,colh);
+  cornerButton->raise();
+  colHeader->raise();
+  rowHeader->raise();
 
-  // Scroll leading fixed columns
-  if(leading_cols){
-    scroll(table_left,scrollable_top+hgrid,scrollable_left+vgrid-table_left,scrollable_bottom-scrollable_top-hgrid,0,dy);
-    }
+  FXTRACE((200," roww=%d colh=%d\n",roww,colh));
 
-  // Scroll trailing fixed rows
-  if(trailing_rows){
-    scroll(scrollable_left+vgrid,scrollable_bottom,scrollable_right-scrollable_left-vgrid,table_bottom+hgrid-scrollable_bottom,dx,0);
-    }
+  // Determine line size for scroll bars
+  vertical->setLine(defRowHeight);
+  horizontal->setLine(defColWidth);
 
-  // Scroll trailing fixed columns
-  if(trailing_cols){
-    scroll(scrollable_right,scrollable_top+hgrid,table_right+vgrid-scrollable_right,scrollable_bottom-scrollable_top-hgrid,0,dy);
-    }
+  // Force repaint
+  update();
 
-  // Scroll table
-  scroll(scrollable_left+vgrid,scrollable_top+hgrid,scrollable_right-scrollable_left-vgrid,scrollable_bottom-scrollable_top-hgrid,dx,dy);
+  // No more dirty
+  flags&=~FLAG_DIRTY;
   }
 
 
 // Starting row of multi-column cell
 FXint FXTable::startRow(FXint row,FXint col) const {
   register FXTableItem *item=cells[row*ncols+col];
-  while(0<row && cells[(row-1)*ncols+col]==item) row--;
+  if(item){ while(0<row && cells[(row-1)*ncols+col]==item) row--; }
+  FXASSERT(0<=row && row<nrows);
   return row;
   }
 
@@ -850,7 +875,8 @@ FXint FXTable::startRow(FXint row,FXint col) const {
 // Starting column of multi-column cell
 FXint FXTable::startCol(FXint row,FXint col) const {
   register FXTableItem *item=cells[row*ncols+col];
-  while(0<col && cells[row*ncols+col-1]==item) col--;
+  if(item){ while(0<col && cells[row*ncols+col-1]==item) col--; }
+  FXASSERT(0<=col && col<ncols);
   return col;
   }
 
@@ -858,7 +884,8 @@ FXint FXTable::startCol(FXint row,FXint col) const {
 // Ending row of multi-column cell
 FXint FXTable::endRow(FXint row,FXint col) const {
   register FXTableItem *item=cells[row*ncols+col];
-  while(row<nrows && cells[row*ncols+col]==item) row++;
+  if(item){ while(row<nrows-1 && cells[(row+1)*ncols+col]==item) row++; }
+  FXASSERT(0<=row && row<nrows);
   return row;
   }
 
@@ -866,104 +893,28 @@ FXint FXTable::endRow(FXint row,FXint col) const {
 // Ending column of multi-column cell
 FXint FXTable::endCol(FXint row,FXint col) const {
   register FXTableItem *item=cells[row*ncols+col];
-  while(col<ncols && cells[row*ncols+col]==item) col++;
+  if(item){ while(col<ncols-1 && cells[row*ncols+col+1]==item) col++; }
+  FXASSERT(0<=col && col<ncols);
   return col;
   }
 
 
-// Find value in array within [l,h]
-static FXint bsearch(FXint *array,FXint l,FXint h,FXint value){
-  register FXint m;
-  do{
-    m=(h+l)/2;
-    if(array[m+1]<=value) l=m+1;
-    else if(value<array[m]) h=m-1;
-    else break;
-    }
-  while(h>=l);
-  return m;
-  }
-
-
-// Get column containing x, -1 if outside table
+// Get column containing x
 FXint FXTable::colAtX(FXint x) const {
-  if(x<table_left || table_right<x) return -1;
-  if(x<scrollable_left) return bsearch(col_x,0,leading_cols-1,x);
-  if(scrollable_right<=x) return bsearch(col_x,ncols-trailing_cols,ncols-1,x-scrollable_right+col_x[ncols-trailing_cols]);
-  return bsearch(col_x,leading_cols,ncols-trailing_cols-1,x-pos_x);
+  return colHeader->getItemAt(x-colHeader->getX());
   }
 
 
 // Get row containing y
 FXint FXTable::rowAtY(FXint y) const {
-  if(y<table_top || table_bottom<y) return -1;
-  if(y<scrollable_top) return bsearch(row_y,0,leading_rows-1,y);
-  if(scrollable_bottom<=y) return bsearch(row_y,nrows-trailing_rows,nrows-1,y-scrollable_bottom+row_y[nrows-trailing_rows]);
-  return bsearch(row_y,leading_rows,nrows-trailing_rows-1,y-pos_y);
+  return rowHeader->getItemAt(y-rowHeader->getY());
   }
 
 
-// Return column that x is near
-FXint FXTable::nearestCol(FXint col,FXint x) const {
-  register FXint t;
-  if(0<=col){
-    t=getColumnX(col);
-    if(t-FUDGE<=x && x<=t+FUDGE) return col;
-    t+=getColumnWidth(col);
-    if(t-FUDGE<=x && x<=t+FUDGE) return col+1;
-    }
-  return -1;
-  }
-
-
-// Return row that y is near
-FXint FXTable::nearestRow(FXint row,FXint y) const {
-  register FXint t;
-  if(0<=row){
-    t=getRowY(row);
-    if(t-FUDGE<=y && y<=t+FUDGE) return row;
-    t+=getRowHeight(row);
-    if(t-FUDGE<=y && y<=t+FUDGE) return row+1;
-    }
-  return -1;
-  }
-
-
-// Rectangle of cell ar r,c
-FXRectangle FXTable::cellRect(FXint r,FXint c) const {
-  FXRectangle rect;
-
-  // Check inputs
-  FXASSERT(0<=r && r<=nrows);
-  FXASSERT(0<=c && c<=ncols);
-
-  // Cell span
-  FXint sr=startRow(r,c);
-  FXint er=endRow(r,c);
-  FXint sc=startCol(r,c);
-  FXint ec=endCol(r,c);
-
-  // X coordinate
-  if(ec<=leading_cols)
-    rect.x=col_x[sc];
-  else if(ncols-trailing_cols<=sc)
-    rect.x=scrollable_right+col_x[sc]-col_x[ncols-trailing_cols];
-  else
-    rect.x=pos_x+col_x[sc];
-
-  // Y coordinate
-  if(er<=leading_rows)
-    rect.y=row_y[sr];
-  else if(nrows-trailing_rows<=sr)
-    rect.y=scrollable_bottom+row_y[sr]-row_y[nrows-trailing_rows];
-  else
-    rect.y=pos_y+row_y[sr];
-
-  // Size, including next grid line if any
-  rect.w=col_x[ec]-col_x[sc]+vgrid;
-  rect.h=row_y[er]-row_y[sr]+hgrid;
-
-  return rect;
+// Return TRUE if its a spanning cell
+FXbool FXTable::isItemSpanning(FXint r,FXint c) const {
+  register FXTableItem *item=cells[r*ncols+c];
+  return item && (0<r && cells[(r-1)*ncols+c]==item) || (r<nrows-1 && cells[(r+1)*ncols+c]==item) || (0<c && cells[r*ncols+c-1]==item) || (c<ncols-1 && cells[r*ncols+c+1]==item);
   }
 
 
@@ -973,76 +924,53 @@ void FXTable::makePositionVisible(FXint r,FXint c){
   if(xid){
     px=pos_x;
     py=pos_y;
-    if(leading_cols<=c && c<ncols-trailing_cols){
-      xlo=col_x[c];
-      xhi=col_x[c+1];
-      if(px+xhi >= scrollable_right) px=scrollable_right-xhi;
-      if(px+xlo <= scrollable_left) px=scrollable_left-xlo;
+    if(0<=c && c<ncols){
+      xlo=colHeader->getItem(c)->getPos();
+      xhi=colHeader->getItem(c)->getSize()+xlo;
+      if(px+xhi >= viewport_w-colHeader->getX()) px=viewport_w-colHeader->getX()-xhi;
+      if(px+xlo <= 0) px=-xlo;
       }
-    if(leading_rows<=r && r<nrows-trailing_rows){
-      ylo=row_y[r];
-      yhi=row_y[r+1];
-      if(py+yhi >= scrollable_bottom) py=scrollable_bottom-yhi;
-      if(py+ylo <= scrollable_top) py=scrollable_top-ylo;
+    if(0<=r && r<nrows){
+      ylo=rowHeader->getItem(r)->getPos();
+      yhi=rowHeader->getItem(r)->getSize()+ylo;
+      if(py+yhi >= viewport_h-rowHeader->getY()) py=viewport_h-rowHeader->getY()-yhi;
+      if(py+ylo <= 0) py=-ylo;
       }
     setPosition(px,py);
     }
   }
 
 
+// True if item (partially) visible
+FXbool FXTable::isItemVisible(FXint r,FXint c) const {
+  register FXint xl,xr,yt,yb;
+  if(r<0 || c<0 || nrows<=r || ncols<=c){ fxerror("%s::isItemVisible: index out of range.\n",getClassName()); }
+  xl=colHeader->getItem(c)->getPos();
+  xr=colHeader->getItem(c)->getSize()+xl;
+  yt=rowHeader->getItem(r)->getPos();
+  yb=rowHeader->getItem(r)->getSize()+yt;
+  return 0<pos_x+xr && 0<pos_y+yb && pos_x+xl<viewport_w-colHeader->getX() && pos_y+yt<viewport_h-rowHeader->getY();
+  }
+
+
 // Repaint cells between grid lines sr,er and grid lines sc,ec
-void FXTable::updateRange(FXint sr,FXint er,FXint sc,FXint ec){
+void FXTable::updateRange(FXint sr,FXint er,FXint sc,FXint ec) const {
   FXint xl,xr,yt,yb;
-  if(sr<0 || sc<0 || nrows<er || ncols<ec){ fxerror("%s::updateRange: index out of range.\n",getClassName()); }
+  if(sr<0 || sc<0 || nrows<=er || ncols<=ec){ fxerror("%s::updateRange: index out of range.\n",getClassName()); }
   if(sr<=er && sc<=ec){
-    if(ec<=leading_cols){
-      xl=col_x[sc];
-      xr=col_x[ec];
-      }
-    else if(ncols-trailing_cols<=sc){
-      xl=scrollable_right+col_x[sc]-col_x[ncols-trailing_cols];
-      xr=scrollable_right+col_x[ec]-col_x[ncols-trailing_cols];
-      }
-    else{
-      xl=pos_x+col_x[sc];
-      xr=pos_x+col_x[ec];
-      }
-    if(er<=leading_rows){
-      yt=row_y[sr];
-      yb=row_y[er];
-      }
-    else if(nrows-trailing_rows<=sr){
-      yt=scrollable_bottom+row_y[sr]-row_y[nrows-trailing_rows];
-      yb=scrollable_bottom+row_y[er]-row_y[nrows-trailing_rows];
-      }
-    else{
-      yt=pos_y+row_y[sr];
-      yb=pos_y+row_y[er];
-      }
+    xl=colHeader->getX()+colHeader->getItemOffset(sc);
+    xr=colHeader->getX()+colHeader->getItemOffset(ec)+colHeader->getItemSize(ec);
+    yt=rowHeader->getY()+rowHeader->getItemOffset(sr);
+    yb=rowHeader->getY()+rowHeader->getItemOffset(er)+rowHeader->getItemSize(er);
     update(xl,yt,xr-xl+vgrid,yb-yt+hgrid);
     }
   }
 
 
 // Repaint
-void FXTable::updateItem(FXint r,FXint c){
+void FXTable::updateItem(FXint r,FXint c) const {
   if(r<0 || c<0 || nrows<=r || ncols<=c){ fxerror("%s::updateItem: index out of range.\n",getClassName()); }
   updateRange(startRow(r,c),endRow(r,c),startCol(r,c),endCol(r,c));
-  }
-
-
-// Return the item at the given index
-FXTableItem *FXTable::getItem(FXint row,FXint col) const {
-  if(row<0 || col<0 || nrows<row || ncols<=col){ fxerror("%s::getItem: index out of range.\n",getClassName()); }
-  return cells[row*ncols+col];
-  }
-
-
-// Replace item with another (may be NULL)
-void FXTable::setItem(FXint row,FXint col,FXTableItem* item){
-  if(row<0 || col<0 || nrows<row || ncols<=col){ fxerror("%s::setItem: index out of range.\n",getClassName()); }
-  cells[row*ncols+col]=item;
-  recalc();
   }
 
 
@@ -1050,16 +978,18 @@ void FXTable::setItem(FXint row,FXint col,FXTableItem* item){
 void FXTable::setItemText(FXint r,FXint c,const FXString& text){
   if(r<0 || nrows<=r || c<0 || ncols<=c){ fxerror("%s::setItemText: index out of range.\n",getClassName()); }
   if(cells[r*ncols+c]==NULL) cells[r*ncols+c]=createItem(NULL,NULL,NULL);
-  cells[r*ncols+c]->setText(text);
-  updateItem(r,c);
+  if(cells[r*ncols+c]->getText()!=text){
+    cells[r*ncols+c]->setText(text);
+    updateItem(r,c);
+    }
   }
 
 
 // Get item text
 FXString FXTable::getItemText(FXint r,FXint c) const {
   if(r<0 || c<0 || nrows<=r || ncols<=c){ fxerror("%s::getItemText: index out of range.\n",getClassName()); }
-  if(cells[r*ncols+c]==NULL) return FXString::null;
-  return cells[r*ncols+c]->getText();
+  if(cells[r*ncols+c]) return cells[r*ncols+c]->getText();
+  return FXString::null;
   }
 
 
@@ -1067,15 +997,17 @@ FXString FXTable::getItemText(FXint r,FXint c) const {
 void FXTable::setItemIcon(FXint r,FXint c,FXIcon* icon){
   if(r<0 || c<0 || nrows<=r || ncols<=c){ fxerror("%s::setItemIcon: index out of range.\n",getClassName()); }
   if(cells[r*ncols+c]==NULL) cells[r*ncols+c]=createItem(NULL,NULL,NULL);
-  cells[r*ncols+c]->setIcon(icon);
-  updateItem(r,c);
+  if(cells[r*ncols+c]->getIcon()!=icon){
+    cells[r*ncols+c]->setIcon(icon);
+    updateItem(r,c);
+    }
   }
+
 
 // Get item icon
 FXIcon* FXTable::getItemIcon(FXint r,FXint c) const {
   if(r<0 || c<0 || nrows<=r || ncols<=c){ fxerror("%s::getItemIcon: index out of range.\n",getClassName()); }
-  if(cells[r*ncols+c]==NULL) return NULL;
-  return cells[r*ncols+c]->getIcon();
+  return cells[r*ncols+c] ? cells[r*ncols+c]->getIcon() : NULL;
   }
 
 
@@ -1090,15 +1022,7 @@ void FXTable::setItemData(FXint r,FXint c,void* ptr){
 // Get item data
 void* FXTable::getItemData(FXint r,FXint c) const {
   if(r<0 || c<0 || nrows<=r || ncols<=c){ fxerror("%s::getItemData: index out of range.\n",getClassName()); }
-  if(cells[r*ncols+c]==NULL) return NULL;
-  return cells[r*ncols+c]->getData();
-  }
-
-
-// True if item is selected
-FXbool FXTable::isItemSelected(FXint r,FXint c) const {
-  if(r<0 || c<0 || nrows<=r || ncols<=c){ fxerror("%s::isItemSelected: index out of range.\n",getClassName()); }
-  return cells[r*ncols+c] && cells[r*ncols+c]->isSelected();
+  return cells[r*ncols+c] ? cells[r*ncols+c]->getData() : NULL;
   }
 
 
@@ -1109,46 +1033,20 @@ FXbool FXTable::isItemCurrent(FXint r,FXint c) const {
   }
 
 
-// True if item (partially) visible
-FXbool FXTable::isItemVisible(FXint r,FXint c) const {
-  FXbool vis=TRUE;
-  if(r<0 || c<0 || nrows<=r || ncols<=c){ fxerror("%s::isItemVisible: index out of range.\n",getClassName()); }
-  if(c<leading_cols){
-    if(table_right<=col_x[c]) vis=FALSE;
-    }
-  else if(ncols-trailing_cols<=c){
-    if(scrollable_right+col_x[c+1]-col_x[ncols-trailing_cols]<table_left) vis=FALSE;
-    }
-  else{
-    if(pos_x+col_x[c+1]<scrollable_left || scrollable_right<=pos_x+col_x[c]) vis=FALSE;
-    }
-  if(r<leading_rows){
-    if(table_bottom<=row_y[r]) vis=FALSE;
-    }
-  else if(nrows-trailing_rows<=r){
-    if(scrollable_bottom+row_y[r+1]-row_y[nrows-trailing_rows]<table_top) vis=FALSE;
-    }
-  else{
-    if(pos_y+row_y[r+1]<scrollable_top || scrollable_bottom<=pos_y+row_y[r]) vis=FALSE;
-    }
-  return vis;
-  }
-
-
 // True if item is enabled
 FXbool FXTable::isItemEnabled(FXint r,FXint c) const {
   if(r<0 || nrows<=r || c<0 || ncols<=c){ fxerror("%s::isItemEnabled: index out of range.\n",getClassName()); }
   FXTableItem *item=cells[r*ncols+c];
-  return item && item->isEnabled();
+  return !item || item->isEnabled();
   }
 
 
 // Enable one item
 FXbool FXTable::enableItem(FXint r,FXint c){
   if(r<0 || nrows<=r || c<0 || ncols<=c){ fxerror("%s::enableItem: index out of range.\n",getClassName()); }
-  FXTableItem *item=cells[r*ncols+c];
-  if(item && !item->isEnabled()){
-    item->setEnabled(TRUE);
+  if(cells[r*ncols+c]==NULL) cells[r*ncols+c]=createItem(NULL,NULL,NULL);
+  if(!cells[r*ncols+c]->isEnabled()){
+    cells[r*ncols+c]->setEnabled(TRUE);
     updateItem(r,c);
     return TRUE;
     }
@@ -1159,9 +1057,9 @@ FXbool FXTable::enableItem(FXint r,FXint c){
 // Disable one item
 FXbool FXTable::disableItem(FXint r,FXint c){
   if(r<0 || nrows<=r || c<0 || ncols<=c){ fxerror("%s::disableItem: index out of range.\n",getClassName()); }
-  FXTableItem *item=cells[r*ncols+c];
-  if(item && item->isEnabled()){
-    item->setEnabled(FALSE);
+  if(cells[r*ncols+c]==NULL) cells[r*ncols+c]=createItem(NULL,NULL,NULL);
+  if(cells[r*ncols+c]->isEnabled()){
+    cells[r*ncols+c]->setEnabled(FALSE);
     updateItem(r,c);
     return TRUE;
     }
@@ -1169,79 +1067,185 @@ FXbool FXTable::disableItem(FXint r,FXint c){
   }
 
 
-// Select one item
-FXbool FXTable::selectItem(FXint r,FXint c,FXbool notify){
-  if(r<0 || nrows<=r || c<0 || ncols<=c){ fxerror("%s::selectItem: index out of range.\n",getClassName()); }
-  FXTableItem *item=cells[r*ncols+c];
-  FXTablePos tablepos;
-  if(item && !item->isSelected()){
-    item->setSelected(TRUE);
+// Change item justification
+void FXTable::setItemJustify(FXint r,FXint c,FXuint justify){
+  if(r<0 || nrows<=r || c<0 || ncols<=c){ fxerror("%s::setItemJustify: index out of range.\n",getClassName()); }
+  if(cells[r*ncols+c]==NULL) cells[r*ncols+c]=createItem(NULL,NULL,NULL);
+  if(justify!=cells[r*ncols+c]->getJustify()){
+    cells[r*ncols+c]->setJustify(justify);
     updateItem(r,c);
-    if(notify && target){
-      tablepos.row=r;
-      tablepos.col=c;
-      target->handle(this,MKUINT(message,SEL_SELECTED),(void*)&tablepos);
-      }
-    return TRUE;
     }
-  return FALSE;
   }
 
 
-// Deselect one item
-FXbool FXTable::deselectItem(FXint r,FXint c,FXbool notify){
-  if(r<0 || nrows<=r || c<0 || ncols<=c){ fxerror("%s::deselectItem: index out of range.\n",getClassName()); }
-  FXTableItem *item=cells[r*ncols+c];
-  FXTablePos tablepos;
-  if(item && item->isSelected()){
-    item->setSelected(FALSE);
-    updateItem(r,c);
-    if(notify && target){
-      tablepos.row=r;
-      tablepos.col=c;
-      target->handle(this,MKUINT(message,SEL_DESELECTED),(void*)&tablepos);
-      }
-    return TRUE;
-    }
-  return FALSE;
+// Return item justification
+FXuint FXTable::getItemJustify(FXint r,FXint c) const {
+  if(r<0 || nrows<=r || c<0 || ncols<=c){ fxerror("%s::getItemJustify: index out of range.\n",getClassName()); }
+  return cells[r*ncols+c] ? cells[r*ncols+c]->getJustify() : 0;
   }
 
 
-// Toggle one item
-FXbool FXTable::toggleItem(FXint r,FXint c,FXbool notify){
-  if(r<0 || nrows<=r || c<0 || ncols<=c){ fxerror("%s::toggleItem: index out of range.\n",getClassName()); }
-  FXTableItem *item=cells[r*ncols+c];
-  FXTablePos tablepos;
-  if(item && item->isSelected()){
-    item->setSelected(FALSE);
+// Change relative position of icon and text of item
+void FXTable::setItemIconPosition(FXint r,FXint c,FXuint mode){
+  if(r<0 || nrows<=r || c<0 || ncols<=c){ fxerror("%s::setItemIconPosition: index out of range.\n",getClassName()); }
+  if(cells[r*ncols+c]==NULL) cells[r*ncols+c]=createItem(NULL,NULL,NULL);
+  if(mode!=cells[r*ncols+c]->getIconPosition()){
+    cells[r*ncols+c]->setIconPosition(mode);
     updateItem(r,c);
-    if(notify && target){
-      tablepos.row=r;
-      tablepos.col=c;
-      target->handle(this,MKUINT(message,SEL_DESELECTED),(void*)&tablepos);
-      }
-    return TRUE;
     }
-  if(item && !item->isSelected()){
-    item->setSelected(TRUE);
+  }
+
+
+// Return relative icon and text position
+FXuint FXTable::getItemIconPosition(FXint r,FXint c) const {
+  if(r<0 || nrows<=r || c<0 || ncols<=c){ fxerror("%s::getItemIconPosition: index out of range.\n",getClassName()); }
+  return cells[r*ncols+c] ? cells[r*ncols+c]->getIconPosition() : 0;
+  }
+
+
+// Change item border style
+void FXTable::setItemBorders(FXint r,FXint c,FXuint borders){
+  if(r<0 || nrows<=r || c<0 || ncols<=c){ fxerror("%s::setItemBorders: index out of range.\n",getClassName()); }
+  if(cells[r*ncols+c]==NULL) cells[r*ncols+c]=createItem(NULL,NULL,NULL);
+  if(borders!=cells[r*ncols+c]->getBorders()){
+    cells[r*ncols+c]->setBorders(borders);
     updateItem(r,c);
-    if(notify && target){
-      tablepos.row=r;
-      tablepos.col=c;
-      target->handle(this,MKUINT(message,SEL_SELECTED),(void*)&tablepos);
-      }
-    return TRUE;
     }
-  return FALSE;
+  }
+
+
+// Return item border style
+FXuint FXTable::getItemBorders(FXint r,FXint c) const {
+  if(r<0 || nrows<=r || c<0 || ncols<=c){ fxerror("%s::getItemBorders: index out of range.\n",getClassName()); }
+  return cells[r*ncols+c] ? cells[r*ncols+c]->getBorders() : 0;
+  }
+
+
+// Change item background stipple style
+void FXTable::setItemStipple(FXint r,FXint c,FXStipplePattern pattern){
+  if(r<0 || nrows<=r || c<0 || ncols<=c){ fxerror("%s::setItemStipple: index out of range.\n",getClassName()); }
+  if(cells[r*ncols+c]==NULL) cells[r*ncols+c]=createItem(NULL,NULL,NULL);
+  if(pattern!=cells[r*ncols+c]->getStipple()){
+    cells[r*ncols+c]->setStipple(pattern);
+    updateItem(r,c);
+    }
+  }
+
+
+// return item background stipple style
+FXStipplePattern FXTable::getItemStipple(FXint r,FXint c) const {
+  if(r<0 || nrows<=r || c<0 || ncols<=c){ fxerror("%s::getItemStipple: index out of range.\n",getClassName()); }
+  return cells[r*ncols+c] ? cells[r*ncols+c]->getStipple() : STIPPLE_NONE;
+  }
+
+
+// Extract cells from given range as text
+void FXTable::extractText(FXchar*& text,FXint& size,FXint startrow,FXint endrow,FXint startcol,FXint endcol,FXchar cs,FXchar rs) const {
+  register FXchar *ptr;
+  register FXuint sz=0;
+  register FXint r,c;
+  FXString string;
+
+  // Verify range
+  if(startrow<0 || startcol<0 || nrows<=endrow || ncols<=endcol){ fxerror("%s::extractText: index out of range.\n",getClassName()); }
+
+  // Initialize
+  text=NULL;
+  size=0;
+
+  // Non-empty range
+  if(startrow<=endrow && startcol<=endcol){
+    for(r=startrow; r<=endrow; r++){
+      for(c=startcol; c<=endcol; c++){
+        sz+=getItemText(r,c).length()+1;
+        }
+      }
+    if(FXMALLOC(&text,FXchar,sz+1)){
+      size=sz;
+      ptr=text;
+      for(r=startrow; r<=endrow; r++){
+        for(c=startcol; c<=endcol; c++){
+          string=getItemText(r,c);
+          memcpy(ptr,string.text(),string.length());
+          ptr+=string.length();
+          *ptr++=(c==endcol)?rs:cs;
+          }
+        }
+      *ptr='\0';        // Its there but not accounted for...
+      }
+    }
+  }
+
+
+// Count rows and columns of a block of text
+void FXTable::countText(FXint& nr,FXint& nc,const FXchar* text,FXint size,FXchar cs,FXchar rs) const {
+  register FXint i,cc;
+  nr=nc=0;
+  for(i=cc=0; i<size && text[i]!='\0'; i++){
+    if(text[i]==cs){
+      cc++;
+      }
+    else if(text[i]==rs){
+      cc++;
+      if(cc>nc) nc=cc;
+      nr++;
+      }
+    }
+  }
+
+
+// Overlay text over given cell range
+// FIXME overlayText should get notify parameter; old cells should
+// be deleted first, then new ones with the data inserted
+void FXTable::overlayText(FXint startrow,FXint endrow,FXint startcol,FXint endcol,const FXchar* text,FXint size,FXchar cs,FXchar rs){
+  register FXint r,c,lastrow,lastcol,beg,end;
+  FXint nr,nc;
+
+  // Verify range
+  if(startrow<0 || startcol<0 || nrows<=endrow || ncols<=endcol){ fxerror("%s::overlayText: index out of range.\n",getClassName()); }
+
+  // Get rows and columns in the text
+  countText(nr,nc,text,size,cs,rs);
+  if(nr && nc){
+
+    // Range of cells affected by the overlay
+    if(startrow+nr>=endrow) lastrow=endrow; else lastrow=startrow+nr-1;
+    if(startcol+nc>=endcol) lastcol=endcol; else lastcol=startcol+nc-1;
+
+    // Overlay new data
+    r=startrow;
+    c=startcol;
+    for(beg=end=0; end<size && text[end]!='\0'; end++){
+      if(text[end]==cs || text[end]==rs){
+
+        // Set new text if inside range
+        if(r<=lastrow && c<=lastcol){
+          setItemText(r,c,FXString(&text[beg],end-beg));
+          }
+        beg=end+1;
+
+        // Update row and column as appropriate
+        if(text[end]==cs){
+          c++;
+          }
+        else if(text[end]==rs){
+          c=startcol;
+          r++;
+          }
+        }
+      }
+    }
   }
 
 
 // Set current item
 void FXTable::setCurrentItem(FXint r,FXint c,FXbool notify){
-  if(r<0) r=0;
-  if(c<0) c=0;
-  if(r>=nrows) r=nrows-1;
-  if(c>=ncols) c=ncols-1;
+
+  // Verify input indices
+  if(r<-1 || nrows<=r){ fxerror("%s::setCurrentItem: row index out of range.\n",getClassName()); }
+  if(c<-1 || ncols<=c){ fxerror("%s::setCurrentItem: column index out of range.\n",getClassName()); }
+
+  // Did it change
   if(r!=current.row || c!=current.col){
 
     // Deactivate old item
@@ -1277,7 +1281,7 @@ void FXTable::setCurrentItem(FXint r,FXint c,FXbool notify){
 
     // Notify item change
     if(notify && target){
-      target->handle(this,MKUINT(message,SEL_CHANGED),(void*)&current);
+      target->handle(this,FXSEL(SEL_CHANGED,message),(void*)&current);
       }
     }
   }
@@ -1285,125 +1289,185 @@ void FXTable::setCurrentItem(FXint r,FXint c,FXbool notify){
 
 // Set anchor item
 void FXTable::setAnchorItem(FXint r,FXint c){
-  if(r<0) r=0;
-  if(c<0) c=0;
-  if(r>=nrows) r=nrows-1;
-  if(c>=ncols) c=ncols-1;
+  if(r<-1 || nrows<=r){ fxerror("%s::setAnchorItem: row index out of range.\n",getClassName()); }
+  if(c<-1 || ncols<=c){ fxerror("%s::setAnchorItem: column index out of range.\n",getClassName()); }
   anchor.row=r;
   anchor.col=c;
-  extent.row=r;
-  extent.col=c;
+  }
+
+
+// Extend range to include spanning cells
+void FXTable::spanningRange(FXint& sr,FXint& er,FXint& sc,FXint& ec,FXint anchrow,FXint anchcol,FXint currow,FXint curcol){
+  register FXint i,t;
+
+  // Current position in table
+  FXASSERT(0<=currow && currow<nrows);
+  FXASSERT(0<=curcol && curcol<ncols);
+
+  // Anchor position in table
+  FXASSERT(0<=anchrow && anchrow<nrows);
+  FXASSERT(0<=anchcol && anchcol<ncols);
+
+  // Initial block just the rectangle
+  FXMINMAX(sr,er,anchrow,currow);
+  FXMINMAX(sc,ec,anchcol,curcol);
+
+//  FXTRACE((1,"before: sr=%d er=%d sc=%d ec=%d\n",sr,er,sc,ec));
+
+  // Expand sr:er sc:ec to fully enclose all spanning cells
+a:for(i=sr; i<=er; i++){
+    if((t=startCol(i,sc))<sc){ sc=t; goto a; }
+    }
+  for(i=sr; i<=er; i++){
+    if((t=endCol(i,ec))>ec){ ec=t; goto a; }
+    }
+  for(i=sc; i<=ec; i++){
+    if((t=startRow(sr,i))<sr){ sr=t; goto a; }
+    }
+  for(i=sc; i<=ec; i++){
+    if((t=endRow(er,i))>er){ er=t; goto a; }
+    }
+
+//  FXTRACE((1,"after: sr=%d er=%d sc=%d ec=%d\n",sr,er,sc,ec));
+
+  FXASSERT(0<=sr && sr<=er && er<nrows);
+  FXASSERT(0<=sc && sc<=ec && ec<ncols);
+  }
+
+
+// True if item is selected
+FXbool FXTable::isItemSelected(FXint r,FXint c) const {
+  if(r<0 || c<0 || nrows<=r || ncols<=c){ fxerror("%s::isItemSelected: index out of range.\n",getClassName()); }
+  return selection.fm.row<=r && r<=selection.to.row && selection.fm.col<=c && c<=selection.to.col;
+  }
+
+
+// Is row of cells selected
+FXbool FXTable::isRowSelected(FXint r) const {
+  if(r<0 || nrows<=r){ fxerror("%s::isRowSelected: index out of range.\n",getClassName()); }
+  return selection.fm.row<=r && r<=selection.to.row && selection.fm.col==0 && selection.to.col==ncols-1;
+  }
+
+
+// Is column selected
+FXbool FXTable::isColumnSelected(FXint c) const {
+  if(c<0 || ncols<=c){ fxerror("%s::isColumnSelected: index out of range.\n",getClassName()); }
+  return selection.fm.row==0 && selection.to.row==nrows-1 && selection.fm.col<=c && c<=selection.to.col;
+  }
+
+
+// Is anything selected
+FXbool FXTable::isAnythingSelected() const {
+  return 0<=selection.fm.row && 0<=selection.to.row && 0<=selection.fm.col && 0<=selection.to.col;
+  }
+
+
+// Select a row
+FXbool FXTable::selectRow(FXint row,FXbool notify){
+  selectRange(row,row,0,ncols-1,notify);
+  return TRUE;
+  }
+
+
+// Select a column
+FXbool FXTable::selectColumn(FXint col,FXbool notify){
+  selectRange(0,nrows-1,col,col,notify);
+  return TRUE;
   }
 
 
 // Select range
-FXbool FXTable::selectRange(FXint sr,FXint er,FXint sc,FXint ec,FXbool notify){
-  register FXbool changes=FALSE;
-  register FXint rr,cc;
-  for(rr=sr; rr<=er; rr++){
-    for(cc=sc; cc<=ec; cc++){
-      changes|=selectItem(rr,cc,notify);
+FXbool FXTable::selectRange(FXint startrow,FXint endrow,FXint startcol,FXint endcol,FXbool notify){
+  FXint orlo,orhi,oclo,ochi,nrlo,nrhi,nclo,nchi,rlo,rhi,clo,chi,inold,innew;
+  FXTablePos tablepos;
+  FXTableItem *item;
+
+  // Determine new selection rectangle
+  spanningRange(nrlo,nrhi,nclo,nchi,startrow,startcol,endrow,endcol);
+
+  // Rectangle
+  rlo=nrlo;
+  rhi=nrhi;
+  clo=nclo;
+  chi=nchi;
+
+  // Did have old selection
+  if(isAnythingSelected()){
+
+    // Old selection rectangle
+    orlo=selection.fm.row;
+    oclo=selection.fm.col;
+    ochi=selection.to.col;
+    orhi=selection.to.row;
+
+    // Maximum of old and new rectangle
+    if(orlo<rlo) rlo=orlo;
+    if(orhi>rhi) rhi=orhi;
+    if(oclo<clo) clo=oclo;
+    if(ochi>chi) chi=ochi;
+    }
+
+  // Hopefully
+  FXASSERT(0<=rlo && rlo<=rhi && rhi<nrows);
+  FXASSERT(0<=clo && clo<=chi && chi<ncols);
+
+  // Change items
+  for(tablepos.row=rlo; tablepos.row<=rhi; tablepos.row++){
+    for(tablepos.col=clo; tablepos.col<=chi; tablepos.col++){
+      item=cells[tablepos.row*ncols+tablepos.col];
+      inold=(orlo<=tablepos.row && tablepos.row<=orhi && oclo<=tablepos.col && tablepos.col<=ochi);
+      innew=(nrlo<=tablepos.row && tablepos.row<=nrhi && nclo<=tablepos.col && tablepos.col<=nchi);
+      if(inold && !innew){
+        if(item){ item->setSelected(FALSE); }
+        updateItem(tablepos.row,tablepos.col);
+        if(notify && target) target->handle(this,FXSEL(SEL_DESELECTED,message),(void*)&tablepos);
+        }
+      else if(!inold && innew){
+        if(item){ item->setSelected(TRUE); }
+        updateItem(tablepos.row,tablepos.col);
+        if(notify && target) target->handle(this,FXSEL(SEL_SELECTED,message),(void*)&tablepos);
+        }
       }
     }
-  return changes;
+
+  // New selection rectangle
+  selection.fm.row=nrlo;
+  selection.fm.col=nclo;
+  selection.to.row=nrhi;
+  selection.to.col=nchi;
+  return TRUE;
   }
 
 
 // Extend selection
 FXbool FXTable::extendSelection(FXint r,FXint c,FXbool notify){
-  register FXint orlo,orhi,oclo,ochi;
-  register FXint nrlo,nrhi,nclo,nchi;
-  register FXint rlo,rhi,clo,chi,rr,cc;
-  register FXbool inold,innew;
-  register FXbool changes=FALSE;
   if(0<=r && 0<=c && 0<=anchor.row && 0<=anchor.col){
-    FXMINMAX(orlo,orhi,anchor.row,extent.row);
-    FXMINMAX(oclo,ochi,anchor.col,extent.col);
-    FXMINMAX(nrlo,nrhi,anchor.row,r);
-    FXMINMAX(nclo,nchi,anchor.col,c);
-    rlo=FXMIN(orlo,nrlo);
-    rhi=FXMAX(orhi,nrhi);
-    clo=FXMIN(oclo,nclo);
-    chi=FXMAX(ochi,nchi);
-    for(rr=rlo; rr<=rhi; rr++){
-      for(cc=clo; cc<=chi; cc++){
-        inold=(orlo<=rr && rr<=orhi && oclo<=cc && cc<=ochi);
-        innew=(nrlo<=rr && rr<=nrhi && nclo<=cc && cc<=nchi);
-        if(inold && !innew){
-          changes|=deselectItem(rr,cc,notify);
-          }
-        else if(!inold && innew){
-          changes|=selectItem(rr,cc,notify);
-          }
-        }
-      }
-    extent.row=r;
-    extent.col=c;
+    return selectRange(anchor.row,r,anchor.col,c,notify);
     }
-  return changes;
+  return FALSE;
   }
 
 
 // Kill selection
 FXbool FXTable::killSelection(FXbool notify){
-  register FXbool changes=FALSE;
-  register FXint r,c;
-  for(r=0; r<nrows; r++){
-    for(c=0; c<ncols; c++){
-      changes|=deselectItem(r,c,notify);
+  FXTablePos tablepos;
+  FXTableItem *item;
+  if(isAnythingSelected()){
+    for(tablepos.row=selection.fm.row; tablepos.row<=selection.to.row; tablepos.row++){
+      for(tablepos.col=selection.fm.col; tablepos.col<=selection.to.col; tablepos.col++){
+        item=cells[tablepos.row*ncols+tablepos.col];
+        if(item){ item->setSelected(FALSE); }
+        updateItem(tablepos.row,tablepos.col);
+        if(notify && target) target->handle(this,FXSEL(SEL_DESELECTED,message),(void*)&tablepos);
+        }
       }
+    selection.fm.row=-1;
+    selection.fm.col=-1;
+    selection.to.row=-1;
+    selection.to.col=-1;
+    return TRUE;
     }
-  extent=anchor;
-  return changes;
-  }
-
-
-// Determine scrollable content width
-FXint FXTable::getContentWidth(){
-  return col_x[ncols]+vgrid;
-  }
-
-
-// Determine scrollable content height
-FXint FXTable::getContentHeight(){
-  return row_y[nrows]+hgrid;
-  }
-
-
-// Recalculate layout determines item locations and sizes
-void FXTable::layout(){
-
-  // Calculate contents
-  FXScrollArea::layout();
-
-  // Whole table placement
-  table_left=col_x[0];
-  table_top=row_y[0];
-  table_right=col_x[ncols];
-  table_bottom=row_y[nrows];
-
-  // Adjust right and bottom
-  if(table_right>=viewport_w) table_right=viewport_w-vgrid;
-  if(table_bottom>=viewport_h) table_bottom=viewport_h-hgrid;
-
-  // Scrollable part of table
-  scrollable_left=col_x[leading_cols];
-  scrollable_top=row_y[leading_rows];
-  scrollable_right=table_right-col_x[ncols]+col_x[ncols-trailing_cols];
-  scrollable_bottom=table_bottom-row_y[nrows]+row_y[nrows-trailing_rows];
-
-  FXTRACE((200,"     table_left=%d      table_right=%d      table_top=%d table_bottom=%d\n",table_left,table_right,table_top,table_bottom));
-  FXTRACE((200,"scrollable_left=%d scrollable_right=%d scrollable_top=%d table_bottom=%d\n",scrollable_left,scrollable_right,scrollable_top,scrollable_bottom));
-
-  // Determine line size for scroll bars
-  vertical->setLine(defRowHeight);
-  horizontal->setLine(defColumnWidth);
-
-  // Force repaint
-  update();
-
-  // No more dirty
-  flags&=~FLAG_DIRTY;
+  return FALSE;
   }
 
 
@@ -1411,8 +1475,6 @@ void FXTable::layout(){
 long FXTable::onFocusIn(FXObject* sender,FXSelector sel,void* ptr){
   register FXTableItem *item;
   FXScrollArea::onFocusIn(sender,sel,ptr);
-  if(!blinker){ blinker=getApp()->addTimeout(getApp()->getBlinkSpeed(),this,ID_BLINK); }
-  drawCursor(FLAG_CARET);
   if(0<=current.row && 0<=current.col){
     FXASSERT(current.row<nrows);
     FXASSERT(current.col<ncols);
@@ -1428,8 +1490,6 @@ long FXTable::onFocusIn(FXObject* sender,FXSelector sel,void* ptr){
 long FXTable::onFocusOut(FXObject* sender,FXSelector sel,void* ptr){
   register FXTableItem *item;
   FXScrollArea::onFocusOut(sender,sel,ptr);
-  if(blinker){ blinker=getApp()->removeTimeout(blinker); }
-  drawCursor(0);
   if(0<=current.row && 0<=current.col){
     FXASSERT(current.row<nrows);
     FXASSERT(current.col<ncols);
@@ -1444,7 +1504,6 @@ long FXTable::onFocusOut(FXObject* sender,FXSelector sel,void* ptr){
 // We have the selection
 long FXTable::onSelectionGained(FXObject* sender,FXSelector sel,void* ptr){
   FXScrollArea::onSelectionGained(sender,sel,ptr);
-  ////
   return 1;
   }
 
@@ -1452,186 +1511,293 @@ long FXTable::onSelectionGained(FXObject* sender,FXSelector sel,void* ptr){
 // We lost the selection
 long FXTable::onSelectionLost(FXObject* sender,FXSelector sel,void* ptr){
   FXScrollArea::onSelectionLost(sender,sel,ptr);
-  ////
+  killSelection(TRUE);
   return 1;
   }
 
 
-// Blink the cursor
-long FXTable::onBlink(FXObject*,FXSelector,void*){
-  drawCursor(flags^FLAG_CARET);
-  blinker=getApp()->addTimeout(getApp()->getBlinkSpeed(),this,ID_BLINK);
+// Somebody wants our selection
+long FXTable::onSelectionRequest(FXObject* sender,FXSelector sel,void* ptr){
+  FXEvent *event=(FXEvent*)ptr;
+  FXchar *data; FXint len;
+
+  // Perhaps the target wants to supply its own data for the selection
+  if(FXScrollArea::onSelectionRequest(sender,sel,ptr)) return 1;
+
+  // Return text of the selection
+  if(event->target==stringType || event->target==textType){
+    data=NULL;
+    len=0;
+    // FIXME
+    setDNDData(FROM_SELECTION,event->target,(FXuchar*)data,(FXuint)len);
+    return 1;
+    }
+
   return 0;
   }
 
 
-// Draw the cursor
-void FXTable::drawCursor(FXuint state){
-  //register FXint xx,yt,yb,cl;
-  if((state^flags)&FLAG_CARET){
-    FXDCWindow dc(this);
-//     xx=pos_x+marginleft+cursorx;
-//     yt=pos_y+margintop+cursory;
-//     yb=yt+font->getFontHeight()-1;
-//     dc.begin(this);
-//     dc.setClipRectangle(marginleft,margintop,viewport_w-marginleft-marginright,viewport_h-margintop-marginbottom);
-//     if(flags&FLAG_CARET){
-//       if(lines[0]<=cursorpos && cursorpos<=lines[nvislines]){
-//
-//         // Cursor may be in the selection
-//         if(hasSelection() && selstartpos<=cursorpos && cursorpos<selendpos){
-//           dc.setForeground(selbackColor);
-//           }
-//         else{
-//           dc.setForeground(backColor);
-//           }
-//
-//         // Repaint cursor in background to erase it
-//         dc.drawLine(xx,yt,xx,yb);
-//         dc.drawLine(xx+1,yt,xx+1,yb);
-//         dc.drawLine(xx-2,yt,xx+3,yt);
-//         dc.drawLine(xx-2,yb,xx+3,yb);
-//
-//         // Restore text
-//         dc.setTextFont(font);
-//         cl=posToLine(cursorpos);
-//         drawTextLine(cl,xx-3,xx+3,0,10000);
-//         }
-//       flags&=~FLAG_CARET;
-//       }
-//     else{
-//       if(lines[0]<=cursorpos && cursorpos<=lines[nvislines]){
-//         dc.setForeground(cursorColor);
-//         dc.drawLine(xx,yt,xx,yb);
-//         dc.drawLine(xx+1,yt,xx+1,yb);
-//         dc.drawLine(xx-2,yt,xx+3,yt);
-//         dc.drawLine(xx-2,yb,xx+3,yb);
-//         flags|=FLAG_CARET;
-//         }
-//       }
-//     dc.clearClipRectangle();
-//     dc.end();
+// We now really do have the selection
+long FXTable::onClipboardGained(FXObject* sender,FXSelector sel,void* ptr){
+  FXScrollArea::onClipboardGained(sender,sel,ptr);
+  // FIXME
+  return 1;
+  }
+
+
+// We lost the selection somehow
+long FXTable::onClipboardLost(FXObject* sender,FXSelector sel,void* ptr){
+  FXScrollArea::onClipboardLost(sender,sel,ptr);
+  FXFREE(&clipbuffer);
+  clipbuffer=NULL;
+  cliplength=0;
+  return 1;
+  }
+
+
+// Somebody wants our selection
+long FXTable::onClipboardRequest(FXObject* sender,FXSelector sel,void* ptr){
+  FXEvent *event=(FXEvent*)ptr;
+  FXchar *data; FXint len;
+
+  // Try handling it in base class first
+  if(FXScrollArea::onClipboardRequest(sender,sel,ptr)) return 1;
+
+  // Requested data from clipboard
+  if(event->target==stringType || event->target==textType){
+    len=cliplength;
+    FXMALLOC(&data,FXchar,len);
+    memcpy(data,clipbuffer,len);
+#ifdef WIN32
+    fxtoDOS(data,len);
+#endif
+    setDNDData(FROM_CLIPBOARD,event->target,(FXuchar*)data,(FXuint)len);
+    return 1;
     }
+  return 0;
+  }
+
+
+// Update items that operate on the selection
+long FXTable::onUpdHaveSelection(FXObject* sender,FXSelector,void*){
+  sender->handle(this,isAnythingSelected()?FXSEL(SEL_COMMAND,ID_ENABLE):FXSEL(SEL_COMMAND,ID_DISABLE),NULL);
+  return 1;
+  }
+
+
+// Cut selection
+long FXTable::onCmdCutSel(FXObject*,FXSelector,void*){
+  if(isAnythingSelected()){
+    FXDragType types[3];
+    types[0]=stringType;
+    types[1]=textType;
+    types[2]=csvType;
+    if(acquireClipboard(types,3)){
+      FXFREE(&clipbuffer);
+      extractText(clipbuffer,cliplength,selection.fm.row,selection.to.row,selection.fm.col,selection.to.col);
+      removeRange(selection.fm.row,selection.to.row,selection.fm.col,selection.to.col,TRUE);
+      }
+    }
+  return 1;
+  }
+
+
+// Copy selection
+long FXTable::onCmdCopySel(FXObject*,FXSelector,void*){
+  if(isAnythingSelected()){
+    FXDragType types[3];
+    types[0]=stringType;
+    types[1]=textType;
+    types[2]=csvType;
+    if(acquireClipboard(types,3)){
+      FXFREE(&clipbuffer);
+      extractText(clipbuffer,cliplength,selection.fm.row,selection.to.row,selection.fm.col,selection.to.col);
+      }
+    }
+  return 1;
+  }
+
+
+// Delete or clear selection
+long FXTable::onCmdDeleteSel(FXObject*,FXSelector,void*){
+  if(isAnythingSelected()){
+    removeRange(selection.fm.row,selection.to.row,selection.fm.col,selection.to.col,TRUE);
+    }
+  return 1;
+  }
+
+
+// Paste selection
+long FXTable::onCmdPasteSel(FXObject*,FXSelector,void*){
+  FXchar *data; FXint len;
+  if(isAnythingSelected()){
+    if(getDNDData(FROM_CLIPBOARD,stringType,(FXuchar*&)data,(FXuint&)len)){
+#ifdef WIN32
+      fxfromDOS(data,len);
+#endif
+      // FIXME we need to add another API called insertText which
+      // optionally extends the table to fit ALL of the paste data
+      // instead of only overlaying the selection
+      overlayText(selection.fm.row,selection.to.row,selection.fm.col,selection.to.col,data,len);
+      }
+    }
+  return 1;
   }
 
 
 // Draw single cell, possibly spanning multiple rows,columns
-void FXTable::drawCell(FXDC& dc,FXint xlo,FXint xhi,FXint ylo,FXint yhi,FXint xoff,FXint yoff,FXint sr,FXint er,FXint sc,FXint ec){
+void FXTable::drawCell(FXDC& dc,FXint sr,FXint er,FXint sc,FXint ec){
   register FXTableItem *item=cells[sr*ncols+sc];
   register FXint xl,xr,yt,yb;
 
+//  FXTRACE((1,"sr=%d er=%d sc=%d ec=%d\n",sr,er,sc,ec));
+
   // Verify some stuff
-  FXASSERT(0<=sc && sc<=ec && ec<=ncols);
-  FXASSERT(0<=sr && sr<=er && er<=nrows);
+  FXASSERT(0<=sc && sc<=ec && ec<ncols);
+  FXASSERT(0<=sr && sr<=er && er<nrows);
 
   // Get cell bounds
-  yt=yoff+row_y[sr];
-  yb=yoff+row_y[er];
-  xl=xoff+col_x[sc];
-  xr=xoff+col_x[ec];
+  yt=rowHeader->getY()+rowHeader->getItemOffset(sr);
+  yb=rowHeader->getY()+rowHeader->getItemOffset(er)+rowHeader->getItemSize(er);
+  xl=colHeader->getX()+colHeader->getItemOffset(sc);
+  xr=colHeader->getX()+colHeader->getItemOffset(ec)+colHeader->getItemSize(ec);
 
-  // All drawing is clipped against cell bounds AND the table
-  // fragment bounds so we don't paint over the neighboring cells
-  dc.setClipRectangle(FXMAX(xlo,xl),FXMAX(ylo,yt),FXMIN(xhi,xr+vgrid)-FXMAX(xlo,xl),FXMIN(yhi,yb+hgrid)-FXMAX(ylo,yt));
+  // Non-empty
+  if(xl<xr && yt<yb){
 
-  // Set background color
-  if(isItemSelected(sr,sc)){
-    dc.setForeground(selbackColor);                 // Selected item
-    }
-  else if(sr+1==er && sc+1==ec){
-    dc.setForeground(cellBackColor[sr&1][sc&1]);    // Singular item
-    }
-  else{
-    dc.setForeground(backColor);                    // Spanning item
-    }
+    // Drawing is clipped against cell rectangle AND the event
+    // rectangle; note, grid lines are included this rectangle!
+    dc.setClipRectangle(xl,yt,xr-xl+vgrid,yb-yt+hgrid);
 
-  // Draw the item, if there is one
-  if(!item){
-    dc.fillRectangle(xl+vgrid,yt+hgrid,xr-xl-vgrid,yb-yt-hgrid);
-    }
-  else{
-    item->draw(this,dc,xl,yt,xr-xl,yb-yt);
-    }
+    // Set background color
+    if(isItemSelected(sr,sc)){
+      dc.setForeground(selbackColor);                 // Selected item
+      }
+    else if(sr==er && sc==ec){
+      dc.setForeground(cellBackColor[sr&1][sc&1]);    // Singular item
+      }
+    else{
+      dc.setForeground(backColor);                    // Spanning item
+      }
 
-  // If focus in current cell, draw the focus
-  if(hasFocus()){
-    if(sr<=current.row && current.row<er && sc<=current.col && current.col<ec){
-      dc.drawFocusRectangle(xl+2,yt+2,xr-xl-3,yb-yt-3);
+    // Draw the item, if there is one
+    if(!item){
+      dc.fillRectangle(xl+vgrid,yt+hgrid,xr-xl-vgrid,yb-yt-hgrid);
+      }
+    else{
+      item->draw(this,dc,xl,yt,xr-xl,yb-yt);
+      }
+
+    // If focus in current cell, draw the focus
+    if(hasFocus()){
+      if(sr<=current.row && current.row<=er && sc<=current.col && current.col<=ec){
+        dc.drawFocusRectangle(xl+2,yt+2,xr+vgrid-xl-4,yb+hgrid-yt-4);
+        }
       }
     }
   }
 
 
-// Draw table fragment [rlo:rhi, clo:chi] clipping against box
-void FXTable::drawRange(FXDC& dc,FXint xlo,FXint xhi,FXint ylo,FXint yhi,FXint xoff,FXint yoff,FXint rlo,FXint rhi,FXint clo,FXint chi){
-  register FXint r,c,fr,lr,fc,lc;
-  register FXTableItem *item,*meti;
-  if(xlo<xhi && ylo<yhi){
-
-    //FXTRACE((300,"drawTableRange: rlo=%d rhi=%d clo=%d chi=%d\n",rlo,rhi,clo,chi));
-
-    // Find dirty part of table
-    for(fc=clo; fc<chi && col_x[fc+1]<xlo-xoff; fc++);
-    for(lc=fc; lc<chi && col_x[lc]<=xhi-xoff; lc++);
-    for(fr=rlo; fr<rhi && row_y[fr+1]<ylo-yoff; fr++);
-    for(lr=fr; lr<rhi && row_y[lr]<=yhi-yoff; lr++);
-
-    //FXTRACE((300,"fr=%d lr=%d fc=%d lc=%d\n",fr,lr,fc,lc));
-    //FXTRACE((300,"xlo=%d xhi=%d col_x[%d]=%d col_x[%d]=%d\n",xlo-xoff,xhi-xoff,fc,col_x[fc],lc,col_x[lc]));
-    //FXTRACE((300,"ylo=%d yhi=%d row_y[%d]=%d row_y[%d]=%d\n",ylo-yoff,yhi-yoff,fr,row_y[fr],lr,row_y[lr]));
-
-    FXASSERT(0<=fc && lc<=ncols);
-    FXASSERT(0<=fr && lr<=nrows);
-
-    // Clip against table fragment
-    dc.setClipRectangle(xlo,ylo,xhi-xlo,yhi-ylo);
-
-    // Draw horizontal grid lines
-    if(hgrid){
-      dc.setForeground(gridColor);
-      for(c=fc; c<lc; c++){
-        meti=item=NULL;
-        for(r=fr; r<=lr; r++){
-
-          // Take care not to access outside of cell array!
-          if(r==0 || r==nrows || (item=cells[r*ncols+c])==NULL || item!=meti){
-            dc.fillRectangle(xoff+col_x[c],yoff+row_y[r],col_x[c+1]-col_x[c],1);
-            }
-          meti=item;
-          }
+// Draw range of cells
+void FXTable::drawRange(FXDC& dc,FXint rlo,FXint rhi,FXint clo,FXint chi){
+  register FXTableItem *item;
+  register FXint r,c;
+  for(r=rlo; r<=rhi; r++){
+    for(c=clo; c<=chi; c++){
+      item=cells[r*ncols+c];
+      if(item){
+        if((r!=rlo && cells[(r-1)*ncols+c]==item) || (c!=clo && cells[r*ncols+c-1]==item)) continue;
+        drawCell(dc,startRow(r,c),endRow(r,c),startCol(r,c),endCol(r,c));
         }
-      }
-
-    // Draw vertical grid lines
-    if(vgrid){
-      dc.setForeground(gridColor);
-      for(r=fr; r<lr; r++){
-        meti=item=NULL;
-        for(c=fc; c<=lc; c++){
-
-          // Take care not to access outside of cell array!
-          if(c==0 || c==ncols || (item=cells[r*ncols+c])==NULL || item!=meti){
-            dc.fillRectangle(xoff+col_x[c],yoff+row_y[r],1,row_y[r+1]-row_y[r]);
-            }
-          meti=item;
-          }
-        }
-      }
-
-    // Draw the cells
-    for(r=fr; r<lr; r++){
-      for(c=fc; c<lc; c++){
-        item=cells[r*ncols+c];
-        if(item){
-          if((r!=fr && cells[(r-1)*ncols+c]==item) || (c!=fc && cells[r*ncols+c-1]==item)) continue;
-          drawCell(dc,xlo,xhi,ylo,yhi,xoff,yoff,startRow(r,c),endRow(r,c),startCol(r,c),endCol(r,c));
-          }
-        else{
-          drawCell(dc,xlo,xhi,ylo,yhi,xoff,yoff,r,r+1,c,c+1);
-          }
+      else{
+        drawCell(dc,r,r,c,c);
         }
       }
     }
+  }
+
+
+// Draw horizontal grid lines
+void FXTable::drawHGrid(FXDC& dc,FXint rlo,FXint rhi,FXint clo,FXint chi){
+  register FXint r,c,xx,yy,ww,hh;
+  register FXTableItem *item,*meti;
+  dc.setForeground(gridColor);
+  for(c=clo; c<=chi; c++){
+    meti=item=NULL;
+    xx=colHeader->getX()+colHeader->getItemOffset(c);
+    ww=colHeader->getItemSize(c);
+    for(r=rlo; r<=rhi; r++){
+      yy=rowHeader->getY()+rowHeader->getItemOffset(r);
+      hh=rowHeader->getItemSize(r);
+      if(r==0 || (item=cells[r*ncols+c])==NULL || item!=meti){
+        dc.fillRectangle(xx,yy,ww,1);
+        }
+      if(rhi==nrows-1){
+        dc.fillRectangle(xx,yy+hh,ww,1);
+        }
+      meti=item;
+      }
+    }
+  }
+
+
+// Draw horizontal vertical lines
+void FXTable::drawVGrid(FXDC& dc,FXint rlo,FXint rhi,FXint clo,FXint chi){
+  register FXint r,c,xx,yy,ww,hh;
+  register FXTableItem *item,*meti;
+  dc.setForeground(gridColor);
+  for(r=rlo; r<=rhi; r++){
+    meti=item=NULL;
+    yy=rowHeader->getY()+rowHeader->getItemOffset(r);
+    hh=rowHeader->getItemSize(r);
+    for(c=clo; c<=chi; c++){
+      xx=colHeader->getX()+colHeader->getItemOffset(c);
+      ww=colHeader->getItemSize(c);
+      if(c==0 || (item=cells[r*ncols+c])==NULL || item!=meti){
+        dc.fillRectangle(xx,yy,1,hh);
+        }
+      if(chi==ncols-1){
+        dc.fillRectangle(xx+ww,yy,1,hh);
+        }
+      meti=item;
+      }
+    }
+  }
+
+
+// Draw table fragment
+void FXTable::drawContents(FXDC& dc,FXint x,FXint y,FXint w,FXint h){
+  register FXint fr,lr,fc,lc;
+
+  // Find dirty part of table; note we need to back up to one row and
+  // one column before the current cell, because of overlapping of
+  // cell borders when grid lines are turned on.
+  fc=colAtX(x)-1; lc=colAtX(x+w);
+  fr=rowAtY(y)-1; lr=rowAtY(y+h);
+
+  // Fix ranges
+  if(fc<0) fc=0;
+  if(fr<0) fr=0;
+  if(lc>=ncols) lc=ncols-1;
+  if(lr>=nrows) lr=nrows-1;
+
+ // FXTRACE((1,"fc=%d lc=%d fr=%d lr=%d\n",fc,lc,fr,lr));
+
+  FXASSERT(0<=fc && lc<ncols);
+  FXASSERT(0<=fr && lr<nrows);
+
+  // Draw horizontal grid lines
+  if(hgrid){
+    drawHGrid(dc,fr,lr,fc,lc);
+    }
+
+  // Draw vertical grid lines
+  if(vgrid){
+    drawVGrid(dc,fr,lr,fc,lc);
+    }
+
+  // Draw the cells
+  drawRange(dc,fr,lr,fc,lc);
   }
 
 
@@ -1639,69 +1805,24 @@ void FXTable::drawRange(FXDC& dc,FXint xlo,FXint xhi,FXint ylo,FXint yhi,FXint x
 long FXTable::onPaint(FXObject*,FXSelector,void* ptr){
   FXEvent* event=(FXEvent*)ptr;
   FXDCWindow dc(this,event);
-  FXint llx,lhx,mlx,mhx,rlx,rhx;
-  FXint tly,thy,mly,mhy,bly,bhy;
-  FXint xlo,xhi,ylo,yhi;
+  FXint tablew,tableh;
 
-  dc.setTextFont(font);
+  dc.setFont(font);
 
 //dc.setForeground(FXRGB(255,0,0));
 //dc.fillRectangle(event->rect.x,event->rect.y,event->rect.w,event->rect.h);
 
-  // Fill background right of the table
-  if(width>col_x[ncols]){
-    dc.setForeground(backColor);
-    dc.fillRectangle(col_x[ncols],0,width-col_x[ncols],height);
-    }
+  // Left/bottom part of table
+  tablew=colHeader->getX()+colHeader->getTotalSize();
+  tableh=rowHeader->getY()+rowHeader->getTotalSize();
 
-  // Fill background below the table
-  if(height>row_y[nrows]){
-    dc.setForeground(backColor);
-    dc.fillRectangle(0,row_y[nrows],col_x[ncols],height-row_y[nrows]);
-    }
-
-  // Exposed area
-  xlo=event->rect.x;
-  xhi=event->rect.x+event->rect.w;
-  ylo=event->rect.y;
-  yhi=event->rect.y+event->rect.h;
-
-  // Overlap with columns
-  llx=FXMAX(xlo,table_left);
-  lhx=FXMIN(xhi,scrollable_left+vgrid);
-  mlx=FXMAX(xlo,scrollable_left+vgrid);
-  mhx=FXMIN(xhi,scrollable_right);
-  rlx=FXMAX(xlo,scrollable_right);
-  rhx=FXMIN(xhi,table_right+vgrid);
-
-  // Overlap with rows
-  tly=FXMAX(ylo,table_top);
-  thy=FXMIN(yhi,scrollable_top+hgrid);
-  mly=FXMAX(ylo,scrollable_top+hgrid);
-  mhy=FXMIN(yhi,scrollable_bottom);
-  bly=FXMAX(ylo,scrollable_bottom);
-  bhy=FXMIN(yhi,table_bottom+hgrid);
-
-  //FXTRACE((300,"llx=%d lhx=%d mlx=%d mhx=%d rlx=%d rhx=%d\n",llx,lhx,mlx,mhx,rlx,rhx));
-  //FXTRACE((300,"tly=%d thy=%d mly=%d mhy=%d bly=%d bhy=%d\n",tly,thy,mly,mhy,bly,bhy));
+  // Fill background right and below the table
+  dc.setForeground(backColor);
+  dc.fillRectangle(tablew,0,width-tablew,height);
+  dc.fillRectangle(0,tableh,tablew,height-tableh);
 
   // Draw main part
-  drawRange(dc,mlx,mhx,mly,mhy,pos_x,pos_y,leading_rows,nrows-trailing_rows,leading_cols,ncols-trailing_cols);
-
-  // Vertically scrollable parts
-  drawRange(dc,llx,lhx,mly,mhy,0,pos_y,leading_rows,nrows-trailing_rows, 0,leading_cols);
-  drawRange(dc,rlx,rhx,mly,mhy,scrollable_right-col_x[ncols-trailing_cols],pos_y,leading_rows,nrows-trailing_rows,ncols-trailing_cols,ncols);
-
-  // Horizontally scrollable parts
-  drawRange(dc,mlx,mhx,tly,thy,pos_x,0,0,leading_rows,leading_cols,ncols-trailing_cols);
-  drawRange(dc,mlx,mhx,bly,bhy,pos_x,scrollable_bottom-row_y[nrows-trailing_rows],nrows-trailing_rows,nrows,leading_cols,ncols-trailing_cols);
-
-  // Corner parts
-  drawRange(dc,llx,lhx,tly,thy,0,0,0,leading_rows,0,leading_cols);
-  drawRange(dc,rlx,rhx,tly,thy,scrollable_right-col_x[ncols-trailing_cols],0,0,leading_rows,ncols-trailing_cols,ncols);
-  drawRange(dc,llx,lhx,bly,bhy,0,scrollable_bottom-row_y[nrows-trailing_rows],nrows-trailing_rows,nrows,0,leading_cols);
-  drawRange(dc,rlx,rhx,bly,bhy,scrollable_right-col_x[ncols-trailing_cols],scrollable_bottom-row_y[nrows-trailing_rows],nrows-trailing_rows,nrows,ncols-trailing_cols,ncols);
-
+  drawContents(dc,event->rect.x,event->rect.y,event->rect.w,event->rect.h);
   return 1;
   }
 
@@ -1711,120 +1832,120 @@ long FXTable::onKeyPress(FXObject*,FXSelector,void* ptr){
   FXEvent* event=(FXEvent*)ptr;
   flags&=~FLAG_TIP;
   if(!isEnabled()) return 0;
-  if(target && target->handle(this,MKUINT(message,SEL_KEYPRESS),ptr)) return 1;
+  if(target && target->handle(this,FXSEL(SEL_KEYPRESS,message),ptr)) return 1;
   switch(event->code){
     case KEY_Home:
     case KEY_KP_Home:
       if(!(event->state&SHIFTMASK)){
-        handle(this,MKUINT(ID_DESELECT_ALL,SEL_COMMAND),NULL);
+        handle(this,FXSEL(SEL_COMMAND,ID_DESELECT_ALL),NULL);
         }
       if(event->state&CONTROLMASK){
-        handle(this,MKUINT(ID_MOVE_TOP,SEL_COMMAND),NULL);
+        handle(this,FXSEL(SEL_COMMAND,ID_MOVE_TOP),NULL);
         }
       else{
-        handle(this,MKUINT(ID_MOVE_HOME,SEL_COMMAND),NULL);
+        handle(this,FXSEL(SEL_COMMAND,ID_MOVE_HOME),NULL);
         }
       if(event->state&SHIFTMASK){
-        handle(this,MKUINT(ID_EXTEND,SEL_COMMAND),NULL);
+        handle(this,FXSEL(SEL_COMMAND,ID_EXTEND),NULL);
         }
       else{
-        handle(this,MKUINT(ID_MARK,SEL_COMMAND),NULL);
+        handle(this,FXSEL(SEL_COMMAND,ID_MARK),NULL);
         }
       return 1;
     case KEY_End:
     case KEY_KP_End:
       if(!(event->state&SHIFTMASK)){
-        handle(this,MKUINT(ID_DESELECT_ALL,SEL_COMMAND),NULL);
+        handle(this,FXSEL(SEL_COMMAND,ID_DESELECT_ALL),NULL);
         }
       if(event->state&CONTROLMASK){
-        handle(this,MKUINT(ID_MOVE_BOTTOM,SEL_COMMAND),NULL);
+        handle(this,FXSEL(SEL_COMMAND,ID_MOVE_BOTTOM),NULL);
         }
       else{
-        handle(this,MKUINT(ID_MOVE_END,SEL_COMMAND),NULL);
+        handle(this,FXSEL(SEL_COMMAND,ID_MOVE_END),NULL);
         }
       if(event->state&SHIFTMASK){
-        handle(this,MKUINT(ID_EXTEND,SEL_COMMAND),NULL);
+        handle(this,FXSEL(SEL_COMMAND,ID_EXTEND),NULL);
         }
       else{
-        handle(this,MKUINT(ID_MARK,SEL_COMMAND),NULL);
+        handle(this,FXSEL(SEL_COMMAND,ID_MARK),NULL);
         }
       return 1;
     case KEY_Page_Up:
     case KEY_KP_Page_Up:
       if(!(event->state&SHIFTMASK)){
-        handle(this,MKUINT(ID_DESELECT_ALL,SEL_COMMAND),NULL);
+        handle(this,FXSEL(SEL_COMMAND,ID_DESELECT_ALL),NULL);
         }
-      handle(this,MKUINT(ID_MOVE_PAGEUP,SEL_COMMAND),NULL);
+      handle(this,FXSEL(SEL_COMMAND,ID_MOVE_PAGEUP),NULL);
       if(event->state&SHIFTMASK){
-        handle(this,MKUINT(ID_EXTEND,SEL_COMMAND),NULL);
+        handle(this,FXSEL(SEL_COMMAND,ID_EXTEND),NULL);
         }
       else{
-        handle(this,MKUINT(ID_MARK,SEL_COMMAND),NULL);
+        handle(this,FXSEL(SEL_COMMAND,ID_MARK),NULL);
         }
       return 1;
     case KEY_Page_Down:
     case KEY_KP_Page_Down:
       if(!(event->state&SHIFTMASK)){
-        handle(this,MKUINT(ID_DESELECT_ALL,SEL_COMMAND),NULL);
+        handle(this,FXSEL(SEL_COMMAND,ID_DESELECT_ALL),NULL);
         }
-      handle(this,MKUINT(ID_MOVE_PAGEDOWN,SEL_COMMAND),NULL);
+      handle(this,FXSEL(SEL_COMMAND,ID_MOVE_PAGEDOWN),NULL);
       if(event->state&SHIFTMASK){
-        handle(this,MKUINT(ID_EXTEND,SEL_COMMAND),NULL);
+        handle(this,FXSEL(SEL_COMMAND,ID_EXTEND),NULL);
         }
       else{
-        handle(this,MKUINT(ID_MARK,SEL_COMMAND),NULL);
+        handle(this,FXSEL(SEL_COMMAND,ID_MARK),NULL);
         }
       return 1;
     case KEY_Up:
     case KEY_KP_Up:
       if(!(event->state&SHIFTMASK)){
-        handle(this,MKUINT(ID_DESELECT_ALL,SEL_COMMAND),NULL);
+        handle(this,FXSEL(SEL_COMMAND,ID_DESELECT_ALL),NULL);
         }
-      handle(this,MKUINT(ID_MOVE_UP,SEL_COMMAND),NULL);
+      handle(this,FXSEL(SEL_COMMAND,ID_MOVE_UP),NULL);
       if(event->state&SHIFTMASK){
-        handle(this,MKUINT(ID_EXTEND,SEL_COMMAND),NULL);
+        handle(this,FXSEL(SEL_COMMAND,ID_EXTEND),NULL);
         }
       else{
-        handle(this,MKUINT(ID_MARK,SEL_COMMAND),NULL);
+        handle(this,FXSEL(SEL_COMMAND,ID_MARK),NULL);
         }
       return 1;
     case KEY_Down:
     case KEY_KP_Down:
       if(!(event->state&SHIFTMASK)){
-        handle(this,MKUINT(ID_DESELECT_ALL,SEL_COMMAND),NULL);
+        handle(this,FXSEL(SEL_COMMAND,ID_DESELECT_ALL),NULL);
         }
-      handle(this,MKUINT(ID_MOVE_DOWN,SEL_COMMAND),NULL);
+      handle(this,FXSEL(SEL_COMMAND,ID_MOVE_DOWN),NULL);
       if(event->state&SHIFTMASK){
-        handle(this,MKUINT(ID_EXTEND,SEL_COMMAND),NULL);
+        handle(this,FXSEL(SEL_COMMAND,ID_EXTEND),NULL);
         }
       else{
-        handle(this,MKUINT(ID_MARK,SEL_COMMAND),NULL);
+        handle(this,FXSEL(SEL_COMMAND,ID_MARK),NULL);
         }
       return 1;
     case KEY_Left:
     case KEY_KP_Left:
       if(!(event->state&SHIFTMASK)){
-        handle(this,MKUINT(ID_DESELECT_ALL,SEL_COMMAND),NULL);
+        handle(this,FXSEL(SEL_COMMAND,ID_DESELECT_ALL),NULL);
         }
-      handle(this,MKUINT(ID_MOVE_LEFT,SEL_COMMAND),NULL);
+      handle(this,FXSEL(SEL_COMMAND,ID_MOVE_LEFT),NULL);
       if(event->state&SHIFTMASK){
-        handle(this,MKUINT(ID_EXTEND,SEL_COMMAND),NULL);
+        handle(this,FXSEL(SEL_COMMAND,ID_EXTEND),NULL);
         }
       else{
-        handle(this,MKUINT(ID_MARK,SEL_COMMAND),NULL);
+        handle(this,FXSEL(SEL_COMMAND,ID_MARK),NULL);
         }
       return 1;
     case KEY_Right:
     case KEY_KP_Right:
       if(!(event->state&SHIFTMASK)){
-        handle(this,MKUINT(ID_DESELECT_ALL,SEL_COMMAND),NULL);
+        handle(this,FXSEL(SEL_COMMAND,ID_DESELECT_ALL),NULL);
         }
-      handle(this,MKUINT(ID_MOVE_RIGHT,SEL_COMMAND),NULL);
+      handle(this,FXSEL(SEL_COMMAND,ID_MOVE_RIGHT),NULL);
       if(event->state&SHIFTMASK){
-        handle(this,MKUINT(ID_EXTEND,SEL_COMMAND),NULL);
+        handle(this,FXSEL(SEL_COMMAND,ID_EXTEND),NULL);
         }
       else{
-        handle(this,MKUINT(ID_MARK,SEL_COMMAND),NULL);
+        handle(this,FXSEL(SEL_COMMAND,ID_MARK),NULL);
         }
       return 1;
     case KEY_space:
@@ -1840,7 +1961,7 @@ long FXTable::onKeyPress(FXObject*,FXSelector,void* ptr){
     case KEY_Shift_R:
     case KEY_Alt_L:
     case KEY_Alt_R:
-      //if(flags&FLAG_DODRAG){handle(this,MKUINT(0,SEL_DRAGGED),ptr);}
+      //if(flags&FLAG_DODRAG){handle(this,FXSEL(SEL_DRAGGED,0),ptr);}
       return 1;
     }
   return 0;
@@ -1852,7 +1973,7 @@ long FXTable::onKeyRelease(FXObject*,FXSelector,void* ptr){
   FXEvent* event=(FXEvent*)ptr;
   if(!isEnabled()) return 0;
   flags|=FLAG_UPDATE;
-  if(target && target->handle(this,MKUINT(message,SEL_KEYRELEASE),ptr)) return 1;
+  if(target && target->handle(this,FXSEL(SEL_KEYRELEASE,message),ptr)) return 1;
   switch(event->code){
     case KEY_Home:
     case KEY_KP_Home:
@@ -1877,9 +1998,9 @@ long FXTable::onKeyRelease(FXObject*,FXSelector,void* ptr){
       return 1;
     case KEY_Return:
     case KEY_KP_Enter:
-      handle(this,MKUINT(0,SEL_DOUBLECLICKED),(void*)&current);
+      handle(this,FXSEL(SEL_DOUBLECLICKED,0),(void*)&current);
       //if(0<=current && items[current]->isEnabled()){
-      //  handle(this,MKUINT(0,SEL_COMMAND),(void*)&current);
+      //  handle(this,FXSEL(SEL_COMMAND,0),(void*)&current);
       //  }
       return 1;
     case KEY_Shift_L:
@@ -1888,7 +2009,7 @@ long FXTable::onKeyRelease(FXObject*,FXSelector,void* ptr){
     case KEY_Control_R:
     case KEY_Alt_L:
     case KEY_Alt_R:
-      //if(flags&FLAG_DODRAG){handle(this,MKUINT(0,SEL_DRAGGED),ptr);}
+      //if(flags&FLAG_DODRAG){handle(this,FXSEL(SEL_DRAGGED,0),ptr);}
       return 1;
     }
   return 0;
@@ -1904,7 +2025,7 @@ long FXTable::onAutoScroll(FXObject* sender,FXSelector sel,void* ptr){
     case MOUSE_SELECT:
       c=colAtX(event->win_x);
       r=rowAtY(event->win_y);
-      if(0<=r && 0<=c && (current.row!=r || current.col!=c)){
+      if(0<=r && 0<=c && r<nrows && c<ncols && (current.row!=r || current.col!=c)){
         extendSelection(r,c,TRUE);
         setCurrentItem(r,c,TRUE);
         }
@@ -1920,19 +2041,31 @@ long FXTable::onAutoScroll(FXObject* sender,FXSelector sel,void* ptr){
 long FXTable::onMotion(FXObject*,FXSelector,void* ptr){
   FXEvent* event=(FXEvent*)ptr;
   FXint r,c;
-  FXCursor *cursor;
   switch(mode){
     case MOUSE_NONE:
+/*
+      c=colAtX(event->win_x);
+      r=rowAtY(event->win_y);
+      FXTRACE((1,"row=%d col=%d\n",r,c));
       cursor=getApp()->getDefaultCursor(DEF_ARROW_CURSOR);
-      if(options&TABLE_ROW_SIZABLE){
-        r=nearestRow(rowAtY(event->win_y),event->win_y);
-        if(0<r) cursor=getApp()->getDefaultCursor(DEF_VSPLIT_CURSOR);
-        }
       if(options&TABLE_COL_SIZABLE){
-        c=nearestCol(colAtX(event->win_x),event->win_x);
-        if(0<c) cursor=getApp()->getDefaultCursor(DEF_HSPLIT_CURSOR);
+        if(event->win_y<=table_top || table_bottom<=event->win_y){
+          c=nearestCol(event->win_x);
+          if(0<=c && ((options&TABLE_HEADERS_SIZABLE) || (0<c && c<ncols))){
+            cursor=getApp()->getDefaultCursor(DEF_HSPLIT_CURSOR);
+            }
+          }
+        }
+      if(options&TABLE_ROW_SIZABLE){
+        if(event->win_x<=table_left || table_right<=event->win_x){
+          r=nearestRow(event->win_y);
+          if(0<=r && ((options&TABLE_HEADERS_SIZABLE) || (0<r && r<nrows))){
+            cursor=getApp()->getDefaultCursor(DEF_VSPLIT_CURSOR);
+            }
+          }
         }
       setDefaultCursor(cursor);
+*/
       return 0;
     case MOUSE_SCROLL:
       setPosition(event->win_x-grabx,event->win_y-graby);
@@ -1940,23 +2073,13 @@ long FXTable::onMotion(FXObject*,FXSelector,void* ptr){
     case MOUSE_DRAG:
       return 1;
     case MOUSE_SELECT:
-      if(startAutoScroll(event->win_x,event->win_y,FALSE)) return 1;  // FIXME scroll when near edge of scrollable area
+      if(startAutoScroll(event,FALSE)) return 1;  // FIXME scroll when near edge of scrollable area
       c=colAtX(event->win_x);
       r=rowAtY(event->win_y);
-      if(0<=r && 0<=c && (current.row!=r || current.col!=c)){
+      if(0<=r && 0<=c && r<nrows && c<ncols && (current.row!=r || current.col!=c)){
         extendSelection(r,c,TRUE);
         setCurrentItem(r,c,TRUE);
         }
-      return 1;
-    case MOUSE_COL_SELECT:
-      return 1;
-    case MOUSE_ROW_SELECT:
-      return 1;
-    case MOUSE_COL_SIZE:
-      setColumnX(rowcol,event->win_x);
-      return 1;
-    case MOUSE_ROW_SIZE:
-      setRowY(rowcol,event->win_y);
       return 1;
     }
   return 0;
@@ -1967,12 +2090,11 @@ long FXTable::onMotion(FXObject*,FXSelector,void* ptr){
 long FXTable::onLeftBtnPress(FXObject*,FXSelector,void* ptr){
   FXEvent* event=(FXEvent*)ptr;
   FXTablePos tablepos;
-  FXint r,c;
   flags&=~FLAG_TIP;
-  handle(this,MKUINT(0,SEL_FOCUS_SELF),ptr);
+  handle(this,FXSEL(SEL_FOCUS_SELF,0),ptr);
   if(isEnabled()){
     grab();
-    if(target && target->handle(this,MKUINT(message,SEL_LEFTBUTTONPRESS),ptr)) return 1;
+    if(target && target->handle(this,FXSEL(SEL_LEFTBUTTONPRESS,message),ptr)) return 1;
 
     // Cell being clicked on
     tablepos.row=rowAtY(event->win_y);
@@ -1981,53 +2103,44 @@ long FXTable::onLeftBtnPress(FXObject*,FXSelector,void* ptr){
     // Outside table
     if(tablepos.row<0 || tablepos.row>=nrows || tablepos.col<0 || tablepos.col>=ncols) return 0;
 
-    // Resizeable column
-    if(options&TABLE_COL_SIZABLE){
-      c=nearestCol(tablepos.col,event->win_x);
-      if(0<c){
-        setDragCursor(getApp()->getDefaultCursor(DEF_HSPLIT_CURSOR));
-        rowcol=c;
-        mode=MOUSE_COL_SIZE;
-        flags&=~FLAG_UPDATE;
-        return 1;
-        }
-      }
-
-    // Resizeable row
-    if(options&TABLE_ROW_SIZABLE){
-      r=nearestRow(tablepos.row,event->win_y);
-      if(0<r){
-        setDragCursor(getApp()->getDefaultCursor(DEF_VSPLIT_CURSOR));
-        rowcol=r;
-        mode=MOUSE_ROW_SIZE;
-        flags&=~FLAG_UPDATE;
-        return 1;
-        }
-      }
-
     // Change current item
     setCurrentItem(tablepos.row,tablepos.col,TRUE);
 
     // Select or deselect
     if(event->state&SHIFTMASK){
       if(0<=anchor.row && 0<=anchor.col){
-        if(isItemEnabled(anchor.row,anchor.col)) selectItem(anchor.row,anchor.col,TRUE);
+        if(isItemEnabled(anchor.row,anchor.col)){
+          extendSelection(current.row,current.col,TRUE);
+          }
+        }
+      else{
+        setAnchorItem(current.row,current.col);
+        if(isItemEnabled(current.row,current.col)){
+          extendSelection(current.row,current.col,TRUE);
+          }
+        }
+      mode=MOUSE_SELECT;
+      }
+/*
+    else if(event->state&CONTROLMASK){
+      if(isItemEnabled(current.row,current.col)){
+//        toggleItem(current.row,current.col,TRUE);
+        }
+      setAnchorItem(current.row,current.col);
+      mode=MOUSE_SELECT;
+      }
+*/
+    else{
+      if(isItemEnabled(current.row,current.col)){
+        killSelection();
+        setAnchorItem(current.row,current.col);
         extendSelection(current.row,current.col,TRUE);
         }
       else{
-        if(isItemEnabled(current.row,current.col)) selectItem(current.row,current.col,TRUE);
         setAnchorItem(current.row,current.col);
         }
+      mode=MOUSE_SELECT;
       }
-    else if(event->state&CONTROLMASK){
-      if(isItemEnabled(current.row,current.col)) toggleItem(current.row,current.col,TRUE);
-      setAnchorItem(current.row,current.col);
-      }
-    else{
-      if(isItemEnabled(current.row,current.col)){ killSelection(); selectItem(current.row,current.col,TRUE); }
-      setAnchorItem(current.row,current.col);
-      }
-    mode=MOUSE_SELECT;
     flags&=~FLAG_UPDATE;
     flags|=FLAG_PRESSED;
     return 1;
@@ -2043,31 +2156,31 @@ long FXTable::onLeftBtnRelease(FXObject*,FXSelector,void* ptr){
     ungrab();
     flags&=~FLAG_PRESSED;
     flags|=FLAG_UPDATE;
-    stopAutoScroll();
-    if(target && target->handle(this,MKUINT(message,SEL_LEFTBUTTONRELEASE),ptr)) return 1;
-    setDragCursor(getApp()->getDefaultCursor(DEF_ARROW_CURSOR));
     mode=MOUSE_NONE;
+    stopAutoScroll();
+    setDragCursor(getApp()->getDefaultCursor(DEF_ARROW_CURSOR));
+    if(target && target->handle(this,FXSEL(SEL_LEFTBUTTONRELEASE,message),ptr)) return 1;
 
     // Scroll to make item visibke
     makePositionVisible(current.row,current.col);
 
     // Update anchor
-    setAnchorItem(current.row,current.col);
+    //setAnchorItem(current.row,current.col); // FIXME look into the selection stuff
 
     // Generate clicked callbacks
     if(event->click_count==1){
-      handle(this,MKUINT(0,SEL_CLICKED),(void*)&current);
+      handle(this,FXSEL(SEL_CLICKED,0),(void*)&current);
       }
     else if(event->click_count==2){
-      handle(this,MKUINT(0,SEL_DOUBLECLICKED),(void*)&current);
+      handle(this,FXSEL(SEL_DOUBLECLICKED,0),(void*)&current);
       }
     else if(event->click_count==3){
-      handle(this,MKUINT(0,SEL_TRIPLECLICKED),(void*)&current);
+      handle(this,FXSEL(SEL_TRIPLECLICKED,0),(void*)&current);
       }
 
     // Command callback only when clicked on item
     if(0<=current.row && 0<=current.col && isItemEnabled(current.row,current.col)){
-      handle(this,MKUINT(0,SEL_COMMAND),(void*)&current);
+      handle(this,FXSEL(SEL_COMMAND,0),(void*)&current);
       }
     return 1;
     }
@@ -2079,10 +2192,10 @@ long FXTable::onLeftBtnRelease(FXObject*,FXSelector,void* ptr){
 long FXTable::onRightBtnPress(FXObject*,FXSelector,void* ptr){
   FXEvent* event=(FXEvent*)ptr;
   flags&=~FLAG_TIP;
-  handle(this,MKUINT(0,SEL_FOCUS_SELF),ptr);
+  handle(this,FXSEL(SEL_FOCUS_SELF,0),ptr);
   if(isEnabled()){
     grab();
-    if(target && target->handle(this,MKUINT(message,SEL_RIGHTBUTTONPRESS),ptr)) return 1;
+    if(target && target->handle(this,FXSEL(SEL_RIGHTBUTTONPRESS,message),ptr)) return 1;
     flags&=~FLAG_UPDATE;
     flags|=FLAG_PRESSED;
     grabx=event->win_x-pos_x;
@@ -2101,7 +2214,7 @@ long FXTable::onRightBtnRelease(FXObject*,FXSelector,void* ptr){
     flags&=~FLAG_PRESSED;
     flags|=FLAG_UPDATE;
     mode=MOUSE_NONE;
-    if(target && target->handle(this,MKUINT(message,SEL_RIGHTBUTTONRELEASE),ptr)) return 1;
+    if(target && target->handle(this,FXSEL(SEL_RIGHTBUTTONRELEASE,message),ptr)) return 1;
     return 1;
     }
   return 0;
@@ -2118,88 +2231,28 @@ long FXTable::onUngrabbed(FXObject* sender,FXSelector sel,void* ptr){
   return 1;
   }
 
-/*
-// Button or Key activate
-long FXTable::onActivate(FXObject*,FXSelector,void* ptr){
-  FXEvent* event=(FXEvent*)ptr;
-  FXTableItem *item;
-  if(0<=current.row && 0<=current.col){
-    item=cells[current.row*ncols+current.col];
-    if(item && item->isEnabled()){
-      if(event->state&SHIFTMASK){
-        if(0<=anchor.row && 0<=anchor.col){
-          selectItem(anchor.row,anchor.col);
-          extendSelection(current.row,current.col);
-          }
-        else{
-          selectItem(current.row,current.col);
-          setAnchorItem(current.row,current.col);
-          }
-        }
-      else if(event->state&CONTROLMASK){
-        toggleItem(current.row,current.col);
-        setAnchorItem(current.row,current.col);
-        }
-      else{
-        killSelection();
-        selectItem(current.row,current.col);
-        setAnchorItem(current.row,current.col);
-        }
-      }
-    }
-  else{
-    if(!(event->state&(SHIFTMASK|CONTROLMASK))) killSelection();
-    }
-  return 1;
-  }
-
-
-// Button or Key deactivate
-long FXTable::onDeactivate(FXObject*,FXSelector,void* ptr){
-  FXEvent* event=(FXEvent*)ptr;
-  FXTableItem *item;
-  setAnchorItem(current.row,current.col);
-  if(event->click_count==1){
-    handle(this,MKUINT(0,SEL_CLICKED),(void*)&current);
-    }
-  else if(event->click_count==2){
-    handle(this,MKUINT(0,SEL_DOUBLECLICKED),(void*)&current);
-    }
-  else if(event->click_count==3){
-    handle(this,MKUINT(0,SEL_TRIPLECLICKED),(void*)&current);
-    }
-  if(0<=current.row && 0<=current.col){
-    item=cells[current.row*ncols+current.col];
-    if(item && item->isEnabled()){
-      handle(this,MKUINT(0,SEL_COMMAND),(void*)&current);
-      }
-    }
-  return 1;
-  }
-*/
-
 
 // Command message
 long FXTable::onCommand(FXObject*,FXSelector,void* ptr){
-  return target && target->handle(this,MKUINT(message,SEL_COMMAND),ptr);
+  return target && target->handle(this,FXSEL(SEL_COMMAND,message),ptr);
   }
 
 
 // Clicked in list
 long FXTable::onClicked(FXObject*,FXSelector,void* ptr){
-  return target && target->handle(this,MKUINT(message,SEL_CLICKED),ptr);
+  return target && target->handle(this,FXSEL(SEL_CLICKED,message),ptr);
   }
 
 
 // Double clicked in list; ptr may or may not point to an item
 long FXTable::onDoubleClicked(FXObject*,FXSelector,void* ptr){
-  return target && target->handle(this,MKUINT(message,SEL_DOUBLECLICKED),ptr);
+  return target && target->handle(this,FXSEL(SEL_DOUBLECLICKED,message),ptr);
   }
 
 
 // Triple clicked in list; ptr may or may not point to an item
 long FXTable::onTripleClicked(FXObject*,FXSelector,void* ptr){
-  return target && target->handle(this,MKUINT(message,SEL_TRIPLECLICKED),ptr);
+  return target && target->handle(this,FXSEL(SEL_TRIPLECLICKED,message),ptr);
   }
 
 
@@ -2211,8 +2264,7 @@ long FXTable::onCmdHorzGrid(FXObject*,FXSelector,void*){
 
 
 long FXTable::onUpdHorzGrid(FXObject* sender,FXSelector,void*){
-  FXuint msg=hgrid ? ID_CHECK : ID_UNCHECK;
-  sender->handle(this,MKUINT(msg,SEL_COMMAND),NULL);
+  sender->handle(this,hgrid?FXSEL(SEL_COMMAND,ID_CHECK):FXSEL(SEL_COMMAND,ID_UNCHECK),NULL);
   return 1;
   }
 
@@ -2225,8 +2277,7 @@ long FXTable::onCmdVertGrid(FXObject*,FXSelector,void*){
 
 
 long FXTable::onUpdVertGrid(FXObject* sender,FXSelector,void*){
-  FXuint msg=vgrid ? ID_CHECK : ID_UNCHECK;
-  sender->handle(this,MKUINT(msg,SEL_COMMAND),NULL);
+  sender->handle(this,vgrid?FXSEL(SEL_COMMAND,ID_CHECK):FXSEL(SEL_COMMAND,ID_UNCHECK),NULL);
   return 1;
   }
 
@@ -2244,9 +2295,9 @@ long FXTable::onCmdDeleteColumn(FXObject*,FXSelector,void*){
 // Update delete current column
 long FXTable::onUpdDeleteColumn(FXObject* sender,FXSelector,void*){
   if(0<=current.col && current.col<ncols && 0<ncols)
-    sender->handle(this,MKUINT(ID_ENABLE,SEL_COMMAND),NULL);
+    sender->handle(this,FXSEL(SEL_COMMAND,ID_ENABLE),NULL);
   else
-    sender->handle(this,MKUINT(ID_DISABLE,SEL_COMMAND),NULL);
+    sender->handle(this,FXSEL(SEL_COMMAND,ID_DISABLE),NULL);
   return 1;
   }
 
@@ -2264,9 +2315,9 @@ long FXTable::onCmdDeleteRow(FXObject*,FXSelector,void*){
 // Update delete current row
 long FXTable::onUpdDeleteRow(FXObject* sender,FXSelector,void*){
   if(0<=current.row && current.row<nrows && 0<nrows)
-    sender->handle(this,MKUINT(ID_ENABLE,SEL_COMMAND),NULL);
+    sender->handle(this,FXSEL(SEL_COMMAND,ID_ENABLE),NULL);
   else
-    sender->handle(this,MKUINT(ID_DISABLE,SEL_COMMAND),NULL);
+    sender->handle(this,FXSEL(SEL_COMMAND,ID_DISABLE),NULL);
   return 1;
   }
 
@@ -2385,16 +2436,30 @@ long FXTable::onCmdSelectCell(FXObject*,FXSelector,void*){
 
 // Select row
 long FXTable::onCmdSelectRow(FXObject*,FXSelector,void*){
-  setAnchorItem(current.row,0);
-  extendSelection(current.row,ncols-1,TRUE);
+  selectRow(current.row,TRUE);
   return 1;
   }
 
 
 // Select column
 long FXTable::onCmdSelectColumn(FXObject*,FXSelector,void*){
-  setAnchorItem(0,current.col);
-  extendSelection(nrows-1,current.col,TRUE);
+  selectColumn(current.col,TRUE);
+  return 1;
+  }
+
+
+// Select row with index
+long FXTable::onCmdSelectRowIndex(FXObject*,FXSelector,void* ptr){
+  setAnchorItem((FXint)(FXival)ptr,0);
+  extendSelection((FXint)(FXival)ptr,ncols-1,TRUE);
+  return 1;
+  }
+
+
+// Select column with index
+long FXTable::onCmdSelectColumnIndex(FXObject*,FXSelector,void* ptr){
+  setAnchorItem(0,(FXint)(FXival)ptr);
+  extendSelection(nrows-1,(FXint)(FXival)ptr,TRUE);
   return 1;
   }
 
@@ -2425,6 +2490,826 @@ long FXTable::onCmdMark(FXObject*,FXSelector,void*){
 long FXTable::onCmdExtend(FXObject*,FXSelector,void*){
   extendSelection(current.row,current.col,TRUE);
   return 1;
+  }
+
+
+// Change table size to nr x nc
+void FXTable::setTableSize(FXint nr,FXint nc,FXbool notify){
+  register FXTableItem *item;
+  register FXint r,c;
+  FXTableRange tablerange;
+
+  // Must be in range
+  if(nr<0 || nc<0){ fxerror("%s::setTableSize: argument out of range.\n",getClassName()); }
+
+  // Notify items will be deleted
+  if(notify && target){
+    tablerange.fm.row=0;
+    tablerange.fm.col=0;
+    tablerange.to.row=nrows-1;
+    tablerange.to.col=ncols-1;
+    target->handle(this,FXSEL(SEL_DELETED,message),(void*)&tablerange);
+    }
+
+  // Free all cells
+  for(r=0; r<nrows; r++){
+    for(c=0; c<ncols; c++){
+      item=cells[r*ncols+c];
+      if(item && (r==0 || cells[(r-1)*ncols+c]!=item) && (c==0 || cells[r*ncols+c-1]!=item)){
+        delete item;
+        }
+      }
+    }
+
+  // Clear headers
+  rowHeader->clearItems();
+  colHeader->clearItems();
+
+  // Resize it now
+  if(!FXRESIZE(&cells,FXTableItem*,nr*nc+1)){
+    fxerror("%s::setTableSize: out of memory.\n",getClassName());
+    }
+
+  // Initialize cell array
+  for(r=0; r<nr; r++){
+    for(c=0; c<nc; c++){
+      cells[r*nc+c]=NULL;
+      }
+    }
+
+  // Initialize row headers
+  for(r=0; r<nr; r++){
+    rowHeader->appendItem(FXString::null,NULL,defRowHeight);
+    }
+
+  // Initialize column headers
+  for(c=0; c<nc; c++){
+    colHeader->appendItem(FXString::null,NULL,defColWidth);
+    }
+
+  // Set size
+  nrows=nr;
+  ncols=nc;
+
+  // Fix up anchor, extent and current
+  anchor.col=-1;
+  anchor.row=-1;
+  current.col=-1;
+  current.row=-1;
+
+  // Fix up selection
+  selection.fm.row=-1;
+  selection.fm.col=-1;
+  selection.to.row=-1;
+  selection.to.col=-1;
+
+  // Notify items have been inserted
+  if(notify && target){
+    tablerange.fm.row=0;
+    tablerange.fm.col=0;
+    tablerange.to.row=nrows-1;
+    tablerange.to.col=ncols-1;
+    target->handle(this,FXSEL(SEL_INSERTED,message),(void*)&tablerange);
+    }
+
+  // Current item have changed
+  if(notify && target){ target->handle(this,FXSEL(SEL_CHANGED,message),(void*)&current); }
+
+  // Redo layout
+  recalc();
+  }
+
+
+// Insert a row
+void FXTable::insertRows(FXint row,FXint nr,FXbool notify){
+  register FXint oldrow=current.row;
+  register FXint r,c,s,n;
+  FXTableItem **oldcells=cells;
+  FXTableRange tablerange;
+
+  // Nothing to do
+  if(nr<1) return;
+
+  // Must be in range
+  if(row<0 || row>nrows){ fxerror("%s::insertRows: row out of range.\n",getClassName()); }
+
+  // Space for nr new rows
+  s=nr*defRowHeight;
+  n=nrows+nr;
+
+  // Initialize row headers
+  for(r=row; r<row+nr; r++){
+    rowHeader->insertItem(r,FXString::null,NULL,defRowHeight);
+    }
+
+  // Allocate new table
+  if(!FXMALLOC(&cells,FXTableItem*,n*ncols+1)){
+    fxerror("%s::insertRows: out of memory.\n",getClassName());
+    }
+
+  // Copy first part
+  for(r=0; r<row; r++){
+    for(c=0; c<ncols; c++){
+      cells[r*ncols+c]=oldcells[r*ncols+c];
+      }
+    }
+
+  // Initialize middle part; cells spanning over current row are not split
+  for(c=0; c<ncols; c++){
+    if(0<row && row<nrows && oldcells[(row-1)*ncols+c]==oldcells[row*ncols+c]){
+      for(r=row; r<row+nr; r++){
+        cells[r*ncols+c]=oldcells[row*ncols+c];
+        }
+      }
+    else{
+      for(r=row; r<row+nr; r++){
+        cells[r*ncols+c]=NULL;
+        }
+      }
+    }
+
+  // Copy last part
+  for(r=row; r<nrows; r++){
+    for(c=0; c<ncols; c++){
+      cells[(r+nr)*ncols+c]=oldcells[r*ncols+c];
+      }
+    }
+
+  // Free old table
+  FXFREE(&oldcells);
+
+  nrows=n;
+
+  FXTRACE((100,"nrows=%d\n",nrows));
+
+  // Fix up anchor, extent, and current
+  if(anchor.row>=row) anchor.row+=nr;
+  if(current.row>=row) current.row+=nr;
+  if(current.row<0 && nrows==nr) current.row=0;
+
+  // Fix up selection
+  if(selection.fm.row>=row) selection.fm.row+=nr;
+  if(selection.to.row>=row) selection.to.row+=nr;
+
+  FXASSERT(-1<=anchor.row && anchor.row<nrows);
+  FXASSERT(-1<=current.row && current.row<nrows);
+
+  // Notify items have been inserted
+  if(notify && target){
+    tablerange.fm.row=row;
+    tablerange.fm.col=0;
+    tablerange.to.row=row+nr-1;
+    tablerange.to.col=ncols-1;
+    target->handle(this,FXSEL(SEL_INSERTED,message),(void*)&tablerange);
+    }
+
+  // Current item may have changed
+  if(oldrow!=current.row){
+    if(notify && target){ target->handle(this,FXSEL(SEL_CHANGED,message),(void*)&current); }
+    }
+
+  // Redo layout
+  recalc();
+  }
+
+
+// Insert a column
+void FXTable::insertColumns(FXint col,FXint nc,FXbool notify){
+  register FXint oldcol=current.col;
+  register FXint r,c,s,n;
+  FXTableItem **oldcells=cells;
+  FXTableRange tablerange;
+
+  // Nothing to do
+  if(nc<1) return;
+
+  // Must be in range
+  if(col<0 || col>ncols){ fxerror("%s::insertColumns: column out of range.\n",getClassName()); }
+
+  // Space for nr new rows
+  s=nc*defColWidth;
+  n=ncols+nc;
+
+  // Initialize column headers
+  for(c=col; c<col+nc; c++){
+    colHeader->insertItem(c,FXString::null,NULL,defColWidth);
+    }
+
+  // Allocate new table
+  if(!FXMALLOC(&cells,FXTableItem*,nrows*n+1)){
+    fxerror("%s::insertColumns: out of memory.\n",getClassName());
+    }
+
+  // Copy first part
+  for(c=0; c<col; c++){
+    for(r=0; r<nrows; r++){
+      cells[r*n+c]=oldcells[r*ncols+c];
+      }
+    }
+
+  // Initialize middle part; cells spanning over current column are not split
+  for(r=0; r<nrows; r++){
+    if(0<col && col<ncols && oldcells[r*ncols+col-1]==oldcells[r*ncols+col]){
+      for(c=col; c<col+nc; c++){
+        cells[r*n+c]=oldcells[r*ncols+col];
+        }
+      }
+    else{
+      for(c=col; c<col+nc; c++){
+        cells[r*n+c]=NULL;
+        }
+      }
+    }
+
+  // Copy last part
+  for(c=col; c<ncols; c++){
+    for(r=0; r<nrows; r++){
+      cells[r*n+nc+c]=oldcells[r*ncols+c];
+      }
+    }
+
+  // Free old table
+  FXFREE(&oldcells);
+
+  ncols=n;
+
+  FXTRACE((100,"ncols=%d\n",ncols));
+
+  // Fix up anchor, extent, and current
+  if(anchor.col>=col) anchor.col+=nc;
+  if(current.col>=col) current.col+=nc;
+  if(current.col<0 && ncols==nc) current.col=0;
+
+  // Fix up selection
+  if(selection.fm.col>=col) selection.fm.col+=nc;
+  if(selection.to.col>=col) selection.to.col+=nc;
+
+  FXASSERT(-1<=anchor.col && anchor.col<ncols);
+  FXASSERT(-1<=current.col && current.col<ncols);
+
+  // Notify items have been inserted
+  if(notify && target){
+    tablerange.fm.row=0;
+    tablerange.fm.col=col;
+    tablerange.to.row=nrows-1;
+    tablerange.to.col=col+nc-1;
+    target->handle(this,FXSEL(SEL_INSERTED,message),(void*)&tablerange);
+    }
+
+  // Current item may have changed
+  if(oldcol!=current.col){
+    if(notify && target){ target->handle(this,FXSEL(SEL_CHANGED,message),(void*)&current); }
+    }
+
+  // Redo layout
+  recalc();
+  }
+
+
+// Remove rows of cells
+void FXTable::removeRows(FXint row,FXint nr,FXbool notify){
+  register FXint oldrow=current.row;
+  register FXTableItem *item;
+  register FXint r,c,n;
+  FXTableItem **oldcells=cells;
+  FXTableRange tablerange;
+
+  // Nothing to do
+  if(nr<1) return;
+
+  // Must be in range
+  if(row<0 || row+nr>nrows){ fxerror("%s::removeRows: row out of range.\n",getClassName()); }
+
+  // Notify items will be deleted
+  if(notify && target){
+    tablerange.fm.row=row;
+    tablerange.fm.col=0;
+    tablerange.to.row=row+nr-1;
+    tablerange.to.col=ncols-1;
+    target->handle(this,FXSEL(SEL_DELETED,message),(void*)&tablerange);
+    }
+
+  // Number removed
+  n=nrows-nr;
+
+  // Allocate new table
+  if(!FXMALLOC(&cells,FXTableItem*,n*ncols+1)){
+    fxerror("%s::removeRows: out of memory.\n",getClassName());
+    }
+
+  // Copy first part
+  for(r=0; r<row; r++){
+    for(c=0; c<ncols; c++){
+      cells[r*ncols+c]=oldcells[r*ncols+c];
+      }
+    }
+
+  // Delete those items fully contained in the deleted range
+  for(r=row; r<row+nr; r++){
+    for(c=0; c<ncols; c++){
+      item=oldcells[r*ncols+c];
+      if(item && (r==0 || oldcells[(r-1)*ncols+c]!=item) && (c==0 || oldcells[r*ncols+c-1]!=item) && (row+nr==nrows || oldcells[(row+nr)*ncols+c]!=item)){
+        FXTRACE((150,"delete item %s\n",item->getText().text()));
+        delete item;
+        }
+      }
+    }
+
+  // Copy last part
+  for(r=row+nr; r<nrows; r++){
+    for(c=0; c<ncols; c++){
+      cells[(r-nr)*ncols+c]=oldcells[r*ncols+c];
+      }
+    }
+
+  // Free old table
+  FXFREE(&oldcells);
+
+  // Remove row headers
+  for(r=row+nr-1; r>=row; r--){
+    rowHeader->removeItem(r);
+    }
+
+  // Fix up anchor and current
+  if(anchor.row>=row+nr)  anchor.row-=nr;  else if(anchor.row>=n)  anchor.row=n-1;
+  if(current.row>=row+nr) current.row-=nr; else if(current.row>=n) current.row=n-1;
+
+  // Fix up selection
+  if(selection.fm.row>=row+nr) selection.fm.row-=nr; else if(selection.fm.row>=n) selection.fm.row=n-1;
+  if(selection.to.row>=row+nr) selection.to.row-=nr; else if(selection.to.row>=n) selection.to.row=n-1;
+
+  nrows=n;
+
+  FXTRACE((100,"nrows=%d\n",nrows));
+
+  FXASSERT(-1<=anchor.row && anchor.row<nrows);
+  FXASSERT(-1<=current.row && current.row<nrows);
+
+  // Current item may have changed
+  if(row<=oldrow){
+    if(notify && target){ target->handle(this,FXSEL(SEL_CHANGED,message),(void*)&current); }
+    }
+
+  // Redo layout
+  recalc();
+  }
+
+
+
+// Remove columns of cells
+void FXTable::removeColumns(FXint col,FXint nc,FXbool notify){
+  register FXint oldcol=current.col;
+  register FXTableItem *item;
+  register FXint r,c,n;
+  FXTableItem **oldcells=cells;
+  FXTableRange tablerange;
+
+  // Nothing to do
+  if(nc<1) return;
+
+  // Must be in range
+  if(col<0 || col+nc>ncols){ fxerror("%s::removeColumns: column out of range.\n",getClassName()); }
+
+  // Notify items will be deleted
+  if(notify && target){
+    tablerange.fm.row=0;
+    tablerange.fm.col=col;
+    tablerange.to.row=nrows-1;
+    tablerange.to.col=col+nc-1;
+    target->handle(this,FXSEL(SEL_DELETED,message),(void*)&tablerange);
+    }
+
+  // Number removed
+  n=ncols-nc;
+
+  // Allocate new table
+  if(!FXMALLOC(&cells,FXTableItem*,nrows*n+1)){
+    fxerror("%s::removeColumns: out of memory.\n",getClassName());
+    }
+
+  // Copy first part
+  for(r=0; r<nrows; r++){
+    for(c=0; c<col; c++){
+      cells[r*n+c]=oldcells[r*ncols+c];
+      }
+    }
+
+  // Delete those items fully contained in the deleted range
+  for(r=0; r<nrows; r++){
+    for(c=col; c<col+nc; c++){
+      item=oldcells[r*ncols+c];
+      if(item && (r==0 || oldcells[(r-1)*ncols+c]!=item) && (c==0 || oldcells[r*ncols+c-1]!=item) && (col+nc==ncols || oldcells[r*ncols+col+nc]!=item)){
+        FXTRACE((150,"delete item %s\n",item->getText().text()));
+        delete item;
+        }
+      }
+    }
+
+  // Copy last part
+  for(r=0; r<nrows; r++){
+    for(c=col+nc; c<ncols; c++){
+      cells[r*n+c-nc]=oldcells[r*ncols+c];
+      }
+    }
+
+  // Free old table
+  FXFREE(&oldcells);
+
+  // Remove column headers
+  for(c=col+nc-1; c>=col; c--){
+    colHeader->removeItem(c);
+    }
+
+  // Fix up anchor and current
+  if(anchor.col>=col+nc)  anchor.col-=nc;  else if(anchor.col>=n)  anchor.col=n-1;
+  if(current.col>=col+nc) current.col-=nc; else if(current.col>=n) current.col=n-1;
+
+  // Fix up selection
+  if(selection.fm.col>=col+nc) selection.fm.col-=nc; else if(selection.fm.col>=n) selection.fm.col=n-1;
+  if(selection.to.col>=col+nc) selection.to.col-=nc; else if(selection.to.col>=n) selection.to.col=n-1;
+
+  ncols=n;
+
+  FXTRACE((100,"ncols=%d\n",ncols));
+
+  FXASSERT(-1<=anchor.col && anchor.col<ncols);
+  FXASSERT(-1<=current.col && current.col<ncols);
+
+  // Current item may have changed
+  if(col<=oldcol){
+    if(notify && target){ target->handle(this,FXSEL(SEL_CHANGED,message),(void*)&current); }
+    }
+
+  // Redo layout
+  recalc();
+  }
+
+
+// Return the item at the given index
+FXTableItem *FXTable::getItem(FXint row,FXint col) const {
+  if(row<0 || col<0 || nrows<row || ncols<=col){ fxerror("%s::getItem: index out of range.\n",getClassName()); }
+  return cells[row*ncols+col];
+  }
+
+
+// Replace item with another (may be NULL)
+void FXTable::setItem(FXint row,FXint col,FXTableItem* item,FXbool notify){
+  register FXint sr,er,sc,ec,r,c;
+  FXTableRange tablerange;
+
+  // Must be in range
+  if(row<0 || col<0 || nrows<row || ncols<=col){ fxerror("%s::setItem: index out of range.\n",getClassName()); }
+
+  // Extent of cell
+  sr=startRow(row,col); er=endRow(row,col);
+  sc=startCol(row,col); ec=endCol(row,col);
+
+  // Notify item will be replaced
+  if(notify && target){
+    tablerange.fm.row=sr; tablerange.to.row=er;
+    tablerange.fm.col=sc; tablerange.to.col=ec;
+    target->handle(this,FXSEL(SEL_REPLACED,message),(void*)&tablerange);
+    }
+
+  // Delete cell
+  delete cells[sr*ncols+sc];
+
+  // Assign new cell
+  for(r=sr; r<=er; r++){
+    for(c=sc; c<=ec; c++){
+      cells[r*ncols+c]=item;
+      }
+    }
+
+  // Repaint these cells
+  updateRange(sr,er,sc,ec);
+  }
+
+
+// Remove cell, i.e. replace cell by NULL
+void FXTable::removeItem(FXint row,FXint col,FXbool notify){
+  register FXint sr,er,sc,ec,r,c;
+  FXTableRange tablerange;
+
+  // Must be in range
+  if(row<0 || col<0 || nrows<=row || ncols<=col){ fxerror("%s::removeItem: index out of range.\n",getClassName()); }
+
+  // Extent of cell
+  sr=startRow(row,col); er=endRow(row,col);
+  sc=startCol(row,col); ec=endCol(row,col);
+
+  // Notify item will be replaced
+  if(notify && target){
+    tablerange.fm.row=sr; tablerange.to.row=er;
+    tablerange.fm.col=sc; tablerange.to.col=ec;
+    target->handle(this,FXSEL(SEL_REPLACED,message),(void*)&tablerange);
+    }
+
+  // Delete cell
+  delete cells[sr*ncols+sc];
+
+  // Clear entries
+  for(r=sr; r<=er; r++){
+    for(c=sc; c<=ec; c++){
+      cells[r*ncols+c]=NULL;
+      }
+    }
+
+  // Repaint these cells
+  updateRange(sr,er,sc,ec);
+  }
+
+
+// Clear all cells in the given range
+void FXTable::removeRange(FXint startrow,FXint endrow,FXint startcol,FXint endcol,FXbool notify){
+  register FXint r,c;
+
+  // Verify range
+  if(startrow<0 || startcol<0 || nrows<=endrow || ncols<=endcol){ fxerror("%s::clearRange: index out of range.\n",getClassName()); }
+
+  // Free all cells
+  for(r=startrow; r<=endrow; r++){
+    for(c=startcol; c<=endcol; c++){
+      removeItem(r,c,notify);
+      }
+    }
+  }
+
+
+// Clear all items from table
+void FXTable::clearItems(FXbool notify){
+  register FXTableItem *item;
+  register FXint r,c;
+  FXTableRange tablerange;
+
+  // Notify item will be deleted
+  if(notify && target){
+    tablerange.fm.row=0; tablerange.to.row=nrows-1;
+    tablerange.fm.col=0; tablerange.to.col=ncols-1;
+    target->handle(this,FXSEL(SEL_DELETED,message),(void*)&tablerange);
+    }
+
+  // Free all cells
+  for(r=0; r<nrows; r++){
+    for(c=0; c<ncols; c++){
+      item=cells[r*ncols+c];
+      if(item && (r==0 || cells[(r-1)*ncols+c]!=item) && (c==0 || cells[r*ncols+c-1]!=item)){
+        delete item;
+        }
+      }
+    }
+
+  // Clear headers
+  rowHeader->clearItems();
+  colHeader->clearItems();
+
+  // Resize arrays
+  FXRESIZE(&cells,FXTableItem*,1);
+
+  // Fix up arrays
+  cells[0]=NULL;
+
+  // Number of rows and columns
+  nrows=0;
+  ncols=0;
+
+  // Fix up anchor, extent and current
+  anchor.col=-1;
+  anchor.row=-1;
+  current.col=-1;
+  current.row=-1;
+
+  // Fix up selection
+  selection.fm.row=-1;
+  selection.fm.col=-1;
+  selection.to.row=-1;
+  selection.to.col=-1;
+
+  // Notify of change of current item
+  if(notify && target){ target->handle(this,FXSEL(SEL_CHANGED,message),(void*)&current); }
+
+  // Redo layout
+  recalc();
+  }
+
+
+/*
+
+  /// Merge cells into one single multi-column cell
+  virtual void mergeCols(FXint row,FXint col,FXint nc,FXbool notify=FALSE);
+
+  /// Merge cells into one single multi-row cell
+  virtual void mergeRows(FXint row,FXint col,FXint nr,FXbool notify=FALSE);
+
+  /// Split multi-column cell into single cells
+  virtual void splitCols(FXint row,FXint col,FXbool notify=FALSE);
+
+  /// Split multi-row cell into single cells
+  virtual void splitRows(FXint row,FXint col,FXbool notify=FALSE);
+
+// Merge cells into one single multi-column cell
+void FXTable::mergeCols(FXint row,FXint col,FXint nc,FXbool notify){
+  register FXint sr,er,ec,r,c;
+  register FXTableItem *item,*it;
+  if(row<0 || row>=nrows || col<0 || nc<1 || col+nc>ncols){ fxerror("%s::mergeCols: argument out of range\n",getClassName()); }
+  sr=startRow(row,col);
+  er=endRow(row,col);
+  ec=col+nc-1;
+  item=cells[row*ncols+col];
+  for(r=sr; r<=er; r++){
+    for(c=col+1; c<=ec; c++){
+      it=cells[r*ncols+c];
+      if(it && it!=item){
+        removeCell(r,c,notify);
+        }
+      cells[r*ncols+c]=item;
+      }
+    }
+  }
+
+
+// Merge cells into one single multi-row cell
+void FXTable::mergeRows(FXint row,FXint col,FXint nr,FXbool notify){
+  register FXint er,sc,ec,r,c;
+  register FXTableItem *item,*it;
+  if(col<0 || col>=ncols || row<0 || nr<1 || row+nr>nrows){ fxerror("%s::mergeRows: argument out of range\n",getClassName()); }
+  sc=startCol(row,col);
+  ec=endCol(row,col);
+  er=row+nr-1;
+  item=cells[row*ncols+col];
+  for(r=row+1; r<=er; r++){
+    for(c=sc; c<=ec; c++){
+      it=cells[r*ncols+c];
+      if(it && it!=item){
+        removeCell(r,c,notify);
+        }
+      cells[r*ncols+c]=item;
+      }
+    }
+  }
+
+
+// Split multi-column cell into single cells
+void FXTable::splitCols(FXint row,FXint col,FXbool notify){
+  if(row<0 || row>=nrows || col<0 || col>=ncols){ fxerror("%s::splitCols: argument out of range\n",getClassName()); }
+  }
+
+
+// Split multi-row cell into single cells
+void FXTable::splitRows(FXint row,FXint col,FXbool notify){
+  if(col<0 || col>=ncols || row<0 || row>=nrows){ fxerror("%s::splitRows: argument out of range\n",getClassName()); }
+  }
+
+*/
+
+
+// Change column header height mode to fixed or variable
+void FXTable::setColumnHeaderMode(FXuint hint){
+  register FXuint hints=(colHeader->getLayoutHints()&~LAYOUT_FIX_HEIGHT) | (hint&LAYOUT_FIX_HEIGHT);
+  colHeader->setLayoutHints(hints);
+  }
+
+// Return column header height mode
+FXuint FXTable::getColumnHeaderMode() const {
+  return (colHeader->getLayoutHints()&LAYOUT_FIX_HEIGHT);
+  }
+
+
+// Change row header width mode to fixed or variable
+void FXTable::setRowHeaderMode(FXuint hint){
+  register FXuint hints=(rowHeader->getLayoutHints()&~LAYOUT_FIX_WIDTH) | (hint&LAYOUT_FIX_WIDTH);
+  rowHeader->setLayoutHints(hints);
+  }
+
+// Return row header width mode
+FXuint FXTable::getRowHeaderMode() const {
+  return (rowHeader->getLayoutHints()&LAYOUT_FIX_WIDTH);
+  }
+
+
+// Change column header height
+void FXTable::setColumnHeaderHeight(FXint h){
+  colHeader->setHeight(h);
+  }
+
+// Return column header height
+FXint FXTable::getColumnHeaderHeight() const {
+  return colHeader->getHeight();
+  }
+
+// Change row header width
+void FXTable::setRowHeaderWidth(FXint w){
+  rowHeader->setWidth(w);
+  }
+
+
+// Return row header width
+FXint FXTable::getRowHeaderWidth() const {
+  return rowHeader->getWidth();
+  }
+
+
+// Change width of custom column
+void FXTable::setColumnWidth(FXint col,FXint cwidth){
+  colHeader->setItemSize(col,cwidth);
+  update();
+  }
+
+
+// Get width of custom column
+FXint FXTable::getColumnWidth(FXint col) const {
+  return colHeader->getItemSize(col);
+  }
+
+
+// Change height of custom row
+void FXTable::setRowHeight(FXint row,FXint rheight){
+  rowHeader->setItemSize(row,rheight);
+  update();
+  }
+
+
+// Get height of custom row
+FXint FXTable::getRowHeight(FXint row) const {
+  return rowHeader->getItemSize(row);
+  }
+
+
+// Change X coordinate of column c
+void FXTable::setColumnX(FXint col,FXint x){
+  if(0<col && col<=ncols){
+    colHeader->setItemSize(col-1,x-colHeader->getItemOffset(col-1));
+    }
+  }
+
+
+// X coordinate of column c
+FXint FXTable::getColumnX(FXint col) const {
+  return colHeader->getItemOffset(col);
+  }
+
+
+// Change Y coordinate of row r
+void FXTable::setRowY(FXint row,FXint y){
+  if(0<row && row<=nrows){
+    rowHeader->setItemSize(row-1,y-rowHeader->getItemOffset(row-1));
+    }
+  }
+
+
+// Y coordinate of row r
+FXint FXTable::getRowY(FXint row) const {
+  return rowHeader->getItemOffset(row);
+  }
+
+
+// Change default column width
+void FXTable::setDefColumnWidth(FXint cwidth){
+  if(defColWidth!=cwidth){
+    defColWidth=cwidth;
+    recalc();
+    }
+  }
+
+
+// Change default row height
+void FXTable::setDefRowHeight(FXint rheight){
+  if(defRowHeight!=rheight){
+    defRowHeight=rheight;
+    recalc();
+    }
+  }
+
+
+// Return minimum row height
+FXint FXTable::getMinRowHeight(FXint r) const {
+  register FXTableItem *item;
+  register FXint h,c,t;
+  if(r<0 || r>=nrows){ fxerror("%s::getMinRowHeight: row out of range\n",getClassName()); }
+  for(c=0,h=0; c<ncols; c++){
+    item=cells[r*ncols+c];
+    if(item && (r==0 || cells[(r-1)*ncols+c]!=item) && (r==nrows-1 || cells[(r+1)*ncols+c]!=item)){
+      t=item->getHeight(this);
+      if(t>h) h=t;
+      }
+    }
+  return h;
+  }
+
+
+// Return minimum column width
+FXint FXTable::getMinColumnWidth(FXint c) const {
+  register FXTableItem *item;
+  register FXint w,r,t;
+  if(c<0 || c>=ncols){ fxerror("%s::getMinColumnWidth: column out of range\n",getClassName()); }
+  for(r=0,w=0; r<nrows; r++){
+    item=cells[r*ncols+c];
+    if(item && (c==0 || cells[r*ncols+c-1]!=item) && (c==ncols-1 || cells[r*ncols+c+1]!=item)){
+      t=item->getWidth(this);
+      if(t>w) w=t;
+      }
+    }
+  return w;
   }
 
 
@@ -2603,779 +3488,27 @@ void FXTable::setCellBorderWidth(FXint borderwidth){
   }
 
 
-// Change table size to nr x nc
-void FXTable::setTableSize(FXint nr,FXint nc,FXbool notify){
-  register FXTableItem *item;
-  register FXint r,c;
-  FXTableRange tablerange;
-
-  // Must be in range
-  if(nr<0 || nc<0){ fxerror("%s::setTableSize: argument out of range.\n",getClassName()); }
-
-  // Notify items will be deleted
-  if(notify && target){
-    tablerange.fm.row=0;
-    tablerange.fm.col=0;
-    tablerange.to.row=nrows-1;
-    tablerange.to.col=ncols-1;
-    target->handle(this,MKUINT(message,SEL_DELETED),(void*)&tablerange);
-    }
-
-  // Free all cells
-  for(r=0; r<nrows; r++){
-    for(c=0; c<ncols; c++){
-      item=cells[r*ncols+c];
-      if(item && (r==0 || cells[(r-1)*ncols+c]!=item) && (c==0 || cells[r*ncols+c-1]!=item)){
-        delete item;
-        }
-      }
-    }
-
-  // Resize it now
-  if(!FXRESIZE(&cells,FXTableItem*,nr*nc+1)){
-    fxerror("%s::setTableSize: out of memory.\n",getClassName());
-    }
-
-  // Resize row heights
-  if(!FXRESIZE(&row_y,FXint,nr+1)){
-    fxerror("%s::setTableSize: out of memory.\n",getClassName());
-    }
-
-  // Resize column widths
-  if(!FXRESIZE(&col_x,FXint,nc+1)){
-    fxerror("%s::setTableSize: out of memory.\n",getClassName());
-    }
-
-  // Initialize cell array
-  for(r=0; r<nr; r++){
-    for(c=0; c<nc; c++){
-      cells[r*nc+c]=NULL;
-      }
-    }
-
-  // Init row heights
-  for(r=0,row_y[0]=0; r<nr; r++){
-    row_y[r+1]=row_y[r]+defRowHeight;
-    }
-
-  // Init column widths
-  for(c=0,col_x[0]=0; c<nc; c++){
-    col_x[c+1]=col_x[c]+defColumnWidth;
-    }
-
-  // Set size
-  nrows=nr;
-  ncols=nc;
-
-  // Set leading/trailing rows
-  leading_rows=0;
-  trailing_rows=0;
-
-  // Set leading/trailing columns
-  leading_cols=0;
-  trailing_cols=0;
-
-  // Set scrolling rows and columns
-  scrolling_rows=nrows-leading_rows-trailing_rows;
-  scrolling_cols=ncols-leading_cols-trailing_cols;
-
-  // Fix up anchor, extent and current
-  anchor.col=-1;
-  anchor.row=-1;
-  extent.col=-1;
-  extent.row=-1;
-  current.col=-1;
-  current.row=-1;
-
-  // Notify items have been inserted
-  if(notify && target){
-    tablerange.fm.row=0;
-    tablerange.fm.col=0;
-    tablerange.to.row=nrows-1;
-    tablerange.to.col=ncols-1;
-    target->handle(this,MKUINT(message,SEL_INSERTED),(void*)&tablerange);
-    }
-
-  // Current item have changed
-  if(notify && target){ target->handle(this,MKUINT(message,SEL_CHANGED),(void*)&current); }
-
-  // Redo layout
-  recalc();
+// Change column header
+void FXTable::setColumnText(FXint index,const FXString& text){
+  colHeader->setItemText(index,text);
   }
 
 
-// Insert a row
-void FXTable::insertRows(FXint row,FXint nr,FXbool notify){
-  register FXint oldrow=current.row;
-  register FXint r,c,s,n;
-  FXTableItem **oldcells=cells;
-  FXTableRange tablerange;
-
-  // Nothing to do
-  if(nr<1) return;
-
-  // Must be in range
-  if(row<0 || row>nrows){ fxerror("%s::insertRows: row out of range.\n",getClassName()); }
-
-  // Resize row heights
-  if(!FXRESIZE(&row_y,FXint,nrows+nr+1)){
-    fxerror("%s::insertRows: out of memory.\n",getClassName());
-    }
-
-  // Space for nr new rows
-  s=nr*defRowHeight;
-  n=nrows+nr;
-
-  // Initial size of added rows is the default row height
-  for(r=nrows; r>row; r--){ row_y[r+nr]=row_y[r]+s; }
-  for(r=row; r<row+nr; r++){ row_y[r+1]=row_y[r]+defRowHeight; }
-
-  // Allocate new table
-  if(!FXMALLOC(&cells,FXTableItem*,n*ncols)){
-    fxerror("%s::insertRows: out of memory.\n",getClassName());
-    }
-
-  // Copy first part
-  for(r=0; r<row; r++){
-    for(c=0; c<ncols; c++){
-      cells[r*ncols+c]=oldcells[r*ncols+c];
-      }
-    }
-
-  // Initialize middle part; cells spanning over current row are not split
-  for(c=0; c<ncols; c++){
-    if(0<row && row<nrows && oldcells[(row-1)*ncols+c]==oldcells[row*ncols+c]){
-      for(r=row; r<row+nr; r++){
-        cells[r*ncols+c]=oldcells[row*ncols+c];
-        }
-      }
-    else{
-      for(r=row; r<row+nr; r++){
-        cells[r*ncols+c]=NULL;
-        }
-      }
-    }
-
-  // Copy last part
-  for(r=row; r<nrows; r++){
-    for(c=0; c<ncols; c++){
-      cells[(r+nr)*ncols+c]=oldcells[r*ncols+c];
-      }
-    }
-
-  // Free old table
-  FXFREE(&oldcells);
-
-  // Update leading/trailing rows
-  if(row<leading_rows) leading_rows+=nr;
-  else if(nrows-trailing_rows<row) trailing_rows+=nr;
-
-  FXASSERT(0<=leading_rows);
-  FXASSERT(0<=trailing_rows);
-
-  nrows=n;
-  scrolling_rows=nrows-leading_rows-trailing_rows;
-
-  FXTRACE((100,"nrows=%d leading_rows=%d trailing_rows=%d scrolling_rows=%d\n",nrows,leading_rows,trailing_rows,scrolling_rows));
-
-  // Fix up anchor, extent, and current
-  if(anchor.row>=row) anchor.row+=nr;
-  if(extent.row>=row) extent.row+=nr;
-  if(current.row>=row) current.row+=nr;
-  if(current.row<0 && nrows==nr) current.row=0;
-
-  FXASSERT(-1<=anchor.row && anchor.row<nrows);
-  FXASSERT(-1<=extent.row && extent.row<nrows);
-  FXASSERT(-1<=current.row && current.row<nrows);
-
-  // Notify items have been inserted
-  if(notify && target){
-    tablerange.fm.row=row;
-    tablerange.fm.col=0;
-    tablerange.to.row=row+nr-1;
-    tablerange.to.col=ncols-1;
-    target->handle(this,MKUINT(message,SEL_INSERTED),(void*)&tablerange);
-    }
-
-  // Current item may have changed
-  if(oldrow!=current.row){
-    if(notify && target){ target->handle(this,MKUINT(message,SEL_CHANGED),(void*)&current); }
-    }
-
-  // Redo layout
-  recalc();
+// Return text of column header at index
+FXString FXTable::getColumnText(FXint index) const {
+  return colHeader->getItemText(index);
   }
 
 
-// Insert a column
-void FXTable::insertColumns(FXint col,FXint nc,FXbool notify){
-  register FXint oldcol=current.col;
-  register FXint r,c,s,n;
-  FXTableItem **oldcells=cells;
-  FXTableRange tablerange;
-
-  // Nothing to do
-  if(nc<1) return;
-
-  // Must be in range
-  if(col<0 || col>ncols){ fxerror("%s::insertColumns: column out of range.\n",getClassName()); }
-
-  // Resize column widths
-  if(!FXRESIZE(&col_x,FXint,ncols+nc+1)){
-    fxerror("%s::insertColumns: out of memory.\n",getClassName());
-    }
-
-  // Space for nr new rows
-  s=nc*defColumnWidth;
-  n=ncols+nc;
-
-  // Initial size of added rows is the default row height
-  for(c=ncols; c>col; c--){ col_x[c+nc]=col_x[c]+s; }
-  for(c=col; c<col+nc; c++){ col_x[c+1]=col_x[c]+defColumnWidth; }
-
-  // Allocate new table
-  if(!FXMALLOC(&cells,FXTableItem*,nrows*n)){
-    fxerror("%s::insertColumns: out of memory.\n",getClassName());
-    }
-
-  // Copy first part
-  for(c=0; c<col; c++){
-    for(r=0; r<nrows; r++){
-      cells[r*n+c]=oldcells[r*ncols+c];
-      }
-    }
-
-  // Initialize middle part; cells spanning over current column are not split
-  for(r=0; r<nrows; r++){
-    if(0<col && col<ncols && oldcells[r*ncols+col-1]==oldcells[r*ncols+col]){
-      for(c=col; c<col+nc; c++){
-        cells[r*n+c]=oldcells[r*ncols+col];
-        }
-      }
-    else{
-      for(c=col; c<col+nc; c++){
-        cells[r*n+c]=NULL;
-        }
-      }
-    }
-
-  // Copy last part
-  for(c=col; c<ncols; c++){
-    for(r=0; r<nrows; r++){
-      cells[r*n+nc+c]=oldcells[r*ncols+c];
-      }
-    }
-
-  // Free old table
-  FXFREE(&oldcells);
-
-  // Update leading/trailing columns
-  if(col<leading_cols) leading_cols+=nc;
-  else if(ncols-trailing_cols<col) trailing_cols+=nc;
-
-  FXASSERT(0<=leading_cols);
-  FXASSERT(0<=trailing_cols);
-
-  ncols=n;
-  scrolling_cols=ncols-leading_cols-trailing_cols;
-
-  FXTRACE((100,"ncols=%d leading_cols=%d trailing_cols=%d scrolling_cols=%d\n",ncols,leading_cols,trailing_cols,scrolling_cols));
-
-  // Fix up anchor, extent, and current
-  if(anchor.col>=col) anchor.col+=nc;
-  if(extent.col>=col) extent.col+=nc;
-  if(current.col>=col) current.col+=nc;
-  if(current.col<0 && ncols==nc) current.col=0;
-
-  FXASSERT(-1<=anchor.col && anchor.col<ncols);
-  FXASSERT(-1<=extent.col && extent.col<ncols);
-  FXASSERT(-1<=current.col && current.col<ncols);
-
-  // Notify items have been inserted
-  if(notify && target){
-    tablerange.fm.row=0;
-    tablerange.fm.col=col;
-    tablerange.to.row=nrows-1;
-    tablerange.to.col=col+nc-1;
-    target->handle(this,MKUINT(message,SEL_INSERTED),(void*)&tablerange);
-    }
-
-  // Current item may have changed
-  if(oldcol!=current.col){
-    if(notify && target){ target->handle(this,MKUINT(message,SEL_CHANGED),(void*)&current); }
-    }
-
-  // Redo layout
-  recalc();
+// Change row header
+void FXTable::setRowText(FXint index,const FXString& text){
+  rowHeader->setItemText(index,text);
   }
 
 
-// Remove rows of cells
-void FXTable::removeRows(FXint row,FXint nr,FXbool notify){
-  register FXint oldrow=current.row;
-  register FXTableItem *item;
-  register FXint r,c,s,n;
-  FXTableItem **oldcells=cells;
-  FXTableRange tablerange;
-
-  // Nothing to do
-  if(nr<1) return;
-
-  // Must be in range
-  if(row<0 || row+nr>nrows){ fxerror("%s::removeRows: row out of range.\n",getClassName()); }
-
-  // Notify items will be deleted
-  if(notify && target){
-    tablerange.fm.row=row;
-    tablerange.fm.col=0;
-    tablerange.to.row=row+nr-1;
-    tablerange.to.col=ncols-1;
-    target->handle(this,MKUINT(message,SEL_DELETED),(void*)&tablerange);
-    }
-
-  // Space removed
-  s=row_y[row+nr]-row_y[row];
-  n=nrows-nr;
-
-  // Adjust remaining rows
-  for(r=row+nr+1; r<=nrows; r++){ row_y[r-nr]=row_y[r]-s; }
-
-  // The array is one longer than nrows
-  FXRESIZE(&row_y,FXint,n+1);
-
-  // Allocate new table
-  if(!FXMALLOC(&cells,FXTableItem*,n*ncols)){
-    fxerror("%s::removeRows: out of memory.\n",getClassName());
-    }
-
-  // Copy first part
-  for(r=0; r<row; r++){
-    for(c=0; c<ncols; c++){
-      cells[r*ncols+c]=oldcells[r*ncols+c];
-      }
-    }
-
-  // Delete those items fully contained in the deleted range
-  for(r=row; r<row+nr; r++){
-    for(c=0; c<ncols; c++){
-      item=oldcells[r*ncols+c];
-      if(item && (r==0 || oldcells[(r-1)*ncols+c]!=item) && (c==0 || oldcells[r*ncols+c-1]!=item) && (row+nr==nrows || oldcells[(row+nr)*ncols+c]!=item)){
-        FXTRACE((150,"delete item %s\n",item->getText().text()));
-        delete item;
-        }
-      }
-    }
-
-  // Copy last part
-  for(r=row+nr; r<nrows; r++){
-    for(c=0; c<ncols; c++){
-      cells[(r-nr)*ncols+c]=oldcells[r*ncols+c];
-      }
-    }
-
-  // Free old table
-  FXFREE(&oldcells);
-
-  // Fix up anchor and current
-  if(anchor.row>=row+nr)  anchor.row-=nr;  else if(anchor.row>=n)  anchor.row=n-1;
-  if(extent.row>=row+nr)  extent.row-=nr;  else if(extent.row>=n)  extent.row=n-1;
-  if(current.row>=row+nr) current.row-=nr; else if(current.row>=n) current.row=n-1;
-
-  // Deleted some leading rows
-  if(row+nr<=leading_rows) leading_rows-=nr;
-  else if(row<leading_rows) leading_rows=row;
-
-  // Deleted some trailing rows
-  if(nrows-trailing_rows<=row) trailing_rows-=nr;
-  else if(nrows-trailing_rows<row+nr) trailing_rows=nrows-row-nr;
-
-  nrows=n;
-  scrolling_rows=nrows-leading_rows-trailing_rows;
-
-  FXTRACE((100,"nrows=%d leading_rows=%d trailing_rows=%d scrolling_rows=%d\n",nrows,leading_rows,trailing_rows,scrolling_rows));
-
-  FXASSERT(-1<=anchor.row && anchor.row<nrows);
-  FXASSERT(-1<=extent.row && extent.row<nrows);
-  FXASSERT(-1<=current.row && current.row<nrows);
-
-  FXASSERT(0<=leading_rows);
-  FXASSERT(0<=trailing_rows);
-
-  // Current item may have changed
-  if(row<=oldrow){
-    if(notify && target){ target->handle(this,MKUINT(message,SEL_CHANGED),(void*)&current); }
-    }
-
-  // Redo layout
-  recalc();
-  }
-
-
-
-// Remove columns of cells
-void FXTable::removeColumns(FXint col,FXint nc,FXbool notify){
-  register FXint oldcol=current.col;
-  register FXTableItem *item;
-  register FXint r,c,s,n;
-  FXTableItem **oldcells=cells;
-  FXTableRange tablerange;
-
-  // Nothing to do
-  if(nc<1) return;
-
-  // Must be in range
-  if(col<0 || col+nc>ncols){ fxerror("%s::removeColumns: column out of range.\n",getClassName()); }
-
-  // Notify items will be deleted
-  if(notify && target){
-    tablerange.fm.row=0;
-    tablerange.fm.col=col;
-    tablerange.to.row=nrows-1;
-    tablerange.to.col=col+nc-1;
-    target->handle(this,MKUINT(message,SEL_DELETED),(void*)&tablerange);
-    }
-
-  // Space removed
-  s=col_x[col+nc]-col_x[col];
-  n=ncols-nc;
-
-  // Adjust remaining columns
-  for(c=col+nc+1; c<=ncols; c++){ col_x[c-nc]=col_x[c]-s; }
-
-  // The array is one longer than ncols
-  FXRESIZE(&col_x,FXint,n+1);
-
-  // Allocate new table
-  if(!FXMALLOC(&cells,FXTableItem*,nrows*n)){
-    fxerror("%s::removeColumns: out of memory.\n",getClassName());
-    }
-
-  // Copy first part
-  for(r=0; r<nrows; r++){
-    for(c=0; c<col; c++){
-      cells[r*n+c]=oldcells[r*ncols+c];
-      }
-    }
-
-  // Delete those items fully contained in the deleted range
-  for(r=0; r<nrows; r++){
-    for(c=col; c<col+nc; c++){
-      item=oldcells[r*ncols+c];
-      if(item && (r==0 || oldcells[(r-1)*ncols+c]!=item) && (c==0 || oldcells[r*ncols+c-1]!=item) && (col+nc==ncols || oldcells[r*ncols+col+nc]!=item)){
-        FXTRACE((150,"delete item %s\n",item->getText().text()));
-        delete item;
-        }
-      }
-    }
-
-  // Copy last part
-  for(r=0; r<nrows; r++){
-    for(c=col+nc; c<ncols; c++){
-      cells[r*n+c-nc]=oldcells[r*ncols+c];
-      }
-    }
-
-  // Free old table
-  FXFREE(&oldcells);
-
-  // Fix up anchor and current
-  if(anchor.col>=col+nc)  anchor.col-=nc;  else if(anchor.col>=n)  anchor.col=n-1;
-  if(extent.col>=col+nc)  extent.col-=nc;  else if(extent.col>=n)  extent.col=n-1;
-  if(current.col>=col+nc) current.col-=nc; else if(current.col>=n) current.col=n-1;
-
-  // Deleted some leading columns
-  if(col+nc<=leading_cols) leading_cols-=nc;
-  else if(col<leading_cols) leading_cols=col;
-
-  // Deleted some trailing columns
-  if(ncols-trailing_cols<=col) trailing_cols-=nc;
-  else if(ncols-trailing_cols<col+nc) trailing_cols=ncols-col-nc;
-
-  ncols=n;
-  scrolling_cols=ncols-leading_cols-trailing_cols;
-
-  FXTRACE((100,"ncols=%d leading_cols=%d trailing_cols=%d scrolling_cols=%d\n",ncols,leading_cols,trailing_cols,scrolling_cols));
-
-  FXASSERT(-1<=anchor.col && anchor.col<ncols);
-  FXASSERT(-1<=extent.col && extent.col<ncols);
-  FXASSERT(-1<=current.col && current.col<ncols);
-
-  FXASSERT(0<=leading_cols);
-  FXASSERT(0<=trailing_cols);
-
-  // Current item may have changed
-  if(col<=oldcol){
-    if(notify && target){ target->handle(this,MKUINT(message,SEL_CHANGED),(void*)&current); }
-    }
-
-  // Redo layout
-  recalc();
-  }
-
-
-// Remove cell
-void FXTable::removeItem(FXint row,FXint col,FXbool notify){
-  register FXint sr,er,sc,ec,r,c;
-
-  // Must be in range
-  if(row<0 || col<0 || nrows<=row || ncols<=col){ fxerror("%s::removeItem: index out of range.\n",getClassName()); }
-
-  // Extent of cell
-  sr=startRow(row,col); er=endRow(row,col);
-  sc=startCol(row,col); ec=endCol(row,col);
-
-  // Notify item will be deleted
-  if(notify && target){
-    FXTableRange tablerange;
-    tablerange.fm.row=sr; tablerange.to.row=er-1;
-    tablerange.fm.col=sc; tablerange.to.col=ec-1;
-    target->handle(this,MKUINT(message,SEL_DELETED),(void*)&tablerange);
-    }
-
-  // Delete cell
-  delete cells[sr*ncols+sc];
-
-  // Clear entries
-  for(r=sr; r<er; r++){
-    for(c=sc; c<ec; c++){
-      cells[r*ncols+c]=NULL;
-      }
-    }
-
-  // Repaint these cells
-  updateRange(sr,er,sc,ec);
-  }
-
-
-
-/*
-
-  /// Merge cells into one single multi-column cell
-  virtual void mergeCols(FXint row,FXint col,FXint nc,FXbool notify=FALSE);
-
-  /// Merge cells into one single multi-row cell
-  virtual void mergeRows(FXint row,FXint col,FXint nr,FXbool notify=FALSE);
-
-  /// Split multi-column cell into single cells
-  virtual void splitCols(FXint row,FXint col,FXbool notify=FALSE);
-
-  /// Split multi-row cell into single cells
-  virtual void splitRows(FXint row,FXint col,FXbool notify=FALSE);
-
-// Merge cells into one single multi-column cell
-void FXTable::mergeCols(FXint row,FXint col,FXint nc,FXbool notify){
-  register FXint sr,er,ec,r,c;
-  register FXTableItem *item,*it;
-  if(row<0 || row>=nrows || col<0 || nc<1 || col+nc>ncols){ fxerror("%s::mergeCols: argument out of range\n",getClassName()); }
-  sr=startRow(row,col);
-  er=endRow(row,col);
-  ec=col+nc-1;
-  item=cells[row*ncols+col];
-  for(r=sr; r<=er; r++){
-    for(c=col+1; c<=ec; c++){
-      it=cells[r*ncols+c];
-      if(it && it!=item){
-        removeCell(r,c,notify);
-        }
-      cells[r*ncols+c]=item;
-      }
-    }
-  }
-
-
-// Merge cells into one single multi-row cell
-void FXTable::mergeRows(FXint row,FXint col,FXint nr,FXbool notify){
-  register FXint er,sc,ec,r,c;
-  register FXTableItem *item,*it;
-  if(col<0 || col>=ncols || row<0 || nr<1 || row+nr>nrows){ fxerror("%s::mergeRows: argument out of range\n",getClassName()); }
-  sc=startCol(row,col);
-  ec=endCol(row,col);
-  er=row+nr-1;
-  item=cells[row*ncols+col];
-  for(r=row+1; r<=er; r++){
-    for(c=sc; c<=ec; c++){
-      it=cells[r*ncols+c];
-      if(it && it!=item){
-        removeCell(r,c,notify);
-        }
-      cells[r*ncols+c]=item;
-      }
-    }
-  }
-
-
-// Split multi-column cell into single cells
-void FXTable::splitCols(FXint row,FXint col,FXbool notify){
-  if(row<0 || row>=nrows || col<0 || col>=ncols){ fxerror("%s::splitCols: argument out of range\n",getClassName()); }
-  }
-
-
-// Split multi-row cell into single cells
-void FXTable::splitRows(FXint row,FXint col,FXbool notify){
-  if(col<0 || col>=ncols || row<0 || row>=nrows){ fxerror("%s::splitRows: argument out of range\n",getClassName()); }
-  }
-
-*/
-
-
-// Change width of custom column
-void FXTable::setColumnWidth(FXint col,FXint cwidth){
-  register FXint i,d;
-  if(col<0 || col>=ncols){ fxerror("%s::setColumnWidth: column out of range\n",getClassName()); }
-  if(cwidth<0) cwidth=0;
-  d=cwidth-col_x[col+1]+col_x[col];
-  if(d!=0){
-    for(i=col+1; i<=ncols; i++){ col_x[i]+=d; }
-    recalc();
-    }
-  }
-
-
-// Get width of custom column
-FXint FXTable::getColumnWidth(FXint col) const {
-  if(col<0 || col>=ncols){ fxerror("%s::getColumnWidth: column out of range\n",getClassName()); }
-  return col_x[col+1]-col_x[col];
-  }
-
-
-// Change height of custom row
-void FXTable::setRowHeight(FXint row,FXint rheight){
-  register FXint i,d;
-  if(row<0 || row>=nrows){ fxerror("%s::setRowHeight: row out of range\n",getClassName()); }
-  if(rheight<0) rheight=0;
-  d=rheight-row_y[row+1]+row_y[row];
-  if(d!=0){
-    for(i=row+1; i<=nrows; i++){ row_y[i]+=d; }
-    recalc();
-    }
-  }
-
-
-// Get height of custom row
-FXint FXTable::getRowHeight(FXint row) const {
-  if(row<0 || row>=nrows){ fxerror("%s::getRowHeight: row out of range\n",getClassName()); }
-  return row_y[row+1]-row_y[row];
-  }
-
-
-// Change X coordinate of column c
-void FXTable::setColumnX(FXint col,FXint x){
-  register FXint i,d;
-  if(col<0 || col>ncols){ fxerror("%s::setColumnX: column out of range\n",getClassName()); }
-  if(col==0) return;
-//   if(ncols-trailing_cols<=col){
-//     if(table_right+vgrid==viewport_w && col==ncols) return;
-//     x=x-scrollable_right+col_x[ncols-trailing_cols];
-//     col_x[col]=x;
-//     recalc();
-//     return;
-//     }
-  if(ncols-trailing_cols<=col) x=x-scrollable_right+col_x[ncols-trailing_cols];
-  else if(leading_cols<col) x=x-pos_x;
-  if(x<col_x[col-1]) x=col_x[col-1];
-  d=x-col_x[col];
-  if(d!=0){
-    for(i=col; i<=ncols; i++){ col_x[i]+=d; }
-    recalc();
-    }
-  }
-
-
-// X coordinate of column c
-FXint FXTable::getColumnX(FXint col) const {
-  if(col<0 || col>ncols){ fxerror("%s::getColumnX: column out of range\n",getClassName()); }
-  register FXint x=col_x[col];
-  if(ncols-trailing_cols<=col) x=x+scrollable_right-col_x[ncols-trailing_cols];
-  else if(leading_cols<=col) x=x+pos_x;
-  return x;
-  }
-
-
-// Change Y coordinate of row r
-void FXTable::setRowY(FXint row,FXint y){
-  register FXint i,d;
-  if(row<0 || row>nrows){ fxerror("%s::setRowY: row out of range\n",getClassName()); }
-  if(row==0) return;
-  if(nrows-trailing_rows<=row) y=y-scrollable_bottom+row_y[nrows-trailing_rows];
-  else if(leading_rows<row) y=y-pos_y;
-  if(y<row_y[row-1]) y=row_y[row-1];
-  d=y-row_y[row];
-  if(d!=0){
-    for(i=row; i<=nrows; i++){ row_y[i]+=d; }
-    recalc();
-    }
-  }
-
-
-// Y coordinate of row r
-FXint FXTable::getRowY(FXint row) const {
-  if(row<0 || row>nrows){ fxerror("%s::getRowY: row out of range\n",getClassName()); }
-  register FXint y=row_y[row];
-  if(nrows-trailing_rows<=row) y=y+scrollable_bottom-row_y[nrows-trailing_rows];
-  else if(leading_rows<=row) y=y+pos_y;
-  return y;
-  }
-
-
-// Change default column width
-void FXTable::setDefColumnWidth(FXint cwidth){
-  if(defColumnWidth!=cwidth){
-    defColumnWidth=cwidth;
-    recalc();
-    }
-  }
-
-
-// Change default row height
-void FXTable::setDefRowHeight(FXint rheight){
-  if(defRowHeight!=rheight){
-    defRowHeight=rheight;
-    recalc();
-    }
-  }
-
-
-// Set leading fixed rows
-void FXTable::setLeadingRows(FXint leadrows){
-  if(leadrows<0 || leadrows>nrows-trailing_rows){ fxerror("%s::setLeadingRows: number out of range\n",getClassName()); }
-  if(leadrows!=leading_rows){
-    leading_rows=leadrows;
-    scrolling_rows=nrows-leading_rows-trailing_rows;
-    recalc();
-    }
-  }
-
-
-// Set leading fixed columns
-void FXTable::setLeadingCols(FXint leadcols){
-  if(leadcols<0 || leadcols>ncols-trailing_cols){ fxerror("%s::setLeadingCols: number out of range\n",getClassName()); }
-  if(leadcols!=leading_cols){
-    leading_cols=leadcols;
-    scrolling_cols=ncols-leading_cols-trailing_cols;
-    recalc();
-    }
-  }
-
-
-// Set trailing fixed rows
-void FXTable::setTrailingRows(FXint trailrows){
-  if(trailrows<0 || trailrows>nrows-leading_rows){ fxerror("%s::setTrailingRows: number out of range\n",getClassName()); }
-  if(trailrows!=trailing_rows){
-    trailing_rows=trailrows;
-    scrolling_rows=nrows-leading_rows-trailing_rows;
-    recalc();
-    }
-  }
-
-
-// Set trailing fixed columns
-void FXTable::setTrailingCols(FXint trailcols){
-  if(trailcols<0 || trailcols>ncols-leading_cols){ fxerror("%s::setTrailingCols: number out of range\n",getClassName()); }
-  if(trailcols!=trailing_cols){
-    trailing_cols=trailcols;
-    scrolling_cols=ncols-leading_cols-trailing_cols;
-    recalc();
-    }
+// Return text of row header at index
+FXString FXTable::getRowText(FXint index) const{
+  return rowHeader->getItemText(index);
   }
 
 
@@ -3390,7 +3523,7 @@ void FXTable::setVisibleRows(FXint nvrows){
 
 
 // Change visible columns
-void FXTable::setVisibleCols(FXint nvcols){
+void FXTable::setVisibleColumns(FXint nvcols){
   if(nvcols<0) nvcols=0;
   if(visiblecols!=nvcols){
     visiblecols=nvcols;
@@ -3417,12 +3550,6 @@ void FXTable::showVertGrid(FXbool on){
   }
 
 
-// Change help text
-void FXTable::setHelpText(const FXString& text){
-  help=text;
-  }
-
-
 // Save data
 void FXTable::save(FXStream& store) const {
   register FXint i;
@@ -3430,8 +3557,6 @@ void FXTable::save(FXStream& store) const {
   store << nrows;
   store << ncols;
   for(i=0; i<nrows*ncols; i++) store << cells[i];
-  store.save(col_x,ncols+2);
-  store.save(row_y,nrows+2);
   store << visiblerows;
   store << visiblecols;
   store << margintop;
@@ -3461,12 +3586,8 @@ void FXTable::load(FXStream& store){
   FXScrollArea::load(store);
   store >> nrows;
   store >> ncols;
-  FXMALLOC(&cells,FXTableItem*,nrows*ncols);
-  FXMALLOC(&col_x,FXint,ncols+2);
-  FXMALLOC(&row_y,FXint,nrows+2);
+  FXMALLOC(&cells,FXTableItem*,nrows*ncols+1);
   for(i=0; i<nrows*ncols; i++) store >> cells[i];
-  store.load(col_x,ncols+2);
-  store.load(row_y,nrows+2);
   store >> visiblerows;
   store >> visiblecols;
   store >> margintop;
@@ -3492,7 +3613,6 @@ void FXTable::load(FXStream& store){
 
 // Clean up
 FXTable::~FXTable(){
-  if(blinker){ getApp()->removeTimeout(blinker); }
   for(FXint r=0; r<nrows; r++){
     for(FXint c=0; c<ncols; c++){
       FXTableItem* item=cells[r*ncols+c];
@@ -3502,13 +3622,13 @@ FXTable::~FXTable(){
       }
     }
   FXFREE(&cells);
-  FXFREE(&col_x);
-  FXFREE(&row_y);
-  cells=(FXTableItem**)-1;
-  col_x=(FXint*)-1;
-  row_y=(FXint*)-1;
-  font=(FXFont*)-1;
-  blinker=(FXTimer*)-1;
+  FXFREE(&clipbuffer);
+  cells=(FXTableItem**)-1L;
+  clipbuffer=(FXchar*)-1L;
+  font=(FXFont*)-1L;
+  colHeader=(FXHeader*)-1L;
+  rowHeader=(FXHeader*)-1L;
   }
 
+}
 

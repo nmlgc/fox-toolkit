@@ -1,112 +1,52 @@
 <html>
 <head>
-<LINK REL="stylesheet" HREF="styles.css" TYPE="text/css">
-<title>FOX-Toolkit</title>
-<!-- HTML Copyright 2001 Paul Laufer -->
+<link rel="stylesheet" href="page.css" type="text/css">
+<title>Documentation: The FOX Registry</title>
 </head>
+<body bgcolor=#ffffff link=#990033 vlink=#990033 alink=#990033 text=#000000>
 
-<body bgcolor=#ffffff link=#990033 vlink=#4a73ad alink=#ed004f text=#000000>
-
-<!--header-->
-<table align=center border=0 cellpadding=0 cellspacing=0 width=100% >
-  <tr><td bgcolor=silver colspan=5 align=right height=50><img src=art/oul_grey.gif align=left valign=top width=8 height=8><img src=art/foxlogo.png valign=bottom alt="FOX Toolkit" height=50 width=500 border=0 ></td>
-  	<td bgcolor=#557faa valign=top align=right><img src=art/our.gif width=8 height=8></td>
-  </tr>
-<!-- end header -->
-  <tr>
-    <td bgcolor=#557faa colspan=2 valign=top align=left>&nbsp;</td>
-    <td bgcolor=#557faa colspan=3><font color=#ffffff size=+1><center>
-<!-- Page Title -->
-Documentation: The FOX Registry
-<!-- End Page Title -->
-    </center></font></td>
-    <td bgcolor=#557faa valign=top align=right>&nbsp;</td>
-  </tr>
-  <tr>
-    <td bgcolor=#557faa colspan=2>&nbsp;</td>
-    <td bgcolor=#ffffff valign=top align=left><img src=art/iul.gif width=8 height=8></td>
-    <td bgcolor=#ffffff>&nbsp;</td>
-    <td bgcolor=#ffffff valign=top align=right><img src=art/iur.gif width=8 height=8></td>
-    <td bgcolor=#557faa width=15>&nbsp;</td>
-  </tr>
-  <tr>
-    <td width=8 bgcolor=#557faa>&nbsp;</td>
-    <td valign=top bgcolor=#557faa link=#ffffff width=150>
-
-<!-- start navbar content -->
-
-	<a href=fox.html><font color=#ffffff>Home</font></a><br>
-	<a href=news.html><font color=#ffffff>News</font></a><br>
-	<a href=download.html><font color=#ffffff>Download</font></a><br>
-	<a href=goals.html><font color=#ffffff>Goals & Approach</font></a><br>
-	<a href=doc.html><font color=#ffffff>Documentation</font></a><br>
-	<a href=faq.html><font color=#ffffff>FAQ</font></a><br>
-	<a href=rex.html><font color=#ffffff>FXRex</font></a><br>
-	<a href=screenshots.html><font color=#ffffff>Screenshots</font></a><br>
-	<br>
-	<a href=adie.html><font color=#ffffff>Adie</font></a><br>
-	<a href=pathfinder.html><font color=#ffffff>PathFinder</font></a><br>
-	<a href=calc.html><font color=#ffffff>FOX Calculator</font></a><br>
-	<br>
-	<a href=projects.html><font color=#ffffff>Projects</font></a><br>
-	<br>
-	<a href='http://fxpy.sourceforge.net'><font color=#ffffff>FXPy</font></a><br>
-	<a href='http://fxruby.sourceforge.net'><font color=#ffffff>FXRuby</font></a><br>
-	<a href='http://eiffelfox.sourceforge.net'><font color=#ffffff>EiffelFox</font></a><br>
-        <a href='http://eevolved.com/foxhole/'><font color=#ffffff>The FOX Hole</font></a><br>
-        <a href='http://takahr.dhis.portside.net/cgi-bin/rwiki.cgi?cmd=view;name=FOX+FAQ'><font color=#ffffff>Japanese Docs</font></a><br>
-	<br>
-	<center>
-	<a href="http://www.eff.org/br"><img SRC="art/freespeach.gif" border=0></a>
-	<p>
-	<a href="http://www.slashdot.org"><img SRC="art/slingerzbutton1.gif" border=0></a>
-	</center>
-
-
-
-<!-- end navbar content -->
-
-    </td>
-    <td bgcolor=#ffffff>&nbsp;</td>
-    <td valign=top>
-
-<!-- start main window content -->
-<center><img src='art/foxstart.png'>
-<BR><B>Documentation: The FOX Registry</B>
-</center>
-<p>
-<p>
-<b>What is a Registry?</b>
-<hr>
-Many applications have a need to read settings and configuration parameters
+<!---- TOPIC TITLE WITH LOGO--->
+<table border=0 cellpadding= cellspacing=2 width=100% ><tr><td><a href='http://www.fox-toolkit.org' target=_top><img src='art/foxlogo_small.jpg' border=0></a></td><td width=100% valign=bottom id="HEADLINE"><b>
+Documentation: The FOX Registry  <A href='registry.html' target="_top" align=left><font  size=-2>[Remove Frame]</font></a>
+<br><img src='art/line.gif' width=100% height=1></b></td></tr></table>
+</p>
+<!--- TOPIC TITLE WITH LOGO --->
+<ul>
+<p>Many applications have a need to read settings and configuration parameters
 from configuration files.&nbsp; For example, it is common for applications
 to remember which documents have been used recently with an application,
-or what color a user has changed his/her window background to.
+or what color a user has changed his/her window background to.</p>
 <P>Historically, each application has implemented its configuration files
 in its own way, resulting in a plethora of file formats, each with their
 own syntax and semantics.&nbsp; Moreover, many applications can only read,
 and not write these configuration files; they rely on the user to fire
-up an editor and edit them by hand.
+up an editor and edit them by hand.</p>
 <P>The FOX Registry class provides a simple method to keep track of configuration
 parameters for FOX-based applications.&nbsp; Entries can be both read as
 well as written, and settings will persist across invocations because the
-system will write changed settings back to disk.
+system will write changed settings back to disk.</p>
 <P>Because the format is the same for all FOX applications, users will
 have to learn only one [very simple] syntax in case they want to edit these
 files by hand (although in most cases, registry files will probably be
-manipulated by FOX programs only).
+manipulated by FOX programs only).</p>
+</ul>
+
+<!--- TOPIC TITLE -->
 <p>
-<p>
-<b>Design Features of the FOX Registry</b>
-<hr>
-A registry mechanism should allow applications from many vendors or
+<table width=100% cellpadding=0 cellspacing=2><tr><td width=100% valign=bottom id=HEADLINE><b>
+Design Features of the FOX Registry
+<br><img src='art/line.gif' width=100% height=1></b></td></tr></table>
+</p>
+<!--- TOPIC TITLE -->
+<ul>
+
+<p>A registry mechanism should allow applications from many vendors or
 organizations to coexist peacefully.&nbsp; Also, certain settings or configuration
 parameters should be applied system wide, others&nbsp; ``suite-wide'' i.e.
 for all applications produced by some organization.&nbsp; Yet other settings
-apply only to one application.
-<P>Tallying it all up, I've come up with the following list of requirements
-for a registry system:
-<BR>&nbsp;
+apply only to one application. Tallying it all up, I've come up with the following list of requirements
+for a registry system:</p>
+
 <UL>
 <LI>
 <B>System-wide Desktop settings.</B>&nbsp; Configuration parameters which
@@ -139,25 +79,24 @@ preferences.</LI>
 that a user may have changed while running an application.</LI>
 </UL>
 
-<P><BR>All settings can be ``shadowed'' or overridden.&nbsp; The general
+<P>All settings can be ``shadowed'' or overridden.&nbsp; The general
 rule is that more specific settings override more general ones.&nbsp; FOX
 implements this by first loading system-wide settings, then per-user settings;
 within each category, Desktop settings are shadowed by Vendor settings,
-and those are overruled by Application settings.
+and those are overruled by Application settings.</p>
 <P>Registry settings are not shadowed when they've been changed, i.e. a
 setting which was changed by an application is not replaced by a settings
-entry loaded later.
+entry loaded later.</p>
 <P>Finally, when settings are being written back to disk, they will automatically
 become per-application, per-user settings.&nbsp; For instance, suppose
 the default system-wide background color is ``gray.''&nbsp; If the user
 changes this, it will become a per-user default background color.&nbsp;
 In other words, the system-wide settings are <I>never written</I>, except
-perhaps when the application is being installed.
+perhaps when the application is being installed.</p>
 <P>The FOX settings database is comprised tyically of a number of files
 which are placed in a certain directory structure.&nbsp; The organization
-is as follows:
-<BR>&nbsp;
-<BR>&nbsp;
+is as follows:</p>
+
 <CENTER><TABLE BORDER CELLSPACING=0 CELLPADDING=0 WIDTH="90%" BGCOLOR="#FFF8E1" NOSAVE >
 <TR NOSAVE>
 <TD NOSAVE>&lt;DIR>/Desktop</TD>
@@ -182,39 +121,56 @@ organization &lt;VENDOR>.&nbsp;</TD>
 </TABLE></CENTER>
 
 <P>The same directory structure applies for both system-wide settings and
-per-user settings.&nbsp; The system-wide settings are found in directories:
-<BLOCKQUOTE>/etc/foxrc
-<BR>/usr/lib/FOX/foxrc
-<BR>/usr/local/lib/FOX/foxrc</BLOCKQUOTE>
+per-user settings.&nbsp; The system-wide settings are found in directories:</p>
+
+<pre>
+/etc/foxrc
+/usr/lib/FOX/foxrc
+/usr/local/lib/FOX/foxrc
+</pre>
+
 Per-user settings are found in:
-<BLOCKQUOTE>$HOME/.foxrc</BLOCKQUOTE>
-Which is a hidden directory directly under the users regular HOME directory.
+
+<pre>
+$HOME/.foxrc
+</pre>
+
+<p>Which is a hidden directory directly under the users regular HOME directory.</p>
+
+</ul>
+
+
+<!--- TOPIC TITLE -->
 <p>
-<p>
-<b>Format of a Registry File</b>
-<hr>
-The format for a FOX registry file is very similar to that of the SAMBA
+<table width=100% cellpadding=0 cellspacing=2><tr><td width=100% valign=bottom id=HEADLINE><b>
+Format of a Registry File
+<br><img src='art/line.gif' width=100% height=1></b></td></tr></table>
+</p>
+<!--- TOPIC TITLE -->
+<ul>
+<p>The format for a FOX registry file is very similar to that of the SAMBA
 configuration files.&nbsp; It consists of a number of sections, and each
 section contains a number of registry entries.&nbsp; Each entry is a key/value
 pair, where the key is the name of the particular entry, and the value
-is a human-readable string representing the value of that key.
-<P>For example:
-<BR>&nbsp;
-<BLOCKQUOTE><FONT FACE="Courier New,Courier"># A section</FONT>
-<BR><FONT FACE="Courier New,Courier">[SETTINGS]</FONT>
-<P><FONT FACE="Courier New,Courier"># An entry</FONT>
-<BR><FONT FACE="Courier New,Courier">clickspeed = 400</FONT>
-<BR><FONT FACE="Courier New,Courier">scrollspeed = 400</FONT>
-<P><FONT FACE="Courier New,Courier"># Strings may have to be quoted if
-they contain special characters</FONT>
-<BR><FONT FACE="Courier New,Courier">tiger = "Tyger tyger burning bright\nIn
-the forest of the night"</FONT>
-<P><FONT FACE="Courier New,Courier">! Comment may also start with a bang</FONT>
-<BR><FONT FACE="Courier New,Courier">tippause = 500</FONT>
-<BR><FONT FACE="Courier New,Courier">tiptime = 300</FONT>
-<BR>&nbsp;</BLOCKQUOTE>
+is a human-readable string representing the value of that key. For example:</p>
 
-<P><BR>The section names should consist of alphanumeric characters [A-Z,a-z,0-9],
+<pre>
+# A section
+[SETTINGS]
+
+# An entry
+clickspeed = 400
+scrollspeed = 400
+
+# Strings may have to be quoted if they contain special characters
+tiger = "Tyger tyger burning bright\nIn the forest of the night"
+
+! Comment may also start with a bang
+tippause = 500
+tiptime = 300
+</pre>
+
+<p>The section names should consist of alphanumeric characters [A-Z,a-z,0-9],
 and may contain underscores ``_'' also.&nbsp; Key names should consist
 of alphanumeric characters [A-Z,a-z,0-9], underscores, dash ``-'' or periods
 ``.''.&nbsp; Value strings may consist of any non-blank character, except
@@ -223,25 +179,34 @@ and other non-printable characters, you may quote the string as shown above.&nbs
 Special characters can be embedded into a quotable string using the regular
 C-style backslash mechanism, i.e. ``\n'' is replaced by a newline; control
 characters can be embedded using hex-notation: for instance, ``\FF'' represents
-the byte 0xff.
+the byte 0xff.</p>
 <P>Under the MS-Windows Implementation of FOX, you can use either the ASCII,
 human-readable implementation, or the binary version which uses the built-in
-System Registry.
+System Registry.</p>
+
+</ul>
+
+<!--- TOPIC TITLE -->
 <p>
-<p>
-<b>Using the Registry</b>
-<hr>
-The FOX FXApp object contains an embedded FXRegistry object, which is
+<table width=100% cellpadding=0 cellspacing=2><tr><td width=100% valign=bottom id=HEADLINE><b>
+Using the Registry
+<br><img src='art/line.gif' width=100% height=1></b></td></tr></table>
+</p>
+<!--- TOPIC TITLE -->
+<ul>
+<p>The FOX FXApp object contains an embedded FXRegistry object, which is
 automatically read in when you start up using FXApp::init().&nbsp; Likewise,
 this registry is also automatically written back out when you terminate
-the application using FXApp::exit().
-<P>The <B><I>application name</I></B> and <B><I>vendor name</I></B> parameters
+the application using FXApp::exit().</p>
+<p>The <B><I>application name</I></B> and <B><I>vendor name</I></B> parameters
 passed in when you construct the FXApp object are directly used as the
-application name and vendor name for the registry system.
-<P>To make use of the registry in your application's code, you can obtain
+application name and vendor name for the registry system.</p>
+<p>To make use of the registry in your application's code, you can obtain
 a reference to the embedded registry object using FXApp::reg().&nbsp; FXRegistry
-provides the following API:
-<BR>&nbsp;
+provides the following API:</p>
+
+
+<ul>
 <P>FXbool<B> read</B>()
 <BR>&nbsp;
 <BLOCKQUOTE>This function causes the system-wide registry database to be
@@ -251,6 +216,7 @@ unmodified settings as it goes.
 <BR>Note that upon startup, a FOX application automatically calls the registry's
 read() function already.&nbsp; You will usually not call this function,
 unless perhaps to re-read the registry.</BLOCKQUOTE>
+
 
 <P><BR>FXbool<B> write</B>()
 <BLOCKQUOTE>If any settings have been changed, this will write out the
@@ -351,11 +317,19 @@ One would typically call this to prevent modified entries from being written.</B
 format or, if asciiMode is FALSE, to the binary system.
 <BR>&nbsp;</BLOCKQUOTE>
 
+</ul>
+</ul>
+
+
+<!--- TOPIC TITLE -->
 <p>
-<p>
-<b>The Standard Registry in FOX Application Object</b>
-<hr>
-Note that the FOX FXApp object provides a registry already.&nbsp; The
+<table width=100% cellpadding=0 cellspacing=2><tr><td width=100% valign=bottom id=HEADLINE><b>
+The Standard Registry in FOX Application Object
+<br><img src='art/line.gif' width=100% height=1></b></td></tr></table>
+</p>
+<!--- TOPIC TITLE -->
+<ul>
+<p>Note that the FOX FXApp object provides a registry already.&nbsp; The
 standard application registry is defined in terms of the application name
 and vendor name that were passed into the FXApp's constructor.
 <BR>When an application is started, the standard registry is automatically
@@ -364,19 +338,18 @@ registry settings are automatically written when <TT><B>FXApp::exit()</B>
 </TT>is called.&nbsp; You should take care that these functions are called
 when writing your own programs so that settings needed in your program
 are available when you expect them, and are properly written back to disk
-after the application exits.
+after the application exits
 <BR>Only changed settings are written back; if no changes have been made
 to any settings while running the application, no writing would take place
-at all.
+at all.</p>
 <P>You can access the built-in registry object by the <B><TT>FXApp::reg()</TT></B>
-member function.&nbsp; For example:
-<BLOCKQUOTE>
-<PRE><FONT FACE="Courier New,Courier"></FONT></PRE>
+member function.&nbsp; For example:</p>
 
-<PRE><FONT FACE="Courier New,Courier">FXColor canvasbackground = myapp->reg().readColorEntry("SETTINGS","background",FXRGB(255,255,255));</FONT></PRE>
-</BLOCKQUOTE>
+<pre>
+FXColor canvasbackground = myapp->reg().readColorEntry("SETTINGS","background",FXRGB(255,255,255));
+</pre>
 
-<P><BR>To read a background color from the settings database, and default
+<P>To read a background color from the settings database, and default
 to white if no entry exists.
 <P>When writing the registry, FOX first writes to a temp file, then renames
 the temp file to the regular registry file.&nbsp; Since rename() is an
@@ -385,34 +358,18 @@ it doesn't and the old registry is still in place; at no time would a partially
 complete registry file be left behind; therefore, the registry mechanism
 should be quite safe even in the presence of multiple applications simultaneously
 trying to access the same registry.
-<BR>&nbsp;
-<P>
+</P>
+</ul>
 
-<!-- end main window content -->
+<!--- COPYRIGHT -->
+<p>
+<table width=100% cellpadding=0 cellspacing=0><tr><td width=100% valign=top id=HEADLINE align=right>
+<img src='art/line.gif' width=100% height=1><font size=-1>
+Copyright &copy; 1997-2004 Jeroen van der Zijp</font>
+</td></tr></table>
+</p>
+<!--- COPYRIGHT -->
 
-    </td>
-    <td bgcolor=#ffffff>&nbsp;</td>
-    <td bgcolor=#557faa width=15>&nbsp;</td>
-  </tr>
-  <tr>
-    <td colspan=2 bgcolor="#557faa" align=center>&nbsp;
-     </td>
-    <td bgcolor=#ffffff valign=bottom align=left><img src=art/ill.gif width=8 height=8></td>
-    <td bgcolor=#ffffff>&nbsp;</td>
-    <td bgcolor=#ffffff valign=bottom align=right><img src=art/ilr.gif width=8 height=8></td>
-    <td bgcolor=#557faa width=15>&nbsp;</td>
-  </tr>
-  <tr>
-    <td valign=bottom align=left bgcolor=#557faa><img src=art/oll.gif width=8 height=8></td>
-    <td colspan=4 bgcolor=#557faa>&nbsp;</td>
-    <td valign=bottom align=right bgcolor=#557faa><img src=art/olr.gif width=8 height=8></td>
-  </tr>
-</table>
 
-<address>Copyright 1997-2002 <a href=mailto:jeroen@fox-toolkit.org>Jeroen van der Zijp</a></address>
-<!-- Created: Mon Apr 10 11:20:32 CEST 2000 -->
-<!-- hhmts start -->
-
-<!-- hhmts end -->
 </body>
 </html>

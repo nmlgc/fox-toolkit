@@ -3,7 +3,7 @@
 *                       U R L   M a n i p u l a t i o n                         *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2000,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 2000,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * Contributed by: Sean Hubbell                                                  *
 *********************************************************************************
@@ -21,7 +21,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXURL.cpp,v 1.15 2002/01/18 22:43:07 jeroen Exp $                        *
+* $Id: FXURL.cpp,v 1.21 2004/04/08 15:09:55 fox Exp $                           *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -62,8 +62,11 @@
 
 */
 
+using namespace FX;
 
 /*******************************************************************************/
+
+namespace FX {
 
 // Return host name
 FXString FXURL::hostname(){
@@ -81,7 +84,7 @@ FXString FXURL::fileToURL(const FXString& file){
   return "file:"+file;        // UNIX is easy
 #else
   FXString absfile=FXFile::absolute(file).substitute(PATHSEP,'/');
-  if(isalpha(absfile[0]) && absfile[1]==':') return "file://"+FXURL::hostname()+"/"+absfile;     // Drive letter
+  if(isalpha((FXuchar)absfile[0]) && absfile[1]==':') return "file://"+FXURL::hostname()+"/"+absfile;     // Drive letter
   return "file://"+FXURL::hostname()+absfile;
   //if(isalpha(absfile[0]) && absfile[1]==':') return "file:///"+absfile;     // Drive letter
   //return "file://"+absfile;
@@ -95,7 +98,7 @@ FXString FXURL::fileFromURL(const FXString& url){
   FXint t;
   if(comparecase("file:",url,5)==0){
     if(url[5]==PATHSEP && url[6]==PATHSEP){
-      t=url.findf(PATHSEP,7);
+      t=url.find(PATHSEP,7);
       if(7<t) return url.mid(t,2000);       // We ignore host designation
       return url.mid(7,2000);               // Empty hostname part
       }
@@ -107,7 +110,7 @@ FXString FXURL::fileFromURL(const FXString& url){
   localurl.substitute('/',PATHSEP);
   if(comparecase("file:" PATHSEPSTRING PATHSEPSTRING,localurl,7)==0){
     FXString result;
-    FXint path=localurl.findf(PATHSEP,7);
+    FXint path=localurl.find(PATHSEP,7);
     if(path<0 || path==7){
       result=localurl.mid(7,2000);
       }
@@ -117,7 +120,7 @@ FXString FXURL::fileFromURL(const FXString& url){
         result=localurl.mid(path,2000);
         }
       }
-    if(result[0]==PATHSEP && isalpha(result[1]) && (result[2]==':' || result[2]=='|')){
+    if(result[0]==PATHSEP && isalpha((FXuchar)result[1]) && (result[2]==':' || result[2]=='|')){
       result.remove(0,1);
       if(result[1]=='|') result[1]=':';
       }
@@ -127,3 +130,4 @@ FXString FXURL::fileFromURL(const FXString& url){
 #endif
   }
 
+}

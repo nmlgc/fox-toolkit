@@ -3,7 +3,7 @@
 *                P a c k e r   C o n t a i n e r   W i d g e t                  *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXPacker.h,v 1.13 2002/01/18 22:42:54 jeroen Exp $                       *
+* $Id: FXPacker.h,v 1.19 2004/02/08 17:17:34 fox Exp $                          *
 ********************************************************************************/
 #ifndef FXPACKER_H
 #define FXPACKER_H
@@ -28,11 +28,11 @@
 #include "FXComposite.h"
 #endif
 
+namespace FX {
 
 
-// Default spacing
-#define DEFAULT_SPACING        4
-
+/// Default spacing
+enum { DEFAULT_SPACING = 4 };
 
 
 /**
@@ -73,7 +73,6 @@ protected:
   void drawDoubleSunkenRectangle(FXDCWindow& dc,FXint x,FXint y,FXint w,FXint h);
   void drawFocusRectangle(FXDCWindow& dc,FXint x,FXint y,FXint w,FXint h);
   void drawFrame(FXDCWindow& dc,FXint x,FXint y,FXint w,FXint h);
-  virtual void layout();
 private:
   FXPacker(const FXPacker&);
   FXPacker &operator=(const FXPacker&);
@@ -93,6 +92,9 @@ public:
 
   /// Return default height
   virtual FXint getDefaultHeight();
+
+  /// Perform layout
+  virtual void layout();
 
   /// Change frame style
   void setFrameStyle(FXuint style);
@@ -176,5 +178,6 @@ public:
   virtual void load(FXStream& store);
   };
 
+}
 
 #endif

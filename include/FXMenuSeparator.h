@@ -3,7 +3,7 @@
 *                    M e n u   S e p a r a t o r   W i d g e t                  *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXMenuSeparator.h,v 1.11 2002/01/18 22:55:03 jeroen Exp $                *
+* $Id: FXMenuSeparator.h,v 1.15 2004/02/08 17:17:33 fox Exp $                   *
 ********************************************************************************/
 #ifndef FXMENUSEPARATOR_H
 #define FXMENUSEPARATOR_H
@@ -28,6 +28,7 @@
 #include "FXWindow.h"
 #endif
 
+namespace FX {
 
 
 /**
@@ -76,5 +77,6 @@ public:
   virtual void load(FXStream& store);
   };
 
+}
 
 #endif

@@ -5,7 +5,7 @@
 ##############################################################################
 # Contributed by: Andre Fornacon <afo@zlug.org>                              #
 ##############################################################################
-# $Id: Makefile.dmc,v 1.1.2.3 2002/07/26 02:41:54 fox Exp $                  #
+# $Id: Makefile.dmc,v 1.7 2003/09/26 05:01:20 fox Exp $                      #
 ##############################################################################
 # This library is free software; you can redistribute it and/or              #
 # modify it under the terms of the GNU Library General Public                #
@@ -27,13 +27,13 @@ CXX	  = sc
 CXXFLAGS  = -mn -5 -a8
 RM        = del
 TOPDIR    = ..
-DEFINES   = -DNDEBUG -DFOX_BIGENDIAN=0 -DWIN32 -D_WINDOWS -DHAVE_OPENGL #-DHAVE_PNG_H -DHAVE_JPEG_H -DHAVE_TIFF_H -DXMD_H
+DEFINES   = -DNDEBUG -DFOX_BIGENDIAN=0 -DWIN32 -D_WINDOWS -DHAVE_GL_H -DHAVE_GLU_H #-DHAVE_PNG_H -DHAVE_JPEG_H -DHAVE_TIFF_H -DXMD_H
 LD	  = sc
 LDFLAGS	  =
 LIBS	  = advapi32.lib+shell32.lib+gdi32.lib+wsock32.lib+winspool.lib
 GLLIBS    = opengl32.lib+glu32.lib
 INCDIRS   = -I$(TOPDIR)\include
-FOXLIB    = $(TOPDIR)\src\fox.lib
+FOXLIB    = $(TOPDIR)\src\FOX-1.1.lib
 
 PROGRAMS  = \
 	rex.exe \
@@ -57,9 +57,13 @@ PROGRAMS  = \
 	dirlist.exe \
 	button.exe \
 	dctest.exe \
-	glviewer.exe \
-	gltest.exe \
+	wizard.exe \
 	imageviewer.exe
+
+# on the following 2 programs compilation abort in the windows header files
+#	glviewer.exe \
+#	gltest.exe \
+#
 
 .cpp.obj:
 	$(CXX) -c $(INCDIRS) $(CXXFLAGS) $(DEFINES) $*.cpp
@@ -71,6 +75,9 @@ rex.exe: $(FOXLIB) rex.obj
 
 minheritance.exe: $(FOXLIB) minheritance.obj
 	$(LD) $(LDFLAGS) minheritance.obj $(FOXLIB) $(LIBS)
+
+wizard.exe: $(FOXLIB) wizard.obj
+	$(LD) $(LDFLAGS) wizard.obj $(FOXLIB) $(LIBS)
 
 foursplit.exe: $(FOXLIB) foursplit.obj
 	$(LD) $(LDFLAGS) foursplit.obj $(FOXLIB) $(LIBS)
@@ -139,4 +146,6 @@ dctest.exe: $(FOXLIB) dctest.obj
 	$(LD) $(LDFLAGS) dctest.obj $(FOXLIB) $(LIBS)
 
 clean:
-	$(RM) *.obj *.exe *.tds *.map
+	del *.obj
+	del *.exe
+	del *.tds

@@ -3,7 +3,7 @@
 *                    F i l e   S e l e c t i o n   D i a l o g                  *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1998,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXFileDialog.cpp,v 1.23.4.3 2003/03/27 20:34:43 fox Exp $                 *
+* $Id: FXFileDialog.cpp,v 1.36 2004/02/20 21:16:57 fox Exp $                    *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -33,6 +33,7 @@
 #include "FXFile.h"
 #include "FXSettings.h"
 #include "FXRegistry.h"
+#include "FXHash.h"
 #include "FXApp.h"
 #include "FXId.h"
 #include "FXDrawable.h"
@@ -52,19 +53,34 @@
 
 
 /*
-  To do:
+  Notes:
+  - Wraps the FXFileSelector file selection mega widget.
 */
 
+using namespace FX;
 
 /*******************************************************************************/
+
+namespace FX {
 
 // Object implementation
 FXIMPLEMENT(FXFileDialog,FXDialogBox,NULL,0)
 
 
-// File Open Dialog
+// Construct file fialog box
 FXFileDialog::FXFileDialog(FXWindow* owner,const FXString& name,FXuint opts,FXint x,FXint y,FXint w,FXint h):
-  FXDialogBox(owner,name,opts|DECOR_TITLE|DECOR_BORDER|DECOR_RESIZE,x,y,w,h,0,0,0,0,4,4){
+  FXDialogBox(owner,name,opts|DECOR_TITLE|DECOR_BORDER|DECOR_RESIZE|DECOR_CLOSE,x,y,w,h,0,0,0,0,4,4){
+  filebox=new FXFileSelector(this,NULL,0,LAYOUT_FILL_X|LAYOUT_FILL_Y);
+  filebox->acceptButton()->setTarget(this);
+  filebox->acceptButton()->setSelector(FXDialogBox::ID_ACCEPT);
+  filebox->cancelButton()->setTarget(this);
+  filebox->cancelButton()->setSelector(FXDialogBox::ID_CANCEL);
+  }
+
+
+// Construct free-floating file dialog box
+FXFileDialog::FXFileDialog(FXApp* a,const FXString& name,FXuint opts,FXint x,FXint y,FXint w,FXint h):
+  FXDialogBox(a,name,opts|DECOR_TITLE|DECOR_BORDER|DECOR_RESIZE|DECOR_CLOSE,x,y,w,h,0,0,0,0,4,4){
   filebox=new FXFileSelector(this,NULL,0,LAYOUT_FILL_X|LAYOUT_FILL_Y);
   filebox->acceptButton()->setTarget(this);
   filebox->acceptButton()->setSelector(FXDialogBox::ID_ACCEPT);
@@ -148,12 +164,6 @@ void FXFileDialog::setPatternText(FXint patno,const FXString& text){
   }
 
 
-// Set list of patterns (DEPRECATED)
-void FXFileDialog::setPatternList(const FXchar **ptrns){
-  filebox->setPatternList(ptrns);
-  }
-
-
 // Change space for item
 void FXFileDialog::setItemSpace(FXint s){
   filebox->setItemSpace(s);
@@ -189,6 +199,18 @@ FXuint FXFileDialog::getSelectMode() const {
   return filebox->getSelectMode();
   }
 
+
+// Change wildcard matching mode
+void FXFileDialog::setMatchMode(FXuint mode){
+  filebox->setMatchMode(mode);
+  }
+  
+
+// Return wildcard matching mode
+FXuint FXFileDialog::getMatchMode() const {
+  return filebox->getMatchMode();
+  }
+  
 
 // Show readonly button
 void FXFileDialog::showReadOnly(FXbool show){
@@ -231,7 +253,7 @@ void FXFileDialog::load(FXStream& store){
 
 // Cleanup
 FXFileDialog::~FXFileDialog(){
-  filebox=(FXFileSelector*)-1;
+  filebox=(FXFileSelector*)-1L;
   }
 
 
@@ -291,4 +313,6 @@ FXString FXFileDialog::getOpenDirectory(FXWindow* owner,const FXString& caption,
     }
   return FXString::null;
   }
+
+}
 

@@ -3,7 +3,7 @@
 *                      S c r o l l A r e a   W i d g e t                        *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1998,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXScrollArea.cpp,v 1.22.4.1 2003/06/20 19:02:07 fox Exp $                 *
+* $Id: FXScrollArea.cpp,v 1.42 2004/04/15 22:12:13 fox Exp $                    *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -31,26 +31,22 @@
 #include "FXRectangle.h"
 #include "FXRegistry.h"
 #include "FXAccelTable.h"
+#include "FXHash.h"
 #include "FXApp.h"
 #include "FXDCWindow.h"
-#include "FXScrollbar.h"
+#include "FXScrollBar.h"
 #include "FXScrollArea.h"
 
 
 /*
   To do:
-  - Fix to take advantage of new scroll information.
   - In new HSCROLLING_OFF mode, default width should be computed
     from contents (new virtual for that), and presence of scrollbars
     (determined by flags, as well as need).
   - The original content size should be returned from getContentWidth(),
-    and getContentHeight(). The content_w and content_h member variables
-    reflect the area involved in the scrolling; this is determined by layout().
-  - Autoscroll needs to change, but don't know how yet. Idea:- pass in x,y, and
-    start autoscroll if x,y near wall, stop if reaching final position or calling stopAutoScroll...
+    and getContentHeight().
   - When tabbing, we will never put focus on scrollbar.
   - Perhaps scroll windows should observe FRAME_SUNKEN etc.
-  - Need margins [and item spacing]
   - Here's a new idea:- perhaps the scrollbars should be GUI-updated from the
     FXScrollArea.  Then layout() will do nothing but place the bars.
   - What if we want to keep two scrolled windows in sync, i.e. scroll them
@@ -61,12 +57,14 @@
 */
 
 
-#define AUTOSCROLL_FUDGE  10       // Proximity to wall at which we start autoscrolling
+#define AUTOSCROLL_FUDGE  11       // Proximity to wall at which we start autoscrolling
 #define SCROLLER_MASK     (HSCROLLER_ALWAYS|HSCROLLER_NEVER|VSCROLLER_ALWAYS|VSCROLLER_NEVER|SCROLLERS_DONT_TRACK)
 
+using namespace FX;
 
 /*******************************************************************************/
 
+namespace FX {
 
 FXDEFMAP(FXScrollArea) FXScrollAreaMap[]={
   FXMAPFUNC(SEL_MOUSEWHEEL,0,FXScrollArea::onVMouseWheel),
@@ -83,7 +81,7 @@ FXIMPLEMENT(FXScrollArea,FXComposite,FXScrollAreaMap,ARRAYNUMBER(FXScrollAreaMap
 
 
 // Scroll acceleration near edge
-static const FXint acceleration[AUTOSCROLL_FUDGE+1]={1,1,1,2,3,4,6,7,8,16,32};
+static const FXint acceleration[AUTOSCROLL_FUDGE+1]={1,1,1,2,3,4,6,7,8,16,32,64};
 
 
 
@@ -93,11 +91,8 @@ FXScrollArea::FXScrollArea(){
   horizontal=NULL;
   vertical=NULL;
   corner=NULL;
-  scrolltimer=NULL;
   viewport_w=1;
   viewport_h=1;
-  content_w=1;
-  content_h=1;
   pos_x=0;
   pos_y=0;
   }
@@ -106,16 +101,15 @@ FXScrollArea::FXScrollArea(){
 // Construct and init
 FXScrollArea::FXScrollArea(FXComposite* p,FXuint opts,FXint x,FXint y,FXint w,FXint h):
   FXComposite(p,opts,x,y,w,h){
+  FXuint jumpy=0;
   flags|=FLAG_SHOWN;
-  horizontal=new FXScrollbar(this,this,FXWindow::ID_HSCROLLED,SCROLLBAR_HORIZONTAL);
-  vertical=new FXScrollbar(this,this,FXWindow::ID_VSCROLLED,SCROLLBAR_VERTICAL);
+  if(opts&SCROLLERS_DONT_TRACK) jumpy=SCROLLBAR_WHEELJUMP;
+  horizontal=new FXScrollBar(this,this,FXWindow::ID_HSCROLLED,SCROLLBAR_HORIZONTAL|jumpy);
+  vertical=new FXScrollBar(this,this,FXWindow::ID_VSCROLLED,SCROLLBAR_VERTICAL|jumpy);
   corner=new FXScrollCorner(this);
   backColor=getApp()->getBackColor();
-  scrolltimer=NULL;
   viewport_w=1;
   viewport_h=1;
-  content_w=1;
-  content_h=1;
   pos_x=0;
   pos_y=0;
   }
@@ -130,20 +124,22 @@ FXScrollArea::FXScrollArea(FXComposite* p,FXuint opts,FXint x,FXint y,FXint w,FX
 
 // Get default width
 FXint FXScrollArea::getDefaultWidth(){
-  FXint w=0;
+  register FXint w=0;
+  register FXint t;
   if((options&HSCROLLER_NEVER)&&(options&HSCROLLER_ALWAYS)) w=getContentWidth();
+  if(!(options&HSCROLLER_NEVER) && (t=horizontal->getDefaultWidth())>w) w=t;
   if(!(options&VSCROLLER_NEVER)) w+=vertical->getDefaultWidth();
-  if(!(options&HSCROLLER_NEVER)) w+=horizontal->getDefaultWidth();
   return FXMAX(w,1);
   }
 
 
 // Get default height
 FXint FXScrollArea::getDefaultHeight(){
-  FXint h=0;
+  register FXint h=0;
+  register FXint t;
   if((options&VSCROLLER_NEVER)&&(options&VSCROLLER_ALWAYS)) h=getContentHeight();
+  if(!(options&VSCROLLER_NEVER) && (t=vertical->getDefaultHeight())>h) h=t;
   if(!(options&HSCROLLER_NEVER)) h+=horizontal->getDefaultHeight();
-  if(!(options&VSCROLLER_NEVER)) h+=vertical->getDefaultHeight();
   return FXMAX(h,1);
   }
 
@@ -221,30 +217,21 @@ long FXScrollArea::onHMouseWheel(FXObject* sender,FXSelector sel,void* ptr){
 
 
 // Timeout
-long FXScrollArea::onAutoScroll(FXObject*,FXSelector sel,void*){
-  FXint dx,dy;
-  FXint xx,yy;
-  FXuint state;
-
-  scrolltimer=NULL;
-
-  // Autoscroll while close to the wall
-  dx=0;
-  dy=0;
-
-  // Where's the cursor?
-  getCursorPosition(xx,yy,state);
+long FXScrollArea::onAutoScroll(FXObject*,FXSelector sel,void* ptr){
+  register FXEvent* event=(FXEvent*)ptr;
+  register FXint dx=0;
+  register FXint dy=0;
 
   // If scrolling only while inside, and not inside, we stop scrolling
-  if((flags&FLAG_SCROLLINSIDE) && !(0<=xx && 0<=yy && xx<viewport_w && yy<viewport_h)) return 0;
+  if((flags&FLAG_SCROLLINSIDE) && !(0<=event->win_x && 0<=event->win_y && event->win_x<viewport_w && event->win_y<viewport_h)) return 0;
 
   // Figure scroll amount x
-  if(xx<AUTOSCROLL_FUDGE) dx=AUTOSCROLL_FUDGE-xx;
-  else if(viewport_w-AUTOSCROLL_FUDGE<=xx) dx=viewport_w-AUTOSCROLL_FUDGE-xx;
+  if(event->win_x<AUTOSCROLL_FUDGE) dx=AUTOSCROLL_FUDGE-event->win_x;
+  else if(viewport_w-AUTOSCROLL_FUDGE<=event->win_x) dx=viewport_w-AUTOSCROLL_FUDGE-event->win_x;
 
   // Figure scroll amount y
-  if(yy<AUTOSCROLL_FUDGE) dy=AUTOSCROLL_FUDGE-yy;
-  else if(viewport_h-AUTOSCROLL_FUDGE<=yy) dy=viewport_h-AUTOSCROLL_FUDGE-yy;
+  if(event->win_y<AUTOSCROLL_FUDGE) dy=AUTOSCROLL_FUDGE-event->win_y;
+  else if(viewport_h-AUTOSCROLL_FUDGE<=event->win_y) dy=viewport_h-AUTOSCROLL_FUDGE-event->win_y;
 
   // Keep autoscrolling
   if(dx || dy){
@@ -262,7 +249,7 @@ long FXScrollArea::onAutoScroll(FXObject*,FXSelector sel,void*){
 
     // Setup next timer if we can still scroll some more
     if((pos_x!=oldposx) || (pos_y!=oldposy)){
-      scrolltimer=getApp()->addTimeout(getApp()->getScrollSpeed(),this,SELID(sel));
+      getApp()->addTimeout(this,FXSELID(sel),getApp()->getScrollSpeed(),event);
       }
     }
 
@@ -273,24 +260,26 @@ long FXScrollArea::onAutoScroll(FXObject*,FXSelector sel,void*){
 
 
 // Start automatic scrolling
-FXbool FXScrollArea::startAutoScroll(FXint x,FXint y,FXbool onlywheninside){
-  FXbool autoscrolling=FALSE;
+FXbool FXScrollArea::startAutoScroll(FXEvent *event,FXbool onlywheninside){
+  register FXbool autoscrolling=FALSE;
   flags&=~FLAG_SCROLLINSIDE;
   if(onlywheninside) flags|=FLAG_SCROLLINSIDE;
   if(horizontal->getPage()<horizontal->getRange()){
-    if((x<AUTOSCROLL_FUDGE) && (0<horizontal->getPosition())) autoscrolling=TRUE;
-    else if((viewport_w-AUTOSCROLL_FUDGE<=x) && (horizontal->getPosition()<horizontal->getRange()-horizontal->getPage())) autoscrolling=TRUE;
+    if((event->win_x<AUTOSCROLL_FUDGE) && (0<horizontal->getPosition())) autoscrolling=TRUE;
+    else if((viewport_w-AUTOSCROLL_FUDGE<=event->win_x) && (horizontal->getPosition()<horizontal->getRange()-horizontal->getPage())) autoscrolling=TRUE;
     }
   if(vertical->getPage()<vertical->getRange()){
-    if((y<AUTOSCROLL_FUDGE) && (0<vertical->getPosition())) autoscrolling=TRUE;
-    else if((viewport_h-AUTOSCROLL_FUDGE<=y) && (vertical->getPosition()<vertical->getRange()-vertical->getPage())) autoscrolling=TRUE;
+    if((event->win_y<AUTOSCROLL_FUDGE) && (0<vertical->getPosition())) autoscrolling=TRUE;
+    else if((viewport_h-AUTOSCROLL_FUDGE<=event->win_y) && (vertical->getPosition()<vertical->getRange()-vertical->getPage())) autoscrolling=TRUE;
     }
-  if(onlywheninside && (x<0 || y<0 || viewport_w<=x || viewport_h<=y)) autoscrolling=FALSE;
+  if(onlywheninside && (event->win_x<0 || event->win_y<0 || viewport_w<=event->win_x || viewport_h<=event->win_y)) autoscrolling=FALSE;
   if(autoscrolling){
-    if(!scrolltimer){ scrolltimer=getApp()->addTimeout(getApp()->getScrollSpeed(),this,FXWindow::ID_AUTOSCROLL); }
+    if(!getApp()->hasTimeout(this,ID_AUTOSCROLL)){
+      getApp()->addTimeout(this,ID_AUTOSCROLL,getApp()->getScrollSpeed(),event);
+      }
     }
   else{
-    if(scrolltimer){ scrolltimer=getApp()->removeTimeout(scrolltimer); }
+    getApp()->removeTimeout(this,ID_AUTOSCROLL);
     }
   return autoscrolling;
   }
@@ -298,7 +287,7 @@ FXbool FXScrollArea::startAutoScroll(FXint x,FXint y,FXbool onlywheninside){
 
 // Stop automatic scrolling
 void FXScrollArea::stopAutoScroll(){
-  if(scrolltimer){scrolltimer=getApp()->removeTimeout(scrolltimer);}
+  getApp()->removeTimeout(this,ID_AUTOSCROLL);
   flags&=~FLAG_SCROLLINSIDE;
   }
 
@@ -307,6 +296,14 @@ void FXScrollArea::stopAutoScroll(){
 void FXScrollArea::setScrollStyle(FXuint style){
   FXuint opts=(options&~SCROLLER_MASK) | (style&SCROLLER_MASK);
   if(options!=opts){
+    if(opts&SCROLLERS_DONT_TRACK){
+      horizontal->setScrollbarStyle(horizontal->getScrollbarStyle()|SCROLLBAR_WHEELJUMP);
+      vertical->setScrollbarStyle(vertical->getScrollbarStyle()|SCROLLBAR_WHEELJUMP);
+      }
+    else{
+      horizontal->setScrollbarStyle(horizontal->getScrollbarStyle()&~SCROLLBAR_WHEELJUMP);
+      vertical->setScrollbarStyle(vertical->getScrollbarStyle()&~SCROLLBAR_WHEELJUMP);
+      }
     options=opts;
     recalc();
     }
@@ -358,7 +355,7 @@ FXint FXScrollArea::getContentHeight(){
 
 // Recalculate layout
 void FXScrollArea::layout(){
-  register FXint new_x,new_y;
+  register FXint new_x,new_y,content_w,content_h;
   register FXint sh_h=0;
   register FXint sv_w=0;
 
@@ -377,12 +374,14 @@ void FXScrollArea::layout(){
   if(!(options&HSCROLLER_NEVER)) sh_h=horizontal->getDefaultHeight();
   if(!(options&VSCROLLER_NEVER)) sv_w=vertical->getDefaultWidth();
 
-  // Should we disable the scroll bars?
-  // A bit tricky as the scrollbars may influence each other's presence
+  // Should we disable the scroll bars?  A bit tricky as the scrollbars 
+  // may influence each other's presence.  Also, we don't allow more than 
+  // 50% of the viewport to be taken up by scrollbars; when the scrollbars 
+  // take up more than 50% of the available space we simply turn them off. 
   if(!(options&(HSCROLLER_ALWAYS|VSCROLLER_ALWAYS)) && (content_w<=viewport_w) && (content_h<=viewport_h)){sh_h=sv_w=0;}
-  if(!(options&HSCROLLER_ALWAYS) && (content_w<=viewport_w-sv_w)) sh_h=0;
-  if(!(options&VSCROLLER_ALWAYS) && (content_h<=viewport_h-sh_h)) sv_w=0;
-  if(!(options&HSCROLLER_ALWAYS) && (content_w<=viewport_w-sv_w)) sh_h=0;
+  if(!(options&HSCROLLER_ALWAYS) && ((content_w<=viewport_w-sv_w) || (0>=viewport_h-sh_h-sh_h))) sh_h=0;
+  if(!(options&VSCROLLER_ALWAYS) && ((content_h<=viewport_h-sh_h) || (0>=viewport_w-sv_w-sv_w))) sv_w=0;
+  if(!(options&HSCROLLER_ALWAYS) && ((content_w<=viewport_w-sv_w) || (0>=viewport_h-sh_h-sh_h))) sh_h=0;
 
   // Viewport size with scroll bars taken into account
   viewport_w-=sv_w;
@@ -477,10 +476,10 @@ void FXScrollArea::setPosition(FXint x,FXint y){
 
 // Clean up
 FXScrollArea::~FXScrollArea(){
-  if(scrolltimer){getApp()->removeTimeout(scrolltimer);}
-  horizontal=(FXScrollbar*)-1;
-  vertical=(FXScrollbar*)-1;
-  corner=(FXScrollCorner*)-1;
-  scrolltimer=(FXTimer*)-1;
+  getApp()->removeTimeout(this,ID_AUTOSCROLL);
+  horizontal=(FXScrollBar*)-1L;
+  vertical=(FXScrollBar*)-1L;
+  corner=(FXScrollCorner*)-1L;
   }
 
+}

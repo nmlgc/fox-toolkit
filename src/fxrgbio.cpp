@@ -3,7 +3,7 @@
 *                    I R I S   R G B   I n p u t / O u t p u t                  *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2002 by Jeroen van der Zijp.   All Rights Reserved.             *
+* Copyright (C) 2002,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: fxrgbio.cpp,v 1.6 2002/01/23 06:20:07 jeroen Exp $                       *
+* $Id: fxrgbio.cpp,v 1.18 2004/04/08 16:24:48 fox Exp $                         *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -34,19 +34,15 @@
   - Bad data may core reader.
 */
 
+using namespace FX;
 
 /*******************************************************************************/
 
-
-/// Load a bmp file from a stream
-extern FXAPI FXbool fxloadRGB(FXStream& store,FXuchar*& data,FXColor& transp,FXint& width,FXint& height);
+namespace FX {
 
 
-/// Save a bmp file to a stream
-extern FXAPI FXbool fxsaveRGB(FXStream& store,const FXuchar *data,FXColor transp,FXint width,FXint height);
-
-
-/*******************************************************************************/
+extern FXAPI FXbool fxloadRGB(FXStream& store,FXColor*& data,FXint& width,FXint& height);
+extern FXAPI FXbool fxsaveRGB(FXStream& store,const FXColor *data,FXint width,FXint height);
 
 
 // Read from MSB order
@@ -67,7 +63,7 @@ static FXushort read16(FXStream& store){
 
 // Read table
 static void readtab(FXStream& store,FXuint* tab,FXint n){
-  for(register FXint i=0; i<n; i++){tab[i]=read32(store);}
+  for(register FXint i=0; i<n; i++){ tab[i]=read32(store); }
   }
 
 
@@ -81,14 +77,14 @@ static void expandrow(FXuchar* optr,FXuchar *iptr){   // FIXME bad data could bl
     if(pixel&0x80){   // Literal bytes
       while(count--){
 	*optr=*iptr++;
-	optr+=3;
+	optr+=4;
         }
       }
     else{             // Repeated bytes
       pixel=*iptr++;
       while(count--){
 	*optr=pixel;
-	optr+=3;
+	optr+=4;
         }
       }
     }
@@ -96,7 +92,7 @@ static void expandrow(FXuchar* optr,FXuchar *iptr){   // FIXME bad data could bl
 
 
 // Load image from stream
-FXbool fxloadRGB(FXStream& store,FXuchar*& data,FXColor& transp,FXint& width,FXint& height){
+FXbool fxloadRGB(FXStream& store,FXColor*& data,FXint& width,FXint& height){
   register FXint i,j,c,base,nchannels,dimension,tablen,magic,start,sub,t;
   FXuchar  storage;
   FXuchar  bpc;
@@ -106,74 +102,72 @@ FXbool fxloadRGB(FXStream& store,FXuchar*& data,FXColor& transp,FXint& width,FXi
   FXint    total;
   FXuchar *array;
 
+  // Null out
+  data=NULL;
+  width=0;
+  height=0;
+
   // Where the image format starts
   base=store.position();
-  
-  // No transparent color:- rgb's are opaque
-  transp=0;
-
-  // Assume we might fail  
-  data=NULL;
 
   // Load header
   magic=read16(store);  // MAGIC (2)
-  
+
   FXTRACE((50,"fxloadRGB: magic=%d\n",magic));
-  
+
   // Check magic number
-  if(magic!=474) return FALSE; 
-  
+  if(magic!=474) return FALSE;
+
   // Load rest of header
   store >> storage;     // STORAGE (1)
   store >> bpc;         // BPC (1)
-  
+
   FXTRACE((50,"fxloadRGB: bpc=%d storage=%d\n",bpc,storage));
-  
+
   // Check the bpc; only grok 1 byte/channel!
-  if(bpc!=1) return FALSE; 
-    
+  if(bpc!=1) return FALSE;
+
   dimension=read16(store);  // DIMENSION (2)
   width=read16(store);      // XSIZE (2)
   height=read16(store);     // YSIZE (2)
   nchannels=read16(store);  // ZSIZE (2)
-  
+
   // Don't grok anything other than RGB!
   if(nchannels!=3) return FALSE;
-  
+
   read32(store);            // PIXMIN (4)
   read32(store);            // PIXMAX (4)
   read32(store);            // DUMMY (4)
   store.load(temp,80);      // IMAGENAME (80)
   read32(store);            // COLORMAP (4)
   store.load(temp,404);     // DUMMY (404)
-  
-  FXTRACE((50,"fxloadRGB: width=%d height=%d nchannels=%d\n",width,height,nchannels));
-  
+
+  FXTRACE((50,"fxloadRGB: width=%d height=%d nchannels=%d dimension=%d storage=%d bpc=%d\n",width,height,nchannels,dimension,storage,bpc));
+
   // Make room for image
-  FXMALLOC(&data,FXuchar,width*height*3);
-  if(!data) return FALSE; 
-  
+  if(!FXMALLOC(&data,FXColor,width*height)) return FALSE;
+
   // RLE compressed
   if(storage){
     tablen=height*3;
-    
+
     // Allocate line tables
     FXMALLOC(&starttab,FXuint,tablen*2);
     if(!starttab) return FALSE;
     lengthtab=&starttab[tablen];
-    
+
     // Read line tables
     readtab(store,starttab,tablen);
     readtab(store,lengthtab,tablen);
-    
+
     // Where the RLE chunks start
     start=store.position();
-    
+
     // Substract this amount to get offset from chunk start
     sub=start-base;
-    
+
     total=0;
-    
+
     // Fix up the line table & figure space for RLE chunks
     // Intelligent RGB writers (not ours ;-)) may re-use RLE
     // chunks for more than 1 line...
@@ -181,38 +175,41 @@ FXbool fxloadRGB(FXStream& store,FXuchar*& data,FXColor& transp,FXint& width,FXi
       starttab[i]-=sub;
       t=starttab[i]+lengthtab[i];
       if(t>total) total=t;
-      } 
-    
+      }
+
     FXTRACE((1,"total=%d start=%d base=%d\n",total,start,base));
-    
+
     // Make room for the compressed lines
     FXMALLOC(&array,FXuchar,total);
     if(!array){ FXFREE(&starttab); return FALSE; }
-  
+
     // Load all RLE chunks
     store.load(array,total);
     for(c=0; c<3; c++){
       for(j=height-1; j>=0; j--){
-        expandrow(&data[3*j*width+c],&array[starttab[height-1-j+c*height]]);
+        expandrow(((FXuchar*)(data+j*width))+c,&array[starttab[height-1-j+c*height]]);
         }
       }
-    
+
     // Free RLE chunks
     FXFREE(&array);
-    
+
     // Free line tables
     FXFREE(&starttab);
     }
-  
+
   // NON compressed
   else{
     for(c=0; c<3; c++){
       for(j=height-1; j>=0; j--){
         store.load(temp,width);
-        for(i=0; i<width; i++) data[3*(j*width+i)+c]=temp[i];
+        for(i=0; i<width; i++) ((FXuchar*)(data+j*width+i))[c]=temp[i];
         }
       }
     }
+
+  // Set alpha
+  for(i=0; i<width*height; i++) ((FXuchar*)(data+i))[3]=255;
 
   // Return TRUE if OK
   return (store.status()==FXStreamOK);
@@ -241,18 +238,15 @@ static void write32(FXStream& store,FXuint i){
   }
 
 
-// Write table
-static void writetab(FXStream& store,FXuint* tab,FXint n){
-  for(register FXint i=0; i<n; i++){write32(store,tab[i]);}
-  }
-
-
 // Save a bmp file to a stream
-FXbool fxsaveRGB(FXStream& store,const FXuchar *data,FXColor,FXint width,FXint height){
+FXbool fxsaveRGB(FXStream& store,const FXColor *data,FXint width,FXint height){
   register FXint i,j,c;
   FXuchar  storage=0;       // FIXME NON compressed, for now
   FXuchar  bpc=1;
   FXuchar  temp[4096];
+
+  // Must make sense
+  if(!data || width<=0 || height<=0) return FALSE;
 
   // Save header
   write16(store,474);       // MAGIC (2)
@@ -275,9 +269,11 @@ FXbool fxsaveRGB(FXStream& store,const FXuchar *data,FXColor,FXint width,FXint h
   // Write pixels
   for(c=0; c<3; c++){
     for(j=height-1; j>=0; j--){
-      for(i=0; i<width; i++) temp[i]=data[3*(j*width+i)+c];
+      for(i=0; i<width; i++) temp[i]=((FXuchar*)(data+j*width+i))[c];
       store.save(temp,width);
       }
     }
   return TRUE;
   }
+
+}

@@ -3,9 +3,7 @@
 *      F i l e   I n f o r m a t i o n   a n d   M a n i p u l a t i o n        *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2000,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
-*********************************************************************************
-* Contributed by: Sean Hubbell                                                  *
+* Copyright (C) 2000,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -21,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXFile.cpp,v 1.131.4.11 2003/09/16 02:48:05 fox Exp $                     *
+* $Id: FXFile.cpp,v 1.174 2004/04/16 14:25:33 fox Exp $                         *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -33,16 +31,13 @@
 #include <shellapi.h>
 #endif
 
-#ifdef __SC__
-using namespace FXFile;
-#endif
+
 
 /*
   Notes:
+  - Thanks to Sean Hubbell for the original impetus for these functions.
   - Windows flavors of some of these functions are not perfect yet.
-
   - Windows 95 and NT:
-
       -  1 to 255 character name.
       -  Complete path for a file or project name cannot exceed 259
          characters, including the separators.
@@ -52,21 +47,32 @@ using namespace FXFile;
       -  Legal characters in the range of 32 - 255 but not ?"/\<>*|:
       -  Filenames may be mixed case.
       -  Filename comparisons are case insensitive (eg. ThIs.TXT = this.txt).
-
   - MS-DOS and Windows 3.1:
-
       -  1 to 11 characters in the 8.3 naming convention.
       -  Legal characters are A-Z, 0-9, Double Byte Character Set (DBCS)
          characters (128 - 255), and _^$~!#%&-{}@'()
       -  May not contain spaces, 0 - 31, and "/\[]:;|=,
       -  Must not begin with $
       -  Uppercase only filename.
-
   - Perhaps use GetEnvironmentVariable instead of getenv?
-
   - FXFile::search() what if some paths are quoted, like
 
       \this\dir;"\that\dir with a ;";\some\other\dir
+
+  - Need function to contract filenames, e.g. change:
+
+      /home/jeroen/junk
+      /home/someoneelse/junk
+
+    to:
+
+      ~/junk
+      ~someoneelse/junk
+
+  - Perhaps also taking into account certain environment variables in the
+    contraction function?
+  - FXFile::copy( "C:\tmp", "c:\tmp\tmp" ) results infinite-loop.
+
 */
 
 
@@ -74,7 +80,16 @@ using namespace FXFile;
 #define TIMEFORMAT "%m/%d/%Y %H:%M:%S"
 #endif
 
+
+using namespace FX;
+
 /*******************************************************************************/
+
+namespace FX {
+
+#ifdef __SC__
+using namespace FXFile;
+#endif
 
 
 // Return value of environment variable name
@@ -110,12 +125,7 @@ FXbool FXFile::setCurrentDirectory(const FXString& path){
 FXString FXFile::getCurrentDrive(){
 #ifdef WIN32
   FXchar buffer[MAXPATHLEN];
-//buffer[0]=_getdrive()+'a'-1;
-//buffer[1]=':';
-  if(GetCurrentDirectory(MAXPATHLEN,buffer) && isalpha((FXuchar)buffer[0]) && buffer[1]==':'){
-    buffer[0]=tolower((FXuchar)buffer[0]);
-    return FXString(buffer,2);
-    }
+  if(GetCurrentDirectory(MAXPATHLEN,buffer) && isalpha((FXuchar)buffer[0]) && buffer[1]==':') return FXString(buffer,2);
 #endif
   return FXString::null;
   }
@@ -131,7 +141,6 @@ FXbool FXFile::setCurrentDrive(const FXString& prefix){
     buffer[0]=prefix[0];
     buffer[1]=':';
     buffer[2]='\0';
-//  return _chdrive(tolower(buffer[0])-'a'+1)==0;
     return SetCurrentDirectory(buffer);
     }
   return FALSE;
@@ -217,17 +226,19 @@ FXString FXFile::getExecPath(){
   }
 
 
-// Get temporary directory
-//FXString FXFile::getTempDirectory(){
-//   FXString tmp=getCurrentDirectory();
-// #ifndef win32
-//   if exist /tmp and isWritable then tmp=/tmp
-//   else if exist /var/tmp and isWritable then tmp=/var/tmp
-// #else
-//   tmp=getEnvironment("TEMP") // or TMP etc
-// #endif
-//   return isWritable(tmp)?tmp:FXString::null;
-//  }
+/// Return temporary directory.
+FXString FXFile::getTempDirectory(){
+#ifndef WIN32
+  // Conform Linux File Hierarchy standard; this should be
+  // good for SUN, SGI, HP-UX, AIX, and OSF1 also.
+  return FXString("/tmp",5);
+#else
+  FXchar buffer[MAXPATHLEN];
+  FXuint len=GetTempPath(MAXPATHLEN,buffer);
+  if(1<len && ISPATHSEP(buffer[len-1]) && !ISPATHSEP(buffer[len-2])) len--;
+  return FXString(buffer,len);
+#endif
+  }
 
 
 // Return directory part of pathname, assuming full pathname.
@@ -446,6 +457,8 @@ FXString FXFile::expand(const FXString& file){
 //  a/../           -> ./
 //  ./a             -> ./a
 //  /////./././     -> /
+//  c:/../          -> c:/
+//  c:a/..          -> c:
 FXString FXFile::simplify(const FXString& file){
   if(!file.empty()){
     FXString result=file;
@@ -496,8 +509,7 @@ FXString FXFile::simplify(const FXString& file){
         if(!ISPATHSEP(result[p-1])) result[p++]=PATHSEP;
         }
       }
-    result[p]=0;
-    return result;
+    return result.trunc(p);
     }
   return FXString::null;
   }
@@ -506,39 +518,69 @@ FXString FXFile::simplify(const FXString& file){
 // Build absolute pathname
 FXString FXFile::absolute(const FXString& file){
   FXString pathfile=FXFile::expand(file);
+  if(pathfile.empty()) return FXFile::getCurrentDirectory();
 #ifndef WIN32
   if(ISPATHSEP(pathfile[0])) return FXFile::simplify(pathfile);
 #else
   if(ISPATHSEP(pathfile[0])){
     if(ISPATHSEP(pathfile[1])) return FXFile::simplify(pathfile);   // UNC
-    return FXFile::simplify(getCurrentDrive()+pathfile);
+    return FXFile::simplify(FXFile::getCurrentDrive()+pathfile);
     }
   if(isalpha((FXuchar)pathfile[0]) && pathfile[1]==':'){
     if(ISPATHSEP(pathfile[2])) return FXFile::simplify(pathfile);
-    return FXFile::simplify(pathfile.mid(0,2)+PATHSEPSTRING+pathfile.mid(2,MAXPATHLEN));
+    return FXFile::simplify(pathfile.mid(0,2)+PATHSEPSTRING+pathfile.mid(2,2147483647));
     }
 #endif
-  return FXFile::simplify(getCurrentDirectory()+PATHSEPSTRING+pathfile);
+  return FXFile::simplify(FXFile::getCurrentDirectory()+PATHSEPSTRING+pathfile);
   }
 
 
 // Build absolute pathname from parts
 FXString FXFile::absolute(const FXString& base,const FXString& file){
   FXString pathfile=FXFile::expand(file);
+  if(pathfile.empty()) return FXFile::absolute(base);
 #ifndef WIN32
   if(ISPATHSEP(pathfile[0])) return FXFile::simplify(pathfile);
 #else
   if(ISPATHSEP(pathfile[0])){
     if(ISPATHSEP(pathfile[1])) return FXFile::simplify(pathfile);   // UNC
-    return FXFile::simplify(getCurrentDrive()+pathfile);
+    return FXFile::simplify(FXFile::getCurrentDrive()+pathfile);
     }
   if(isalpha((FXuchar)pathfile[0]) && pathfile[1]==':'){
     if(ISPATHSEP(pathfile[2])) return FXFile::simplify(pathfile);
-    return FXFile::simplify(pathfile.mid(0,2)+PATHSEPSTRING+pathfile.mid(2,MAXPATHLEN));
+    return FXFile::simplify(pathfile.mid(0,2)+PATHSEPSTRING+pathfile.mid(2,2147483647));
     }
 #endif
   return FXFile::simplify(FXFile::absolute(base)+PATHSEPSTRING+pathfile);
   }
+
+
+#ifndef WIN32
+
+// Return root of given path; this is just "/" or "" if not absolute
+FXString FXFile::root(const FXString& file){
+  if(ISPATHSEP(file[0])){
+    return PATHSEPSTRING;
+    }
+  return FXString::null;
+  }
+
+#else
+
+// Return root of given path; this may be "\\" or "C:\" or "" if not absolute
+FXString FXFile::root(const FXString& file){
+  if(ISPATHSEP(file[0])){
+    if(ISPATHSEP(file[1])) return PATHSEPSTRING PATHSEPSTRING;   // UNC
+    return FXFile::getCurrentDrive()+PATHSEPSTRING;
+    }
+  if(isalpha((FXuchar)file[0]) && file[1]==':'){
+    if(ISPATHSEP(file[2])) return file.left(3);
+    return file.left(2)+PATHSEPSTRING;
+    }
+  return FXString::null;
+  }
+
+#endif
 
 
 // Return relative path of file to given base directory
@@ -682,35 +724,29 @@ FXString FXFile::upLevel(const FXString& file){
 #endif
     if(beg<end && ISPATHSEP(file[end-1])) end--;
     while(beg<end){ --end; if(ISPATHSEP(file[end])) break; }
-    return file.mid(0,end);
+    return file.left(end);
     }
-  return file;
+  return PATHSEPSTRING;
   }
 
 
 // Check if file represents absolute pathname
 FXbool FXFile::isAbsolute(const FXString& file){
-  if(!file.empty()){
 #ifndef WIN32
-    return ISPATHSEP(file[0]);
+  return !file.empty() && ISPATHSEP(file[0]);
 #else
-    return ISPATHSEP(file[0]) || (isalpha((FXuchar)file[0]) && file[1]==':');
+  return !file.empty() && (ISPATHSEP(file[0]) || (isalpha((FXuchar)file[0]) && file[1]==':'));
 #endif
-    }
-  return FALSE;
   }
 
 
 // Does file represent topmost directory
 FXbool FXFile::isTopDirectory(const FXString& file){
-  if(!file.empty()){
 #ifndef WIN32
-    return (ISPATHSEP(file[0]) && file[1]=='\0');
+  return !file.empty() && ISPATHSEP(file[0]) && file[1]=='\0';
 #else
-    return (ISPATHSEP(file[0]) && (file[1]=='\0' || (ISPATHSEP(file[1]) && file[2]=='\0'))) || (isalpha((FXuchar)file[0]) && file[1]==':' && (file[2]=='\0' || (ISPATHSEP(file[2]) && file[3]=='\0')));
+  return !file.empty() && ((ISPATHSEP(file[0]) && (file[1]=='\0' || (ISPATHSEP(file[1]) && file[2]=='\0'))) || (isalpha((FXuchar)file[0]) && file[1]==':' && (file[2]=='\0' || (ISPATHSEP(file[2]) && file[3]=='\0'))));
 #endif
-    }
-  return FALSE;
   }
 
 
@@ -737,9 +773,17 @@ FXbool FXFile::isLink(const FXString& file){
   }
 
 
+// Check if file represents a file share
+FXbool FXFile::isShare(const FXString& file){
+#ifndef WIN32
+  return FALSE;
+#else
+  return ISPATHSEP(file[0]) && ISPATHSEP(file[1]) && file.find(PATHSEP,2)<0;
+#endif
+  }
+
+
 /*
-/// Return true if input path represents a file share
-FXbool FXAPI isShare(const FXString& file);
 
 
 // Return true if input path represents a file share of the form "\\" or "\\server"
@@ -747,7 +791,7 @@ FXbool FXFile::isShare(const FXString& file){
 #ifndef WIN32
   return FALSE;
 #else
-  if(ISPATHSEP(file[0]) && ISPATHSEP(file[1]) && file.findf(PATHSEP,2)<0){
+  if(ISPATHSEP(file[0]) && ISPATHSEP(file[1]) && file.find(PATHSEP,2)<0){
     HANDLE hEnum;
     NETRESOURCE host;
     host.dwScope=RESOURCE_GLOBALNET;
@@ -984,33 +1028,124 @@ FXbool FXFile::isSetSticky(const FXString& file){
   }
 
 
+// Return owner name from uid
+FXString FXFile::owner(FXuint uid){
+  FXchar result[64];
+#ifndef WIN32
+#ifdef FOX_THREAD_SAFE
+  struct passwd pwdresult,*pwd;
+  char buffer[1024];
+  if(getpwuid_r(uid,&pwdresult,buffer,sizeof(buffer),&pwd)==0 && pwd) return pwd->pw_name;
+#else
+  struct passwd *pwd=getpwuid(uid);
+  if(pwd) return pwd->pw_name;
+#endif
+#endif
+  sprintf(result,"%u",uid);
+  return result;
+  }
+
+
+// Return group name from gid
+FXString FXFile::group(FXuint gid){
+  FXchar result[64];
+#ifndef WIN32
+#ifdef FOX_THREAD_SAFE
+  ::group grpresult;
+  ::group *grp;
+  char buffer[1024];
+  if(getgrgid_r(gid,&grpresult,buffer,sizeof(buffer),&grp)==0 && grp) return grp->gr_name;
+#else
+  ::group *grp=getgrgid(gid);
+  if(grp) return grp->gr_name;
+#endif
+#endif
+  sprintf(result,"%u",gid);
+  return result;
+  }
+
+
 // Return owner name of file
 FXString FXFile::owner(const FXString& file){
   struct stat status;
-  FXchar owner[64];
-  if(file.empty() || (::stat(file.text(),&status)!=0)) return FXString::null;
-#ifndef WIN32
-  fxgetusername(owner,status.st_uid);
-#else
-  fxgetusername(owner,0);
-#endif
-  return owner;
+  if(!file.empty() && ::stat(file.text(),&status)==0){
+    return FXFile::owner(status.st_uid);
+    }
+  return FXString::null;
   }
 
 
 // Return group name of file
 FXString FXFile::group(const FXString& file){
   struct stat status;
-  FXchar group[64];
-  if(file.empty() || (::stat(file.text(),&status)!=0)) return FXString::null;
-#ifndef WIN32
-  fxgetgroupname(group,status.st_gid);
-#else
-  fxgetgroupname(group,0);
-#endif
-  return group;
+  if(!file.empty() && ::stat(file.text(),&status)==0){
+    return FXFile::group(status.st_gid);
+    }
+  return FXString::null;
   }
 
+
+/// Return permissions string
+FXString FXFile::permissions(FXuint mode){
+  FXchar result[11];
+#ifndef WIN32
+  result[0]=S_ISLNK(mode) ? 'l' : S_ISREG(mode) ? '-' : S_ISDIR(mode) ? 'd' : S_ISCHR(mode) ? 'c' : S_ISBLK(mode) ? 'b' : S_ISFIFO(mode) ? 'p' : S_ISSOCK(mode) ? 's' : '?';
+  result[1]=(mode&S_IRUSR) ? 'r' : '-';
+  result[2]=(mode&S_IWUSR) ? 'w' : '-';
+  result[3]=(mode&S_ISUID) ? 's' : (mode&S_IXUSR) ? 'x' : '-';
+  result[4]=(mode&S_IRGRP) ? 'r' : '-';
+  result[5]=(mode&S_IWGRP) ? 'w' : '-';
+  result[6]=(mode&S_ISGID) ? 's' : (mode&S_IXGRP) ? 'x' : '-';
+  result[7]=(mode&S_IROTH) ? 'r' : '-';
+  result[8]=(mode&S_IWOTH) ? 'w' : '-';
+  result[9]=(mode&S_ISVTX) ? 't' : (mode&S_IXOTH) ? 'x' : '-';
+  result[10]=0;
+#else
+  result[0]='-';
+#ifdef _S_IFDIR
+  if(mode&_S_IFDIR) result[0]='d';
+#endif
+#ifdef _S_IFCHR
+  if(mode&_S_IFCHR) result[0]='c';
+#endif
+#ifdef _S_IFIFO
+  if(mode&_S_IFIFO) result[0]='p';
+#endif
+  result[1]='r';
+  result[2]='w';
+  result[3]='x';
+  result[4]='r';
+  result[5]='w';
+  result[6]='x';
+  result[7]='r';
+  result[8]='w';
+  result[9]='x';
+  result[10]=0;
+#endif
+  return result;
+  }
+
+/*
+// Convert FILETIME (# 100ns since 01/01/1601) to time_t (# s since 01/01/1970)
+static time_t fxfiletime(const FILETIME& ft){
+  FXlong ll=(((FXlong)ft.dwHighDateTime)<<32) | (FXlong)ft.dwLowDateTime;
+#if defined(__CYGWIN__) || defined(__MINGW32__)
+  ll=ll-116444736000000000LL;
+#else
+  ll=ll-116444736000000000L;    // 0x19DB1DED53E8000
+#endif
+  ll=ll/10000000;
+  if(ll<0) ll=0;
+  return (time_t)ll;
+  }
+*/
+
+//    hFile=CreateFile(pathname,GENERIC_READ,0,NULL,OPEN_EXISTING,FILE_FLAG_BACKUP_SEMANTICS,NULL);
+//    if(hFile!=INVALID_HANDLE_VALUE){
+//      GetFileTime(hFile,NULL,NULL,&ftLastWriteTime);
+//      CloseHandle(hFile);
+
+//       filetime=fxfiletime(ftLastWriteTime);
 
 // Return time file was last modified
 FXTime FXFile::modified(const FXString& file){
@@ -1065,9 +1200,10 @@ FXTime FXFile::touched(const FXString& file){
 
 
 // List all the files in directory
-FXint FXFile::listFiles(FXString*& list,const FXString& path,const FXString& pattern,FXuint flags){
+FXint FXFile::listFiles(FXString*& filelist,const FXString& path,const FXString& pattern,FXuint flags){
   FXuint matchmode=FILEMATCH_FILE_NAME|FILEMATCH_NOESCAPE;
-  FXchar pathname[MAXPATHLEN],*pathtail,*name;
+  FXString pathname;
+  FXString name;
   struct dirent *dp;
   FXString *newlist;
   FXint count=0;
@@ -1076,11 +1212,11 @@ FXint FXFile::listFiles(FXString*& list,const FXString& path,const FXString& pat
   struct stat inf;
 
   // Initialize to empty
-  list=NULL;
+  filelist=NULL;
 /*
   // One single root under Unix
   if(path.empty()){
-    list=new FXString[2];
+    filelist=new FXString[2];
     list[count++]=PATHSEPSTRING;
     return count;
     }
@@ -1088,52 +1224,49 @@ FXint FXFile::listFiles(FXString*& list,const FXString& path,const FXString& pat
   // Folding case
   if(flags&LIST_CASEFOLD) matchmode|=FILEMATCH_CASEFOLD;
 
-  // Copy directory name
-  strcpy(pathname,path.text());
-
   // Get directory stream pointer
-  dirp=opendir(pathname);
-  if(!dirp) return 0;
+  dirp=opendir(path.text());
+  if(dirp){
 
-  // Built directory part
-  pathtail=pathname+strlen(pathname)-1;
-  if(!ISPATHSEP(*pathtail)) *++pathtail=PATHSEP;
-  ++pathtail;
-
-  // Loop over directory entries
+    // Loop over directory entries
 #ifdef FOX_THREAD_SAFE
-  struct fxdirent dirresult;
-  while(readdir_r(dirp,&dirresult,&dp)==0 && dp){
+    struct fxdirent dirresult;
+    while(!readdir_r(dirp,&dirresult,&dp) && dp){
 #else
-  while((dp=readdir(dirp))!=NULL){
+    while((dp=readdir(dirp))!=NULL){
 #endif
-    name=dp->d_name;
 
-    // Build full pathname
-    strcpy(pathtail,name);
+      // Get name
+      name=dp->d_name;
 
-    // Get info on file
-    if(::stat(pathname,&inf)!=0) continue;
+      // Build full pathname
+      pathname=path;
+      if(!ISPATHSEP(pathname[pathname.length()-1])) pathname+=PATHSEPSTRING;
+      pathname+=name;
 
-    // Filter out files; a bit tricky...
-    if(!S_ISDIR(inf.st_mode) && ((flags&LIST_NO_FILES) || (name[0]=='.' && !(flags&LIST_HIDDEN_FILES)) || (!(flags&LIST_ALL_FILES) && !fxfilematch(pattern.text(),name,matchmode)))) continue;
+      // Get info on file
+      if(!info(pathname,inf)) continue;
 
-    // Filter out directories; even more tricky!
-    if(S_ISDIR(inf.st_mode) && ((flags&LIST_NO_DIRS) || (name[0]=='.' && (name[1]==0 || (name[1]=='.' && name[2]==0 && (flags&LIST_NO_PARENT)) || (name[1]!='.' && !(flags&LIST_HIDDEN_DIRS)))) || (!(flags&LIST_ALL_DIRS) && !fxfilematch(pattern.text(),name,matchmode)))) continue;
+      // Filter out files; a bit tricky...
+      if(!S_ISDIR(inf.st_mode) && ((flags&LIST_NO_FILES) || (name[0]=='.' && !(flags&LIST_HIDDEN_FILES)) || (!(flags&LIST_ALL_FILES) && !match(pattern,name,matchmode)))) continue;
 
-    // Grow list
-    if(count+1>=size){
-      size=size?(size<<1):256;
-      newlist=new FXString [size];
-      for(int i=0; i<count; i++) newlist[i]=list[i];
-      delete [] list;
-      list=newlist;
+      // Filter out directories; even more tricky!
+      if(S_ISDIR(inf.st_mode) && ((flags&LIST_NO_DIRS) || (name[0]=='.' && (name[1]==0 || (name[1]=='.' && name[2]==0 && (flags&LIST_NO_PARENT)) || (name[1]!='.' && !(flags&LIST_HIDDEN_DIRS)))) || (!(flags&LIST_ALL_DIRS) && !match(pattern,name,matchmode)))) continue;
+
+      // Grow list
+      if(count+1>=size){
+        size=size?(size<<1):256;
+        newlist=new FXString [size];
+        for(int i=0; i<count; i++) newlist[i]=filelist[i];
+        delete [] filelist;
+        filelist=newlist;
+        }
+
+      // Add to list
+      filelist[count++]=name;
       }
-
-    // Add to list
-    list[count++]=name;
+    closedir(dirp);
     }
-  closedir(dirp);
   return count;
   }
 
@@ -1142,9 +1275,10 @@ FXint FXFile::listFiles(FXString*& list,const FXString& path,const FXString& pat
 
 
 // List all the files in directory
-FXint FXFile::listFiles(FXString*& list,const FXString& path,const FXString& pattern,FXuint flags){
+FXint FXFile::listFiles(FXString*& filelist,const FXString& path,const FXString& pattern,FXuint flags){
   FXuint matchmode=FILEMATCH_FILE_NAME|FILEMATCH_NOESCAPE;
-  FXchar pathname[MAXPATHLEN],*pathtail,*name;
+  FXString pathname;
+  FXString name;
   FXString *newlist;
   FXint count=0;
   FXint size=0;
@@ -1154,7 +1288,7 @@ FXint FXFile::listFiles(FXString*& list,const FXString& path,const FXString& pat
   FXchar server[200];
 
   // Initialize to empty
-  list=NULL;
+  filelist=NULL;
 
 /*
   // Each drive is a root on windows
@@ -1164,17 +1298,17 @@ FXint FXFile::listFiles(FXString*& list,const FXString& path,const FXString& pat
     letter[1]=':';
     letter[2]=PATHSEP;
     letter[3]='\0';
-    list=new FXString[28];
+    filelist=new FXString[28];
     for(DWORD mask=GetLogicalDrives(); mask; mask>>=1,letter[0]++){
       if(mask&1) list[count++]=letter;
       }
-    list[count++]=PATHSEPSTRING PATHSEPSTRING;    // UNC for file shares
+    filelist[count++]=PATHSEPSTRING PATHSEPSTRING;    // UNC for file shares
     return count;
     }
 */
 /*
   // A UNC name was given of the form "\\" or "\\server"
-  if(ISPATHSEP(path[0]) && ISPATHSEP(path[1]) && path.findf(PATHSEP,2)<0){
+  if(ISPATHSEP(path[0]) && ISPATHSEP(path[1]) && path.find(PATHSEP,2)<0){
     NETRESOURCE host;
 
     // Fill in
@@ -1212,12 +1346,12 @@ FXint FXFile::listFiles(FXString*& list,const FXString& path,const FXString& pat
             size=size?(size<<1):256;
             newlist=new FXString[size];
             for(j=0; j<count; j++) newlist[j]=list[j];
-            delete [] list;
-            list=newlist;
+            delete [] filelist;
+            filelist=newlist;
             }
 
           // Add remote name to list
-          list[count]=resource[i].lpRemoteName;
+          filelist[count]=resource[i].lpRemoteName;
           count++;
           }
         }
@@ -1230,40 +1364,41 @@ FXint FXFile::listFiles(FXString*& list,const FXString& path,const FXString& pat
   if(flags&LIST_CASEFOLD) matchmode|=FILEMATCH_CASEFOLD;
 
   // Copy directory name
-  strcpy(pathname,path.text());
-  pathtail=pathname+strlen(pathname)-1;
-  if(!ISPATHSEP(*pathtail)) *++pathtail=PATHSEP;
-  ++pathtail;
+  pathname=path;
+  if(!ISPATHSEP(pathname[pathname.length()-1])) pathname+=PATHSEPSTRING;
+  pathname+="*";
 
   // Open directory
-  strcpy(pathtail,"*");
-  hFindFile=FindFirstFile(pathname,&ffData);
-  if(hFindFile==INVALID_HANDLE_VALUE) return 0;
+  hFindFile=FindFirstFile(pathname.text(),&ffData);
+  if(hFindFile!=INVALID_HANDLE_VALUE){
 
-  // Loop over directory entries
-  do{
-    name=ffData.cFileName;
+    // Loop over directory entries
+    do{
 
-    // Filter out files; a bit tricky...
-    if(!(ffData.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY) && ((flags&LIST_NO_FILES) || ((ffData.dwFileAttributes&FILE_ATTRIBUTE_HIDDEN) && !(flags&LIST_HIDDEN_FILES)) || (!(flags&LIST_ALL_FILES) && !fxfilematch(pattern.text(),name,matchmode)))) continue;
+      // Get name
+      name=ffData.cFileName;
 
-    // Filter out directories; even more tricky!
-    if((ffData.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY) && ((flags&LIST_NO_DIRS) || ((ffData.dwFileAttributes&FILE_ATTRIBUTE_HIDDEN) && !(flags&LIST_HIDDEN_DIRS)) || (name[0]=='.' && (name[1]==0 || (name[1]=='.' && name[2]==0 && (flags&LIST_NO_PARENT)))) || (!(flags&LIST_ALL_DIRS) && !fxfilematch(pattern.text(),name,matchmode)))) continue;
+      // Filter out files; a bit tricky...
+      if(!(ffData.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY) && ((flags&LIST_NO_FILES) || ((ffData.dwFileAttributes&FILE_ATTRIBUTE_HIDDEN) && !(flags&LIST_HIDDEN_FILES)) || (!(flags&LIST_ALL_FILES) && !match(pattern,name,matchmode)))) continue;
 
-    // Grow list
-    if(count+1>=size){
-      size=size?(size<<1):256;
-      newlist=new FXString[size];
-      for(int f=0; f<count; f++) newlist[f]=list[f];
-      delete [] list;
-      list=newlist;
+      // Filter out directories; even more tricky!
+      if((ffData.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY) && ((flags&LIST_NO_DIRS) || ((ffData.dwFileAttributes&FILE_ATTRIBUTE_HIDDEN) && !(flags&LIST_HIDDEN_DIRS)) || (name[0]=='.' && (name[1]==0 || (name[1]=='.' && name[2]==0 && (flags&LIST_NO_PARENT)))) || (!(flags&LIST_ALL_DIRS) && !match(pattern,name,matchmode)))) continue;
+
+      // Grow list
+      if(count+1>=size){
+        size=size?(size<<1):256;
+        newlist=new FXString[size];
+        for(int f=0; f<count; f++) newlist[f]=filelist[f];
+        delete [] filelist;
+        filelist=newlist;
+        }
+
+      // Add to list
+      filelist[count++]=name;
       }
-
-    // Add to list
-    list[count++]=name;
+    while(FindNextFile(hFindFile,&ffData));
+    FindClose(hFindFile);
     }
-  while(FindNextFile(hFindFile,&ffData));
-  FindClose(hFindFile);
   return count;
   }
 
@@ -1294,6 +1429,7 @@ FXString FXFile::time(const FXchar *format,FXTime filetime){
   }
 
 
+
 // Convert file time to string
 FXString FXFile::time(FXTime filetime){
   return FXFile::time(TIMEFORMAT,filetime);
@@ -1314,6 +1450,17 @@ FXbool FXFile::info(const FXString& file,struct stat& inf){
   return !file.empty() && (::stat(file.text(),&inf)==0);
 #endif
   }
+
+
+// Get file info
+FXbool FXFile::linkinfo(const FXString& file,struct stat& inf){
+#ifndef WIN32
+  return !file.empty() && (::lstat(file.text(),&inf)==0);
+#else
+  return !file.empty() && (::stat(file.text(),&inf)==0);
+#endif
+  }
+
 
 
 // Get file size
@@ -1535,7 +1682,7 @@ FXbool FXFile::createDirectory(const FXString& path,FXuint mode){
 // Create new (empty) file
 FXbool FXFile::createFile(const FXString& file,FXuint mode){
 #ifndef WIN32
-  FXint fd=open(file.text(),O_CREAT|O_WRONLY|O_TRUNC,mode);
+  FXint fd=open(file.text(),O_CREAT|O_WRONLY|O_TRUNC|O_EXCL,mode);
   if(fd>=0){ close(fd); return TRUE; }
   return FALSE;
 #else
@@ -1724,11 +1871,11 @@ static FXbool copyrec(const FXString& oldfile,const FXString& newfile,FXbool ove
 
 // Copy directory
 static FXbool copydir(const FXString& oldfile,const FXString& newfile,FXbool overwrite,struct stat& parentstatus,inodelist* inodes){
-  DIR *dirp;
-  struct dirent *dp;
+  FXString oldchild,newchild;
   struct stat status;
   inodelist *in,inode;
-  FXString oldchild,newchild;
+  struct dirent *dp;
+  DIR *dirp;
 
   // See if visited this inode already
   for(in=inodes; in; in=in->next){
@@ -1752,7 +1899,7 @@ static FXbool copydir(const FXString& oldfile,const FXString& newfile,FXbool ove
   // Copy stuff
 #ifdef FOX_THREAD_SAFE
   struct fxdirent dirresult;
-  while(readdir_r(dirp,&dirresult,&dp)==0 && dp){
+  while(!readdir_r(dirp,&dirresult,&dp) && dp){
 #else
   while((dp=readdir(dirp))!=NULL){
 #endif
@@ -1883,7 +2030,14 @@ static FXbool copydir(const FXString& oldfile,const FXString& newfile,FXbool ove
   HANDLE hFindFile;
 
   // Try make directory, if none exists yet
-  if(CreateDirectory(newfile.text(),NULL)==0 && GetLastError()!=ERROR_FILE_EXISTS) return FALSE;
+//  if(CreateDirectory(newfile.text(),NULL)==0 && GetLastError()!=ERROR_FILE_EXISTS) return FALSE;
+  if(CreateDirectory(newfile.text(),NULL)==0){  // patch from "Malcolm Dane" <danem@talk21.com>
+    switch(GetLastError()){
+      case ERROR_FILE_EXISTS:
+      case ERROR_ALREADY_EXISTS: break;
+      default: return FALSE;
+      }
+    }
 
   // Can we stat it
   if((atts=GetFileAttributes(newfile.text()))==0xffffffff || !(atts&FILE_ATTRIBUTE_DIRECTORY)) return FALSE;
@@ -1973,11 +2127,11 @@ FXbool FXFile::remove(const FXString& file){
     if(S_ISDIR(status.st_mode)){
       DIR *dirp=::opendir(file.text());
       if(dirp){
-        struct dirent *dp;
         FXString child;
+        struct dirent *dp;
 #ifdef FOX_THREAD_SAFE
         struct fxdirent dirresult;
-        while(readdir_r(dirp,&dirresult,&dp)==0 && dp){
+        while(!readdir_r(dirp,&dirresult,&dp) && dp){
 #else
         while((dp=readdir(dirp))!=NULL){
 #endif
@@ -2130,4 +2284,6 @@ FXString FXFile::symlink(const FXString& file){
 #endif
   return FXString::null;
   }
+
+}
 

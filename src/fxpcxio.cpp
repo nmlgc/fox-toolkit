@@ -3,7 +3,7 @@
 *                          P C X   I n p u t / O u t p u t                      *
 *                                                                               *
 *********************************************************************************
-* Author: Janusz Ganczarski (POWER)   Email: JanuszG@enter.net.pl               *
+* Copyright (C) 2001,2004 by Janusz Ganczarski.   All Rights Reserved.          *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: fxpcxio.cpp,v 1.5.4.2 2002/10/03 06:08:49 fox Exp $                       *
+* $Id: fxpcxio.cpp,v 1.22 2004/04/08 16:24:48 fox Exp $                         *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -29,276 +29,63 @@
 
 
 /*
-  To do:
-   - Load 32 bpp PCX image
-   - Save 1, 4 and 256 bpi PCX image
+  Notes:
+  - Loading 1-bit/1-plane, 4-bit/1-plane, 8-bit/1-plane and 8-bit/3-plane
+    images appears to work.
+  - Slight question as to whether to round up width to even for saving.
+  - Need to check if fewer colors, if so fall back on lower pixel depth
+    mode to save space.
+  - Needs to be updated when new stream classes are here (can do byte
+    swap on writing).
 */
 
+using namespace FX;
 
 /*******************************************************************************/
 
-/// Load a PCX file from a stream
-extern FXAPI FXbool fxloadPCX(FXStream& store,FXuchar*& data,FXColor& transp,FXint& width,FXint& height);
+namespace FX {
 
 
-/// Save a PCX file to a stream
-extern FXAPI FXbool fxsavePCX(FXStream& store,const FXuchar *data,FXColor transp,FXint width,FXint height);
+extern FXAPI FXbool fxloadPCX(FXStream& store,FXColor*& data,FXint& width,FXint& height);
+extern FXAPI FXbool fxsavePCX(FXStream& store,const FXColor *data,FXint width,FXint height);
 
 
-/*******************************************************************************/
-
-static FXuint read16(FXStream& store){
+static inline FXuint read16(FXStream& store){
   FXuchar c1,c2;
   store >> c1 >> c2;
   return ((FXuint)c1) | (((FXuint)c2)<<8);
   }
 
 
-static FXbool loadPCX1(FXStream& store,FXuchar* pic,FXuchar* colormap,FXint w,FXint h,FXint bpl){
-  FXuchar *pp = pic,c,*cm;
-  FXint x,y,i,rc;
-
-  // Decompress image
-  for(y=0; y<h; y++){
-    x=0;
-    while(x<bpl){
-      store >> c;
-      if((c&0xC0)==0xC0){
-        rc=c&0x3F;
-        store >> c;
-        while(rc--){
-          for(i=0; i<8; i++){
-            if(x*8+i<w){
-              cm=colormap+3*((FXuchar)(c<<i)>>7);
-              *pp++=*cm++;
-              *pp++=*cm++;
-              *pp++=*cm;
-              }
-            }
-          x++;
-          }
-        }
-      else{
-        for(i=0; i<8; i++){
-          if(x*8+i<w){
-            cm = colormap + 3 * ((FXuchar)(c << i) >> 7);
-            *pp++ = *cm++;
-            *pp++ = *cm++;
-            *pp++ = *cm;
-            }
-          }
-        x++;
-        }
-      }
-    }
-  return TRUE;
-  }
-
-
-/*******************************************************************************/
-
-
-static FXbool loadPCX4(FXStream& store,FXuchar* pic,FXuchar* colormap,FXint w,FXint h,FXint bpl){
-  FXuchar *pp=pic,c,*cm;
-  FXint x,y,rc;
-
-  // Decompress image
-  for(y = 0; y < h; y++){
-    x = 0;
-    while (x < bpl){
-      store >> c;
-      if ((c & 0xC0) == 0xC0){
-        rc = c & 0x3F;
-        store >> c;
-        while (rc--){
-          if (x + x < w){
-            cm = colormap + 3 * (c >> 4);
-            *pp++ = *cm++;
-            *pp++ = *cm++;
-            *pp++ = *cm;
-            }
-          if (x + x + 1 < w){
-            cm = colormap + 3 * (c & 0x0F);
-            *pp++ = *cm++;
-            *pp++ = *cm++;
-            *pp++ = *cm;
-            }
-          x++;
-          }
-        }
-      else{
-        if (x + x < w){
-          cm = colormap + 3 * (c >> 4);
-          *pp++ = *cm++;
-          *pp++ = *cm++;
-          *pp++ = *cm;
-          }
-        if (x + x + 1 < w){
-          cm = colormap + 3 * (c & 0x0F);
-          *pp++ = *cm++;
-          *pp++ = *cm++;
-          *pp++ = *cm;
-          }
-        x++;
-        }
-      }
-    }
-  return TRUE;
-  }
-
-/*******************************************************************************/
-
-// 4 planes, 1 bpp
-
-static FXbool loadPCX4x1(FXStream& store,FXuchar* pic,FXuchar* colormap,FXint w,FXint h,FXint bpl){
-  FXuchar *pp=pic,c,*cm;
-  FXint x,y,i,rc,bpl4=bpl*4;
-  FXuint mask;
-  FXuchar *buf;
-  FXuchar c0,c1,c2,c3;
-
-  // temp buf
-  FXMALLOC (&buf,FXuchar,bpl4);
-  if(!buf) return FALSE;
-
-  // Decompress image
-  for(y=0; y<h; y++){
-    x=0;
-    while(x<bpl4){
-      store >> c;
-      if((c&0xC0)==0xC0){
-        rc=c&0x3F;
-        store >> c;
-        memset (&buf [x],c,rc);
-        x+=rc;
-      }
-      else{
-        buf [x] = c;
-        x++;
-      }
-    }
-
-    // decode line
-    for (x = 0; x<bpl; x++){
-      c0 = buf [x];
-      c1 = buf [x + bpl];
-      c2 = buf [x + 2 * bpl];
-      c3 = buf [x + 3 * bpl];
-      for(i=7,mask=128; i>=0; i--,mask >>= 1)
-        if(x*4+i<w){
-          cm=colormap+3*(((c0 & mask) >> i) + (((c1 & mask) >> i) << 1) +
-             (((c2 & mask) >> i) << 2) + (((c3 & mask) >> i) << 3));
-          *pp++=*cm++;
-          *pp++=*cm++;
-          *pp++=*cm;
-        }
-      }
-  }
-  // clear buf
-  FXFREE (&buf);
-
-  return TRUE;
-  }
-
-/*******************************************************************************/
-
-
-static FXbool loadPCX8(FXStream& store,FXuchar* pic,FXint w,FXint h,FXint bpl){
-  FXuchar colormap[256*3];
-  FXint x,y,i,ix,rc;
-  FXuchar *cm,c,*pp;
-  pp=&pic[w*h*2];
-
-  // Decompress image
-  for(y=0; y<h; y++){
-    x=0;
-    while(x<bpl){
-      store >> c;
-      if((c&0xC0)==0xC0){
-        rc=c&0x3F;
-        store >> c;
-        while(rc--){
-          if(x++<w) *pp++=c;
-          }
-        }
-      else{
-        if(x++<w) *pp++=c;
-        }
-      }
-    }
-
-  // Get VGApaletteID
-  store >> c;
-
-  // Check VGApaletteID
-  if(c!=0xC) return FALSE;
-
-  // Get Colormap
-  cm=colormap;
-  for(i=0; i<768; i++) store >> *cm++;
-
-  // Apply colormap
-  for(i=0; i<w*h; i++){
-    ix=pic[2*w*h+i];
-    pic[3*i+0]=colormap[3*ix+0];
-    pic[3*i+1]=colormap[3*ix+1];
-    pic[3*i+2]=colormap[3*ix+2];
-    }
-
-  return TRUE;
-  }
-
-/*******************************************************************************/
-
-
-static FXbool loadPCX24(FXStream& store,FXuchar* pic,FXint w,FXint h,FXint bpl){
-  FXint x,y,rc,rgb;
-  FXuchar c,*pp;
-
-  // Decompress image
-  for (y = 0; y < h; y++){
-    for (rgb = 0; rgb < 3; rgb++){
-      pp = pic + 3 * y * w + rgb;
-      x = 0;
-      while(x < bpl){
-        store >> c;
-        if ((c & 0xC0) == 0xC0){
-          rc = c & 0x3F;
-          store >> c;
-          while (rc--){
-            if(x++ < w){
-              *pp = c;
-              pp += 3;
-              }
-            }
-          }
-        else{
-          if(x++ < w){
-            *pp = c;
-            pp += 3;
-            }
-          }
-        }
-      }
-    }
-  return TRUE;
-  }
-
-
-/*******************************************************************************/
-
-
 // Load PCX image from stream
+FXbool fxloadPCX(FXStream& store,FXColor*& data,FXint& width,FXint& height){
+  FXuchar Colormap[256][3];
+  FXuchar Manufacturer;
+  FXuchar Version;
+  FXuchar Encoding;
+  FXuchar BitsPerPixel;
+  FXuchar NPlanes;
+  FXuchar Reserved;
+  FXuchar fill;
+  FXuchar *pp;
+  FXint   Xmin;
+  FXint   Ymin;
+  FXint   Xmax;
+  FXint   Ymax;
+  FXint   BytesPerLine;
+  FXint   NumPixels;
+  FXshort PaletteInfo;
+  FXuchar c;
+  FXint   i,clr,x,y,rc,rgb;
 
-FXbool fxloadPCX (FXStream& store,FXuchar*& data,FXColor& transp,FXint& width,FXint& height){
-  FXuchar Manufacturer, Version, Encoding, BitsPerPixel, Reserved, NPlanes;
-  FXint Xmin, Ymin, Xmax, Ymax, BytesPerLine;
-  FXuchar Colormap[16*3];
-  FXint i,ok=FALSE;
+  // Null out
+  data=NULL;
+  width=0;
+  height=0;
 
   // Check Manufacturer
   store >> Manufacturer;
-  if (Manufacturer != 0x0A) return FALSE;
+  if(Manufacturer!=10) return FALSE;
 
   // Get Version
   store >> Version;
@@ -309,177 +96,268 @@ FXbool fxloadPCX (FXStream& store,FXuchar*& data,FXColor& transp,FXint& width,FX
   // Get BitsPerPixel
   store >> BitsPerPixel;
 
+  // One of these four possibilities?
+  if(BitsPerPixel!=1 && BitsPerPixel!=2 && BitsPerPixel!=4 && BitsPerPixel!=8) return FALSE;
+
   // Get Xmin, Ymin, Xmax, Ymax
-  Xmin = read16 (store);
-  Ymin = read16 (store);
-  Xmax = read16 (store);
-  Ymax = read16 (store);
+  Xmin=read16(store);
+  Ymin=read16(store);
+  Xmax=read16(store);
+  Ymax=read16(store);
+
+  // Calculate Width and Height
+  width=Xmax-Xmin+1;
+  height=Ymax-Ymin+1;
+
+  // Total number of pixels
+  NumPixels=width*height;
 
   // HDpi, VDpi
-  read16 (store);
-  read16 (store);
+  read16(store);
+  read16(store);
 
   // Get EGA/VGA Colormap
-  for (i = 0; i < 48; i++)
-    store >> Colormap [i];
+  store.load(Colormap[0],48);
 
   // Get Reserved
   store >> Reserved;
-  //if(Reserved != 0) return FALSE;
 
   // Get NPlanes
   store >> NPlanes;
 
+
+  // Does it make sense?
+  if(NPlanes!=1 && NPlanes!=3 && NPlanes!=4) return FALSE;
+
   // Get BytesPerLine
-  BytesPerLine = read16 (store);
+  BytesPerLine=read16(store);
 
-  // Get 60 bytes
-  for (i = 0; i < 30; i++) read16 (store);
+  // Get PaletteInfo
+  PaletteInfo=read16(store);
 
-  // Calculate Width and Height
-  width = Xmax - Xmin + 1;
-  height = Ymax - Ymin + 1;
+  // Get 58 bytes, to get to 128 byte header
+  for(i=0; i<58; i++) store >> fill;
 
-  // Error checking
-  if (BitsPerPixel != 1 && BitsPerPixel != 4 && BitsPerPixel != 8) return FALSE;
-  if (NPlanes != 1 && NPlanes != 3 && NPlanes != 4) return FALSE;
-
-  FXTRACE ((150,"fxloadPCX: width=%d height=%d nbits=%d\n",width,height,BitsPerPixel));
+  FXTRACE((1,"fxloadPCX: width=%d height=%d Version=%d BitsPerPixel=%d NPlanes=%d BytesPerLine=%d\n",width,height,Version,BitsPerPixel,NPlanes,BytesPerLine));
 
   // Allocate memory
-  FXMALLOC (&data,FXuchar,width * height * 3);
-  if(!data) return FALSE;
+  if(!FXCALLOC(&data,FXColor,NumPixels)) return FALSE;
 
-  // load up the image
-  if(BitsPerPixel==1 && NPlanes == 1)
-    ok=loadPCX1(store,data,Colormap,width,height,BytesPerLine);
-  else if (BitsPerPixel == 1 && NPlanes == 4)
-    ok=loadPCX4x1(store,data,Colormap,width,height,BytesPerLine);
-  else if(BitsPerPixel==4)
-    ok=loadPCX4(store,data,Colormap,width,height,BytesPerLine);
-  else if(BitsPerPixel==8 && NPlanes==1)
-    ok=loadPCX8(store,data,width,height,BytesPerLine);
-  else if(BitsPerPixel==8 && NPlanes==3)
-    ok=loadPCX24(store,data,width,height,BytesPerLine);
+  // Load 1 bit/pixel
+  if(BitsPerPixel==1 && NPlanes==1){
+    pp=(FXuchar*)data;
+    for(y=0; y<height; y++){
+      x=0;
+      while(x<BytesPerLine){
+        store >> c;
+        if((c&0xC0)==0xC0){
+          rc=c&0x3F;
+          store >> c;
+          while(rc--){
+            for(i=0; i<8; i++){
+              if(x*8+i<width){
+                clr=((FXuchar)(c<<i)>>7);
+                *pp++=Colormap[clr][0];
+                *pp++=Colormap[clr][1];
+                *pp++=Colormap[clr][2];
+                *pp++=255;
+                }
+              }
+            x++;
+            }
+          }
+        else{
+          for(i=0; i<8; i++){
+            if(x*8+i<width){
+              clr=((FXuchar)(c<<i)>>7);
+              *pp++=Colormap[clr][0];
+              *pp++=Colormap[clr][1];
+              *pp++=Colormap[clr][2];
+              *pp++=255;
+              }
+            }
+          x++;
+          }
+        }
+      }
+    }
 
-  if(!ok) return FALSE;
+  // Load 1 bit/pixel
+  if(BitsPerPixel==1 && NPlanes==4){
+/*
+    No documentation found so far as to how this is interpreted...
+*/
+    }
 
-  // No transparent color:- bitmaps are opaque
-  transp=0;
+  // Load 4 bits/pixel
+  else if(BitsPerPixel==4){
+    pp=(FXuchar*)data;
+    for(y=0; y<height; y++){
+      x=0;
+      while(x<BytesPerLine){
+        store >> c;
+        if((c&0xC0)==0xC0){
+          rc=c&0x3F;
+          store >> c;
+          while(rc--){
+            if(x+x<width){
+              clr=c>>4;
+              *pp++=Colormap[clr][0];
+              *pp++=Colormap[clr][1];
+              *pp++=Colormap[clr][2];
+              *pp++=255;
+              }
+            if(x+x+1<width){
+              clr=c&0x0F;
+              *pp++=Colormap[clr][0];
+              *pp++=Colormap[clr][1];
+              *pp++=Colormap[clr][2];
+              *pp++=255;
+              }
+            x++;
+            }
+          }
+        else{
+          if(x+x<width){
+            clr=c>>4;
+            *pp++=Colormap[clr][0];
+            *pp++=Colormap[clr][1];
+            *pp++=Colormap[clr][2];
+            *pp++=255;
+            }
+          if(x+x+1<width){
+            clr=c&0x0F;
+            *pp++=Colormap[clr][0];
+            *pp++=Colormap[clr][1];
+            *pp++=Colormap[clr][2];
+            *pp++=255;
+            }
+          x++;
+          }
+        }
+      }
+    }
 
+  // Load 8 bit/pixel
+  else if(BitsPerPixel==8 && NPlanes==1){
+    pp=(FXuchar*)data;
+    for(y=0; y<height; y++){
+      x=0;
+      while(x<BytesPerLine){
+        store >> c;
+        if((c&0xC0)==0xC0){
+          rc=c&0x3F;
+          store >> c;
+          while(rc--){
+            if(x++<width){ *pp=c; pp+=4; }
+            }
+          }
+        else{
+          if(x++<width){ *pp=c; pp+=4; }
+          }
+        }
+      }
+    store >> c;                   // Get VGApaletteID
+    if(c!=12) return FALSE;       // Check VGApaletteID
+    store.load(Colormap[0],768);
+    pp=(FXuchar*)data;
+    for(i=0; i<NumPixels; i++){   // Apply colormap
+      clr=pp[0];
+      *pp++=Colormap[clr][0];
+      *pp++=Colormap[clr][1];
+      *pp++=Colormap[clr][2];
+      *pp++=255;
+      }
+    }
+
+  // Load 24 bits/pixel
+  else if(BitsPerPixel==8 && NPlanes==3){
+    for(y=0; y<height; y++){
+      for(rgb=0; rgb<3; rgb++){
+        pp=((FXuchar*)(data+y*width))+rgb;
+        x=0;
+        while(x<BytesPerLine){
+          store >> c;
+          if((c&0xC0)==0xC0){
+            rc=c&0x3F;
+            store >> c;
+            while(rc--){
+              if(x++<width){ *pp=c; pp+=4; }
+              }
+            }
+          else{
+            if(x++<width){ *pp=c; pp+=4; }
+            }
+          }
+        }
+      }
+    }
   return TRUE;
   }
+
 
 
 /*******************************************************************************/
 
 
-static void write16(FXStream& store,FXuint i){
+static inline void write16(FXStream& store,FXuint i){
   FXuchar c1,c2;
   c1=i&0xff;
   c2=(i>>8)&0xff;
   store << c1 << c2;
   }
 
-/*******************************************************************************/
-
-
-static FXbool writePCX24(FXStream& store,const FXuchar* pic,FXint w,FXint h){
-  FXuint rgb;
-  FXint x,y;
-  const FXuchar *pp;
-  FXuchar Current,Last,RLECount;
-
-  for (y = 0; y < h; y++){
-      // RGB planes
-      for (rgb = 0; rgb < 3; rgb++){
-          pp = pic + 3 * y * w + rgb;
-          Last = *pp;
-          pp += 3;
-          RLECount = 1;
-
-          // coding one line
-          for (x = 1; x < w; x++){
-              Current = *pp;
-              pp += 3;
-
-              // Last == Current
-              if (Current == Last)
-                {
-                  RLECount++;
-                  if (RLECount == 63)
-                    {
-                      store << (FXuchar)(0xC0 | RLECount) << Last;
-                      RLECount = 0;
-                    }
-                }
-              // Last != Current
-              else
-                {
-                  if (RLECount)
-                    if ((RLECount == 1) && (0xC0 != (0xC0 & Last)))
-                      store << Last;
-                    else
-                      {
-                        store << (FXuchar)(0xC0 | RLECount) << Last;
-                        RLECount = 1;
-                      }
-                  Last = Current;
-                  RLECount = 1;
-                }
-            }
-
-          if (RLECount)
-            if ((RLECount == 1) && (0xC0 != (0xC0 & Last)))
-              store << Last;
-            else
-              store << (FXuchar)(0xC0 | RLECount) << Last;
-        }
-    }
-
-  return TRUE;
-}
-
-/*******************************************************************************/
 
 // Save a PCX file to a stream
+FXbool fxsavePCX(FXStream& store,const FXColor *data,FXint width,FXint height){
+  const FXuchar Colormap[16][3]={{0,0,0},{255,255,255},{0,170,0},{0,170,170},{170,0,0},{170,0,170},{170,170,0},{170,170,170},{85,85,85},{85,85,255},{85,255,85},{85,255,255},{255,85,85},{255,85,255},{255,255,85},{255,255,255}};
+  const FXuchar Manufacturer=10;
+  const FXuchar Version=5;
+  const FXuchar Encoding=1;
+  const FXuchar BitsPerPixel=8;
+  const FXuchar NPlanes=3;
+  const FXuchar Reserved=0;
+  const FXshort PaletteInfo=1;
+  const FXshort HRes=75;
+  const FXshort VRes=75;
+  const FXuchar fill=0;
+  const FXuchar *pp;
+  const FXshort Xmin=0;
+  const FXshort Ymin=0;
+  FXshort       Xmax=width-1;
+  FXshort       Ymax=height-1;
+  FXint         i,x,y,rgb;
+  FXuchar       Current,Last,RLECount,rc;
 
-FXbool fxsavePCX(FXStream& store,const FXuchar *data,FXColor,FXint width,FXint height){
-  FXint i,ok=FALSE;
-  FXuchar c;
-  FXuchar Manufacturer = 10,
-          Version = 5,
-          Encoding = 1,
-          BitsPerPixel = 8,
-          NPlanes = 3,
-          Reserved = 0;
+  // Must make sense
+  if(!data || width<=0 || height<=0) return FALSE;
 
   // Manufacturer, Version, Encoding and BitsPerPixel
-  store << Manufacturer
-        << Version
-        << Encoding
-        << BitsPerPixel;
+  store << Manufacturer;
+  store << Version;
+  store << Encoding;
+  store << BitsPerPixel;
 
   // Xmin = 0
-  write16 (store,0);
+  write16(store,Xmin);
 
   // Ymin = 0
-  write16 (store,0);
+  write16(store,Ymin);
 
   // Xmax = width - 1
-  write16 (store,width - 1);
+  write16(store,Xmax);
 
   // Ymax = height - 1
-  write16 (store,height - 1);
+  write16(store,Ymax);
 
   // HDpi = 75
-  write16 (store,75);
+  write16(store,HRes);
 
   // VDpi = 75
-  write16 (store,75);
+  write16(store,VRes);
 
   // Colormap
-  for (i = 16; i < 64; i++) store << c;
+  store.save(Colormap[0],48);
 
   // Reserved
   store << Reserved;
@@ -488,23 +366,59 @@ FXbool fxsavePCX(FXStream& store,const FXuchar *data,FXColor,FXint width,FXint h
   store << NPlanes;
 
   // BytesPerLine = width
-  write16 (store,width);
+  write16(store,width);
 
-  // PaletteInfo = 1
-  write16 (store,1);
+  // PaletteInfo=1
+  write16(store,PaletteInfo);
 
   // Filler
-  for (i = 0; i < 58; i++) store << c;
+  for(i=0; i<58; i++) store << fill;
 
-  // Image
-  if(BitsPerPixel==1)
-    ok=FALSE;
-  else if(BitsPerPixel==4)
-    ok=FALSE;
-  else if(BitsPerPixel==8 && NPlanes==1)
-    ok=FALSE;
-  else if(BitsPerPixel==8 && NPlanes==3)
-    ok=writePCX24(store,data,width,height);
-
-  return ok;
+  // Save as 24 bits/pixel
+  for(y=0; y<height; y++){
+    for(rgb=0; rgb<3; rgb++){
+      pp=((FXuchar*)(data+y*width))+rgb;
+      Last=*pp;
+      pp+=4;
+      RLECount=1;
+      for(x=1; x<width; x++){
+        Current=*pp;
+        pp+=4;
+        if(Current==Last){
+          RLECount++;
+          if(RLECount==63){
+            rc=0xC0|RLECount;
+            store << rc << Last;
+            RLECount=0;
+            }
+          }
+        else{
+          if(RLECount){
+            if((RLECount==1) && (0xC0!=(0xC0&Last))){
+              store << Last;
+              }
+            else{
+              rc=0xC0|RLECount;
+              store << rc << Last;
+              RLECount = 1;
+              }
+            }
+          Last=Current;
+          RLECount=1;
+          }
+        }
+      if(RLECount){
+        if((RLECount==1) && (0xC0!=(0xC0&Last))){
+          store << Last;
+          }
+        else{
+          rc=0xC0|RLECount;
+          store << rc << Last;
+          }
+        }
+      }
+    }
+  return TRUE;
   }
+
+}

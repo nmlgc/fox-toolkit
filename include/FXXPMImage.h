@@ -3,7 +3,7 @@
 *                            X P M   I m a g e   O b j e c t                    *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2000,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 2000,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXXPMImage.h,v 1.6 2002/01/18 22:42:55 jeroen Exp $                      *
+* $Id: FXXPMImage.h,v 1.15 2004/04/24 14:10:30 fox Exp $                        *
 ********************************************************************************/
 #ifndef FXXPMIMAGE_H
 #define FXXPMIMAGE_H
@@ -28,6 +28,7 @@
 #include "FXImage.h"
 #endif
 
+namespace FX {
 
 /// X Pixmap image
 class FXAPI FXXPMImage : public FXImage {
@@ -43,25 +44,42 @@ public:
   FXXPMImage(FXApp* a,const FXchar **pix=NULL,FXuint opts=0,FXint w=1,FXint h=1);
 
   /// Save pixels into stream in X Pixmap format
-  virtual void savePixels(FXStream& store) const;
+  virtual FXbool savePixels(FXStream& store) const;
 
   /// Load pixels from stream in X Pixmap format
-  virtual void loadPixels(FXStream& store);
+  virtual FXbool loadPixels(FXStream& store);
 
   /// Destroy icon
   virtual ~FXXPMImage();
   };
 
 
-/// Load an X Pixmap from array of strings
-extern FXAPI FXbool fxloadXPM(const FXchar **pix,FXuchar*& data,FXColor& transp,FXint& width,FXint& height);
+#ifndef FXLOADXPM
+#define FXLOADXPM
+
+/**
+* Load an XPM (X Pixmap) from array of strings.
+* Upon successful return, the pixel array and size are returned.
+* If an error occurred, the pixel array is set to NULL.
+*/
+extern FXAPI FXbool fxloadXPM(const FXchar **pix,FXColor*& data,FXint& width,FXint& height);
 
 
-/// Load an X Pixmap file from a stream
-extern FXAPI FXbool fxloadXPM(FXStream& store,FXuchar*& data,FXColor& transp,FXint& width,FXint& height);
+/**
+* Load an XPM (X Pixmap) file from a stream.
+* Upon successful return, the pixel array and size are returned.
+* If an error occurred, the pixel array is set to NULL.
+*/
+extern FXAPI FXbool fxloadXPM(FXStream& store,FXColor*& data,FXint& width,FXint& height);
 
 
-/// Save an X Pixmap file to a stream
-extern FXAPI FXbool fxsaveXPM(FXStream& store,const FXuchar *data,FXColor transp,FXint width,FXint height);
+/**
+* Save an XPM (X Pixmap) file to a stream.
+*/
+extern FXAPI FXbool fxsaveXPM(FXStream& store,const FXColor *data,FXint width,FXint height,FXbool fast=TRUE);
+
+#endif
+
+}
 
 #endif

@@ -3,7 +3,7 @@
 *                        X P M   I c o n   O b j e c t                          *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2000,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 2000,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,17 +19,19 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXXPMIcon.cpp,v 1.13 2002/01/18 22:43:07 jeroen Exp $                    *
+* $Id: FXXPMIcon.cpp,v 1.23 2004/02/08 17:29:07 fox Exp $                       *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
 #include "fxdefs.h"
 #include "FXStream.h"
+#include "FXMemoryStream.h"
 #include "FXString.h"
 #include "FXSize.h"
 #include "FXPoint.h"
 #include "FXRectangle.h"
 #include "FXRegistry.h"
+#include "FXHash.h"
 #include "FXApp.h"
 #include "FXXPMIcon.h"
 
@@ -38,7 +40,11 @@
   Notes:
 */
 
+using namespace FX;
+
 /*******************************************************************************/
+
+namespace FX {
 
 // Object implementation
 FXIMPLEMENT(FXXPMIcon,FXIcon,NULL,0)
@@ -46,35 +52,29 @@ FXIMPLEMENT(FXXPMIcon,FXIcon,NULL,0)
 
 // Initialize nicely
 FXXPMIcon::FXXPMIcon(FXApp* a,const FXchar **pix,FXColor clr,FXuint opts,FXint w,FXint h):
-  FXIcon(a,NULL,clr,opts&~IMAGE_ALPHA,w,h){
+  FXIcon(a,NULL,clr,opts,w,h){
   if(pix){
-    FXColor clearcolor=0;
-    fxloadXPM(pix,data,clearcolor,width,height);
-    if(!(options&IMAGE_ALPHACOLOR)) transp=clearcolor;
+    fxloadXPM(pix,data,width,height);
     if(options&IMAGE_ALPHAGUESS) transp=guesstransp();
-    if(transp==0) options|=IMAGE_OPAQUE;
     options|=IMAGE_OWNED;
     }
   }
 
 
 // Save object to stream
-void FXXPMIcon::savePixels(FXStream& store) const {
-  FXASSERT(!(options&IMAGE_ALPHA));
-  fxsaveXPM(store,data,transp,width,height);
+FXbool FXXPMIcon::savePixels(FXStream& store) const {
+  if(!fxsaveXPM(store,data,width,height)) return FALSE;
+  return TRUE;
   }
 
 
 // Load object from stream
-void FXXPMIcon::loadPixels(FXStream& store){
-  FXColor clearcolor=0;
+FXbool FXXPMIcon::loadPixels(FXStream& store){
   if(options&IMAGE_OWNED){FXFREE(&data);}
-  fxloadXPM(store,data,clearcolor,width,height);
-  if(!(options&IMAGE_ALPHACOLOR)) transp=clearcolor;
+  if(!fxloadXPM(store,data,width,height)) return FALSE;
   if(options&IMAGE_ALPHAGUESS) transp=guesstransp();
-  if(transp==0) options|=IMAGE_OPAQUE;
-  options&=~IMAGE_ALPHA;
   options|=IMAGE_OWNED;
+  return TRUE;
   }
 
 
@@ -82,4 +82,5 @@ void FXXPMIcon::loadPixels(FXStream& store){
 FXXPMIcon::~FXXPMIcon(){
   }
 
+}
 

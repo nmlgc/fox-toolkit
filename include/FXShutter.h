@@ -3,7 +3,7 @@
 *                 S h u t t e r   C o n t a i n e r   W i d g e t               *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1998,2004 by Charles W. Warren.   All Rights Reserved.          *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXShutter.h,v 1.15 2002/01/18 22:42:54 jeroen Exp $                      *
+* $Id: FXShutter.h,v 1.22 2004/02/08 17:17:34 fox Exp $                         *
 ********************************************************************************/
 #ifndef FXSHUTTER_H
 #define FXSHUTTER_H
@@ -28,9 +28,9 @@
 #include "FXVerticalFrame.h"
 #endif
 
+namespace FX {
 
 
-struct FXTimer;
 class FXShutter;
 class FXButton;
 class FXScrollWindow;
@@ -93,13 +93,11 @@ class FXAPI FXShutter : public FXVerticalFrame {
 protected:
   FXint          current;               // Item currently open
   FXint          closing;               // Item closing down
-  FXTimer       *timer;                 // Timer for animation
   FXint          heightIncrement;       // Height delta
   FXint          closingHeight;         // Closing items current height
   FXbool         closingHadScrollbar;   // Closing item had a scroll bar
 protected:
   FXShutter(){}
-  virtual void layout();
 private:
   FXShutter(const FXShutter&);
   FXShutter &operator=(const FXShutter&);
@@ -122,8 +120,12 @@ public:
     ID_LAST
     };
 public:
+
   /// Constructor
   FXShutter(FXComposite *p,FXObject* tgt=NULL,FXSelector sel=0,FXuint opts=0,FXint x=0,FXint y=0,FXint w=0,FXint h=0,FXint pl=DEFAULT_SPACING,FXint pr=DEFAULT_SPACING,FXint pt=DEFAULT_SPACING,FXint pb=DEFAULT_SPACING,FXint hs=DEFAULT_SPACING,FXint vs=DEFAULT_SPACING);
+
+  /// Perform layout
+  virtual void layout();
 
   /// Set the currently displayed item (panel = 0, 1, 2, ..., npanels-1)
   virtual void setCurrent(FXint panel);
@@ -135,5 +137,6 @@ public:
   virtual ~FXShutter();
   };
 
+}
 
 #endif

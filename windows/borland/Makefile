@@ -2,9 +2,9 @@
 #  Top-level makefile for Borland C++
 #
 all:
-	cd ..\..\src
+	cd ..\..\utils
 	make -fMakefile.bc
-	cd ..\utils
+	cd ..\src
 	make -fMakefile.bc
 	cd ..\tests
 	make -fMakefile.bc
@@ -13,12 +13,14 @@ all:
 	cd ..\pathfinder
 	make -fMakefile.bc
 	cd ..\calculator
+	make -fMakefile.bc
+	cd ..\shutterbug
 	make -fMakefile.bc
 
 clean:
-	cd ..\..\src
+	cd ..\..\utils
 	make -fMakefile.bc clean
-	cd ..\utils
+	cd ..\src
 	make -fMakefile.bc clean
 	cd ..\tests
 	make -fMakefile.bc clean
@@ -27,5 +29,7 @@ clean:
 	cd ..\pathfinder
 	make -fMakefile.bc clean
 	cd ..\calculator
+	make -fMakefile.bc clean
+	cd ..\shutterbug
 	make -fMakefile.bc clean
 

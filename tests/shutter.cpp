@@ -53,7 +53,7 @@ const unsigned char compress0c[]={
   0xb0,0x90,0x1c,0x87,0x99,0x7f,0x2a,0x19,0xc7,0xc2,0x0d,0xc4,0x50,0x96,0x75,0x63,
   0xcb,0x28,0xbd,0x80,0x52,0xce,0x09,0x00,0x3b
   };
-  
+
 
 // Main Window
 class ShutterWindow : public FXMainWindow {
@@ -67,22 +67,26 @@ public:
   FXVerticalFrame *buttonFrame;
   FXShutter       *shutterFrame;
   FXTreeList      *tree;
-    
+  FXGIFIcon       *foldericon;
+  FXGIFIcon       *compressicon;
+
 protected:
   ShutterWindow(){}
-   
+
 public:
 
   // Message handlers
   long onCmdExit(FXObject*,FXSelector,void*);
-  
+
 public:
 
   // Constructor
   ShutterWindow(FXApp* a);
-  
+
   // Initialize
   virtual void create();
+
+  virtual ~ShutterWindow();
   };
 
 
@@ -95,15 +99,15 @@ FXIMPLEMENT(ShutterWindow,FXMainWindow,NULL,0)
 // Construct an application
 ShutterWindow::ShutterWindow(FXApp* a):FXMainWindow(a,"Shutter Widget Test",NULL,NULL,DECOR_ALL,0,0,600,600){
   FXHorizontalFrame *contents;
-  FXGIFIcon *foldericon=new FXGIFIcon(getApp(),folder0a);
-  FXGIFIcon *compressicon=new FXGIFIcon(getApp(),compress0c);
+  foldericon=new FXGIFIcon(getApp(),folder0a);
+  compressicon=new FXGIFIcon(getApp(),compress0c);
   FXShutterItem *shutterItem = 0;
-  
+
   contents=new FXHorizontalFrame(this,LAYOUT_FILL_X|LAYOUT_FILL_Y);
   listFrame = new FXVerticalFrame(contents,LAYOUT_FILL_X|LAYOUT_FILL_Y|LAYOUT_TOP|LAYOUT_LEFT,0,0,0,0,10,10,10,10);
   new FXLabel(listFrame,"Tree List",NULL,JUSTIFY_CENTER_X|LAYOUT_FILL_X);
   new FXHorizontalSeparator(listFrame,SEPARATOR_GROOVE|LAYOUT_FILL_X);
-  tree = new FXTreeList(listFrame,0,NULL,0,FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_FILL_Y|LAYOUT_TOP|LAYOUT_RIGHT|TREELIST_SHOWS_LINES|TREELIST_SHOWS_BOXES);
+  tree = new FXTreeList(listFrame,NULL,0,FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_FILL_Y|LAYOUT_TOP|LAYOUT_RIGHT|TREELIST_SHOWS_LINES|TREELIST_SHOWS_BOXES);
 
   buttonFrame=new FXVerticalFrame(contents,FRAME_RAISED|LAYOUT_FILL_Y|LAYOUT_TOP|LAYOUT_LEFT,0,0,0,0,10,10,10,10);
   new FXLabel(buttonFrame,"Button Frame",NULL,JUSTIFY_CENTER_X|LAYOUT_FILL_X);
@@ -115,30 +119,34 @@ ShutterWindow::ShutterWindow(FXApp* a):FXMainWindow(a,"Shutter Widget Test",NULL
   new FXButton(shutterItem->getContent(),NULL,compressicon,getApp(),FXApp::ID_QUIT,FRAME_THICK|FRAME_RAISED|LAYOUT_FILL_X|LAYOUT_TOP|LAYOUT_LEFT,0,0,0,0,10,10,5,5);
   new FXButton(shutterItem->getContent(),NULL,compressicon,getApp(),FXApp::ID_QUIT,FRAME_THICK|FRAME_RAISED|LAYOUT_FILL_X|LAYOUT_TOP|LAYOUT_LEFT,0,0,0,0,10,10,5,5);
   new FXButton(shutterItem->getContent(),NULL,foldericon,getApp(),FXApp::ID_QUIT,FRAME_THICK|FRAME_RAISED|LAYOUT_FILL_X|LAYOUT_TOP|LAYOUT_LEFT,0,0,0,0,10,10,5,5);
-  
+
   shutterItem = new FXShutterItem(shutterFrame,"Test 2",NULL,LAYOUT_FILL_X|LAYOUT_TOP|LAYOUT_LEFT,0,0,0,0,10,10,10,10,10,10);
   new FXButton(shutterItem->getContent(),NULL,foldericon,getApp(),FXApp::ID_QUIT,FRAME_THICK|FRAME_RAISED|LAYOUT_FILL_X|LAYOUT_TOP|LAYOUT_LEFT,0,0,0,0,10,10,5,5);
   new FXButton(shutterItem->getContent(),NULL,compressicon,getApp(),FXApp::ID_QUIT,FRAME_THICK|FRAME_RAISED|LAYOUT_FILL_X|LAYOUT_TOP|LAYOUT_LEFT,0,0,0,0,10,10,5,5);
   new FXButton(shutterItem->getContent(),NULL,foldericon,getApp(),FXApp::ID_QUIT,FRAME_THICK|FRAME_RAISED|LAYOUT_FILL_X|LAYOUT_TOP|LAYOUT_LEFT,0,0,0,0,10,10,5,5);
-  
+
   shutterItem = new FXShutterItem(shutterFrame,"Test 3",NULL,LAYOUT_FILL_X|LAYOUT_TOP|LAYOUT_LEFT,0,0,0,0,10,10,10,10,10,10);
   new FXButton(shutterItem->getContent(),NULL,foldericon,getApp(),FXApp::ID_QUIT,FRAME_THICK|FRAME_RAISED|LAYOUT_FILL_X|LAYOUT_TOP|LAYOUT_LEFT,0,0,0,0,10,10,5,5);
   new FXButton(shutterItem->getContent(),NULL,compressicon,getApp(),FXApp::ID_QUIT,FRAME_THICK|FRAME_RAISED|LAYOUT_FILL_X|LAYOUT_TOP|LAYOUT_LEFT,0,0,0,0,10,10,5,5);
-  
+
   shutterItem = new FXShutterItem(shutterFrame,"Test 4",NULL,LAYOUT_FILL_X|LAYOUT_TOP|LAYOUT_LEFT,0,0,0,0,10,10,10,10,10,10);
   new FXButton(shutterItem->getContent(),NULL,compressicon,getApp(),FXApp::ID_QUIT,FRAME_THICK|FRAME_RAISED|LAYOUT_FILL_X|LAYOUT_TOP|LAYOUT_LEFT,0,0,0,0,10,10,5,5);
   }
 
 
+ShutterWindow::~ShutterWindow(){
+  delete foldericon;
+  delete compressicon;
+  }
 
-// Create and initialize 
+// Create and initialize
 void ShutterWindow::create(){
 
   // Create the windows
   FXMainWindow::create();
 
   // Make the main window appear
-  show();
+  show(PLACEMENT_SCREEN);
   }
 
 
@@ -153,7 +161,7 @@ int main(int argc,char *argv[]){
 
   // Make window
   new ShutterWindow(&application);
-  
+
   // Create the application's windows
   application.create();
 

@@ -3,9 +3,9 @@
 *                                 Button Test                                   *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998 by Jeroen van der Zijp.   All Rights Reserved.             *
+* Copyright (C) 1998,2003 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
-* $Id: button.cpp,v 1.8 2000/08/29 05:56:48 jeroen Exp $                        *
+* $Id: button.cpp,v 1.14 2003/10/05 17:16:27 fox Exp $                          *
 ********************************************************************************/
 #include "fx.h"
 #include <stdio.h>
@@ -21,23 +21,29 @@ class ButtonWindow : public FXMainWindow {
   FXDECLARE(ButtonWindow)
 protected:
   FXButton*          button;        // Object being tested
-  FXStatusbar*       statusbar;     // Status line
+  FXStatusBar*       statusbar;     // Status line
   FXHorizontalFrame* contents;      // Container for button
   FXVerticalFrame*   controls;      // Switchs to set various modes
+  FXGroupBox*        group0;
   FXGroupBox*        group1;
   FXGroupBox*        group2;
   FXGroupBox*        group3;
   FXGroupBox*        group4;
+  FXIcon*            icon;
 protected:
   ButtonWindow(){}
 public:
   enum {
+
+    // Messages to change icon/text relationship
     ID_ICON_BEFORE_TEXT=FXMainWindow::ID_LAST,
     ID_ICON_AFTER_TEXT,
     ID_ICON_CENTER_HOR,
     ID_ICON_ABOVE_TEXT,
     ID_ICON_BELOW_TEXT,
     ID_ICON_CENTER_VER,
+
+    // Messages to change justification
     ID_JUST_CENTER_X,
     ID_JUST_LEFT,
     ID_JUST_RIGHT,
@@ -46,33 +52,30 @@ public:
     ID_JUST_TOP,
     ID_JUST_BOTTOM,
     ID_JUST_VER_APART,
+
+    // Message to change style
     ID_TOOLBAR_STYLE,
-    ID_QUIT,
-    ID_DEBUG
+
+    // Message to quit application
+    ID_QUIT
     };
 public:
-  long onCmdIconBeforeText(FXObject*,FXSelector,void*);
-  long onCmdIconAfterText(FXObject*,FXSelector,void*);
-  long onCmdIconCenterHor(FXObject*,FXSelector,void*);
-  long onCmdIconAboveText(FXObject*,FXSelector,void*);
-  long onCmdIconBelowText(FXObject*,FXSelector,void*);
-  long onCmdIconCenterVer(FXObject*,FXSelector,void*);
-  long onCmdJustCenterX(FXObject*,FXSelector,void*);
-  long onCmdJustLeft(FXObject*,FXSelector,void*);
-  long onCmdJustRight(FXObject*,FXSelector,void*);
-  long onCmdJustHorApart(FXObject*,FXSelector,void*);
-  long onCmdJustCenterY(FXObject*,FXSelector,void*);
-  long onCmdJustTop(FXObject*,FXSelector,void*);
-  long onCmdJustBottom(FXObject*,FXSelector,void*);
-  long onCmdJustVerApart(FXObject*,FXSelector,void*);
+  long onCmdIconTextRelation(FXObject*,FXSelector,void*);
+  long onUpdIconTextRelation(FXObject*,FXSelector,void*);
+
+  long onCmdJustification(FXObject*,FXSelector,void*);
+  long onUpdJustification(FXObject*,FXSelector,void*);
+
   long onCmdToolbarStyle(FXObject*,FXSelector,void*);
+
   long onCmdQuit(FXObject*,FXSelector,void*);
 public:
   ButtonWindow(FXApp* a);
   void create();
+  virtual ~ButtonWindow();
   };
 
-  
+
 /*******************************************************************************/
 
 // Icon data
@@ -123,90 +126,95 @@ const unsigned char bigpenguin[]={
   };
 
 /*******************************************************************************/
-  
+
 
 // Map
 FXDEFMAP(ButtonWindow) ButtonWindowMap[]={
-  FXMAPFUNC(SEL_COMMAND,ButtonWindow::ID_ICON_BEFORE_TEXT,ButtonWindow::onCmdIconBeforeText),
-  FXMAPFUNC(SEL_COMMAND,ButtonWindow::ID_ICON_AFTER_TEXT,ButtonWindow::onCmdIconAfterText),
-  FXMAPFUNC(SEL_COMMAND,ButtonWindow::ID_ICON_CENTER_HOR,ButtonWindow::onCmdIconCenterHor),
-  FXMAPFUNC(SEL_COMMAND,ButtonWindow::ID_ICON_ABOVE_TEXT,ButtonWindow::onCmdIconAboveText),
-  FXMAPFUNC(SEL_COMMAND,ButtonWindow::ID_ICON_BELOW_TEXT,ButtonWindow::onCmdIconBelowText),
-  FXMAPFUNC(SEL_COMMAND,ButtonWindow::ID_ICON_CENTER_VER,ButtonWindow::onCmdIconCenterVer),
-    
-  FXMAPFUNC(SEL_COMMAND,ButtonWindow::ID_JUST_CENTER_X,ButtonWindow::onCmdJustCenterX),
-  FXMAPFUNC(SEL_COMMAND,ButtonWindow::ID_JUST_LEFT,ButtonWindow::onCmdJustLeft),
-  FXMAPFUNC(SEL_COMMAND,ButtonWindow::ID_JUST_RIGHT,ButtonWindow::onCmdJustRight),
-  FXMAPFUNC(SEL_COMMAND,ButtonWindow::ID_JUST_HOR_APART,ButtonWindow::onCmdJustHorApart),
-  FXMAPFUNC(SEL_COMMAND,ButtonWindow::ID_JUST_CENTER_Y,ButtonWindow::onCmdJustCenterY),
-  FXMAPFUNC(SEL_COMMAND,ButtonWindow::ID_JUST_TOP,ButtonWindow::onCmdJustTop),
-  FXMAPFUNC(SEL_COMMAND,ButtonWindow::ID_JUST_BOTTOM,ButtonWindow::onCmdJustBottom),
-  FXMAPFUNC(SEL_COMMAND,ButtonWindow::ID_JUST_VER_APART,ButtonWindow::onCmdJustVerApart),
-  
-  FXMAPFUNC(SEL_COMMAND,ButtonWindow::ID_TOOLBAR_STYLE,ButtonWindow::onCmdToolbarStyle),
-  FXMAPFUNC(SEL_COMMAND,ButtonWindow::ID_QUIT,ButtonWindow::onCmdQuit),
+
+  // Quit
+  FXMAPFUNC(SEL_CLOSE,    0,                                 ButtonWindow::onCmdQuit),
+  FXMAPFUNC(SEL_COMMAND,  ButtonWindow::ID_QUIT,             ButtonWindow::onCmdQuit),
+
+  // Change or update icon/text relationship
+  FXMAPFUNCS(SEL_COMMAND, ButtonWindow::ID_ICON_BEFORE_TEXT, ButtonWindow::ID_ICON_CENTER_VER, ButtonWindow::onCmdIconTextRelation),
+  FXMAPFUNCS(SEL_UPDATE,  ButtonWindow::ID_ICON_BEFORE_TEXT, ButtonWindow::ID_ICON_CENTER_VER, ButtonWindow::onUpdIconTextRelation),
+
+  // Change or update justification
+  FXMAPFUNCS(SEL_COMMAND, ButtonWindow::ID_JUST_CENTER_X,    ButtonWindow::ID_JUST_VER_APART,  ButtonWindow::onCmdJustification),
+  FXMAPFUNCS(SEL_UPDATE,  ButtonWindow::ID_JUST_CENTER_X,    ButtonWindow::ID_JUST_VER_APART,  ButtonWindow::onUpdJustification),
+
+  FXMAPFUNC(SEL_COMMAND,  ButtonWindow::ID_TOOLBAR_STYLE,    ButtonWindow::onCmdToolbarStyle),
   };
 
 
 // ButtonApp implementation
 FXIMPLEMENT(ButtonWindow,FXMainWindow,ButtonWindowMap,ARRAYNUMBER(ButtonWindowMap))
 
-  
-  
+
+
 // Make some windows
-ButtonWindow::ButtonWindow(FXApp* a):FXMainWindow(a,"Button Test",NULL,NULL,DECOR_ALL,100,100,0,0){
-  
+ButtonWindow::ButtonWindow(FXApp* a):FXMainWindow(a,"Button Test",NULL,NULL,DECOR_TITLE|DECOR_MINIMIZE|DECOR_MAXIMIZE|DECOR_CLOSE|DECOR_BORDER|DECOR_STRETCHABLE|DECOR_MENU,100,100,800,600){
+
   // Tooltip
-  new FXTooltip(getApp());
-  
+  new FXToolTip(getApp());
+
   // Status bar
-  statusbar=new FXStatusbar(this,LAYOUT_SIDE_BOTTOM|LAYOUT_FILL_X|STATUSBAR_WITH_DRAGCORNER);
-  
+  statusbar=new FXStatusBar(this,LAYOUT_SIDE_BOTTOM|LAYOUT_FILL_X|STATUSBAR_WITH_DRAGCORNER);
+
   // Controls on right
   controls=new FXVerticalFrame(this,LAYOUT_SIDE_RIGHT|LAYOUT_FILL_Y|PACK_UNIFORM_WIDTH);
 
   // Separator
   new FXVerticalSeparator(this,LAYOUT_SIDE_RIGHT|LAYOUT_FILL_Y|SEPARATOR_GROOVE);
-  
+
   // Contents
   contents=new FXHorizontalFrame(this,LAYOUT_SIDE_LEFT|FRAME_NONE|LAYOUT_FILL_X|LAYOUT_FILL_Y|PACK_UNIFORM_WIDTH,0,0,0,0,20,20,20,20);
+
+  icon=new FXGIFIcon(getApp(),bigpenguin);
   
   // The button
   button=new FXButton(contents,
                       "&This is a multi-line label on\na button to show off the full\ncapabilities of the button object\tIt also has a tooltip\n[which by the way can be multi-line also]\tAnd some helpful message for the status line.",
-                      new FXGIFIcon(getApp(),bigpenguin),
+                      icon,
                       NULL,0,
                       FRAME_RAISED|FRAME_THICK|LAYOUT_CENTER_X|LAYOUT_CENTER_Y|LAYOUT_FIX_WIDTH|LAYOUT_FIX_HEIGHT,
                       0,0,300,200);
-    
-  new FXCheckButton(controls,"Toolbar Style\tCool ``poppy'' style buttons",this,ID_TOOLBAR_STYLE);
-  
+
+  group0=new FXGroupBox(controls,"Style",GROUPBOX_TITLE_CENTER|FRAME_RIDGE);
+  new FXCheckButton(group0,"Toolbar\tCool ``poppy'' style buttons",this,ID_TOOLBAR_STYLE);
+
   group1=new FXGroupBox(controls,"Horizontal Placement",GROUPBOX_TITLE_CENTER|FRAME_RIDGE);
   new FXRadioButton(group1,"Before Text",this,ID_ICON_BEFORE_TEXT);
   new FXRadioButton(group1,"After Text",this,ID_ICON_AFTER_TEXT);
   new FXRadioButton(group1,"Centered",this,ID_ICON_CENTER_HOR);
-  
+
   group2=new FXGroupBox(controls,"Vertical Placement",GROUPBOX_TITLE_CENTER|FRAME_RIDGE);
   new FXRadioButton(group2,"Above Text",this,ID_ICON_ABOVE_TEXT);
   new FXRadioButton(group2,"Below Text",this,ID_ICON_BELOW_TEXT);
   new FXRadioButton(group2,"Centered",this,ID_ICON_CENTER_VER);
-  
+
   group3=new FXGroupBox(controls,"Horizontal Justify",GROUPBOX_TITLE_CENTER|FRAME_RIDGE);
   new FXRadioButton(group3,"Center",this,ID_JUST_CENTER_X);
   new FXRadioButton(group3,"Left",this,ID_JUST_LEFT);
   new FXRadioButton(group3,"Right",this,ID_JUST_RIGHT);
   new FXRadioButton(group3,"Apart",this,ID_JUST_HOR_APART);
-  
+
   group4=new FXGroupBox(controls,"Vertical Justify",GROUPBOX_TITLE_CENTER|FRAME_RIDGE);
   new FXRadioButton(group4,"Center",this,ID_JUST_CENTER_Y);
   new FXRadioButton(group4,"Top",this,ID_JUST_TOP);
   new FXRadioButton(group4,"Bottom",this,ID_JUST_BOTTOM);
   new FXRadioButton(group4,"Apart",this,ID_JUST_VER_APART);
-  
-  new FXButton(controls,"&Quit",NULL,this,ID_QUIT,FRAME_RAISED|FRAME_THICK|LAYOUT_FILL_X);
+
+  new FXButton(controls,"&Quit",NULL,this,ID_QUIT,FRAME_RAISED|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_BOTTOM);
   }
 
 
+// Free up icon
+ButtonWindow::~ButtonWindow(){
+  delete icon;
+  }
+  
+  
 // Start
 void ButtonWindow::create(){
   FXMainWindow::create();
@@ -214,115 +222,136 @@ void ButtonWindow::create(){
   }
 
 
-long ButtonWindow::onCmdIconBeforeText(FXObject*,FXSelector,void*){
+// Change the icon/text relationship
+long ButtonWindow::onCmdIconTextRelation(FXObject*,FXSelector sel,void*){
   FXuint style=button->getIconPosition();
-  style|=ICON_BEFORE_TEXT;
-  style&=~ICON_AFTER_TEXT;
+  switch(FXSELID(sel)){
+    case ID_ICON_BEFORE_TEXT:
+      style|=ICON_BEFORE_TEXT; style&=~ICON_AFTER_TEXT;
+      break;
+    case ID_ICON_AFTER_TEXT:
+      style|=ICON_AFTER_TEXT; style&=~ICON_BEFORE_TEXT;
+      break;
+    case ID_ICON_CENTER_HOR:
+      style&=~ICON_AFTER_TEXT; style&=~ICON_BEFORE_TEXT;
+      break;
+    case ID_ICON_ABOVE_TEXT:
+      style|=ICON_ABOVE_TEXT; style&=~ICON_BELOW_TEXT;
+      break;
+    case ID_ICON_BELOW_TEXT:
+      style|=ICON_BELOW_TEXT; style&=~ICON_ABOVE_TEXT;
+      break;
+    case ID_ICON_CENTER_VER:
+      style&=~ICON_ABOVE_TEXT; style&=~ICON_BELOW_TEXT;
+      break;
+    }
   button->setIconPosition(style);
   return 1;
   }
 
-long ButtonWindow::onCmdIconAfterText(FXObject*,FXSelector,void*){
+
+// Update icon/text relationship radio buttons
+long ButtonWindow::onUpdIconTextRelation(FXObject* sender,FXSelector sel,void*){
+  FXSelector updatemessage=FXSEL(SEL_COMMAND,ID_UNCHECK);
   FXuint style=button->getIconPosition();
-  style|=ICON_AFTER_TEXT;
-  style&=~ICON_BEFORE_TEXT;
-  button->setIconPosition(style);
+  switch(FXSELID(sel)){
+    case ID_ICON_BEFORE_TEXT:
+      if((style&ICON_BEFORE_TEXT) && !(style&ICON_AFTER_TEXT)) updatemessage=FXSEL(SEL_COMMAND,ID_CHECK);
+      break;
+    case ID_ICON_AFTER_TEXT:
+      if(!(style&ICON_BEFORE_TEXT) && (style&ICON_AFTER_TEXT)) updatemessage=FXSEL(SEL_COMMAND,ID_CHECK);
+      break;
+    case ID_ICON_CENTER_HOR:
+      if(!(style&ICON_BEFORE_TEXT) && !(style&ICON_AFTER_TEXT)) updatemessage=FXSEL(SEL_COMMAND,ID_CHECK);
+      break;
+    case ID_ICON_ABOVE_TEXT:
+      if((style&ICON_ABOVE_TEXT) && !(style&ICON_BELOW_TEXT)) updatemessage=FXSEL(SEL_COMMAND,ID_CHECK);
+      break;
+    case ID_ICON_BELOW_TEXT:
+      if(!(style&ICON_ABOVE_TEXT) && (style&ICON_BELOW_TEXT)) updatemessage=FXSEL(SEL_COMMAND,ID_CHECK);
+      break;
+    case ID_ICON_CENTER_VER:
+      if(!(style&ICON_ABOVE_TEXT) && !(style&ICON_BELOW_TEXT)) updatemessage=FXSEL(SEL_COMMAND,ID_CHECK);
+      break;
+    }
+  sender->handle(this,updatemessage,NULL);
   return 1;
   }
 
-long ButtonWindow::onCmdIconCenterHor(FXObject*,FXSelector,void*){
-  FXuint style=button->getIconPosition();
-  style&=~ICON_AFTER_TEXT;
-  style&=~ICON_BEFORE_TEXT;
-  button->setIconPosition(style);
-  return 1;
-  }
 
-long ButtonWindow::onCmdIconAboveText(FXObject*,FXSelector,void*){
-  FXuint style=button->getIconPosition();
-  style|=ICON_ABOVE_TEXT;
-  style&=~ICON_BELOW_TEXT;
-  button->setIconPosition(style);
-  return 1;
-  }
-
-long ButtonWindow::onCmdIconBelowText(FXObject*,FXSelector,void*){
-  FXuint style=button->getIconPosition();
-  style|=ICON_BELOW_TEXT;
-  style&=~ICON_ABOVE_TEXT;
-  button->setIconPosition(style);
-  return 1;
-  }
-
-long ButtonWindow::onCmdIconCenterVer(FXObject*,FXSelector,void*){
-  FXuint style=button->getIconPosition();
-  style&=~ICON_ABOVE_TEXT;
-  style&=~ICON_BELOW_TEXT;
-  button->setIconPosition(style);
-  return 1;
-  }
-
-long ButtonWindow::onCmdJustCenterX(FXObject*,FXSelector,void*){
+// Change justification
+long ButtonWindow::onCmdJustification(FXObject*,FXSelector sel,void*){
   FXuint style=button->getJustify();
-  style&=~JUSTIFY_HZ_APART;
+  switch(FXSELID(sel)){
+    case ID_JUST_CENTER_X:
+      style&=~JUSTIFY_HZ_APART;
+      break;
+    case ID_JUST_LEFT:
+      style&=~JUSTIFY_HZ_APART;
+      style|=JUSTIFY_LEFT;
+      break;
+    case ID_JUST_RIGHT:
+      style&=~JUSTIFY_HZ_APART;
+      style|=JUSTIFY_RIGHT;
+      break;
+    case ID_JUST_HOR_APART:
+      style|=JUSTIFY_HZ_APART;
+      break;
+    case ID_JUST_CENTER_Y:
+      style&=~JUSTIFY_VT_APART;
+      break;
+    case ID_JUST_TOP:
+      style&=~JUSTIFY_VT_APART;
+      style|=JUSTIFY_TOP;
+      break;
+    case ID_JUST_BOTTOM:
+      style&=~JUSTIFY_VT_APART;
+      style|=JUSTIFY_BOTTOM;
+      break;
+    case ID_JUST_VER_APART:
+      style|=JUSTIFY_VT_APART;
+      break;
+    }
   button->setJustify(style);
   return 1;
   }
 
-long ButtonWindow::onCmdJustLeft(FXObject*,FXSelector,void*){
+// Update justification radio buttons
+long ButtonWindow::onUpdJustification(FXObject* sender,FXSelector sel,void*){
+  FXSelector updatemessage=FXSEL(SEL_COMMAND,ID_UNCHECK);
   FXuint style=button->getJustify();
-  style&=~JUSTIFY_HZ_APART;
-  style|=JUSTIFY_LEFT;
-  button->setJustify(style);
-  return 1;
-  }
-
-long ButtonWindow::onCmdJustRight(FXObject*,FXSelector,void*){
-  FXuint style=button->getJustify();
-  style&=~JUSTIFY_HZ_APART;
-  style|=JUSTIFY_RIGHT;
-  button->setJustify(style);
-  return 1;
-  }
-
-long ButtonWindow::onCmdJustHorApart(FXObject*,FXSelector,void*){
-  FXuint style=button->getJustify();
-  style|=JUSTIFY_HZ_APART;
-  button->setJustify(style);
-  return 1;
-  }
-
-long ButtonWindow::onCmdJustCenterY(FXObject*,FXSelector,void*){
-  FXuint style=button->getJustify();
-  style&=~JUSTIFY_VT_APART;
-  button->setJustify(style);
-  return 1;
-  }
-
-long ButtonWindow::onCmdJustTop(FXObject*,FXSelector,void*){
-  FXuint style=button->getJustify();
-  style&=~JUSTIFY_VT_APART;
-  style|=JUSTIFY_TOP;
-  button->setJustify(style);
-  return 1;
-  }
-
-long ButtonWindow::onCmdJustBottom(FXObject*,FXSelector,void*){
-  FXuint style=button->getJustify();
-  style&=~JUSTIFY_VT_APART;
-  style|=JUSTIFY_BOTTOM;
-  button->setJustify(style);
-  return 1;
-  }
-
-long ButtonWindow::onCmdJustVerApart(FXObject*,FXSelector,void*){
-  FXuint style=button->getJustify();
-  style|=JUSTIFY_VT_APART;
-  button->setJustify(style);
+  switch(FXSELID(sel)){
+    case ID_JUST_CENTER_X:
+      if(!(style&JUSTIFY_LEFT) && !(style&JUSTIFY_RIGHT)) updatemessage=FXSEL(SEL_COMMAND,ID_CHECK);
+      break;
+    case ID_JUST_LEFT:
+      if((style&JUSTIFY_LEFT) && !(style&JUSTIFY_RIGHT)) updatemessage=FXSEL(SEL_COMMAND,ID_CHECK);
+      break;
+    case ID_JUST_RIGHT:
+      if(!(style&JUSTIFY_LEFT) && (style&JUSTIFY_RIGHT)) updatemessage=FXSEL(SEL_COMMAND,ID_CHECK);
+      break;
+    case ID_JUST_HOR_APART:
+      if((style&JUSTIFY_LEFT) && (style&JUSTIFY_RIGHT)) updatemessage=FXSEL(SEL_COMMAND,ID_CHECK);
+      break;
+    case ID_JUST_CENTER_Y:
+      if(!(style&JUSTIFY_TOP) && !(style&JUSTIFY_BOTTOM)) updatemessage=FXSEL(SEL_COMMAND,ID_CHECK);
+      break;
+    case ID_JUST_TOP:
+      if((style&JUSTIFY_TOP) && !(style&JUSTIFY_BOTTOM)) updatemessage=FXSEL(SEL_COMMAND,ID_CHECK);
+      break;
+    case ID_JUST_BOTTOM:
+      if(!(style&JUSTIFY_TOP) && (style&JUSTIFY_BOTTOM)) updatemessage=FXSEL(SEL_COMMAND,ID_CHECK);
+      break;
+    case ID_JUST_VER_APART:
+      if((style&JUSTIFY_TOP) && (style&JUSTIFY_BOTTOM)) updatemessage=FXSEL(SEL_COMMAND,ID_CHECK);
+      break;
+    }
+  sender->handle(this,updatemessage,NULL);
   return 1;
   }
 
 
+// Set to toolbar style
 long ButtonWindow::onCmdToolbarStyle(FXObject*,FXSelector,void* ptr){
   FXuint style=button->getButtonStyle();
   if(ptr){
@@ -338,6 +367,7 @@ long ButtonWindow::onCmdToolbarStyle(FXObject*,FXSelector,void* ptr){
   }
 
 
+// Quit the application
 long ButtonWindow::onCmdQuit(FXObject*,FXSelector,void*){
   getApp()->exit(0);
   return 1;
@@ -351,16 +381,16 @@ int main(int argc,char *argv[]){
 
   // Make application
   FXApp application("Button","FoxTest");
-  
+
   // Open display
   application.init(argc,argv);
-  
+
   // Main window
   new ButtonWindow(&application);
-  
+
   // Create app
   application.create();
-  
+
   // Run
   return application.run();
   }

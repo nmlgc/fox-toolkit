@@ -5,7 +5,7 @@
 ##############################################################################
 # Contributed by: Andre Fornacon <afo@zlug.org>                              #
 ##############################################################################
-# $Id: Makefile.dmc,v 1.1.2.3 2002/07/26 02:41:54 fox Exp $                  #
+# $Id: Makefile.dmc,v 1.9 2003/09/26 05:01:20 fox Exp $                      #
 ##############################################################################
 # This library is free software; you can redistribute it and/or              #
 # modify it under the terms of the GNU Library General Public                #
@@ -32,19 +32,20 @@ LD	  = sc
 LDFLAGS	  =
 LIBS	  = advapi32.lib+shell32.lib+gdi32.lib+wsock32.lib
 INCDIRS   = -I$(TOPDIR)\include
-FOXLIB    = $(TOPDIR)\src\fox.lib
+FOXLIB    = $(TOPDIR)\src\FOX-1.1.lib
 RESWRAP   = $(TOPDIR)\utils\reswrap.exe
 
 PROGRAMS  = PathFinder.exe
 OBJECTS  = \
         PathFinder.obj \
         PropertyDialog.obj \
+        Preferences.obj \
         icons.obj
 
-# splitted to avoid 'cmdline too long' errors
 ICONS_1 = \
         bigicons.bmp \
         bigpenguin.bmp \
+        closepanel.gif \
         clrbook.gif \
         copy.bmp \
         copyit.gif \
@@ -53,24 +54,34 @@ ICONS_1 = \
         desktop.bmp \
         details.bmp \
         dirup.bmp \
+        enter.gif \
+        file_gif.gif \
         goback.bmp \
         goforw.bmp \
-        gotodir.bmp
+        gotodir.bmp \
 
-ICONS_2 = home.gif \
+ICONS_2 = \
+        home.gif \
         hosts.bmp \
+        iconpath.gif \
         linkit.gif \
+        location.gif \
         maphost.bmp \
         minipenguin.bmp \
         moveit.gif \
         paste.bmp \
+        pattern_gif.gif \
         properties.bmp \
+        quit_gif.gif \
+        renameit.gif \
+        rotateleft.gif \
+        rotateright.gif \
         setbook.gif \
         smallicons.bmp \
         unmaphost.bmp \
         work.gif
 
-ICONS	= $(ICONS_1) $(ICONS_2)
+ICONS = $(ICONS_1) $(ICONS_2)
 
 .cpp.obj:
 	$(CXX) -c $(INCDIRS) $(CXXFLAGS) $(DEFINES) $*.cpp
@@ -80,13 +91,12 @@ all: $(PROGRAMS)
 pathfinder.exe: $(OBJECTS) $(FOXLIB)
 	$(LD) $(LDFLAGS) $(OBJECTS) $(FOXLIB) $(LIBS)
 
-PathFinder.obj: icons.cpp
+PathFinder.obj: icons.h icons.cpp
 
-#icons.h: $(ICONS)
-#	$(RESWRAP) -i -o icons.h $**
-
-#icons.cpp: $(ICONS)
-#	$(RESWRAP) -e -o icons.cpp $**
+icons.h: $(ICONS)
+	$(RM) $@
+	$(RESWRAP) -i -oa $@ $(ICONS_1)
+	$(RESWRAP) -i -oa $@ $(ICONS_2)
 
 icons.cpp: $(ICONS)
 	$(RM) $@
@@ -95,4 +105,4 @@ icons.cpp: $(ICONS)
 	$(RESWRAP) -oa $@ $(ICONS_2)
 
 clean:
-	$(RM) *.obj *.exe *.tds *.map icons.cpp #icons.h
+	$(RM) *.obj *.exe *.tds # icons.cpp icons.h

@@ -3,7 +3,7 @@
 *                D i r e c t o r y   S e l e c t i o n   D i a l o g            *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2000,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 2000,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXDirDialog.cpp,v 1.10 2002/01/18 22:42:59 jeroen Exp $                   *
+* $Id: FXDirDialog.cpp,v 1.16 2004/02/08 17:29:06 fox Exp $                     *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -32,6 +32,7 @@
 #include "FXRectangle.h"
 #include "FXSettings.h"
 #include "FXRegistry.h"
+#include "FXHash.h"
 #include "FXApp.h"
 #include "FXId.h"
 #include "FXFont.h"
@@ -54,8 +55,11 @@
   To do:
 */
 
+using namespace FX;
 
 /*******************************************************************************/
+
+namespace FX {
 
 // Object implementation
 FXIMPLEMENT(FXDirDialog,FXDialogBox,NULL,0)
@@ -112,7 +116,7 @@ void FXDirDialog::load(FXStream& store){
 
 // Cleanup
 FXDirDialog::~FXDirDialog(){
-  dirbox=(FXDirSelector*)-1;
+  dirbox=(FXDirSelector*)-1L;
   }
 
-
+}

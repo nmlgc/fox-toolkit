@@ -3,7 +3,7 @@
 *                G r o u p  B o x   W i n d o w   W i d g e t                   *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXGroupBox.h,v 1.14 2002/01/18 22:42:53 jeroen Exp $                     *
+* $Id: FXGroupBox.h,v 1.20 2004/02/08 17:17:33 fox Exp $                        *
 ********************************************************************************/
 #ifndef FXGROUPBOX_H
 #define FXGROUPBOX_H
@@ -28,6 +28,7 @@
 #include "FXPacker.h"
 #endif
 
+namespace FX {
 
 
 // Group box options
@@ -45,9 +46,6 @@ enum {
 * around a group of widgets, providing a visual delineation.
 * Typically, a title is placed over the border to provide some
 * clarification.
-* Radio buttons placed inside a group box automatically assume
-* mutually exclusive behaviour, i.e. at most one radio button will
-* be checked at any one time.
 */
 class FXAPI FXGroupBox : public FXPacker {
   FXDECLARE(FXGroupBox)
@@ -57,13 +55,11 @@ protected:
   FXColor   textColor;
 protected:
   FXGroupBox();
-  virtual void layout();
 private:
   FXGroupBox(const FXGroupBox&);
   FXGroupBox &operator=(const FXGroupBox&);
 public:
   long onPaint(FXObject*,FXSelector,void*);
-  long onUncheckOther(FXObject*,FXSelector,void*);
 public:
 
   /// Construct group box layout manager
@@ -74,6 +70,9 @@ public:
 
   /// Detach server-side resources
   virtual void detach();
+
+  /// Perform layout
+  virtual void layout();
 
   /// Enable the window
   virtual void enable();
@@ -118,5 +117,6 @@ public:
   virtual void load(FXStream& store);
   };
 
+}
 
 #endif

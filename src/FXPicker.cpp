@@ -3,7 +3,7 @@
 *                          P i c k e r   B u t t o n                            *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2001,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 2001,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXPicker.cpp,v 1.5 2002/01/18 22:43:01 jeroen Exp $                      *
+* $Id: FXPicker.cpp,v 1.11 2004/02/08 17:29:07 fox Exp $                         *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -31,6 +31,7 @@
 #include "FXPoint.h"
 #include "FXRectangle.h"
 #include "FXRegistry.h"
+#include "FXHash.h"
 #include "FXApp.h"
 #include "FXDCWindow.h"
 #include "FXIcon.h"
@@ -41,10 +42,12 @@
   Notes:
 */
 
+using namespace FX;
 
 
 /*******************************************************************************/
 
+namespace FX {
 
 
 // Map
@@ -91,7 +94,7 @@ long FXPicker::onMotion(FXObject*,FXSelector,void* ptr){
   flags&=~FLAG_TIP;
   if(state==STATE_DOWN){
     FXPoint point(event->root_x,event->root_y);
-    if(target){ target->handle(this,MKUINT(message,SEL_CHANGED),(void*)&point); }
+    if(target){ target->handle(this,FXSEL(SEL_CHANGED,message),(void*)&point); }
     return 1;
     }
   return 0;
@@ -101,7 +104,7 @@ long FXPicker::onMotion(FXObject*,FXSelector,void* ptr){
 // Pressed mouse button
 long FXPicker::onLeftBtnPress(FXObject*,FXSelector,void* ptr){
   FXEvent* event=(FXEvent*)ptr;
-  handle(this,MKUINT(0,SEL_FOCUS_SELF),ptr);
+  handle(this,FXSEL(SEL_FOCUS_SELF,0),ptr);
   flags&=~FLAG_TIP;
   if(isEnabled()){
     if(state!=STATE_DOWN){
@@ -114,7 +117,7 @@ long FXPicker::onLeftBtnPress(FXObject*,FXSelector,void* ptr){
       flags|=FLAG_UPDATE;
       setState(STATE_UP);
       FXPoint point(event->root_x,event->root_y);
-      if(target){ target->handle(this,MKUINT(message,SEL_COMMAND),(void*)&point); }
+      if(target){ target->handle(this,FXSEL(SEL_COMMAND,message),(void*)&point); }
       }
     return 1;
     }
@@ -127,4 +130,5 @@ long FXPicker::onLeftBtnRelease(FXObject*,FXSelector,void*){
   return 0;
   }
 
+}
 

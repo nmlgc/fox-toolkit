@@ -3,7 +3,7 @@
 *                          T I F F   I n p u t / O u t p u t                    *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2001 Eric Gillet <egillet@ibelgique.com>. All Rights Reserved.  *
+* Copyright (C) 2001,2004 Eric Gillet.   All Rights Reserved.                   *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,13 +19,15 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: fxtifio.cpp,v 1.11.4.1 2004/03/03 19:02:17 fox Exp $                      *
+* $Id: fxtifio.cpp,v 1.27 2004/04/08 16:24:48 fox Exp $                         *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
 #include "fxdefs.h"
 #include "FXStream.h"
-
+#ifdef HAVE_TIFF_H
+#include <tiffio.h>
+#endif
 
 /*
   Notes:
@@ -36,26 +38,30 @@
     ftp://ftp.onshore.com/pub/libtiff/TIFF6.ps.Z
     ftp://ftp.sgi.com/graphics/tiff/TTN2.draft.txt
     http://partners.adobe.com/asn/developer/technotes.html
+  - Bugs: libtiff does not gracefully recover from certain errors;
+    this causes core dump!
+  - FOX keeps order in FXColor to RGBA (i.e. red at lowest memory
+    address, alpha at highest). Currently not known if this does
+    or does not require swapping when read in.
+  - Updated for libtiff 3.6.1.
 */
 
 
-/*******************************************************************************/
-
-/// Load a tiff from a stream
-extern FXAPI FXbool fxloadTIF(FXStream& store,FXuchar*& data,FXColor& transp,FXint& width,FXint& height,FXushort& codec);
+#define TIFF_SWAP(p) (((p)&0xff)<<24 | ((p)&0xff00)<<8 | ((p)&0xff0000)>>8 | ((p)&0xff000000)>>24)
 
 
-/// Save a tiff to a stream
-extern FXAPI FXbool fxsaveTIF(FXStream& store,const FXuchar* data,FXColor transp,FXint width,FXint height,FXushort codec);
-
+using namespace FX;
 
 /*******************************************************************************/
+
+namespace FX {
+
+
+extern FXAPI FXbool fxloadTIF(FXStream& store,FXColor*& data,FXint& width,FXint& height,FXushort& codec);
+extern FXAPI FXbool fxsaveTIF(FXStream& store,const FXColor* data,FXint width,FXint height,FXushort codec);
+
 
 #ifdef HAVE_TIFF_H
-#include <tiffio.h>
-
-
-#define TIFF_SWAP(p) (((p)&0xff)<<24 | ((p)&0xff00)<<8 | ((p)&0xff0000)>>8 | ((p)&0xff000000)>>24)
 
 
 // Stuff being passed around
@@ -71,7 +77,7 @@ struct tiff_store_handle {
 static void fxerrorhandler(const char* module,const char* format,va_list args){
   FXchar message[1024];
   vsprintf(message,format,args);
-  fxwarning("error: in %s: %s\n",module,message);
+  FXTRACE((100,"error: in %s: %s\n",module,message));
   }
 
 
@@ -79,7 +85,7 @@ static void fxerrorhandler(const char* module,const char* format,va_list args){
 static void fxwarninghandler(const char* module,const char* format,va_list args){
   FXchar message[1024];
   vsprintf(message,format,args);
-  fxwarning("warning: in %s: %s\n",module,message);
+  FXTRACE((100,"warning: in %s: %s\n",module,message));
   }
 
 
@@ -87,7 +93,7 @@ static void fxwarninghandler(const char* module,const char* format,va_list args)
 static tsize_t tif_read_store(thandle_t handle,tdata_t data,tsize_t size){
   tiff_store_handle *h=(tiff_store_handle*)handle;
   h->store->load((FXuchar*)data,size);
-  if(h->store->status()!=FXStreamOK) return 0;
+  if(h->store->eof()!=FXStreamOK) return 0;
   if(h->store->position() > h->end) h->end=h->store->position();
   return size;
   }
@@ -143,6 +149,7 @@ static int tif_map_store(thandle_t, tdata_t*, toff_t*){
 static void tif_unmap_store(thandle_t, tdata_t, toff_t){
   }
 
+
 // Compute size of what's been written
 static toff_t tif_size_store(thandle_t handle){
   tiff_store_handle *h=(tiff_store_handle*)handle;
@@ -151,10 +158,19 @@ static toff_t tif_size_store(thandle_t handle){
 
 
 // Load a TIFF image
-FXbool fxloadTIF(FXStream& store,FXuchar*& data,FXColor&,FXint& width,FXint& height,FXushort& codec){
-  TIFF *image;
+FXbool fxloadTIF(FXStream& store,FXColor*& data,FXint& width,FXint& height,FXushort& codec){
   tiff_store_handle s_handle;
-  FXbool ret = FALSE;
+  TIFFRGBAImage img;
+  TIFF *image;
+  char emsg[1024];
+  register FXColor *up,*dn,t;
+  register FXint i;
+  register long size;
+
+  // Null out
+  data=NULL;
+  width=0;
+  height=0;
 
   // Set error/warning handlers
   TIFFSetErrorHandler(fxerrorhandler);
@@ -168,71 +184,63 @@ FXbool fxloadTIF(FXStream& store,FXuchar*& data,FXColor&,FXint& width,FXint& hei
 
   // Open image
   image=TIFFClientOpen("tiff","rm",(thandle_t)&s_handle,tif_read_store,tif_write_store,tif_seek_store,tif_close_store,tif_size_store,tif_map_store,tif_unmap_store);
-  if(image){
-    TIFFRGBAImage img;
-    char emsg[1024];
+  if(!image) return FALSE;
 
-    // We try to remember the codec for later when we save the image back out...
-    TIFFGetField(image,TIFFTAG_COMPRESSION,&codec);
-    FXTRACE((100,"fxloadTIF: codec=%d\n",codec));
+  // We try to remember the codec for later when we save the image back out...
+  TIFFGetField(image,TIFFTAG_COMPRESSION,&codec);
+  FXTRACE((100,"fxloadTIF: codec=%d\n",codec));
 
-    ret = (TIFFRGBAImageBegin(&img, image, 0, emsg) != 0);    // FIXME TIFFRGBAImage{Begin,Get,End} is too broken!
-    if(ret){
-      FXTRACE((100,"FXTIF: width=%ld height=%ld\n", img.width , img.height));
-      width = (FXint)img.width;
-      height = (FXint)img.height;
-      // Make room for data
-      unsigned long size=4*img.width*(img.height+((img.orientation==ORIENTATION_TOPLEFT)?1:0));
-      FXMALLOC(&data,FXuchar,size);
-      if(!data){
-        ret=FALSE;
-        }
-      if(ret && !TIFFRGBAImageGet(&img,(uint32 *)data,img.width,img.height)){
-        ret=FALSE;
-        }
-      ret = !s_handle.error;
-      if(ret && (img.orientation == ORIENTATION_TOPLEFT)){ // vertical mirroring
-        FXuchar *up, *down, *temp;
-        size = 4 * img.width;
-        up = data;
-        down = data + size * (img.height -1);
-        temp = data + size * img.height;
-        while(up < down){
-          memcpy(temp,up,size);
-          memcpy(up,down,size);
-          memcpy(down,temp,size);
-          up+=size;
-          down-=size;
-          }
-        }
-#if FOX_BIGENDIAN == 1
-      if(ret){
-	FXPixel *pix_data = (FXPixel*)data;
-	size = img.width * img.height;
-	while(size--){
-	  *pix_data = TIFF_SWAP(*pix_data);
-	  pix_data++;
-	  }
-	}
-#endif
-      TIFFRGBAImageEnd(&img);
-      }
+  // FIXME TIFFRGBAImage{Begin,Get,End} is too broken!
+  if(TIFFRGBAImageBegin(&img,image,0,emsg)!=1){
     TIFFClose(image);
-    if(!ret && data) FXFREE(&data);
+    return FALSE;
     }
-  return ret;
+
+  FXTRACE((1,"fxloadTIF: width=%u height=%u alpha=%d bitspersample=%u samplesperpixel=%u orientation=%u photometric=%u\n",img.width,img.height,img.alpha,img.bitspersample,img.samplesperpixel,img.orientation,img.photometric));
+
+  // Make room for data
+  size=img.width*img.height;
+  if(!FXMALLOC(&data,FXColor,size)){
+    TIFFClose(image);
+    return FALSE;
+    }
+
+  // Get the pixels
+  if(TIFFRGBAImageGet(&img,(uint32*)data,img.width,img.height)!=1){
+    FXFREE(&data);
+    TIFFClose(image);
+    return FALSE;
+    }
+
+  // If we got this far, we have the data;
+  // nothing can go wrong from here on.
+  width=(FXint)img.width;
+  height=(FXint)img.height;
+
+  // Maybe flip image upside down?
+  if(img.orientation==ORIENTATION_TOPLEFT){
+    for(up=data,dn=data+(height-1)*width; up<dn; up+=width,dn-=width){
+      for(i=0; i<width; i++){ t=up[i]; up[i]=dn[i]; dn[i]=t; }
+      }
+    }
+
+  TIFFRGBAImageEnd(&img);
+  TIFFClose(image);
+  return TRUE;
   }
 
 
 /*******************************************************************************/
 
 // Save a TIFF image
-FXbool fxsaveTIF(FXStream& store,const FXuchar* data,FXColor,FXint width,FXint height,FXushort codec){
-  TIFF *image;
+FXbool fxsaveTIF(FXStream& store,const FXColor* data,FXint width,FXint height,FXushort codec){
   tiff_store_handle s_handle;
-  long rows_per_strip,line,h,size;
+  long rows_per_strip,line;
   const TIFFCodec* coder;
-  FXbool ok=FALSE;
+  TIFF *image;
+
+  // Must make sense
+  if(!data || width<=0 || height<=0) return FALSE;
 
   // Correct for unsupported codecs
   coder=TIFFFindCODEC(codec);
@@ -256,34 +264,33 @@ FXbool fxsaveTIF(FXStream& store,const FXuchar* data,FXColor,FXint width,FXint h
 
   // Open image
   image=TIFFClientOpen("tiff","w",(thandle_t)&s_handle,tif_dummy_read_store,tif_write_store,tif_seek_store,tif_close_store,tif_size_store,tif_map_store,tif_unmap_store);
-  if(image){
+  if(!image) return FALSE;
 
-    // Size of a strip is 16kb
-    rows_per_strip=16*1024/width;
-    if(rows_per_strip<1) rows_per_strip=1;
+  // Size of a strip is 16kb
+  rows_per_strip=16*1024/width;
+  if(rows_per_strip<1) rows_per_strip=1;
 
-    // Set fields
-    TIFFSetField(image,TIFFTAG_IMAGEWIDTH,width);
-    TIFFSetField(image,TIFFTAG_IMAGELENGTH,height);
-    TIFFSetField(image,TIFFTAG_COMPRESSION,codec);
-    TIFFSetField(image,TIFFTAG_ORIENTATION,ORIENTATION_TOPLEFT);
-    TIFFSetField(image,TIFFTAG_ROWSPERSTRIP,rows_per_strip);
-    TIFFSetField(image,TIFFTAG_BITSPERSAMPLE,8);
-    TIFFSetField(image,TIFFTAG_SAMPLESPERPIXEL,4);
-    TIFFSetField(image,TIFFTAG_PLANARCONFIG,1);
-    TIFFSetField(image,TIFFTAG_PHOTOMETRIC,PHOTOMETRIC_RGB);
+  // Set fields
+  TIFFSetField(image,TIFFTAG_IMAGEWIDTH,width);
+  TIFFSetField(image,TIFFTAG_IMAGELENGTH,height);
+  TIFFSetField(image,TIFFTAG_COMPRESSION,codec);
+  TIFFSetField(image,TIFFTAG_ORIENTATION,ORIENTATION_TOPLEFT);
+  TIFFSetField(image,TIFFTAG_ROWSPERSTRIP,rows_per_strip);
+  TIFFSetField(image,TIFFTAG_BITSPERSAMPLE,8);
+  TIFFSetField(image,TIFFTAG_SAMPLESPERPIXEL,4);
+  TIFFSetField(image,TIFFTAG_PLANARCONFIG,1);
+  TIFFSetField(image,TIFFTAG_PHOTOMETRIC,PHOTOMETRIC_RGB);
 
-    // Dump each line
-    h=height;
-    size=4*width;
-    for(line=0; line<h; line++){
-      if(TIFFWriteScanline(image,(void*)data,line,1)!=1 || s_handle.error) goto x;
-      data+=size;
+  // Dump each line
+  for(line=0; line<height; line++){
+    if(TIFFWriteScanline(image,(void*)data,line,1)!=1 || s_handle.error){
+      TIFFClose(image);
+      return FALSE;
       }
-    ok=TRUE;
-x:  TIFFClose(image);
+    data+=width;
     }
-  return ok;
+  TIFFClose(image);
+  return TRUE;
   }
 
 
@@ -294,7 +301,7 @@ x:  TIFFClose(image);
 
 
 // Stub routine
-FXbool fxloadTIF(FXStream&,FXuchar*& data,FXColor& transp,FXint& width,FXint& height,FXushort& codec){
+FXbool fxloadTIF(FXStream&,FXColor*& data,FXint& width,FXint& height,FXushort& codec){
   static const FXuchar tiff_bits[] = {
    0xff, 0xff, 0xff, 0xff, 0x01, 0x00, 0x00, 0x80, 0xfd, 0xff, 0xff, 0xbf,
    0x05, 0x00, 0x00, 0xa0, 0x05, 0x00, 0x00, 0xa0, 0x05, 0x00, 0x00, 0xa0,
@@ -307,29 +314,24 @@ FXbool fxloadTIF(FXStream&,FXuchar*& data,FXColor& transp,FXint& width,FXint& he
    0x45, 0x38, 0x81, 0xa0, 0x05, 0x00, 0x00, 0xa0, 0x05, 0x00, 0x00, 0xa0,
    0x05, 0x00, 0x00, 0xa0, 0x05, 0x00, 0x00, 0xa0, 0xfd, 0xff, 0xff, 0xbf,
    0x01, 0x00, 0x00, 0x80, 0xff, 0xff, 0xff, 0xff};
-  register FXint p,q;
-  FXCALLOC(&data,FXuchar,32*32*4);
-  for(p=q=0; p<32*32*4; p+=4,q+=1){
-    if(!(tiff_bits[q>>3]&(1<<(q&7)))) data[p+0]=data[p+1]=data[p+2]=255;
-    data[p+3]=255;
+  register FXint p;
+  FXMALLOC(&data,FXColor,32*32);
+  for(p=0; p<32*32; p++){
+    data[p]=(tiff_bits[p>>3]&(1<<(p&7))) ? FXRGB(0,0,0) : FXRGB(255,255,255);
     }
-  transp=0;
   width=32;
   height=32;
   codec=1;
-  return FALSE;
+  return TRUE;
   }
 
 
 // Stub routine
-FXbool fxsaveTIF(FXStream&,const FXuchar*,FXColor,FXint,FXint,FXushort){
+FXbool fxsaveTIF(FXStream&,const FXColor*,FXint,FXint,FXushort){
   return FALSE;
   }
 
-
-// Stub routine
-FXuint fxcodecTIF(FXuint){
-  return 1;
-  }
 
 #endif
+
+}

@@ -3,7 +3,7 @@
 *                    M u l t i - L i ne   T e x t   W i d g e t                 *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1998,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXText.h,v 1.118 2002/01/22 14:37:48 jeroen Exp $                        *
+* $Id: FXText.h,v 1.144 2004/05/05 16:03:37 fox Exp $                           *
 ********************************************************************************/
 #ifndef FXTEXT_H
 #define FXTEXT_H
@@ -28,9 +28,7 @@
 #include "FXScrollArea.h"
 #endif
 
-
-
-struct FXTimer;
+namespace FX {
 
 
 /// Text widget options
@@ -66,6 +64,21 @@ struct FXHiliteStyle {
   };
 
 
+/**
+* Text mutation callback data passed with the SEL_INSERTED,
+* SEL_REPLACED, and SEL_DELETED messages; both old and new
+* text is available on behalf of the undo system as well as
+* syntax highlighting.
+*/
+struct FXTextChange {
+  FXint   pos;          /// Position in buffer
+  FXint   ndel;         /// Number characters deleted at position
+  FXint   nins;         /// Number characters inserted at position
+  FXchar *ins;          /// Text inserted at position
+  FXchar *del;          /// Text deleted at position
+  };
+
+
 /// Multiline text widget
 class FXAPI FXText : public FXScrollArea {
   FXDECLARE(FXText)
@@ -87,6 +100,7 @@ protected:
   FXint          hiliteendpos;        // Hightlight end position
   FXint          anchorpos;           // Anchor position
   FXint          cursorpos;           // Cursor position
+  FXint          revertpos;           // Position of cursor prior to dragging
   FXint          cursorstart;         // Cursor row start pos
   FXint          cursorend;           // Cursor row end pos
   FXint          cursorrow;           // Cursor row
@@ -112,13 +126,13 @@ protected:
   FXColor        numberColor;         // Line number color
   FXColor        cursorColor;         // Cursor color
   FXColor        barColor;            // Bar background color
-  FXTimer       *blinker;             // Timer to blink cursor
-  FXTimer       *flasher;             // Timer to flash brace
   FXint          textWidth;           // Total width of all text
   FXint          textHeight;          // Total height of all text
+  FXString       searchstring;        // String of last search
+  FXuint         searchflags;         // Flags of last search
+  const FXchar  *delimiters;          // Delimiters
   FXchar        *clipbuffer;          // Clipped text
   FXint          cliplength;          // Length of clipped text
-  FXCharset      delimiters;          // Delimiters
   FXint          vrows;               // Default visible rows
   FXint          vcols;               // Default visible columns
   FXString       help;                // Status line help
@@ -126,25 +140,23 @@ protected:
   const FXHiliteStyle *hilitestyles;  // Style definitions
   FXuint         matchtime;           // Match time (ms)
   FXbool         modified;            // User has modified text
-  FXuint         mode;                // Mode widget is in
+  FXuchar        mode;                // Mode widget is in
   FXint          grabx;               // Grab point x
   FXint          graby;               // Grab point y
 protected:
   FXText();
-  virtual void layout();
   void calcVisRows(FXint s,FXint e);
-  void showCursor(FXuint state);
-  void drawCursor(FXuint state);
-  void eraseCursorOverhang();
+  virtual void eraseCursorOverhang();
+  virtual void drawCursor(FXuint state);
   virtual FXuint style(FXint row,FXint beg,FXint end,FXint pos) const;
   virtual void drawBufferText(FXDCWindow& dc,FXint x,FXint y,FXint w,FXint h,FXint pos,FXint n,FXuint style) const;
   virtual void fillBufferRect(FXDCWindow& dc,FXint x,FXint y,FXint w,FXint h,FXuint style) const;
   virtual void drawTextRow(FXDCWindow& dc,FXint line,FXint left,FXint right) const;
-  void drawContents(FXDCWindow& dc,FXint x,FXint y,FXint w,FXint h) const;
-  void drawNumbers(FXDCWindow& dc,FXint x,FXint y,FXint w,FXint h) const;
+  virtual void drawContents(FXDCWindow& dc,FXint x,FXint y,FXint w,FXint h) const;
+  virtual void drawNumbers(FXDCWindow& dc,FXint x,FXint y,FXint w,FXint h) const;
   FXint posToLine(FXint pos,FXint ln) const;
   FXbool posVisible(FXint pos) const;
-  void updateRange(FXint beg,FXint end);
+  void updateRange(FXint beg,FXint end) const;
   void movegap(FXint pos);
   void sizegap(FXint sz);
   void squeezegap();
@@ -168,6 +180,7 @@ protected:
   FXint matchBackward(FXint pos,FXint beg,FXchar l,FXchar r,FXint level) const;
   FXint findMatching(FXint pos,FXint beg,FXint end,FXchar ch,FXint level) const;
   void flashMatching();
+  void moveContents(FXint x,FXint y);
 protected:
   enum {
     STYLE_MASK      = 0x00FF,   // Mask color table
@@ -184,13 +197,13 @@ protected:
     MOUSE_LINES,                // Selecting lines
     MOUSE_SCROLL,               // Scrolling
     MOUSE_DRAG,                 // Dragging text
-    MOUSE_PASTE,                // Pasting
     MOUSE_TRYDRAG               // Tentative drag
     };
 public:
   enum {
     STYLE_UNDERLINE = 0x0001,   /// Underline text
-    STYLE_STRIKEOUT = 0x0002    /// Strike out text
+    STYLE_STRIKEOUT = 0x0002,   /// Strike out text
+    STYLE_BOLD      = 0x0004    /// Bold text
     };
 private:
   FXText(const FXText&);
@@ -240,11 +253,13 @@ public:
   long onCmdCursorColumn(FXObject*,FXSelector,void*);
   long onUpdCursorColumn(FXObject*,FXSelector,void*);
   long onUpdHaveSelection(FXObject*,FXSelector,void*);
+  long onUpdSelectAll(FXObject*,FXSelector,void*);
   long onCmdSetStringValue(FXObject*,FXSelector,void*);
   long onCmdGetStringValue(FXObject*,FXSelector,void*);
-  long onCmdSearchSel(FXObject*,FXSelector,void*);
   long onCmdSearch(FXObject*,FXSelector,void*);
   long onCmdReplace(FXObject*,FXSelector,void*);
+  long onCmdSearchNext(FXObject*,FXSelector,void*);
+  long onCmdSearchSel(FXObject*,FXSelector,void*);
 
   // Cursor movement
   long onCmdCursorTop(FXObject*,FXSelector,void*);
@@ -257,6 +272,8 @@ public:
   long onCmdCursorDown(FXObject*,FXSelector,void*);
   long onCmdCursorWordLeft(FXObject*,FXSelector,void*);
   long onCmdCursorWordRight(FXObject*,FXSelector,void*);
+  long onCmdCursorWordStart(FXObject*,FXSelector,void*);
+  long onCmdCursorWordEnd(FXObject*,FXSelector,void*);
   long onCmdCursorPageDown(FXObject*,FXSelector,void*);
   long onCmdCursorPageUp(FXObject*,FXSelector,void*);
   long onCmdCursorScreenTop(FXObject*,FXSelector,void*);
@@ -289,6 +306,7 @@ public:
   long onCmdDeleteSel(FXObject*,FXSelector,void*);
   long onCmdChangeCase(FXObject*,FXSelector,void*);
   long onCmdShiftText(FXObject*,FXSelector,void*);
+  long onCmdPasteMiddle(FXObject*,FXSelector,void*);
 
   // Changing Selection
   long onCmdSelectChar(FXObject*,FXSelector,void*);
@@ -306,7 +324,11 @@ public:
   long onCmdDelete(FXObject*,FXSelector,void*);
   long onCmdDeleteWord(FXObject*,FXSelector,void*);
   long onCmdDeleteEol(FXObject*,FXSelector,void*);
+  long onCmdDeleteAll(FXObject*,FXSelector,void*);
   long onCmdDeleteLine(FXObject*,FXSelector,void*);
+
+public:
+  static const FXchar textDelimiters[];
 
 public:
 
@@ -321,6 +343,8 @@ public:
     ID_CURSOR_DOWN,
     ID_CURSOR_WORD_LEFT,
     ID_CURSOR_WORD_RIGHT,
+    ID_CURSOR_WORD_START,
+    ID_CURSOR_WORD_END,
     ID_CURSOR_PAGEDOWN,
     ID_CURSOR_PAGEUP,
     ID_CURSOR_SCRNTOP,
@@ -338,8 +362,9 @@ public:
     ID_INSERT_TAB,
     ID_CUT_SEL,
     ID_COPY_SEL,
-    ID_PASTE_SEL,
     ID_DELETE_SEL,
+    ID_PASTE_SEL,
+    ID_PASTE_MIDDLE,
     ID_SELECT_CHAR,
     ID_SELECT_WORD,
     ID_SELECT_LINE,
@@ -356,6 +381,7 @@ public:
     ID_DELETE,
     ID_DELETE_WORD,
     ID_DELETE_EOL,
+    ID_DELETE_ALL,
     ID_DELETE_LINE,
     ID_TOGGLE_EDITABLE,
     ID_TOGGLE_OVERSTRIKE,
@@ -373,6 +399,8 @@ public:
     ID_GOTO_LINE,
     ID_SEARCH_FORW_SEL,
     ID_SEARCH_BACK_SEL,
+    ID_SEARCH_FORW,
+    ID_SEARCH_BACK,
     ID_SEARCH,
     ID_REPLACE,
     ID_LEFT_BRACE,
@@ -398,6 +426,9 @@ public:
 
   /// Detach server-side resources
   virtual void detach();
+
+  /// Perform layout
+  virtual void layout();
 
   /// Return default width
   virtual FXint getDefaultWidth();
@@ -434,9 +465,6 @@ public:
 
   /// Remove the focus from this window
   virtual void killFocus();
-
-  /// Scroll the contents
-  void moveContents(FXint x,FXint y);
 
   /// Change top margin
   void setMarginTop(FXint pt);
@@ -499,10 +527,10 @@ public:
   FXbool isStyled() const { return (sbuffer!=NULL); }
 
   /// Change delimiters of words
-  void setDelimiters(const FXCharset& delims){ delimiters=delims; }
+  void setDelimiters(const FXchar* delims=textDelimiters){ delimiters=delims; }
 
   /// Return word delimiters
-  FXCharset getDelimiters() const { return delimiters; }
+  const FXchar* getDelimiters() const { return delimiters; }
 
   /// Change text font
   void setFont(FXFont* fnt);
@@ -570,10 +598,10 @@ public:
   /// Return help text
   FXString getHelpText() const { return help; }
 
-  /// Set the tool tip message for this text field
+  /// Set the tool tip message for this text widget
   void setTipText(const FXString& text){ tip=text; }
 
-  /// Get the tool tip message for this text field
+  /// Get the tool tip message for this text widget
   FXString getTipText() const { return tip; }
 
   /// Get character at position in text buffer
@@ -587,7 +615,7 @@ public:
 
   /// Extract n characters of style info from position pos
   void extractStyle(FXchar *style,FXint pos,FXint n) const;
-  
+
   /// Replace m characters at pos by n characters
   void replaceText(FXint pos,FXint m,const FXchar *text,FXint n,FXbool notify=FALSE);
 
@@ -734,10 +762,10 @@ public:
   FXint getCursorRow() const { return cursorrow; }
 
   /// Set cursor column
-  void setCursorCol(FXint col,FXbool notify=FALSE);
+  void setCursorColumn(FXint col,FXbool notify=FALSE);
 
   /// Return cursor row, i.e. indent position
-  FXint getCursorCol() const { return cursorcol; }
+  FXint getCursorColumn() const { return cursorcol; }
 
   /// Return the cursor position
   FXint getCursorPos() const { return cursorpos; }
@@ -776,16 +804,16 @@ public:
   FXuint getTextStyle() const;
 
   /// Change number of visible rows
-  void setVisRows(FXint rows);
+  void setVisibleRows(FXint rows);
 
   /// Return number of visible rows
-  FXint getVisRows() const { return vrows; }
+  FXint getVisibleRows() const { return vrows; }
 
   /// Change number of visible columns
-  void setVisCols(FXint cols);
+  void setVisibleColumns(FXint cols);
 
   /// Return number of visible columns
-  FXint getVisCols() const { return vcols; }
+  FXint getVisibleColumns() const { return vcols; }
 
   /**
   * Change brace and parenthesis match highlighting time, in ms.
@@ -814,6 +842,6 @@ public:
   virtual ~FXText();
   };
 
-
+}
 
 #endif

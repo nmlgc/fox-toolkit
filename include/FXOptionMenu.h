@@ -3,7 +3,7 @@
 *                             O p t i o n   M e n u                             *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXOptionMenu.h,v 1.14.4.1 2003/10/13 15:57:43 fox Exp $                   *
+* $Id: FXOptionMenu.h,v 1.23 2004/02/08 17:17:34 fox Exp $                      *
 ********************************************************************************/
 #ifndef FXOPTIONMENU_H
 #define FXOPTIONMENU_H
@@ -28,6 +28,7 @@
 #include "FXLabel.h"
 #endif
 
+namespace FX {
 
 
 class FXPopup;
@@ -85,7 +86,6 @@ protected:
   FXOption *current;
 protected:
   FXOptionMenu(){}
-  virtual void layout();
 private:
   FXOptionMenu(const FXOptionMenu&);
   FXOptionMenu &operator=(const FXOptionMenu&);
@@ -119,6 +119,9 @@ public:
   /// Delete server-side resources
   virtual void destroy();
 
+  /// Perform layout
+  virtual void layout();
+
   /// Remove the focus from this window
   virtual void killFocus();
 
@@ -132,22 +135,25 @@ public:
   virtual FXbool contains(FXint parentx,FXint parenty) const;
 
   /// Set the current option
-  void setCurrent(FXOption *win);
+  void setCurrent(FXOption *win,FXbool notify=FALSE);
 
   /// Return the current option
   FXOption* getCurrent() const { return current; }
 
   /// Set the current option number
-  void setCurrentNo(FXint no);
+  void setCurrentNo(FXint no,FXbool notify=FALSE);
 
   /// Get the current option number
   FXint getCurrentNo() const;
 
+  /// Get number of options
+  FXint getNumOptions() const;
+
   /// Set the pane which will be popped up
-  void setPopup(FXPopup *pup);
+  void setMenu(FXPopup *pup);
 
   /// Return the pane which is poppup up
-  FXPopup* getPopup() const { return pane; }
+  FXPopup* getMenu() const { return pane; }
 
   /// Returns true because a option menu can receive focus
   virtual FXbool canFocus() const;
@@ -165,5 +171,6 @@ public:
   virtual ~FXOptionMenu();
   };
 
+}
 
 #endif

@@ -3,7 +3,7 @@
 *                         T o p l e v el   O b j e c t                          *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,20 +19,25 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXObject.h,v 1.16 2002/01/18 22:42:54 jeroen Exp $                       *
+* $Id: FXObject.h,v 1.25 2004/02/08 17:17:34 fox Exp $                          *
 ********************************************************************************/
 #ifndef FXOBJECT_H
 #define FXOBJECT_H
 
+namespace FX {
 
-// Minimum and maximum keys
-#define MINKEY    0
-#define MAXKEY    65535
+/// Minimum and maximum message id
+enum {
+  MINKEY = 0,
+  MAXKEY = 65535
+  };
 
 
-// Minimum and maximum types
-#define MINTYPE   0
-#define MAXTYPE   65535
+/// Minimum and maximum message type
+enum {
+  MINTYPE = 0,
+  MAXTYPE = 65535
+  };
 
 
 // Association key
@@ -43,16 +48,24 @@ typedef FXuint FXSelector;
 class FXObject;
 
 
-
 /// Describes a FOX object
-struct FXAPI FXMetaClass {
-  const FXchar       *className;
-  FXObject*         (*manufacture)();
-  const FXMetaClass  *baseClass;
-  const void         *assoc;
-  FXuint              nassocs;
-  FXuint              assocsz;
-  FXuint              namelen;
+class FXAPI FXMetaClass {
+private:
+  const FXchar              *className;
+  FXObject*                (*manufacture)();
+  const FXMetaClass         *baseClass;
+  const void                *assoc;
+  FXuint                     nassocs;
+  FXuint                     assocsz;
+  FXuint                     namelen;
+private:
+  static const FXMetaClass **metaClassTable;
+  static FXuint              nmetaClassTable;
+  static FXuint              nmetaClasses;
+private:
+  static void resize(FXuint n);
+public:
+  FXMetaClass(const FXchar* name,FXObject *(fac)(),const FXMetaClass* base,const void* ass,FXuint nass,FXuint assz,FXuint len);
 
   /// Check if metaclass is subclass of some other metaclass
   FXbool isSubClassOf(const FXMetaClass* metaclass) const;
@@ -63,6 +76,9 @@ struct FXAPI FXMetaClass {
   /// Ask class name
   const FXchar* getClassName() const { return className; }
 
+  /// Obtain class name length
+  FXuint getClassNameLength() const { return namelen; }
+
   /// Ask base class
   const FXMetaClass* getBaseClass() const { return baseClass; }
 
@@ -71,35 +87,29 @@ struct FXAPI FXMetaClass {
 
   /// Search message map
   const void* search(FXSelector key) const;
-  };
 
-
-// Pre-runtime initializer
-class FXAPI __FXMETACLASSINITIALIZER__ {
-public:
-  __FXMETACLASSINITIALIZER__(const FXMetaClass* meta);
+ ~FXMetaClass();
   };
 
 
 /// Macro to set up class declaration
 #define FXDECLARE(classname) \
   public: \
-   struct FXMapEntry { FXSelector keylo; FXSelector keyhi; long (classname::* func)(FXObject*,FXSelector,void*); }; \
-   static const FXMetaClass metaClass; \
-   static FXObject* manufacture(); \
-   virtual long handle(FXObject* sender,FXSelector sel,void* ptr); \
-   virtual const FXMetaClass* getMetaClass() const { return &metaClass; } \
-   friend FXStream& operator<<(FXStream& store,const classname* obj){return store.saveObject((FXObjectPtr)(obj));} \
-   friend FXStream& operator>>(FXStream& store,classname*& obj){return store.loadObject((FXObjectPtr&)(obj));} \
+   struct FXMapEntry { FX::FXSelector keylo; FX::FXSelector keyhi; long (classname::* func)(FX::FXObject*,FX::FXSelector,void*); }; \
+   static const FX::FXMetaClass metaClass; \
+   static FX::FXObject* manufacture(); \
+   virtual long handle(FX::FXObject* sender,FX::FXSelector sel,void* ptr); \
+   virtual const FX::FXMetaClass* getMetaClass() const { return &metaClass; } \
+   friend FX::FXStream& operator<<(FX::FXStream& store,const classname* obj){return store.saveObject((FX::FXObjectPtr)(obj));} \
+   friend FX::FXStream& operator>>(FX::FXStream& store,classname*& obj){return store.loadObject((FX::FXObjectPtr&)(obj));} \
   private:
 
 
 /// Macro to set up class implementation
 #define FXIMPLEMENT(classname,baseclassname,mapping,nmappings) \
-  FXObject* classname::manufacture(){return new classname;} \
-  const FXMetaClass classname::metaClass={#classname,classname::manufacture,&baseclassname::metaClass,mapping,nmappings,sizeof(classname::FXMapEntry),sizeof(#classname)}; \
-  __FXMETACLASSINITIALIZER__ classname##Initializer(&classname::metaClass); \
-  long classname::handle(FXObject* sender,FXSelector sel,void* ptr){ \
+  FX::FXObject* classname::manufacture(){return new classname;} \
+  const FX::FXMetaClass classname::metaClass(#classname,classname::manufacture,&baseclassname::metaClass,mapping,nmappings,sizeof(classname::FXMapEntry),sizeof(#classname)); \
+  long classname::handle(FX::FXObject* sender,FX::FXSelector sel,void* ptr){ \
     const FXMapEntry* me=(const FXMapEntry*)metaClass.search(sel); \
     return me ? (this->* me->func)(sender,sel,ptr) : baseclassname::handle(sender,sel,ptr); \
     }
@@ -108,20 +118,19 @@ public:
 /// Macro to set up abstract class declaration
 #define FXDECLARE_ABSTRACT(classname) \
   public: \
-   struct FXMapEntry { FXSelector keylo; FXSelector keyhi; long (classname::* func)(FXObject*,FXSelector,void*); }; \
-   static const FXMetaClass metaClass; \
-   virtual long handle(FXObject* sender,FXSelector sel,void* ptr); \
-   virtual const FXMetaClass* getMetaClass() const { return &metaClass; } \
-   friend FXStream& operator<<(FXStream& store,const classname* obj){return store.saveObject((FXObjectPtr)(obj));} \
-   friend FXStream& operator>>(FXStream& store,classname*& obj){return store.loadObject((FXObjectPtr&)(obj));} \
+   struct FXMapEntry { FX::FXSelector keylo; FX::FXSelector keyhi; long (classname::* func)(FX::FXObject*,FX::FXSelector,void*); }; \
+   static const FX::FXMetaClass metaClass; \
+   virtual long handle(FX::FXObject* sender,FX::FXSelector sel,void* ptr); \
+   virtual const FX::FXMetaClass* getMetaClass() const { return &metaClass; } \
+   friend FX::FXStream& operator<<(FX::FXStream& store,const classname* obj){return store.saveObject((FX::FXObjectPtr)(obj));} \
+   friend FX::FXStream& operator>>(FX::FXStream& store,classname*& obj){return store.loadObject((FX::FXObjectPtr&)(obj));} \
   private:
 
 
 /// Macro to set up abstract class implementation
 #define FXIMPLEMENT_ABSTRACT(classname,baseclassname,mapping,nmappings) \
-  const FXMetaClass classname::metaClass={#classname,NULL,&baseclassname::metaClass,mapping,nmappings,sizeof(classname::FXMapEntry),sizeof(#classname)}; \
-  __FXMETACLASSINITIALIZER__ classname##Initializer(&classname::metaClass); \
-  long classname::handle(FXObject* sender,FXSelector sel,void* ptr){ \
+  const FX::FXMetaClass classname::metaClass(#classname,NULL,&baseclassname::metaClass,mapping,nmappings,sizeof(classname::FXMapEntry),sizeof(#classname)); \
+  long classname::handle(FX::FXObject* sender,FX::FXSelector sel,void* ptr){ \
     const FXMapEntry* me=(const FXMapEntry*)metaClass.search(sel); \
     return me ? (this->* me->func)(sender,sel,ptr) : baseclassname::handle(sender,sel,ptr); \
     }
@@ -173,5 +182,6 @@ public:
   virtual ~FXObject();
   };
 
+}
 
 #endif

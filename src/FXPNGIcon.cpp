@@ -3,7 +3,7 @@
 *                          P N G   I m a g e   O b j e c t                      *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1999,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1999,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,17 +19,19 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXPNGIcon.cpp,v 1.14 2002/01/18 22:43:01 jeroen Exp $                    *
+* $Id: FXPNGIcon.cpp,v 1.26 2004/02/08 17:29:07 fox Exp $                       *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
 #include "fxdefs.h"
 #include "FXStream.h"
+#include "FXMemoryStream.h"
 #include "FXString.h"
 #include "FXSize.h"
 #include "FXPoint.h"
 #include "FXRectangle.h"
 #include "FXRegistry.h"
+#include "FXHash.h"
 #include "FXApp.h"
 #include "FXPNGIcon.h"
 
@@ -39,18 +41,21 @@
   - FXPNGIcon has an alpha channel
 */
 
+using namespace FX;
 
 /*******************************************************************************/
+
+namespace FX {
 
 FXIMPLEMENT(FXPNGIcon,FXIcon,NULL,0)
 
 
 // Initialize
 FXPNGIcon::FXPNGIcon(FXApp* a,const void *pix,FXColor clr,FXuint opts,FXint w,FXint h):
-  FXIcon(a,NULL,clr,opts|IMAGE_ALPHA,w,h){
+  FXIcon(a,NULL,clr,opts,w,h){
   if(pix){
     FXMemoryStream ms;
-    ms.open((FXuchar *)pix,FXStreamLoad);
+    ms.open(FXStreamLoad,(FXuchar*)pix);
     loadPixels(ms);
     ms.close();
     }
@@ -58,24 +63,24 @@ FXPNGIcon::FXPNGIcon(FXApp* a,const void *pix,FXColor clr,FXuint opts,FXint w,FX
 
 
 // Save pixels only
-void FXPNGIcon::savePixels(FXStream& store) const {
-  FXASSERT(options&IMAGE_ALPHA);
-  fxsavePNG(store,data,transp,width,height);
+FXbool FXPNGIcon::savePixels(FXStream& store) const {
+  if(!fxsavePNG(store,data,width,height)) return FALSE;
+  return TRUE;
   }
 
 
 // Load pixels only
-void FXPNGIcon::loadPixels(FXStream& store){
-  FXColor clearcolor=0;
-  if(options&IMAGE_OWNED){FXFREE(&data);}
-  fxloadPNG(store,data,clearcolor,width,height);
-  if(!(options&IMAGE_ALPHACOLOR)) transp=clearcolor;
+FXbool FXPNGIcon::loadPixels(FXStream& store){
+  if(options&IMAGE_OWNED){ FXFREE(&data); }
+  if(!fxloadPNG(store,data,width,height)) return FALSE;
   if(options&IMAGE_ALPHAGUESS) transp=guesstransp();
-  options|=IMAGE_ALPHA;
   options|=IMAGE_OWNED;
+  return TRUE;
   }
 
 
 // Clean up
 FXPNGIcon::~FXPNGIcon(){
   }
+
+}

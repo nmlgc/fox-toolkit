@@ -3,7 +3,7 @@
 *                  S t r i n g   D i c t i o n a r y    C l a s s               *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1998,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXStringDict.h,v 1.6 2002/01/24 14:27:36 jeroen Exp $                    *
+* $Id: FXStringDict.h,v 1.10 2004/02/08 17:17:34 fox Exp $                       *
 ********************************************************************************/
 #ifndef FXSTRINGDICT_H
 #define FXSTRINGDICT_H
@@ -28,6 +28,7 @@
 #include "FXDict.h"
 #endif
 
+namespace FX {
 
 /**
 * String dictionary maps a character string to a character string.
@@ -65,5 +66,6 @@ public:
   virtual ~FXStringDict();
   };
 
+}
 
 #endif

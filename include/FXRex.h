@@ -3,7 +3,7 @@
 *                 R e g u l a r   E x p r e s s i o n   C l a s s               *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1999,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1999,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,12 +19,13 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXRex.h,v 1.44 2002/01/18 22:42:54 jeroen Exp $                          *
+* $Id: FXRex.h,v 1.48 2004/02/08 17:17:34 fox Exp $                             *
 ********************************************************************************/
 #ifndef FXREX_H
 #define FXREX_H
 
 
+namespace FX {
 
 
 /// Regular expression error codes
@@ -169,5 +170,7 @@ public:
   /// Delete
  ~FXRex();
   };
+
+}
 
 #endif

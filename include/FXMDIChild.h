@@ -3,7 +3,7 @@
 *          M u l t i p l e   D o c u m e n t   C h i l d   W i n d o w          *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1998,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXMDIChild.h,v 1.22 2002/01/18 22:42:53 jeroen Exp $                     *
+* $Id: FXMDIChild.h,v 1.38 2004/02/08 17:17:33 fox Exp $                        *
 ********************************************************************************/
 #ifndef FXMDICHILD_H
 #define FXMDICHILD_H
@@ -28,9 +28,9 @@
 #include "FXComposite.h"
 #endif
 
+namespace FX {
 
 
-struct FXTimer;
 class FXMDIClient;
 class FXMenuButton;
 class FXButton;
@@ -41,7 +41,8 @@ class FXFont;
 enum {
   MDI_NORMAL    = 0,                /// Normal display mode
   MDI_MAXIMIZED = 0x00001000,       /// Window appears maximized
-  MDI_MINIMIZED = 0x00002000        /// Window is iconified or minimized
+  MDI_MINIMIZED = 0x00002000,       /// Window is iconified or minimized
+  MDI_TRACKING  = 0x00004000        /// Track continuously during dragging
   };
 
 
@@ -53,37 +54,36 @@ enum {
 class FXAPI FXMDIChild : public FXComposite {
   FXDECLARE(FXMDIChild)
 protected:
-  FXString      title;
-  FXMenuButton *windowbtn;
-  FXButton     *minimizebtn;
-  FXButton     *restorebtn;
-  FXButton     *maximizebtn;
-  FXButton     *deletebtn;
-  FXFont       *font;
-  FXColor       baseColor;
+  FXString      title;                  // Window title
+  FXMenuButton *windowbtn;              // Window button
+  FXButton     *minimizebtn;            // Minimize button
+  FXButton     *restorebtn;             // Restore button
+  FXButton     *maximizebtn;            // Maximize buton
+  FXButton     *deletebtn;              // Close button
+  FXFont       *font;                   // Title font
+  FXColor       baseColor;              // Colors
   FXColor       hiliteColor;
   FXColor       shadowColor;
   FXColor       borderColor;
   FXColor       titleColor;
   FXColor       titleBackColor;
-  FXint         iconPosX;
+  FXint         iconPosX;               // Saved icon position
   FXint         iconPosY;
   FXint         iconWidth;
   FXint         iconHeight;
-  FXint         normalPosX;
+  FXint         normalPosX;             // Saved normal position
   FXint         normalPosY;
   FXint         normalWidth;
   FXint         normalHeight;
-  FXint         xoff;
+  FXint         spotx;                  // Grab-spot of mouse on window
+  FXint         spoty;
+  FXint         xoff;                   // Mouse offset to add
   FXint         yoff;
-  FXint         oldx;
-  FXint         oldy;
-  FXint         oldw;
-  FXint         oldh;
-  FXuchar       action;
-private:
-  FXMDIChild   *mdinext;
-  FXMDIChild   *mdiprev;
+  FXint         newx;                   // New location of window
+  FXint         newy;
+  FXint         neww;
+  FXint         newh;
+  FXuchar       mode;                   // Dragging mode
 protected:
   FXMDIChild();
   void drawRubberBox(FXint x,FXint y,FXint w,FXint h);
@@ -91,7 +91,20 @@ protected:
   FXuchar where(FXint x,FXint y);
   void changeCursor(FXint x,FXint y);
   void revertCursor();
-  virtual void layout();
+protected:
+  enum {
+    DRAG_NONE        = 0,
+    DRAG_TOP         = 1,
+    DRAG_BOTTOM      = 2,
+    DRAG_LEFT        = 4,
+    DRAG_RIGHT       = 8,
+    DRAG_TOPLEFT     = (DRAG_TOP|DRAG_LEFT),
+    DRAG_TOPRIGHT    = (DRAG_TOP|DRAG_RIGHT),
+    DRAG_BOTTOMLEFT  = (DRAG_BOTTOM|DRAG_LEFT),
+    DRAG_BOTTOMRIGHT = (DRAG_BOTTOM|DRAG_RIGHT),
+    DRAG_INVERTED    = 16,
+    DRAG_TITLE       = 32
+    };
 private:
   FXMDIChild(const FXMDIChild&);
   FXMDIChild &operator=(const FXMDIChild&);
@@ -107,34 +120,30 @@ public:
   long onMiddleBtnPress(FXObject*,FXSelector,void*);
   long onMiddleBtnRelease(FXObject*,FXSelector,void*);
   long onMotion(FXObject*,FXSelector,void*);
-  long onDelete(FXObject*,FXSelector,void*);
-  long onClose(FXObject*,FXSelector,void*);
-  long onCloseAll(FXObject*,FXSelector,void*);
   long onSelected(FXObject*,FXSelector,void*);
   long onDeselected(FXObject*,FXSelector,void*);
-  long onMinimize(FXObject*,FXSelector,void*);
-  long onRestore(FXObject*,FXSelector,void*);
-  long onMaximize(FXObject*,FXSelector,void*);
-  long onCmdRestore(FXObject*,FXSelector,void*);
-  long onCmdMaximize(FXObject*,FXSelector,void*);
-  long onCmdMinimize(FXObject*,FXSelector,void*);
   long onCmdClose(FXObject*,FXSelector,void*);
-  long onCmdDelete(FXObject*,FXSelector,void*);
+  long onUpdClose(FXObject*,FXSelector,void*);
+  long onCmdRestore(FXObject*,FXSelector,void*);
   long onUpdRestore(FXObject*,FXSelector,void*);
   long onUpdMaximize(FXObject*,FXSelector,void*);
   long onUpdMinimize(FXObject*,FXSelector,void*);
+  long onCmdMaximize(FXObject*,FXSelector,void*);
+  long onCmdMinimize(FXObject*,FXSelector,void*);
   long onUpdWindow(FXObject*,FXSelector,void*);
   long onUpdMenuRestore(FXObject*,FXSelector,void*);
   long onUpdMenuMinimize(FXObject*,FXSelector,void*);
   long onUpdMenuClose(FXObject*,FXSelector,void*);
   long onUpdMenuWindow(FXObject*,FXSelector,void*);
-  long onUpdClose(FXObject*,FXSelector,void*);
   long onCmdSetStringValue(FXObject*,FXSelector,void*);
+  long onCmdGetStringValue(FXObject*,FXSelector,void*);
+  long onCmdSetIconValue(FXObject*,FXSelector,void*);
+  long onCmdGetIconValue(FXObject*,FXSelector,void*);
   virtual long onDefault(FXObject*,FXSelector,void*);
 public:
 
   /// Construct MDI Child window with given name and icon
-  FXMDIChild(FXMDIClient* p,const FXString& name,FXIcon* ic=NULL,FXMenuPane* mn=NULL,FXuint opts=0,FXint x=0,FXint y=0,FXint w=0,FXint h=0);
+  FXMDIChild(FXMDIClient* p,const FXString& name,FXIcon* ic=NULL,FXPopup* pup=NULL,FXuint opts=0,FXint x=0,FXint y=0,FXint w=0,FXint h=0);
 
   /// Create window
   virtual void create();
@@ -142,15 +151,17 @@ public:
   /// Detach window
   virtual void detach();
 
-  /// Get next MDI Child
-  FXMDIChild* getMDINext() const { return mdinext; }
+  /// Perform layout
+  virtual void layout();
 
-  /// Get previous MDI Child
-  FXMDIChild* getMDIPrev() const { return mdiprev; }
-
-  /// Compute default size
+  /// Return the default width of this window
   virtual FXint getDefaultWidth();
+
+  /// Return the default height of this window
   virtual FXint getDefaultHeight();
+
+  /// Move the focus to this window
+  virtual void setFocus();
 
   /// MDI Child can receive focus
   virtual FXbool canFocus() const;
@@ -213,32 +224,41 @@ public:
   void setTitleColor(FXColor clr);
   void setTitleBackColor(FXColor clr);
 
+  /// Maximize MDI window, return TRUE if maximized
+  virtual FXbool maximize(FXbool notify=FALSE);
+
+  /// Minimize/iconify MDI window, return TRUE if minimized
+  virtual FXbool minimize(FXbool notify=FALSE);
+
+  /// Restore MDI window to normal, return TRUE if restored
+  virtual FXbool restore(FXbool notify=FALSE);
+
+  /// Close MDI window, return TRUE if actually closed
+  virtual FXbool close(FXbool notify=FALSE);
+
   /// Return TRUE if maximized
   FXbool isMaximized() const;
 
   /// Return TRUE if minimized
   FXbool isMinimized() const;
 
-  /// Maximize MDI Child
-  virtual void maximize(FXbool notify=FALSE);
-
-  /// Minimize/iconify MDI Child
-  virtual void minimize(FXbool notify=FALSE);
-
-  /// Restore MDI Child to normal
-  virtual void restore(FXbool notify=FALSE);
-
   /// Get window icon
-  FXIcon *getWindowIcon() const;
+  FXIcon *getIcon() const;
 
   /// Set window icon
-  void setWindowIcon(FXIcon* icon);
+  void setIcon(FXIcon* icon);
 
   /// Get window menu
-  FXPopup* getWindowMenu() const;
+  FXPopup* getMenu() const;
 
   /// Set window menu
-  void setWindowMenu(FXPopup* menu);
+  void setMenu(FXPopup* menu);
+
+  /// Set tracking instead of just outline
+  void setTracking(FXbool tracking=TRUE);
+
+  /// Return true if tracking
+  FXbool getTracking() const;
 
   /// Set title font
   void setFont(FXFont *fnt);
@@ -256,5 +276,6 @@ public:
   virtual ~FXMDIChild();
   };
 
+}
 
 #endif

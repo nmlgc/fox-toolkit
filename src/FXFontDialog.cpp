@@ -3,7 +3,7 @@
 *                    F o n t   S e l e c t i o n   D i a l o g                  *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1999,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1999,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXFontDialog.cpp,v 1.11 2002/01/18 22:43:00 jeroen Exp $                 *
+* $Id: FXFontDialog.cpp,v 1.17 2004/02/08 17:29:06 fox Exp $                    *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -31,6 +31,7 @@
 #include "FXRectangle.h"
 #include "FXSettings.h"
 #include "FXRegistry.h"
+#include "FXHash.h"
 #include "FXApp.h"
 #include "FXId.h"
 #include "FXFont.h"
@@ -52,8 +53,11 @@
   Notes:
 */
 
+using namespace FX;
 
 /*******************************************************************************/
+
+namespace FX {
 
 // Object implementation
 FXIMPLEMENT(FXFontDialog,FXDialogBox,NULL,0)
@@ -98,7 +102,8 @@ void FXFontDialog::getFontSelection(FXFontDesc& fontdesc) const {
 
 // Cleanup
 FXFontDialog::~FXFontDialog(){
-  fontbox=(FXFontSelector*)-1;
+  fontbox=(FXFontSelector*)-1L;
   }
 
+}
 

@@ -3,7 +3,7 @@
 *               W i n d o w s   K e y b o a r d   H a n d l i n g               *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 * Code written by Daniel Gehriger (gehriger@linkcad.com)                        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
@@ -20,7 +20,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: fxwinkbd.cpp,v 1.11 2002/01/18 22:43:08 jeroen Exp $                      *
+* $Id: fxwinkbd.cpp,v 1.17 2004/02/08 17:29:07 fox Exp $                        *
 ********************************************************************************/
 #ifdef WIN32
 #include "xincs.h"
@@ -37,6 +37,7 @@
 #include "FXSize.h"
 #include "FXPoint.h"
 #include "FXRectangle.h"
+#include "FXHash.h"
 #include "FXApp.h"
 #include "FXId.h"
 #include "FXDrawable.h"
@@ -115,7 +116,9 @@
 //
 //-------------------------------------------------------------------------
 
+using namespace FX;
 
+/*******************************************************************************/
 
 // Keyboard map for control keys
 static const FXuint keymapCtl[] = {
@@ -322,6 +325,7 @@ FXuint wkbMapKeyCode(HWND hWnd,UINT iMsg,WPARAM uVirtKey,LPARAM lParam){
         return KEY_Return;
 
     default:
+
       // Map remaining special keys
       for(FXuint i=0; i<ARRAYNUMBER(keymapCtl)/2; ++i){
         if(keymapCtl[2*i]==uVirtKey){
@@ -332,11 +336,11 @@ FXuint wkbMapKeyCode(HWND hWnd,UINT iMsg,WPARAM uVirtKey,LPARAM lParam){
       // Map characters (they come in as uppercase,
       // but FOX wants them converted according the current shift state...
       if('A'<=uVirtKey && uVirtKey<='Z'){
-        return KEYDOWN(ks,VK_SHIFT) ? uVirtKey : uVirtKey-'A'+KEY_a;
+        return (FXuint)(KEYDOWN(ks,VK_SHIFT) ? uVirtKey : uVirtKey-'A'+KEY_a);
         }
 
       // Ask Windows to map remaining characters
-      c=LOWORD(MapVirtualKeyEx(uVirtKey,2,GetKeyboardLayout(0)));
+      c=(char)LOWORD(MapVirtualKeyEx(uVirtKey,2,GetKeyboardLayout(0))); // FIXME ";" and ":" map to same keysym; this is wrong!
       return (c ? c : KEY_VoidSymbol);
     }
   }

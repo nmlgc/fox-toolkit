@@ -3,7 +3,7 @@
 *                       D e l e g a t o r   T a r g e t                         *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2000,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 2000,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXDelegator.h,v 1.8 2002/01/18 22:42:52 jeroen Exp $                     *
+* $Id: FXDelegator.h,v 1.13 2004/04/05 14:49:33 fox Exp $                       *
 ********************************************************************************/
 #ifndef FXDELEGATOR_H
 #define FXDELEGATOR_H
@@ -28,6 +28,7 @@
 #include "FXObject.h"
 #endif
 
+namespace FX {
 
 
 /**
@@ -60,10 +61,9 @@ public:
   void setDelegate(FXObject* target){ delegate=target; }
 
   /// Always trash during detroy
-  virtual ~FXDelegator(){ delegate=(FXObject*)-1; }
+  virtual ~FXDelegator(){ delegate=(FXObject*)-1L; }
   };
 
-
-
+}
 
 #endif

@@ -5,10 +5,10 @@ dnl Major Library release number
 FOX_MAJOR_VERSION=1
 
 dnl Minor Library release number
-FOX_MINOR_VERSION=0
+FOX_MINOR_VERSION=2
 
 dnl Increment after every source code change
-FOX_PATCH_LEVEL=53
+FOX_PATCH_LEVEL=0
 
 dnl Binaries compiled with this patchlevel of FOX will need at least
 dnl version MAJOR.MINOR.INTERFACE_VERSION to run. The assertion
@@ -39,11 +39,16 @@ AC_SUBST(FOX_MAJOR_VERSION)
 AC_SUBST(FOX_MINOR_VERSION)
 AC_SUBST(FOX_PATCH_LEVEL)
 
-dnl Calculate libtool versioning information
+dnl CURRENT:  Most recent interface library implements
+dnl REVISION: The implementation number of the CURRENT interface
+dnl AGE:      The difference between the newest and oldest interfaces that this
+dnl           library implements.  The library implements all the interface numbers
+dnl           in the range from number CURRENT - AGE to CURRENT.
 LT_RELEASE=$FOX_MAJOR_VERSION.$FOX_MINOR_VERSION
 LT_CURRENT=$FOX_INTERFACE_VERSION
 LT_REVISION=`expr $FOX_PATCH_LEVEL - $FOX_INTERFACE_VERSION`
 LT_AGE=`expr $FOX_INTERFACE_VERSION - $FOX_BINARY_VERSION`
+
 AC_SUBST(LT_RELEASE)
 AC_SUBST(LT_CURRENT)
 AC_SUBST(LT_REVISION)
@@ -58,6 +63,9 @@ AC_PROG_CC
 AC_PROG_CPP
 AC_PROG_CXX
 AM_PROG_LIBTOOL
+
+dnl Run tests in C++
+dnl AC_LANG_CPLUSPLUS
 
 
 dnl Checks for header files.
@@ -106,26 +114,6 @@ fi
 AC_SUBST(FOX_BYTEORDER)
 fi
 
-saved_cppflags="$CPPFLAGS"
-CPPFLAGS="$CPPFLAGS $X_CFLAGS"
-
-dnl Check for shared memory
-XSHM="HAVE_XSHM"
-AC_CHECK_HEADER(X11/extensions/XShm.h,,XSHM="")
-AC_CHECK_HEADER(sys/ipc.h,,XSHM="")
-AC_CHECK_HEADER(sys/shm.h,,XSHM="")
-AC_ARG_ENABLE(shm,[  --with-shm              choices are yes, no])
-AC_MSG_RESULT([$with_shm])
-if test "x$with_shm" = "xno" ; then
-XSHM=""
-fi
-
-CPPFLAGS="$saved_cppflags"
-
-if test "x$XSHM" = "xHAVE_XSHM" ; then
-CXXFLAGS="${CXXFLAGS} -DHAVE_XSHM"
-fi
-
 
 if test "x$CYGWIN" = "xyes" -o "x$MINGW32" = "xyes" ; then
 AC_DEFINE(WIN32)
@@ -141,6 +129,36 @@ X_BASE_LIBS="-lXext -lX11"
 fi
 AC_SUBST(X_BASE_LIBS)
 AC_EXEEXT
+
+dnl Checks for QNX (Dustin Graves <dgraves@computer.org>)
+AC_MSG_CHECKING(for QNX environment)
+case "$host_os" in
+  *-qnx*)
+    AC_MSG_RESULT(yes)
+    dnl Check g++ for -fno-builtin dependency
+    if test "${GXX}" = "yes" ; then
+      AC_LANG_SAVE
+      AC_LANG_CPLUSPLUS
+      AC_MSG_CHECKING(if QNX C++ compiler requires -fno-builtin)
+      AC_CACHE_VAL(ac_cv_no_builtin,
+       [AC_TRY_COMPILE([#include<stdlib.h>
+                        #include<math.h>
+                        #include<string.h>],
+                        [return 0;],
+                        [ac_cv_no_builtin=false],
+                        [ac_cv_no_builtin=true])])
+      if test "$ac_cv_no_builtin" = true ; then
+        CXXFLAGS="${CXXFLAGS} -fno-builtin"
+        AC_MSG_RESULT(yes)
+      else
+        AC_MSG_RESULT(no)
+      fi
+      AC_LANG_RESTORE
+    fi
+    ;;
+  *)
+    AC_MSG_RESULT(no)
+esac
 
 
 dnl Checks for the Sun WorkShop Compiler
@@ -159,40 +177,105 @@ AC_MSG_RESULT(no)
 fi
 
 
+dnl Check for Xft2 support
+AC_ARG_ENABLE(xft,[  --with-xft          enable Xft support])
+AC_MSG_RESULT([$with_xft])
+if test "x$with_xft" = "xyes"; then
+FTCFLAGS=`xft-config --cflags`
+FTLIBS=`xft-config --libs`
+AC_CHECK_HEADER(X11/Xft/Xft.h,CXXFLAGS="${CXXFLAGS} $FTCFLAGS -DHAVE_XFT_H=1"; X_BASE_LIBS="${X_BASE_LIBS} $FTLIBS")
+fi
+
+
+dnl Check for XShm support
+AC_ARG_ENABLE(xshm,[  --with-xshm            compile with XShm support])
+AC_MSG_RESULT([$with_xshm])
+if test "x$with_xshm" != "xno"; then
+XSHM="-DHAVE_XSHM_H=1"
+AC_CHECK_HEADER(X11/extensions/XShm.h,,XSHM="")
+AC_CHECK_HEADER(sys/ipc.h,,XSHM="")
+AC_CHECK_HEADER(sys/shm.h,,XSHM="")
+CXXFLAGS="${CXXFLAGS} ${XSHM}"
+fi
+
+
+dnl Using reentrant library calls
+AC_MSG_CHECKING(for thread-safe library calls)
+AC_ARG_ENABLE(xthreads,[  --enable-threadsafe     Thread-safe library calls])
+AC_MSG_RESULT([$enable_threadsafe])
+if test "x$enable_threadsafe" = "xyes" ; then
+CXXFLAGS="${CXXFLAGS} -DFOX_THREAD_SAFE=1"
+fi
+
+dnl Find posix thread library
+AC_CHECK_HEADER(pthread.h,,AC_MSG_ERROR([*** POSIX thread support not available ***]))
+PTHREAD_LIBS=notfound
+if test "x$PTHREAD_LIBS" = xnotfound; then
+AC_CHECK_LIB(pthread, pthread_attr_init, PTHREAD_LIBS="-lpthread")
+fi
+if test "x$PTHREAD_LIBS" = xnotfound; then
+AC_CHECK_LIB(pthreads, pthread_attr_init, PTHREAD_LIBS="-lpthreads")
+fi
+if test "x$PTHREAD_LIBS" = xnotfound; then
+AC_CHECK_LIB(c_r, pthread_attr_init, PTHREAD_LIBS="-lc_r")
+fi
+if test "x$PTHREAD_LIBS" = xnotfound; then
+AC_CHECK_FUNC(pthread_attr_init, PTHREAD_LIBS="")
+fi
+if test "x$PTHREAD_LIBS" = xnotfound; then
+AC_MSG_ERROR(*** Unable to locate working posix thread library ***)
+fi
+CXXFLAGS="${CXXFLAGS} -D_GNU_SOURCE"
+LIBS="${LIBS} $PTHREAD_LIBS"
+
+
 dnl Check for JPEG Image support
-dnl You can override JPEGLIB if necessary
 AC_ARG_ENABLE(jpeg,[  --disable-jpeg          compile without JPEG image support])
 AC_MSG_RESULT([$enable_jpeg])
 if test "x$enable_jpeg" != "xno"; then
-AC_CHECK_HEADERS(jpeglib.h,CXXFLAGS="${CXXFLAGS} -DHAVE_JPEG_H=1"; LIBS="${LIBS} ${JPEGLIB:=-ljpeg}")
+AC_CHECK_HEADER(jpeglib.h,CXXFLAGS="${CXXFLAGS} -DHAVE_JPEG_H=1"; LIBS="${LIBS} ${LIBJPEG:=-ljpeg}")
 fi
 
 
 dnl Check for PNG Image support; note zlib is needed for PNG
-dnl You can override PNGLIB if necessary
 AC_ARG_ENABLE(png,[  --disable-png           compile without PNG image support])
 AC_MSG_RESULT([$enable_png])
 if test "x$enable_png" != "xno"; then
-AC_CHECK_HEADERS(png.h,CXXFLAGS="${CXXFLAGS} -DHAVE_PNG_H=1"; LIBS="${LIBS} ${PNGLIB:=-lpng}")
+AC_CHECK_HEADERS(png.h,CXXFLAGS="${CXXFLAGS} -DHAVE_PNG_H=1"; LIBS="${LIBS} ${LIBPNG:=-lpng}")
 fi
 
 
 dnl Check for TIFF Image support; note zlib is needed for TIFF
-dnl You can override TIFFLIB if necessary
-AC_ARG_ENABLE(tiff,[  --disable-tiff         compile without TIFF image support])
+AC_ARG_ENABLE(tiff,[  --disable-tiff          compile without TIFF image support])
 AC_MSG_RESULT([$enable_tiff])
 if test "x$enable_tiff" != "xno"; then
-AC_CHECK_HEADERS(tiff.h,CXXFLAGS="${CXXFLAGS} -DHAVE_TIFF_H=1"; LIBS="${LIBS} ${TIFFLIB:=-ltiff}")
+AC_CHECK_HEADERS(tiff.h,CXXFLAGS="${CXXFLAGS} -DHAVE_TIFF_H=1"; LIBS="${LIBS} ${LIBTIFF:=-ltiff}")
 fi
 
 
-dnl Check for compression library
-dnl You can override ZLIB if necessary
+dnl Check for libz compression library
 AC_ARG_ENABLE(zlib,[  --disable-zlib          compile without zlib support])
 AC_MSG_RESULT([$enable_zlib])
 if test "x$enable_zlib" != "xno"; then
-AC_CHECK_HEADERS(zlib.h,CXXFLAGS="${CXXFLAGS} -DHAVE_ZLIB_H=1"; LIBS="${LIBS} ${ZLIB:=-lz}")
+AC_CHECK_HEADERS(zlib.h,CXXFLAGS="${CXXFLAGS} -DHAVE_ZLIB_H=1"; LIBS="${LIBS} ${LIBZ:=-lz}")
 fi
+
+
+dnl Check for bzip2 compression library
+AC_ARG_ENABLE(bz2lib,[  --disable-bz2lib        compile without bz2lib support])
+AC_MSG_RESULT([$enable_bz2lib])
+if test "x$enable_bz2lib" != "xno"; then
+AC_CHECK_HEADERS(bzlib.h,CXXFLAGS="${CXXFLAGS} -DHAVE_BZ2LIB_H=1"; LIBS="${LIBS} ${LIBBZ2:=-lbz2}")
+fi
+
+
+dnl Check for Xcursor support
+AC_ARG_WITH(xcursor,[  --with-xcursor          compile with Xcursor support])
+AC_MSG_RESULT([$with_xcursor])
+if test "x$with_xcursor" != "xno"; then
+AC_CHECK_HEADER(X11/Xcursor/Xcursor.h,CXXFLAGS="${CXXFLAGS} -DHAVE_XCURSOR_H=1"; X_BASE_LIBS="${X_BASE_LIBS} -lXcursor")
+fi
+
 
 dnl Add math lib if TIFF Image support
 if test "x$enable_tiff" != "xno"; then
@@ -207,9 +290,13 @@ SOCKLIBS=""
 AC_CHECK_LIB(socket,socket, if test "$uname" != "IRIX"; then SOCKLIBS="-lsocket"; fi)
 AC_CHECK_LIB(nsl,gethostbyaddr,if test "$uname" != "IRIX"; then SOCKLIBS="${SOCKLIBS} -lnsl"; fi)
 
+dnl Check for dynamic loader
+AC_CHECK_LIB(dl, dlopen)
+AC_CHECK_LIB(dld, shl_load)
+
 dnl Checking for CUPS
 AC_MSG_CHECKING(for CUPS support)
-AC_ARG_ENABLE(cups,[  --enable-cups           compile without cups support])
+AC_ARG_ENABLE(cups,[  --enable-cups           compile with CUPS support])
 AC_MSG_RESULT([$enable_cups])
 if test "x$enable_cups" = "xyes"; then
 CUPSLIBS=""
@@ -245,7 +332,7 @@ fi
 
 dnl Enable profiling
 AC_MSG_CHECKING(for profiling)
-AC_ARG_ENABLE(profiling,[  --with-profiling        choices are yes, no, or gprof])
+AC_ARG_WITH(profiling,[  --with-profiling        choices are yes, no, or gprof])
 AC_MSG_RESULT([$with_profiling])
 if test "x$with_profiling" = "xyes" ; then
 CXXFLAGS="${CXXFLAGS} -p"
@@ -258,57 +345,24 @@ saved_cppflags="$CPPFLAGS"
 CPPFLAGS="$CPPFLAGS $X_CFLAGS"
 
 dnl Compile with 3D support
+dnl You have the option of NOT compiling with 3D support even if you have it
 AC_MSG_CHECKING(for OpenGL support)
-OPENGL=""
-MESA=""
-AC_CHECK_HEADER(GL/gl.h,OPENGL="HAVE_OPENGL",)
-AC_MSG_CHECKING(for MesaGL support)
-AC_CHECK_HEADER(GL/osmesa.h,MESA="HAVE_MESA",)
-AC_CHECK_HEADER(GL/xmesa.h,MESA="HAVE_MESA",)
-
-dnl Tried, but it does not find Mesa even though its there...
-dnl AC_CHECK_LIB(MesaGL, glColor3f,MESA_LIBS="-lMesaGL -lMesaGLU",MESA_LIBS="-lGL -lGLU")
-dnl AC_CHECK_LIB(GL, glColor3f,MESA_LIBS="-lMesaGL -lMesaGLU",MESA_LIBS="-lGL -lGLU")
+AC_ARG_WITH(opengl,[  --with-opengl           choices are yes, no])
+AC_MSG_RESULT([$with_opengl])
+if test "x$with_opengl" != "xno" ; then
+if test "x$CYGWIN" = "xyes" -o "x$MINGW32" = "xyes" ; then
+AC_CHECK_HEADER(GL/gl.h,CXXFLAGS="${CXXFLAGS} -DHAVE_GL_H=1"; LIBS="${LIBS} ${LIBGL:=-lopengl32}")
+AC_CHECK_HEADER(GL/glu.h,CXXFLAGS="${CXXFLAGS} -DHAVE_GLU_H=1"; LIBS="${LIBS} ${LIBGLU:=-lglu32}")
+GL_TESTS="gltest.exe glviewer.exe"
+else
+AC_CHECK_HEADER(GL/gl.h,CXXFLAGS="${CXXFLAGS} -DHAVE_GL_H=1 -DSUN_OGL_NO_VERTEX_MACROS -DHPOGL_SUPPRESS_FAST_API"; LIBS="${LIBS} ${LIBGL:=-lGL}")
+AC_CHECK_HEADER(GL/glu.h,CXXFLAGS="${CXXFLAGS} -DHAVE_GLU_H=1"; LIBS="${LIBS} ${LIBGLU:=-lGLU}")
+GL_TESTS="gltest glviewer"
+fi
+fi
 
 CPPFLAGS="$saved_cppflags"
 
-dnl You have the option of NOT compiling with 3D support even if you have it
-dnl Or you can force OpenGL or Mesa GL if you have both
-AC_ARG_ENABLE(opengl,[  --with-opengl           choices are yes, no, opengl, or mesa])
-AC_MSG_RESULT([$with_opengl])
-if test "x$with_opengl" = "xno" ; then
-  OPENGL=""
-  MESA=""
-elif test "x$with_opengl" = "xopengl" ; then
-  MESA=""
-elif test "x$with_opengl" = "xmesa" ; then
-  MESA="HAVE_MESA"
-fi
-
-
-dnl Having no OpenGL whatsoever means no Mesa either
-GL_TESTS=""
-if test "x$OPENGL" = "xHAVE_OPENGL" ; then
-  if test "x$CYGWIN" = "xyes" -o "x$MINGW32" = "xyes" ; then
-    CXXFLAGS="${CXXFLAGS} -DHAVE_OPENGL"
-    GL_TESTS="gltest.exe glviewer.exe"
-    if test "x$MESA" = "xHAVE_MESA" ; then
-      CXXFLAGS="${CXXFLAGS} -DHAVE_MESA"
-      GL_LIBS="-lMesaGL -lMesaGLU"
-    else
-      GL_LIBS="-lopengl32 -lglu32"
-    fi
-  else
-    CXXFLAGS="${CXXFLAGS} -DHAVE_OPENGL -DSUN_OGL_NO_VERTEX_MACROS"
-    GL_TESTS="gltest glviewer"
-    if test "x$MESA" = "xHAVE_MESA" ; then
-      CXXFLAGS="${CXXFLAGS} -DHAVE_MESA"
-      GL_LIBS="-lMesaGL -lMesaGLU"
-    else
-      GL_LIBS="-lGL -lGLU"
-    fi
-  fi
-fi
 
 AC_SUBST(GL_LIBS)
 AC_SUBST(GL_TESTS)
@@ -321,13 +375,16 @@ include/Makefile
 include/fxver.h
 src/Makefile
 src/version.rc
+chart/Makefile
 doc/Makefile
 doc/art/Makefile
 doc/screenshots/Makefile
 tests/Makefile
 adie/Makefile
+shutterbug/Makefile
 pathfinder/Makefile
 calculator/Makefile
+windows/Makefile
 fox.spec)
 
 echo ""

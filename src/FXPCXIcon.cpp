@@ -3,7 +3,7 @@
 *                        P C X   I c o n   O b j e c t                          *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2001,2002 by Janusz Ganczarski.   All Rights Reserved.          *
+* Copyright (C) 2001,2004 by Janusz Ganczarski.   All Rights Reserved.          *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,17 +19,19 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXPCXIcon.cpp,v 1.4 2002/01/18 22:55:04 jeroen Exp $                     *
+* $Id: FXPCXIcon.cpp,v 1.17 2004/02/08 17:29:07 fox Exp $                       *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
 #include "fxdefs.h"
 #include "FXStream.h"
+#include "FXMemoryStream.h"
 #include "FXString.h"
 #include "FXSize.h"
 #include "FXPoint.h"
 #include "FXRectangle.h"
 #include "FXRegistry.h"
+#include "FXHash.h"
 #include "FXApp.h"
 #include "FXId.h"
 #include "FXDrawable.h"
@@ -45,7 +47,11 @@
   - If that doesn't work, you can force a specific transparency color.
 */
 
+using namespace FX;
+
 /*******************************************************************************/
+
+namespace FX {
 
 // Object implementation
 FXIMPLEMENT(FXPCXIcon,FXIcon,NULL,0)
@@ -53,32 +59,29 @@ FXIMPLEMENT(FXPCXIcon,FXIcon,NULL,0)
 
 // Initialize nicely
 FXPCXIcon::FXPCXIcon(FXApp* a,const void *pix,FXColor clr,FXuint opts,FXint w,FXint h):
-  FXIcon(a,NULL,clr,opts&~IMAGE_ALPHA,w,h){
+  FXIcon(a,NULL,clr,opts,w,h){
   if(pix){
     FXMemoryStream ms;
-    ms.open((FXuchar*)pix,FXStreamLoad);
+    ms.open(FXStreamLoad,(FXuchar*)pix);
     loadPixels(ms);
     ms.close();
     }
   }
 
 // Save object to stream
-void FXPCXIcon::savePixels(FXStream& store) const {
-  FXASSERT(!(options&IMAGE_ALPHA));
-  fxsavePCX(store,data,transp,width,height);
+FXbool FXPCXIcon::savePixels(FXStream& store) const {
+  if(!fxsavePCX(store,data,width,height)) return FALSE;
+  return TRUE;
   }
 
 
 // Load object from stream
-void FXPCXIcon::loadPixels(FXStream& store){
-  FXColor clearcolor=0;
-  if(options&IMAGE_OWNED){FXFREE(&data);}
-  fxloadPCX(store,data,clearcolor,width,height);
-  if(!(options&IMAGE_ALPHACOLOR)) transp=clearcolor;
+FXbool FXPCXIcon::loadPixels(FXStream& store){
+  if(options&IMAGE_OWNED){ FXFREE(&data); }
+  if(!fxloadPCX(store,data,width,height)) return FALSE;
   if(options&IMAGE_ALPHAGUESS) transp=guesstransp();
-  if(transp==0) options|=IMAGE_OPAQUE;
-  options&=~IMAGE_ALPHA;
   options|=IMAGE_OWNED;
+  return TRUE;
   }
 
 
@@ -86,4 +89,5 @@ void FXPCXIcon::loadPixels(FXStream& store){
 FXPCXIcon::~FXPCXIcon(){
   }
 
+}
 

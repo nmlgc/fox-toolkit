@@ -3,7 +3,7 @@
 *                          G e n e r i c   A r r a y                            *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,11 +19,16 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXArray.h,v 1.11 2002/01/18 22:46:41 jeroen Exp $                        *
+* $Id: FXArray.h,v 1.17 2004/02/08 17:17:33 fox Exp $                           *
 ********************************************************************************/
 #ifndef FXARRAY_H
 #define FXARRAY_H
 
+#ifndef FXELEMENT_H
+#include "FXElement.h"
+#endif
+
+namespace FX {
 
 
 /*************************  D e f i n i t i o n  *******************************/
@@ -52,7 +57,8 @@ public:
   void prepend(const TYPE& p);
   void remove(FXint pos);
   void extract(const TYPE& p);
-  FXint find(const TYPE& p);
+  FXint find(const TYPE& p,FXint pos=0);
+  FXint rfind(const TYPE& p,FXint pos=2147483647);
   void trunc();
   void clear();
   void save(FXStream& store) const;
@@ -229,10 +235,19 @@ void FXArray<TYPE>::remove(FXint pos){
 
 // Find element, -1 if not found
 template<class TYPE>
-FXint FXArray<TYPE>::find(const TYPE& p){
-  FXint s=number;
-  while(s!=0 && !(list[s-1]==p)) s--;
-  return s-1;
+FXint FXArray<TYPE>::find(const TYPE& p,FXint pos){
+  if(pos<0) pos=0;
+  while(pos<number){ if(list[pos]==p){ return pos; } ++pos; }
+  return -1;
+  }
+
+
+// Find element, -1 if not found
+template<class TYPE>
+FXint FXArray<TYPE>::rfind(const TYPE& p,FXint pos){
+  if(pos>=number) pos=number-1;
+  while(0<=pos){ if(list[pos]==p){ return pos; } --pos; }
+  return -1;
   }
 
 
@@ -291,5 +306,6 @@ FXArray<TYPE>::~FXArray(){
   freeElms(list);
   }
 
+}
 
 #endif

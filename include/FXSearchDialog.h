@@ -3,7 +3,7 @@
 *                       T e x t   S e a r c h   D i a l o g                     *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2000,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 2000,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXSearchDialog.h,v 1.17 2002/01/18 22:42:54 jeroen Exp $                 *
+* $Id: FXSearchDialog.h,v 1.21 2004/02/08 17:17:34 fox Exp $                    *
 ********************************************************************************/
 #ifndef FXSEARCHDIALOG_H
 #define FXSEARCHDIALOG_H
@@ -28,6 +28,7 @@
 #include "FXReplaceDialog.h"
 #endif
 
+namespace FX {
 
 
 /// Text search dialog
@@ -47,5 +48,6 @@ public:
   virtual ~FXSearchDialog();
   };
 
+}
 
 #endif

@@ -3,7 +3,7 @@
 *                     R e c e n t   F i l e s   L i s t                         *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1998,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXRecentFiles.h,v 1.15 2002/01/18 22:42:54 jeroen Exp $                  *
+* $Id: FXRecentFiles.h,v 1.20 2004/02/08 17:17:34 fox Exp $                     *
 ********************************************************************************/
 #ifndef FXRECENTFILES_H
 #define FXRECENTFILES_H
@@ -28,6 +28,7 @@
 #include "FXObject.h"
 #endif
 
+namespace FX {
 
 
 /**
@@ -103,6 +104,12 @@ public:
   /// Return the message id
   FXSelector getSelector() const { return message; }
 
+  /// Obtain the filename at index
+  FXString getFile(FXint index) const;
+
+  /// Change the filename at index
+  void setFile(FXint index,const FXString& filename);
+
   /// Append a file
   void appendFile(const FXString& filename);
 
@@ -122,5 +129,6 @@ public:
   virtual ~FXRecentFiles();
   };
 
+}
 
 #endif

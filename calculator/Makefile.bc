@@ -3,9 +3,9 @@
 #                  FOX:  A Free C++ Class Library for X                      #
 #                                                                            #
 ##############################################################################
-# Copyright (C) 1997 by Jeroen van der Zijp.   All Rights Reserved.          #
+# Copyright (C) 1997,2003 by Jeroen van der Zijp.   All Rights Reserved.     #
 ##############################################################################
-# $Id: Makefile.bc,v 1.3 2001/05/17 06:26:41 jeroen Exp $                    #
+# $Id: Makefile.bc,v 1.7 2003/09/26 05:01:20 fox Exp $                       #
 ##############################################################################
 # This library is free software; you can redistribute it and/or              #
 # modify it under the terms of the GNU Library General Public                #
@@ -27,16 +27,31 @@ CXX       = bcc32
 CXXFLAGS  = -5 -O2 -w-par -w-csu -w-aus
 RM        = del
 TOPDIR    = ..
-DEFINES   = -DNDEBUG -DFOX_BIGENDIAN=0 -DWIN32 -D_WINDOWS -DHAVE_OPENGL
+DEFINES   = -DNDEBUG -DFOX_BIGENDIAN=0 -DWIN32 -D_WINDOWS
 LD	  = bcc32
 LDFLAGS	  = -laa
 GLLIBS    = opengl32.lib glu32.lib
 INCDIRS   = -I$(TOPDIR)\include
-FOXLIB    = $(TOPDIR)\src\fox.lib
+FOXLIB    = $(TOPDIR)\src\FOX-1.1.lib
+RESWRAP   = $(TOPDIR)\utils\reswrap.exe
 
 PROGRAMS  = calculator.exe
 
-OBJECTS   = Calculator.obj main.obj icons.obj HelpWindow.obj Preferences.obj help.obj
+OBJECTS   = \
+        Calculator.obj \
+        main.obj \
+        icons.obj \
+        HelpWindow.obj \
+        Preferences.obj \
+        help.obj
+
+ICONS = \
+        bigcalc.gif \
+        colors.gif \
+        constmem.bmp \
+        information.gif \
+        question.gif \
+        tinycalc.gif
 
 .cpp.obj:
 	$(CXX) -c $(INCDIRS) $(CXXFLAGS) $(DEFINES) $*.cpp
@@ -44,8 +59,20 @@ OBJECTS   = Calculator.obj main.obj icons.obj HelpWindow.obj Preferences.obj hel
 all: $(PROGRAMS)
 
 
-calculator.exe: $(OBJECTS) $(FOXLIB)
+Calculator.exe: $(OBJECTS) $(FOXLIB)
 	$(LD) $(LDFLAGS) $(OBJECTS) $(FOXLIB)
 
+Calculator.obj: icons.h icons.cpp
+
+icons.h: $(ICONS)
+	$(RESWRAP) -i -o icons.h $**
+
+icons.cpp: $(ICONS)
+	$(RESWRAP) -e -o icons.cpp $**
+
 clean:
-	$(RM) *.obj *.exe *.tds
+	$(RM) *.obj
+	$(RM) *.exe
+	$(RM) *.tds
+	$(RM) icons.cpp
+	$(RM) icons.h

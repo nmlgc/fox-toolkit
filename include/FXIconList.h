@@ -3,7 +3,7 @@
 *                         I c o n   L i s t   W i d g e t                       *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1999,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1999,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXIconList.h,v 1.54 2002/01/18 22:42:53 jeroen Exp $                     *
+* $Id: FXIconList.h,v 1.75 2004/02/17 21:06:02 fox Exp $                        *
 ********************************************************************************/
 #ifndef FXICONLIST_H
 #define FXICONLIST_H
@@ -28,6 +28,7 @@
 #include "FXScrollArea.h"
 #endif
 
+namespace FX {
 
 
 /// Icon list styles
@@ -46,7 +47,6 @@ enum {
   };
 
 
-struct FXTimer;
 class FXIcon;
 class FXHeader;
 class FXFont;
@@ -85,7 +85,7 @@ protected:
 public:
   FXIconItem(const FXString& text,FXIcon* bi=NULL,FXIcon* mi=NULL,void* ptr=NULL):label(text),bigIcon(bi),miniIcon(mi),data(ptr),state(0){}
   virtual void setText(const FXString& txt){ label=txt; }
-  FXString getText() const { return label; }
+  const FXString& getText() const { return label; }
   virtual void setBigIcon(FXIcon* icn){ bigIcon=icn; }
   FXIcon* getBigIcon() const { return bigIcon; }
   virtual void setMiniIcon(FXIcon* icn){ miniIcon=icn; }
@@ -117,7 +117,26 @@ public:
 typedef FXint (*FXIconListSortFunc)(const FXIconItem*,const FXIconItem*);
 
 
-/// Icon List Widget
+/**
+* A Icon List Widget displays a list of items, each with a text and
+* optional icon.  Icon List can display its items in essentially three
+* different ways; in big-icon mode, the bigger of the two icons is used
+* for each item, and the text is placed underneath the icon. In mini-
+* icon mode, the icons are listed in rows and columns, with the smaller
+* icon preceding the text.  Finally, in detail mode the icons are listed
+* in a single column, and all fields of the text are shown under a
+* header control with one button for each subfield.
+* When an item's selected state changes, the icon list sends
+* a SEL_SELECTED or SEL_DESELECTED message.  A change of the current
+* item is signified by the SEL_CHANGED message.
+* The icon list sends SEL_COMMAND messages when the user clicks on an item,
+* and SEL_CLICKED, SEL_DOUBLECLICKED, and SEL_TRIPLECLICKED when the user
+* clicks once, twice, or thrice, respectively.
+* When items are added, replaced, or removed, the icon list sends messages
+* of the type SEL_INSERTED, SEL_REPLACED, or SEL_DELETED.
+* In each of these cases, the index to the item, if any, is passed in the
+* 3rd argument of the message.
+*/
 class FXAPI FXIconList : public FXScrollArea {
   FXDECLARE(FXIconList)
 protected:
@@ -145,17 +164,15 @@ protected:
   FXint              grabx;             // Grab point x
   FXint              graby;             // Grab point y
   FXString           lookup;            // Lookup string
-  FXTimer           *timer;             // Tip hover timer
-  FXTimer           *lookuptimer;       // Lookup timer
   FXString           help;              // Help text
   FXbool             state;             // State of item
 protected:
   FXIconList();
+  virtual FXIconItem *createItem(const FXString& text,FXIcon *big,FXIcon* mini,void* ptr);
+  virtual void moveContents(FXint x,FXint y);
   void drawLasso(FXint x0,FXint y0,FXint x1,FXint y1);
-  virtual void layout();
   void recompute();
   void getrowscols(FXint& nr,FXint& nc,FXint w,FXint h) const;
-  virtual FXIconItem *createItem(const FXString& text,FXIcon *big,FXIcon* mini,void* ptr);
   void lassoChanged(FXint ox,FXint oy,FXint ow,FXint oh,FXint nx,FXint ny,FXint nw,FXint nh,FXbool notify);
 private:
   FXIconList(const FXIconList&);
@@ -189,6 +206,7 @@ public:
   long onCmdShowMiniIcons(FXObject*,FXSelector,void*);
   long onUpdShowMiniIcons(FXObject*,FXSelector,void*);
   long onHeaderChanged(FXObject*,FXSelector,void*);
+  long onHeaderResize(FXObject*,FXSelector,void*);
   long onFocusIn(FXObject*,FXSelector,void*);
   long onFocusOut(FXObject*,FXSelector,void*);
   long onClicked(FXObject*,FXSelector,void*);
@@ -197,12 +215,14 @@ public:
   long onCommand(FXObject*,FXSelector,void*);
   long onAutoScroll(FXObject*,FXSelector,void*);
   long onLookupTimer(FXObject*,FXSelector,void*);
-  long onCmdSetValue(FXObject*,FXSelector,void*);public:
+  long onCmdSetValue(FXObject*,FXSelector,void*);
   long onCmdGetIntValue(FXObject*,FXSelector,void*);
   long onCmdSetIntValue(FXObject*,FXSelector,void*);
 public:
   static FXint ascending(const FXIconItem* a,const FXIconItem* b);
   static FXint descending(const FXIconItem* a,const FXIconItem* b);
+  static FXint ascendingCase(const FXIconItem* a,const FXIconItem* b);
+  static FXint descendingCase(const FXIconItem* a,const FXIconItem* b);
 public:
   enum {
     ID_SHOW_DETAILS=FXScrollArea::ID_LAST,
@@ -211,7 +231,6 @@ public:
     ID_ARRANGE_BY_ROWS,
     ID_ARRANGE_BY_COLUMNS,
     ID_HEADER_CHANGE,
-    ID_TIPTIMER,
     ID_LOOKUPTIMER,
     ID_SELECT_ALL,
     ID_DESELECT_ALL,
@@ -219,7 +238,8 @@ public:
     ID_LAST
     };
 public:
-  /// Construct icon list
+
+  /// Construct icon list with no items in it initially
   FXIconList(FXComposite *p,FXObject* tgt=NULL,FXSelector sel=0,FXuint opts=ICONLIST_NORMAL,FXint x=0,FXint y=0,FXint w=0,FXint h=0);
 
   /// Create server-side resources
@@ -231,7 +251,10 @@ public:
   /// Recalculate layout
   virtual void recalc();
 
-  /// Compute and return content width
+  /// Perform layout
+  virtual void layout();
+
+ /// Compute and return content width
   virtual FXint getContentWidth();
 
   /// Return content height
@@ -248,9 +271,6 @@ public:
 
   /// Return viewport size
   virtual FXint getViewportHeight();
-
-  /// Move contents to the specified position
-  virtual void moveContents(FXint x,FXint y);
 
   /// Resize this window to the specified width and height
   virtual void resize(FXint w,FXint h);
@@ -298,13 +318,13 @@ public:
   FXint getNumHeaders() const;
 
   /// Return the item at the given index
-  FXIconItem *retrieveItem(FXint index) const;
+  FXIconItem *getItem(FXint index) const;
 
   /// Replace the item with a [possibly subclassed] item
-  FXint replaceItem(FXint index,FXIconItem* item,FXbool notify=FALSE);
+  FXint setItem(FXint index,FXIconItem* item,FXbool notify=FALSE);
 
   /// Replace items text, icons, and user-data pointer
-  FXint replaceItem(FXint index,const FXString& text,FXIcon *big=NULL,FXIcon* mini=NULL,void* ptr=NULL,FXbool notify=FALSE);
+  FXint setItem(FXint index,const FXString& text,FXIcon *big=NULL,FXIcon* mini=NULL,void* ptr=NULL,FXbool notify=FALSE);
 
   /// Insert a new [possibly subclassed] item at the give index
   FXint insertItem(FXint index,FXIconItem* item,FXbool notify=FALSE);
@@ -318,11 +338,14 @@ public:
   /// Append new item with given text and optional icons, and user-data pointer
   FXint appendItem(const FXString& text,FXIcon *big=NULL,FXIcon* mini=NULL,void* ptr=NULL,FXbool notify=FALSE);
 
-  /// Append a [possibly subclassed] item to the end of the list
+  /// Prepend a [possibly subclassed] item to the end of the list
   FXint prependItem(FXIconItem* item,FXbool notify=FALSE);
 
-  /// Append new item with given text and optional icons, and user-data pointer
+  /// Prepend new item with given text and optional icons, and user-data pointer
   FXint prependItem(const FXString& text,FXIcon *big=NULL,FXIcon* mini=NULL,void* ptr=NULL,FXbool notify=FALSE);
+
+  /// Move item from oldindex to newindex
+  FXint moveItem(FXint newindex,FXint oldindex,FXbool notify=FALSE);
 
   /// Remove item from list
   void removeItem(FXint index,FXbool notify=FALSE);
@@ -388,10 +411,7 @@ public:
   FXint hitItem(FXint index,FXint x,FXint y,FXint ww=1,FXint hh=1) const;
 
   /// Repaint item at index
-  void updateItem(FXint index);
-
-  /// Select items in rectangle
-  FXbool selectInRectangle(FXint x,FXint y,FXint w,FXint h,FXbool notify=FALSE);
+  void updateItem(FXint index) const;
 
   /// Enable item at index
   FXbool enableItem(FXint index);
@@ -400,16 +420,25 @@ public:
   FXbool disableItem(FXint index);
 
   /// Select item at index
-  FXbool selectItem(FXint index,FXbool notify=FALSE);
+  virtual FXbool selectItem(FXint index,FXbool notify=FALSE);
 
   /// Deselect item at index
-  FXbool deselectItem(FXint index,FXbool notify=FALSE);
+  virtual FXbool deselectItem(FXint index,FXbool notify=FALSE);
 
   /// Toggle item at index
-  FXbool toggleItem(FXint index,FXbool notify=FALSE);
+  virtual FXbool toggleItem(FXint index,FXbool notify=FALSE);
+
+  /// Select items in rectangle
+  virtual FXbool selectInRectangle(FXint x,FXint y,FXint w,FXint h,FXbool notify=FALSE);
+
+  /// Extend selection from anchor index to index
+  virtual FXbool extendSelection(FXint index,FXbool notify=FALSE);
+
+  /// Deselect all items
+  virtual FXbool killSelection(FXbool notify=FALSE);
 
   /// Change current item index
-  void setCurrentItem(FXint index,FXbool notify=FALSE);
+  virtual void setCurrentItem(FXint index,FXbool notify=FALSE);
 
   /// Return current item index, or -1 if none
   FXint getCurrentItem() const { return current; }
@@ -423,14 +452,14 @@ public:
   /// Return index of item under cursor, or -1 if none
   FXint getCursorItem() const { return cursor; }
 
-  /// Extend selection from anchor index to index
-  FXbool extendSelection(FXint index,FXbool notify=FALSE);
-
-  /// Deselect all items
-  FXbool killSelection(FXbool notify=FALSE);
-
   /// Sort items
   void sortItems();
+
+  /// Return sort function
+  FXIconListSortFunc getSortFunc() const { return sortfunc; }
+
+  /// Change sort function
+  void setSortFunc(FXIconListSortFunc func){ sortfunc=func; }
 
   /// Change text font
   void setFont(FXFont* fnt);
@@ -462,12 +491,6 @@ public:
   /// Return maximum item space
   FXint getItemSpace() const { return itemSpace; }
 
-  /// Return sort function
-  FXIconListSortFunc getSortFunc() const { return sortfunc; }
-
-  /// Change sort function
-  void setSortFunc(FXIconListSortFunc func){ sortfunc=func; }
-
   /// Get the current icon list style
   FXuint getListStyle() const;
 
@@ -490,6 +513,6 @@ public:
   virtual ~FXIconList();
   };
 
-
+}
 
 #endif

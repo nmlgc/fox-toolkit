@@ -3,7 +3,7 @@
 *                G L  C a n v a s   W i n d o w   W i d g e t                   *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXGLCanvas.h,v 1.24 2002/01/18 22:42:53 jeroen Exp $                     *
+* $Id: FXGLCanvas.h,v 1.30 2004/04/28 16:29:07 fox Exp $                        *
 ********************************************************************************/
 #ifndef FXGLCANVAS_H
 #define FXGLCANVAS_H
@@ -28,6 +28,10 @@
 #include "FXCanvas.h"
 #endif
 
+namespace FX {
+
+
+class FXGLVisual;
 
 
 /// GLCanvas, an area drawn by another object
@@ -79,9 +83,12 @@ public:
   /// Make OpenGL context non current
   virtual FXbool makeNonCurrent();
 
-  /// Return TRUE if context is current
+  /// Return TRUE if this window's context is current
   virtual FXbool isCurrent() const;
 
+  // Return current context, if any
+  static void* getCurrentContext();
+  
   /// Get GL context handle
   void* getContext() const { return ctx; }
 
@@ -98,7 +105,7 @@ public:
   virtual ~FXGLCanvas();
   };
 
-
+}
 
 #endif
 

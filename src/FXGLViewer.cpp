@@ -3,7 +3,7 @@
 *                           O p e n G L   V i e w e r                           *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,18 +19,19 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXGLViewer.cpp,v 1.104.4.3 2003/06/20 19:02:07 fox Exp $                  *
+* $Id: FXGLViewer.cpp,v 1.139 2004/03/05 22:56:25 fox Exp $                     *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
 #include "fxdefs.h"
 #include "fxkeys.h"
 #include "FXStream.h"
-#include "FXVec.h"
-#include "FXHVec.h"
-#include "FXQuat.h"
-#include "FXHMat.h"
-#include "FXRange.h"
+#include "FXVec2f.h"
+#include "FXVec3f.h"
+#include "FXVec4f.h"
+#include "FXQuatf.h"
+#include "FXMat4f.h"
+#include "FXRangef.h"
 #include "FXString.h"
 #include "FXSize.h"
 #include "FXPoint.h"
@@ -39,6 +40,7 @@
 #include "FXRegistry.h"
 #include "FXAccelTable.h"
 #include "FXObjectList.h"
+#include "FXHash.h"
 #include "FXApp.h"
 #include "FXVisual.h"
 #include "FXGLVisual.h"
@@ -46,14 +48,13 @@
 #include "FXDCWindow.h"
 #include "FXDCPrint.h"
 #include "FXMessageBox.h"
-#include "FXTooltip.h"
+#include "FXToolTip.h"
 #include "FXCursor.h"
 #include "FXGLContext.h"
 #include "FXGLViewer.h"
 #include "FXGLObject.h"
 #include "FXPrintDialog.h"
 #include "jitter.h"
-
 
 /*
   To Do:
@@ -99,9 +100,34 @@
     HOVERING  Right      Left              --              ZOOMING        Zoom in
     HOVERING  Right      Left +Shift       --              TRUCKING       Trucking camera
 
-*/
+    FIXME FIXME FIXME FIXME FIXME FIXME FIXME
 
-/*******************************************************************************/
+    Should remove "selection" member.  FXGLViewer should have no knowledge
+    of any GL object besides scene.
+
+    Should delegate all messages it does not understand to "target" and not
+    to current object.
+
+    Picking, selection should pass list of records in callback; this list
+    should NOT contain zmin, zmax, but just, for each record: number of
+    names, and the names.  List is ended by 0 (no names) record.
+
+    The list should be sorted based on zmin, zmax, with first record in list
+    being the one closest to the eye.
+
+    Should add FXGLLight objects, which can be added to FXGLGroups.
+
+    Should add subclass of FXGLGroup which pushes/pops attributes.
+
+    Note that we will keep the camera state in the FXGLViewer widget, i.e.
+    won't have camera objects.
+
+    FIXME FIXME FIXME FIXME FIXME FIXME FIXME
+
+  - Need 3 dials to rotate about model (not screen) axes.
+
+  - Zoom centered on point at which you started the zoom operation.
+*/
 
 
 // Size of pick buffer
@@ -113,9 +139,14 @@
 // Rotation tolerance
 #define EPS            1.0E-2
 
+// Pick tolerance
+#define PICK_TOL       3
+
+using namespace FX;
 
 /*******************************************************************************/
 
+namespace FX {
 
 // Map
 FXDEFMAP(FXGLViewer) FXGLViewerMap[]={
@@ -198,8 +229,6 @@ FXDEFMAP(FXGLViewer) FXGLViewerMap[]={
   FXMAPFUNC(SEL_UPDATE,FXGLViewer::ID_AMBIENT_COLOR,FXGLViewer::onUpdAmbientColor),
   FXMAPFUNC(SEL_COMMAND,FXGLViewer::ID_AMBIENT_COLOR,FXGLViewer::onCmdAmbientColor),
   FXMAPFUNC(SEL_CHANGED,FXGLViewer::ID_AMBIENT_COLOR,FXGLViewer::onCmdAmbientColor),
-  FXMAPFUNC(SEL_UPDATE,FXGLViewer::ID_LOCK,FXGLViewer::onUpdLock),
-  FXMAPFUNC(SEL_COMMAND,FXGLViewer::ID_LOCK,FXGLViewer::onCmdLock),
   FXMAPFUNC(SEL_UPDATE,FXGLViewer::ID_LIGHTING,FXGLViewer::onUpdLighting),
   FXMAPFUNC(SEL_COMMAND,FXGLViewer::ID_LIGHTING,FXGLViewer::onCmdLighting),
   FXMAPFUNC(SEL_UPDATE,FXGLViewer::ID_FOG,FXGLViewer::onUpdFog),
@@ -231,6 +260,9 @@ FXDEFMAP(FXGLViewer) FXGLViewerMap[]={
   FXMAPFUNC(SEL_CHANGED,FXGLViewer::ID_ZOOM,FXGLViewer::onCmdZoom),
   FXMAPFUNC(SEL_COMMAND,FXGLViewer::ID_PRINT_IMAGE,FXGLViewer::onCmdPrintImage),
   FXMAPFUNC(SEL_COMMAND,FXGLViewer::ID_PRINT_VECTOR,FXGLViewer::onCmdPrintVector),
+  FXMAPFUNCS(SEL_UPDATE,FXGLViewer::ID_TOP_COLOR,FXGLViewer::ID_BOTTOM_COLOR,FXGLViewer::onUpdGradientBackColor),
+  FXMAPFUNCS(SEL_COMMAND,FXGLViewer::ID_TOP_COLOR,FXGLViewer::ID_BOTTOM_COLOR,FXGLViewer::onCmdGradientBackColor),
+  FXMAPFUNCS(SEL_CHANGED,FXGLViewer::ID_TOP_COLOR,FXGLViewer::ID_BOTTOM_COLOR,FXGLViewer::onCmdGradientBackColor),
   };
 
 
@@ -257,12 +289,11 @@ FXGLViewer::FXGLViewer(){
   dial[0]=0;
   dial[1]=0;
   dial[2]=0;
-  timer=NULL;
   dropped=NULL;
   selection=NULL;
   zsortfunc=NULL;
   doesturbo=FALSE;
-  op=HOVERING;
+  mode=HOVERING;
   }
 
 
@@ -287,7 +318,6 @@ void FXGLViewer::initialize(){
   dragCursor=getApp()->getDefaultCursor(DEF_CROSSHAIR_CURSOR);
   projection=PERSPECTIVE;                       // Projection
   zoom=1.0;                                     // Zoom factor
-  offset=0.004;                                 // Offset for lines on surfaces
   fov=30.0;                                     // Field of view (1 to 90)
   wvt.left=-1.0;                                // Init world box
   wvt.right=1.0;
@@ -299,53 +329,91 @@ void FXGLViewer::initialize(){
   wvt.h=100;                                    // Viewport height
   diameter=2.0;                                 // Size of model
   distance=7.464116;                            // Distance of PRP to target
-  rotation=FXQuat(0.0f,0.0f,0.0f,1.0f);         // Orientation
-  center=FXVec(0.0f,0.0f,0.0f);                 // Model center
-  scale=FXVec(1.0f,1.0f,1.0f);                  // Model scaling
+  rotation.x=0.0f;                              // Orientation
+  rotation.y=0.0f;
+  rotation.z=0.0f;
+  rotation.w=1.0f;
+  center.x=0.0f;                                // Model center
+  center.y=0.0f;
+  center.z=0.0f;
+  scale.x=1.0f;                                 // Model scaling
+  scale.y=1.0f;
+  scale.z=1.0f;
   updateProjection();                           // Initial projection
   updateTransform();                            // Set transformation
-  op=HOVERING;                                  // Mouse operation
   maxhits=512;                                  // Maximum hit buffer size
-  background=getApp()->getBackColor();          // Background copied from GUI background
-  ambient=FXHVec(0.2f,0.2f,0.2f,1.0);           // Scene ambient
-
-  light.ambient=FXHVec(0.0f,0.0f,0.0f,1.0f);    // Light setup
-  light.diffuse=FXHVec(1.0f,1.0f,1.0f,1.0f);
-  light.specular=FXHVec(0.0f,0.0f,0.0f,1.0f);
-  light.position=FXHVec(-2.0f,2.0f,3.0f,0.0f);
-  light.direction=FXVec(0.0f,0.0f,-1.0f);
-  light.exponent=0.0f;
-  light.cutoff=180.0f;
-  light.c_attn=1.0f;
-  light.l_attn=0.0f;
-  light.q_attn=0.0f;
-
-  material.ambient=FXHVec(0.2f,0.2f,0.2f,1.0f); // Material setup
-  material.diffuse=FXHVec(0.8f,0.8f,0.8f,1.0f);
-  material.specular=FXHVec(1.0f,1.0f,1.0f,1.0f);
-  material.emission=FXHVec(0.0f,0.0f,0.0f,1.0f);
-  material.shininess=30.0f;
-
+  background[0][0]=0.5f;                        // Top background
+  background[0][1]=0.5f;
+  background[0][2]=1.0f;
+  background[0][3]=1.0f;
+  background[1][0]=1.0f;                        // Bottom background
+  background[1][1]=1.0f;
+  background[1][2]=1.0f;
+  background[1][3]=1.0f;
+  ambient[0]=0.2f;                              // Scene ambient
+  ambient[1]=0.2f;
+  ambient[2]=0.2f;
+  ambient[3]=1.0f;
+  light.ambient[0]=0.0f;                        // Light ambient
+  light.ambient[1]=0.0f;
+  light.ambient[2]=0.0f;
+  light.ambient[3]=1.0f;
+  light.diffuse[0]=1.0f;                        // Light diffuse
+  light.diffuse[1]=1.0f;
+  light.diffuse[2]=1.0f;
+  light.diffuse[3]=1.0f;
+  light.specular[0]=0.0f;                       // Light specular
+  light.specular[1]=0.0f;
+  light.specular[2]=0.0f;
+  light.specular[3]=1.0f;
+  light.position[0]=-2.0f;                      // Light position
+  light.position[1]= 2.0f;
+  light.position[2]= 5.0f;
+  light.position[3]= 0.0f;
+  light.direction[0]= 0.0f;                     // Light direction
+  light.direction[1]= 0.0f;
+  light.direction[2]=-1.0f;
+  light.exponent=0.0f;                          // Light spot exponent
+  light.cutoff=180.0f;                          // Light spot cutoff
+  light.c_attn=1.0f;                            // Light constant attenuation
+  light.l_attn=0.0f;                            // Light linear attenuation
+  light.q_attn=0.0f;                            // Light quadratic attenuation
+  material.ambient[0]=0.2f;                     // Material ambient reflectivity
+  material.ambient[1]=0.2f;
+  material.ambient[2]=0.2f;
+  material.ambient[3]=1.0f;
+  material.diffuse[0]=0.8f;                     // Material diffuse reflectivity
+  material.diffuse[1]=0.8f;
+  material.diffuse[2]=0.8f;
+  material.diffuse[3]=1.0f;
+  material.specular[0]=1.0f;                    // Material specular reflectivity
+  material.specular[1]=1.0f;
+  material.specular[2]=1.0f;
+  material.specular[3]=1.0f;
+  material.emission[0]=0.0f;                    // Material emissivity
+  material.emission[1]=0.0f;
+  material.emission[2]=0.0f;
+  material.emission[3]=1.0f;
+  material.shininess=30.0f;                     // Material shininess
   dial[0]=0;                                    // Old dial position
   dial[1]=0;                                    // Old dial position
   dial[2]=0;                                    // Old dial position
-
-  doesturbo=FALSE;                              // In interaction
-  turbomode=FALSE;                              // Turbo mode
-  timer=NULL;                                   // Motion timer
   dropped=NULL;                                 // Nobody being dropped on
   selection=NULL;                               // No initial selection
   zsortfunc=NULL;                               // Routine to sort feedback buffer
   scene=NULL;                                   // Scene to look at
+  doesturbo=FALSE;                              // In interaction
+  turbomode=FALSE;                              // Turbo mode
+  mode=HOVERING;                                // Mouse operation
   }
 
 
 // Create window
 void FXGLViewer::create(){
-  FXRange r(-1.0f,1.0f,-1.0f,1.0f,-1.0f,1.0f);
+  FXRangef r(-1.0f,1.0f,-1.0f,1.0f,-1.0f,1.0f);
 
   // We would like to have this be true
-#ifdef HAVE_OPENGL
+#ifdef HAVE_GL_H
   FXASSERT(sizeof(FXuint)==sizeof(GLuint));
 #endif
 
@@ -380,7 +448,7 @@ void FXGLViewer::detach(){
 
 // Set up GL context
 void FXGLViewer::glsetup(){
-#ifdef HAVE_OPENGL
+#ifdef HAVE_GL_H
 
   // Make GL context current
   if(makeCurrent()){
@@ -400,7 +468,7 @@ void FXGLViewer::glsetup(){
     glDepthFunc(GL_LESS);
     glDepthRange(0.0,1.0);
     glClearDepth(1.0);
-    glClearColor(background[0],background[1],background[2],1.0);
+    glClearColor(background[0][0],background[0][1],background[0][2],background[0][3]);
 
     // No face culling
     glDisable(GL_CULL_FACE);
@@ -464,43 +532,67 @@ void FXGLViewer::glsetup(){
 
 // Render all the graphics into a world box
 void FXGLViewer::drawWorld(FXViewport& wv){
-#ifdef HAVE_OPENGL
+#ifdef HAVE_GL_H
 
   // Set viewport
   glViewport(0,0,wv.w,wv.h);
 
-  // Clear background
+  // Reset important stuff
+  glShadeModel(GL_SMOOTH);
+  glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
+  glDisable(GL_LIGHTING);
+  glDisable(GL_ALPHA_TEST);
+  glDisable(GL_BLEND);
+  glDisable(GL_DITHER);
+  glDisable(GL_FOG);
+  glDisable(GL_LOGIC_OP);
+  glDisable(GL_POLYGON_SMOOTH);
+  glDisable(GL_POLYGON_STIPPLE);
+  glDisable(GL_STENCIL_TEST);
+  glDisable(GL_CULL_FACE);
+  glDisable(GL_COLOR_MATERIAL);
+
+  // Reset matrices
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+  glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity();
+
+  // Clear to solid background
   glClearDepth(1.0);
-  glClearColor(background[0],background[1],background[2],1.0f);
-  glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+  glClearColor(background[0][0],background[0][1],background[0][2],background[0][3]);
+  if(background[0]==background[1]){
+    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+    }
 
-  // Set OFFSET Projection Matrix
-  glNewList(FXGLViewer::OFFSETPROJECTION,GL_COMPILE);
+  // Clear to gradient background
+  else{
+    glClear(GL_DEPTH_BUFFER_BIT);
+    glDisable(GL_DEPTH_TEST);
+    glDepthMask(GL_FALSE);
+    glBegin(GL_TRIANGLE_STRIP);
+    glColor4fv(background[1]); glVertex3f(-1.0f,-1.0f,0.0f); glVertex3f( 1.0f,-1.0f,0.0f);
+    glColor4fv(background[0]); glVertex3f(-1.0f, 1.0f,0.0f); glVertex3f( 1.0f, 1.0f,0.0f);
+    glEnd();
+    }
+
+  // Depth test on by default
+  glDepthMask(GL_TRUE);
+  glEnable(GL_DEPTH_TEST);
+
+  // Switch to projection matrix
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  glTranslatef(0.0f,0.0f,(GLfloat)(-offset/zoom));    // FIXME when fov becomes very small this needs to be corrected!!!
   switch(projection){
-    case PARALLEL: glOrtho(wv.left,wv.right,wv.bottom,wv.top,wv.hither,wv.yon); break;
-    case PERSPECTIVE: glFrustum(wv.left,wv.right,wv.bottom,wv.top,wv.hither,wv.yon); break;
+    case PARALLEL:
+      glOrtho(wv.left,wv.right,wv.bottom,wv.top,wv.hither,wv.yon);
+      break;
+    case PERSPECTIVE:
+      glFrustum(wv.left,wv.right,wv.bottom,wv.top,wv.hither,wv.yon);
+      break;
     }
-  glMatrixMode(GL_MODELVIEW);
-  glEndList();
 
-  // Set SURFACE Projection Matrix
-  glNewList(FXGLViewer::SURFACEPROJECTION,GL_COMPILE);
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  switch(projection){
-    case PARALLEL: glOrtho(wv.left,wv.right,wv.bottom,wv.top,wv.hither,wv.yon); break;
-    case PERSPECTIVE: glFrustum(wv.left,wv.right,wv.bottom,wv.top,wv.hither,wv.yon); break;
-    }
-  glMatrixMode(GL_MODELVIEW);
-  glEndList();
-
-  // Set SURFACE Projection Matrix
-  glCallList(FXGLViewer::SURFACEPROJECTION);
-
-  // Place the light
+  // Switch to model matrix
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
 
@@ -517,9 +609,6 @@ void FXGLViewer::drawWorld(FXViewport& wv){
   glLightf(GL_LIGHT0,GL_LINEAR_ATTENUATION,light.l_attn);
   glLightf(GL_LIGHT0,GL_QUADRATIC_ATTENUATION,light.q_attn);
 
-  // Set model matrix
-  glLoadMatrixf(transform);
-
   // Default material colors
   glMaterialfv(GL_FRONT_AND_BACK,GL_AMBIENT,material.ambient);
   glMaterialfv(GL_FRONT_AND_BACK,GL_DIFFUSE,material.diffuse);
@@ -530,39 +619,31 @@ void FXGLViewer::drawWorld(FXViewport& wv){
   // Color commands change both
   glColorMaterial(GL_FRONT_AND_BACK,GL_AMBIENT_AND_DIFFUSE);
 
-  // Track material
-  glDisable(GL_COLOR_MATERIAL);
-
   // Global ambient light
   glLightModelfv(GL_LIGHT_MODEL_AMBIENT,ambient);
-
-  // Enable lighting
-  if(options&VIEWER_LIGHTING)
-    glEnable(GL_LIGHTING);
-  else
-    glDisable(GL_LIGHTING);
 
   // Enable fog
   if(options&VIEWER_FOG){
     glEnable(GL_FOG);
-    glFogfv(GL_FOG_COLOR,background);         // Disappear into the background
+    glFogfv(GL_FOG_COLOR,background[0]);                // Disappear into the background
     //glFogf(GL_FOG_DENSITY,1.0f);
-    glFogf(GL_FOG_START,(GLfloat)(distance-diameter));   // Range tight around model position
-    glFogf(GL_FOG_END,(GLfloat)(distance+diameter));     // Far place same as clip plane:- clipped stuff is in the mist!
-    glFogi(GL_FOG_MODE,GL_LINEAR);	// Simple linear depth cueing
-    }
-  else{
-    glDisable(GL_FOG);
+    glFogf(GL_FOG_START,(GLfloat)(distance-diameter));  // Range tight around model position
+    glFogf(GL_FOG_END,(GLfloat)(distance+diameter));    // Far place same as clip plane:- clipped stuff is in the mist!
+    glFogi(GL_FOG_MODE,GL_LINEAR);	                // Simple linear depth cueing
     }
 
   // Dithering
-  if(options&VIEWER_DITHER)
+  if(options&VIEWER_DITHER){
     glEnable(GL_DITHER);
-  else
-    glDisable(GL_DITHER);
+    }
 
-  // Shade model
-  glShadeModel(GL_SMOOTH);
+  // Enable lighting
+  if(options&VIEWER_LIGHTING){
+    glEnable(GL_LIGHTING);
+    }
+
+  // Set model matrix
+  glLoadMatrixf(transform);
 
   // Draw what's visible
   if(scene) scene->draw(this);
@@ -572,7 +653,7 @@ void FXGLViewer::drawWorld(FXViewport& wv){
 
 // Render with anti-aliasing
 void FXGLViewer::drawAnti(FXViewport& wv){
-#ifdef HAVE_OPENGL
+#ifdef HAVE_GL_H
   FXViewport jt=wv;
   FXdouble d=0.5*worldpx;
   register FXuint i;
@@ -597,7 +678,7 @@ FXint FXGLViewer::selectHits(FXuint*& hits,FXint& nhits,FXint x,FXint y,FXint w,
   register FXint mh=maxhits;
   hits=NULL;
   nhits=0;
-#ifdef HAVE_OPENGL
+#ifdef HAVE_GL_H
   if(makeCurrent()){
 
     // Where to pick
@@ -606,36 +687,21 @@ FXint FXGLViewer::selectHits(FXuint*& hits,FXint& nhits,FXint x,FXint y,FXint w,
     pickw=wvt.w/((FXfloat)w);
     pickh=wvt.h/((FXfloat)h);
 
-    // Set OFFSET Pick Matrix
-    glNewList(FXGLViewer::OFFSETPROJECTION,GL_COMPILE);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glTranslatef(pickx,picky,(GLfloat)(-offset/zoom));   // Slightly toward eye; one wants to pick lines first!
-    glScalef(pickw,pickh,1.0f);
-    switch(projection){
-      case PARALLEL: glOrtho(wvt.left,wvt.right,wvt.bottom,wvt.top,wvt.hither,wvt.yon); break;
-      case PERSPECTIVE: glFrustum(wvt.left,wvt.right,wvt.bottom,wvt.top,wvt.hither,wvt.yon); break;
-      }
-    glMatrixMode(GL_MODELVIEW);
-    glEndList();
-
-    // Set SURFACE Pick Matrix
-    glNewList(FXGLViewer::SURFACEPROJECTION,GL_COMPILE);
+    // Set pick projection matrix
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glTranslatef(pickx,picky,0.0f);
     glScalef(pickw,pickh,1.0f);
     switch(projection){
-      case PARALLEL: glOrtho(wvt.left,wvt.right,wvt.bottom,wvt.top,wvt.hither,wvt.yon); break;
-      case PERSPECTIVE: glFrustum(wvt.left,wvt.right,wvt.bottom,wvt.top,wvt.hither,wvt.yon); break;
+      case PARALLEL:
+        glOrtho(wvt.left,wvt.right,wvt.bottom,wvt.top,wvt.hither,wvt.yon);
+        break;
+      case PERSPECTIVE:
+        glFrustum(wvt.left,wvt.right,wvt.bottom,wvt.top,wvt.hither,wvt.yon);
+        break;
       }
-    glMatrixMode(GL_MODELVIEW);
-    glEndList();
 
-    // Set SURFACE Pick Matrix
-    glCallList(FXGLViewer::SURFACEPROJECTION);
-
-    // Model Matrix
+    // Model matrix
     glMatrixMode(GL_MODELVIEW);
     glLoadMatrixf(transform);
 
@@ -727,7 +793,7 @@ FXGLObject* FXGLViewer::pick(FXint x,FXint y){
 
 // Repaint the GL window
 long FXGLViewer::onPaint(FXObject*,FXSelector,void*){
-#ifdef HAVE_OPENGL
+#ifdef HAVE_GL_H
   FXGLVisual *vis=(FXGLVisual*)getVisual();
   FXASSERT(xid);
   if(makeCurrent()){
@@ -753,7 +819,7 @@ void FXGLViewer::layout(){
 long FXGLViewer::onEnter(FXObject* sender,FXSelector sel,void* ptr){
   FXGLCanvas::onEnter(sender,sel,ptr);
   if(isEnabled()){
-    if(!timer){timer=getApp()->addTimeout(getApp()->getMenuPause(),this,ID_TIPTIMER);}
+    getApp()->addTimeout(this,ID_TIPTIMER,getApp()->getMenuPause());
     }
   return 1;
   }
@@ -763,7 +829,7 @@ long FXGLViewer::onEnter(FXObject* sender,FXSelector sel,void* ptr){
 long FXGLViewer::onLeave(FXObject* sender,FXSelector sel,void* ptr){
   FXGLCanvas::onLeave(sender,sel,ptr);
   if(isEnabled()){
-    if(timer){getApp()->removeTimeout(timer);timer=NULL;}
+    getApp()->removeTimeout(this,ID_TIPTIMER);
     }
   return 1;
   }
@@ -772,7 +838,7 @@ long FXGLViewer::onLeave(FXObject* sender,FXSelector sel,void* ptr){
 // Gained focus
 long FXGLViewer::onFocusIn(FXObject* sender,FXSelector sel,void* ptr){
   FXGLCanvas::onFocusIn(sender,sel,ptr);
-  if(selection && selection->handle(this,MKUINT(0,SEL_FOCUSIN),ptr)){
+  if(selection && selection->handle(this,FXSEL(SEL_FOCUSIN,0),ptr)){
     update();
     }
   return 1;
@@ -782,7 +848,7 @@ long FXGLViewer::onFocusIn(FXObject* sender,FXSelector sel,void* ptr){
 // Lost focus
 long FXGLViewer::onFocusOut(FXObject* sender,FXSelector sel,void* ptr){
   FXGLCanvas::onFocusOut(sender,sel,ptr);
-  if(selection && selection->handle(this,MKUINT(0,SEL_FOCUSOUT),ptr)){
+  if(selection && selection->handle(this,FXSEL(SEL_FOCUSOUT,0),ptr)){
     update();
     }
   return 1;
@@ -837,10 +903,10 @@ void FXGLViewer::setZoom(FXdouble zm){
 
 
 // Change scale factors
-void FXGLViewer::setScale(FXVec s){
-  if(s[0]<=0.000001f) s[0]=0.000001f;
-  if(s[1]<=0.000001f) s[1]=0.000001f;
-  if(s[2]<=0.000001f) s[2]=0.000001f;
+void FXGLViewer::setScale(FXVec3f s){
+  if(s.x<0.000001f) s.x=0.000001f;
+  if(s.y<0.000001f) s.y=0.000001f;
+  if(s.z<0.000001f) s.z=0.000001f;
   if(scale!=s){
     scale=s;
     updateTransform();
@@ -850,7 +916,7 @@ void FXGLViewer::setScale(FXVec s){
 
 
 // Change orientation to new quaternion
-void FXGLViewer::setOrientation(FXQuat rot){
+void FXGLViewer::setOrientation(FXQuatf rot){
   if(rot!=rotation){
     rotation=rot;
     rotation.adjust();
@@ -949,11 +1015,11 @@ void FXGLViewer::updateTransform(){
 
 
 // Set model bounding box
-FXbool FXGLViewer::setBounds(const FXRange& r){
-//   FXTRACE((100,"xlo=%g xhi=%g ylo=%g yhi=%g zlo=%g zhi=%g\n",r[0][0],r[0][1],r[1][0],r[1][1],r[2][0],r[2][1]));
+FXbool FXGLViewer::setBounds(const FXRangef& r){
+//   FXTRACE((100,"xlo=%g xhi=%g ylo=%g yhi=%g zlo=%g zhi=%g\n",r.lower.x,r.upper.x,r.lower.y,r.upper.y,r.lower.z,r.upper.z));
 
   // Model center
-  center=boxCenter(r);
+  center=r.center();
 
   // Model size
   diameter=r.longest();
@@ -962,7 +1028,7 @@ FXbool FXGLViewer::setBounds(const FXRange& r){
   if(diameter<1.0E-30) diameter=1.0;
 
   // Set equal scaling initially
-  scale=FXVec(1.0f,1.0f,1.0f);
+  scale=FXVec3f(1.0f,1.0f,1.0f);
 
   // Reset distance (and thus field of view)
   setDistance(1.1*diameter);
@@ -972,24 +1038,19 @@ FXbool FXGLViewer::setBounds(const FXRange& r){
 
 
 // Fit view to new bounds
-FXbool FXGLViewer::fitToBounds(const FXRange& box){
-  FXRange r(FLT_MAX,-FLT_MAX,FLT_MAX,-FLT_MAX,FLT_MAX,-FLT_MAX);
-  FXVec corner[8],v;
-  FXHMat m;
-  register int i;
-
-  // Get corners
-  boxCorners(corner,box);
+FXbool FXGLViewer::fitToBounds(const FXRangef& box){
+  FXRangef r(FLT_MAX,-FLT_MAX,FLT_MAX,-FLT_MAX,FLT_MAX,-FLT_MAX);
+  FXVec3f corner;
+  FXMat4f m;
 
   // Get rotation of model
   m.eye();
   m.rot(rotation);
-  m.trans(-boxCenter(box));
+  m.trans(-box.center());
 
   // Transform box
-  for(i=0; i<8; i++){
-    v=corner[i]*m;
-    r.include(v[0],v[1],v[2]);
+  for(int i=0; i<8; i++){
+    r.include(box.corner(i)*m);
     }
 
   setBounds(r);
@@ -1017,16 +1078,16 @@ void FXGLViewer::getMaterial(FXMaterial &mtl) const {
 
 
 // Get screen point from eye coordinate
-void FXGLViewer::eyeToScreen(FXint& sx,FXint& sy,FXVec e){
+void FXGLViewer::eyeToScreen(FXint& sx,FXint& sy,FXVec3f e){
   register double xp,yp;
   if(projection==PERSPECTIVE){
-    if(e[2]==0.0f){ fxerror("%s::eyeToScreen: cannot transform point.\n",getClassName()); }
-    xp=-distance*e[0]/e[2];
-    yp=-distance*e[1]/e[2];
+    if(e.z==0.0f){ fxerror("%s::eyeToScreen: cannot transform point.\n",getClassName()); }
+    xp=-distance*e.x/e.z;
+    yp=-distance*e.y/e.z;
     }
   else{
-    xp=e[0];
-    yp=e[1];
+    xp=e.x;
+    yp=e.y;
     }
   sx=(int)((xp-ax)/worldpx);
   sy=(int)((ay-yp)/worldpx);
@@ -1034,53 +1095,53 @@ void FXGLViewer::eyeToScreen(FXint& sx,FXint& sy,FXVec e){
 
 
 // Convert screen point to eye coords
-FXVec FXGLViewer::screenToEye(FXint sx,FXint sy,FXfloat eyez){
+FXVec3f FXGLViewer::screenToEye(FXint sx,FXint sy,FXfloat eyez){
   register float xp,yp;
-  FXVec e;
+  FXVec3f e;
   xp=(float)(worldpx*sx+ax);
   yp=(float)(ay-worldpx*sy);
   if(projection==PERSPECTIVE){
     FXASSERT(distance>0.0);
-    e[0]=(FXfloat)(-eyez*xp/distance);
-    e[1]=(FXfloat)(-eyez*yp/distance);
-    e[2]=eyez;
+    e.x=(FXfloat)(-eyez*xp/distance);
+    e.y=(FXfloat)(-eyez*yp/distance);
+    e.z=eyez;
     }
   else{
-    e[0]=xp;
-    e[1]=yp;
-    e[2]=eyez;
+    e.x=xp;
+    e.y=yp;
+    e.z=eyez;
     }
   return e;
   }
 
 
 // Convert screen to eye, on projection plane
-FXVec FXGLViewer::screenToTarget(FXint sx,FXint sy){
-  return FXVec((FXfloat)(worldpx*sx+ax), (FXfloat)(ay-worldpx*sy), (FXfloat)-distance);
+FXVec3f FXGLViewer::screenToTarget(FXint sx,FXint sy){
+  return FXVec3f((FXfloat)(worldpx*sx+ax), (FXfloat)(ay-worldpx*sy), (FXfloat)-distance);
   }
 
 
 // Convert world to eye coords
-FXVec FXGLViewer::worldToEye(FXVec w){
+FXVec3f FXGLViewer::worldToEye(FXVec3f w){
   return w*transform;
   }
 
 
 // Get eye Z-coordinate of world point
-FXfloat FXGLViewer::worldToEyeZ(FXVec w){
-  return w[0]*transform[0][2]+w[1]*transform[1][2]+w[2]*transform[2][2]+transform[3][2];
+FXfloat FXGLViewer::worldToEyeZ(FXVec3f w){
+  return w.x*transform[0][2]+w.y*transform[1][2]+w.z*transform[2][2]+transform[3][2];
   }
 
 
 // Convert eye to world coords
-FXVec FXGLViewer::eyeToWorld(FXVec e){
+FXVec3f FXGLViewer::eyeToWorld(FXVec3f e){
   return e*itransform;
   }
 
 
 // Get world vector
-FXVec FXGLViewer::worldVector(FXint fx,FXint fy,FXint tx,FXint ty){
-  FXVec wfm,wto,vec;
+FXVec3f FXGLViewer::worldVector(FXint fx,FXint fy,FXint tx,FXint ty){
+  FXVec3f wfm,wto,vec;
   wfm=screenToTarget(fx,fy);
   wto=screenToTarget(tx,ty);
   vec=wto*itransform-wfm*itransform;
@@ -1089,35 +1150,31 @@ FXVec FXGLViewer::worldVector(FXint fx,FXint fy,FXint tx,FXint ty){
 
 
 // Get a bore vector
-FXbool FXGLViewer::getBoreVector(FXint sx,FXint sy,FXVec& point,FXVec& dir){
-  FXVec p;
-  FXdouble d;
-  p=eyeToWorld(screenToEye(sx,sy,(FXfloat)(diameter-distance)));
+FXbool FXGLViewer::getBoreVector(FXint sx,FXint sy,FXVec3f& point,FXVec3f& dir){
+  FXVec3f p=eyeToWorld(screenToEye(sx,sy,(FXfloat)(diameter-distance)));
   if(PARALLEL==projection)
     point=eyeToWorld(screenToEye(sx,sy,0.0f));
   else
-    point=eyeToWorld(FXVec(0.0f,0.0f,0.0f));
-  dir=p-point;
-  d=len(dir);
-  if(0.0<d) dir/=(FXfloat)d;         // normalize
+    point=eyeToWorld(FXVec3f(0.0f,0.0f,0.0f));
+  dir=normalize(p-point);
   return TRUE;
   }
 
 
 // Get eye viewing direction (non-normalized)
-FXVec FXGLViewer::getEyeVector() const {
-  return FXVec(-itransform[2][0],-itransform[2][1],-itransform[2][2]);
+FXVec3f FXGLViewer::getEyeVector() const {
+  return FXVec3f(-itransform[2][0],-itransform[2][1],-itransform[2][2]);
   }
 
 
 // Get eye position
-FXVec FXGLViewer::getEyePosition() const{
-  return FXVec(itransform[3][0],itransform[3][1],itransform[3][2]);
+FXVec3f FXGLViewer::getEyePosition() const{
+  return FXVec3f(itransform[3][0],itransform[3][1],itransform[3][2]);
   }
 
 
 // Change model center
-void FXGLViewer::setCenter(FXVec cntr){
+void FXGLViewer::setCenter(FXVec3f cntr){
   if(center!=cntr){
     center=cntr;
     updateTransform();
@@ -1127,7 +1184,7 @@ void FXGLViewer::setCenter(FXVec cntr){
 
 
 // Translate in world
-void FXGLViewer::translate(FXVec vec){
+void FXGLViewer::translate(FXVec3f vec){
   center+=vec;
   updateTransform();
   update();
@@ -1156,54 +1213,53 @@ void FXGLViewer::setTipText(const FXString& text){
 
 
 // Translate point into unit-sphere coordinate
-FXVec FXGLViewer::spherePoint(FXint px,FXint py){
-  FXdouble d,t,screenmin;
-  FXVec v;
+FXVec3f FXGLViewer::spherePoint(FXint px,FXint py){
+  FXfloat d,t,screenmin;
+  FXVec3f v;
   if(wvt.w>wvt.h)
     screenmin=wvt.h;
   else
     screenmin=wvt.w;
-  FXASSERT(screenmin>0.0);
-  v[0]=(FXfloat)(2.0*(px-0.5*wvt.w)/screenmin);
-  v[1]=(FXfloat)(2.0*(0.5*wvt.h-py)/screenmin);
-  d=v[0]*v[0]+v[1]*v[1];
+  v.x=2.0f*(px-0.5f*wvt.w)/screenmin;
+  v.y=2.0f*(0.5f*wvt.h-py)/screenmin;
+  d=v.x*v.x+v.y*v.y;
   if(d<0.75){
-    v[2]=(FXfloat)sqrt(1.0-d);
+    v.z=sqrtf(1.0-d);
     }
-  else if(d<3.0){
-    d=1.7320508008-sqrt(d);
-    t=1.0-d*d;
-    if(t<0.0) t=0.0;
-    v[2]=(FXfloat)(1.0-sqrt(t));
+  else if(d<3.0f){
+    d=1.7320508008f-sqrtf(d);
+    t=1.0f-d*d;
+    if(t<0.0f) t=0.0f;
+    v.z=1.0f-sqrtf(t);
     }
   else{
-    v[2]=0.0;
+    v.z=0.0f;
     }
   return normalize(v);
   }
 
 
 // Turn camera
-FXQuat FXGLViewer::turn(FXint fx,FXint fy,FXint tx,FXint ty){
-  FXVec oldsp,newsp;
-  FXQuat q;
-  FXdouble t;
+FXQuatf FXGLViewer::turn(FXint fx,FXint fy,FXint tx,FXint ty){
+  FXVec3f oldsp,newsp;
+  FXQuatf q;
+  FXfloat t;
   oldsp=spherePoint(fx,fy);
   newsp=spherePoint(tx,ty);
   q=arc(oldsp,newsp);
-  q[0]*=0.5;
-  q[1]*=0.5;
-  q[2]*=0.5;
-  t=1.0-(q[0]*q[0]+q[1]*q[1]+q[2]*q[2]);
-  if(t<0.0) t=0.0;
-  q[3]=(FXfloat)sqrt(t);
+  q.x*=0.5f;
+  q.y*=0.5f;
+  q.z*=0.5f;
+  t=1.0f-(q.x*q.x+q.y*q.y+q.z*q.z);
+  if(t<0.0f) t=0.0f;
+  q.w=sqrtf(t);
   return q;
   }
 
 
 // Draw non-destructive lasso box; drawing twice will erase it again
 void FXGLViewer::drawLasso(FXint x0,FXint y0,FXint x1,FXint y1){
-#ifdef HAVE_OPENGL
+#ifdef HAVE_GL_H
   FXGLVisual *vis=(FXGLVisual*)getVisual();
 
   // With OpenGL, first change back to 1:1 projection mode
@@ -1279,7 +1335,7 @@ void FXGLViewer::drawLasso(FXint x0,FXint y0,FXint x1,FXint y1){
     glVertex2i(x1,wvt.h-y1-1);
     glVertex2i(x1,wvt.h-y0-1);
     glEnd();
-    glFinish();
+    glFinish();         // Moved back here because of driver issues
 
     // Restore to old state
     glPopMatrix();
@@ -1297,22 +1353,22 @@ void FXGLViewer::drawLasso(FXint x0,FXint y0,FXint x1,FXint y1){
 // Current object changed
 long FXGLViewer::onChanged(FXObject*,FXSelector,void* ptr){
   setSelection((FXGLObject*)ptr);
-  if(target) target->handle(this,MKUINT(message,SEL_CHANGED),ptr);
+  if(target) target->handle(this,FXSEL(SEL_CHANGED,message),ptr);
   return 1;
   }
 
 
 // Message that indicates where user picked
 long FXGLViewer::onPick(FXObject*,FXSelector,void* ptr){
-  return target && target->handle(this,MKUINT(message,SEL_PICKED),ptr);
+  return target && target->handle(this,FXSEL(SEL_PICKED,message),ptr);
   }
 
 
 // Clicked in widget
 long FXGLViewer::onClicked(FXObject*,FXSelector,void* ptr){
   if(target){
-    if(target->handle(this,MKUINT(message,SEL_CLICKED),ptr)) return 1;
-    if(ptr && target->handle(this,MKUINT(message,SEL_COMMAND),ptr)) return 1;
+    if(target->handle(this,FXSEL(SEL_CLICKED,message),ptr)) return 1;
+    if(ptr && target->handle(this,FXSEL(SEL_COMMAND,message),ptr)) return 1;
     }
   return 1;
   }
@@ -1320,13 +1376,13 @@ long FXGLViewer::onClicked(FXObject*,FXSelector,void* ptr){
 
 // Double clicked in widget; ptr may or may not point to an object
 long FXGLViewer::onDoubleClicked(FXObject*,FXSelector,void* ptr){
-  return target && target->handle(this,MKUINT(message,SEL_DOUBLECLICKED),ptr);
+  return target && target->handle(this,FXSEL(SEL_DOUBLECLICKED,message),ptr);
   }
 
 
 // Triple clicked in widget; ptr may or may not point to an object
 long FXGLViewer::onTripleClicked(FXObject*,FXSelector,void* ptr){
-  return target && target->handle(this,MKUINT(message,SEL_TRIPLECLICKED),ptr);
+  return target && target->handle(this,FXSEL(SEL_TRIPLECLICKED,message),ptr);
   }
 
 
@@ -1336,19 +1392,19 @@ long FXGLViewer::onLassoed(FXObject*,FXSelector,void* ptr){
   FXGLObject **objlist;
 
   // Notify target of lasso
-  if(target && target->handle(this,MKUINT(message,SEL_LASSOED),ptr)) return 1;
+  if(target && target->handle(this,FXSEL(SEL_LASSOED,message),ptr)) return 1;
 
   // Grab all objects in lasso
   objlist=lasso(event->click_x,event->click_y,event->win_x,event->win_y);
 
   // Add selection mode
   if(event->state&SHIFTMASK){
-    handle(this,MKUINT(0,SEL_SELECTED),(void*)objlist);
+    handle(this,FXSEL(SEL_SELECTED,0),(void*)objlist);
     }
 
   // Toggle selection mode
   else if(event->state&CONTROLMASK){
-    handle(this,MKUINT(0,SEL_DESELECTED),(void*)objlist);
+    handle(this,FXSEL(SEL_DESELECTED,0),(void*)objlist);
     }
 
   // Free list
@@ -1360,31 +1416,31 @@ long FXGLViewer::onLassoed(FXObject*,FXSelector,void* ptr){
 
 // Selected object(s)
 long FXGLViewer::onSelected(FXObject*,FXSelector,void* ptr){
-  return target && target->handle(this,MKUINT(message,SEL_SELECTED),ptr);
+  return target && target->handle(this,FXSEL(SEL_SELECTED,message),ptr);
   }
 
 
 // Deselected object(s)
 long FXGLViewer::onDeselected(FXObject*,FXSelector,void* ptr){
-  return target && target->handle(this,MKUINT(message,SEL_DESELECTED),ptr);
+  return target && target->handle(this,FXSEL(SEL_DESELECTED,message),ptr);
   }
 
 
 // Inserted object(s)
 long FXGLViewer::onInserted(FXObject*,FXSelector,void* ptr){
-  return target && target->handle(this,MKUINT(message,SEL_INSERTED),ptr);
+  return target && target->handle(this,FXSEL(SEL_INSERTED,message),ptr);
   }
 
 
 // Deleted object(s)
 long FXGLViewer::onDeleted(FXObject*,FXSelector,void* ptr){
-  return target && target->handle(this,MKUINT(message,SEL_DELETED),ptr);
+  return target && target->handle(this,FXSEL(SEL_DELETED,message),ptr);
   }
 
 
 // Change operation
 void FXGLViewer::setOp(FXuint o){
-  if(op!=o){
+  if(mode!=o){
     switch(o){
       case HOVERING:
         setDragCursor(getDefaultCursor());
@@ -1436,9 +1492,10 @@ void FXGLViewer::setOp(FXuint o){
         setDragCursor(getApp()->getDefaultCursor(DEF_ROTATE_CURSOR));
         break;
       case DO_LASSOSELECT:
-        if(op==LASSOSELECT) return;
+        if(mode==LASSOSELECT) return;
         FXTRACE((100,"LASSOSELECT\n"));
         setDefaultCursor(getApp()->getDefaultCursor(DEF_CORNERNW_CURSOR));
+        /// FIXME grab
         break;
       case LASSOSELECT:
         FXTRACE((100,"LASSOSELECT\n"));
@@ -1446,9 +1503,10 @@ void FXGLViewer::setOp(FXuint o){
         setDragCursor(getApp()->getDefaultCursor(DEF_CORNERNW_CURSOR));
         break;
       case DO_LASSOZOOM:
-        if(op==LASSOZOOM) return;
+        if(mode==LASSOZOOM) return;
         FXTRACE((100,"LASSOZOOM\n"));
         setDefaultCursor(getApp()->getDefaultCursor(DEF_CORNERNW_CURSOR));
+        /// FIXME grab
         break;
       case LASSOZOOM:
         FXTRACE((100,"LASSOZOOM\n"));
@@ -1456,7 +1514,7 @@ void FXGLViewer::setOp(FXuint o){
         setDragCursor(getApp()->getDefaultCursor(DEF_CORNERNW_CURSOR));
         break;
       }
-    op=o;
+    mode=o;
     }
   }
 
@@ -1464,51 +1522,48 @@ void FXGLViewer::setOp(FXuint o){
 // Perform the usual mouse manipulation
 long FXGLViewer::onLeftBtnPress(FXObject*,FXSelector,void* ptr){
   FXEvent* event=(FXEvent*)ptr;
-  FXGLObject *objects[2];
   flags&=~FLAG_TIP;
   FXTRACE((100,"onLeftBtnPress Mask=%08x\n",event->state));
-  handle(this,MKUINT(0,SEL_FOCUS_SELF),ptr);
+  handle(this,FXSEL(SEL_FOCUS_SELF,0),ptr);
   if(isEnabled()){
     grab();
     flags&=~FLAG_UPDATE;
-    if(target && target->handle(this,MKUINT(message,SEL_LEFTBUTTONPRESS),ptr)) return 1;
-    if(options&VIEWER_LOCKED){
-      if(!handle(this,MKUINT(0,SEL_PICKED),ptr)){
-        objects[0]=pick(event->click_x,event->click_y);
-        objects[1]=NULL;
-        handle(this,MKUINT(0,SEL_CHANGED),(void*)objects[0]);
-        handle(this,MKUINT(0,SEL_SELECTED),(void*)objects);
-        if(objects[0] && objects[0]->canDrag()){
-          setOp(DRAGGING);
-          }
-        }
+    if(target && target->handle(this,FXSEL(SEL_LEFTBUTTONPRESS,message),ptr)) return 1;
+    if(event->state&RIGHTBUTTONMASK){
+      if(event->state&SHIFTMASK)
+        setOp(TRUCKING);
+      else
+        setOp(ZOOMING);
       }
-    else{
-      if(event->state&RIGHTBUTTONMASK){
-        if(event->state&SHIFTMASK)
-          setOp(TRUCKING);
-        else
-          setOp(ZOOMING);
-        }
-      else if(event->state&MIDDLEBUTTONMASK){
-        setOp(ROTATING);
+    else if(event->state&MIDDLEBUTTONMASK){
+      setOp(ROTATING);
+      }
+    else if(mode==DO_LASSOZOOM){
+      if(0<=event->click_x && 0<=event->click_y && event->click_x<width && event->click_y<height){
+        drawLasso(event->click_x,event->click_y,event->win_x,event->win_y);
+        setOp(LASSOZOOM);
         }
       else{
-        if(op==DO_LASSOZOOM){
-          drawLasso(event->click_x,event->click_y,event->win_x,event->win_y);
-          setOp(LASSOZOOM);
-          }
-        else if((op==DO_LASSOSELECT) || (event->state&(SHIFTMASK|CONTROLMASK))){
-          drawLasso(event->click_x,event->click_y,event->win_x,event->win_y);
-          setOp(LASSOSELECT);
-          }
-        else if(selection && selection->canDrag() && selection==pick(event->click_x,event->click_y)){
-          setOp(DRAGGING);
-          }
-        else{
-          setOp(PICKING);
-          }
+        getApp()->beep();
         }
+      }
+    else if(mode==DO_LASSOSELECT){
+      if(0<=event->click_x && 0<=event->click_y && event->click_x<width && event->click_y<height){
+        drawLasso(event->click_x,event->click_y,event->win_x,event->win_y);
+        setOp(LASSOSELECT);
+        }
+      else{
+        getApp()->beep();
+        }
+      }
+    else if(event->state&(SHIFTMASK|CONTROLMASK)){
+      setOp(PICKING);
+      }
+    else if(selection && selection->canDrag() && selection==pick(event->click_x,event->click_y)){
+      setOp(DRAGGING);
+      }
+    else{
+      setOp(PICKING);
       }
     }
   return 1;
@@ -1520,86 +1575,81 @@ long FXGLViewer::onLeftBtnRelease(FXObject*,FXSelector,void* ptr){
   FXEvent* event=(FXEvent*)ptr;
   FXGLObject *objects[2];
   FXint new_x,new_y,cx,cy,xl,xh,yl,yh;
-  FXVec vec;
+  FXVec3f vec;
   FXTRACE((100,"onLeftBtnRelease Mask=%08x\n",event->state));
   if(isEnabled()){
     ungrab();
     flags|=FLAG_UPDATE;
-    if(target && target->handle(this,MKUINT(message,SEL_LEFTBUTTONRELEASE),ptr)) return 1;
-    if(options&VIEWER_LOCKED){
-      if(op==DRAGGING){
-        if(target) target->handle(this,MKUINT(message,SEL_DRAGGED),selection);
-        setOp(HOVERING);
+    if(target && target->handle(this,FXSEL(SEL_LEFTBUTTONRELEASE,message),ptr)) return 1;
+    if(event->state&RIGHTBUTTONMASK){
+      if(event->state&SHIFTMASK){
+        setOp(GYRATING);
         }
-      }
-    else{
-      if(event->state&RIGHTBUTTONMASK){
-        if(event->state&SHIFTMASK)
-          setOp(GYRATING);
-        else if(event->state&CONTROLMASK)
-          setOp(FOVING);
-        else
-          setOp(TRANSLATING);
-        grab();
-        }
-      else if(event->state&MIDDLEBUTTONMASK){
-        if(event->state&SHIFTMASK)
-          setOp(TRUCKING);
-        else
-          setOp(ZOOMING);
-        grab();
+      else if(event->state&CONTROLMASK){
+        setOp(FOVING);
         }
       else{
-        if(op==LASSOZOOM){
-          new_x=FXCLAMP(0,event->win_x,(width-1));
-          new_y=FXCLAMP(0,event->win_y,(height-1));
-          drawLasso(event->click_x,event->click_y,new_x,new_y);
-          xl=FXMIN(new_x,event->click_x);
-          xh=FXMAX(new_x,event->click_x);
-          yl=FXMIN(new_y,event->click_y);
-          yh=FXMAX(new_y,event->click_y);
-          if(xh>xl && yh>yl){
-            cx=(getWidth()-(xl+xh))/2;
-            cy=(getHeight()-(yl+yh))/2;
-            vec=worldVector(0,0,cx,cy);
-            translate(-vec);
-            setZoom(zoom*getWidth()/(xh-xl));
-            }
-          setOp(HOVERING);
-          }
-        else if(op==LASSOSELECT){
-          new_x=FXCLAMP(0,event->win_x,(width-1));
-          new_y=FXCLAMP(0,event->win_y,(height-1));
-          drawLasso(event->click_x,event->click_y,new_x,new_y);
-          handle(this,MKUINT(0,SEL_LASSOED),ptr);
-          setOp(HOVERING);
-          }
-        else if(op==PICKING){
-          setOp(HOVERING);
-          if(!handle(this,MKUINT(0,SEL_PICKED),ptr)){
-            objects[0]=pick(event->click_x,event->click_y);
-            objects[1]=NULL;
-            handle(this,MKUINT(0,SEL_CHANGED),(void*)objects[0]);
-            handle(this,MKUINT(0,SEL_SELECTED),(void*)objects);
-            }
-          }
-        else if(op==DRAGGING){
-          if(target) target->handle(this,MKUINT(message,SEL_DRAGGED),selection);
-          setOp(HOVERING);
-          }
-        else{
-          setOp(HOVERING);
-          }
+        setOp(TRANSLATING);
+        }
+      grab();
+      }
+    else if(event->state&MIDDLEBUTTONMASK){
+      if(event->state&SHIFTMASK){
+        setOp(TRUCKING);
+        }
+      else{
+        setOp(ZOOMING);
+        }
+      grab();
+      }
+    else if(mode==LASSOZOOM){
+      new_x=FXCLAMP(0,event->win_x,(width-1));
+      new_y=FXCLAMP(0,event->win_y,(height-1));
+      drawLasso(event->click_x,event->click_y,new_x,new_y);
+      xl=FXMIN(new_x,event->click_x);
+      xh=FXMAX(new_x,event->click_x);
+      yl=FXMIN(new_y,event->click_y);
+      yh=FXMAX(new_y,event->click_y);
+      if(xh>xl && yh>yl){
+        cx=(getWidth()-(xl+xh))/2;
+        cy=(getHeight()-(yl+yh))/2;
+        vec=worldVector(0,0,cx,cy);
+        translate(-vec);
+        setZoom(zoom*getWidth()/(xh-xl));
+        }
+      setOp(HOVERING);
+      }
+    else if(mode==LASSOSELECT){           // FIXME interpret control and shift for selection changes
+      new_x=FXCLAMP(0,event->win_x,(width-1));
+      new_y=FXCLAMP(0,event->win_y,(height-1));
+      drawLasso(event->click_x,event->click_y,new_x,new_y);
+      handle(this,FXSEL(SEL_LASSOED,0),ptr);
+      setOp(HOVERING);
+      }
+    else if(mode==PICKING){               // FIXME interpret control and shift for selection changes
+      setOp(HOVERING);
+      if(!handle(this,FXSEL(SEL_PICKED,0),ptr)){
+        objects[0]=pick(event->click_x,event->click_y);
+        objects[1]=NULL;
+        handle(this,FXSEL(SEL_CHANGED,0),(void*)objects[0]);        // FIXME want multiple objects
+        handle(this,FXSEL(SEL_SELECTED,0),(void*)objects);
         }
       }
+    else if(mode==DRAGGING){
+      if(target) target->handle(this,FXSEL(SEL_DRAGGED,message),selection);
+      setOp(HOVERING);
+      }
+    else{
+      setOp(HOVERING);
+      }
     if(event->click_count==1){
-      handle(this,MKUINT(0,SEL_CLICKED),(void*)selection);
+      handle(this,FXSEL(SEL_CLICKED,0),(void*)selection);
       }
     else if(event->click_count==2){
-      handle(this,MKUINT(0,SEL_DOUBLECLICKED),(void*)selection);
+      handle(this,FXSEL(SEL_DOUBLECLICKED,0),(void*)selection);
       }
     else if(event->click_count==3){
-      handle(this,MKUINT(0,SEL_TRIPLECLICKED),(void*)selection);
+      handle(this,FXSEL(SEL_TRIPLECLICKED,0),(void*)selection);
       }
     }
   return 1;
@@ -1611,16 +1661,16 @@ long FXGLViewer::onMiddleBtnPress(FXObject*,FXSelector,void* ptr){
   FXEvent* event=(FXEvent*)ptr;
   flags&=~FLAG_TIP;
   FXTRACE((100,"onMiddleBtnPress Mask=%08x\n",event->state));
-  handle(this,MKUINT(0,SEL_FOCUS_SELF),ptr);
+  handle(this,FXSEL(SEL_FOCUS_SELF,0),ptr);
   if(isEnabled()){
     grab();
     flags&=~FLAG_UPDATE;
-    if(target && target->handle(this,MKUINT(message,SEL_MIDDLEBUTTONPRESS),ptr)) return 1;
-    if(!(options&VIEWER_LOCKED)){
-      if(event->state&SHIFTMASK)
-        setOp(TRUCKING);
-      else
-        setOp(ZOOMING);
+    if(target && target->handle(this,FXSEL(SEL_MIDDLEBUTTONPRESS,message),ptr)) return 1;
+    if(event->state&SHIFTMASK){
+      setOp(TRUCKING);
+      }
+    else{
+      setOp(ZOOMING);
       }
     }
   return 1;
@@ -1634,24 +1684,25 @@ long FXGLViewer::onMiddleBtnRelease(FXObject*,FXSelector,void* ptr){
   if(isEnabled()){
     ungrab();
     flags|=FLAG_UPDATE;
-    if(target && target->handle(this,MKUINT(message,SEL_MIDDLEBUTTONRELEASE),ptr)) return 1;
-    if(!(options&VIEWER_LOCKED)){
-      if(event->state&LEFTBUTTONMASK){
-        setOp(ROTATING);
-        grab();
+    if(target && target->handle(this,FXSEL(SEL_MIDDLEBUTTONRELEASE,message),ptr)) return 1;
+    if(event->state&LEFTBUTTONMASK){
+      setOp(ROTATING);
+      grab();
+      }
+    else if(event->state&RIGHTBUTTONMASK){
+      if(event->state&SHIFTMASK){
+        setOp(GYRATING);
         }
-      else if(event->state&RIGHTBUTTONMASK){
-        if(event->state&SHIFTMASK)
-          setOp(GYRATING);
-        else if(event->state&CONTROLMASK)
-          setOp(FOVING);
-        else
-          setOp(TRANSLATING);
-        grab();
+      else if(event->state&CONTROLMASK){
+        setOp(FOVING);
         }
       else{
-        setOp(HOVERING);
+        setOp(TRANSLATING);
         }
+      grab();
+      }
+    else{
+      setOp(HOVERING);
       }
     }
   return 1;
@@ -1663,36 +1714,39 @@ long FXGLViewer::onRightBtnPress(FXObject*,FXSelector,void* ptr){
   FXEvent* event=(FXEvent*)ptr;
   flags&=~FLAG_TIP;
   FXTRACE((100,"onRightBtnPress Mask=%08x\n",event->state));
-  handle(this,MKUINT(0,SEL_FOCUS_SELF),ptr);
+  handle(this,FXSEL(SEL_FOCUS_SELF,0),ptr);
   if(isEnabled()){
     grab();
     flags&=~FLAG_UPDATE;
-    if(target && target->handle(this,MKUINT(message,SEL_RIGHTBUTTONPRESS),ptr)) return 1;
-    if(options&VIEWER_LOCKED){
-      setOp(POSTING);
-      }
-    else{
-      if(event->state&LEFTBUTTONMASK){
-        if(event->state&SHIFTMASK)
-          setOp(TRUCKING);
-        else
-          setOp(ZOOMING);
-        }
-      else if(event->state&MIDDLEBUTTONMASK){
-        if(event->state&SHIFTMASK)
-          setOp(GYRATING);
-        else if(event->state&CONTROLMASK)
-          setOp(FOVING);
-        else
-          setOp(TRANSLATING);
+    if(target && target->handle(this,FXSEL(SEL_RIGHTBUTTONPRESS,message),ptr)) return 1;
+    if(event->state&LEFTBUTTONMASK){
+      if(event->state&SHIFTMASK){
+        setOp(TRUCKING);
         }
       else{
-        if(event->state&SHIFTMASK)
-          setOp(GYRATING);
-        else if(event->state&CONTROLMASK)
-          setOp(FOVING);
-        else
-          setOp(POSTING);
+        setOp(ZOOMING);
+        }
+      }
+    else if(event->state&MIDDLEBUTTONMASK){
+      if(event->state&SHIFTMASK){
+        setOp(GYRATING);
+        }
+      else if(event->state&CONTROLMASK){
+        setOp(FOVING);
+        }
+      else{
+        setOp(TRANSLATING);
+        }
+      }
+    else{
+      if(event->state&SHIFTMASK){
+        setOp(GYRATING);
+        }
+      else if(event->state&CONTROLMASK){
+        setOp(FOVING);
+        }
+      else{
+        setOp(POSTING);
         }
       }
     }
@@ -1715,41 +1769,30 @@ long FXGLViewer::onRightBtnRelease(FXObject*,FXSelector,void* ptr){
   if(isEnabled()){
     ungrab();
     flags|=FLAG_UPDATE;
-    if(target && target->handle(this,MKUINT(message,SEL_RIGHTBUTTONRELEASE),ptr)) return 1;
-    if(options&VIEWER_LOCKED){
-      if(op==POSTING){
+    if(target && target->handle(this,FXSEL(SEL_RIGHTBUTTONRELEASE,message),ptr)) return 1;
+    if(event->state&LEFTBUTTONMASK){
+      setOp(ROTATING);
+      grab();
+      }
+    else if(event->state&MIDDLEBUTTONMASK){
+      if(event->state&SHIFTMASK){
+        setOp(TRUCKING);
+        }
+      else{
+        setOp(ZOOMING);
+        }
+      grab();
+      }
+    else{
+      if(mode==POSTING){
         setOp(HOVERING);
         hit=pick(event->click_x,event->click_y);
-        if(hit && hit->handle(this,MKUINT(ID_QUERY_MENU,SEL_COMMAND),ptr))
+        if(hit && hit->handle(this,FXSEL(SEL_COMMAND,ID_QUERY_MENU),ptr))
           ;
-        else if(target && target->handle(this,MKUINT(ID_QUERY_MENU,SEL_COMMAND),ptr))
+        else if(target && target->handle(this,FXSEL(SEL_COMMAND,ID_QUERY_MENU),ptr))
           ;
         }
       setOp(HOVERING);
-      }
-    else{
-      if(event->state&LEFTBUTTONMASK){
-        setOp(ROTATING);
-        grab();
-        }
-      else if(event->state&MIDDLEBUTTONMASK){
-        if(event->state&SHIFTMASK)
-          setOp(TRUCKING);
-        else
-          setOp(ZOOMING);
-        grab();
-        }
-      else{
-        if(op==POSTING){
-          setOp(HOVERING);
-          hit=pick(event->click_x,event->click_y);
-          if(hit && hit->handle(this,MKUINT(ID_QUERY_MENU,SEL_COMMAND),ptr))
-            ;
-          else if(target && target->handle(this,MKUINT(ID_QUERY_MENU,SEL_COMMAND),ptr))
-            ;
-          }
-        setOp(HOVERING);
-        }
       }
     }
   return 1;
@@ -1763,58 +1806,65 @@ long FXGLViewer::onMotion(FXObject*,FXSelector,void* ptr){
   long changed=(flags&FLAG_TIP)!=0;
   FXdouble delta;
   FXfloat tmp;
-  FXVec vec;
-  FXQuat q;
+  FXVec3f vec;
+  FXQuatf q;
   flags&=~FLAG_TIP;
   if(isEnabled()){
-    if(target && target->handle(this,MKUINT(message,SEL_MOTION),ptr)) return 1;
-    if(timer){ getApp()->removeTimeout(timer); timer=NULL; }
-    switch(op){
-      case HOVERING:          // Reset the timer each time we moved the cursor
-        timer=getApp()->addTimeout(getApp()->getMenuPause(),this,ID_TIPTIMER);
+    if(target && target->handle(this,FXSEL(SEL_MOTION,message),ptr)) return 1;
+    getApp()->removeTimeout(this,ID_TIPTIMER);
+    switch(mode){
+      case HOVERING:            // Reset the timer each time we moved the cursor
+        getApp()->addTimeout(this,ID_TIPTIMER,getApp()->getMenuPause());
         break;
-      case PICKING:           // Picking, but we moved; if moving more than a delta, we go to rotate mode
-        if(!event->moved || (options&VIEWER_LOCKED)) break;
-        setOp(ROTATING);
-      case ROTATING:          // Rotating camera around target
+      case PICKING:             // Picking
+        if(!event->moved){                              // Keep picking mode for now
+          break;
+          }
+        if(event->state&(SHIFTMASK|CONTROLMASK)){       // Lasso mode if modifier held down
+          drawLasso(event->click_x,event->click_y,event->win_x,event->win_y);
+          setOp(LASSOSELECT);
+          break;
+          }
+        setOp(ROTATING);                                // Go into rotation mode
+      case ROTATING:            // Rotating camera around target
         q=turn(event->last_x,event->last_y,event->win_x,event->win_y) * getOrientation();
         setOrientation(q);
         changed=1;
         break;
-      case POSTING:           // Posting right-mouse menu; if moving more than delta, we go to translate mode
-        if(!event->moved || (options&VIEWER_LOCKED)) break;
+      case POSTING:             // Posting right-mouse menu; if moving more than delta, we go to translate mode
+        if(!event->moved) break;
         setOp(TRANSLATING);
-      case TRANSLATING:       // Translating camera
+      case TRANSLATING:         // Translating camera
         vec=worldVector(event->last_x,event->last_y,event->win_x,event->win_y);
         translate(-vec);
         changed=1;
         break;
-      case ZOOMING:           // Zooming camera
+      case ZOOMING:             // Zooming camera
         delta=0.005*(event->win_y-event->last_y);
         setZoom(getZoom()*pow(2.0,delta));
         changed=1;
         break;
-      case FOVING:            // Change FOV
+      case FOVING:              // Change FOV
         setFieldOfView(getFieldOfView()+90.0*(event->win_y-event->last_y)/(double)wvt.h);
         changed=1;
         break;
-      case DRAGGING:          // Dragging a shape
+      case DRAGGING:            // Dragging a shape
         if(selection && selection->drag(this,event->last_x,event->last_y,event->win_x,event->win_y)){
           //// Perhaps callback here for the target to be notified of the new object position
           update();
           }
         changed=1;
         break;
-      case TRUCKING:          // Trucking camera forward or backward
+      case TRUCKING:            // Trucking camera forward or backward
         tmp=(FXfloat)(worldpx*(event->win_y-event->last_y));
         vec=normalize(getEyeVector());
         translate(tmp*vec);
         changed=1;
         break;
-      case GYRATING:          // Rotating camera around eye
+      case GYRATING:            // Rotating camera around eye
         {
-          FXHMat mm;
-          FXQuat qq;
+          FXMat4f mm;
+          FXQuatf qq;
           qq=turn(event->win_x,event->win_y,event->last_x,event->last_y);
           mm.eye();
           mm.trans(0.0f,0.0f,(FXfloat)-distance); // FIXME This aint it yet...
@@ -1827,7 +1877,7 @@ long FXGLViewer::onMotion(FXObject*,FXSelector,void* ptr){
           changed=1;
         }
         break;
-      case LASSOSELECT:          // Dragging a lasso
+      case LASSOSELECT:         // Dragging a lasso
       case LASSOZOOM:
         old_x=FXCLAMP(0,event->last_x,(width-1));
         old_y=FXCLAMP(0,event->last_y,(height-1));
@@ -1858,8 +1908,12 @@ long FXGLViewer::onMotion(FXObject*,FXSelector,void* ptr){
 // Mouse wheel
 long FXGLViewer::onMouseWheel(FXObject*,FXSelector,void* ptr){
   FXEvent* event=(FXEvent*)ptr;
-  setZoom(getZoom()*pow(2.0,-0.1*event->code/120.0));
-  return 1;
+  if(isEnabled()){
+    if(target && target->handle(this,FXSEL(SEL_MOUSEWHEEL,message),ptr)) return 1;
+    setZoom(getZoom()*pow(2.0,-0.1*event->code/120.0));
+    return 1;
+    }
+  return 0;
   }
 
 
@@ -1868,13 +1922,13 @@ long FXGLViewer::onKeyPress(FXObject*,FXSelector,void* ptr){
   FXEvent* event=(FXEvent*)ptr;
   flags&=~FLAG_TIP;
   if(isEnabled()){
-    if(target && target->handle(this,MKUINT(message,SEL_KEYPRESS),ptr)) return 1;
+    if(target && target->handle(this,FXSEL(SEL_KEYPRESS,message),ptr)) return 1;
     switch(event->code){
       case KEY_Shift_L:
       case KEY_Shift_R:
 
         // We do not switch modes unless something was going on already
-        if(op!=HOVERING){
+        if(mode!=HOVERING){
           if((event->state&MIDDLEBUTTONMASK) || ((event->state&LEFTBUTTONMASK) && (event->state&RIGHTBUTTONMASK))){
             setOp(TRUCKING);
             }
@@ -1887,7 +1941,7 @@ long FXGLViewer::onKeyPress(FXObject*,FXSelector,void* ptr){
       case KEY_Control_R:
 
         // We do not switch modes unless something was going on already
-        if(op!=HOVERING){
+        if(mode!=HOVERING){
           if(event->state&RIGHTBUTTONMASK){
             setOp(FOVING);
             }
@@ -1903,13 +1957,13 @@ long FXGLViewer::onKeyPress(FXObject*,FXSelector,void* ptr){
 long FXGLViewer::onKeyRelease(FXObject*,FXSelector,void* ptr){
   FXEvent* event=(FXEvent*)ptr;
   if(isEnabled()){
-    if(target && target->handle(this,MKUINT(message,SEL_KEYRELEASE),ptr)) return 1;
+    if(target && target->handle(this,FXSEL(SEL_KEYRELEASE,message),ptr)) return 1;
     switch(event->code){
       case KEY_Shift_L:
       case KEY_Shift_R:
 
         // We do not switch modes unless something was going on already
-        if(op!=HOVERING){
+        if(mode!=HOVERING){
           if((event->state&MIDDLEBUTTONMASK) || ((event->state&LEFTBUTTONMASK) && (event->state&RIGHTBUTTONMASK))){
             setOp(ZOOMING);
             }
@@ -1922,7 +1976,7 @@ long FXGLViewer::onKeyRelease(FXObject*,FXSelector,void* ptr){
       case KEY_Control_R:
 
         // We do not switch modes unless something was going on already
-        if(op!=HOVERING){
+        if(mode!=HOVERING){
           if(event->state&RIGHTBUTTONMASK){
             setOp(TRANSLATING);
             }
@@ -1949,7 +2003,6 @@ long FXGLViewer::onUngrabbed(FXObject* sender,FXSelector sel,void* ptr){
 // We timed out, i.e. the user didn't move for a while
 long FXGLViewer::onTipTimer(FXObject*,FXSelector,void*){
   FXTRACE((250,"%s::onTipTimer %p\n",getClassName(),this));
-  timer=NULL;
   flags|=FLAG_TIP;
   return 1;
   }
@@ -1960,7 +2013,7 @@ long FXGLViewer::onQueryHelp(FXObject* sender,FXSelector,void*){
   if((flags&FLAG_HELP)){
     FXTRACE((250,"%s::onQueryHelp %p\n",getClassName(),this));
     if(!help.empty()){
-      sender->handle(this,MKUINT(ID_SETSTRINGVALUE,SEL_COMMAND),(void*)&help);
+      sender->handle(this,FXSEL(SEL_COMMAND,ID_SETSTRINGVALUE),(void*)&help);
       return 1;
       }
     }
@@ -1979,7 +2032,7 @@ long FXGLViewer::onQueryTip(FXObject* sender,FXSelector sel,void* ptr){
     hit=pick(x,y);
     if(hit && hit->handle(sender,sel,ptr)) return 1;
     if(!tip.empty()){
-      sender->handle(this,MKUINT(ID_SETSTRINGVALUE,SEL_COMMAND),(void*)&tip);
+      sender->handle(this,FXSEL(SEL_COMMAND,ID_SETSTRINGVALUE),(void*)&tip);
       return 1;
       }
     }
@@ -1999,10 +2052,9 @@ long FXGLViewer::onCmdPerspective(FXObject*,FXSelector,void*){
 
 // Update sender
 long FXGLViewer::onUpdPerspective(FXObject* sender,FXSelector,void*){
-  FXuint msg=projection==PERSPECTIVE ? ID_CHECK : ID_UNCHECK;
-  sender->handle(this,MKUINT(ID_SHOW,SEL_COMMAND),NULL);
-  sender->handle(this,MKUINT(ID_ENABLE,SEL_COMMAND),NULL);
-  sender->handle(this,MKUINT(msg,SEL_COMMAND),NULL);
+  sender->handle(this,FXSEL(SEL_COMMAND,ID_SHOW),NULL);
+  sender->handle(this,FXSEL(SEL_COMMAND,ID_ENABLE),NULL);
+  sender->handle(this,(projection==PERSPECTIVE)?FXSEL(SEL_COMMAND,ID_CHECK):FXSEL(SEL_COMMAND,ID_UNCHECK),NULL);
   return 1;
   }
 
@@ -2016,10 +2068,9 @@ long FXGLViewer::onCmdParallel(FXObject*,FXSelector,void*){
 
 // Update sender
 long FXGLViewer::onUpdParallel(FXObject* sender,FXSelector,void*){
-  FXuint msg=projection==PARALLEL ? ID_CHECK : ID_UNCHECK;
-  sender->handle(this,MKUINT(ID_SHOW,SEL_COMMAND),NULL);
-  sender->handle(this,MKUINT(ID_ENABLE,SEL_COMMAND),NULL);
-  sender->handle(this,MKUINT(msg,SEL_COMMAND),NULL);
+  sender->handle(this,FXSEL(SEL_COMMAND,ID_SHOW),NULL);
+  sender->handle(this,FXSEL(SEL_COMMAND,ID_ENABLE),NULL);
+  sender->handle(this,(projection==PARALLEL)?FXSEL(SEL_COMMAND,ID_CHECK):FXSEL(SEL_COMMAND,ID_UNCHECK),NULL);
   return 1;
   }
 
@@ -2028,7 +2079,7 @@ long FXGLViewer::onUpdParallel(FXObject* sender,FXSelector,void*){
 
 // View front
 long FXGLViewer::onCmdFront(FXObject*,FXSelector,void*){
-  rotation=FXQuat(0.0f,0.0f,0.0f,1.0f);
+  rotation=FXQuatf(0.0f,0.0f,0.0f,1.0f);
   updateTransform();
   update();
   return 1;
@@ -2037,20 +2088,15 @@ long FXGLViewer::onCmdFront(FXObject*,FXSelector,void*){
 
 // Update sender
 long FXGLViewer::onUpdFront(FXObject* sender,FXSelector,void*){
-  FXuint msg=ID_UNCHECK;
-  if(EPS>fabs(rotation[0]) &&
-     EPS>fabs(rotation[1]) &&
-     EPS>fabs(rotation[2]) &&
-     EPS>fabs(rotation[3]-1.0)) msg=ID_CHECK;
-  sender->handle(this,MKUINT(ID_SHOW,SEL_COMMAND),NULL);
-  sender->handle(this,MKUINT(ID_ENABLE,SEL_COMMAND),NULL);
-  sender->handle(this,MKUINT(msg,SEL_COMMAND),NULL);
+  sender->handle(this,FXSEL(SEL_COMMAND,ID_SHOW),NULL);
+  sender->handle(this,FXSEL(SEL_COMMAND,ID_ENABLE),NULL);
+  sender->handle(this,(EPS>fabs(rotation[0]) && EPS>fabs(rotation[1]) && EPS>fabs(rotation[2]) && EPS>fabs(rotation[3]-1.0)) ? FXSEL(SEL_COMMAND,ID_CHECK) : FXSEL(SEL_COMMAND,ID_UNCHECK),NULL);
   return 1;
   }
 
 // View back
 long FXGLViewer::onCmdBack(FXObject*,FXSelector,void*){
-  rotation=FXQuat(0.0f,-1.0f,0.0f,0.0f);
+  rotation=FXQuatf(0.0f,-1.0f,0.0f,0.0f);
   updateTransform();
   update();
   return 1;
@@ -2059,20 +2105,15 @@ long FXGLViewer::onCmdBack(FXObject*,FXSelector,void*){
 
 // Update sender
 long FXGLViewer::onUpdBack(FXObject* sender,FXSelector,void*){
-  FXuint msg=ID_UNCHECK;
-  if(EPS>fabs(rotation[0]) &&
-     EPS>fabs(rotation[1]+1.0) &&
-     EPS>fabs(rotation[2]) &&
-     EPS>fabs(rotation[3])) msg=ID_CHECK;
-  sender->handle(this,MKUINT(ID_SHOW,SEL_COMMAND),NULL);
-  sender->handle(this,MKUINT(ID_ENABLE,SEL_COMMAND),NULL);
-  sender->handle(this,MKUINT(msg,SEL_COMMAND),NULL);
+  sender->handle(this,FXSEL(SEL_COMMAND,ID_SHOW),NULL);
+  sender->handle(this,FXSEL(SEL_COMMAND,ID_ENABLE),NULL);
+  sender->handle(this,(EPS>fabs(rotation[0]) && EPS>fabs(rotation[1]+1.0) && EPS>fabs(rotation[2]) && EPS>fabs(rotation[3])) ? FXSEL(SEL_COMMAND,ID_CHECK) : FXSEL(SEL_COMMAND,ID_UNCHECK),NULL);
   return 1;
   }
 
 // View left
 long FXGLViewer::onCmdLeft(FXObject*,FXSelector,void*){
-  rotation=FXQuat(0.0f,0.7071067811865f,0.0f,0.7071067811865f);
+  rotation=FXQuatf(0.0f,0.7071067811865f,0.0f,0.7071067811865f);
   updateTransform();
   update();
   return 1;
@@ -2081,20 +2122,15 @@ long FXGLViewer::onCmdLeft(FXObject*,FXSelector,void*){
 
 // Update sender
 long FXGLViewer::onUpdLeft(FXObject* sender,FXSelector,void*){
-  FXuint msg=ID_UNCHECK;
-  if(EPS>fabs(rotation[0]) &&
-     EPS>fabs(rotation[1]-0.7071067811865) &&
-     EPS>fabs(rotation[2]) &&
-     EPS>fabs(rotation[3]-0.7071067811865)) msg=ID_CHECK;
-  sender->handle(this,MKUINT(ID_SHOW,SEL_COMMAND),NULL);
-  sender->handle(this,MKUINT(ID_ENABLE,SEL_COMMAND),NULL);
-  sender->handle(this,MKUINT(msg,SEL_COMMAND),NULL);
+  sender->handle(this,FXSEL(SEL_COMMAND,ID_SHOW),NULL);
+  sender->handle(this,FXSEL(SEL_COMMAND,ID_ENABLE),NULL);
+  sender->handle(this,(EPS>fabs(rotation[0]) && EPS>fabs(rotation[1]-0.7071067811865) && EPS>fabs(rotation[2]) && EPS>fabs(rotation[3]-0.7071067811865)) ? FXSEL(SEL_COMMAND,ID_CHECK) : FXSEL(SEL_COMMAND,ID_UNCHECK),NULL);
   return 1;
   }
 
 // View right
 long FXGLViewer::onCmdRight(FXObject*,FXSelector,void*){
-  rotation=FXQuat(0.0f,-0.7071067811865f,0.0f,0.7071067811865f);
+  rotation=FXQuatf(0.0f,-0.7071067811865f,0.0f,0.7071067811865f);
   updateTransform();
   update();
   return 1;
@@ -2103,20 +2139,15 @@ long FXGLViewer::onCmdRight(FXObject*,FXSelector,void*){
 
 // Update sender
 long FXGLViewer::onUpdRight(FXObject* sender,FXSelector,void*){
-  FXuint msg=ID_UNCHECK;
-  if(EPS>fabs(rotation[0]) &&
-     EPS>fabs(rotation[1]+0.7071067811865) &&
-     EPS>fabs(rotation[2]) &&
-     EPS>fabs(rotation[3]-0.7071067811865)) msg=ID_CHECK;
-  sender->handle(this,MKUINT(ID_SHOW,SEL_COMMAND),NULL);
-  sender->handle(this,MKUINT(ID_ENABLE,SEL_COMMAND),NULL);
-  sender->handle(this,MKUINT(msg,SEL_COMMAND),NULL);
+  sender->handle(this,FXSEL(SEL_COMMAND,ID_SHOW),NULL);
+  sender->handle(this,FXSEL(SEL_COMMAND,ID_ENABLE),NULL);
+  sender->handle(this,(EPS>fabs(rotation[0]) && EPS>fabs(rotation[1]+0.7071067811865) && EPS>fabs(rotation[2]) && EPS>fabs(rotation[3]-0.7071067811865)) ? FXSEL(SEL_COMMAND,ID_CHECK) : FXSEL(SEL_COMMAND,ID_UNCHECK),NULL);
   return 1;
   }
 
 // View top
 long FXGLViewer::onCmdTop(FXObject*,FXSelector,void*){
-  rotation=FXQuat(0.7071067811865f,0.0f,0.0f,0.7071067811865f);
+  rotation=FXQuatf(0.7071067811865f,0.0f,0.0f,0.7071067811865f);
   updateTransform();
   update();
   return 1;
@@ -2125,20 +2156,15 @@ long FXGLViewer::onCmdTop(FXObject*,FXSelector,void*){
 
 // Update sender
 long FXGLViewer::onUpdTop(FXObject* sender,FXSelector,void*){
-  FXuint msg=ID_UNCHECK;
-  if(EPS>fabs(rotation[0]-0.7071067811865) &&
-     EPS>fabs(rotation[1]) &&
-     EPS>fabs(rotation[2]) &&
-     EPS>fabs(rotation[3]-0.7071067811865)) msg=ID_CHECK;
-  sender->handle(this,MKUINT(ID_SHOW,SEL_COMMAND),NULL);
-  sender->handle(this,MKUINT(ID_ENABLE,SEL_COMMAND),NULL);
-  sender->handle(this,MKUINT(msg,SEL_COMMAND),NULL);
+  sender->handle(this,FXSEL(SEL_COMMAND,ID_SHOW),NULL);
+  sender->handle(this,FXSEL(SEL_COMMAND,ID_ENABLE),NULL);
+  sender->handle(this,(EPS>fabs(rotation[0]-0.7071067811865) && EPS>fabs(rotation[1]) && EPS>fabs(rotation[2]) && EPS>fabs(rotation[3]-0.7071067811865)) ? FXSEL(SEL_COMMAND,ID_CHECK) : FXSEL(SEL_COMMAND,ID_UNCHECK),NULL);
   return 1;
   }
 
 // View bottom
 long FXGLViewer::onCmdBottom(FXObject*,FXSelector,void*){
-  rotation=FXQuat(-0.7071067811865f,0.0f,0.0f,0.7071067811865f);
+  rotation=FXQuatf(-0.7071067811865f,0.0f,0.0f,0.7071067811865f);
   updateTransform();
   update();
   return 1;
@@ -2147,24 +2173,19 @@ long FXGLViewer::onCmdBottom(FXObject*,FXSelector,void*){
 
 // Update sender
 long FXGLViewer::onUpdBottom(FXObject* sender,FXSelector,void*){
-  FXuint msg=ID_UNCHECK;
-  if(EPS>fabs(rotation[0]+0.7071067811865) &&
-     EPS>fabs(rotation[1]) &&
-     EPS>fabs(rotation[2]) &&
-     EPS>fabs(rotation[3]-0.7071067811865)) msg=ID_CHECK;
-  sender->handle(this,MKUINT(ID_SHOW,SEL_COMMAND),NULL);
-  sender->handle(this,MKUINT(ID_ENABLE,SEL_COMMAND),NULL);
-  sender->handle(this,MKUINT(msg,SEL_COMMAND),NULL);
+  sender->handle(this,FXSEL(SEL_COMMAND,ID_SHOW),NULL);
+  sender->handle(this,FXSEL(SEL_COMMAND,ID_ENABLE),NULL);
+  sender->handle(this,(EPS>fabs(rotation[0]+0.7071067811865) && EPS>fabs(rotation[1]) && EPS>fabs(rotation[2]) && EPS>fabs(rotation[3]-0.7071067811865)) ? FXSEL(SEL_COMMAND,ID_CHECK) : FXSEL(SEL_COMMAND,ID_UNCHECK),NULL);
   return 1;
   }
 
 
 // Reset view
 long FXGLViewer::onCmdResetView(FXObject*,FXSelector,void*){
-  FXRange r(-1.0f,1.0f,-1.0f,1.0f,-1.0f,1.0f);
-  rotation=FXQuat(0.0f,0.0f,0.0f,1.0f);
+  FXRangef r(-1.0f,1.0f,-1.0f,1.0f,-1.0f,1.0f);
+  rotation=FXQuatf(0.0f,0.0f,0.0f,1.0f);
   zoom=1.0;
-  scale=FXVec(1.0f,1.0f,1.0f);
+  scale=FXVec3f(1.0f,1.0f,1.0f);
   if(scene) scene->bounds(r);
   setBounds(r);
   updateProjection();
@@ -2176,7 +2197,7 @@ long FXGLViewer::onCmdResetView(FXObject*,FXSelector,void*){
 
 // Fit view
 long FXGLViewer::onCmdFitView(FXObject*,FXSelector,void*){
-  FXRange r(-1.0f,1.0f,-1.0f,1.0f,-1.0f,1.0f);
+  FXRangef r(-1.0f,1.0f,-1.0f,1.0f,-1.0f,1.0f);
   if(scene) scene->bounds(r);
   setBounds(r);
   update();
@@ -2186,7 +2207,7 @@ long FXGLViewer::onCmdFitView(FXObject*,FXSelector,void*){
 
 // Update zoom
 long FXGLViewer::onUpdZoom(FXObject* sender,FXSelector,void*){
-  sender->handle(this,MKUINT(FXWindow::ID_SETREALVALUE,SEL_COMMAND),(void*)&zoom);
+  sender->handle(this,FXSEL(SEL_COMMAND,ID_SETREALVALUE),(void*)&zoom);
   return 1;
   }
 
@@ -2194,8 +2215,8 @@ long FXGLViewer::onUpdZoom(FXObject* sender,FXSelector,void*){
 // Change zoom
 long FXGLViewer::onCmdZoom(FXObject* sender,FXSelector sel,void*){
   FXdouble z=zoom;
-  sender->handle(this,MKUINT(FXWindow::ID_GETREALVALUE,SEL_COMMAND),(void*)&z);
-  doesturbo=(SELTYPE(sel)==SEL_CHANGED)?turbomode:FALSE;
+  sender->handle(this,FXSEL(SEL_COMMAND,ID_GETREALVALUE),(void*)&z);
+  doesturbo=(FXSELTYPE(sel)==SEL_CHANGED)?turbomode:FALSE;
   setZoom(z);
   return 1;
   }
@@ -2203,7 +2224,7 @@ long FXGLViewer::onCmdZoom(FXObject* sender,FXSelector sel,void*){
 
 // Update field of view
 long FXGLViewer::onUpdFov(FXObject* sender,FXSelector,void*){
-  sender->handle(this,MKUINT(FXWindow::ID_SETREALVALUE,SEL_COMMAND),(void*)&fov);
+  sender->handle(this,FXSEL(SEL_COMMAND,ID_SETREALVALUE),(void*)&fov);
   return 1;
   }
 
@@ -2211,8 +2232,8 @@ long FXGLViewer::onUpdFov(FXObject* sender,FXSelector,void*){
 // Change field of view
 long FXGLViewer::onCmdFov(FXObject* sender,FXSelector sel,void*){
   FXdouble f=fov;
-  sender->handle(this,MKUINT(FXWindow::ID_GETREALVALUE,SEL_COMMAND),(void*)&f);
-  doesturbo=(SELTYPE(sel)==SEL_CHANGED)?turbomode:FALSE;
+  sender->handle(this,FXSEL(SEL_COMMAND,ID_GETREALVALUE),(void*)&f);
+  doesturbo=(FXSELTYPE(sel)==SEL_CHANGED)?turbomode:FALSE;
   setFieldOfView(f);
   return 1;
   }
@@ -2220,11 +2241,11 @@ long FXGLViewer::onCmdFov(FXObject* sender,FXSelector sel,void*){
 
 // Scale model
 long FXGLViewer::onCmdXYZScale(FXObject* sender,FXSelector sel,void*){
-  FXVec s=scale;
+  FXVec3f s=scale;
   FXdouble value;
-  sender->handle(this,MKUINT(FXWindow::ID_GETREALVALUE,SEL_COMMAND),&value);
-  s[SELID(sel)-ID_SCALE_X]=value;
-  doesturbo=(SELTYPE(sel)==SEL_CHANGED)?turbomode:FALSE;
+  sender->handle(this,FXSEL(SEL_COMMAND,ID_GETREALVALUE),&value);
+  s[FXSELID(sel)-ID_SCALE_X]=(FXfloat)value;
+  doesturbo=(FXSELTYPE(sel)==SEL_CHANGED)?turbomode:FALSE;
   setScale(s);
   return 1;
   }
@@ -2232,37 +2253,37 @@ long FXGLViewer::onCmdXYZScale(FXObject* sender,FXSelector sel,void*){
 
 // Update scale value
 long FXGLViewer::onUpdXYZScale(FXObject* sender,FXSelector sel,void*){
-  FXdouble value=scale[SELID(sel)-ID_SCALE_X];
-  sender->handle(this,MKUINT(FXWindow::ID_SETREALVALUE,SEL_COMMAND),(void*)&value);
+  FXdouble value=scale[FXSELID(sel)-ID_SCALE_X];
+  sender->handle(this,FXSEL(SEL_COMMAND,ID_SETREALVALUE),(void*)&value);
   return 1;
   }
 
 
 // Rotate camera about model by means of dials
 long FXGLViewer::onCmdXYZDial(FXObject*,FXSelector sel,void* ptr){
-  const FXVec xaxis(1.0f,0.0f,0.0f);
-  const FXVec yaxis(0.0f,1.0f,0.0f);
-  const FXVec zaxis(0.0f,0.0f,1.0f);
+  const FXVec3f xaxis(1.0f,0.0f,0.0f);
+  const FXVec3f yaxis(0.0f,1.0f,0.0f);
+  const FXVec3f zaxis(0.0f,0.0f,1.0f);
   FXint dialnew=(FXint)(FXival)ptr;
   FXfloat ang;
-  FXQuat q;
-  if(SELTYPE(sel)==SEL_CHANGED){
+  FXQuatf q;
+  if(FXSELTYPE(sel)==SEL_CHANGED){
     doesturbo=turbomode;
-    FXASSERT(ID_DIAL_X<=SELID(sel) && SELID(sel)<=ID_DIAL_Z);
-    switch(SELID(sel)){
+    FXASSERT(ID_DIAL_X<=FXSELID(sel) && FXSELID(sel)<=ID_DIAL_Z);
+    switch(FXSELID(sel)){
       case ID_DIAL_X:
         ang=(FXfloat)(DTOR*(dialnew-dial[0]));
-        q=FXQuat(xaxis,-ang);
+        q.setAxisAngle(xaxis,-ang);
         dial[0]=dialnew;
         break;
       case ID_DIAL_Y:
         ang=(FXfloat)(DTOR*(dialnew-dial[1]));
-        q=FXQuat(yaxis, ang);
+        q.setAxisAngle(yaxis, ang);
         dial[1]=dialnew;
         break;
       case ID_DIAL_Z:
         ang=(FXfloat)(DTOR*(dialnew-dial[2]));
-        q=FXQuat(zaxis, ang);
+        q.setAxisAngle(zaxis, ang);
         dial[2]=dialnew;
         break;
       }
@@ -2278,22 +2299,22 @@ long FXGLViewer::onCmdXYZDial(FXObject*,FXSelector sel,void* ptr){
 
 // Update dial value
 long FXGLViewer::onUpdXYZDial(FXObject* sender,FXSelector sel,void*){
-  FXASSERT(ID_DIAL_X<=SELID(sel) && SELID(sel)<=ID_DIAL_Z);
-  sender->handle(this,MKUINT(FXWindow::ID_SETINTVALUE,SEL_COMMAND),(void*)&dial[SELID(sel)-ID_DIAL_X]);
+  FXASSERT(ID_DIAL_X<=FXSELID(sel) && FXSELID(sel)<=ID_DIAL_Z);
+  sender->handle(this,FXSEL(SEL_COMMAND,ID_SETINTVALUE),(void*)&dial[FXSELID(sel)-ID_DIAL_X]);
   return 1;
   }
 
 
 // Update roll pitch yaw
 long FXGLViewer::onCmdRollPitchYaw(FXObject* sender,FXSelector sel,void*){
-  FXASSERT(ID_ROLL<=SELID(sel) && SELID(sel)<=ID_YAW);
+  FXASSERT(ID_ROLL<=FXSELID(sel) && FXSELID(sel)<=ID_YAW);
   FXfloat rpy[3];
   FXdouble ang;
   rotation.getRollPitchYaw(rpy[0],rpy[1],rpy[2]);
-  sender->handle(this,MKUINT(FXWindow::ID_GETREALVALUE,SEL_COMMAND),(void*)&ang);
-  rpy[SELID(sel)-ID_ROLL]=DTOR*ang;
-  doesturbo=(SELTYPE(sel)==SEL_CHANGED)?turbomode:FALSE;
-  setOrientation(FXQuat(rpy[0],rpy[1],rpy[2]));
+  sender->handle(this,FXSEL(SEL_COMMAND,ID_GETREALVALUE),(void*)&ang);
+  rpy[FXSELID(sel)-ID_ROLL]=(FXfloat)(DTOR*ang);
+  doesturbo=(FXSELTYPE(sel)==SEL_CHANGED)?turbomode:FALSE;
+  setOrientation(FXQuatf(rpy[0],rpy[1],rpy[2]));
   update();
   return 1;
   }
@@ -2301,11 +2322,11 @@ long FXGLViewer::onCmdRollPitchYaw(FXObject* sender,FXSelector sel,void*){
 
 // Update roll pitch yaw
 long FXGLViewer::onUpdRollPitchYaw(FXObject* sender,FXSelector sel,void*){
-  FXASSERT(ID_ROLL<=SELID(sel) && SELID(sel)<=ID_YAW);
+  FXASSERT(ID_ROLL<=FXSELID(sel) && FXSELID(sel)<=ID_YAW);
   FXfloat rpy[3];
   rotation.getRollPitchYaw(rpy[0],rpy[1],rpy[2]);
-  FXdouble ang=RTOD*rpy[SELID(sel)-ID_ROLL];
-  sender->handle(this,MKUINT(FXWindow::ID_SETREALVALUE,SEL_COMMAND),(void*)&ang);
+  FXdouble ang=RTOD*rpy[FXSELID(sel)-ID_ROLL];
+  sender->handle(this,FXSEL(SEL_COMMAND,ID_SETREALVALUE),(void*)&ang);
   return 1;
   }
 
@@ -2315,112 +2336,136 @@ long FXGLViewer::onUpdRollPitchYaw(FXObject* sender,FXSelector sel,void*){
 
 // Read back pixels
 // Derived from code contributed by <sancelot@crosswinds.net>
-FXbool FXGLViewer::readPixels(FXuchar*& buffer,FXint x,FXint y,FXint w,FXint h){
-#ifdef HAVE_OPENGL
-  GLint swapbytes,lsbfirst,rowlength,oldbuf;
-  GLint skiprows,skippixels,alignment;
-  GLuint size=w*h*3;
+FXbool FXGLViewer::readPixels(FXColor*& buffer,FXint x,FXint y,FXint w,FXint h){
+#ifdef HAVE_GL_H
+  if(1<=w && 1<=h){
+    GLint swapbytes,lsbfirst,rowlength,skiprows,skippixels,alignment,oldbuf;
+    register FXColor *p,*q,*pp,*qq,t;
 
-  // Try allocate buffer
-  if(!FXMALLOC(&buffer,FXuchar,size)) return FALSE;
+    // Try allocate buffer
+    if(FXMALLOC(&buffer,FXColor,w*h)){
 
-  makeCurrent();
+      // Make context current
+      makeCurrent();
 
-  // Save old pixel formats
-  glGetIntegerv(GL_PACK_SWAP_BYTES,&swapbytes);
-  glGetIntegerv(GL_PACK_LSB_FIRST,&lsbfirst);
-  glGetIntegerv(GL_PACK_ROW_LENGTH,&rowlength);
-  glGetIntegerv(GL_PACK_SKIP_ROWS,&skiprows);
-  glGetIntegerv(GL_PACK_SKIP_PIXELS,&skippixels);
-  glGetIntegerv(GL_PACK_ALIGNMENT,&alignment);
-  glGetIntegerv(GL_READ_BUFFER,&oldbuf);
+      // Save old pixel formats
+      glGetIntegerv(GL_PACK_SWAP_BYTES,&swapbytes);
+      glGetIntegerv(GL_PACK_LSB_FIRST,&lsbfirst);
+      glGetIntegerv(GL_PACK_ROW_LENGTH,&rowlength);
+      glGetIntegerv(GL_PACK_SKIP_ROWS,&skiprows);
+      glGetIntegerv(GL_PACK_SKIP_PIXELS,&skippixels);
+      glGetIntegerv(GL_PACK_ALIGNMENT,&alignment);
+      glGetIntegerv(GL_READ_BUFFER,&oldbuf);
 
-  // Set pixel readback formats
-  glPixelStorei(GL_PACK_SWAP_BYTES,GL_FALSE);
-  glPixelStorei(GL_PACK_LSB_FIRST,GL_FALSE);
-  glPixelStorei(GL_PACK_ROW_LENGTH,0);
-  glPixelStorei(GL_PACK_SKIP_ROWS,0);
-  glPixelStorei(GL_PACK_SKIP_PIXELS,0);
-  glPixelStorei(GL_PACK_ALIGNMENT,1);
+      // Set pixel readback formats
+      glPixelStorei(GL_PACK_SWAP_BYTES,GL_FALSE);
+      glPixelStorei(GL_PACK_LSB_FIRST,GL_FALSE);
+      glPixelStorei(GL_PACK_ROW_LENGTH,0);
+      glPixelStorei(GL_PACK_SKIP_ROWS,0);
+      glPixelStorei(GL_PACK_SKIP_PIXELS,0);
+      glPixelStorei(GL_PACK_ALIGNMENT,1);
 
-  // Read from the right buffer
-  glReadBuffer((GLenum)GL_FRONT);
+      // Read from the right buffer
+      glReadBuffer((GLenum)GL_FRONT);
 
-  // Read the pixels
-  glReadPixels(x,y,w,h,GL_RGB,GL_UNSIGNED_BYTE,(GLvoid*)buffer);
+      // Read the pixels
+      glReadPixels(x,y,w,h,GL_RGBA,GL_UNSIGNED_BYTE,(GLvoid*)buffer);
 
-  // Restore old formats
-  glPixelStorei(GL_PACK_SWAP_BYTES,swapbytes);
-  glPixelStorei(GL_PACK_LSB_FIRST,lsbfirst);
-  glPixelStorei(GL_PACK_ROW_LENGTH,rowlength);
-  glPixelStorei(GL_PACK_SKIP_ROWS,skiprows);
-  glPixelStorei(GL_PACK_SKIP_PIXELS,skippixels);
-  glPixelStorei(GL_PACK_ALIGNMENT,alignment);
-  glReadBuffer((GLenum)oldbuf);
+      // Flip image upside down
+      pp=buffer;
+      qq=buffer+(h-1)*w;
+      do{
+        p=pp; pp+=w;
+        q=qq; qq-=w;
+        do{
+          FXSWAP(*p,*q,t);
+          p++;
+          q++;
+          }
+        while(p<pp);
+        }
+      while(pp<qq);
 
-  makeNonCurrent();
+      // Restore old formats
+      glPixelStorei(GL_PACK_SWAP_BYTES,swapbytes);
+      glPixelStorei(GL_PACK_LSB_FIRST,lsbfirst);
+      glPixelStorei(GL_PACK_ROW_LENGTH,rowlength);
+      glPixelStorei(GL_PACK_SKIP_ROWS,skiprows);
+      glPixelStorei(GL_PACK_SKIP_PIXELS,skippixels);
+      glPixelStorei(GL_PACK_ALIGNMENT,alignment);
+      glReadBuffer((GLenum)oldbuf);
 
-  return TRUE;
-#else
-  return FALSE;
+      // Make context non-current
+      makeNonCurrent();
+      return TRUE;
+      }
+    }
 #endif
+  return FALSE;
   }
 
 
 // Print the window by grabbing pixels
 long FXGLViewer::onCmdPrintImage(FXObject*,FXSelector,void*){
-  FXPrintDialog dlg(this,"Print Scene");
-  FXuint red,green,blue;
-  FXPrinter printer;
-  FXuchar *buffer;
-  FXint i;
+  FXColor *buffer;
 
-  // Run dialog
-  if(dlg.execute()){
-    dlg.getPrinter(printer);
-    FXDCPrint pdc(getApp());
-    if(!pdc.beginPrint(printer)){
-      FXMessageBox::error(this,MBOX_OK,"Printer Error","Unable to print");
-      return 1;
-      }
+  // First, ensure window is fully painted
+  repaint();
+  getApp()->flush(TRUE);
 
-    // Repaint now
-    repaint();
+  // Then try grab the pixels
+  if(readPixels(buffer,0,0,width,height)){
+//    FXFileStream outfile;
+//    if(outfile.open("testje.bmp",FXStreamSave)){
+//      fxsaveBMP(outfile,buffer,width,height);
+//      outfile.close();
+//      }
 
-    // Flush commands
-    getApp()->flush(TRUE);
+    // Open print dialog
+    FXPrintDialog dlg(this,"Print Scene");
 
-    // Page header
-    pdc.beginPage(1);
+    // Run dialog
+    if(dlg.execute()){
+      FXPrinter printer;
 
-    // Grab pixels
-    if(readPixels(buffer,0,0,width,height)){
+      // Get the printer
+      dlg.getPrinter(printer);
 
+      // Printer device context
+      FXDCPrint pdc(getApp());
+
+      // Try open printer
+      if(!pdc.beginPrint(printer)){
+        FXMessageBox::error(this,MBOX_OK,"Printer Error","Unable to print");
+        return 1;
+        }
+
+      // Page header
+      pdc.beginPage(1);
+
+      // This is very ad-hoc; please don't look
       pdc.outf("/picstr %d string def\n",width*3);
-      pdc.outf("%d %d translate\n",0,0+height);
-      pdc.outf("%d %d scale\n",width,-height);
+      pdc.outf("%d %d translate\n",50,50);
+      pdc.outf("%d %d scale\n",width,height);
       pdc.outf("%d %d %d\n",width,height,8);
       pdc.outf("[%d 0 0 -%d 0 %d]\n",width,height,height);
       pdc.outf("{currentfile picstr readhexstring pop}\n");
       pdc.outf("false %d\n",3);
       pdc.outf("colorimage\n");
-
-      for(i=0; i<width*height; i++){
-        red=buffer[3*i];
-        green=buffer[3*i+1];
-        blue=buffer[3*i+2];
-        pdc.outhex(red);
-        pdc.outhex(green);
-        pdc.outhex(blue);
+      for(int i=0; i<width*height; i++){
+        pdc.outhex(FXREDVAL(buffer[i]));
+        pdc.outhex(FXGREENVAL(buffer[i]));
+        pdc.outhex(FXBLUEVAL(buffer[i]));
         }
       pdc.outf("\n");
 
-      FXFREE(&buffer);
+      // Page trailer
+      pdc.endPage();
+      pdc.endPrint();
       }
 
-    // Page trailer
-    pdc.endPage();
-    pdc.endPrint();
+    // Free the pixels
+    FXFREE(&buffer);
     }
   return 1;
   }
@@ -2428,7 +2473,7 @@ long FXGLViewer::onCmdPrintImage(FXObject*,FXSelector,void*){
 
 // Render
 FXint FXGLViewer::renderFeedback(FXfloat *buffer,FXint x,FXint y,FXint w,FXint h,FXint maxbuffer){
-#ifdef HAVE_OPENGL
+#ifdef HAVE_GL_H
   FXint used;
   makeCurrent();
   glFeedbackBuffer(maxbuffer,GL_3D_COLOR,buffer);
@@ -2477,11 +2522,11 @@ FXbool FXGLViewer::readFeedback(FXfloat*& buffer,FXint& used,FXint& size,FXint x
 
 // Draw feedback buffer into dc
 void FXGLViewer::drawFeedback(FXDCPrint& pdc,const FXfloat* buffer,FXint used){
-#ifdef HAVE_OPENGL
+#ifdef HAVE_GL_H
   FXint nvertices,smooth,token,i,p;
 
   // Draw background
-  pdc.outf("%g %g %g C\n",background[0],background[1],background[2]);
+  pdc.outf("%g %g %g C\n",background[0][0],background[0][1],background[0][2]);
   pdc.outf("newpath\n");
   pdc.outf("%g %g moveto\n",0.0,0.0);
   pdc.outf("%g %g lineto\n",0.0,(double)height);
@@ -2554,9 +2599,6 @@ void FXGLViewer::drawFeedback(FXDCPrint& pdc,const FXfloat* buffer,FXint used){
   }
 
 
-
-
-
 // Print the window by means of feedback buffer
 long FXGLViewer::onCmdPrintVector(FXObject*,FXSelector,void*){
   FXPrintDialog dlg(this,"Print Scene");
@@ -2627,7 +2669,7 @@ long FXGLViewer::onClipboardLost(FXObject* sender,FXSelector sel,void* ptr){
 // Somebody wants our selection
 long FXGLViewer::onClipboardRequest(FXObject* sender,FXSelector sel,void* ptr){
   FXEvent *event=(FXEvent*)ptr;
-  FXuchar *data; FXuint len;
+//  FXuchar *data; FXuint len;
 
   // Try handling it in base class first
   if(FXGLCanvas::onClipboardRequest(sender,sel,ptr)) return 1;
@@ -2679,8 +2721,8 @@ long FXGLViewer::onCmdDeleteSel(FXObject*,FXSelector,void*){
   obj[0]=selection;
   obj[1]=NULL;
   if(obj[0] && obj[0]->canDelete()){
-    handle(this,MKUINT(0,SEL_CHANGED),NULL);
-    handle(this,MKUINT(0,SEL_DELETED),(void*)obj);
+    handle(this,FXSEL(SEL_CHANGED,0),NULL);
+    handle(this,FXSEL(SEL_DELETED,0),(void*)obj);
     //delete obj[0];
     }
   else{
@@ -2693,8 +2735,8 @@ long FXGLViewer::onCmdDeleteSel(FXObject*,FXSelector,void*){
 // Update delete object
 long FXGLViewer::onUpdDeleteSel(FXObject* sender,FXSelector,void*){
   if(selection && selection->canDelete()){
-    sender->handle(this,MKUINT(ID_SHOW,SEL_COMMAND),NULL);
-    sender->handle(this,MKUINT(ID_ENABLE,SEL_COMMAND),NULL);
+    sender->handle(this,FXSEL(SEL_COMMAND,ID_SHOW),NULL);
+    sender->handle(this,FXSEL(SEL_COMMAND,ID_ENABLE),NULL);
     return 1;
     }
   return 0;
@@ -2704,8 +2746,8 @@ long FXGLViewer::onUpdDeleteSel(FXObject* sender,FXSelector,void*){
 // Update for current object
 long FXGLViewer::onUpdCurrent(FXObject* sender,FXSelector,void*){
   if(selection){
-    sender->handle(this,MKUINT(ID_SHOW,SEL_COMMAND),NULL);
-    sender->handle(this,MKUINT(ID_ENABLE,SEL_COMMAND),NULL);
+    sender->handle(this,FXSEL(SEL_COMMAND,ID_SHOW),NULL);
+    sender->handle(this,FXSEL(SEL_COMMAND,ID_ENABLE),NULL);
     return 1;
     }
   return 0;
@@ -2715,8 +2757,8 @@ long FXGLViewer::onUpdCurrent(FXObject* sender,FXSelector,void*){
 // Set background color
 long FXGLViewer::onCmdBackColor(FXObject*,FXSelector sel,void* ptr){
   FXColor color=(FXColor)(FXuval)ptr;
-  background=color;
-  if(SELTYPE(sel)==SEL_COMMAND || !turbomode){
+  background[0]=background[1]=color;
+  if(FXSELTYPE(sel)==SEL_COMMAND || !turbomode){
     update();
     }
   return 1;
@@ -2725,8 +2767,27 @@ long FXGLViewer::onCmdBackColor(FXObject*,FXSelector sel,void* ptr){
 
 // Update background color
 long FXGLViewer::onUpdBackColor(FXObject* sender,FXSelector,void*){
-  FXColor clr=background;
-  sender->handle(this,MKUINT(FXWindow::ID_SETVALUE,SEL_COMMAND),(void*)(FXuval)clr);
+  FXColor clr=background[0];
+  sender->handle(this,FXSEL(SEL_COMMAND,ID_SETVALUE),(void*)(FXuval)clr);
+  return 1;
+  }
+
+
+// Set gradient background color
+long FXGLViewer::onCmdGradientBackColor(FXObject*,FXSelector sel,void* ptr){
+  FXColor color=(FXColor)(FXuval)ptr;
+  background[FXSELID(sel)-ID_TOP_COLOR]=color;
+  if(FXSELTYPE(sel)==SEL_COMMAND || !turbomode){
+    update();
+    }
+  return 1;
+  }
+
+
+// Update gradient background color
+long FXGLViewer::onUpdGradientBackColor(FXObject* sender,FXSelector sel,void*){
+  FXColor clr=background[FXSELID(sel)-ID_TOP_COLOR];
+  sender->handle(this,FXSEL(SEL_COMMAND,ID_SETVALUE),(void*)(FXuval)clr);
   return 1;
   }
 
@@ -2735,7 +2796,7 @@ long FXGLViewer::onUpdBackColor(FXObject* sender,FXSelector,void*){
 long FXGLViewer::onCmdAmbientColor(FXObject*,FXSelector sel,void* ptr){
   FXColor color=(FXColor)(FXuval)ptr;
   ambient=color;
-  if(SELTYPE(sel)==SEL_COMMAND || !turbomode){
+  if(FXSELTYPE(sel)==SEL_COMMAND || !turbomode){
     update();
     }
   return 1;
@@ -2745,7 +2806,7 @@ long FXGLViewer::onCmdAmbientColor(FXObject*,FXSelector sel,void* ptr){
 // Update ambient light color
 long FXGLViewer::onUpdAmbientColor(FXObject* sender,FXSelector,void*){
   FXColor clr=ambient;
-  sender->handle(this,MKUINT(FXWindow::ID_SETVALUE,SEL_COMMAND),(void*)(FXuval)clr);
+  sender->handle(this,FXSEL(SEL_COMMAND,ID_SETVALUE),(void*)(FXuval)clr);
   return 1;
   }
 
@@ -2754,7 +2815,7 @@ long FXGLViewer::onUpdAmbientColor(FXObject* sender,FXSelector,void*){
 long FXGLViewer::onCmdLightAmbient(FXObject*,FXSelector sel,void* ptr){
   FXColor color=(FXColor)(FXuval)ptr;
   light.ambient=color;
-  if(SELTYPE(sel)==SEL_COMMAND || !turbomode){
+  if(FXSELTYPE(sel)==SEL_COMMAND || !turbomode){
     update();
     }
   return 1;
@@ -2764,7 +2825,7 @@ long FXGLViewer::onCmdLightAmbient(FXObject*,FXSelector sel,void* ptr){
 // Update ambient light color
 long FXGLViewer::onUpdLightAmbient(FXObject* sender,FXSelector,void*){
   FXColor clr=light.ambient;
-  sender->handle(this,MKUINT(FXWindow::ID_SETVALUE,SEL_COMMAND),(void*)(FXuval)clr);
+  sender->handle(this,FXSEL(SEL_COMMAND,ID_SETVALUE),(void*)(FXuval)clr);
   return 1;
   }
 
@@ -2773,7 +2834,7 @@ long FXGLViewer::onUpdLightAmbient(FXObject* sender,FXSelector,void*){
 long FXGLViewer::onCmdLightDiffuse(FXObject*,FXSelector sel,void* ptr){
   FXColor color=(FXColor)(FXuval)ptr;
   light.diffuse=color;
-  if(SELTYPE(sel)==SEL_COMMAND || !turbomode){
+  if(FXSELTYPE(sel)==SEL_COMMAND || !turbomode){
     update();
     }
   return 1;
@@ -2783,7 +2844,7 @@ long FXGLViewer::onCmdLightDiffuse(FXObject*,FXSelector sel,void* ptr){
 // Update diffuse light color
 long FXGLViewer::onUpdLightDiffuse(FXObject* sender,FXSelector,void*){
   FXColor clr=light.diffuse;
-  sender->handle(this,MKUINT(FXWindow::ID_SETVALUE,SEL_COMMAND),(void*)(FXuval)clr);
+  sender->handle(this,FXSEL(SEL_COMMAND,ID_SETVALUE),(void*)(FXuval)clr);
   return 1;
   }
 
@@ -2792,7 +2853,7 @@ long FXGLViewer::onUpdLightDiffuse(FXObject* sender,FXSelector,void*){
 long FXGLViewer::onCmdLightSpecular(FXObject*,FXSelector sel,void* ptr){
   FXColor color=(FXColor)(FXuval)ptr;
   light.specular=color;
-  if(SELTYPE(sel)==SEL_COMMAND || !turbomode){
+  if(FXSELTYPE(sel)==SEL_COMMAND || !turbomode){
     update();
     }
   return 1;
@@ -2802,25 +2863,7 @@ long FXGLViewer::onCmdLightSpecular(FXObject*,FXSelector sel,void* ptr){
 // Update specular light color
 long FXGLViewer::onUpdLightSpecular(FXObject* sender,FXSelector,void*){
   FXColor clr=light.specular;
-  sender->handle(this,MKUINT(FXWindow::ID_SETVALUE,SEL_COMMAND),(void*)(FXuval)clr);
-  return 1;
-  }
-
-
-// Toggle Lock view
-long FXGLViewer::onCmdLock(FXObject*,FXSelector,void*){
-  setViewLock(!getViewLock());
-  return 1;
-  }
-
-
-
-// Update lock view
-long FXGLViewer::onUpdLock(FXObject* sender,FXSelector,void*){
-  FXuint msg=getViewLock() ? ID_CHECK : ID_UNCHECK;
-  sender->handle(this,MKUINT(ID_SHOW,SEL_COMMAND),NULL);
-  sender->handle(this,MKUINT(ID_ENABLE,SEL_COMMAND),NULL);
-  sender->handle(this,MKUINT(msg,SEL_COMMAND),NULL);
+  sender->handle(this,FXSEL(SEL_COMMAND,ID_SETVALUE),(void*)(FXuval)clr);
   return 1;
   }
 
@@ -2832,13 +2875,11 @@ long FXGLViewer::onCmdTurbo(FXObject*,FXSelector,void*){
   }
 
 
-
 // Update Turbo Mode
 long FXGLViewer::onUpdTurbo(FXObject* sender,FXSelector,void*){
-  FXuint msg=getTurboMode() ? ID_CHECK : ID_UNCHECK;
-  sender->handle(this,MKUINT(ID_SHOW,SEL_COMMAND),NULL);
-  sender->handle(this,MKUINT(ID_ENABLE,SEL_COMMAND),NULL);
-  sender->handle(this,MKUINT(msg,SEL_COMMAND),NULL);
+  sender->handle(this,FXSEL(SEL_COMMAND,ID_SHOW),NULL);
+  sender->handle(this,FXSEL(SEL_COMMAND,ID_ENABLE),NULL);
+  sender->handle(this,getTurboMode() ? FXSEL(SEL_COMMAND,ID_CHECK) : FXSEL(SEL_COMMAND,ID_UNCHECK),NULL);
   return 1;
   }
 
@@ -2853,10 +2894,9 @@ long FXGLViewer::onCmdLighting(FXObject*,FXSelector,void*){
 
 // Update lighting
 long FXGLViewer::onUpdLighting(FXObject* sender,FXSelector,void*){
-  FXuint msg=(options&VIEWER_LIGHTING) ? ID_CHECK : ID_UNCHECK;
-  sender->handle(this,MKUINT(ID_SHOW,SEL_COMMAND),NULL);
-  sender->handle(this,MKUINT(ID_ENABLE,SEL_COMMAND),NULL);
-  sender->handle(this,MKUINT(msg,SEL_COMMAND),NULL);
+  sender->handle(this,FXSEL(SEL_COMMAND,ID_SHOW),NULL);
+  sender->handle(this,FXSEL(SEL_COMMAND,ID_ENABLE),NULL);
+  sender->handle(this,(options&VIEWER_LIGHTING) ? FXSEL(SEL_COMMAND,ID_CHECK) : FXSEL(SEL_COMMAND,ID_UNCHECK),NULL);
   return 1;
   }
 
@@ -2871,10 +2911,9 @@ long FXGLViewer::onCmdFog(FXObject*,FXSelector,void*){
 
 // Update fog
 long FXGLViewer::onUpdFog(FXObject* sender,FXSelector,void*){
-  FXuint msg=(options&VIEWER_FOG) ? ID_CHECK : ID_UNCHECK;
-  sender->handle(this,MKUINT(ID_SHOW,SEL_COMMAND),NULL);
-  sender->handle(this,MKUINT(ID_ENABLE,SEL_COMMAND),NULL);
-  sender->handle(this,MKUINT(msg,SEL_COMMAND),NULL);
+  sender->handle(this,FXSEL(SEL_COMMAND,ID_SHOW),NULL);
+  sender->handle(this,FXSEL(SEL_COMMAND,ID_ENABLE),NULL);
+  sender->handle(this,(options&VIEWER_FOG) ? FXSEL(SEL_COMMAND,ID_CHECK) : FXSEL(SEL_COMMAND,ID_UNCHECK),NULL);
   return 1;
   }
 
@@ -2889,10 +2928,9 @@ long FXGLViewer::onCmdDither(FXObject*,FXSelector,void*){
 
 // Update dithering
 long FXGLViewer::onUpdDither(FXObject* sender,FXSelector,void*){
-  FXuint msg=(options&VIEWER_DITHER) ? ID_CHECK : ID_UNCHECK;
-  sender->handle(this,MKUINT(ID_SHOW,SEL_COMMAND),NULL);
-  sender->handle(this,MKUINT(ID_ENABLE,SEL_COMMAND),NULL);
-  sender->handle(this,MKUINT(msg,SEL_COMMAND),NULL);
+  sender->handle(this,FXSEL(SEL_COMMAND,ID_SHOW),NULL);
+  sender->handle(this,FXSEL(SEL_COMMAND,ID_ENABLE),NULL);
+  sender->handle(this,(options&VIEWER_DITHER) ? FXSEL(SEL_COMMAND,ID_CHECK) : FXSEL(SEL_COMMAND,ID_UNCHECK),NULL);
   return 1;
   }
 
@@ -2969,10 +3007,7 @@ long FXGLViewer::onDNDDrop(FXObject* sender,FXSelector sel,void* ptr){
 
   // Dropped on viewer
   if(getDNDData(FROM_DRAGNDROP,FXGLViewer::colorType,(FXuchar*&)clr,len)){
-    background[0]=clr[0]/65535.0f;
-    background[1]=clr[1]/65535.0f;
-    background[2]=clr[2]/65535.0f;
-    background[3]=1.0f;
+    setBackgroundColor(FXVec4f(clr[0]/65535.0f,clr[1]/65535.0f,clr[2]/65535.0f,1.0f));
     FXFREE(&clr);
     update();
     return 1;
@@ -2989,27 +3024,20 @@ void FXGLViewer::setProjection(FXuint proj){
   }
 
 
-// Lock viewpoint
-void FXGLViewer::setViewLock(FXbool lock){
-  options=lock?(options|VIEWER_LOCKED):(options&~VIEWER_LOCKED);
-  }
-
-
-// Get locked
-FXbool FXGLViewer::getViewLock() const {
-  return (options&VIEWER_LOCKED)!=0;
-  }
-
-
 // Set background
-void FXGLViewer::setBackgroundColor(const FXHVec& clr){
-  background=clr;
+void FXGLViewer::setBackgroundColor(const FXVec4f& clr,FXbool bottom){
+  if(bottom==MAYBE){
+    background[0]=background[1]=clr;
+    }
+  else{
+    background[bottom]=clr;
+    }
   update();
   }
 
 
 // Set ambient color
-void FXGLViewer::setAmbientColor(const FXHVec& clr){
+void FXGLViewer::setAmbientColor(const FXVec4f& clr){
   ambient=clr;
   update();
   }
@@ -3018,15 +3046,6 @@ void FXGLViewer::setAmbientColor(const FXHVec& clr){
 // Delegate all other messages to the GL Object
 long FXGLViewer::onDefault(FXObject* sender,FXSelector key,void* data){
   return selection && selection->handle(sender,key,data);
-  }
-
-
-// Change surface/lines offset
-void FXGLViewer::setOffset(FXdouble offs){
-  if(offset!=offs){
-    offset=offs;
-    update();
-    }
   }
 
 
@@ -3067,7 +3086,6 @@ void FXGLViewer::save(FXStream& store) const {
   store << rotation;
   store << fov;
   store << zoom;
-  store << offset;
   store << center;
   store << scale;
   store << worldpx;
@@ -3075,7 +3093,8 @@ void FXGLViewer::save(FXStream& store) const {
   store << maxhits;
   store << diameter;
   store << distance;
-  store << background;
+  store << background[0];
+  store << background[1];
   store << ambient;
   store << turbomode;
   store << help;
@@ -3100,7 +3119,6 @@ void FXGLViewer::load(FXStream& store){
   store >> rotation;
   store >> fov;
   store >> zoom;
-  store >> offset;
   store >> center;
   store >> scale;
   store >> worldpx;
@@ -3108,7 +3126,8 @@ void FXGLViewer::load(FXStream& store){
   store >> maxhits;
   store >> diameter;
   store >> distance;
-  store >> background;
+  store >> background[0];
+  store >> background[1];
   store >> ambient;
   store >> turbomode;
   store >> help;
@@ -3117,9 +3136,10 @@ void FXGLViewer::load(FXStream& store){
 
 // Close and release any resources
 FXGLViewer::~FXGLViewer(){
-  if(timer) getApp()->removeTimeout(timer);
-  timer=(FXTimer*)-1;
-  dropped=(FXGLObject*)-1;
-  selection=(FXGLObject*)-1;
-  scene=(FXGLObject*)-1;
+  getApp()->removeTimeout(this,ID_TIPTIMER);
+  dropped=(FXGLObject*)-1L;
+  selection=(FXGLObject*)-1L;
+  scene=(FXGLObject*)-1L;
   }
+
+}

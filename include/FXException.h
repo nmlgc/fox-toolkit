@@ -3,7 +3,7 @@
 *                          E x c e p t i o n  T y p e s                         *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2000,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 2000,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,12 +19,13 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXException.h,v 1.6 2002/01/18 22:42:52 jeroen Exp $                     *
+* $Id: FXException.h,v 1.10 2004/02/08 17:17:33 fox Exp $                        *
 ********************************************************************************/
 #ifndef FXEXCEPTION_H
 #define FXEXCEPTION_H
 
 
+namespace FX {
 
 /// Generic catch-all exception
 class FXAPI FXException {
@@ -89,5 +90,6 @@ public:
   FXMemoryException(const FXchar *msg):FXResourceException(msg){}
   };
 
+}
 
 #endif

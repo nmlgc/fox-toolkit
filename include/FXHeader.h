@@ -3,7 +3,7 @@
 *                          H e a d e r   W i d g e t                            *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXHeader.h,v 1.27 2002/01/18 22:42:53 jeroen Exp $                       *
+* $Id: FXHeader.h,v 1.57 2004/02/08 17:17:33 fox Exp $                          *
 ********************************************************************************/
 #ifndef FXHEADER_H
 #define FXHEADER_H
@@ -28,9 +28,8 @@
 #include "FXFrame.h"
 #endif
 
+namespace FX {
 
-
-struct FXTimer;
 class FXIcon;
 class FXFont;
 class FXHeader;
@@ -51,24 +50,45 @@ class FXAPI FXHeaderItem : public FXObject {
   FXDECLARE(FXHeaderItem)
   friend class FXHeader;
 protected:
-  FXString  label;
-  FXIcon   *icon;
-  FXint     size;
-  void     *data;
-  FXbool    arrow;
+  FXString  label;      // Text of item
+  FXIcon   *icon;       // Icon of item
+  void     *data;       // Item user data pointer
+  FXint     size;       // Item size
+  FXint     pos;        // Item position
+  FXuint    state;      // Item state flags
 protected:
   FXHeaderItem(){}
   virtual void draw(const FXHeader* header,FXDC& dc,FXint x,FXint y,FXint w,FXint h);
+protected:
+  enum{
+    ARROW_NONE = 0,
+    ARROW_UP   = 0x00000001,
+    ARROW_DOWN = 0x00000002,
+    PRESSED    = 0x00000004
+    };
+public:
+  enum{
+    RIGHT      = 0x00000008,      /// Align on right
+    LEFT       = 0x00000010,      /// Align on left
+    CENTER_X   = 0,               /// Aling centered horizontally (default)
+    TOP        = 0x00000020,      /// Align on top
+    BOTTOM     = 0x00000040,      /// Align on bottom
+    CENTER_Y   = 0,               /// Aling centered vertically (default)
+    BEFORE     = 0x00000080,      /// Icon before the text
+    AFTER      = 0x00000100,      /// Icon after the text
+    ABOVE      = 0x00000200,      /// Icon above the text
+    BELOW      = 0x00000400       /// Icon below the text
+    };
 public:
 
   /// Construct new item with given text, icon, size, and user-data
-  FXHeaderItem(const FXString& text,FXIcon* ic=NULL,FXint s=0,void* ptr=NULL):label(text),icon(ic),size(s),data(ptr),arrow(MAYBE){}
+  FXHeaderItem(const FXString& text,FXIcon* ic=NULL,FXint s=0,void* ptr=NULL):label(text),icon(ic),data(ptr),size(s),pos(0),state(FXHeaderItem::LEFT|FXHeaderItem::BEFORE){}
 
   /// Change item's text label
   virtual void setText(const FXString& txt){ label=txt; }
 
   /// Return item's text label
-  FXString getText() const { return label; }
+  const FXString& getText() const { return label; }
 
   /// Change item's icon
   virtual void setIcon(FXIcon* icn){ icon=icn; }
@@ -88,16 +108,40 @@ public:
   /// Obtain current size
   FXint getSize() const { return size; }
 
+  /// Change position
+  void setPos(FXint p){ pos=p; }
+
+  /// Obtain current position
+  FXint getPos() const { return pos; }
+
   /// Change sort direction (FALSE, TRUE, MAYBE)
-  void setArrowDir(FXuint dir=MAYBE){ arrow=dir; }
+  void setArrowDir(FXbool dir=MAYBE);
 
   /// Return sort direction (FALSE, TRUE, MAYBE)
-  FXuint getArrowDir() const { return arrow; }
+  FXbool getArrowDir() const;
 
-  /// Return the item's width in the header
+  /// Change content justification
+  void setJustify(FXuint justify);
+
+  /// Return content justification
+  FXuint getJustify() const { return state&(RIGHT|LEFT|TOP|BOTTOM); }
+
+  /// Change icon position
+  void setIconPosition(FXuint mode);
+
+  /// Return icon position
+  FXuint getIconPosition() const { return state&(BEFORE|AFTER|ABOVE|BELOW); }
+
+  /// Change state to pressed
+  void setPressed(FXbool pressed);
+
+  /// Return pressed state
+  FXbool isPressed() const { return (state&PRESSED)!=0; }
+
+  /// Return the item's content width in the header
   virtual FXint getWidth(const FXHeader* header) const;
 
-  /// Return the item's height in the header
+  /// Return the item's content height in the header
   virtual FXint getHeight(const FXHeader* header) const;
 
   /// Create server-side resources
@@ -132,26 +176,28 @@ public:
 * the end of the resizing operation.
 * Clicking on a caption causes a message of type SEL_COMMAND to be sent to the
 * target, with the message data set to the caption number being clicked.
+* A single click on a split causes a message of type SEL_CLICKED to be sent to the
+* target; a typical response to this message would be to adjust the size of
+* the split to fit the contents displayed underneath it.
+* The contents may be scrolled by calling setPosition().
 */
 class FXAPI FXHeader : public FXFrame {
   FXDECLARE(FXHeader)
 protected:
-  FXHeaderItem **items;               // Item list
-  FXint          nitems;              // Number of items
-  FXColor        textColor;           // Text color
-  FXFont*        font;                // Text font
-  FXTimer       *timer;               // Tip hover timer
-  FXString       help;                // Help text
-  FXbool         state;               // Button state
-  FXint          active;              // Active button
-  FXint          activepos;           // Position of active item
-  FXint          activesize;          // Size of active item
-  FXint          off;
+  FXHeaderItem **items;         // Item list
+  FXint          nitems;        // Number of items
+  FXColor        textColor;     // Text color
+  FXFont        *font;          // Text font
+  FXString       help;          // Help text
+  FXint          pos;           // Scroll position
+  FXint          active;        // Active button
+  FXint          activepos;     // Position of active item
+  FXint          activesize;    // Size of active item
+  FXint          offset;        // Offset where split grabbed
 protected:
   FXHeader();
   void drawSplit(FXint pos);
   virtual FXHeaderItem *createItem(const FXString& text,FXIcon* icon,FXint size,void* ptr);
-  virtual void layout();
 private:
   FXHeader(const FXHeader&);
   FXHeader &operator=(const FXHeader&);
@@ -165,11 +211,6 @@ public:
   long onQueryTip(FXObject*,FXSelector,void*);
   long onQueryHelp(FXObject*,FXSelector,void*);
 public:
-  enum {
-    ID_TIPTIMER=FXFrame::ID_LAST,
-    ID_LAST
-    };
-public:
 
   /// Construct new header control
   FXHeader(FXComposite* p,FXObject* tgt=NULL,FXSelector sel=0,FXuint opts=HEADER_NORMAL,FXint x=0,FXint y=0,FXint w=0,FXint h=0,FXint pl=DEFAULT_PAD,FXint pr=DEFAULT_PAD,FXint pt=DEFAULT_PAD,FXint pb=DEFAULT_PAD);
@@ -180,8 +221,14 @@ public:
   /// Detach server-side resources
   virtual void detach();
 
+  /// Perform layout
+  virtual void layout();
+
   /// Return number of items
   FXint getNumItems() const { return nitems; }
+
+  /// Return total size of all items
+  FXint getTotalSize() const;
 
   /// Return default width
   virtual FXint getDefaultWidth();
@@ -189,14 +236,27 @@ public:
   /// Return default height
   virtual FXint getDefaultHeight();
 
+  /// Set the current position
+  void setPosition(FXint p);
+
+  /// Return the current position
+  FXint getPosition() const { return pos; }
+
   /// Return item at given index
-  FXHeaderItem *retrieveItem(FXint index) const;
+  FXHeaderItem *getItem(FXint index) const;
 
   /// Replace the item with a [possibly subclassed] item
-  FXint replaceItem(FXint index,FXHeaderItem* item,FXbool notify=FALSE);
+  FXint setItem(FXint index,FXHeaderItem* item,FXbool notify=FALSE);
+
+  /**
+  * Return item-index given coordinate offset, or -1 if coordinate
+  * is before first item in header, or nitems if coordinate is after
+  * last item in header.
+  */
+  FXint getItemAt(FXint coord) const;
 
   /// Replace items text, icon, and user-data pointer
-  FXint replaceItem(FXint index,const FXString& text,FXIcon *icon=NULL,FXint size=0,void* ptr=NULL,FXbool notify=FALSE);
+  FXint setItem(FXint index,const FXString& text,FXIcon *icon=NULL,FXint size=0,void* ptr=NULL,FXbool notify=FALSE);
 
   /// Insert a new [possibly subclassed] item at the give index
   FXint insertItem(FXint index,FXHeaderItem* item,FXbool notify=FALSE);
@@ -221,9 +281,6 @@ public:
 
   /// Remove all items
   void clearItems(FXbool notify=FALSE);
-
-  /// Return item-index given pixel-offset from left
-  FXint getItemAt(FXint offset) const;
 
   /// Change text label for item at index
   void setItemText(FXint index,const FXString& text);
@@ -257,6 +314,30 @@ public:
 
   /// Return sort direction (FALSE, TRUE, MAYBE)
   FXbool getArrowDir(FXint index) const;
+
+  /// Change item justification
+  void setItemJustify(FXint index,FXuint justify);
+
+  /// Return item justification
+  FXuint getItemJustify(FXint index) const;
+
+  /// Change relative position of icon and text of item
+  void setItemIconPosition(FXint index,FXuint mode);
+
+  /// Return relative icon and text position
+  FXuint getItemIconPosition(FXint index) const;
+
+  /// Changed button item's pressed state
+  void setItemPressed(FXint index,FXbool pressed=TRUE);
+
+  /// Return TRUE if button item is pressed in
+  FXbool isItemPressed(FXint index) const;
+
+  /// Scroll to make given item visible
+  void makeItemVisible(FXint index);
+
+  /// Repaint header at index
+  void updateItem(FXint index) const;
 
   /// Change text font
   void setFont(FXFont* fnt);
@@ -292,5 +373,6 @@ public:
   virtual ~FXHeader();
   };
 
+}
 
 #endif

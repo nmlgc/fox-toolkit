@@ -3,7 +3,7 @@
 *                  S w i t c h   C o n t a i n e r   W i d g e t                *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXSwitcher.h,v 1.11 2002/01/24 19:00:59 jeroen Exp $                     *
+* $Id: FXSwitcher.h,v 1.15 2004/02/08 17:17:34 fox Exp $                        *
 ********************************************************************************/
 #ifndef FXSWITCHER_H
 #define FXSWITCHER_H
@@ -28,6 +28,7 @@
 #include "FXPacker.h"
 #endif
 
+namespace FX {
 
 /// Switcher options
 enum {
@@ -35,7 +36,7 @@ enum {
   SWITCHER_VCOLLAPSE = 0x00040000   /// Collapse vertically to height of current child
   };
 
-  
+
 /**
 * The Switcher layout manager automatically arranges its child
 * windows such that one of them is placed on top; all other
@@ -57,7 +58,6 @@ protected:
   FXint  current;
 protected:
   FXSwitcher(){}
-  virtual void layout();
 private:
   FXSwitcher(const FXSwitcher&);
   FXSwitcher& operator=(const FXSwitcher&);
@@ -94,6 +94,9 @@ public:
   /// Return default height
   virtual FXint getDefaultHeight();
 
+  /// Perform layout
+  virtual void layout();
+
   /// Bring the child window at index to the top
   void setCurrent(FXint index,FXbool notify=FALSE);
 
@@ -112,5 +115,7 @@ public:
   /// Load from stream
   virtual void load(FXStream& store);
   };
+
+}
 
 #endif

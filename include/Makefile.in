@@ -87,11 +87,12 @@ STRIP = @STRIP@
 VERSION = @VERSION@
 X_BASE_LIBS = @X_BASE_LIBS@
 
-pkginclude_HEADERS =  FX4Splitter.h FXAccelTable.h FXApp.h FXArray.h FXArrowButton.h FXBMPIcon.h FXBMPImage.h FXBitmap.h FXButton.h FXCURCursor.h FXCanvas.h FXCharset.h FXCheckButton.h FXColorBar.h FXColorDialog.h FXColorSelector.h FXColorWell.h FXColorWheel.h FXComboBox.h FXComposite.h FXCursor.h FXDC.h FXDCPrint.h FXDCWindow.h FXDHMat.h FXDHVec.h FXDQuat.h FXDVec.h FXDataTarget.h FXDebugTarget.h FXDelegator.h FXDial.h FXDialogBox.h FXDict.h FXDirBox.h FXDirDialog.h FXDirList.h FXDirSelector.h FXDocument.h FXDragCorner.h FXDrawable.h FXDriveBox.h FXElement.h FXException.h FXFile.h FXFileDialog.h FXFileDict.h FXFileList.h FXFileSelector.h FXFont.h FXFontDialog.h FXFontSelector.h FXFrame.h FXGIFCursor.h FXGIFIcon.h FXGIFImage.h FXGLCanvas.h FXGLCone.h FXGLContext.h FXGLCube.h FXGLCylinder.h FXGLObject.h FXGLShape.h FXGLSphere.h FXGLTriangleMesh.h FXGLViewer.h FXGLVisual.h FXGroupBox.h FXHMat.h FXHVec.h FXHeader.h FXHorizontalFrame.h FXICOIcon.h FXICOImage.h FXIcon.h FXIconList.h FXId.h FXImage.h FXImageView.h FXInputDialog.h FXJPGIcon.h FXJPGImage.h FXLabel.h FXList.h FXListBox.h FXMDIButton.h FXMDIChild.h FXMDIClient.h FXMainWindow.h FXMatrix.h FXMenubar.h FXMenuButton.h FXMenuCaption.h FXMenuCascade.h FXMenuCommand.h FXMenuPane.h FXMenuSeparator.h FXMenuTitle.h FXMessageBox.h FXObject.h FXObjectList.h FXOptionMenu.h FXPCXIcon.h FXPCXImage.h FXPNGIcon.h FXPNGImage.h FXPacker.h FXPicker.h FXPoint.h FXPopup.h FXPrintDialog.h FXProgressBar.h FXProgressDialog.h FXQuat.h FXRGBIcon.h FXRGBImage.h FXRadioButton.h FXRange.h FXRecentFiles.h FXRectangle.h FXRegion.h FXRegistry.h FXReplaceDialog.h FXRex.h FXRootWindow.h FXScrollArea.h FXScrollWindow.h FXScrollbar.h FXSearchDialog.h FXSeparator.h FXSettings.h FXShell.h FXShutter.h FXSize.h FXSlider.h FXSpinner.h FXSplitter.h FXStatusbar.h FXStatusline.h FXStream.h FXString.h FXStringDict.h FXSwitcher.h FXTGAIcon.h FXTGAImage.h FXTIFIcon.h FXTIFImage.h FXTabBar.h FXTabBook.h FXTabItem.h FXTable.h FXText.h FXTextField.h FXToggleButton.h FXToolbar.h FXToolbarGrip.h FXToolbarShell.h FXToolbarTab.h FXTooltip.h FXTopWindow.h FXTreeList.h FXTreeListBox.h FXUndoList.h FXURL.h FXVec.h FXVerticalFrame.h FXVisual.h FXWindow.h FXXPMIcon.h FXXPMImage.h fx.h fx3d.h fxdefs.h fxkeys.h fxver.h xincs.h
+foxincludedir = $(includedir)/fox-1.1
+foxinclude_HEADERS =  FX4Splitter.h FXAccelTable.h FXApp.h FXArray.h FXArrowButton.h FXBMPIcon.h FXBMPImage.h FXBitmap.h FXBitmapFrame.h FXBitmapView.h FXButton.h FXBZStream.h FXCURCursor.h FXCanvas.h FXCharset.h FXCheckButton.h FXColorBar.h FXColorDialog.h FXColorSelector.h FXColorWell.h FXColorWheel.h FXComboBox.h FXComposite.h FXCursor.h FXDC.h FXDCPrint.h FXDCWindow.h FXDLL.h FXDataTarget.h FXDebugTarget.h FXDelegator.h FXDial.h FXDialogBox.h FXDict.h FXDirBox.h FXDirDialog.h FXDirList.h FXDirSelector.h FXDocument.h FXDragCorner.h FXDrawable.h FXDriveBox.h FXElement.h FXException.h FXFile.h FXFileDialog.h FXFileDict.h FXFileList.h FXFileSelector.h FXFileStream.h FXFoldingList.h FXFont.h FXFontDialog.h FXFontSelector.h FXFrame.h FXGIFCursor.h FXGIFIcon.h FXGIFImage.h FXGLCanvas.h FXGLCone.h FXGLContext.h FXGLCube.h FXGLCylinder.h FXGLObject.h FXGLShape.h FXGLSphere.h FXGLTriangleMesh.h FXGLViewer.h FXGLVisual.h FXGroupBox.h FXGradientBar.h FXGZStream.h FXHash.h FXHeader.h FXHorizontalFrame.h FXICOIcon.h FXICOImage.h FXIcon.h FXIconList.h FXId.h FXImage.h FXImageFrame.h FXImageView.h FXInputDialog.h FXJPGIcon.h FXJPGImage.h FXLabel.h FXList.h FXListBox.h FXMDIButton.h FXMDIChild.h FXMDIClient.h FXMainWindow.h FXMat3d.h FXMat4d.h FXMat3f.h FXMat4f.h FXMatrix.h FXMemoryStream.h FXMenuBar.h FXMenuButton.h FXMenuCaption.h FXMenuCascade.h FXMenuCheck.h FXMenuRadio.h FXMenuCommand.h FXMenuPane.h FXMenuSeparator.h FXMenuTitle.h FXMessageBox.h FXObject.h FXObjectList.h FXOptionMenu.h FXPCXIcon.h FXPCXImage.h FXPNGIcon.h FXPNGImage.h FXPPMIcon.h FXPPMImage.h FXPacker.h FXPicker.h FXPoint.h FXPopup.h FXPrintDialog.h FXProgressBar.h FXProgressDialog.h FXQuatd.h FXQuatf.h FXRGBIcon.h FXRGBImage.h FXRadioButton.h FXRangef.h FXRanged.h FXRealSlider.h FXRealSpinner.h FXRecentFiles.h FXRectangle.h FXRegion.h FXRegistry.h FXReplaceDialog.h FXRex.h FXRootWindow.h FXRuler.h FXScrollArea.h FXScrollBar.h FXScrollPane.h FXScrollWindow.h FXSearchDialog.h FXSeparator.h FXSettings.h FXShell.h FXShutter.h FXSize.h FXSlider.h FXSpinner.h FXSpheref.h FXSphered.h FXSplitter.h FXSpring.h FXStatusBar.h FXStatusLine.h FXStream.h FXString.h FXStringDict.h FXSwitcher.h FXTGAIcon.h FXTGAImage.h FXTIFIcon.h FXTIFImage.h FXTabBar.h FXTabBook.h FXTabItem.h FXTable.h FXText.h FXTextCodec.h FXTextField.h FXThread.h FXToggleButton.h FXToolBar.h FXToolBarGrip.h FXToolBarShell.h FXToolBarTab.h FXToolTip.h FXTopWindow.h FXTreeList.h FXTreeListBox.h FXTriStateButton.h FXUndoList.h FXURL.h FXUTF8Codec.h FXUTF16Codec.h FXUTF32Codec.h FXVec2d.h FXVec2f.h FXVec3d.h FXVec3f.h FXVec4d.h FXVec4f.h FXVerticalFrame.h FXVisual.h FXWindow.h FXWizard.h FXWString.h FXXBMIcon.h FXXBMImage.h FXXPMIcon.h FXXPMImage.h fx.h fx3d.h fxdefs.h fxkeys.h fxver.h xincs.h
 
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_CLEAN_FILES =  fxver.h
-HEADERS =  $(pkginclude_HEADERS)
+HEADERS =  $(foxinclude_HEADERS)
 
 DIST_COMMON =  Makefile.am Makefile.in fxver.h.in
 
@@ -112,19 +113,19 @@ Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status
 fxver.h: $(top_builddir)/config.status fxver.h.in
 	cd $(top_builddir) && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
 
-install-pkgincludeHEADERS: $(pkginclude_HEADERS)
+install-foxincludeHEADERS: $(foxinclude_HEADERS)
 	@$(NORMAL_INSTALL)
-	$(mkinstalldirs) $(DESTDIR)$(pkgincludedir)
-	@list='$(pkginclude_HEADERS)'; for p in $$list; do \
+	$(mkinstalldirs) $(DESTDIR)$(foxincludedir)
+	@list='$(foxinclude_HEADERS)'; for p in $$list; do \
 	  if test -f "$$p"; then d= ; else d="$(srcdir)/"; fi; \
-	  echo " $(INSTALL_DATA) $$d$$p $(DESTDIR)$(pkgincludedir)/$$p"; \
-	  $(INSTALL_DATA) $$d$$p $(DESTDIR)$(pkgincludedir)/$$p; \
+	  echo " $(INSTALL_DATA) $$d$$p $(DESTDIR)$(foxincludedir)/$$p"; \
+	  $(INSTALL_DATA) $$d$$p $(DESTDIR)$(foxincludedir)/$$p; \
 	done
 
-uninstall-pkgincludeHEADERS:
+uninstall-foxincludeHEADERS:
 	@$(NORMAL_UNINSTALL)
-	list='$(pkginclude_HEADERS)'; for p in $$list; do \
-	  rm -f $(DESTDIR)$(pkgincludedir)/$$p; \
+	list='$(foxinclude_HEADERS)'; for p in $$list; do \
+	  rm -f $(DESTDIR)$(foxincludedir)/$$p; \
 	done
 
 tags: TAGS
@@ -182,20 +183,20 @@ installcheck: installcheck-am
 install-exec-am:
 install-exec: install-exec-am
 
-install-data-am: install-pkgincludeHEADERS
+install-data-am: install-foxincludeHEADERS
 install-data: install-data-am
 
 install-am: all-am
 	@$(MAKE) $(AM_MAKEFLAGS) install-exec-am install-data-am
 install: install-am
-uninstall-am: uninstall-pkgincludeHEADERS
+uninstall-am: uninstall-foxincludeHEADERS
 uninstall: uninstall-am
 all-am: Makefile $(HEADERS)
 all-redirect: all-am
 install-strip:
 	$(MAKE) $(AM_MAKEFLAGS) AM_INSTALL_PROGRAM_FLAGS=-s install
 installdirs:
-	$(mkinstalldirs)  $(DESTDIR)$(pkgincludedir)
+	$(mkinstalldirs)  $(DESTDIR)$(foxincludedir)
 
 
 mostlyclean-generic:
@@ -227,7 +228,7 @@ maintainer-clean-am:  maintainer-clean-tags maintainer-clean-generic \
 
 maintainer-clean: maintainer-clean-am
 
-.PHONY: uninstall-pkgincludeHEADERS install-pkgincludeHEADERS tags \
+.PHONY: uninstall-foxincludeHEADERS install-foxincludeHEADERS tags \
 mostlyclean-tags distclean-tags clean-tags maintainer-clean-tags \
 distdir info-am info dvi-am dvi check check-am installcheck-am \
 installcheck install-exec-am install-exec install-data-am install-data \

@@ -3,7 +3,7 @@
 *                        L i s t   B o x   W i d g e t                          *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXListBox.h,v 1.19 2002/02/27 05:12:45 fox Exp $                         *
+* $Id: FXListBox.h,v 1.29 2004/02/08 17:17:33 fox Exp $                         *
 ********************************************************************************/
 #ifndef FXLISTBOX_H
 #define FXLISTBOX_H
@@ -28,6 +28,7 @@
 #include "FXPacker.h"
 #endif
 
+namespace FX {
 
 
 /// List Box styles
@@ -52,13 +53,13 @@ protected:
   FXPopup       *pane;
 protected:
   FXListBox(){}
-  virtual void layout();
 private:
   FXListBox(const FXListBox&);
   FXListBox &operator=(const FXListBox&);
 public:
   long onFocusUp(FXObject*,FXSelector,void*);
   long onFocusDown(FXObject*,FXSelector,void*);
+  long onFocusSelf(FXObject*,FXSelector,void*);
   long onFieldButton(FXObject*,FXSelector,void*);
   long onListUpdate(FXObject*,FXSelector,void*);
   long onListChanged(FXObject*,FXSelector,void*);
@@ -75,7 +76,7 @@ public:
 public:
 
   /// Constructor
-  FXListBox(FXComposite *p,FXint nvis,FXObject* tgt=NULL,FXSelector sel=0,FXuint opts=FRAME_SUNKEN|FRAME_THICK|LISTBOX_NORMAL,FXint x=0,FXint y=0,FXint w=0,FXint h=0,FXint pl=DEFAULT_PAD,FXint pr=DEFAULT_PAD,FXint pt=DEFAULT_PAD,FXint pb=DEFAULT_PAD);
+  FXListBox(FXComposite *p,FXObject* tgt=NULL,FXSelector sel=0,FXuint opts=FRAME_SUNKEN|FRAME_THICK|LISTBOX_NORMAL,FXint x=0,FXint y=0,FXint w=0,FXint h=0,FXint pl=DEFAULT_PAD,FXint pr=DEFAULT_PAD,FXint pt=DEFAULT_PAD,FXint pb=DEFAULT_PAD);
 
   /// Create server-side resources
   virtual void create();
@@ -85,6 +86,9 @@ public:
 
   /// Destroy server-side resources
   virtual void destroy();
+
+  /// Perform layout
+  virtual void layout();
 
   /// Enable drive box
   virtual void enable();
@@ -117,19 +121,22 @@ public:
   FXint getCurrentItem() const;
 
   /// Return the item at the given index
-  FXString retrieveItem(FXint index) const;
+  FXString getItem(FXint index) const;
 
   /// Replace the item at index
-  void replaceItem(FXint index,const FXString& text,FXIcon* icon=NULL,void* ptr=NULL);
+  FXint setItem(FXint index,const FXString& text,FXIcon* icon=NULL,void* ptr=NULL);
 
   /// Insert a new item at index
-  void insertItem(FXint index,const FXString& text,FXIcon* icon=NULL,void* ptr=NULL);
+  FXint insertItem(FXint index,const FXString& text,FXIcon* icon=NULL,void* ptr=NULL);
 
   /// Add an item to the end of the list
-  void appendItem(const FXString& text,FXIcon* icon=NULL,void* ptr=NULL);
+  FXint appendItem(const FXString& text,FXIcon* icon=NULL,void* ptr=NULL);
 
   /// Prepend an item to the list
-  void prependItem(const FXString& text,FXIcon* icon=NULL,void* ptr=NULL);
+  FXint prependItem(const FXString& text,FXIcon* icon=NULL,void* ptr=NULL);
+
+  /// Move item from oldindex to newindex
+  FXint moveItem(FXint newindex,FXint oldindex);
 
   /// Remove this item from the list
   void removeItem(FXint index);
@@ -225,6 +232,6 @@ public:
   virtual ~FXListBox();
   };
 
-
+}
 
 #endif

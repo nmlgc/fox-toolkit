@@ -3,7 +3,7 @@
 *             M u l t i p l e   D o c u m e n t   B u t t o n                   *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1998,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXMDIButton.h,v 1.9 2002/01/18 22:42:53 jeroen Exp $                     *
+* $Id: FXMDIButton.h,v 1.14 2004/02/08 17:17:33 fox Exp $                       *
 ********************************************************************************/
 #ifndef FXMDIBUTTON_H
 #define FXMDIBUTTON_H
@@ -28,6 +28,7 @@
 #include "FXButton.h"
 #endif
 
+namespace FX {
 
 class FXIcon;
 
@@ -116,7 +117,7 @@ public:
   long onPaint(FXObject*,FXSelector,void*);
 public:
   /// Constructor
-  FXMDIWindowButton(FXComposite* p,FXObject* tgt=NULL,FXSelector sel=0,FXuint opts=0,FXint x=0,FXint y=0,FXint w=0,FXint h=0);
+  FXMDIWindowButton(FXComposite* p,FXPopup* pup,FXObject* tgt=NULL,FXSelector sel=0,FXuint opts=0,FXint x=0,FXint y=0,FXint w=0,FXint h=0);
   virtual FXint getDefaultWidth();
   virtual FXint getDefaultHeight();
   };
@@ -144,5 +145,6 @@ public:
   virtual ~FXMDIMenu();
   };
 
+}
 
 #endif

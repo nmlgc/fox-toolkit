@@ -3,7 +3,7 @@
 *                               F o n t   O b j e c t                           *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXFont.h,v 1.23 2002/01/18 22:42:53 jeroen Exp $                         *
+* $Id: FXFont.h,v 1.43 2004/03/10 23:19:41 fox Exp $                            *
 ********************************************************************************/
 #ifndef FXFONT_H
 #define FXFONT_H
@@ -28,6 +28,7 @@
 #include "FXId.h"
 #endif
 
+namespace FX {
 
 
 /// Font style hints which influence the matcher
@@ -50,64 +51,93 @@ enum FXFontHint {
 
 /// Font slant
 enum FXFontSlant {
-  FONTSLANT_DONTCARE        = 0,    /// Don't care about slant
-  FONTSLANT_REGULAR         = 1,    /// Regular straight up
-  FONTSLANT_ITALIC          = 2,    /// Italics
-  FONTSLANT_OBLIQUE         = 3,    /// Oblique slant
-  FONTSLANT_REVERSE_ITALIC  = 4,    /// Reversed italic
-  FONTSLANT_REVERSE_OBLIQUE = 5     /// Reversed oblique
+  FONTSLANT_DONTCARE        = 0,        /// Don't care about slant
+  FONTSLANT_REGULAR         = 1,        /// Regular straight up
+  FONTSLANT_ITALIC          = 2,        /// Italics
+  FONTSLANT_OBLIQUE         = 3,        /// Oblique slant
+  FONTSLANT_REVERSE_ITALIC  = 4,        /// Reversed italic
+  FONTSLANT_REVERSE_OBLIQUE = 5         /// Reversed oblique
   };
 
 
 /// Font character set encoding
 enum FXFontEncoding {
-  FONTENCODING_DEFAULT      = 0,                        /// Don't care character encoding
-  FONTENCODING_ISO_8859_1   = 1,
-  FONTENCODING_ISO_8859_2   = 2,
-  FONTENCODING_ISO_8859_3   = 3,
+  FONTENCODING_DEFAULT,         /// Don't care character encoding
+
+  FONTENCODING_ISO_8859_1   = 1,        /// West European (Latin1)
+  FONTENCODING_ISO_8859_2   = 2,        /// Central and East European (Latin2)
+  FONTENCODING_ISO_8859_3   = 3,        /// Esperanto (Latin3)
   FONTENCODING_ISO_8859_4   = 4,
-  FONTENCODING_ISO_8859_5   = 5,                        /// Cyrillic (almost obsolete)
-  FONTENCODING_ISO_8859_6   = 6,
-  FONTENCODING_ISO_8859_7   = 7,
-  FONTENCODING_ISO_8859_8   = 8,
-  FONTENCODING_ISO_8859_9   = 9,
+  FONTENCODING_ISO_8859_5   = 5,        /// Cyrillic (almost obsolete)
+  FONTENCODING_ISO_8859_6   = 6,        /// Arabic
+  FONTENCODING_ISO_8859_7   = 7,        /// Greek
+  FONTENCODING_ISO_8859_8   = 8,        /// Hebrew
+  FONTENCODING_ISO_8859_9   = 9,        /// Turkish (Latin5)
   FONTENCODING_ISO_8859_10  = 10,
-  FONTENCODING_ISO_8859_11  = 11,
-  FONTENCODING_ISO_8859_13  = 13,
+  FONTENCODING_ISO_8859_11  = 11,       /// Thai
+  FONTENCODING_ISO_8859_13  = 13,       /// Baltic
   FONTENCODING_ISO_8859_14  = 14,
   FONTENCODING_ISO_8859_15  = 15,
   FONTENCODING_ISO_8859_16  = 16,
   FONTENCODING_KOI8         = 17,
-  FONTENCODING_KOI8_R       = 18,                       /// Russian
-  FONTENCODING_KOI8_U       = 19,                       /// Ukrainian
+  FONTENCODING_KOI8_R       = 18,       /// Russian
+  FONTENCODING_KOI8_U       = 19,       /// Ukrainian
   FONTENCODING_KOI8_UNIFIED = 20,
 
-  FONTENCODING_LATIN1      = FONTENCODING_ISO_8859_1,   /// Latin 1 (West European)
-  FONTENCODING_LATIN2      = FONTENCODING_ISO_8859_2,   /// Latin 2 (East European)
-  FONTENCODING_LATIN3      = FONTENCODING_ISO_8859_3,   /// Latin 3 (South European)
-  FONTENCODING_LATIN4      = FONTENCODING_ISO_8859_4,   /// Latin 4 (North European)
-  FONTENCODING_LATIN5      = FONTENCODING_ISO_8859_9,   /// Latin 5 (Turkish)
-  FONTENCODING_LATIN6      = FONTENCODING_ISO_8859_10,  /// Latin 6 (Nordic)
-  FONTENCODING_LATIN7      = FONTENCODING_ISO_8859_13,  /// Latin 7 (Baltic Rim)
-  FONTENCODING_LATIN8      = FONTENCODING_ISO_8859_14,  /// Latin 8 (Celtic)
-  FONTENCODING_LATIN9      = FONTENCODING_ISO_8859_15,  /// Latin 9 AKA Latin 0
-  FONTENCODING_LATIN10     = FONTENCODING_ISO_8859_16,  /// Latin 10
+  FONTENCODING_CP437        = 437,      /// IBM-PC code page
+  FONTENCODING_CP850        = 850,      /// IBMPC Multilingual
+  FONTENCODING_CP851        = 851,      /// IBM-PC Greek
+  FONTENCODING_CP852        = 852,      /// IBM-PC Latin2
+  FONTENCODING_CP855        = 855,      /// IBM-PC Cyrillic
+  FONTENCODING_CP856        = 856,      /// IBM-PC Hebrew
+  FONTENCODING_CP857        = 857,      /// IBM-PC Turkish
+  FONTENCODING_CP860        = 860,      /// IBM-PC Portugese
+  FONTENCODING_CP861        = 861,      /// IBM-PC Iceland
+  FONTENCODING_CP862        = 862,      /// IBM-PC Israel
+  FONTENCODING_CP863        = 863,      /// IBM-PC Canadian/French
+  FONTENCODING_CP864        = 864,      /// IBM-PC Arabic
+  FONTENCODING_CP865        = 865,      /// IBM-PC Nordic
+  FONTENCODING_CP866        = 866,      /// IBM-PC Cyrillic #2
+  FONTENCODING_CP869        = 869,      /// IBM-PC Greek #2
+  FONTENCODING_CP870        = 870,      /// Latin-2 Multilingual
 
-  FONTENCODING_USASCII     = FONTENCODING_ISO_8859_1,   /// Latin 1
-  FONTENCODING_WESTEUROPE  = FONTENCODING_ISO_8859_1,   /// Latin 1 (West European)
-  FONTENCODING_EASTEUROPE  = FONTENCODING_ISO_8859_2,   /// Latin 2 (East European)
-  FONTENCODING_SOUTHEUROPE = FONTENCODING_ISO_8859_3,   /// Latin 3 (South European)
-  FONTENCODING_NORTHEUROPE = FONTENCODING_ISO_8859_4,   /// Latin 4 (North European)
-  FONTENCODING_CYRILLIC    = FONTENCODING_ISO_8859_5,   /// Cyrillic
-  FONTENCODING_RUSSIAN     = FONTENCODING_KOI8,         /// Cyrillic
-  FONTENCODING_ARABIC      = FONTENCODING_ISO_8859_6,   /// Arabic
-  FONTENCODING_GREEK       = FONTENCODING_ISO_8859_7,   /// Greek
-  FONTENCODING_HEBREW      = FONTENCODING_ISO_8859_8,   /// Hebrew
-  FONTENCODING_TURKISH     = FONTENCODING_ISO_8859_9,   /// Latin 5 (Turkish)
-  FONTENCODING_NORDIC      = FONTENCODING_ISO_8859_10,  /// Latin 6 (Nordic)
-  FONTENCODING_THAI        = FONTENCODING_ISO_8859_11,  /// Thai
-  FONTENCODING_BALTIC      = FONTENCODING_ISO_8859_13,  /// Latin 7 (Baltic Rim)
-  FONTENCODING_CELTIC      = FONTENCODING_ISO_8859_14   /// Latin 8 (Celtic)
+  FONTENCODING_CP1250       = 1250,     /// Windows Central European
+  FONTENCODING_CP1251       = 1251,     /// Windows Russian
+  FONTENCODING_CP1252       = 1252,     /// Windows Latin1
+  FONTENCODING_CP1253       = 1253,     /// Windows Greek
+  FONTENCODING_CP1254       = 1254,     /// Windows Turkish
+  FONTENCODING_CP1255       = 1255,     /// Windows Hebrew
+  FONTENCODING_CP1256       = 1256,     /// Windows Arabic
+  FONTENCODING_CP1257       = 1257,     /// Windows Baltic
+  FONTENCODING_CP1258       = 1258,     /// Windows Vietnam
+  FONTENCODING_CP874        = 874,      /// Windows Thai
+
+  FONTENCODING_LATIN1       = FONTENCODING_ISO_8859_1,   /// Latin 1 (West European)
+  FONTENCODING_LATIN2       = FONTENCODING_ISO_8859_2,   /// Latin 2 (East European)
+  FONTENCODING_LATIN3       = FONTENCODING_ISO_8859_3,   /// Latin 3 (South European)
+  FONTENCODING_LATIN4       = FONTENCODING_ISO_8859_4,   /// Latin 4 (North European)
+  FONTENCODING_LATIN5       = FONTENCODING_ISO_8859_9,   /// Latin 5 (Turkish)
+  FONTENCODING_LATIN6       = FONTENCODING_ISO_8859_10,  /// Latin 6 (Nordic)
+  FONTENCODING_LATIN7       = FONTENCODING_ISO_8859_13,  /// Latin 7 (Baltic Rim)
+  FONTENCODING_LATIN8       = FONTENCODING_ISO_8859_14,  /// Latin 8 (Celtic)
+  FONTENCODING_LATIN9       = FONTENCODING_ISO_8859_15,  /// Latin 9 AKA Latin 0
+  FONTENCODING_LATIN10      = FONTENCODING_ISO_8859_16,  /// Latin 10
+
+  FONTENCODING_USASCII      = FONTENCODING_ISO_8859_1,   /// Latin 1
+  FONTENCODING_WESTEUROPE   = FONTENCODING_ISO_8859_1,   /// Latin 1 (West European)
+  FONTENCODING_EASTEUROPE   = FONTENCODING_ISO_8859_2,   /// Latin 2 (East European)
+  FONTENCODING_SOUTHEUROPE  = FONTENCODING_ISO_8859_3,   /// Latin 3 (South European)
+  FONTENCODING_NORTHEUROPE  = FONTENCODING_ISO_8859_4,   /// Latin 4 (North European)
+  FONTENCODING_CYRILLIC     = FONTENCODING_ISO_8859_5,   /// Cyrillic
+  FONTENCODING_RUSSIAN      = FONTENCODING_KOI8,         /// Cyrillic
+  FONTENCODING_ARABIC       = FONTENCODING_ISO_8859_6,   /// Arabic
+  FONTENCODING_GREEK        = FONTENCODING_ISO_8859_7,   /// Greek
+  FONTENCODING_HEBREW       = FONTENCODING_ISO_8859_8,   /// Hebrew
+  FONTENCODING_TURKISH      = FONTENCODING_ISO_8859_9,   /// Latin 5 (Turkish)
+  FONTENCODING_NORDIC       = FONTENCODING_ISO_8859_10,  /// Latin 6 (Nordic)
+  FONTENCODING_THAI         = FONTENCODING_ISO_8859_11,  /// Thai
+  FONTENCODING_BALTIC       = FONTENCODING_ISO_8859_13,  /// Latin 7 (Baltic Rim)
+  FONTENCODING_CELTIC       = FONTENCODING_ISO_8859_14   /// Latin 8 (Celtic)
   };
 
 
@@ -150,28 +180,35 @@ enum FXFontSetWidth {
 
 /// Font style
 struct FXFontDesc {
-  FXchar          face[48];                 /// Face name
+  FXchar          face[104];                /// Face name
   FXuint          size;                     /// Size in deci-points
   FXuint          weight;                   /// Weight [light, normal, bold, ...]
   FXuint          slant;                    /// Slant [normal, italic, oblique, ...]
-  FXuint          encoding;                 /// Encoding of character set
   FXuint          setwidth;                 /// Set width [normal, condensed, expanded, ...]
+  FXuint          encoding;                 /// Encoding of character set
   FXuint          flags;                    /// Flags
   };
 
 
 /// Font class
 class FXAPI FXFont : public FXId {
+  friend class FXDCWindow;
   FXDECLARE(FXFont)
 protected:
-  FXString  name;                 // Name of the font
-  FXuint    size;                 // Font size (points*10)
-  FXuint    weight;               // Font weight
-  FXuint    slant;                // Font slant
-  FXuint    encoding;             // Character set encoding
-  FXuint    setwidth;             // Relative setwidth
-  FXuint    hints;                // Matching hints
-  void     *font;                 // Info about the font
+  FXString  wantedName;         // Desired font font name
+  FXString  actualName;         // Matched font font name
+  FXuint    wantedSize;         // Font size (points*10)
+  FXuint    actualSize;         // Actual size that was matched
+  FXuint    wantedWeight;       // Font weight
+  FXuint    actualWeight;       // Font weight
+  FXuint    wantedSlant;        // Font slant
+  FXuint    actualSlant;        // Font slant
+  FXuint    wantedSetwidth;     // Relative setwidth
+  FXuint    actualSetwidth;     // Relative setwidth
+  FXuint    wantedEncoding;     // Character set encoding
+  FXuint    actualEncoding;     // Character set encoding
+  FXuint    hints;              // Matching hints
+  void     *font;               // Info about the font
 private:
 #ifdef WIN32
   FXID      dc;                   // Dummy
@@ -179,23 +216,46 @@ private:
 protected:
   FXFont();
 #ifndef WIN32
-  char* findbestfont(char *fontname) const;
-  const char* fallbackfont() const;
-  char* findmatch(char *fontname,const char* family) const;
+  char* findbestfont(char* fontname);
+  char* findmatch(char* fontname,const char* forge,const char* family);
 #endif
 private:
   FXFont(const FXFont&);
   FXFont &operator=(const FXFont&);
 public:
 
-  /// Construct font from font description
-  FXFont(FXApp* a,const FXFontDesc& fontdesc);
+  /**
+  * Construct a font with given font description of the form:
+  *
+  *     fontname [ "[" foundry "]" ] ["," size ["," weight ["," slant ["," setwidth ["," encoding ["," hints]]]]]]
+  *
+  * For example:
+  *
+  *     "helvetica [bitstream],12,bold,i,normal,iso8859-1,0"
+  *
+  * Typically, at least the font name, and size must be given for
+  * normal font matching.  As a special case, raw X11 fonts can also be
+  * passed, for example:
+  *
+  *     "9x15bold"
+  *
+  * Finally, an old FOX 1.0 style font string may be passed as well:
+  *
+  *     "[helvetica] 90 700 1 1 0 0"
+  *
+  */
+  FXFont(FXApp* a,const FXString& string);
 
-  /// Construct a font with given face name, size in points(pixels), weight, slant, character set encoding, setwidth, and hints
+  /**
+  * Construct a font with given name, size in points, weight, slant, character set
+  * encoding, setwidth, and hints.
+  * The font name may be comprised of a family name and optional foundry name enclosed in 
+  * square brackets, for example, "helvetica [bitstream]".
+  */
   FXFont(FXApp* a,const FXString& face,FXuint sz,FXuint wt=FONTWEIGHT_NORMAL,FXuint sl=FONTSLANT_REGULAR,FXuint enc=FONTENCODING_DEFAULT,FXuint setw=FONTSETWIDTH_DONTCARE,FXuint h=0);
 
-  /// Construct a font with given X11 font string
-  FXFont(FXApp* a,const FXString& nm);
+  /// Construct font from font description
+  FXFont(FXApp* a,const FXFontDesc& fontdesc);
 
   /// Create the font
   virtual void create();
@@ -206,32 +266,61 @@ public:
   /// Destroy the font
   virtual void destroy();
 
-  /// Get face name
-  FXString getName() const { return name; }
+  /// Get font family name
+  FXString getName() const { return wantedName; }
+  
+  /// Get actual family name 
+  FXString getActualName() const { return actualName; }
 
   /// Get size in deci-points
-  FXuint getSize() const { return size; }
+  FXuint getSize() const { return wantedSize; }
+  
+  /// Get actual size in deci-points
+  FXuint getActualSize() const { return actualSize; }
 
   /// Get font weight
-  FXuint getWeight() const { return weight; }
+  FXuint getWeight() const { return wantedWeight; }
 
+  /// Get actual font weight
+  FXuint getActualWeight() const { return actualWeight; }
+  
   /// Get slant
-  FXuint getSlant() const { return slant; }
+  FXuint getSlant() const { return wantedSlant; }
 
+  /// Get actual slant
+  FXuint getActualSlant() const { return actualSlant; }
+  
   /// Get character set encoding
-  FXuint getEncoding() const { return encoding; }
+  FXuint getEncoding() const { return wantedEncoding; }
 
+  /// Get actual encoding
+  FXuint getActualEncoding() const { return actualEncoding; }
+  
   /// Get setwidth
-  FXuint getSetWidth() const { return setwidth; }
+  FXuint getSetWidth() const { return wantedSetwidth; }
 
+  /// Get actual setwidth
+  FXuint getActualSetWidth() const { return actualSetwidth; }
+  
   /// Get hints
   FXuint getHints() const { return hints; }
+
+  /// Change font description
+  void setFontDesc(const FXFontDesc& fontdesc);
 
   /// Get font description
   void getFontDesc(FXFontDesc& fontdesc) const;
 
-  /// Change font description
-  void setFontDesc(const FXFontDesc& fontdesc);
+  /**
+  * Change the font to the specified font description string.
+  */
+  FXbool setFont(const FXString& string);
+
+  /**
+  * Return the font description as a string suitable for
+  * parsing with setFont(), see above.
+  */
+  FXString getFont() const;
 
   /// Find out if the font is monotype or proportional
   FXbool isFontMono() const;
@@ -272,10 +361,20 @@ public:
   /// Calculate width of given text in this font
   FXint getTextWidth(const FXchar *text,FXuint n) const;
 
+  /// Calculate width of given text in this font
+  FXint getTextWidth(const FXString& text) const;
+
   /// Calculate height of given text in this font
   FXint getTextHeight(const FXchar *text,FXuint n) const;
 
-  /// List all fonts matching hints
+  /// Calculate height of given text in this font
+  FXint getTextHeight(const FXString& text) const;
+
+  /**
+   * List all fonts matching hints. If listFonts() returns TRUE then
+   * fonts points to a newly-allocated array of length numfonts. It
+   * is the caller's responsibility to free this array using FXFREE().
+   */
   static FXbool listFonts(FXFontDesc*& fonts,FXuint& numfonts,const FXString& face,FXuint wt=FONTWEIGHT_DONTCARE,FXuint sl=FONTSLANT_DONTCARE,FXuint sw=FONTSETWIDTH_DONTCARE,FXuint en=FONTENCODING_DEFAULT,FXuint h=0);
 
   /// Save font data into stream
@@ -290,11 +389,12 @@ public:
 
 
 
-/// Parse font description from a string
+/// DEPRECATED: Parse font description from a string
 extern FXAPI FXbool fxparsefontdesc(FXFontDesc& fontdesc,const FXchar* string);
 
-/// Unparse font description into a string
+/// DEPRECATED: Unparse font description into a string
 extern FXAPI FXbool fxunparsefontdesc(FXchar *string,const FXFontDesc& fontdesc);
 
+}
 
 #endif

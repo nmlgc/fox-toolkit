@@ -5,7 +5,7 @@
 *********************************************************************************
 * Copyright (C) 1997 by Jeroen van der Zijp.   All Rights Reserved.             *
 *********************************************************************************
-* $Id: header.cpp,v 1.16.4.1 2003/06/20 19:02:07 fox Exp $                       *
+* $Id: header.cpp,v 1.25 2004/02/08 17:05:35 fox Exp $                          *
 ********************************************************************************/
 #include "fx.h"
 #include <stdio.h>
@@ -49,7 +49,7 @@ public:
     ID_LAST
     };
 protected:
-  FXMenubar*         menubar;
+  FXMenuBar*         menubar;
   FXMenuPane*        filemenu;
   FXMenuPane*        helpmenu;
   FXVerticalFrame*   contents;
@@ -86,9 +86,9 @@ FXIMPLEMENT(HeaderWindow,FXMainWindow,HeaderWindowMap,ARRAYNUMBER(HeaderWindowMa
 HeaderWindow::HeaderWindow(FXApp* a):FXMainWindow(a,"Header Control Test",NULL,NULL,DECOR_ALL,0,0,800,600){
 
   // Make menu bar
-  menubar=new FXMenubar(this,LAYOUT_SIDE_TOP|LAYOUT_FILL_X);
+  menubar=new FXMenuBar(this,LAYOUT_SIDE_TOP|LAYOUT_FILL_X);
 
-  new FXStatusbar(this,LAYOUT_SIDE_BOTTOM|LAYOUT_FILL_X);
+  new FXStatusBar(this,LAYOUT_SIDE_BOTTOM|LAYOUT_FILL_X);
 
   filemenu=new FXMenuPane(this);
   new FXMenuCommand(filemenu,"&Quit\tCtl-Q\tQuit the application",NULL,getApp(),FXApp::ID_QUIT);
@@ -115,10 +115,10 @@ HeaderWindow::HeaderWindow(FXApp* a):FXMainWindow(a,"Header Control Test",NULL,N
   panes=new FXHorizontalFrame(contents,FRAME_SUNKEN|FRAME_THICK|LAYOUT_SIDE_TOP|LAYOUT_FILL_X|LAYOUT_FILL_Y,0,0,0,0, 0,0,0,0, 0,0);
 
   // Make 4 lists
-  list[0]=new FXList(panes,1,NULL,0,LAYOUT_FILL_Y|LAYOUT_FIX_WIDTH|LIST_BROWSESELECT,0,0,150,0);
-  list[1]=new FXList(panes,1,NULL,0,LAYOUT_FILL_Y|LAYOUT_FIX_WIDTH|LIST_SINGLESELECT,0,0,120,0);
-  list[2]=new FXList(panes,1,NULL,0,LAYOUT_FILL_Y|LAYOUT_FIX_WIDTH|LIST_MULTIPLESELECT,0,0,230,0);
-  list[3]=new FXList(panes,1,NULL,0,LAYOUT_FILL_Y|LAYOUT_FIX_WIDTH|LIST_EXTENDEDSELECT,0,0,80,0);
+  list[0]=new FXList(panes,NULL,0,LAYOUT_FILL_Y|LAYOUT_FIX_WIDTH|LIST_BROWSESELECT,0,0,150,0);
+  list[1]=new FXList(panes,NULL,0,LAYOUT_FILL_Y|LAYOUT_FIX_WIDTH|LIST_SINGLESELECT,0,0,120,0);
+  list[2]=new FXList(panes,NULL,0,LAYOUT_FILL_Y|LAYOUT_FIX_WIDTH|LIST_MULTIPLESELECT,0,0,230,0);
+  list[3]=new FXList(panes,NULL,0,LAYOUT_FILL_Y|LAYOUT_FIX_WIDTH|LIST_EXTENDEDSELECT,0,0,80,0);
   list[0]->setBackColor(FXRGB(255,240,240));
   list[1]->setBackColor(FXRGB(240,255,240));
   list[2]->setBackColor(FXRGB(240,240,255));
@@ -164,13 +164,14 @@ HeaderWindow::HeaderWindow(FXApp* a):FXMainWindow(a,"Header Control Test",NULL,N
   check=new FXCheckButton(groupie,"Continuous Tracking\tContinuous\tTrack Header continuously",this,ID_TRACKING,ICON_BEFORE_TEXT|LAYOUT_SIDE_TOP);
 
   // Whip out a tooltip control, jeez, that's hard
-  new FXTooltip(getApp());
+  new FXToolTip(getApp());
   }
 
 
 HeaderWindow::~HeaderWindow(){
   delete filemenu;
   delete helpmenu;
+  delete doc;
   }
 
 
@@ -185,7 +186,7 @@ long HeaderWindow::onCmdAbout(FXObject*,FXSelector,void*){
 
 // Changed the header control
 long HeaderWindow::onCmdHeader(FXObject*,FXSelector,void* ptr){
-  FXint which=(FXint)(FXival)ptr;
+  FXint which=(FXint)(long)ptr;
   FXASSERT(0<=which && which<4);
   FXTRACE((1,"Width of item %d = %d\n",which,header1->getItemSize(which)));
   list[which]->setWidth(header1->getItemSize(which));
@@ -195,7 +196,7 @@ long HeaderWindow::onCmdHeader(FXObject*,FXSelector,void* ptr){
 
 // Clicked a header button:- we highlight all in the list
 long HeaderWindow::onCmdHeaderButton(FXObject*,FXSelector,void* ptr){
-  FXint which=(FXint)(FXival)ptr;
+  FXint which=(FXint)(long)ptr;
   FXint i;
   FXASSERT(0<=which && which<4);
   for(i=0; i<list[which]->getNumItems(); i++){

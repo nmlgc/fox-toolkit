@@ -3,7 +3,7 @@
 *                      I R I S   R G B   I c o n   O b j e c t                  *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2002 by Jeroen van der Zijp.   All Rights Reserved.             *
+* Copyright (C) 2002,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXRGBIcon.h,v 1.1 2002/01/22 18:35:41 jeroen Exp $                       *
+* $Id: FXRGBIcon.h,v 1.8 2004/02/08 17:17:34 fox Exp $                          *
 ********************************************************************************/
 #ifndef FXRGBICON_H
 #define FXRGBICON_H
@@ -28,6 +28,7 @@
 #include "FXIcon.h"
 #endif
 
+namespace FX {
 
 
 /// IRIS RGB icon
@@ -44,22 +45,29 @@ public:
   FXRGBIcon(FXApp* a,const void *pix=NULL,FXColor clr=FXRGB(192,192,192),FXuint opts=0,FXint w=1,FXint h=1);
 
   /// Save pixels into stream in IRIS-RGB format
-  virtual void savePixels(FXStream& store) const;
+  virtual FXbool savePixels(FXStream& store) const;
 
   /// Load pixels from stream in IRIS-RGB format
-  virtual void loadPixels(FXStream& store);
+  virtual FXbool loadPixels(FXStream& store);
 
   /// Destroy icon
   virtual ~FXRGBIcon();
   };
 
 
-/// Load a IRIS-RGB file from a stream
-extern FXAPI FXbool fxloadRGB(FXStream& store,FXuchar*& data,FXColor& transp,FXint& width,FXint& height);
+/**
+* Load an RGB (SGI IRIS RGB) file from a stream.
+* Upon successful return, the pixel array and size are returned.
+* If an error occurred, the pixel array is set to NULL.
+*/
+extern FXAPI FXbool fxloadRGB(FXStream& store,FXColor*& data,FXint& width,FXint& height);
 
 
-/// Save a IRIS-RGB file to a stream
-extern FXAPI FXbool fxsaveRGB(FXStream& store,const FXuchar *data,FXColor transp,FXint width,FXint height);
+/**
+* Save an RGB (SGI IRIS RGB) file to a stream.
+*/
+extern FXAPI FXbool fxsaveRGB(FXStream& store,const FXColor *data,FXint width,FXint height);
 
+}
 
 #endif

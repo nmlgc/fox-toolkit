@@ -3,7 +3,7 @@
 *                         T e x t   F i e l d   W i d g e t                     *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXTextField.h,v 1.34 2002/01/18 22:42:55 jeroen Exp $                    *
+* $Id: FXTextField.h,v 1.51 2004/02/08 17:17:34 fox Exp $                       *
 ********************************************************************************/
 #ifndef FXTEXTFIELD_H
 #define FXTEXTFIELD_H
@@ -28,20 +28,20 @@
 #include "FXFrame.h"
 #endif
 
-
-
-struct FXTimer;
+namespace FX {
 
 
 /// Textfield styles
 enum {
-  TEXTFIELD_PASSWD     = 0x00800000,      /// Password mode
-  TEXTFIELD_INTEGER    = 0x01000000,      /// Integer mode
-  TEXTFIELD_REAL       = 0x02000000,      /// Real mode
-  TEXTFIELD_READONLY   = 0x04000000,      /// NOT editable
-  TEXTFIELD_ENTER_ONLY = 0x08000000,      /// Only callback when enter hit
-  TEXTFIELD_LIMITED    = 0x10000000,      /// Limit entry to given number of columns
-  TEXTFIELD_OVERSTRIKE = 0x20000000,      /// Overstrike mode
+  TEXTFIELD_PASSWD     = 0x00080000,    /// Password mode
+  TEXTFIELD_INTEGER    = 0x00100000,    /// Integer mode
+  TEXTFIELD_REAL       = 0x00200000,    /// Real mode
+  TEXTFIELD_READONLY   = 0x00400000,    /// NOT editable
+  TEXTFIELD_ENTER_ONLY = 0x00800000,    /// Only callback when enter hit
+  TEXTFIELD_LIMITED    = 0x01000000,    /// Limit entry to given number of columns
+  TEXTFIELD_OVERSTRIKE = 0x02000000,    /// Overstrike mode
+  TEXTFIELD_AUTOGRAY   = 0x04000000,    /// Automatically gray out text field when not updated
+  TEXTFIELD_AUTOHIDE   = 0x08000000,    /// Automatically hide text field when not updated
   TEXTFIELD_NORMAL     = FRAME_SUNKEN|FRAME_THICK
   };
 
@@ -63,33 +63,38 @@ enum {
 class FXAPI FXTextField : public FXFrame {
   FXDECLARE(FXTextField)
 protected:
-  FXString     contents;                  // Edited text
-  FXFont      *font;                      // Text font
-  FXColor      textColor;                 // Text color
-  FXColor      selbackColor;              // Selected background color
-  FXColor      seltextColor;              // Selected text color
-  FXint        cursor;                    // Cursor position
-  FXint        anchor;                    // Anchor position
-  FXTimer     *blinker;                   // Blink timer
-  FXint        columns;                   // Number of columns visible
-  FXint        shift;                     // Shift amount
-  FXString     clipped;                   // Clipped text
-  FXString     help;                      // Help string
-  FXString     tip;                       // Tooltip
+  FXString      contents;               // Edited text
+  const FXchar *delimiters;             // Set of delimiters
+  FXFont       *font;                   // Text font
+  FXColor       textColor;              // Text color
+  FXColor       selbackColor;           // Selected background color
+  FXColor       seltextColor;           // Selected text color
+  FXColor       cursorColor;            // Color of the Cursor
+  FXint         cursor;                 // Cursor position
+  FXint         anchor;                 // Anchor position
+  FXint         columns;                // Number of columns visible
+  FXint         shift;                  // Shift amount
+  FXString      clipped;                // Clipped text
+  FXString      help;                   // Help string
+  FXString      tip;                    // Tooltip
 protected:
   FXTextField();
   FXint index(FXint x) const;
   FXint coord(FXint i) const;
-  virtual void layout();
   void drawCursor(FXuint state);
   void drawTextRange(FXDCWindow& dc,FXint fm,FXint to);
   void drawTextFragment(FXDCWindow& dc,FXint x,FXint y,FXint fm,FXint to);
   void drawPWDTextFragment(FXDCWindow& dc,FXint x,FXint y,FXint fm,FXint to);
+  FXint rightWord(FXint pos) const;
+  FXint leftWord(FXint pos) const;
+  FXint wordStart(FXint pos) const;
+  FXint wordEnd(FXint pos) const;
 private:
   FXTextField(const FXTextField&);
   FXTextField& operator=(const FXTextField&);
 public:
   long onPaint(FXObject*,FXSelector,void*);
+  long onUpdate(FXObject*,FXSelector,void*);
   long onKeyPress(FXObject*,FXSelector,void*);
   long onKeyRelease(FXObject*,FXSelector,void*);
   long onLeftBtnPress(FXObject*,FXSelector,void*);
@@ -109,8 +114,6 @@ public:
   long onFocusOut(FXObject*,FXSelector,void*);
   long onBlink(FXObject*,FXSelector,void*);
   long onAutoScroll(FXObject*,FXSelector,void*);
-  long onQueryHelp(FXObject*,FXSelector,void*);
-  long onQueryTip(FXObject*,FXSelector,void*);
   long onCmdSetValue(FXObject*,FXSelector,void*);
   long onCmdSetIntValue(FXObject*,FXSelector,void*);
   long onCmdSetRealValue(FXObject*,FXSelector,void*);
@@ -122,6 +125,10 @@ public:
   long onCmdCursorEnd(FXObject*,FXSelector,void*);
   long onCmdCursorRight(FXObject*,FXSelector,void*);
   long onCmdCursorLeft(FXObject*,FXSelector,void*);
+  long onCmdCursorWordLeft(FXObject*,FXSelector,void*);
+  long onCmdCursorWordRight(FXObject*,FXSelector,void*);
+  long onCmdCursorWordStart(FXObject*,FXSelector,void*);
+  long onCmdCursorWordEnd(FXObject*,FXSelector,void*);
   long onCmdMark(FXObject*,FXSelector,void*);
   long onCmdExtend(FXObject*,FXSelector,void*);
   long onCmdSelectAll(FXObject*,FXSelector,void*);
@@ -130,6 +137,7 @@ public:
   long onCmdCopySel(FXObject*,FXSelector,void*);
   long onCmdPasteSel(FXObject*,FXSelector,void*);
   long onCmdDeleteSel(FXObject*,FXSelector,void*);
+  long onCmdDeleteAll(FXObject*,FXSelector,void*);
   long onCmdOverstString(FXObject*,FXSelector,void*);
   long onCmdInsertString(FXObject*,FXSelector,void*);
   long onCmdBackspace(FXObject*,FXSelector,void*);
@@ -138,12 +146,30 @@ public:
   long onUpdToggleEditable(FXObject*,FXSelector,void*);
   long onCmdToggleOverstrike(FXObject*,FXSelector,void*);
   long onUpdToggleOverstrike(FXObject*,FXSelector,void*);
+  long onUpdHaveSelection(FXObject*,FXSelector,void*);
+  long onUpdSelectAll(FXObject*,FXSelector,void*);
+  long onCmdSetHelp(FXObject*,FXSelector,void*);
+  long onCmdGetHelp(FXObject*,FXSelector,void*);
+  long onCmdSetTip(FXObject*,FXSelector,void*);
+  long onCmdGetTip(FXObject*,FXSelector,void*);
+  long onQueryHelp(FXObject*,FXSelector,void*);
+  long onQueryTip(FXObject*,FXSelector,void*);
 public:
+
+  /// Default text delimiters
+  static const FXchar textDelimiters[];
+
+public:
+
   enum{
     ID_CURSOR_HOME=FXFrame::ID_LAST,
     ID_CURSOR_END,
     ID_CURSOR_RIGHT,
     ID_CURSOR_LEFT,
+    ID_CURSOR_WORD_LEFT,
+    ID_CURSOR_WORD_RIGHT,
+    ID_CURSOR_WORD_START,
+    ID_CURSOR_WORD_END,
     ID_MARK,
     ID_EXTEND,
     ID_SELECT_ALL,
@@ -152,6 +178,7 @@ public:
     ID_COPY_SEL,
     ID_PASTE_SEL,
     ID_DELETE_SEL,
+    ID_DELETE_ALL,
     ID_OVERST_STRING,
     ID_INSERT_STRING,
     ID_BACKSPACE,
@@ -161,6 +188,7 @@ public:
     ID_BLINK,
     ID_LAST
     };
+
 public:
 
   /// Construct text field wide enough to display ncols columns
@@ -168,6 +196,9 @@ public:
 
   /// Create server-side resources
   virtual void create();
+
+  /// Perform layout
+  virtual void layout();
 
   /// Enable text field
   virtual void enable();
@@ -238,6 +269,12 @@ public:
   /// Return selected text color
   FXColor getSelTextColor() const { return seltextColor; }
 
+  /// Changes the cursor color
+  void setCursorColor(FXColor clr);
+
+  /// Return the cursor color
+  FXColor getCursorColor() const { return cursorColor; }
+
   /// Change width of text field in terms of number of columns * `m'
   void setNumColumns(FXint cols);
 
@@ -249,6 +286,12 @@ public:
 
   /// Return text justification mode
   FXuint getJustify() const;
+
+  /// Change word delimiters
+  void setDelimiters(const FXchar* delims=textDelimiters){ delimiters=delims; }
+
+  /// Return word delimiters
+  const FXchar* getDelimiters() const { return delimiters; }
 
   /// Set the status line help text for this label
   void setHelpText(const FXString& text);
@@ -299,5 +342,6 @@ public:
   virtual ~FXTextField();
   };
 
+}
 
 #endif

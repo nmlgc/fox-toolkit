@@ -3,7 +3,7 @@
 *                        S p i n   B u t t o n   W i d g e t                    *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1998,2004 by Lyle Johnson.   All Rights Reserved.               *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXSpinner.h,v 1.26 2002/01/18 22:42:54 jeroen Exp $                      *
+* $Id: FXSpinner.h,v 1.40 2004/02/08 17:17:34 fox Exp $                         *
 ********************************************************************************/
 #ifndef FXSPINNER_H
 #define FXSPINNER_H
@@ -28,6 +28,7 @@
 #include "FXPacker.h"
 #endif
 
+namespace FX {
 
 
 // Spinner Options
@@ -56,7 +57,6 @@ protected:
   FXint          pos;               // Current position
 protected:
   FXSpinner();
-  virtual void layout();
 private:
   FXSpinner(const FXSpinner&);
   FXSpinner& operator=(const FXSpinner&);
@@ -65,8 +65,10 @@ public:
   long onCmdIncrement(FXObject*,FXSelector,void*);
   long onUpdDecrement(FXObject*,FXSelector,void*);
   long onCmdDecrement(FXObject*,FXSelector,void*);
+  long onUpdEntry(FXObject*,FXSelector,void*);
   long onCmdEntry(FXObject*,FXSelector,void*);
   long onChgEntry(FXObject*,FXSelector,void*);
+  long onWheelEntry(FXObject*,FXSelector,void*);
   long onKeyPress(FXObject*,FXSelector,void*);
   long onKeyRelease(FXObject*,FXSelector,void*);
   long onCmdSetValue(FXObject*,FXSelector,void*);
@@ -74,6 +76,7 @@ public:
   long onCmdGetIntValue(FXObject*,FXSelector,void*);
   long onCmdSetIntRange(FXObject*,FXSelector,void*);
   long onCmdGetIntRange(FXObject*,FXSelector,void*);
+  long onFocusSelf(FXObject*,FXSelector,void*);
 public:
   enum{
     ID_INCREMENT=FXPacker::ID_LAST,
@@ -86,8 +89,8 @@ public:
   /// Construct a spinner
   FXSpinner(FXComposite *p,FXint cols,FXObject *tgt=NULL,FXSelector sel=0,FXuint opts=SPIN_NORMAL,FXint x=0,FXint y=0,FXint w=0,FXint h=0,FXint pl=DEFAULT_PAD,FXint pr=DEFAULT_PAD,FXint pt=DEFAULT_PAD,FXint pb=DEFAULT_PAD);
 
-  /// Create server-side resources
-  virtual void create();
+  /// Perform layout
+  virtual void layout();
 
   /// Disable spinner
   virtual void disable();
@@ -167,6 +170,48 @@ public:
   /// Return TRUE if text field is editable
   FXbool isEditable() const;
 
+  /// Change color of the up arrow
+  void setUpArrowColor(FXColor clr);
+
+  /// Return color of the up arrow
+  FXColor getUpArrowColor() const;
+
+  /// Change color of the down arrow
+  void setDownArrowColor(FXColor clr);
+
+  /// Return color of the the down arrow
+  FXColor getDownArrowColor() const;
+
+  /// Change text color
+  void setTextColor(FXColor clr);
+
+  /// Return text color
+  FXColor getTextColor() const;
+
+  /// Change selected background color
+  void setSelBackColor(FXColor clr);
+
+  /// Return selected background color
+  FXColor getSelBackColor() const;
+
+  /// Change selected text color
+  void setSelTextColor(FXColor clr);
+
+  /// Return selected text color
+  FXColor getSelTextColor() const;
+
+  /// Changes the cursor color
+  void setCursorColor(FXColor clr);
+
+  /// Return the cursor color
+  FXColor getCursorColor() const;
+
+  /// Change width of text field in terms of number of columns * `m'
+  void setNumColumns(FXint cols);
+
+  /// Return number of columns
+  FXint getNumColumns() const;
+
   /// Save spinner to a stream
   virtual void save(FXStream& store) const;
 
@@ -176,5 +221,7 @@ public:
   /// Destructor
   virtual ~FXSpinner();
   };
+
+}
 
 #endif

@@ -3,9 +3,7 @@
 *                             S p i n   B u t t o n                             *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
-*********************************************************************************
-* Contributed by: Lyle Johnson                                                  *
+* Copyright (C) 1998,2004 by Lyle Johnson.   All Rights Reserved.               *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -21,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXSpinner.cpp,v 1.23.4.4 2003/06/20 19:02:07 fox Exp $                    *
+* $Id: FXSpinner.cpp,v 1.50 2004/02/19 15:37:45 fox Exp $                       *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -34,6 +32,7 @@
 #include "FXRectangle.h"
 #include "FXRegistry.h"
 #include "FXAccelTable.h"
+#include "FXHash.h"
 #include "FXApp.h"
 #include "FXLabel.h"
 #include "FXTextField.h"
@@ -43,12 +42,11 @@
 
 /*
   To do:
-  - Should respond to up/down arrows.
-  - should send SEL_COMMAND.
-  - Should understand get/set messages.
   - Should this also be derived from FXTextField instead?
   - Sends SEL_COMMAND; should it send SEL_CHANGED for each repeat, then SEL_COMMAND
     at end?
+  - Should block SEL_UPDATE until after sending SEL_COMMAND.
+  - Make the value->text and text->value virtual.
 */
 
 #define BUTTONWIDTH 14
@@ -58,25 +56,31 @@
 
 #define SPINNER_MASK (SPIN_CYCLIC|SPIN_NOTEXT|SPIN_NOMAX|SPIN_NOMIN)
 
+using namespace FX;
+
 /*******************************************************************************/
+
+namespace FX {
 
 
 //  Message map
 FXDEFMAP(FXSpinner) FXSpinnerMap[]={
   FXMAPFUNC(SEL_KEYPRESS,0,FXSpinner::onKeyPress),
   FXMAPFUNC(SEL_KEYRELEASE,0,FXSpinner::onKeyRelease),
+  FXMAPFUNC(SEL_FOCUS_SELF,0,FXSpinner::onFocusSelf),
+  FXMAPFUNC(SEL_UPDATE,FXSpinner::ID_ENTRY,FXSpinner::onUpdEntry),
+  FXMAPFUNC(SEL_COMMAND,FXSpinner::ID_ENTRY,FXSpinner::onCmdEntry),
+  FXMAPFUNC(SEL_CHANGED,FXSpinner::ID_ENTRY,FXSpinner::onChgEntry),
+  FXMAPFUNC(SEL_MOUSEWHEEL,FXSpinner::ID_ENTRY,FXSpinner::onWheelEntry),
   FXMAPFUNC(SEL_UPDATE,FXSpinner::ID_INCREMENT,FXSpinner::onUpdIncrement),
   FXMAPFUNC(SEL_COMMAND,FXSpinner::ID_INCREMENT,FXSpinner::onCmdIncrement),
   FXMAPFUNC(SEL_UPDATE,FXSpinner::ID_DECREMENT,FXSpinner::onUpdDecrement),
   FXMAPFUNC(SEL_COMMAND,FXSpinner::ID_DECREMENT,FXSpinner::onCmdDecrement),
-  FXMAPFUNC(SEL_COMMAND,FXWindow::ID_SETVALUE,FXSpinner::onCmdSetValue),
-  FXMAPFUNC(SEL_COMMAND,FXWindow::ID_SETINTVALUE,FXSpinner::onCmdSetIntValue),
-  FXMAPFUNC(SEL_COMMAND,FXWindow::ID_GETINTVALUE,FXSpinner::onCmdGetIntValue),
-  FXMAPFUNC(SEL_COMMAND,FXWindow::ID_SETINTRANGE,FXSpinner::onCmdSetIntRange),
-  FXMAPFUNC(SEL_COMMAND,FXWindow::ID_GETINTRANGE,FXSpinner::onCmdGetIntRange),
-  FXMAPFUNC(SEL_COMMAND,FXSpinner::ID_ENTRY,FXSpinner::onCmdEntry),
-  FXMAPFUNC(SEL_CHANGED,FXSpinner::ID_ENTRY,FXSpinner::onChgEntry),
-  FXMAPFUNC(SEL_UPDATE,FXSpinner::ID_ENTRY,FXSpinner::onChgEntry),
+  FXMAPFUNC(SEL_COMMAND,FXSpinner::ID_SETVALUE,FXSpinner::onCmdSetValue),
+  FXMAPFUNC(SEL_COMMAND,FXSpinner::ID_SETINTVALUE,FXSpinner::onCmdSetIntValue),
+  FXMAPFUNC(SEL_COMMAND,FXSpinner::ID_GETINTVALUE,FXSpinner::onCmdGetIntValue),
+  FXMAPFUNC(SEL_COMMAND,FXSpinner::ID_SETINTRANGE,FXSpinner::onCmdSetIntRange),
+  FXMAPFUNC(SEL_COMMAND,FXSpinner::ID_GETINTRANGE,FXSpinner::onCmdGetIntRange),
   };
 
 
@@ -86,31 +90,29 @@ FXIMPLEMENT(FXSpinner,FXPacker,FXSpinnerMap,ARRAYNUMBER(FXSpinnerMap))
 
 // Construct spinner out of two buttons and a text field
 FXSpinner::FXSpinner(){
-  flags|=FLAG_ENABLED|FLAG_SHOWN;
-  flags&=~FLAG_UPDATE;
-  textField=(FXTextField*)-1;
-  upButton=(FXArrowButton*)-1;
-  downButton=(FXArrowButton*)-1;
+  flags=(flags|FLAG_ENABLED|FLAG_SHOWN)&~FLAG_UPDATE;
+  textField=(FXTextField*)-1L;
+  upButton=(FXArrowButton*)-1L;
+  downButton=(FXArrowButton*)-1L;
   range[0]=INTMIN;
   range[1]=INTMAX;
   incr=1;
-  pos=1;
+  pos=0;
   }
 
 
 // Construct spinner out of two buttons and a text field
 FXSpinner::FXSpinner(FXComposite *p,FXint cols,FXObject *tgt,FXSelector sel,FXuint opts,FXint x,FXint y,FXint w,FXint h,FXint pl,FXint pr,FXint pt,FXint pb):
-  FXPacker(p,opts,x,y,w,h, 0,0,0,0, 0,0){
-  flags|=FLAG_ENABLED|FLAG_SHOWN;
-  flags&=~FLAG_UPDATE;
+  FXPacker(p,opts,x,y,w,h,0,0,0,0,0,0){
+  flags=(flags|FLAG_ENABLED|FLAG_SHOWN)&~FLAG_UPDATE;
   target=tgt;
   message=sel;
   textField=new FXTextField(this,cols,this,ID_ENTRY,TEXTFIELD_INTEGER|JUSTIFY_RIGHT,0,0,0,0,pl,pr,pt,pb);
   upButton=new FXArrowButton(this,this,FXSpinner::ID_INCREMENT,FRAME_RAISED|FRAME_THICK|ARROW_UP|ARROW_REPEAT, 0,0,0,0, 0,0,0,0);
   downButton=new FXArrowButton(this,this,FXSpinner::ID_DECREMENT,FRAME_RAISED|FRAME_THICK|ARROW_DOWN|ARROW_REPEAT, 0,0,0,0, 0,0,0,0);
-  textField->setText("0");
   range[0]=(options&SPIN_NOMIN) ? INTMIN : 0;
   range[1]=(options&SPIN_NOMAX) ? INTMAX : 100;
+  textField->setText("0");
   incr=1;
   pos=0;
   }
@@ -130,9 +132,25 @@ FXint FXSpinner::getDefaultHeight(){
   }
 
 
-// Create window
-void FXSpinner::create(){
-  FXPacker::create();
+// Enable the widget
+void FXSpinner::enable(){
+  if(!(flags&FLAG_ENABLED)){
+    FXPacker::enable();
+    textField->enable();
+    upButton->enable();
+    downButton->enable();
+    }
+  }
+
+
+// Disable the widget
+void FXSpinner::disable(){
+  if(flags&FLAG_ENABLED){
+    FXPacker::disable();
+    textField->disable();
+    upButton->disable();
+    downButton->disable();
+    }
   }
 
 
@@ -165,61 +183,82 @@ void FXSpinner::layout(){
 // Respond to increment message
 long FXSpinner::onUpdIncrement(FXObject* sender,FXSelector,void*){
   if(isEnabled() && ((options&SPIN_CYCLIC) || (pos<range[1])))
-    sender->handle(this,MKUINT(ID_ENABLE,SEL_COMMAND),NULL);
+    sender->handle(this,FXSEL(SEL_COMMAND,ID_ENABLE),NULL);
   else
-    sender->handle(this,MKUINT(ID_DISABLE,SEL_COMMAND),NULL);
+    sender->handle(this,FXSEL(SEL_COMMAND,ID_DISABLE),NULL);
   return 1;
   }
 
 
 // Respond to increment message
 long FXSpinner::onCmdIncrement(FXObject*,FXSelector,void*){
-  if(!isEnabled()) return 0;
-  increment();
-  if(target) target->handle(this,MKUINT(message,SEL_COMMAND),(void*)(FXival)pos);
-  return 1;
+  if(isEnabled() && isEditable()){
+    increment();
+    if(target) target->handle(this,FXSEL(SEL_COMMAND,message),(void*)(FXival)pos);
+    return 1;
+    }
+  return 0;
   }
 
 
 // Disable decrement if at low end already
 long FXSpinner::onUpdDecrement(FXObject* sender,FXSelector,void*){
   if(isEnabled() && ((options&SPIN_CYCLIC) || (range[0]<pos)))
-    sender->handle(this,MKUINT(ID_ENABLE,SEL_COMMAND),NULL);
+    sender->handle(this,FXSEL(SEL_COMMAND,ID_ENABLE),NULL);
   else
-    sender->handle(this,MKUINT(ID_DISABLE,SEL_COMMAND),NULL);
+    sender->handle(this,FXSEL(SEL_COMMAND,ID_DISABLE),NULL);
   return 1;
   }
 
 
 // Respond to decrement message
 long FXSpinner::onCmdDecrement(FXObject*,FXSelector,void*){
-  if(!isEnabled()) return 0;
-  decrement();
-  if(target) target->handle(this,MKUINT(message,SEL_COMMAND),(void*)(FXival)pos);
+  if(isEnabled() && isEditable()){
+    decrement();
+    if(target) target->handle(this,FXSEL(SEL_COMMAND,message),(void*)(FXival)pos);
+    return 1;
+    }
+  return 0;
+  }
+
+
+// Rolling mouse wheel in text field works as if hitting up or down buttons
+long FXSpinner::onWheelEntry(FXObject*,FXSelector,void* ptr){
+  if(isEnabled() && isEditable()){
+    if(((FXEvent*)ptr)->code>0) 
+      increment(); 
+    else 
+      decrement();
+    if(target) target->handle(this,FXSEL(SEL_COMMAND,message),(void*)(FXival)pos);
+    return 1;
+    }
+  return 0;
+  }
+
+
+// Update from text field
+long FXSpinner::onUpdEntry(FXObject*,FXSelector,void*){
+  return target && target->handle(this,FXSEL(SEL_UPDATE,message),NULL);
+  }
+
+
+// Text field changed
+long FXSpinner::onChgEntry(FXObject*,FXSelector,void*){
+  register FXint value=FXIntVal(textField->getText());
+  if(value<range[0]) value=range[0];
+  if(value>range[1]) value=range[1];
+  if(value!=pos){
+    pos=value;
+    if(target) target->handle(this,FXSEL(SEL_CHANGED,message),(void*)(FXival)pos);
+    }
   return 1;
   }
 
 
-// TextField entry changed
-long FXSpinner::onChgEntry(FXObject*,FXSelector sel,void*){
-  if(SELTYPE(sel)==SEL_CHANGED){
-    register FXint value=FXIntVal(textField->getText());
-    if(value<range[0]) value=range[0];
-    if(value>range[1]) value=range[1];
-    if(value!=pos){
-      pos=value;
-      if(target) target->handle(this,MKUINT(message,SEL_CHANGED),(void*)(FXival)pos);
-      }
-    return 1;
-    }
-  return target && target->handle(this,MKUINT(message,SEL_UPDATE),NULL);
-  }
-
-
-// TextField entered
+// Text field command
 long FXSpinner::onCmdEntry(FXObject*,FXSelector,void*){
   textField->setText(FXStringVal(pos));       // Put back adjusted value
-  if(target) target->handle(this,MKUINT(message,SEL_COMMAND),(void*)(FXival)pos);
+  if(target) target->handle(this,FXSEL(SEL_COMMAND,message),(void*)(FXival)pos);
   return 1;
   }
 
@@ -227,21 +266,32 @@ long FXSpinner::onCmdEntry(FXObject*,FXSelector,void*){
 // Keyboard press
 long FXSpinner::onKeyPress(FXObject* sender,FXSelector sel,void* ptr){
   FXEvent* event=(FXEvent*)ptr;
-  if(!isEnabled()) return 0;
-  if(target && target->handle(this,MKUINT(message,SEL_KEYPRESS),ptr)) return 1;
-  switch(event->code){
-    case KEY_Up:
-    case KEY_KP_Up:
-      increment();
-      if(target) target->handle(this,MKUINT(message,SEL_COMMAND),(void*)(FXival)pos);
-      return 1;
-    case KEY_Down:
-    case KEY_KP_Down:
-      decrement();
-      if(target) target->handle(this,MKUINT(message,SEL_COMMAND),(void*)(FXival)pos);
-      return 1;
-    default:
-      return textField->handle(sender,sel,ptr);
+  if(isEnabled()){
+    if(target && target->handle(this,FXSEL(SEL_KEYPRESS,message),ptr)) return 1;
+    switch(event->code){
+      case KEY_Up:
+      case KEY_KP_Up:
+        if(isEditable()){
+          increment();
+          if(target) target->handle(this,FXSEL(SEL_COMMAND,message),(void*)(FXival)pos);
+          }
+        else{
+          getApp()->beep();
+          }
+        return 1;
+      case KEY_Down:
+      case KEY_KP_Down:
+        if(isEditable()){
+          decrement();
+          if(target) target->handle(this,FXSEL(SEL_COMMAND,message),(void*)(FXival)pos);
+          }
+        else{
+          getApp()->beep();
+          }
+        return 1;
+      default:
+        return textField->handle(sender,sel,ptr);
+      }
     }
   return 0;
   }
@@ -250,18 +300,25 @@ long FXSpinner::onKeyPress(FXObject* sender,FXSelector sel,void* ptr){
 // Keyboard release
 long FXSpinner::onKeyRelease(FXObject* sender,FXSelector sel,void* ptr){
   FXEvent* event=(FXEvent*)ptr;
-  if(!isEnabled()) return 0;
-  if(target && target->handle(this,MKUINT(message,SEL_KEYRELEASE),ptr)) return 1;
-  switch(event->code){
-    case KEY_Up:
-    case KEY_KP_Up:
-    case KEY_Down:
-    case KEY_KP_Down:
-      return 1;
-    default:
-      return textField->handle(sender,sel,ptr);
+  if(isEnabled()){
+    if(target && target->handle(this,FXSEL(SEL_KEYRELEASE,message),ptr)) return 1;
+    switch(event->code){
+      case KEY_Up:
+      case KEY_KP_Up:
+      case KEY_Down:
+      case KEY_KP_Down:
+        return 1;
+      default:
+        return textField->handle(sender,sel,ptr);
+      }
     }
   return 0;
+  }
+
+
+// Force focus on the text field
+long FXSpinner::onFocusSelf(FXObject* sender,FXSelector,void* ptr){
+  return textField->handle(sender,FXSEL(SEL_FOCUS_SELF,0),ptr);
   }
 
 
@@ -302,7 +359,7 @@ long FXSpinner::onCmdGetIntRange(FXObject*,FXSelector,void* ptr){
 
 // Increment spinner
 void FXSpinner::increment(){
-  if(range[0]<=range[1]){
+  if(range[0]<range[1]){
     if(options&SPIN_CYCLIC){
       setValue(range[0] + (pos+incr-range[0]) % (range[1]-range[0]+1));
       }
@@ -315,7 +372,7 @@ void FXSpinner::increment(){
 
 // Decrement spinner
 void FXSpinner::decrement(){
-  if(range[0]<=range[1]){
+  if(range[0]<range[1]){
     if(options&SPIN_CYCLIC){
       setValue(range[0] + (pos+(range[1]-range[0]+1-incr)-range[0]) % (range[1]-range[0]+1));
       }
@@ -335,28 +392,6 @@ FXbool FXSpinner::isCyclic() const {
 // Set spinner cyclic mode
 void FXSpinner::setCyclic(FXbool cyclic){
   if(cyclic) options|=SPIN_CYCLIC; else options&=~SPIN_CYCLIC;
-  }
-
-
-// Enable the widget
-void FXSpinner::enable(){
-  if(!(flags&FLAG_ENABLED)){
-    FXPacker::enable();
-    textField->enable();
-    upButton->enable();
-    downButton->enable();
-    }
-  }
-
-
-// Disable the widget
-void FXSpinner::disable(){
-  if(flags&FLAG_ENABLED){
-    FXPacker::disable();
-    textField->disable();
-    upButton->disable();
-    downButton->disable();
-    }
   }
 
 
@@ -384,7 +419,7 @@ void FXSpinner::setValue(FXint value){
 
 // Change value increment
 void FXSpinner::setIncrement(FXint inc){
-  if(inc<1){ fxerror("%s::setIncrement: negative or zero increment specified.\n",getClassName()); }
+  if(inc<=0){ fxerror("%s::setIncrement: negative or zero increment specified.\n",getClassName()); }
   incr=inc;
   }
 
@@ -475,6 +510,78 @@ FXbool FXSpinner::isEditable() const {
   return textField->isEditable();
   }
 
+// Change color of the up arrow
+void FXSpinner::setUpArrowColor(FXColor clr){
+  upButton->setArrowColor(clr);
+  }
+
+// Return color of the up arrow
+FXColor FXSpinner::getUpArrowColor() const {
+  return upButton->getArrowColor();
+  }
+
+// Change color of the down arrow
+void FXSpinner::setDownArrowColor(FXColor clr){
+  downButton->setArrowColor(clr);
+  }
+
+// Return color of the the down arrow
+FXColor FXSpinner::getDownArrowColor() const {
+  return downButton->getArrowColor();
+  }
+
+// Change text color
+void FXSpinner::setTextColor(FXColor clr){
+  textField->setTextColor(clr);
+  }
+
+// Return text color
+FXColor FXSpinner::getTextColor() const {
+  return textField->getTextColor();
+  }
+
+// Change selected background color
+void FXSpinner::setSelBackColor(FXColor clr){
+  textField->setSelBackColor(clr);
+  }
+
+// Return selected background color
+FXColor FXSpinner::getSelBackColor() const {
+  return textField->getSelBackColor();
+  }
+
+// Change selected text color
+void FXSpinner::setSelTextColor(FXColor clr){
+  textField->setSelTextColor(clr);
+  }
+
+// Return selected text color
+FXColor FXSpinner::getSelTextColor() const {
+  return textField->getSelTextColor();
+  }
+
+// Changes the cursor color
+void FXSpinner::setCursorColor(FXColor clr){
+  textField->setCursorColor(clr);
+  }
+
+// Return the cursor color
+FXColor FXSpinner::getCursorColor() const {
+  return textField->getCursorColor();
+  }
+
+
+// Change number of columns
+void FXSpinner::setNumColumns(FXint ncols){
+  textField->setNumColumns(ncols);
+  }
+
+
+// Return number of columns
+FXint FXSpinner::getNumColumns() const {
+  return textField->getNumColumns();
+  }
+
 
 // Save object to stream
 void FXSpinner::save(FXStream& store) const {
@@ -502,7 +609,9 @@ void FXSpinner::load(FXStream& store){
 
 // Destruct spinner:- trash it!
 FXSpinner::~FXSpinner(){
-  textField=(FXTextField*)-1;
-  upButton=(FXArrowButton*)-1;
-  downButton=(FXArrowButton*)-1;
+  textField=(FXTextField*)-1L;
+  upButton=(FXArrowButton*)-1L;
+  downButton=(FXArrowButton*)-1L;
   }
+
+}

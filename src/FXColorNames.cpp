@@ -3,7 +3,7 @@
 *                      C o l o r   N a m e   F u n c t i o n s                  *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXColorNames.cpp,v 1.16 2002/01/18 22:42:58 jeroen Exp $                 *
+* $Id: FXColorNames.cpp,v 1.23 2004/02/08 17:29:06 fox Exp $                    *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -29,7 +29,11 @@
 #include "FXStream.h"
 #include "FXString.h"
 
+using namespace FX;
 
+/*******************************************************************************/
+
+namespace FX {
 
 // Massive color database
 const FXNamedColor fxcolornames[]={
@@ -39,6 +43,7 @@ const FXNamedColor fxcolornames[]={
   {"AntiqueWhite2",        FXRGBA(238,223,204,255)},
   {"AntiqueWhite3",        FXRGBA(205,192,176,255)},
   {"AntiqueWhite4",        FXRGBA(139,131,120,255)},
+  //{"Aqua",                 FXRGBA(  0,255,255,255)},
   {"Aquamarine",           FXRGBA(127,255,212,255)},
   {"Aquamarine1",          FXRGBA(127,255,212,255)},
   {"Aquamarine2",          FXRGBA(118,238,198,255)},
@@ -49,6 +54,7 @@ const FXNamedColor fxcolornames[]={
   {"Azure2",               FXRGBA(224,238,238,255)},
   {"Azure3",               FXRGBA(193,205,205,255)},
   {"Azure4",               FXRGBA(131,139,139,255)},
+  {"Banana",               FXRGBA(227,207, 87,255)},
   {"Beige",                FXRGBA(245,245,220,255)},
   {"Bisque",               FXRGBA(255,228,196,255)},
   {"Bisque1",              FXRGBA(255,228,196,255)},
@@ -63,6 +69,7 @@ const FXNamedColor fxcolornames[]={
   {"Blue3",                FXRGBA(  0,  0,205,255)},
   {"Blue4",                FXRGBA(  0,  0,139,255)},
   {"BlueViolet",           FXRGBA(138, 43,226,255)},
+  {"Brick",                FXRGBA(156,102, 31,255)},
   {"Brown",                FXRGBA(165, 42, 42,255)},
   {"Brown1",               FXRGBA(255, 64, 64,255)},
   {"Brown2",               FXRGBA(238, 59, 59,255)},
@@ -73,11 +80,17 @@ const FXNamedColor fxcolornames[]={
   {"Burlywood2",           FXRGBA(238,197,145,255)},
   {"Burlywood3",           FXRGBA(205,170,125,255)},
   {"Burlywood4",           FXRGBA(139,115, 85,255)},
+  {"BurnedSienna",         FXRGBA(138, 54, 15,255)},
+  {"BurnedUmber",          FXRGBA(138, 51, 36,255)},
   {"CadetBlue",            FXRGBA( 95,158,160,255)},
   {"CadetBlue1",           FXRGBA(152,245,255,255)},
   {"CadetBlue2",           FXRGBA(142,229,238,255)},
   {"CadetBlue3",           FXRGBA(122,197,205,255)},
   {"CadetBlue4",           FXRGBA( 83,134,139,255)},
+  {"CadmiumOrange",        FXRGBA(255, 97,  3,255)},
+  {"CadmiumRed",           FXRGBA(227, 23, 13,255)},
+  {"CadmiumYellow",        FXRGBA(255,153, 18,255)},
+  {"Carrot",               FXRGBA(237,145, 33,255)},
   {"Chartreuse",           FXRGBA(127,255,  0,255)},
   {"Chartreuse1",          FXRGBA(127,255,  0,255)},
   {"Chartreuse2",          FXRGBA(118,238,  0,255)},
@@ -88,6 +101,9 @@ const FXNamedColor fxcolornames[]={
   {"Chocolate2",           FXRGBA(238,118, 33,255)},
   {"Chocolate3",           FXRGBA(205,102, 29,255)},
   {"Chocolate4",           FXRGBA(139, 69, 19,255)},
+  {"Cobalt",               FXRGBA( 61, 89,171,255)},
+  {"CobaltGreen",          FXRGBA( 61,145, 64,255)},
+  {"ColdGrey",             FXRGBA(128,138,135,255)},
   {"Coral",                FXRGBA(255,127, 80,255)},
   {"Coral1",               FXRGBA(255,114, 86,255)},
   {"Coral2",               FXRGBA(238,106, 80,255)},
@@ -99,6 +115,7 @@ const FXNamedColor fxcolornames[]={
   {"Cornsilk2",            FXRGBA(238,232,205,255)},
   {"Cornsilk3",            FXRGBA(205,200,177,255)},
   {"Cornsilk4",            FXRGBA(139,136,120,255)},
+  {"Crimson",              FXRGBA(220, 20, 60,255)},
   {"Cyan",                 FXRGBA(  0,255,255,255)},
   {"Cyan1",                FXRGBA(  0,255,255,255)},
   {"Cyan2",                FXRGBA(  0,238,238,255)},
@@ -164,6 +181,8 @@ const FXNamedColor fxcolornames[]={
   {"DodgerBlue2",          FXRGBA( 28,134,238,255)},
   {"DodgerBlue3",          FXRGBA( 24,116,205,255)},
   {"DodgerBlue4",          FXRGBA( 16, 78,139,255)},
+  {"Eggshell",             FXRGBA(252,230,201,255)},
+  {"EmeraldGreen",         FXRGBA(  0,201, 87,255)},
   {"Firebrick",            FXRGBA(178, 34, 34,255)},
   {"Firebrick1",           FXRGBA(255, 48, 48,255)},
   {"Firebrick2",           FXRGBA(238, 44, 44,255)},
@@ -171,6 +190,7 @@ const FXNamedColor fxcolornames[]={
   {"Firebrick4",           FXRGBA(139, 26, 26,255)},
   {"FloralWhite",          FXRGBA(255,250,240,255)},
   {"ForestGreen",          FXRGBA( 34,139, 34,255)},
+  //{"Fuchsia",              FXRGBA(255,  0,255,255)},
   {"Gainsboro",            FXRGBA(220,220,220,255)},
   {"GhostWhite",           FXRGBA(248,248,255,255)},
   {"Gold",                 FXRGBA(255,215,  0,255)},
@@ -408,6 +428,7 @@ const FXNamedColor fxcolornames[]={
   {"IndianRed2",           FXRGBA(238, 99, 99,255)},
   {"IndianRed3",           FXRGBA(205, 85, 85,255)},
   {"IndianRed4",           FXRGBA(139, 58, 58,255)},
+  {"Indigo",               FXRGBA( 75,  0,130,255)},
   {"Ivory",                FXRGBA(255,255,240,255)},
   {"Ivory1",               FXRGBA(255,255,240,255)},
   {"Ivory2",               FXRGBA(238,238,224,255)},
@@ -479,6 +500,7 @@ const FXNamedColor fxcolornames[]={
   {"LightYellow2",         FXRGBA(238,238,209,255)},
   {"LightYellow3",         FXRGBA(205,205,180,255)},
   {"LightYellow4",         FXRGBA(139,139,122,255)},
+  //{"Lime",                 FXRGBA(  0,255,  0,255)},
   {"LimeGreen",            FXRGBA( 50,205, 50,255)},
   {"Linen",                FXRGBA(250,240,230,255)},
   {"Magenta",              FXRGBA(255,  0,255,255)},
@@ -525,6 +547,7 @@ const FXNamedColor fxcolornames[]={
   {"NavyBlue",             FXRGBA(  0,  0,128,255)},
   {"None",                 FXRGBA(  0,  0,  0,  0)},    // Transparent
   {"OldLace",              FXRGBA(253,245,230,255)},
+  {"Olive",                FXRGBA(128,128,  0,255)},
   {"OliveDrab",            FXRGBA(107,142, 35,255)},
   {"OliveDrab1",           FXRGBA(192,255, 62,255)},
   {"OliveDrab2",           FXRGBA(179,238, 58,255)},
@@ -584,6 +607,7 @@ const FXNamedColor fxcolornames[]={
   {"Purple2",              FXRGBA(145, 44,238,255)},
   {"Purple3",              FXRGBA(125, 38,205,255)},
   {"Purple4",              FXRGBA( 85, 26,139,255)},
+  {"Raspberry",            FXRGBA(135, 38, 87,255)},
   {"Red",                  FXRGBA(255,  0,  0,255)},
   {"Red1",                 FXRGBA(255,  0,  0,255)},
   {"Red2",                 FXRGBA(238,  0,  0,255)},
@@ -616,11 +640,13 @@ const FXNamedColor fxcolornames[]={
   {"Seashell2",            FXRGBA(238,229,222,255)},
   {"Seashell3",            FXRGBA(205,197,191,255)},
   {"Seashell4",            FXRGBA(139,134,130,255)},
+  {"Sepia",                FXRGBA( 94, 38, 18,255)},
   {"Sienna",               FXRGBA(160, 82, 45,255)},
   {"Sienna1",              FXRGBA(255,130, 71,255)},
   {"Sienna2",              FXRGBA(238,121, 66,255)},
   {"Sienna3",              FXRGBA(205,104, 57,255)},
   {"Sienna4",              FXRGBA(139, 71, 38,255)},
+  {"Silver",               FXRGBA(192,192,192,255)},
   {"SkyBlue",              FXRGBA(135,206,235,255)},
   {"SkyBlue1",             FXRGBA(135,206,255,255)},
   {"SkyBlue2",             FXRGBA(126,192,238,255)},
@@ -657,6 +683,7 @@ const FXNamedColor fxcolornames[]={
   {"Tan2",                 FXRGBA(238,154, 73,255)},
   {"Tan3",                 FXRGBA(205,133, 63,255)},
   {"Tan4",                 FXRGBA(139, 90, 43,255)},
+  {"Teal",                 FXRGBA(  0,128,128,255)},
   {"Thistle",              FXRGBA(216,191,216,255)},
   {"Thistle1",             FXRGBA(255,225,255,255)},
   {"Thistle2",             FXRGBA(238,210,238,255)},
@@ -672,12 +699,14 @@ const FXNamedColor fxcolornames[]={
   {"Turquoise2",           FXRGBA(  0,229,238,255)},
   {"Turquoise3",           FXRGBA(  0,197,205,255)},
   {"Turquoise4",           FXRGBA(  0,134,139,255)},
+  {"Ultramarine",          FXRGBA(  0, 42,143,255)},
   {"Violet",               FXRGBA(238,130,238,255)},
   {"VioletRed",            FXRGBA(208, 32,144,255)},
   {"VioletRed1",           FXRGBA(255, 62,150,255)},
   {"VioletRed2",           FXRGBA(238, 58,140,255)},
   {"VioletRed3",           FXRGBA(205, 50,120,255)},
   {"VioletRed4",           FXRGBA(139, 34, 82,255)},
+  {"WarmGrey",             FXRGBA(128,128,105,255)},
   {"Wheat",                FXRGBA(245,222,179,255)},
   {"Wheat1",               FXRGBA(255,231,186,255)},
   {"Wheat2",               FXRGBA(238,216,174,255)},
@@ -700,55 +729,51 @@ const FXuint fxnumcolornames=ARRAYNUMBER(fxcolornames);
 
 // Get RGB value from color name
 FXColor fxcolorfromname(const FXchar* colorname){
-  FXColor color=FXRGBA(0,0,0,0);
   FXchar name[100],c,*tail=name;
   FXint l,h,m,eq,r,g,b,a;
-  if(!colorname){fxerror("fxcolorfromname: NULL colorname argument.\n");}
-  while((c=*colorname++)!='\0'){ if(!isspace((FXuchar)c)) *tail++=c; } *tail='\0';
-  if(name[0]=='#'){
-    switch(tail-name-1){
-      case 3:
-        sscanf(name+1,"%01x%01x%01x",&r,&g,&b);
-        color=FXRGB((r*17),(g*17),(b*17));
-        break;
-      case 4:
-        sscanf(name+1,"%01x%01x%01x%01x",&r,&g,&b,&a);
-        color=FXRGBA((r*17),(g*17),(b*17),(a*17));
-        break;
-      case 6:
-        sscanf(name+1,"%02x%02x%02x",&r,&g,&b);
-        color=FXRGB(r,g,b);
-        break;
-      case 8:
-        sscanf(name+1,"%02x%02x%02x%02x",&r,&g,&b,&a);
-        color=FXRGBA(r,g,b,a);
-        break;
-      case 9:
-        sscanf(name+1,"%03x%03x%03x",&r,&g,&b);
-        color=FXRGB((r/16),(g/16),(b/16));
-        break;
-      case 12:
-        sscanf(name+1,"%04x%04x%04x",&r,&g,&b);
-        color=FXRGB((r/257),(g/257),(b/257));
-        break;
-      case 16:
-        sscanf(name+1,"%04x%04x%04x%04x",&r,&g,&b,&a);
-        color=FXRGBA((r/257),(g/257),(b/257),(a/257));
-        break;
+  if(colorname){
+    while((c=*colorname++)!='\0' && tail<&name[99]){
+      if(!isspace((FXuchar)c)) *tail++=c;
+      }
+    *tail='\0';
+    if(name[0]=='#'){
+      switch(tail-name-1){
+        case 3:
+          sscanf(name+1,"%01x%01x%01x",&r,&g,&b);
+          return FXRGB((r*17),(g*17),(b*17));
+        case 4:
+          sscanf(name+1,"%01x%01x%01x%01x",&r,&g,&b,&a);
+          return FXRGBA((r*17),(g*17),(b*17),(a*17));
+        case 6:
+          sscanf(name+1,"%02x%02x%02x",&r,&g,&b);
+          return FXRGB(r,g,b);
+        case 8:
+          sscanf(name+1,"%02x%02x%02x%02x",&r,&g,&b,&a);
+          return FXRGBA(r,g,b,a);
+        case 9:
+          sscanf(name+1,"%03x%03x%03x",&r,&g,&b);
+          return FXRGB((r/16),(g/16),(b/16));
+        case 12:
+          sscanf(name+1,"%04x%04x%04x",&r,&g,&b);
+          return FXRGB((r/257),(g/257),(b/257));
+        case 16:
+          sscanf(name+1,"%04x%04x%04x%04x",&r,&g,&b,&a);
+          return FXRGBA((r/257),(g/257),(b/257),(a/257));
+        }
+      }
+    else{
+      l=0;
+      h=ARRAYNUMBER(fxcolornames)-1;
+      do{
+        m=(h+l)>>1;
+        eq=comparecase(name,fxcolornames[m].name);
+        if(eq==0) return fxcolornames[m].color;
+        if(eq<0) h=m-1; else l=m+1;
+        }
+      while(h>=l);
       }
     }
-  else{
-    l=0;
-    h=ARRAYNUMBER(fxcolornames)-1;
-    do{
-      m=(h+l)>>1;
-      eq=comparecase(name,fxcolornames[m].name);
-      if(eq==0) return fxcolornames[m].color;
-      if(eq<0) h=m-1; else l=m+1;
-      }
-    while(h>=l);
-    }
-  return color;
+  return FXRGBA(0,0,0,0);
   }
 
 
@@ -771,3 +796,4 @@ FXchar* fxnamefromcolor(FXchar* colorname,FXColor color){
   return colorname;
   }
 
+}

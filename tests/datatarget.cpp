@@ -5,7 +5,7 @@
 *********************************************************************************
 * Copyright (C) 1997 by Jeroen van der Zijp.   All Rights Reserved.             *
 *********************************************************************************
-* $Id: datatarget.cpp,v 1.28 2001/09/05 05:47:23 jeroen Exp $                   *
+* $Id: datatarget.cpp,v 1.41 2004/03/25 16:30:25 fox Exp $                      *
 ********************************************************************************/
 #include "fx.h"
 #include <stdio.h>
@@ -16,7 +16,6 @@
 #include <unistd.h>
 #endif
 
-
 /*******************************************************************************/
 
 
@@ -24,7 +23,7 @@
 class DataTargetWindow : public FXMainWindow {
   FXDECLARE(DataTargetWindow)
 protected:
-  FXMenubar*         menubar;
+  FXMenuBar*         menubar;
   FXMenuPane*        filemenu;
   FXMenuPane*        optionmenu;
   FXPopup*           popup;
@@ -46,14 +45,12 @@ public:
   long onCmdTimer(FXObject*,FXSelector,void*);
   long onCmdQuit(FXObject*,FXSelector,void*);
   long onCmdProgress(FXObject*,FXSelector,void*);
-  long onCmdTextField(FXObject*,FXSelector,void*);
 public:
   DataTargetWindow(){}
 public:
   enum {
     ID_TIMER=FXMainWindow::ID_LAST,
     ID_PROGRESS,
-    ID_TEXTFIELD,
     ID_QUIT
     };
 public:
@@ -68,10 +65,10 @@ public:
 
 // Map
 FXDEFMAP(DataTargetWindow) DataTargetWindowMap[]={
-  FXMAPFUNC(SEL_TIMEOUT,DataTargetWindow::ID_TIMER,    DataTargetWindow::onCmdTimer),
+  FXMAPFUNC(SEL_CLOSE,  0,                             DataTargetWindow::onCmdQuit),
   FXMAPFUNC(SEL_SIGNAL, DataTargetWindow::ID_QUIT,     DataTargetWindow::onCmdQuit),
+  FXMAPFUNC(SEL_TIMEOUT,DataTargetWindow::ID_TIMER,    DataTargetWindow::onCmdTimer),
   FXMAPFUNC(SEL_COMMAND,DataTargetWindow::ID_PROGRESS, DataTargetWindow::onCmdProgress),
-  FXMAPFUNC(SEL_COMMAND,DataTargetWindow::ID_TEXTFIELD,DataTargetWindow::onCmdTextField),
   };
 
 
@@ -111,12 +108,12 @@ DataTargetWindow::DataTargetWindow(FXApp* a):FXMainWindow(a,"Data Target Test",N
   progress_target.connect(some_progress);
 
   // Create progress dialog
-  progressdialog=new FXProgressDialog(this,"Progress","We zijn druk, we zijn druk\nWe zijn ongelooflijk druk.",PROGRESSDIALOG_CANCEL|DECOR_BORDER|DECOR_RESIZE);
+  progressdialog=new FXProgressDialog(this,"Progress","We zijn druk, we zijn druk\nWe zijn ongelooflijk druk.",PROGRESSDIALOG_CANCEL|DECOR_BORDER|DECOR_RESIZE|DECOR_TITLE);
   progressdialog->setTarget(&int_target);
   progressdialog->setSelector(FXDataTarget::ID_VALUE);
 
   // Menubar
-  menubar=new FXMenubar(this,LAYOUT_SIDE_TOP|LAYOUT_FILL_X);
+  menubar=new FXMenuBar(this,LAYOUT_SIDE_TOP|LAYOUT_FILL_X);
 
   // File menu
   filemenu=new FXMenuPane(this);
@@ -127,11 +124,12 @@ DataTargetWindow::DataTargetWindow(FXApp* a):FXMainWindow(a,"Data Target Test",N
   // Option menu
   optionmenu=new FXMenuPane(this);
 
-    // The menu commands change the "some_option" variable via the option_target
-    new FXMenuCommand(optionmenu,"Option 1",NULL,&option_target,FXDataTarget::ID_OPTION+0);
-    new FXMenuCommand(optionmenu,"Option 2",NULL,&option_target,FXDataTarget::ID_OPTION+1);
-    new FXMenuCommand(optionmenu,"Option 3",NULL,&option_target,FXDataTarget::ID_OPTION+2);
-    new FXMenuCommand(optionmenu,"Option 4",NULL,&option_target,FXDataTarget::ID_OPTION+3);
+    // The menu radios change the "some_option" variable via the option_target
+    new FXMenuRadio(optionmenu,"Option 1",&option_target,FXDataTarget::ID_OPTION+0);
+    new FXMenuRadio(optionmenu,"Option 2",&option_target,FXDataTarget::ID_OPTION+1);
+    new FXMenuRadio(optionmenu,"Option 3",&option_target,FXDataTarget::ID_OPTION+2);
+    new FXMenuRadio(optionmenu,"Option 4",&option_target,FXDataTarget::ID_OPTION+3);
+
   new FXMenuTitle(menubar,"&Option",NULL,optionmenu);
 
 
@@ -179,7 +177,8 @@ DataTargetWindow::DataTargetWindow(FXApp* a):FXMainWindow(a,"Data Target Test",N
   // The value of variable "some_double" may be changed by the widgets below
   new FXTextField(matrix,10,&double_target,FXDataTarget::ID_VALUE,TEXTFIELD_REAL|JUSTIFY_RIGHT|LAYOUT_CENTER_Y|LAYOUT_CENTER_X|FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_ROW);
   new FXTextField(matrix,10,&double_target,FXDataTarget::ID_VALUE,TEXTFIELD_REAL|JUSTIFY_RIGHT|LAYOUT_CENTER_Y|LAYOUT_CENTER_X|FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_ROW);
-  new FXSlider(matrix,&double_target,FXDataTarget::ID_VALUE,LAYOUT_CENTER_Y|LAYOUT_FILL_X|LAYOUT_FILL_ROW|LAYOUT_FIX_WIDTH,0,0,100);
+  FXRealSlider *rslider=new FXRealSlider(matrix,&double_target,FXDataTarget::ID_VALUE,LAYOUT_CENTER_Y|LAYOUT_FILL_X|LAYOUT_FILL_ROW|LAYOUT_FIX_WIDTH,0,0,100);
+  rslider->setRange(0.0,10.0);
   new FXDial(matrix,&double_target,FXDataTarget::ID_VALUE,LAYOUT_CENTER_Y|LAYOUT_FILL_X|LAYOUT_FILL_ROW|LAYOUT_FIX_WIDTH|DIAL_HORIZONTAL|DIAL_HAS_NOTCH,0,0,100);
 
   new FXFrame(matrix,LAYOUT_FILL_COLUMN|LAYOUT_FILL_ROW);
@@ -230,15 +229,15 @@ DataTargetWindow::DataTargetWindow(FXApp* a):FXMainWindow(a,"Data Target Test",N
   new FXFrame(matrix,LAYOUT_FILL_COLUMN|LAYOUT_FILL_ROW);
 
   // Install an accelerator
-  getAccelTable()->addAccel(fxparseaccel("Ctl-Q"),getApp(),MKUINT(FXApp::ID_QUIT,SEL_COMMAND));
+  getAccelTable()->addAccel(fxparseAccel("Ctl-Q"),getApp(),FXSEL(SEL_COMMAND,FXApp::ID_QUIT));
 
-  string_target.setTarget(this);
-  string_target.setSelector(ID_TEXTFIELD);
   }
 
 
 // Clean up
 DataTargetWindow::~DataTargetWindow(){
+  getApp()->removeTimeout(this,ID_TIMER);
+  delete progressdialog;
   delete filemenu;
   delete optionmenu;
   delete popup;
@@ -252,7 +251,7 @@ long DataTargetWindow::onCmdTimer(FXObject*,FXSelector,void*){
   some_progress=(some_progress+1)%100;
 
   // Reset timer for next time
-  getApp()->addTimeout(80,this,ID_TIMER);
+  getApp()->addTimeout(this,ID_TIMER,80);
   return 1;
   }
 
@@ -271,21 +270,6 @@ long DataTargetWindow::onCmdProgress(FXObject*,FXSelector,void*){
   }
 
 
-long DataTargetWindow::onCmdTextField(FXObject*,FXSelector,void*){
-  FXString *list;
-  FXint count,i;
-  FXTRACE((100,"some_string=%s\n",some_string.text()));
-  count=FXFile::listFiles(list,some_string,"*",LIST_MATCHING_FILES|LIST_ALL_DIRS);
-  for(i=0; i<count; i++){
-    FXTRACE((100,"file[%d]=%s\n",i,list[i].text()));
-    }
-  delete [] list;
-  return 1;
-  }
-
-
-
-
 // Start
 void DataTargetWindow::create(){
 
@@ -293,7 +277,7 @@ void DataTargetWindow::create(){
   FXMainWindow::create();
 
   // Kick off the timer
-  getApp()->addTimeout(80,this,ID_TIMER);
+  getApp()->addTimeout(this,ID_TIMER,80);
 
   // Show
   show(PLACEMENT_SCREEN);

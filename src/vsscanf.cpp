@@ -3,7 +3,7 @@
 *                   V a r a r g s   S c a n f   R o u t i n e s                 *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2002 by Jeroen van der Zijp.   All Rights Reserved.             *
+* Copyright (C) 2002,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: vsscanf.cpp,v 1.3 2002/02/07 06:01:58 fox Exp $                          *
+* $Id: vsscanf.cpp,v 1.12 2004/03/11 03:17:18 fox Exp $                         *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -32,18 +32,6 @@
 */
 
 #ifndef HAVE_VSSCANF
-
-
-struct arg_scanf {
-  void *data;
-  int (*getch)(void*);
-  int (*putch)(int,void*);
-  };
-
-struct str_data {
-  unsigned char* str;
-  };
-
 
 // API
 extern "C" int vfscanf(FILE *stream, const char *format, va_list arg_ptr);
@@ -59,15 +47,26 @@ extern "C" int vsscanf(const char* str, const char* format, va_list arg_ptr);
 
 /*******************************************************************************/
 
+
+struct arg_scanf {
+  void *data;
+  int (*getch)(void*);
+  int (*putch)(int,void*);
+  };
+
+struct str_data {
+  unsigned char* str;
+  };
+
+
 static int sgetc(struct str_data* sd){
-  register unsigned int ret = *(sd->str++);
-  return (ret)?(int)ret:-1;
+  register unsigned int ret = *sd->str++;
+  return ret ? (int)ret : -1;
   }
 
-static int sputc(int c, struct str_data* sd){
-  return (*(--sd->str)==c)?c:-1;
+static int sputc(int c,struct str_data* sd){
+  return (*--sd->str==c)?c:-1;
   }
-
 
 
 #define A_GETC(fn)	(++consumed,(fn)->getch((fn)->data))
@@ -81,7 +80,6 @@ static int __v_scanf(arg_scanf* fn,const char *format,va_list arg_ptr){
   double d,factor;
   int width,n,neg,exp,prec,tpch;
   char cset[256],*s;
-  FXTRACE((100,"__v_scanf\n"));
 
   /* arg_ptr tmps */
   double *pd;
@@ -94,9 +92,9 @@ static int __v_scanf(arg_scanf* fn,const char *format,va_list arg_ptr){
   n=0;
 
   /* get one char */
-  tpch= A_GETC(fn);
+  tpch=A_GETC(fn);
 
-  while((tpch!=-1) && (*format)){
+  while(tpch!=-1 && *format){
     ch=(unsigned int)*format++;
     switch(ch){
       case 0:                                           // End of the format string
@@ -107,7 +105,7 @@ static int __v_scanf(arg_scanf* fn,const char *format,va_list arg_ptr){
       case '\v':
       case '\n':
       case '\r':
-        while((*format) && (isspace(*format))) ++format;
+        while(*format && isspace(*format)) ++format;
         while(isspace(tpch)) tpch=A_GETC(fn);
         break;
       case '%':                                         // Format string %
@@ -195,9 +193,8 @@ scan_hex:       tpch=A_GETC(fn);
               tpch=A_GETC(fn);
               }
             if((ch|0x20)<'p'){
-              register long l=v;
-              if(v>=-((unsigned long)LONG_MIN)){
-                l=(neg)?LONG_MIN:LONG_MAX;
+              if(v>=0-((unsigned long)LONG_MIN)){
+                v=(neg)?LONG_MIN:LONG_MAX;
                 }
               else{
                 if(neg) v*=-1;
@@ -210,11 +207,11 @@ scan_hex:       tpch=A_GETC(fn);
                 }
               else if(flag_half){
                 ph=(short*)va_arg(arg_ptr,short*);
-                *ph=v;
+                *ph=(short)v;
                 }
               else{
                 pi=(int*)va_arg(arg_ptr,int*);
-                *pi=v;
+                *pi=(int)v;
                 }
               if(consumedsofar<consumed) ++n;
               }
@@ -278,7 +275,7 @@ exp_out:    if(!flag_discard){
                 }
               else {
                 pf=(float *)va_arg(arg_ptr,float*);
-                *pf=d;
+                *pf=(float)d;
                 }
               ++n;
               }
@@ -295,7 +292,7 @@ exp_out:    if(!flag_discard){
               tpch=A_GETC(fn);
               }
             break;
-          case 's':                                     // String 
+          case 's':                                     // String
             if(!flag_discard) s=(char *)va_arg(arg_ptr,char*);
             while(isspace(tpch)) tpch=A_GETC(fn);
             while (width && (tpch!=-1) && (!isspace(tpch))){
@@ -314,20 +311,20 @@ exp_out:    if(!flag_discard){
             break;
           case '[':                                     // Character set
             memset(cset,0,sizeof(cset));
-            ch=*format++;
+            ch=*format;
             flag_not=0;
             if(ch=='^'){                                // Negated character set
               flag_not=1;
-              ch=*format++;
+              ch=*++format;
               }
-            if((ch=='-')||(ch==']')){                   // Special case if first is - or ]
+            if(ch=='-' || ch==']'){                     // Special case if first is - or ]
               cset[ch]=1;
-              ch=*format++;
+              ch=*++format;
               }
             flag_dash=0;
             for( ; *format && *format!=']'; ++format){  // Parse set
               if(flag_dash){
-                for( ; ch<=*format; ++ch) cset[ch]=1;   // Set characters
+                for( ; ch<=(unsigned int)*format; ++ch) cset[ch]=1;   // Set characters
                 flag_dash=0;
                 ch=*format;
                 }
@@ -340,8 +337,8 @@ exp_out:    if(!flag_discard){
                 }
               }
             if(flag_dash)                               // Last character
-              cset['-']=1;
-            else 
+              cset[(int)'-']=1;
+            else
               cset[ch]=1;
             if(!flag_discard){                          // Copy string if not discarded
               s=(char *)va_arg(arg_ptr,char*);
@@ -371,7 +368,6 @@ err_out:
   A_PUTC(tpch,fn);
   return n;
   }
-
 
 
 // API

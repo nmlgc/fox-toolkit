@@ -2,6 +2,7 @@
                                 The FOX GUI Library
                                 ===================
 
+	              Jeroen van der Zijp <jeroen@fox-toolkit.org>
 
 
 
@@ -118,65 +119,16 @@ that some of the problems you may have experienced have already been fixed.
 License.
 ========
 
-The FOX Library proper is licensed under GNU Library GPL; all the examples and demo
+The FOX Library proper is licensed under GNU Lesser GPL; all the examples and demo
 programs are licensed under GPL.
 
 If you write software based on the FOX library, please include the following in your
 About Box, or some other place where a user may be able to see it:
 
 
-        This software uses the FOX Platform Independent GUI Toolkit Library.
-        The FOX Library is Copyright (C) 1997,2001 Jeroen van der Zijp and is
-        available freely under GNU Library Public License at the following site:
-        http://www.fox-toolkit.org/fox.html.
+        This software uses the FOX Toolkit (http://www.fox-toolkit.org).
+        
 
 
 Thanks!
-
-
-
-List of Contributors.
-=====================
-
-List of contributors in alphabetical order.
-
-
-Johnathan Bush 		The Progress Bar Widget.
-
-Janusz Ganczarski       PCX Image and Icon support.
-
-Daniel Gehriger         GIF Cursor, lots of bug reports and suggestions.
-
-Eric Gillet             TIFF Image and Icon support.
-
-Freddy Golos 		Freddy [Fyodor] was one of the first adopters of FOX, back
-			when everybody still had to take my word for it how nice it was;
-			Freddy made it clear there was real potential here.
-
-Sean Hubbell            Initial impetus behind the FXFile class of utility functions.
-
-Sander Jansen 	        Code for the round progress dial, and lots of Windows
-                        specific nitty-gritties.
-
-Lyle Johnson 		The Spinner Widget. Lyle is also largely responsible for the
-			Window NT port of FOX.
-
-David Tyree             JPEG Image and JPEG Icon support.
-
-Guoqing Tian 		The Dial Widget.
-
-Charles W. Warren 	The Shutter Widget.  The concept of the Data Targets.  Charles
-			has also been my principal sounding board for exploring the
-			philosophical underpinnings of the FOX Library.
-
-
-The true list should probably be much larger; if you feel I have inadvertantly omitted
-you, please email me jvz@cfdrc.com and I'll amend the errors in my ways.
-
-
-
-Yours,
-
-
-	Jeroen van der Zijp <jeroen@fox-toolkit.org>
 

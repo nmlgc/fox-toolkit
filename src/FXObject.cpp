@@ -3,7 +3,7 @@
 *                         T o p l e v el   O b j e c t                          *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXObject.cpp,v 1.12.4.1 2003/08/14 03:44:46 fox Exp $                     *
+* $Id: FXObject.cpp,v 1.32 2004/02/08 17:29:06 fox Exp $                        *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -31,16 +31,28 @@
 /*
   Notes:
 
-  - We have to use extern "C" for the metaClass names, as in some compilers,
-    e.g. MS VC++, mangled C++ names are no longer legal identifiers in C or C++.
-  - Perhaps hash metaclasses into table at run-time, by giving FXMetaClass a constructor...
-    [less efficient, but probably also less error-prone...].
-  - We need a table of all metaclasses, as we should be able to create any type of
-    object during deserialization...
+  - We need a table of all metaclasses, as we should be able to create any type
+    of object during deserialization.
+  - For MacOS/X support, we moved fxmalloc() and co. here; the reason is that
+    when FOX is loaded as a DLL into FXRuby, these symbols need to be resolvable
+    in order for the DLL startup code to run properly for the meta class
+    initializers; afterward everything's OK.
 */
+
+
+#define HASH1(x,n) (((unsigned int)(x))%(n))            // Number [0..n-1]
+#define HASH2(x,n) (1|(((unsigned int)(x)*17)%((n)-1))) // Number [1..n-2]
+#define MAX_LOAD   80                                   // Maximum hash table load factor (%)
+#define MIN_LOAD   10                                   // Minimum hash table load factor (%)
+#define DEF_SIZE   128                                  // Initial table size (MUST be power of 2)
+#define EMPTYSLOT  ((FXMetaClass*)-1L)                  // Previously used, now empty slot
+
+
+using namespace FX;
 
 /*******************************************************************************/
 
+namespace FX {
 
 // Allocate memory
 FXint fxmalloc(void** ptr,unsigned long size){
@@ -77,7 +89,7 @@ FXint fxresize(void** ptr,unsigned long size){
 
 
 // Allocate and initialize memory
-FXint fxmemdup(void** ptr,unsigned long size,const void* src){
+FXint fxmemdup(void** ptr,const void* src,unsigned long size){
   *ptr=NULL;
   if(size!=0 && src!=NULL){
     if((*ptr=malloc(size))==NULL) return FALSE;
@@ -110,88 +122,67 @@ void fxfree(void** ptr){
 /*************************  FXMetaClass Implementation  ************************/
 
 // Hash table of metaclasses
-static const FXMetaClass** metaClassTable=NULL;
-static FXuint              nmetaClassTable=0;
-static FXuint              nmetaClasses=0;
+const FXMetaClass** FXMetaClass::metaClassTable=NULL;
+FXuint              FXMetaClass::nmetaClassTable=0;
+FXuint              FXMetaClass::nmetaClasses=0;
 
 
-// Compute hash string
-static FXuint hashstring(const FXchar *str){
+// Hash function for string
+static inline FXuint hashstring(const FXchar* str){
+  register const FXuchar *s=(const FXuchar*)str;
   register FXuint h=0;
-  register FXuint g;
-  while(*str) {
-    h=(h<<4)+*str++;
-    g=h&0xF0000000UL;
-    if(g) h^=g>>24;
-    h&=~g;
+  register FXuint c;
+  while((c=*s++)!='\0'){
+    h = ((h << 5) + h) ^ c;
     }
   return h;
   }
 
 
-#define HASH1(x,n) (((unsigned int)(x)*13)%(n))           // Number [0..n-1]
-#define HASH2(x,n) (1|(((unsigned int)(x)*17)%((n)-1)))   // Number [1..n-1]
+// Constructor adds metaclass to the table
+FXMetaClass::FXMetaClass(const FXchar* name,FXObject *(fac)(),const FXMetaClass* base,const void* ass,FXuint nass,FXuint assz,FXuint len):
+  className(name),manufacture(fac),baseClass(base),assoc(ass),nassocs(nass),assocsz(assz),namelen(len){
+  register FXuint p,x,m;
 
+  // Adding one
+  ++nmetaClasses;
 
-// Metaclass initializer
-__FXMETACLASSINITIALIZER__::__FXMETACLASSINITIALIZER__(const FXMetaClass* meta){
-  const FXMetaClass** newtable;
-  register FXuint h=hashstring(meta->className);
-  register FXuint p,x,i,n;
-//fprintf(stderr,"hash for %s = %d\n",meta->className,h);
-
-  // First time?
-  if(nmetaClassTable==0){
-    nmetaClassTable=8;
-    FXCALLOC(&metaClassTable,FXMetaClass*,nmetaClassTable);
+  // Table is almost full?
+  if(nmetaClassTable < (nmetaClasses<<1)){
+    resize(nmetaClassTable?nmetaClassTable<<1:1);
     }
 
+  // Should always be maintained
+  FXASSERT(nmetaClassTable>=nmetaClasses);
+
   // Find hash slot
-  p=HASH1(h,nmetaClassTable);
-  x=HASH2(h,nmetaClassTable);
-  while(metaClassTable[p]){
-    FXASSERT(metaClassTable[p]!=meta);
-    p=(p+x)%nmetaClassTable;
+  p=hashstring(className);
+  x=(p<<1)|1;
+  m=nmetaClassTable-1;
+  while(1){
+    p=(p+x)&m;
+    if(metaClassTable[p]==0) break;
     }
 
   // Place in table
-  metaClassTable[p]=meta;
-  nmetaClasses++;
-
-  // Grow table if needed
-  if((100*nmetaClasses)>=(80*nmetaClassTable)){
-    n=nmetaClassTable*2;
-//fprintf(stderr,"growing table from %d to %d (%d entries)\n",nmetaClassTable,n,nmetaClasses);
-    FXCALLOC(&newtable,FXMetaClass*,n);
-    for(i=0; i<nmetaClassTable; i++){
-      if(metaClassTable[i]){
-        h=hashstring(metaClassTable[i]->className);
-        p=HASH1(h,n);
-        x=HASH2(h,n);
-        while(newtable[p]){
-          p=(p+x)%n;
-          }
-        newtable[p]=metaClassTable[i];
-        }
-      }
-    FXFREE(&metaClassTable);
-    metaClassTable=newtable;
-    nmetaClassTable=n;
-    }
+  metaClassTable[p]=this;
   }
 
 
 // Find the FXMetaClass belonging to class name
 const FXMetaClass* FXMetaClass::getMetaClassFromName(const FXchar* name){
-  register FXuint h=hashstring(name);
-  register FXuint p,x;
-  p=HASH1(h,nmetaClassTable);
-  x=HASH2(h,nmetaClassTable);
-  while(metaClassTable[p]){
-    if(strcmp(metaClassTable[p]->className,name)==0){
-      return metaClassTable[p];
+  if(nmetaClassTable){
+    register FXuint p,x,m;
+    p=hashstring(name);
+    x=(p<<1)|1;
+    m=nmetaClassTable-1;
+    while(1){
+      p=(p+x)&m;
+      if(metaClassTable[p]==0) break;
+      if(metaClassTable[p]!=EMPTYSLOT && strcmp(metaClassTable[p]->className,name)==0){
+        return metaClassTable[p];
+        }
       }
-    p=(p+x)%nmetaClassTable;
     }
   return NULL;
   }
@@ -225,15 +216,63 @@ const void* FXMetaClass::search(FXSelector key) const {
   }
 
 
+// Destructor removes metaclass from the table
+FXMetaClass::~FXMetaClass(){
+  register FXuint p,x,m;
+
+  // Find hash slot
+  p=hashstring(className);
+  x=(p<<1)|1;
+  m=nmetaClassTable-1;
+  while(1){
+    p=(p+x)&m;
+    if(metaClassTable[p]==this) break;
+    }
+
+  // Remove from table
+  metaClassTable[p]=EMPTYSLOT;
+
+  // Table is empty?
+  --nmetaClasses;
+
+  // Table is almost empty?
+  if(nmetaClassTable >= (nmetaClasses<<1)){
+    resize(nmetaClassTable>>1);
+    }
+
+  // Should always be maintained
+  FXASSERT(nmetaClassTable>=nmetaClasses);
+  }
+
+
+// Resize global hash table
+void FXMetaClass::resize(FXuint n){
+  const FXMetaClass **newtable,*ptr;
+  register FXuint p,x,i,m;
+  FXCALLOC(&newtable,FXMetaClass*,n);
+  for(i=0; i<nmetaClassTable; i++){
+    ptr=metaClassTable[i];
+    if(ptr && ptr!=EMPTYSLOT){
+      p=hashstring(ptr->className);
+      x=(p<<1)|1;
+      m=n-1;
+      while(1){
+        p=(p+x)&m;
+        if(newtable[p]==NULL) break;
+        }
+      newtable[p]=ptr;
+      }
+    }
+  FXFREE(&metaClassTable);
+  metaClassTable=newtable;
+  nmetaClassTable=n;
+  }
+
 
 /***************************  FXObject Implementation  *************************/
 
 // Have to do this one `by hand' as it has no base class
-const FXMetaClass FXObject::metaClass={"FXObject",FXObject::manufacture,NULL,NULL,0,0,sizeof("FXObject")};
-
-
-// Manual initializer
-__FXMETACLASSINITIALIZER__ FXObjectInitializer(&FXObject::metaClass);
+const FXMetaClass FXObject::metaClass("FXObject",FXObject::manufacture,NULL,NULL,0,0,sizeof("FXObject"));
 
 
 // Build an object
@@ -271,3 +310,5 @@ long FXObject::handle(FXObject* sender,FXSelector sel,void* ptr){
 // This really messes the object up; note that it is intentional,
 // as further references to a destructed object should not happen.
 FXObject::~FXObject(){*((void**)this)=(void*)-1L;}
+
+}

@@ -3,7 +3,7 @@
 *                     FOX Definitions, Types, and Macros                        *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: fxdefs.h,v 1.95.4.3 2003/06/20 19:02:07 fox Exp $                            *
+* $Id: fxdefs.h,v 1.133 2004/03/28 23:55:18 fox Exp $                           *
 ********************************************************************************/
 #ifndef FXDEFS_H
 #define FXDEFS_H
@@ -41,6 +41,7 @@
 #define NULL 0
 #endif
 
+/// Pi
 #ifndef PI
 #define PI      3.1415926535897932384626433833
 #endif
@@ -51,7 +52,7 @@
 /// Multiplier for degrees to radians
 #define DTOR    0.0174532925199432957692369077
 
-/// Multipier for radians to degrees
+/// Multiplier for radians to degrees
 #define RTOD    57.295779513082320876798154814
 
 
@@ -71,6 +72,14 @@
 #endif
 
 
+// End Of Line
+#ifdef WIN32
+#define EOLSTRING "\r\n"
+#else
+#define EOLSTRING "\n"
+#endif
+
+
 // For Windows
 #ifdef _DEBUG
 #ifndef DEBUG
@@ -86,19 +95,23 @@
 
 // Shared library support
 #ifdef WIN32
+#define FXEXPORT __declspec(dllexport)
+#define FXIMPORT __declspec(dllimport)
+#else
+#define FXEXPORT
+#define FXIMPORT
+#endif
+
+// Define FXAPI for DLL builds
 #ifdef FOXDLL
 #ifdef FOXDLL_EXPORTS
-#define FXAPI __declspec(dllexport)
+#define FXAPI FXEXPORT
 #else
-#define FXAPI __declspec(dllimport)
+#define FXAPI FXIMPORT
 #endif
-#endif
-#endif
-
-#ifndef FXAPI
+#else
 #define FXAPI
 #endif
-
 
 // Callback
 #ifdef WIN32
@@ -117,26 +130,36 @@
 #define FX_SCANF(fmt,arg)
 #endif
 
+// Raw event type
+#ifndef WIN32
+union _XEvent;
+#else
+struct tagMSG;
+#endif
+
+
+namespace FX {
+
 
 // FOX System Defined Selector Types
 enum FXSelType {
   SEL_NONE,
-  SEL_KEYPRESS,                       // Key
-  SEL_KEYRELEASE,
-  SEL_LEFTBUTTONPRESS,                // Buttons
-  SEL_LEFTBUTTONRELEASE,
-  SEL_MIDDLEBUTTONPRESS,
-  SEL_MIDDLEBUTTONRELEASE,
-  SEL_RIGHTBUTTONPRESS,
-  SEL_RIGHTBUTTONRELEASE,
-  SEL_MOTION,                         // Mouse motion
-  SEL_ENTER,
-  SEL_LEAVE,
-  SEL_FOCUSIN,
-  SEL_FOCUSOUT,
+  SEL_KEYPRESS,                         /// Key pressed
+  SEL_KEYRELEASE,                       /// Key released
+  SEL_LEFTBUTTONPRESS,                  /// Left mouse button pressed
+  SEL_LEFTBUTTONRELEASE,                /// Left mouse button released
+  SEL_MIDDLEBUTTONPRESS,                /// Middle mouse button pressed
+  SEL_MIDDLEBUTTONRELEASE,              /// Middle mouse button released
+  SEL_RIGHTBUTTONPRESS,                 /// Right mouse button pressed
+  SEL_RIGHTBUTTONRELEASE,               /// Right mouse button released
+  SEL_MOTION,                           /// Mouse motion
+  SEL_ENTER,                            /// Mouse entered window
+  SEL_LEAVE,                            /// Mouse left window
+  SEL_FOCUSIN,                          /// Focus into window
+  SEL_FOCUSOUT,                         /// Focus out of window
   SEL_KEYMAP,
-  SEL_UNGRABBED,                      // Lost the grab (Windows)
-  SEL_PAINT,                          // Must repaint window
+  SEL_UNGRABBED,                        /// Lost the grab (Windows)
+  SEL_PAINT,                            /// Must repaint window
   SEL_CREATE,
   SEL_DESTROY,
   SEL_UNMAP,
@@ -145,10 +168,9 @@ enum FXSelType {
   SEL_SELECTION_LOST,                 // Widget lost selection
   SEL_SELECTION_GAINED,               // Widget gained selection
   SEL_SELECTION_REQUEST,              // Inquire selection data
-  SEL_RAISED,
-  SEL_LOWERED,
+  SEL_RAISED,                         // Window to top of stack
+  SEL_LOWERED,                        // Window to bottom of stack
   SEL_CLOSE,                          // Close window
-  SEL_CLOSEALL,                       // Close all windows
   SEL_DELETE,                         // Delete window
   SEL_MINIMIZE,                       // Iconified
   SEL_RESTORE,                        // No longer iconified or maximized
@@ -192,8 +214,6 @@ enum FXSelType {
   SEL_DND_DROP,                       // Drop on drop target
   SEL_DND_MOTION,                     // Drag position changed over potential drop target
   SEL_DND_REQUEST,                    // Inquire drag and drop data
-  SEL_UNCHECK_OTHER,                  // Sent by child to parent to uncheck other children
-  SEL_UNCHECK_RADIO,                  // Sent by parent to uncheck radio children
   SEL_IO_READ,                        // Read activity on a pipe
   SEL_IO_WRITE,                       // Write activity on a pipe
   SEL_IO_EXCEPT,                      // Except activity on a pipe
@@ -208,6 +228,7 @@ enum {
   CAPSLOCKMASK     = 0x002,           /// Caps Lock key is down
   CONTROLMASK      = 0x004,           /// Ctrl key is down
   ALTMASK          = 0x008,           /// Alt key is down
+  METAMASK         = 0x040,           /// Meta key is down
   NUMLOCKMASK      = 0x010,           /// Num Lock key is down
   SCROLLLOCKMASK   = 0x0E0,           /// Scroll Lock key is down (seems to vary)
   LEFTBUTTONMASK   = 0x100,           /// Left mouse button is down
@@ -292,22 +313,25 @@ enum {
 
 /*********************************  Typedefs  **********************************/
 
+// Forward declarations
+class                          FXObject;
+class                          FXStream;
+class                          FXString;
 
-class FXObject;
-class FXStream;
 
 // Streamable types; these are fixed size!
-typedef unsigned char          FXuchar;
 typedef char                   FXchar;
+typedef unsigned char          FXuchar;
 typedef FXuchar                FXbool;
 typedef unsigned short         FXushort;
 typedef short                  FXshort;
 typedef unsigned int           FXuint;
+typedef unsigned int           FXwchar;
 typedef int                    FXint;
 typedef float                  FXfloat;
 typedef double                 FXdouble;
 typedef FXObject              *FXObjectPtr;
-#if defined(_MSC_VER) || (defined(__BCPLUSPLUS__) && __BORLANDC__ > 0x500)
+#if defined(_MSC_VER) || (defined(__BCPLUSPLUS__) && __BORLANDC__ > 0x500) || defined(__WATCOM_INT64__)
 #define FX_LONG
 typedef unsigned __int64       FXulong;
 typedef __int64                FXlong;
@@ -317,7 +341,6 @@ typedef unsigned long long int FXulong;
 typedef long long int          FXlong;
 #endif
 
-
 // Integral types large enough to hold value of a pointer
 #if defined(_MSC_VER) && defined(_WIN64)
 typedef __int64                FXival;
@@ -326,6 +349,7 @@ typedef unsigned __int64       FXuval;
 typedef long                   FXival;
 typedef unsigned long          FXuval;
 #endif
+
 
 // Handle to something in server
 #ifndef WIN32
@@ -353,21 +377,20 @@ typedef FXID                   FXDragType;
 typedef FXushort               FXDragType;
 #endif
 
-// Raw event type
-#ifndef WIN32
-union _XEvent;
-typedef _XEvent                FXRawEvent;
-#else
-struct tagMSG;
-typedef tagMSG                 FXRawEvent;
-#endif
-
 // Input source handle type
 #ifndef WIN32
 typedef FXint                  FXInputHandle;
 #else
 typedef void*                  FXInputHandle;
 #endif
+
+// Raw event type
+#ifndef WIN32
+typedef _XEvent                FXRawEvent;
+#else
+typedef tagMSG                 FXRawEvent;
+#endif
+
 
 /**********************************  Macros  ***********************************/
 
@@ -409,13 +432,16 @@ typedef void*                  FXInputHandle;
 #define CONTAINER(ptr,str,mem) ((str*)(((char*)(ptr))-STRUCTOFFSET(str,mem)))
 
 /// Make int out of two shorts
-#define MKUINT(l,h) ((((FXuint)(l))&0xffff) | (((FXuint)(h))<<16))
+#define MKUINT(l,h) ((((FX::FXuint)(l))&0xffff) | (((FX::FXuint)(h))<<16))
+
+/// Make selector from message type and message id
+#define FXSEL(type,id) ((((FX::FXuint)(id))&0xffff) | (((FX::FXuint)(type))<<16))
 
 /// Get type from selector
-#define SELTYPE(s) ((FXushort)(((s)>>16)&0xffff))
+#define FXSELTYPE(s) ((FX::FXushort)(((s)>>16)&0xffff))
 
 /// Get ID from selector
-#define SELID(s) ((FXushort)((s)&0xffff))
+#define FXSELID(s) ((FX::FXushort)((s)&0xffff))
 
 /// Reverse bits in byte
 #define FXBITREVERSE(b) (((b&0x01)<<7)|((b&0x02)<<5)|((b&0x04)<<3)|((b&0x08)<<1)|((b&0x10)>>1)|((b&0x20)>>3)|((b&0x40)>>5)|((b&0x80)>>7))
@@ -426,25 +452,25 @@ typedef void*                  FXInputHandle;
 #if FOX_BIGENDIAN == 1
 
 /// Make RGBA color
-#define FXRGBA(r,g,b,a)    (((FXuint)(FXuchar)(r)<<24) | ((FXuint)(FXuchar)(g)<<16) | ((FXuint)(FXuchar)(b)<<8) | ((FXuint)(FXuchar)(a)))
+#define FXRGBA(r,g,b,a)    (((FX::FXuint)(FX::FXuchar)(r)<<24) | ((FX::FXuint)(FX::FXuchar)(g)<<16) | ((FX::FXuint)(FX::FXuchar)(b)<<8) | ((FX::FXuint)(FX::FXuchar)(a)))
 
 /// Make RGB color
-#define FXRGB(r,g,b)       (((FXuint)(FXuchar)(r)<<24) | ((FXuint)(FXuchar)(g)<<16) | ((FXuint)(FXuchar)(b)<<8) | 0x000000ff)
+#define FXRGB(r,g,b)       (((FX::FXuint)(FX::FXuchar)(r)<<24) | ((FX::FXuint)(FX::FXuchar)(g)<<16) | ((FX::FXuint)(FX::FXuchar)(b)<<8) | 0x000000ff)
 
 /// Get red value from RGBA color
-#define FXREDVAL(rgba)     ((FXuchar)(((rgba)>>24)&0xff))
+#define FXREDVAL(rgba)     ((FX::FXuchar)(((rgba)>>24)&0xff))
 
 /// Get green value from RGBA color
-#define FXGREENVAL(rgba)   ((FXuchar)(((rgba)>>16)&0xff))
+#define FXGREENVAL(rgba)   ((FX::FXuchar)(((rgba)>>16)&0xff))
 
 /// Get blue value from RGBA color
-#define FXBLUEVAL(rgba)    ((FXuchar)(((rgba)>>8)&0xff))
+#define FXBLUEVAL(rgba)    ((FX::FXuchar)(((rgba)>>8)&0xff))
 
 /// Get alpha value from RGBA color
-#define FXALPHAVAL(rgba)   ((FXuchar)((rgba)&0xff))
+#define FXALPHAVAL(rgba)   ((FX::FXuchar)((rgba)&0xff))
 
 /// Get component value of RGBA color
-#define FXRGBACOMPVAL(rgba,comp) ((FXuchar)(((rgba)>>((3-(comp))<<3))&0xff))
+#define FXRGBACOMPVAL(rgba,comp) ((FX::FXuchar)(((rgba)>>((3-(comp))<<3))&0xff))
 
 #endif
 
@@ -452,25 +478,25 @@ typedef void*                  FXInputHandle;
 #if FOX_BIGENDIAN == 0
 
 /// Make RGBA color
-#define FXRGBA(r,g,b,a)    (((FXuint)(FXuchar)(r)) | ((FXuint)(FXuchar)(g)<<8) | ((FXuint)(FXuchar)(b)<<16) | ((FXuint)(FXuchar)(a)<<24))
+#define FXRGBA(r,g,b,a)    (((FX::FXuint)(FX::FXuchar)(r)) | ((FX::FXuint)(FX::FXuchar)(g)<<8) | ((FX::FXuint)(FX::FXuchar)(b)<<16) | ((FX::FXuint)(FX::FXuchar)(a)<<24))
 
 /// Make RGB color
-#define FXRGB(r,g,b)       (((FXuint)(FXuchar)(r)) | ((FXuint)(FXuchar)(g)<<8) | ((FXuint)(FXuchar)(b)<<16) | 0xff000000)
+#define FXRGB(r,g,b)       (((FX::FXuint)(FX::FXuchar)(r)) | ((FX::FXuint)(FX::FXuchar)(g)<<8) | ((FX::FXuint)(FX::FXuchar)(b)<<16) | 0xff000000)
 
 /// Get red value from RGBA color
-#define FXREDVAL(rgba)     ((FXuchar)((rgba)&0xff))
+#define FXREDVAL(rgba)     ((FX::FXuchar)((rgba)&0xff))
 
 /// Get green value from RGBA color
-#define FXGREENVAL(rgba)   ((FXuchar)(((rgba)>>8)&0xff))
+#define FXGREENVAL(rgba)   ((FX::FXuchar)(((rgba)>>8)&0xff))
 
 /// Get blue value from RGBA color
-#define FXBLUEVAL(rgba)    ((FXuchar)(((rgba)>>16)&0xff))
+#define FXBLUEVAL(rgba)    ((FX::FXuchar)(((rgba)>>16)&0xff))
 
 /// Get alpha value from RGBA color
-#define FXALPHAVAL(rgba)   ((FXuchar)(((rgba)>>24)&0xff))
+#define FXALPHAVAL(rgba)   ((FX::FXuchar)(((rgba)>>24)&0xff))
 
 /// Get component value of RGBA color
-#define FXRGBACOMPVAL(rgba,comp) ((FXuchar)(((rgba)>>((comp)<<3))&0xff))
+#define FXRGBACOMPVAL(rgba,comp) ((FX::FXuchar)(((rgba)>>((comp)<<3))&0xff))
 
 #endif
 
@@ -483,7 +509,7 @@ typedef void*                  FXInputHandle;
 * are compiled out; thus there is no impact on execution speed.
 */
 #ifndef NDEBUG
-#define FXASSERT(exp) ((exp)?((void)0):(void)fxassert(#exp,__FILE__,__LINE__))
+#define FXASSERT(exp) ((exp)?((void)0):(void)FX::fxassert(#exp,__FILE__,__LINE__))
 #else
 #define FXASSERT(exp) ((void)0)
 #endif
@@ -502,30 +528,73 @@ typedef void*                  FXInputHandle;
 * Note the double parentheses!
 */
 #ifndef NDEBUG
-#define FXTRACE(arguments) fxtrace arguments
+#define FXTRACE(arguments) FX::fxtrace arguments
 #else
 #define FXTRACE(arguments) ((void)0)
 #endif
 
 
-/// Allocate no elements of type to the specified pointer
-#define FXMALLOC(ptr,type,no)     (fxmalloc((void **)(ptr),sizeof(type)*(no)))
+/**
+* Allocate no elements of type to the specified pointer.
+* Return FALSE if size!=0 and allocation fails, TRUE otherwise.
+* An allocation of a zero size block returns a NULL pointer.
+*/
+#define FXMALLOC(ptr,type,no)     (FX::fxmalloc((void **)(ptr),sizeof(type)*(no)))
 
-/// Allocate cleared memory
-#define FXCALLOC(ptr,type,no)     (fxcalloc((void **)(ptr),sizeof(type)*(no)))
+/**
+* Allocate no elements of type to the specified pointer, and clear this memory to zero.
+* Return FALSE if size!=0 and allocation fails, TRUE otherwise.
+* An allocation of a zero size block returns a NULL pointer.
+*/
+#define FXCALLOC(ptr,type,no)     (FX::fxcalloc((void **)(ptr),sizeof(type)*(no)))
 
-/// Resize a previously allocated block of memory
-#define FXRESIZE(ptr,type,no)     (fxresize((void **)(ptr),sizeof(type)*(no)))
+/**
+* Resize a previously allocated block of memory.
+* Returns FALSE if size!=0 and reallocation fails, TRUE otherwise.
+* If reallocation fails, pointer is left to point to old block; a reallocation
+* to a zero size block has the effect of freeing it.
+*/
+#define FXRESIZE(ptr,type,no)     (FX::fxresize((void **)(ptr),sizeof(type)*(no)))
 
-/// Allocate and initialize memory
-#define FXMEMDUP(ptr,type,src,no) (fxmemdup((void **)(ptr),sizeof(type)*(no),(const void*)(src)))
+/**
+* Allocate and initialize memory from another block.
+* Return FALSE if size!=0 and source!=NULL and allocation fails, TRUE otherwise.
+* An allocation of a zero size block returns a NULL pointer.
+*/
+#define FXMEMDUP(ptr,src,type,no) (FX::fxmemdup((void **)(ptr),(const void*)(src),sizeof(type)*(no)))
 
-/// Free a block of memory allocated with either FXMALLOC or FXCALLOC
-#define FXFREE(ptr)               (fxfree((void **)(ptr)))
+/**
+* Free a block of memory allocated with either FXMALLOC, FXCALLOC, FXRESIZE, or FXMEMDUP.
+* It is OK to call free a NULL pointer.
+*/
+#define FXFREE(ptr)               (FX::fxfree((void **)(ptr)))
 
+
+/**
+* These are some of the ISO C99 standard single-precision transcendental functions.
+* On LINUX, specify _GNU_SOURCE or _ISOC99_SOURCE to enable native implementation;
+* otherwise, these macros will be used.
+*/
+#ifndef __USE_ISOC99
+#define sqrtf(x)    ((float)sqrt((double)(x)))
+#define fabsf(x)    ((float)fabs((double)(x)))
+#define ceilf(x)    ((float)ceil((double)(x)))
+#define floorf(x)   ((float)floor((double)(x)))
+#define sinf(x)     ((float)sin((double)(x)))
+#define cosf(x)     ((float)cos((double)(x)))
+#define tanf(x)     ((float)tan((double)(x)))
+#define asinf(x)    ((float)asin((double)(x)))
+#define acosf(x)    ((float)acos((double)(x)))
+#define atanf(x)    ((float)atan((double)(x)))
+#define atan2f(y,x) ((float)atan2((double)(y),(double)(x)))
+#define powf(x,y)   ((float)pow((double)(x),(double)(y)))
+#define expf(x)     ((float)exp((double)(x)))
+#define fmodf(x,y)  ((float)fmod((double)(x),(double)(y)))
+#define logf(x)     ((float)log((double)(x)))
+#define log10f(x)   ((float)log10((double)(x)))
+#endif
 
 /**********************************  Globals  **********************************/
-
 
 /// Simple, thread-safe, random number generator
 extern FXAPI FXuint fxrandom(FXuint& seed);
@@ -540,7 +609,7 @@ extern FXAPI FXint fxcalloc(void** ptr,unsigned long size);
 extern FXAPI FXint fxresize(void** ptr,unsigned long size);
 
 /// Duplicate memory
-extern FXAPI FXint fxmemdup(void** ptr,unsigned long size,const void* src);
+extern FXAPI FXint fxmemdup(void** ptr,const void* src,unsigned long size);
 
 /// Free memory, resets ptr to NULL afterward
 extern FXAPI void fxfree(void** ptr);
@@ -566,38 +635,26 @@ extern FXAPI void fxsleep(unsigned int n);
 /// Match a file name with a pattern
 extern FXAPI FXint fxfilematch(const char *pattern,const char *string,FXuint flags=(FILEMATCH_NOESCAPE|FILEMATCH_FILE_NAME));
 
-/// Parse for accelerator key codes in a string
-extern FXAPI FXHotKey fxparseaccel(const FXchar* s);
-
-/// Parse for hot key codes in a string
-extern FXAPI FXHotKey fxparsehotkey(const FXchar* s);
-
-/// Locate hot key underline offset from begin of string
-extern FXAPI FXint fxfindhotkeyoffset(const FXchar* s);
-
 /// Get highlight color
 extern FXAPI FXColor makeHiliteColor(FXColor clr);
 
 /// Get shadow color
 extern FXAPI FXColor makeShadowColor(FXColor clr);
 
-/// Get user name from uid
-extern FXAPI FXchar* fxgetusername(FXchar* result,FXuint uid);
-
-/// Get group name from gid
-extern FXAPI FXchar* fxgetgroupname(FXchar* result,FXuint gid);
-
-/// Get permissions string from mode.
-extern FXAPI FXchar* fxgetpermissions(FXchar* result,FXuint mode);
-
 /// Get process id
 extern FXAPI FXint fxgetpid();
+
+/// Convert to MSDOS
+extern FXAPI FXbool fxtoDOS(FXchar*& string,FXint& len);
+
+/// Convert from MSDOS format
+extern FXAPI FXbool fxfromDOS(FXchar*& string,FXint& len);
 
 /// Duplicate string
 extern FXAPI FXchar *fxstrdup(const FXchar* str);
 
 /// Calculate a hash value from a string
-extern FXAPI FXint fxstrhash(const FXchar* str);
+extern FXAPI FXuint fxstrhash(const FXchar* str);
 
 /// Get RGB value from color name
 extern FXAPI FXColor fxcolorfromname(const FXchar* colorname);
@@ -615,6 +672,11 @@ extern FXAPI void fxhsv_to_rgb(FXfloat& r,FXfloat& g,FXfloat& b,FXfloat h,FXfloa
 extern FXAPI FXint fxieeefloatclass(FXfloat number);
 extern FXAPI FXint fxieeedoubleclass(FXdouble number);
 
+/// Parse geometry, a-la X11 geometry specification
+extern FXAPI FXint fxparsegeometry(const FXchar *string,FXint& x,FXint& y,FXint& w,FXint& h);
+
+/// True if executable with given path is a console application
+extern FXbool fxisconsole(const FXchar *path);
 
 /// Version number that the library has been compiled with
 extern FXAPI const FXuchar fxversion[3];
@@ -623,5 +685,33 @@ extern FXAPI const FXuchar fxversion[3];
 /// Controls tracing level
 extern FXAPI unsigned int fxTraceLevel;
 
+/**
+* Parse accelerator from string, yielding modifier and
+* key code.  For example, fxparseAccel("Ctl+Shift+X")
+* yields MKUINT(KEY_X,CONTROLMASK|SHIFTMASK).
+*/
+extern FXAPI FXHotKey fxparseAccel(const FXString& string);
+
+/**
+* Parse hot key from string, yielding modifier and
+* key code.  For example, fxparseHotKey(""Salt && &Pepper!"")
+* yields MKUINT(KEY_p,ALTMASK).
+*/
+extern FXAPI FXHotKey fxparseHotKey(const FXString& string);
+
+/**
+* Obtain hot key offset in string, or -1 if not found.
+* For example, findHotKey("Salt && &Pepper!") yields 7.
+*/
+extern FXAPI FXint fxfindHotKey(const FXString& string);
+
+/**
+* Strip hot key combination from the string.
+* For example, stripHotKey("Salt && &Pepper") should
+* yield "Salt & Pepper".
+*/
+extern FXAPI FXString fxstripHotKey(const FXString& string);
+
+}
 
 #endif

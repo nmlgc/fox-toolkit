@@ -5,7 +5,7 @@
 *********************************************************************************
 * Copyright (C) 1997 by Jeroen van der Zijp.   All Rights Reserved.             *
 *********************************************************************************
-* $Id: switcher.cpp,v 1.10 2002/02/27 14:30:42 fox Exp $                      *
+* $Id: switcher.cpp,v 1.14 2004/02/08 17:05:35 fox Exp $                        *
 ********************************************************************************/
 #include "fx.h"
 #include <stdio.h>
@@ -23,7 +23,7 @@
 class SwitcherTest : public FXMainWindow {
   FXDECLARE(SwitcherTest)
 protected:
-  FXMenubar         *menubar;
+  FXMenuBar         *menubar;
   FXMenuPane        *filemenu;
   FXHorizontalFrame *contents;
   FXVerticalFrame   *buttons;
@@ -85,14 +85,14 @@ FXIMPLEMENT(SwitcherTest,FXMainWindow,NULL,0)
 SwitcherTest::SwitcherTest(FXApp *a):FXMainWindow(a,"Switcher Test",NULL,NULL,DECOR_ALL,0,0,600,400){
 
   // Tooltip
-  new FXTooltip(getApp());
+  new FXToolTip(getApp());
 
   // Make icons
   big_folder=new FXGIFIcon(getApp(),bigfolder);
   mini_folder=new FXGIFIcon(getApp(),minifolder);
 
   // Menubar
-  menubar=new FXMenubar(this,LAYOUT_SIDE_TOP|LAYOUT_FILL_X);
+  menubar=new FXMenuBar(this,LAYOUT_SIDE_TOP|LAYOUT_FILL_X);
 
   // Separator
   new FXHorizontalSeparator(this,LAYOUT_SIDE_TOP|LAYOUT_FILL_X|SEPARATOR_GROOVE);
@@ -107,7 +107,7 @@ SwitcherTest::SwitcherTest(FXApp *a):FXMainWindow(a,"Switcher Test",NULL,NULL,DE
   switcher=new FXSwitcher(contents,LAYOUT_FILL_X|LAYOUT_FILL_Y|LAYOUT_RIGHT|FRAME_THICK|FRAME_RAISED);
 
   // First item in switcher is a list
-  simplelist=new FXList(switcher,1,NULL,0,LIST_EXTENDEDSELECT);
+  simplelist=new FXList(switcher,NULL,0,LIST_EXTENDEDSELECT);
   simplelist->appendItem("First Entry",mini_folder);
   simplelist->appendItem("Second Entry",big_folder);
   simplelist->appendItem("Third Entry",mini_folder);

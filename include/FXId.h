@@ -3,7 +3,7 @@
 *                                  X - O b j e c t                              *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXId.h,v 1.11 2002/01/18 22:42:53 jeroen Exp $                           *
+* $Id: FXId.h,v 1.16 2004/04/05 14:49:33 fox Exp $                              *
 ********************************************************************************/
 #ifndef FXID_H
 #define FXID_H
@@ -28,7 +28,7 @@
 #include "FXObject.h"
 #endif
 
-
+namespace FX {
 
 class FXApp;
 
@@ -45,7 +45,7 @@ private:
   FXId(const FXId&);
   FXId &operator=(const FXId&);
 protected:
-  FXId():app((FXApp*)-1),data(NULL),xid(0){}
+  FXId():app((FXApp*)-1L),data(NULL),xid(0){}
   FXId(FXApp* a):app(a),data(NULL),xid(0){}
 public:
 
@@ -77,8 +77,9 @@ public:
   virtual void load(FXStream& store);
 
   /// Destructor
-  virtual ~FXId(){app=(FXApp*)-1;}
+  virtual ~FXId(){app=(FXApp*)-1L;}
   };
 
+}
 
 #endif

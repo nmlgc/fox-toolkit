@@ -3,7 +3,7 @@
 *      F i l e   I n f o r m a t i o n   a n d   M a n i p u l a t i o n        *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2000,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 2000,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,16 +19,21 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXFile.h,v 1.51 2002/01/18 22:42:52 jeroen Exp $                         *
+* $Id: FXFile.h,v 1.65 2004/02/08 17:17:33 fox Exp $                            *
 ********************************************************************************/
 #ifndef FXFILE_H
 #define FXFILE_H
 
 
+/// Declared as "C" so as to not clash tag-names
+extern "C" { struct stat; }
+
+namespace FX {
+
+
 /// Options for listing files
 enum {
-  LIST_MATCHING_FILES = 0,              /// Matching files
-  LIST_MATCHING_DIRS  = 0,              /// Matching directories
+  LIST_MATCH_ALL      = 0,              /// Matching files and directories
   LIST_NO_FILES       = 1,              /// Don't list any files
   LIST_NO_DIRS        = 2,              /// Don't list any directories
   LIST_ALL_FILES      = 4,              /// List all files
@@ -40,11 +45,8 @@ enum {
   };
 
 
-/// Declared as "C" so as to not clash tag-names
-extern "C" { struct stat; }
+namespace FXFile {      // FIXME do we still need FXFile namespace at all?
 
-
-namespace FXFile {
 
 /// Return value of environment variable name
 FXString FXAPI getEnvironment(const FXString& name);
@@ -54,6 +56,9 @@ FXString FXAPI getHomeDirectory();
 
 /// Return the home directory for a given user.
 FXString FXAPI getUserDirectory(const FXString& user);
+
+/// Return temporary directory.
+FXString FXAPI getTempDirectory();
 
 /// Set the current working directory
 FXbool FXAPI setCurrentDirectory(const FXString& path);
@@ -119,6 +124,13 @@ FXString FXAPI relative(const FXString& file);
 /// Return relative path of file to given base directory
 FXString FXAPI relative(const FXString& base,const FXString& file);
 
+/**
+* Return root of absolute path; on Unix, this is just "/". On
+* Windows, this is "\\" or "C:\".  Returns the empty string
+* if the given path is not absolute.
+*/
+FXString FXAPI root(const FXString& file);
+
 /// Enquote filename to make safe for shell
 FXString FXAPI enquote(const FXString& file,FXbool forcequotes=FALSE);
 
@@ -152,6 +164,9 @@ FXbool FXAPI isLink(const FXString& file);
 
 /// Return true if input path is a directory
 FXbool FXAPI isDirectory(const FXString& file);
+
+/// Return true if input path is a file share
+FXbool FXAPI isShare(const FXString& file);
 
 /// Return true if file is readable
 FXbool FXAPI isReadable(const FXString& file);
@@ -207,25 +222,51 @@ FXbool FXAPI isSetGid(const FXString& file);
 /// Return true if the file has the sticky bit set
 FXbool FXAPI isSetSticky(const FXString& file);
 
-/// Return owner name of file (if available, else "user")
+/// Return owner name from uid if available
+FXString FXAPI owner(FXuint uid);
+
+/// Return owner name of file if available
 FXString FXAPI owner(const FXString& file);
 
-/// Return group name of file (if available, else "group")
+/// Return group name from gid if available
+FXString FXAPI group(FXuint gid);
+
+/// Return group name of file if available
 FXString FXAPI group(const FXString& file);
+
+/// Return permissions string
+FXString FXAPI permissions(FXuint mode);
 
 /// Return file size in bytes
 unsigned long FXAPI size(const FXString& file);
 
-/// Return last modified time for this file
+/**
+* Return last modified time for this file, on filesystems
+* where this is supported.  This is the time when any data
+* in the file was last modified.
+*/
 FXTime FXAPI modified(const FXString& file);
 
-/// Return last accessed time for this file
+/**
+* Return last accessed time for this file, on filesystems
+* where this is supported.
+*/
 FXTime FXAPI accessed(const FXString& file);
 
-/// Return created time for this file
+/**
+* Return created time for this file, on filesystems
+* where this is supported.  This is also the time when
+* ownership, permissions, links, and other meta-data may
+* have changed.
+*/
 FXTime FXAPI created(const FXString& file);
 
-/// Return touched time for this file
+/**
+* Return touched time for this file, on filesystems
+* where this is supported.  This is the time when anything
+* at all, either contents or meta-data, about the file was
+* changed.
+*/
 FXTime FXAPI touched(const FXString& file);
 
 /// Match filenames using *, ?, [^a-z], and so on
@@ -236,7 +277,7 @@ FXbool FXAPI match(const FXString& pattern,const FXString& file,FXuint flags=(FI
 * Returns the number of files in the string-array list which matched the
 * pattern or satisfied the flag conditions.
 */
-FXint FXAPI listFiles(FXString*& list,const FXString& path,const FXString& pattern="*",FXuint flags=LIST_MATCHING_FILES|LIST_MATCHING_DIRS);
+FXint FXAPI listFiles(FXString*& filelist,const FXString& path,const FXString& pattern="*",FXuint flags=LIST_MATCH_ALL);
 
 /// Return current time
 FXTime FXAPI now();
@@ -255,7 +296,10 @@ FXString FXAPI time(FXTime filetime);
 FXString FXAPI time(const FXchar *format,FXTime filetime);
 
 /// Return file info as reported by system stat() function
-FXbool FXAPI info(const FXString& file,struct stat& info);
+FXbool FXAPI info(const FXString& file,struct stat& inf);
+
+/// Return file info as reported by system lstat() function
+FXbool FXAPI linkinfo(const FXString& file,struct stat& inf);
 
 /// Return true if file exists
 FXbool FXAPI exists(const FXString& file);
@@ -299,6 +343,8 @@ FXbool FXAPI symlink(const FXString& srcfile,const FXString& dstfile,FXbool over
 
 /// Read symbolic link
 FXString FXAPI symlink(const FXString& file);
+
+}
 
 }
 

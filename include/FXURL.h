@@ -3,7 +3,7 @@
 *                       U R L   M a n i p u l a t i o n                         *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2000,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 2000,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,13 +19,14 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXURL.h,v 1.6 2002/01/18 22:42:55 jeroen Exp $                           *
+* $Id: FXURL.h,v 1.10 2004/02/08 17:17:34 fox Exp $                              *
 ********************************************************************************/
 #ifndef FXURL_H
 #define FXURL_H
 
+namespace FX {
 
-namespace FXURL {
+namespace FXURL {       // FIXME namespace may not be needed anymore?
 
 /// Return host name
 FXString FXAPI hostname();
@@ -35,6 +36,8 @@ FXString FXAPI fileToURL(const FXString& file);
 
 /// Return filename from URL, empty if url is not a local file
 FXString FXAPI fileFromURL(const FXString& url);
+
+}
 
 }
 

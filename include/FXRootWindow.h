@@ -3,7 +3,7 @@
 *                     R o o t   W i n d o w   W i d g e t                       *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXRootWindow.h,v 1.15 2002/01/18 22:42:54 jeroen Exp $                   *
+* $Id: FXRootWindow.h,v 1.21 2004/02/08 17:17:34 fox Exp $                      *
 ********************************************************************************/
 #ifndef FXROOTWINDOW_H
 #define FXROOTWINDOW_H
@@ -28,6 +28,7 @@
 #include "FXComposite.h"
 #endif
 
+namespace FX {
 
 
 /// Root window
@@ -35,7 +36,6 @@ class FXAPI FXRootWindow : public FXComposite {
   FXDECLARE(FXRootWindow)
 protected:
   FXRootWindow(){}
-  virtual void layout();
 #ifdef WIN32
   virtual FXID GetDC() const;
   virtual int ReleaseDC(FXID) const;
@@ -56,6 +56,9 @@ public:
 
   /// Root window can not be destroyed
   virtual void destroy();
+
+  /// Perform layout
+  virtual void layout();
 
   /// Return width of the root window
   virtual FXint getDefaultWidth();
@@ -85,5 +88,6 @@ public:
   virtual ~FXRootWindow();
   };
 
+}
 
 #endif

@@ -3,9 +3,7 @@
 *                             D r a w a b l e   A r e a                         *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
-*********************************************************************************
-* Major Contributions for Windows NT by Lyle Johnson                            *
+* Copyright (C) 1997,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -21,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXDrawable.cpp,v 1.13 2002/01/18 22:42:59 jeroen Exp $                   *
+* $Id: FXDrawable.cpp,v 1.20 2004/02/08 17:29:06 fox Exp $                      *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -33,6 +31,7 @@
 #include "FXRectangle.h"
 #include "FXSettings.h"
 #include "FXRegistry.h"
+#include "FXHash.h"
 #include "FXApp.h"
 #include "FXVisual.h"
 #include "FXDrawable.h"
@@ -43,8 +42,11 @@
   - Abstract drawable surface.
 */
 
+using namespace FX;
 
 /*******************************************************************************/
+
+namespace FX {
 
 // Object implementation
 FXIMPLEMENT_ABSTRACT(FXDrawable,FXId,NULL,0)
@@ -52,7 +54,7 @@ FXIMPLEMENT_ABSTRACT(FXDrawable,FXId,NULL,0)
 
 // For deserialization
 FXDrawable::FXDrawable(){
-  visual=(FXVisual*)-1;
+  visual=(FXVisual*)-1L;
   width=1;
   height=1;
   }
@@ -101,8 +103,10 @@ void FXDrawable::load(FXStream& store){
 
 // Clean up
 FXDrawable::~FXDrawable(){
-  visual=(FXVisual*)-1;
+  visual=(FXVisual*)-1L;
   xid=0;
   }
+
+}
 
 

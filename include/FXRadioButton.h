@@ -3,7 +3,7 @@
 *                  R a d i o   B u t t o n    W i d g e t                       *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1998,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXRadioButton.h,v 1.18 2002/01/18 22:42:54 jeroen Exp $                  *
+* $Id: FXRadioButton.h,v 1.24 2004/02/17 21:06:02 fox Exp $                     *
 ********************************************************************************/
 #ifndef FXRADIOBUTTON_H
 #define FXRADIOBUTTON_H
@@ -27,6 +27,8 @@
 #ifndef FXLABEL_H
 #include "FXLabel.h"
 #endif
+
+namespace FX {
 
 
 /// RadioButton flags
@@ -51,9 +53,10 @@ enum {
 class FXAPI FXRadioButton : public FXLabel {
   FXDECLARE(FXRadioButton)
 protected:
-  FXbool   check;
-  FXbool   oldcheck;
-  FXColor  radioColor;
+  FXColor  radioColor;  // Color of radio ball
+  FXColor  diskColor;   // Color of radio disk
+  FXbool   check;       // Radio state
+  FXbool   oldcheck;    // Old radio state
 protected:
   FXRadioButton();
 private:
@@ -73,7 +76,6 @@ public:
   long onKeyRelease(FXObject*,FXSelector,void*);
   long onHotKeyPress(FXObject*,FXSelector,void*);
   long onHotKeyRelease(FXObject*,FXSelector,void*);
-  long onUncheckRadio(FXObject*,FXSelector,void*);
   long onCheck(FXObject*,FXSelector,void*);
   long onUncheck(FXObject*,FXSelector,void*);
   long onUnknown(FXObject*,FXSelector,void*);
@@ -106,11 +108,17 @@ public:
   /// Return current radio button style
   FXuint getRadioButtonStyle() const;
 
-  /// Get the radio background color
+  /// Get the radio ball color
   FXColor getRadioColor() const { return radioColor; }
 
-  /// Set the radio background color
+  /// Set the radio ball color
   void setRadioColor(FXColor clr);
+
+  /// Get the radio disk color
+  FXColor getDiskColor() const { return diskColor; }
+
+  /// Set the radio disk color
+  void setDiskColor(FXColor clr);
 
   /// Save radio button to a stream
   virtual void save(FXStream& store) const;
@@ -119,5 +127,6 @@ public:
   virtual void load(FXStream& store);
   };
 
+}
 
 #endif

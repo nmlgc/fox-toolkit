@@ -3,7 +3,7 @@
 *              P r i v a t e   I n t e r n a l   F u n c t i o n s              *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2000,2002 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 2000,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: fxpriv.cpp,v 1.16 2002/01/18 22:43:08 jeroen Exp $                       *
+* $Id: fxpriv.cpp,v 1.32 2004/02/18 16:06:15 fox Exp $                          *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -32,6 +32,7 @@
 #include "FXRectangle.h"
 #include "FXObject.h"
 #include "FXRegistry.h"
+#include "FXHash.h"
 #include "FXApp.h"
 #include "FXId.h"
 #include "FXDrawable.h"
@@ -40,13 +41,29 @@
 
 /*
   Notes:
+  - This file does actual data transfer for clipboard, selection, and drag and drop.
+  - Perhaps we should also implement INCR for sending; however, we don't know for
+    sure if the other side supports this.
 */
 
+using namespace FX;
 
 /*******************************************************************************/
 
 // X11
 #ifndef WIN32
+
+
+// Wait for event of certain type
+static FXbool fxwaitforevent(Display *display,Window window,int type,XEvent& event){
+  FXuint loops=1000;
+  while(!XCheckTypedWindowEvent(display,window,type,&event)){
+    if(loops==0){ fxwarning("timed out\n"); return FALSE; }
+    fxsleep(10000);     // Don't burn too much CPU here:- the other guy needs it more....
+    loops--;
+    }
+  return TRUE;
+  }
 
 
 // Send request for selection info
@@ -136,32 +153,93 @@ Atom fxrecvtypes(Display *display,Window window,Atom prop,FXDragType*& types,FXu
   }
 
 
-// Receive data via property
-Atom fxrecvdata(Display *display,Window window,Atom prop,Atom,FXuchar*& data,FXuint& size){
-  unsigned long  maxtfrsize,tfrsize,tfroffset,bytes_after;
+// Read property in chunks smaller than maximum transfer length,
+// appending to data array; returns amount read from the property.
+static FXuint fxrecvprop(Display *display,Window window,Atom prop,Atom& type,FXuchar*& data,FXuint& size){
+  unsigned long maxtfrsize=XMaxRequestSize(display)*4;
+  unsigned long tfroffset,tfrsize,tfrleft;
   unsigned char *ptr;
-  Atom actualtype;
-  int actualformat;
+  int format;
+  //FXTRACE((100,"fxrecvprop: maxtfrsize=%lu\n",maxtfrsize));
+  tfroffset=0;
+
+  // Read next chunk of data from property
+  while(XGetWindowProperty(display,window,prop,tfroffset>>2,maxtfrsize>>2,False,AnyPropertyType,&type,&format,&tfrsize,&tfrleft,&ptr)==Success && type!=None){
+    //FXTRACE((100,"fxrecvprop: type=%d format=%d tfrsize=%d tfrleft=%d\n",type,format,tfrsize,tfrleft));
+    tfrsize*=(format>>3);
+
+    // Grow the array to accomodate new data
+    if(!FXRESIZE(&data,FXuchar,size+tfrsize+1)){ XFree(ptr); break; }
+
+    // Append new data at the end, plus the extra 0.
+    memcpy(&data[size],ptr,tfrsize+1);
+    size+=tfrsize;
+    tfroffset+=tfrsize;
+    XFree(ptr);
+    if(tfrleft==0) break;
+    }
+
+  // Delete property after we're done
+  XDeleteProperty(display,window,prop);
+  XFlush(display);
+  //FXTRACE((100,"fxrecvprop: read=%lu\n",tfroffset));
+  return tfroffset;
+  }
+
+
+// Receive data via property
+Atom fxrecvdata(Display *display,Window window,Atom prop,Atom incr,Atom& type,FXuchar*& data,FXuint& size){
+  unsigned long  tfrsize,tfrleft;
+  unsigned char *ptr;
+  XEvent ev;
+  int format;
   data=NULL;
   size=0;
   if(prop){
-    maxtfrsize=4*XMaxRequestSize(display);
-    if(XGetWindowProperty(display,window,prop,0,0,False,AnyPropertyType,&actualtype,&actualformat,&tfrsize,&bytes_after,&ptr)==Success){
-      if(ptr) XFree(ptr);
-      if(FXMALLOC(&data,FXuchar,bytes_after+1)){    // One extra byte!
-        size=bytes_after;
-        tfroffset=0;
-        while(bytes_after){
-          if(XGetWindowProperty(display,window,prop,tfroffset>>2,maxtfrsize>>2,False,AnyPropertyType,&actualtype,&actualformat,&tfrsize,&bytes_after,&ptr)!=Success) break;
-          tfrsize*=(actualformat>>3);
-          if(tfroffset+tfrsize>size){ tfrsize=size-tfroffset; bytes_after=0; }
-          memcpy(&data[tfroffset],ptr,tfrsize);
-          tfroffset+=tfrsize;
-          XFree(ptr);
-          }
+
+    // First, see what we've got
+    if(XGetWindowProperty(display,window,prop,0,0,False,AnyPropertyType,&type,&format,&tfrsize,&tfrleft,&ptr)==Success && type!=None){
+      XFree(ptr);
+      //FXTRACE((100,"fxrecvdata: type=%d format=%d tfrsize=%d tfrleft=%d\n",type,format,tfrsize,tfrleft));
+
+      // Incremental transfer
+      if(type==incr){
+        //FXTRACE((100,"fxrecvdata: incr\n"));
+
+        // Delete the INCR property
         XDeleteProperty(display,window,prop);
-        size=tfroffset;
-        data[size]='\0';                            // Append a '\0' just past the end!
+        XFlush(display);
+
+        // Wait for the next batch of data
+        while(fxwaitforevent(display,window,PropertyNotify,ev)){
+
+          // Wrong type of notify event; perhaps stale event
+          if(ev.xproperty.atom!=prop || ev.xproperty.state!=PropertyNewValue) continue;
+          //FXTRACE((100,"fxwaitforevent: got it\n"));
+
+          // See what we've got
+          if(XGetWindowProperty(display,window,prop,0,0,False,AnyPropertyType,&type,&format,&tfrsize,&tfrleft,&ptr)==Success && type!=None){
+            XFree(ptr);
+
+            // if empty property, its the last one
+            if(tfrleft==0){
+
+              // Delete property so the other side knows we've got the data
+              XDeleteProperty(display,window,prop);
+              XFlush(display);
+              break;
+              }
+
+            // Read and delete the property
+            fxrecvprop(display,window,prop,type,data,size);
+            }
+          }
+        }
+
+      // All data in one shot
+      else{
+        // Read and delete the property
+        fxrecvprop(display,window,prop,type,data,size);
         }
       }
     return prop;
@@ -174,7 +252,7 @@ Atom fxrecvdata(Display *display,Window window,Atom prop,Atom,FXuchar*& data,FXu
 
 
 // Change PRIMARY selection data
-void FXApp::selectionSetData(FXWindow*,FXDragType,FXuchar* data,FXuint size){
+void FXApp::selectionSetData(const FXWindow*,FXDragType,FXuchar* data,FXuint size){
   FXFREE(&ddeData);
   ddeData=data;
   ddeSize=size;
@@ -182,7 +260,7 @@ void FXApp::selectionSetData(FXWindow*,FXDragType,FXuchar* data,FXuint size){
 
 
 // Retrieve PRIMARY selection data
-void FXApp::selectionGetData(FXWindow* window,FXDragType type,FXuchar*& data,FXuint& size){
+void FXApp::selectionGetData(const FXWindow* window,FXDragType type,FXuchar*& data,FXuint& size){
   FXID answer;
   data=NULL;
   size=0;
@@ -191,29 +269,26 @@ void FXApp::selectionGetData(FXWindow* window,FXDragType type,FXuchar*& data,FXu
     event.target=type;
     ddeData=NULL;
     ddeSize=0;
-    selectionWindow->handle(this,MKUINT(0,SEL_SELECTION_REQUEST),&event);
+    selectionWindow->handle(this,FXSEL(SEL_SELECTION_REQUEST,0),&event);
     data=ddeData;
     size=ddeSize;
     ddeData=NULL;
     ddeSize=0;
-    FXTRACE((100,"Window %d requested SELECTION DATA of type %d from local; got %d bytes\n",window->id(),type,size));
     }
   else{
-    FXTRACE((100,"Sending SELECTION request from %d\n",window->id()));
     answer=fxsendrequest((Display*)display,window->id(),XA_PRIMARY,ddeAtom,type,event.time);
-    fxrecvdata((Display*)display,window->id(),answer,type,data,size);
-    FXTRACE((100,"Window %d requested SELECTION DATA of type %d from remote; got %d bytes\n",window->id(),type,size));
+    fxrecvdata((Display*)display,window->id(),answer,ddeIncr,type,data,size);
     }
   }
 
 
 // Retrieve PRIMARY selection types
-void FXApp::selectionGetTypes(FXWindow* window,FXDragType*& types,FXuint& numtypes){
+void FXApp::selectionGetTypes(const FXWindow* window,FXDragType*& types,FXuint& numtypes){
   FXID answer;
   types=NULL;
   numtypes=0;
   if(selectionWindow){
-    FXMEMDUP(&types,FXDragType,xselTypeList,xselNumTypes);
+    FXMEMDUP(&types,xselTypeList,FXDragType,xselNumTypes);
     numtypes=xselNumTypes;
     }
   else{
@@ -228,7 +303,7 @@ void FXApp::selectionGetTypes(FXWindow* window,FXDragType*& types,FXuint& numtyp
 
 
 // Change CLIPBOARD selection data
-void FXApp::clipboardSetData(FXWindow*,FXDragType,FXuchar* data,FXuint size){
+void FXApp::clipboardSetData(const FXWindow*,FXDragType,FXuchar* data,FXuint size){
   FXFREE(&ddeData);
   ddeData=data;
   ddeSize=size;
@@ -236,7 +311,7 @@ void FXApp::clipboardSetData(FXWindow*,FXDragType,FXuchar* data,FXuint size){
 
 
 // Retrieve CLIPBOARD selection data
-void FXApp::clipboardGetData(FXWindow* window,FXDragType type,FXuchar*& data,FXuint& size){
+void FXApp::clipboardGetData(const FXWindow* window,FXDragType type,FXuchar*& data,FXuint& size){
   FXID answer;
   data=NULL;
   size=0;
@@ -245,30 +320,27 @@ void FXApp::clipboardGetData(FXWindow* window,FXDragType type,FXuchar*& data,FXu
     event.target=type;
     ddeData=NULL;
     ddeSize=0;
-    clipboardWindow->handle(this,MKUINT(0,SEL_CLIPBOARD_REQUEST),&event);
+    clipboardWindow->handle(this,FXSEL(SEL_CLIPBOARD_REQUEST,0),&event);
     data=ddeData;
     size=ddeSize;
     ddeData=NULL;
     ddeSize=0;
-    FXTRACE((100,"Window %d requested CLIPBOARD DATA of type %d from local; got %d bytes\n",window->id(),type,size));
     }
   else{
-    FXTRACE((100,"Sending CLIPBOARD request from %d\n",window->id()));
     answer=fxsendrequest((Display*)display,window->id(),xcbSelection,ddeAtom,type,event.time);
-    fxrecvdata((Display*)display,window->id(),answer,type,data,size);
-    FXTRACE((100,"Window %d requested CLIPBOARD DATA of type %d from remote; got %d bytes\n",window->id(),type,size));
+    fxrecvdata((Display*)display,window->id(),answer,ddeIncr,type,data,size);
     }
   }
 
 
 // Retrieve CLIPBOARD selection types
-void FXApp::clipboardGetTypes(FXWindow* window,FXDragType*& types,FXuint& numtypes){
+void FXApp::clipboardGetTypes(const FXWindow* window,FXDragType*& types,FXuint& numtypes){
   FXID answer;
   types=NULL;
   numtypes=0;
   if(clipboardWindow){
-    FXMEMDUP(&types,FXDragType,xcbTypeList,xcbNumTypes);
-    numtypes=xcbNumTypes;
+    FXMEMDUP(&types,xcbTypeList,FXDragType,xcbNumTypes);
+    numtypes=xselNumTypes;
     }
   else{
     answer=fxsendrequest((Display*)display,window->id(),xcbSelection,ddeAtom,ddeTargets,event.time);
@@ -281,7 +353,7 @@ void FXApp::clipboardGetTypes(FXWindow* window,FXDragType*& types,FXuint& numtyp
 
 
 // Change DND selection data
-void FXApp::dragdropSetData(FXWindow*,FXDragType,FXuchar* data,FXuint size){
+void FXApp::dragdropSetData(const FXWindow*,FXDragType,FXuchar* data,FXuint size){
   FXFREE(&ddeData);
   ddeData=data;
   ddeSize=size;
@@ -289,7 +361,7 @@ void FXApp::dragdropSetData(FXWindow*,FXDragType,FXuchar* data,FXuint size){
 
 
 // Retrieve DND selection data
-void FXApp::dragdropGetData(FXWindow* window,FXDragType type,FXuchar*& data,FXuint& size){
+void FXApp::dragdropGetData(const FXWindow* window,FXDragType type,FXuchar*& data,FXuint& size){
   FXID answer;
   data=NULL;
   size=0;
@@ -298,27 +370,50 @@ void FXApp::dragdropGetData(FXWindow* window,FXDragType type,FXuchar*& data,FXui
     event.target=type;
     ddeData=NULL;
     ddeSize=0;
-    dragWindow->handle(this,MKUINT(0,SEL_DND_REQUEST),&event);
+    dragWindow->handle(this,FXSEL(SEL_DND_REQUEST,0),&event);
     data=ddeData;
     size=ddeSize;
     ddeData=NULL;
     ddeSize=0;
-    FXTRACE((100,"Window %d requested XDND DATA of type %d from local; got %d bytes\n",window->id(),type,size));
     }
   else{
-    FXTRACE((100,"Sending XDND request from %d\n",window->id()));
     answer=fxsendrequest((Display*)display,window->id(),xdndSelection,ddeAtom,type,event.time);
-    fxrecvdata((Display*)display,window->id(),answer,type,data,size);
-    FXTRACE((100,"Window %d requested XDND DATA of type %d from remote; got %d bytes\n",window->id(),type,size));
+    fxrecvdata((Display*)display,window->id(),answer,ddeIncr,type,data,size);
     }
   }
 
 
 // Retrieve DND selection types
-void FXApp::dragdropGetTypes(FXWindow*,FXDragType*& types,FXuint& numtypes){
-  FXMEMDUP(&types,FXDragType,ddeTypeList,ddeNumTypes);
+void FXApp::dragdropGetTypes(const FXWindow*,FXDragType*& types,FXuint& numtypes){
+  FXMEMDUP(&types,ddeTypeList,FXDragType,ddeNumTypes);
   numtypes=ddeNumTypes;
   }
+
+
+// Make GC for given visual and depth; graphics exposures optional
+GC fxmakegc(Display *display,Visual* visual,FXint depth,FXbool gex){
+  XGCValues gval;
+  FXID drawable;
+  GC gg;
+
+  gval.fill_style=FillSolid;
+  gval.graphics_exposures=gex;
+
+  // For default visual; this is easy as we already have a matching window
+  if(visual==DefaultVisual(display,DefaultScreen(display))){
+    gg=XCreateGC(display,XDefaultRootWindow(display),GCFillStyle|GCGraphicsExposures,&gval);
+    }
+
+  // For arbitrary visual; create a temporary pixmap of the same depth as the visual
+  else{
+    drawable=XCreatePixmap(display,XDefaultRootWindow(display),1,1,depth);
+    gg=XCreateGC(display,drawable,GCFillStyle|GCGraphicsExposures,&gval);
+    XFreePixmap(display,drawable);
+    }
+
+  return gg;
+  }
+
 
 /*******************************************************************************/
 
@@ -392,7 +487,7 @@ HANDLE fxsendrequest(HWND window,HWND requestor,WPARAM type){
 
 
 // Change PRIMARY selection data
-void FXApp::selectionSetData(FXWindow*,FXDragType,FXuchar* data,FXuint size){
+void FXApp::selectionSetData(const FXWindow*,FXDragType,FXuchar* data,FXuint size){
   FXFREE(&ddeData);
   ddeData=data;
   ddeSize=size;
@@ -400,7 +495,7 @@ void FXApp::selectionSetData(FXWindow*,FXDragType,FXuchar* data,FXuint size){
 
 
 // Retrieve PRIMARY selection data
-void FXApp::selectionGetData(FXWindow* window,FXDragType type,FXuchar*& data,FXuint& size){
+void FXApp::selectionGetData(const FXWindow* window,FXDragType type,FXuchar*& data,FXuint& size){
   data=NULL;
   size=0;
   if(selectionWindow){
@@ -408,25 +503,23 @@ void FXApp::selectionGetData(FXWindow* window,FXDragType type,FXuchar*& data,FXu
     event.target=type;
     ddeData=NULL;
     ddeSize=0;
-    selectionWindow->handle(this,MKUINT(0,SEL_SELECTION_REQUEST),&event);
+    selectionWindow->handle(this,FXSEL(SEL_SELECTION_REQUEST,0),&event);
     data=ddeData;
     size=ddeSize;
     ddeData=NULL;
     ddeSize=0;
-    FXTRACE((100,"Window %d requested SELECTION DATA of type %d from local; got %d bytes\n",window->id(),type,size));
     }
   }
 
 
 
 // Retrieve PRIMARY selection types
-void FXApp::selectionGetTypes(FXWindow* window,FXDragType*& types,FXuint& numtypes){
+void FXApp::selectionGetTypes(const FXWindow* window,FXDragType*& types,FXuint& numtypes){
   types=NULL;
   numtypes=0;
   if(selectionWindow){
-    FXMEMDUP(&types,FXDragType,xselTypeList,xselNumTypes);
+    FXMEMDUP(&types,xselTypeList,FXDragType,xselNumTypes);
     numtypes=xselNumTypes;
-    FXTRACE((100,"Window %d requested SELECTION TYPES of from remote; got %d types\n",window->id(),numtypes));
     }
   }
 
@@ -436,7 +529,7 @@ void FXApp::selectionGetTypes(FXWindow* window,FXDragType*& types,FXuint& numtyp
 
 
 // Change CLIPBOARD selection data
-void FXApp::clipboardSetData(FXWindow*,FXDragType type,FXuchar* data,FXuint size){
+void FXApp::clipboardSetData(const FXWindow*,FXDragType type,FXuchar* data,FXuint size){
   HGLOBAL hGlobalMemory=GlobalAlloc(GMEM_MOVEABLE,size);
   if(hGlobalMemory){
     void *pGlobalMemory=GlobalLock(hGlobalMemory);
@@ -450,21 +543,20 @@ void FXApp::clipboardSetData(FXWindow*,FXDragType type,FXuchar* data,FXuint size
 
 
 // Retrieve CLIPBOARD selection data
-void FXApp::clipboardGetData(FXWindow* window,FXDragType type,FXuchar*& data,FXuint& size){
+void FXApp::clipboardGetData(const FXWindow* window,FXDragType type,FXuchar*& data,FXuint& size){
   data=NULL;
   size=0;
   if(IsClipboardFormatAvailable(type)){
     if(OpenClipboard((HWND)window->id())){
       HANDLE hClipMemory=GetClipboardData(type);
       if(hClipMemory){
-        size=GlobalSize(hClipMemory);
+        size=(FXuint)GlobalSize(hClipMemory);
         if(FXMALLOC(&data,FXuchar,size)){
           void *pClipMemory=GlobalLock(hClipMemory);
           FXASSERT(pClipMemory);
           memcpy((void*)data,pClipMemory,size);
           GlobalUnlock(hClipMemory);
           CloseClipboard();
-          FXTRACE((100,"Window %d requested CLIPBOARD DATA of type %d from remote; got %d bytes\n",window->id(),type,size));
           }
         }
       }
@@ -474,7 +566,7 @@ void FXApp::clipboardGetData(FXWindow* window,FXDragType type,FXuchar*& data,FXu
 
 
 // Retrieve CLIPBOARD selection types
-void FXApp::clipboardGetTypes(FXWindow* window,FXDragType*& types,FXuint& numtypes){
+void FXApp::clipboardGetTypes(const FXWindow* window,FXDragType*& types,FXuint& numtypes){
   FXuint count;
   types=NULL;
   numtypes=0;
@@ -486,7 +578,6 @@ void FXApp::clipboardGetTypes(FXWindow* window,FXDragType*& types,FXuint& numtyp
       while(numtypes<count && (format=EnumClipboardFormats(format))!=0){
         types[numtypes++]=format;
         }
-      FXTRACE((100,"Window %d requested CLIPBOARD TYPES of from remote; got %d types\n",window->id(),numtypes));
       }
     CloseClipboard();
     }
@@ -497,7 +588,7 @@ void FXApp::clipboardGetTypes(FXWindow* window,FXDragType*& types,FXuint& numtyp
 
 
 // Change DND selection data
-void FXApp::dragdropSetData(FXWindow*,FXDragType,FXuchar* data,FXuint size){
+void FXApp::dragdropSetData(const FXWindow*,FXDragType,FXuchar* data,FXuint size){
   FXFREE(&ddeData);
   ddeData=data;
   ddeSize=size;
@@ -505,7 +596,7 @@ void FXApp::dragdropSetData(FXWindow*,FXDragType,FXuchar* data,FXuint size){
 
 
 // Retrieve DND selection data
-void FXApp::dragdropGetData(FXWindow* window,FXDragType type,FXuchar*& data,FXuint& size){
+void FXApp::dragdropGetData(const FXWindow* window,FXDragType type,FXuchar*& data,FXuint& size){
   HANDLE answer;
   data=NULL;
   size=0;
@@ -514,25 +605,22 @@ void FXApp::dragdropGetData(FXWindow* window,FXDragType type,FXuchar*& data,FXui
     event.target=type;
     ddeData=NULL;
     ddeSize=0;
-    dragWindow->handle(this,MKUINT(0,SEL_DND_REQUEST),&event);
+    dragWindow->handle(this,FXSEL(SEL_DND_REQUEST,0),&event);
     data=ddeData;
     size=ddeSize;
     ddeData=NULL;
     ddeSize=0;
-    FXTRACE((100,"Window %d requested XDND DATA of type %d from local; got %d bytes\n",window->id(),type,size));
     }
   else{
-    FXTRACE((100,"Sending request to %d\n",xdndSource));
     answer=fxsendrequest((HWND)xdndSource,(HWND)window->id(),(WPARAM)type);
     fxrecvdata(answer,data,size);
-    FXTRACE((100,"Window %d requested XDND DATA of type %d from remote; got %d bytes\n",window->id(),type,size));
     }
   }
 
 
 // Retrieve DND selection types
-void FXApp::dragdropGetTypes(FXWindow*,FXDragType*& types,FXuint& numtypes){
-  FXMEMDUP(&types,FXDragType,ddeTypeList,ddeNumTypes);
+void FXApp::dragdropGetTypes(const FXWindow*,FXDragType*& types,FXuint& numtypes){
+  FXMEMDUP(&types,ddeTypeList,FXDragType,ddeNumTypes);
   numtypes=ddeNumTypes;
   }
 
