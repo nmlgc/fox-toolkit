@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXList.cpp,v 1.85 2002/02/27 14:30:42 fox Exp $                       *
+* $Id: FXList.cpp,v 1.85.4.8 2003/06/20 19:02:07 fox Exp $                       *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -43,8 +43,8 @@
 /*
 
   Notes:
-  - Draw stuff differently when disabled.
   - Move active item by means of focus navigation, or first letters typed.
+  - Draw stuff differently when disabled.
   - PageUp/PageDn should also change currentitem.
   - Should support borders in ScrollWindow & derivatives.
   - Should issue callbacks from keyboard also.
@@ -627,7 +627,7 @@ FXbool FXList::selectItem(FXint index,FXbool notify){
       case LIST_MULTIPLESELECT:
         items[index]->setSelected(TRUE);
         updateItem(index);
-        if(notify && target){target->handle(this,MKUINT(message,SEL_SELECTED),(void*)index);}
+        if(notify && target){target->handle(this,MKUINT(message,SEL_SELECTED),(void*)(FXival)index);}
         break;
       }
     return TRUE;
@@ -646,7 +646,7 @@ FXbool FXList::deselectItem(FXint index,FXbool notify){
       case LIST_SINGLESELECT:
         items[index]->setSelected(FALSE);
         updateItem(index);
-        if(notify && target){target->handle(this,MKUINT(message,SEL_DESELECTED),(void*)index);}
+        if(notify && target){target->handle(this,MKUINT(message,SEL_DESELECTED),(void*)(FXival)index);}
         break;
       }
     return TRUE;
@@ -664,7 +664,7 @@ FXbool FXList::toggleItem(FXint index,FXbool notify){
         killSelection(notify);
         items[index]->setSelected(TRUE);
         updateItem(index);
-        if(notify && target){target->handle(this,MKUINT(message,SEL_SELECTED),(void*)index);}
+        if(notify && target){target->handle(this,MKUINT(message,SEL_SELECTED),(void*)(FXival)index);}
         }
       break;
     case LIST_SINGLESELECT:
@@ -672,12 +672,12 @@ FXbool FXList::toggleItem(FXint index,FXbool notify){
         killSelection(notify);
         items[index]->setSelected(TRUE);
         updateItem(index);
-        if(notify && target){target->handle(this,MKUINT(message,SEL_SELECTED),(void*)index);}
+        if(notify && target){target->handle(this,MKUINT(message,SEL_SELECTED),(void*)(FXival)index);}
         }
       else{
         items[index]->setSelected(FALSE);
         updateItem(index);
-        if(notify && target){target->handle(this,MKUINT(message,SEL_DESELECTED),(void*)index);}
+        if(notify && target){target->handle(this,MKUINT(message,SEL_DESELECTED),(void*)(FXival)index);}
         }
       break;
     case LIST_EXTENDEDSELECT:
@@ -685,12 +685,12 @@ FXbool FXList::toggleItem(FXint index,FXbool notify){
       if(!items[index]->isSelected()){
         items[index]->setSelected(TRUE);
         updateItem(index);
-        if(notify && target){target->handle(this,MKUINT(message,SEL_SELECTED),(void*)index);}
+        if(notify && target){target->handle(this,MKUINT(message,SEL_SELECTED),(void*)(FXival)index);}
         }
       else{
         items[index]->setSelected(FALSE);
         updateItem(index);
-        if(notify && target){target->handle(this,MKUINT(message,SEL_DESELECTED),(void*)index);}
+        if(notify && target){target->handle(this,MKUINT(message,SEL_DESELECTED),(void*)(FXival)index);}
         }
       break;
     }
@@ -700,7 +700,7 @@ FXbool FXList::toggleItem(FXint index,FXbool notify){
 
 // Update value from a message
 long FXList::onCmdSetValue(FXObject*,FXSelector,void* ptr){
-  setCurrentItem((FXint)(long)ptr);
+  setCurrentItem((FXint)(FXival)ptr);
   return 1;
   }
 
@@ -891,9 +891,9 @@ hop:  lookup=FXString::null;
             }
           }
         }
-      handle(this,MKUINT(0,SEL_CLICKED),(void*)current);
+      handle(this,MKUINT(0,SEL_CLICKED),(void*)(FXival)current);
       if(0<=current && items[current]->isEnabled()){
-        handle(this,MKUINT(0,SEL_COMMAND),(void*)current);
+        handle(this,MKUINT(0,SEL_COMMAND),(void*)(FXival)current);
         }
       return 1;
     case KEY_space:
@@ -926,21 +926,21 @@ hop:  lookup=FXString::null;
           }
         setAnchorItem(current);
         }
-      handle(this,MKUINT(0,SEL_CLICKED),(void*)current);
+      handle(this,MKUINT(0,SEL_CLICKED),(void*)(FXival)current);
       if(0<=current && items[current]->isEnabled()){
-        handle(this,MKUINT(0,SEL_COMMAND),(void*)current);
+        handle(this,MKUINT(0,SEL_COMMAND),(void*)(FXival)current);
         }
       return 1;
     case KEY_Return:
     case KEY_KP_Enter:
       lookup=FXString::null;
-      handle(this,MKUINT(0,SEL_DOUBLECLICKED),(void*)current);
+      handle(this,MKUINT(0,SEL_DOUBLECLICKED),(void*)(FXival)current);
       if(0<=current && items[current]->isEnabled()){
-        handle(this,MKUINT(0,SEL_COMMAND),(void*)current);
+        handle(this,MKUINT(0,SEL_COMMAND),(void*)(FXival)current);
         }
       return 1;
     default:
-      if((event->state&(CONTROLMASK|ALTMASK)) || ((FXuchar)event->text[0]<32)) return 0;
+      if((event->state&(CONTROLMASK|ALTMASK)) || !isprint((FXuchar)event->text[0])) return 0;
       lookup.append(event->text);
       if(lookuptimer) getApp()->removeTimeout(lookuptimer);
       lookuptimer=getApp()->addTimeout(getApp()->getTypingSpeed(),this,ID_LOOKUPTIMER);
@@ -956,9 +956,9 @@ hop:  lookup=FXString::null;
 	  }
 	setAnchorItem(index);
         }
-      handle(this,MKUINT(0,SEL_CLICKED),(void*)current);
+      handle(this,MKUINT(0,SEL_CLICKED),(void*)(FXival)current);
       if(0<=current && items[current]->isEnabled()){
-	handle(this,MKUINT(0,SEL_COMMAND),(void*)current);
+	handle(this,MKUINT(0,SEL_COMMAND),(void*)(FXival)current);
 	}
       return 1;
     }
@@ -1114,7 +1114,6 @@ long FXList::onLeftBtnPress(FXObject*,FXSelector,void* ptr){
 
     // Locate item
     index=getItemAt(event->win_x,event->win_y);
-    code=hitItem(index,event->win_x,event->win_y);
 
     // No item
     if(index<0) return 1;
@@ -1216,18 +1215,18 @@ long FXList::onLeftBtnRelease(FXObject*,FXSelector,void* ptr){
 
     // Generate clicked callbacks
     if(event->click_count==1){
-      handle(this,MKUINT(0,SEL_CLICKED),(void*)current);
+      handle(this,MKUINT(0,SEL_CLICKED),(void*)(FXival)current);
       }
     else if(event->click_count==2){
-      handle(this,MKUINT(0,SEL_DOUBLECLICKED),(void*)current);
+      handle(this,MKUINT(0,SEL_DOUBLECLICKED),(void*)(FXival)current);
       }
     else if(event->click_count==3){
-      handle(this,MKUINT(0,SEL_TRIPLECLICKED),(void*)current);
+      handle(this,MKUINT(0,SEL_TRIPLECLICKED),(void*)(FXival)current);
       }
 
     // Command callback only when clicked on item
     if(0<=current && items[current]->isEnabled()){
-      handle(this,MKUINT(0,SEL_COMMAND),(void*)current);
+      handle(this,MKUINT(0,SEL_COMMAND),(void*)(FXival)current);
       }
     return 1;
     }
@@ -1324,7 +1323,7 @@ FXbool FXList::extendSelection(FXint index,FXbool notify){
           items[i]->setSelected(TRUE);
           updateItem(i);
           changes=TRUE;
-          if(notify && target){target->handle(this,MKUINT(message,SEL_SELECTED),(void*)i);}
+          if(notify && target){target->handle(this,MKUINT(message,SEL_SELECTED),(void*)(FXival)i);}
           }
         }
 
@@ -1335,7 +1334,7 @@ FXbool FXList::extendSelection(FXint index,FXbool notify){
           items[i]->setSelected(FALSE);
           updateItem(i);
           changes=TRUE;
-          if(notify && target){target->handle(this,MKUINT(message,SEL_DESELECTED),(void*)i);}
+          if(notify && target){target->handle(this,MKUINT(message,SEL_DESELECTED),(void*)(FXival)i);}
           }
         }
       }
@@ -1350,7 +1349,7 @@ FXbool FXList::extendSelection(FXint index,FXbool notify){
           items[i]->setSelected(TRUE);
           updateItem(i);
           changes=TRUE;
-          if(notify && target){target->handle(this,MKUINT(message,SEL_SELECTED),(void*)i);}
+          if(notify && target){target->handle(this,MKUINT(message,SEL_SELECTED),(void*)(FXival)i);}
           }
         }
 
@@ -1361,7 +1360,7 @@ FXbool FXList::extendSelection(FXint index,FXbool notify){
           items[i]->setSelected(FALSE);
           updateItem(i);
           changes=TRUE;
-          if(notify && target){target->handle(this,MKUINT(message,SEL_DESELECTED),(void*)i);}
+          if(notify && target){target->handle(this,MKUINT(message,SEL_DESELECTED),(void*)(FXival)i);}
           }
         }
       }
@@ -1380,7 +1379,7 @@ FXbool FXList::killSelection(FXbool notify){
       items[i]->setSelected(FALSE);
       updateItem(i);
       changes=TRUE;
-      if(notify && target){target->handle(this,MKUINT(message,SEL_DESELECTED),(void*)i);}
+      if(notify && target){target->handle(this,MKUINT(message,SEL_DESELECTED),(void*)(FXival)i);}
       }
     }
   return changes;
@@ -1424,7 +1423,7 @@ void FXList::sortItems(){
         if(items[i]==c){ current=i; break; }
         }
       }
-    update();
+    recalc();
     }
   }
 
@@ -1457,7 +1456,7 @@ void FXList::setCurrentItem(FXint index,FXbool notify){
       }
 
     // Notify item change
-    if(notify && target){target->handle(this,MKUINT(message,SEL_CHANGED),(void*)current);}
+    if(notify && target){target->handle(this,MKUINT(message,SEL_CHANGED),(void*)(FXival)current);}
     }
 
   // In browse select mode, select this item
@@ -1498,7 +1497,7 @@ FXint FXList::replaceItem(FXint index,FXListItem* item,FXbool notify){
   if(index<0 || nitems<=index){ fxerror("%s::replaceItem: index out of range.\n",getClassName()); }
 
   // Notify item will be replaced
-  if(notify && target){target->handle(this,MKUINT(message,SEL_REPLACED),(void*)index);}
+  if(notify && target){target->handle(this,MKUINT(message,SEL_REPLACED),(void*)(FXival)index);}
 
   // Copy the state over
   item->state=items[index]->state;
@@ -1544,11 +1543,11 @@ FXint FXList::insertItem(FXint index,FXListItem* item,FXbool notify){
   if(current<0 && nitems==1) current=0;
 
   // Notify item has been inserted
-  if(notify && target){target->handle(this,MKUINT(message,SEL_INSERTED),(void*)index);}
+  if(notify && target){target->handle(this,MKUINT(message,SEL_INSERTED),(void*)(FXival)index);}
 
   // Current item may have changed
   if(old!=current){
-    if(notify && target){target->handle(this,MKUINT(message,SEL_CHANGED),(void*)current);}
+    if(notify && target){target->handle(this,MKUINT(message,SEL_CHANGED),(void*)(FXival)current);}
     }
 
   // Was new item
@@ -1604,7 +1603,7 @@ void FXList::removeItem(FXint index,FXbool notify){
   if(index<0 || nitems<=index){ fxerror("%s::removeItem: index out of range.\n",getClassName()); }
 
   // Notify item will be deleted
-  if(notify && target){target->handle(this,MKUINT(message,SEL_DELETED),(void*)index);}
+  if(notify && target){target->handle(this,MKUINT(message,SEL_DELETED),(void*)(FXival)index);}
 
   // Remove item from list
   nitems--;
@@ -1617,8 +1616,8 @@ void FXList::removeItem(FXint index,FXbool notify){
   if(current>index || current>=nitems) current--;
 
   // Current item has changed
-  if(old!=current){
-    if(notify && target){target->handle(this,MKUINT(message,SEL_CHANGED),(void*)current);}
+  if(index<=old){
+    if(notify && target){target->handle(this,MKUINT(message,SEL_CHANGED),(void*)(FXival)current);}
     }
 
   // Deleted current item
@@ -1641,8 +1640,8 @@ void FXList::clearItems(FXbool notify){
   register FXint old=current;
 
   // Delete items
-  for(FXint index=0; index<nitems; index++){
-    if(notify && target){target->handle(this,MKUINT(message,SEL_DELETED),(void*)index);}
+  for(FXint index=nitems-1; 0<=index; index--){
+    if(notify && target){target->handle(this,MKUINT(message,SEL_DELETED),(void*)(FXival)index);}
     delete items[index];
     }
 
@@ -1657,7 +1656,7 @@ void FXList::clearItems(FXbool notify){
 
   // Current item has changed
   if(old!=current){
-    if(notify && target){target->handle(this,MKUINT(message,SEL_CHANGED),(void*)-1);}
+    if(notify && target){target->handle(this,MKUINT(message,SEL_CHANGED),(void*)(FXival)-1);}
     }
 
   // Redo layout
@@ -1713,22 +1712,28 @@ void FXList::setFont(FXFont* fnt){
 
 // Set text color
 void FXList::setTextColor(FXColor clr){
-  textColor=clr;
-  update();
+  if(textColor!=clr){
+    textColor=clr;
+    update();
+    }
   }
 
 
 // Set select background color
 void FXList::setSelBackColor(FXColor clr){
-  selbackColor=clr;
-  update();
+  if(selbackColor!=clr){
+    selbackColor=clr;
+    update();
+    }
   }
 
 
 // Set selected text color
 void FXList::setSelTextColor(FXColor clr){
-  seltextColor=clr;
-  update();
+  if(seltextColor!=clr){
+    seltextColor=clr;
+    update();
+    }
   }
 
 

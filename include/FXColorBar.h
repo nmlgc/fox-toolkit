@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXColorBar.h,v 1.6 2002/01/18 22:42:51 jeroen Exp $                      *
+* $Id: FXColorBar.h,v 1.6.4.1 2003/01/16 18:32:07 fox Exp $                      *
 ********************************************************************************/
 #ifndef FXCOLORBAR_H
 #define FXCOLORBAR_H
@@ -67,7 +67,7 @@ public:
   long onQueryTip(FXObject*,FXSelector,void*);
 public:
 
-  /// Construct color well with initial color clr
+  /// Construct color bar
   FXColorBar(FXComposite* p,FXObject* tgt=NULL,FXSelector sel=0,FXuint opts=FRAME_NORMAL,FXint x=0,FXint y=0,FXint w=0,FXint h=0,FXint pl=DEFAULT_PAD,FXint pr=DEFAULT_PAD,FXint pt=DEFAULT_PAD,FXint pb=DEFAULT_PAD);
 
   /// Create server-side resources
@@ -106,22 +106,22 @@ public:
   /// Get the color bar style
   void setBarStyle(FXuint style);
 
-  /// Set status line help text for this color well
+  /// Set status line help text for this color bar
   void setHelpText(const FXString& text){ help=text; }
 
-  /// Get status line help text for this color well
+  /// Get status line help text for this color bar
   FXString getHelpText() const { return help; }
 
-  /// Set tool tip message for this color well
+  /// Set tool tip message for this color bar
   void setTipText(const FXString& text){ tip=text; }
 
-  /// Get tool tip message for this color well
+  /// Get tool tip message for this color bar
   FXString getTipText() const { return tip; }
 
-  /// Save color well to a stream
+  /// Save color bar to a stream
   virtual void save(FXStream& store) const;
 
-  /// Load color well from a stream
+  /// Load color bar from a stream
   virtual void load(FXStream& store);
 
   /// Destructor

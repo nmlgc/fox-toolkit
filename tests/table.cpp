@@ -5,7 +5,7 @@
 *********************************************************************************
 * Copyright (C) 1997 by Jeroen van der Zijp.   All Rights Reserved.             *
 *********************************************************************************
-* $Id: table.cpp,v 1.36 2001/09/19 06:09:26 jeroen Exp $                        *
+* $Id: table.cpp,v 1.36.4.2 2003/01/24 18:28:33 fox Exp $                           *
 ********************************************************************************/
 #include "fx.h"
 #include <stdio.h>
@@ -127,14 +127,20 @@ TableWindow::TableWindow(FXApp* a):FXMainWindow(a,"Table Widget Test",NULL,NULL,
   //table=new FXTable(frame,50,13,NULL,0,TABLE_HOR_GRIDLINES|TABLE_VER_GRIDLINES|LAYOUT_FILL_X|LAYOUT_FILL_Y,0,0,0,0, 2,2,2,2);
   table=new FXTable(frame,20,8,this,ID_TABLE,TABLE_COL_SIZABLE|TABLE_ROW_SIZABLE|LAYOUT_FILL_X|LAYOUT_FILL_Y,0,0,0,0, 2,2,2,2);
   table->setTableSize(50,14);
-//   table->setLeadingRows(3);
-//   table->setLeadingCols(3);
-//   table->setTrailingRows(3);
-//   table->setTrailingCols(3);
-   table->setLeadingRows(1);
-   table->setLeadingCols(1);
-   table->setTrailingRows(1);
-   table->setTrailingCols(1);
+  table->setCellColor(0,0,FXRGB(255,255,255));
+  table->setCellColor(0,1,FXRGB(255,240,240));
+  table->setCellColor(1,0,FXRGB(240,255,240));
+  table->setCellColor(1,1,FXRGB(240,240,255));
+  table->setLeadingRows(1);
+  table->setLeadingCols(1);
+  table->setTrailingRows(1);
+  table->setTrailingCols(1);
+
+  // Init corners
+  table->setItemText(0,0,FXString::null);
+  table->setItemText(0,13,FXString::null);
+  table->setItemText(49,0,FXString::null);
+  table->setItemText(49,13,FXString::null);
 
   // Initialize first/last fixed rows
   for(c=1; c<=12; c++){
@@ -166,7 +172,7 @@ TableWindow::TableWindow(FXApp* a):FXMainWindow(a,"Table Widget Test",NULL,NULL,
   table->getItem(10,10)->setJustify(0);
 
   table->setItem(3,3,NULL);
-  table->setItem(5,6,table->getItem(5,5));
+  table->setItem(5,6,table->getItem(5,5));      // FIXME this is not the right way to make spanning cells
   table->setItem(5,7,table->getItem(5,5));
   table->setItemText(5,5,"Spanning Item");
   table->getItem(5,5)->setJustify(0);
@@ -252,9 +258,7 @@ long TableWindow::onCmdResizeTable(FXObject*,FXSelector,void*){
     table->setTableSize(nr,nc);
     for(r=0; r<nr; r++){
       for(c=0; c<nc; c++){
-        if(r>oldnr || c>oldnc){
-          table->setItemText(r,c,"r:"+FXStringVal(r+1)+" c:"+FXStringVal(c+1));
-          }
+        table->setItemText(r,c,"r:"+FXStringVal(r+1)+" c:"+FXStringVal(c+1));
         }
       }
     }

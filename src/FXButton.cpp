@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXButton.cpp,v 1.41 2002/01/24 19:01:00 jeroen Exp $                     *
+* $Id: FXButton.cpp,v 1.41.4.3 2003/06/20 19:02:07 fox Exp $                     *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -143,7 +143,7 @@ void FXButton::setState(FXuint s){
 
 // Update value from a message
 long FXButton::onCmdSetValue(FXObject*,FXSelector,void* ptr){
-  setState((FXint)(long)ptr);
+  setState((FXuint)(FXuval)ptr);
   return 1;
   }
 
@@ -272,7 +272,7 @@ long FXButton::onKeyPress(FXObject*,FXSelector,void* ptr){
   flags&=~FLAG_TIP;
   if(isEnabled() && !(flags&FLAG_PRESSED)){
     if(target && target->handle(this,MKUINT(message,SEL_KEYPRESS),ptr)) return 1;
-    if((event->code==KEY_space || event->code==KEY_KP_Space) || ((options&BUTTON_DEFAULT) && (event->code==KEY_Return || event->code==KEY_KP_Enter))){
+    if((event->code==KEY_space || event->code==KEY_KP_Space) || (isDefault() && (event->code==KEY_Return || event->code==KEY_KP_Enter))){
       if(state!=STATE_ENGAGED) setState(STATE_DOWN);
       flags|=FLAG_PRESSED;
       flags&=~FLAG_UPDATE;
@@ -289,7 +289,7 @@ long FXButton::onKeyRelease(FXObject*,FXSelector,void* ptr){
   FXbool click=(state==STATE_DOWN);
   if(isEnabled() && (flags&FLAG_PRESSED)){
     if(target && target->handle(this,MKUINT(message,SEL_KEYRELEASE),ptr)) return 1;
-    if((event->code==KEY_space || event->code==KEY_KP_Space) || ((options&BUTTON_DEFAULT) && (event->code==KEY_Return || event->code==KEY_KP_Enter))){
+    if((event->code==KEY_space || event->code==KEY_KP_Space) || (isDefault() && (event->code==KEY_Return || event->code==KEY_KP_Enter))){
       if(state!=STATE_ENGAGED) setState(STATE_UP);
       flags|=FLAG_UPDATE;
       flags&=~FLAG_PRESSED;
@@ -462,7 +462,7 @@ long FXButton::onPaint(FXObject*,FXSelector,void* ptr){
       dc.setForeground(textColor);
       drawLabel(dc,label,hotoff,tx,ty,tw,th);
       if(hasFocus()){
-        dc.drawFocusRectangle(border+2,border+2,width-2*border-4,height-2*border-4);
+        dc.drawFocusRectangle(border+1,border+1,width-2*border-2,height-2*border-2);
         }
       }
     else{

@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: help.cpp,v 1.4 2001/12/30 19:11:22 jeroen Exp $                          *
+* $Id: help.cpp,v 1.4.4.1 2002/04/04 14:10:33 fox Exp $                          *
 ********************************************************************************/
 #include "help.h"
 
@@ -52,6 +52,9 @@ const char help[]=
 "\n"
 "General Features.\n"
 "\n"
+"  - Programmable syntax coloring and text styles.\n"
+"  - Active or current text line highlighting.\n"
+"  - Optional line number display.\n"
 "  - Preferences are configurable with convenient dialogs.\n"
 "  - Text size only limited by available memory.\n"
 "  - Persistent bookmarks may be set for each file.\n"
@@ -89,6 +92,14 @@ const char help[]=
 "  - Mouse wheel or right-mouse scroll support.\n"
 "  - Customizable word-delimiters to select words by double-clicks.\n"
 "  - Insert files or extract highlighted text to file.\n"
+"\n"
+"Syntax Coloring Features.\n"
+"\n"
+"  - Syntax coloring is programmable, using PERL-like regular expressions.\n"
+"  - Syntax patterns are keyed to language or file extension.\n"
+"  - Text styles including foreground, background, selection colors, as well as underlining and strike-throughs.\n"
+"  - Syntax expressions, text styles, and language modes can be set up from convenient dialogs.\n"
+"  - Color fallback mechanism to minimize style setup hassles.\n"
 "\n"
 "\n"
 "Starting a New Document.\n"

@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXPopup.cpp,v 1.49 2002/02/25 14:07:20 fox Exp $                      *
+* $Id: FXPopup.cpp,v 1.49.4.2 2002/07/24 21:29:14 fox Exp $                      *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -499,10 +499,13 @@ long FXPopup::onFocusPrev(FXObject*,FXSelector,void* ptr){
 
 // Moved into the popup:- tell the target
 long FXPopup::onEnter(FXObject* sender,FXSelector sel,void* ptr){
+  FXEvent* event=(FXEvent*)ptr;
+  FXint px, py;
   FXShell::onEnter(sender,sel,ptr);
-  if(((FXEvent*)ptr)->code==CROSSINGNORMAL){
+  if(event->code==CROSSINGNORMAL){
   //if(((FXEvent*)ptr)->code!=CROSSINGGRAB){
-    if(getGrabOwner()->grabbed()) getGrabOwner()->ungrab();
+    translateCoordinatesTo(px,py,getParent(),event->win_x,event->win_y); // Patch from Michael Nold <mn@sol-3.de>
+    if(contains(px,py) && getGrabOwner()->grabbed()) getGrabOwner()->ungrab();
     }
   return 1;
   }
@@ -510,10 +513,13 @@ long FXPopup::onEnter(FXObject* sender,FXSelector sel,void* ptr){
 
 // Moved outside the popup:- tell the target
 long FXPopup::onLeave(FXObject* sender,FXSelector sel,void* ptr){
+  FXEvent* event=(FXEvent*)ptr;
+  FXint px,py;
   FXShell::onLeave(sender,sel,ptr);
-  if(((FXEvent*)ptr)->code==CROSSINGNORMAL){
+  if(event->code==CROSSINGNORMAL){
   //if(((FXEvent*)ptr)->code!=CROSSINGGRAB){
-    if(shown() && !getGrabOwner()->grabbed() && getGrabOwner()->shown()) getGrabOwner()->grab();
+    translateCoordinatesTo(px,py,getParent(),event->win_x,event->win_y); // Patch from Michael Nold <mn@sol-3.de>
+    if(!contains(px,py) && shown() && !getGrabOwner()->grabbed() && getGrabOwner()->shown()) getGrabOwner()->grab();
     }
   return 1;
   }
@@ -681,29 +687,37 @@ long FXPopup::onCmdChoice(FXObject*,FXSelector sel,void*){
 
 // Set base color
 void FXPopup::setBaseColor(FXColor clr){
-  baseColor=clr;
-  update();
+  if(baseColor!=clr){
+    baseColor=clr;
+    update();
+    }
   }
 
 
 // Set highlight color
 void FXPopup::setHiliteColor(FXColor clr){
-  hiliteColor=clr;
-  update();
+  if(hiliteColor!=clr){
+    hiliteColor=clr;
+    update();
+    }
   }
 
 
 // Set shadow color
 void FXPopup::setShadowColor(FXColor clr){
-  shadowColor=clr;
-  update();
+  if(shadowColor!=clr){
+    shadowColor=clr;
+    update();
+    }
   }
 
 
 // Set border color
 void FXPopup::setBorderColor(FXColor clr){
-  borderColor=clr;
-  update();
+  if(borderColor!=clr){
+    borderColor=clr;
+    update();
+    }
   }
 
 

@@ -5,7 +5,7 @@
 *********************************************************************************
 * Copyright (C) 1997 by Jeroen van der Zijp.   All Rights Reserved.             *
 *********************************************************************************
-* $Id: tabbook.cpp,v 1.11 2001/04/19 05:25:21 jeroen Exp $                      *
+* $Id: tabbook.cpp,v 1.11.4.1 2003/06/20 19:02:07 fox Exp $                      *
 ********************************************************************************/
 #include "fx.h"
 
@@ -14,7 +14,7 @@
 class TabBookWindow : public FXMainWindow {
   FXDECLARE(TabBookWindow)
 protected:
-    
+
   // Member data
   FXMenubar*         menubar;
   FXMenuPane*        filemenu;
@@ -27,23 +27,23 @@ protected:
   FXHorizontalFrame* listframe;
   FXHorizontalFrame* fileframe;
   FXHorizontalFrame* dirframe;
-  FXList*            simplelist;   
+  FXList*            simplelist;
   FXFileList*        filelist;
   FXDirList*         dirlist;
-  
+
 protected:
-  
+
   TabBookWindow(){}
 
 public:
-  
+
   // Message handlers
   long onCmdTabOrient(FXObject*,FXSelector,void*);
   long onCmdHideShow(FXObject*,FXSelector,void*);
   long onCmdPanel(FXObject*,FXSelector,void*);
 
 public:
-  
+
   // Messages
   enum{
     ID_TABS_TOP=FXMainWindow::ID_LAST,
@@ -59,9 +59,9 @@ public:
   virtual ~TabBookWindow();
   };
 
-  
+
 /*******************************************************************************/
-  
+
 // Map
 FXDEFMAP(TabBookWindow) TabBookWindowMap[]={
   FXMAPFUNCS(SEL_COMMAND,TabBookWindow::ID_TABS_TOP,TabBookWindow::ID_TABS_RIGHT,TabBookWindow::onCmdTabOrient),
@@ -72,29 +72,29 @@ FXDEFMAP(TabBookWindow) TabBookWindowMap[]={
 
 // Object implementation
 FXIMPLEMENT(TabBookWindow,FXMainWindow,TabBookWindowMap,ARRAYNUMBER(TabBookWindowMap))
-  
-  
+
+
 /*******************************************************************************/
 
-  
+
 // Make some windows
 TabBookWindow::TabBookWindow(FXApp *a):FXMainWindow(a,"Tab Book Test",NULL,NULL,DECOR_ALL,0,0,600,400){
-  
+
   // Tooltip
   new FXTooltip(getApp());
-  
+
   // Menubar
   menubar=new FXMenubar(this,LAYOUT_SIDE_TOP|LAYOUT_FILL_X);
-  
+
   // Separator
   new FXHorizontalSeparator(this,LAYOUT_SIDE_TOP|LAYOUT_FILL_X|SEPARATOR_GROOVE);
 
   // Contents
   contents=new FXHorizontalFrame(this,LAYOUT_SIDE_TOP|FRAME_NONE|LAYOUT_FILL_X|LAYOUT_FILL_Y|PACK_UNIFORM_WIDTH);
-  
+
   // Switcher
   tabbook=new FXTabBook(contents,this,ID_PANEL,LAYOUT_FILL_X|LAYOUT_FILL_Y|LAYOUT_RIGHT);
-  
+
   // First item is a list
   tab1=new FXTabItem(tabbook,"&Simple List",NULL);
   listframe=new FXHorizontalFrame(tabbook,FRAME_THICK|FRAME_RAISED);
@@ -103,17 +103,17 @@ TabBookWindow::TabBookWindow(FXApp *a):FXMainWindow(a,"Tab Book Test",NULL,NULL,
   simplelist->appendItem("Second Entry");
   simplelist->appendItem("Third Entry");
   simplelist->appendItem("Fourth Entry");
-    
+
   // Second item is a file list
   tab2=new FXTabItem(tabbook,"F&ile List",NULL);
   fileframe=new FXHorizontalFrame(tabbook,FRAME_THICK|FRAME_RAISED);
   filelist=new FXFileList(fileframe,NULL,0,ICONLIST_EXTENDEDSELECT|LAYOUT_FILL_X|LAYOUT_FILL_Y);
-  
+
   // Third item is a directory list
   tab3=new FXTabItem(tabbook,"T&ree List",NULL);
   dirframe=new FXHorizontalFrame(tabbook,FRAME_THICK|FRAME_RAISED);
   dirlist=new FXDirList(dirframe,0,NULL,0,DIRLIST_SHOWFILES|TREELIST_SHOWS_LINES|TREELIST_SHOWS_BOXES|LAYOUT_FILL_X|LAYOUT_FILL_Y);
-  
+
   // File Menu
   filemenu=new FXMenuPane(this);
   new FXMenuCommand(filemenu,"&Simple List",NULL,tabbook,FXTabBar::ID_OPEN_FIRST+0);
@@ -121,7 +121,7 @@ TabBookWindow::TabBookWindow(FXApp *a):FXMainWindow(a,"Tab Book Test",NULL,NULL,
   new FXMenuCommand(filemenu,"T&ree List",NULL,tabbook,FXTabBar::ID_OPEN_FIRST+2);
   new FXMenuCommand(filemenu,"&Quit\tCtl-Q",NULL,getApp(),FXApp::ID_QUIT);
   new FXMenuTitle(menubar,"&File",NULL,filemenu);
-  
+
   // Tab side
   tabmenu=new FXMenuPane(this);
   new FXMenuCommand(tabmenu,"Hide/Show Tab 2",NULL,this,TabBookWindow::ID_HIDESHOW);
@@ -130,7 +130,7 @@ TabBookWindow::TabBookWindow(FXApp *a):FXMainWindow(a,"Tab Book Test",NULL,NULL,
   new FXMenuCommand(tabmenu,"&Left Tabs",NULL,this,TabBookWindow::ID_TABS_LEFT);
   new FXMenuCommand(tabmenu,"&Right Tabs",NULL,this,TabBookWindow::ID_TABS_RIGHT);
   new FXMenuTitle(menubar,"&Tab Placement",NULL,tabmenu);
-  
+
   }
 
 
@@ -192,7 +192,7 @@ long TabBookWindow::onCmdHideShow(FXObject*,FXSelector,void*){
 
 // Active panel switched
 long TabBookWindow::onCmdPanel(FXObject*,FXSelector,void* ptr){
-  FXTRACE((1,"Panel = %d\n",(FXint)(long)ptr));
+  FXTRACE((1,"Panel = %d\n",(FXint)(FXival)ptr));
   return 1;
   }
 
@@ -212,16 +212,16 @@ int main(int argc,char *argv[]){
 
   // Make application
   FXApp application("TabBook","FoxTest");
-  
+
   // Open display; this reads registry
   application.init(argc,argv);
-  
+
   // Build a window
   new TabBookWindow(&application);
-  
+
   // Create app
   application.create();
-  
+
   // Run
   return application.run();
   }

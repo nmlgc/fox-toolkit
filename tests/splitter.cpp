@@ -5,7 +5,7 @@
 *********************************************************************************
 * Copyright (C) 1997 by Jeroen van der Zijp.   All Rights Reserved.             *
 *********************************************************************************
-* $Id: splitter.cpp,v 1.16 2001/11/02 06:07:19 jeroen Exp $                     *
+* $Id: splitter.cpp,v 1.16.4.1 2002/12/22 07:32:04 fox Exp $                     *
 ********************************************************************************/
 #include "fx.h"
 #include <stdio.h>
@@ -63,7 +63,7 @@ protected:
   FXVerticalFrame*   group1;
   FXVerticalFrame*   group2;
   FXVerticalFrame*   group3;
-  
+
 protected:
   SplitterWindow(){}
 
@@ -74,7 +74,7 @@ public:
   long onCmdVectical(FXObject*,FXSelector,void*);
   long onCmdTracking(FXObject*,FXSelector,void*);
   long onUpdTracking(FXObject*,FXSelector,void*);
-  
+
 public:
   enum {
     ID_REVERSE=FXMainWindow::ID_LAST,
@@ -84,7 +84,7 @@ public:
     ID_TRACKING,
     ID_LAST
     };
-    
+
 public:
   SplitterWindow(FXApp* a);
   virtual void create();
@@ -94,7 +94,7 @@ public:
 
 
 /*******************************************************************************/
-  
+
 // Map
 FXDEFMAP(SplitterWindow) SplitterWindowMap[]={
   FXMAPFUNC(SEL_COMMAND,  SplitterWindow::ID_REVERSE,   SplitterWindow::onCmdReverse),
@@ -116,27 +116,27 @@ SplitterWindow::SplitterWindow(FXApp* a):FXMainWindow(a,"Splitter Test",NULL,NUL
   FXGIFIcon *folder_closed;
   FXGIFIcon *doc;
   int i;
-  
+
   // Folder open icon
   folder_open=new FXGIFIcon(getApp(),minifolderopen);
-  
+
   // Folder closed icon
   folder_closed=new FXGIFIcon(getApp(),minifolderclosed);
 
   // Document icon
   doc=new FXGIFIcon(getApp(),minidoc1);
-  
+
   // Menu bar
   menubar=new FXMenubar(this,LAYOUT_SIDE_TOP|LAYOUT_FILL_X);
-  
+
   // Status bar
   status=new FXStatusbar(this,LAYOUT_SIDE_BOTTOM|LAYOUT_FILL_X|STATUSBAR_WITH_DRAGCORNER);
-  
+
   // File menu
   filemenu=new FXMenuPane(this);
   new FXMenuCommand(filemenu,"Quit\tCtl-Q",NULL,getApp(),FXApp::ID_QUIT);
   new FXMenuTitle(menubar,"&File",NULL,filemenu);
-  
+
   // Main window interior
   splitter=new FXSplitter(this,LAYOUT_SIDE_TOP|LAYOUT_FILL_X|LAYOUT_FILL_Y|SPLITTER_REVERSED|SPLITTER_TRACKING);
   group1=new FXVerticalFrame(splitter,FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_FILL_Y, 0,0,0,0, 0,0,0,0);
@@ -153,11 +153,10 @@ SplitterWindow::SplitterWindow(FXApp* a):FXMainWindow(a,"Splitter Test",NULL,NUL
   new FXMenuCommand(modemenu,"Toggle pane 1",NULL,group1,FXWindow::ID_TOGGLESHOWN);
   new FXMenuCommand(modemenu,"Toggle pane 2",NULL,group2,FXWindow::ID_TOGGLESHOWN);
   new FXMenuCommand(modemenu,"Toggle pane 3",NULL,group3,FXWindow::ID_TOGGLESHOWN);
-  
+
   new FXMenuTitle(menubar,"&Mode",NULL,modemenu);
-    
+
   FXTreeList *tree=new FXTreeList(group1,0,NULL,0,FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_FILL_Y|LAYOUT_TOP|LAYOUT_RIGHT|TREELIST_SHOWS_LINES|TREELIST_SHOWS_BOXES|TREELIST_ROOT_BOXES|TREELIST_EXTENDEDSELECT);
-  //FXTreeList *tree=new FXTreeList(group1,0,NULL,0,FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_FILL_Y|LAYOUT_TOP|LAYOUT_RIGHT|TREELIST_SHOWS_LINES|TREELIST_SHOWS_BOXES|TREELIST_ROOT_BOXES|TREELIST_BROWSESELECT);
   FXTreeItem *branch,*twig,*leaf,*topmost;
 
   topmost=tree->addItemLast(0,"Top",folder_open,folder_closed);
@@ -204,43 +203,43 @@ SplitterWindow::SplitterWindow(FXApp* a):FXMainWindow(a,"Splitter Test",NULL,NUL
       tree->addItemLast(branch,"Seventh-Second",doc,doc);
       tree->addItemLast(branch,"Seventh-Third",doc,doc);
     tree->addItemLast(topmost,"Eighth",doc,doc);
-    
-  
+
+
   new FXLabel(group2,"Matrix",NULL,LAYOUT_CENTER_X);
   new FXHorizontalSeparator(group2,SEPARATOR_GROOVE|LAYOUT_FILL_X);
   FXMatrix* matrix=new FXMatrix(group2,2,MATRIX_BY_COLUMNS|LAYOUT_FILL_X);
-  
+
   new FXLabel(matrix,"Alpha:",NULL,JUSTIFY_RIGHT|LAYOUT_FILL_X|LAYOUT_CENTER_Y);
   new FXTextField(matrix,2,NULL,0,FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_CENTER_Y|LAYOUT_FILL_COLUMN);
   new FXLabel(matrix,"Beta:",NULL,JUSTIFY_RIGHT|LAYOUT_FILL_X|LAYOUT_CENTER_Y);
   new FXTextField(matrix,2,NULL,0,FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_CENTER_Y|LAYOUT_FILL_COLUMN);
   new FXLabel(matrix,"Gamma:",NULL,JUSTIFY_RIGHT|LAYOUT_FILL_X|LAYOUT_CENTER_Y);
   new FXTextField(matrix,2,NULL,0,FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_CENTER_Y|LAYOUT_FILL_COLUMN);
-  
+
   new FXCheckButton(group2,"Continuous Tracking\tSplitter continuously tracks split changes",this,ID_TRACKING);
-  
+
   new FXLabel(group3,"Quite a Stretch",NULL,LAYOUT_CENTER_X);
   new FXHorizontalSeparator(group3,SEPARATOR_GROOVE|LAYOUT_FILL_X);
   FXMatrix* mat=new FXMatrix(group3,3,LAYOUT_FILL_X|LAYOUT_FILL_Y);
-  
+
   new FXButton(mat,"One\nStretch the row\nStretch in Y\nStretch in X\tThe possibilities are endless..",NULL,NULL,0,FRAME_RAISED|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_FILL_Y|LAYOUT_FILL_ROW);
   new FXButton(mat,"Two\nStretch in X\tThe possibilities are endless..",NULL,NULL,0,FRAME_RAISED|FRAME_THICK|LAYOUT_FILL_X);
   new FXButton(mat,"Three\nStretch the row\nStretch in Y\nStretch in X\tThe possibilities are endless..",NULL,NULL,0,FRAME_RAISED|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_FILL_Y|LAYOUT_FILL_ROW);
-  
+
   new FXButton(mat,"Four\nStretch the column\nStretch the row\nStretch in Y\nStretch in X\tThe possibilities are endless..",NULL,NULL,0,FRAME_RAISED|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_FILL_Y|LAYOUT_FILL_ROW|LAYOUT_FILL_COLUMN);
   new FXButton(mat,"Five\nStretch the column\nStretch in Y\nStretch in X\tThe possibilities are endless..",NULL,NULL,0,FRAME_RAISED|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_FILL_Y|LAYOUT_FILL_COLUMN);
   new FXButton(mat,"Six\nStretch the column\nStretch the row\nStretch in Y\nStretch in X\tThe possibilities are endless..",NULL,NULL,0,FRAME_RAISED|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_FILL_Y|LAYOUT_FILL_COLUMN|LAYOUT_FILL_ROW);
-  
+
   new FXButton(mat,"Seven\nStretch the column\nStretch the row\nCenter in Y\nCenter in X\tThe possibilities are endless..",NULL,NULL,0,FRAME_RAISED|FRAME_THICK|LAYOUT_CENTER_Y|LAYOUT_CENTER_X|LAYOUT_FILL_ROW|LAYOUT_FILL_COLUMN);
   new FXButton(mat,"Eight\nStretch the column\tThe possibilities are endless..",NULL,NULL,0,FRAME_RAISED|FRAME_THICK|LAYOUT_FILL_COLUMN);
   new FXButton(mat,"Nine\nStretch the column\nStretch the row\nStretch in Y\tThe possibilities are endless..",NULL,NULL,0,FRAME_RAISED|FRAME_THICK|LAYOUT_RIGHT|LAYOUT_FILL_Y|LAYOUT_FILL_ROW|LAYOUT_FILL_COLUMN);
-  
+
   // Make a tool tip
   new FXTooltip(getApp(),0);
   }
 
 
-// Clean up  
+// Clean up
 SplitterWindow::~SplitterWindow(){
   delete filemenu;
   delete modemenu;

@@ -57,11 +57,14 @@ public:
 
 public:
 
-  // ScribbleApp constructor
+  // ImageWindow constructor
   ImageWindow(FXApp* a);
 
   // Initialize
   virtual void create();
+  
+  // ImageWindow destructor
+  virtual ~ImageWindow();
   };
 
 
@@ -82,7 +85,7 @@ FXIMPLEMENT(ImageWindow,FXMainWindow,ImageWindowMap,ARRAYNUMBER(ImageWindowMap))
 
 
 
-// Construct a ScribbleApp
+// Construct ImageWindow
 ImageWindow::ImageWindow(FXApp* a):FXMainWindow(a,"Image Application",NULL,NULL,DECOR_ALL,0,0,800,600){
   FXint x,y;
   FXVerticalFrame *canvasFrame;
@@ -180,6 +183,21 @@ ImageWindow::ImageWindow(FXApp* a):FXMainWindow(a,"Image Application",NULL,NULL,
   new FXTooltip(getApp());
   }
 
+
+
+// Destroy ImageWindow
+ImageWindow::~ImageWindow(){
+  delete grey;
+  delete red;
+  delete green;
+  delete blue;
+  delete grey_nodither;
+  delete red_nodither;
+  delete green_nodither;
+  delete blue_nodither;
+  delete picture;
+  delete font;
+  }
 
 
 // Create and initialize

@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXTabItem.cpp,v 1.6 2002/01/18 22:43:05 jeroen Exp $                     *
+* $Id: FXTabItem.cpp,v 1.6.4.1 2002/07/16 22:42:42 fox Exp $                     *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -244,8 +244,8 @@ long FXTabItem::onPaint(FXObject*,FXSelector,void* ptr){
       break;
     }
   if(!label.empty()){
-    tw=font->getTextWidth(label.text(),label.length());
-    th=font->getFontHeight();
+    tw=labelWidth(label);
+    th=labelHeight(label);
     }
   if(icon){
     iw=icon->getWidth();

@@ -19,17 +19,17 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: HelpWindow.h,v 1.1 2001/08/22 04:01:50 jeroen Exp $                      *
+* $Id: HelpWindow.h,v 1.1.4.1 2002/04/30 13:13:07 fox Exp $                      *
 ********************************************************************************/
 #ifndef HELPWINDOW_H
 #define HELPWINDOW_H
 
-  
+
 class FXText;
 
 
-/// Online help dialog box 
-class FXAPI HelpWindow : public FXDialogBox {
+/// Online help dialog box
+class HelpWindow : public FXDialogBox {
   FXDECLARE(HelpWindow)
 protected:
   FXText *helptext;         // Help display

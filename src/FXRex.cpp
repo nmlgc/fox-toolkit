@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXRex.cpp,v 1.71 2002/02/23 00:28:09 fox Exp $                           *
+* $Id: FXRex.cpp,v 1.71.4.2 2003/02/19 06:37:33 fox Exp $                           *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -250,7 +250,7 @@
 // As close to infinity as we're going to get; this seems big
 // enough.  We can not make it MAX_INT as this may wrap around when
 // added to something else!
-#define INFINITY 1000000
+#define ONEINDIG 1000000
 
 // Number of capturing sub-expressions allowed
 #define NSUBEXP  10
@@ -868,11 +868,11 @@ FXRexError FXCompile::piece(FXint& flags){
     switch(ch){
       case '*':                                           // Repeat 0-INF
         rep_min=0;
-        rep_max=INFINITY;
+        rep_max=ONEINDIG;
         break;
       case '+':                                           // Repeat 1-INF
         rep_min=1;
-        rep_max=INFINITY;
+        rep_max=ONEINDIG;
         break;
       case '?':                                           // Repeat 0-1
         rep_min=0;
@@ -880,7 +880,7 @@ FXRexError FXCompile::piece(FXint& flags){
         break;
       case '{':                                           // Repeat n-m
         rep_min=0;
-        rep_max=INFINITY;
+        rep_max=ONEINDIG;
         if(*pat!='}'){
           while(isdigit((FXuchar)*pat)){
             rep_min=10*rep_min+(*pat-'0');
@@ -889,7 +889,7 @@ FXRexError FXCompile::piece(FXint& flags){
           rep_max=rep_min;
           if(*pat==','){
             pat++;
-            rep_max=INFINITY;
+            rep_max=ONEINDIG;
             if(*pat!='}'){
               rep_max=0;
               while(isdigit((FXuchar)*pat)){
@@ -913,10 +913,10 @@ FXRexError FXCompile::piece(FXint& flags){
 
       // For simple repeats we prefix the last operation
       if(flg&FLG_SIMPLE){
-        if(rep_min==0 && rep_max==INFINITY){
+        if(rep_min==0 && rep_max==ONEINDIG){
           insert(ptr,OP_STAR+lazy);
           }
-        else if(rep_min==1 && rep_max==INFINITY){
+        else if(rep_min==1 && rep_max==ONEINDIG){
           insert(ptr,OP_PLUS+lazy);
           }
         else if(rep_min==0 && rep_max==1){
@@ -929,19 +929,19 @@ FXRexError FXCompile::piece(FXint& flags){
 
       // For complex repeats we build loop constructs
       else{
-        if(rep_min==0 && rep_max==INFINITY){
+        if(rep_min==0 && rep_max==ONEINDIG){
           /*    ________
           **   |        \
-          ** --B--(...)--J--+--                 (...){0,INFINITY}
+          ** --B--(...)--J--+--                 (...){0,ONEINDIG}
           **    \___________|
           */
           insert(ptr,lazy?OP_BRANCHREV:OP_BRANCH,pc-ptr+3);
           append(OP_JUMP,ptr-pc-1);
           }
-        else if(rep_min==1 && rep_max==INFINITY){
+        else if(rep_min==1 && rep_max==ONEINDIG){
           /*    ________
           **   |        \
-          ** --+--(...)--B--                    (...){1,INFINITY}
+          ** --+--(...)--B--                    (...){1,ONEINDIG}
           **
           */
           append(lazy?OP_BRANCH:OP_BRANCHREV,ptr-pc-1);
@@ -966,7 +966,7 @@ FXRexError FXCompile::piece(FXint& flags){
           append(OP_JUMPLT+nbra,rep_min,ptr-pc-1);
           nbra++;
           }
-        else if(rep_min==0 && rep_max<INFINITY){
+        else if(rep_min==0 && rep_max<ONEINDIG){
           /*       ___________
           **      |           \
           ** --Z--B--(...)--I--L--+--           (...){0,n}
@@ -979,11 +979,11 @@ FXRexError FXCompile::piece(FXint& flags){
           append(OP_JUMPLT+nbra,rep_max,ptr-pc-1);
           nbra++;
           }
-        else if(0<rep_min && rep_max==INFINITY){
+        else if(0<rep_min && rep_max==ONEINDIG){
           /*       ________________
           **      |   ___________  \
           **      |  |           \  \
-          ** --Z--+--+--(...)--I--L--B--        (...){n,INFINITY}
+          ** --Z--+--+--(...)--I--L--B--        (...){n,ONEINDIG}
           */
           if(nbra>=NSUBEXP) return REGERR_COMPLEX;
           insert(ptr,OP_ZERO+nbra);
@@ -1849,12 +1849,12 @@ FXbool FXExecute::match(const FXint* prog){
         break;
       case OP_PLUS:         // Simple repetitions of one character
         rep_min=1;
-        rep_max=INFINITY;
+        rep_max=ONEINDIG;
         greed=1;
         goto rep;
       case OP_MIN_PLUS:
         rep_min=1;
-        rep_max=INFINITY;
+        rep_max=ONEINDIG;
         greed=0;
         goto rep;
       case OP_QUEST:
@@ -1879,12 +1879,12 @@ FXbool FXExecute::match(const FXint* prog){
         goto rep;
       case OP_MIN_STAR:
         rep_min=0;
-        rep_max=INFINITY;
+        rep_max=ONEINDIG;
         greed=0;
         goto rep;
       case OP_STAR:         // Star is the most popular so make that the fall-through case...
         rep_min=0;
-        rep_max=INFINITY;
+        rep_max=ONEINDIG;
         greed=1;
 
         // We need to match more characters than are available
@@ -2257,7 +2257,7 @@ FXbool FXExecute::execute(const FXchar* fm,const FXchar* to){
       return FALSE;
       }
     if(code[1]==OP_CHAR_CI || code[1]==OP_CHARS_CI){  // Known starting character, ignoring case
-      ch=(code[1]==OP_CHAR)?code[2]:code[3];
+      ch=(code[1]==OP_CHAR_CI)?code[2]:code[3];
       if(to==str_end) to--;
       while(fm<=to){
         if(tolower((FXuchar)*fm)==ch && attempt(fm)) return TRUE;

@@ -1,4 +1,4 @@
-# Makefile.in generated automatically by automake 1.4-p5 from Makefile.am
+# Makefile.in generated automatically by automake 1.4-p6 from Makefile.am
 
 # Copyright (C) 1994, 1995-8, 1999, 2001 Free Software Foundation, Inc.
 # This Makefile.in is free software; the Free Software Foundation
@@ -105,7 +105,7 @@ adie_SOURCES =  icons.h icons.cpp help.h help.cpp Adie.h Adie.cpp HelpWindow.h H
 
 CLEANFILES = icons.h icons.cpp
 
-EXTRA_DIST = $(man_MANS)              Adie_sample              Makefile.bc              Makefile.icc
+EXTRA_DIST = $(man_MANS)              Adie_sample              Makefile.bc              Makefile.icc              Makefile.dmc
 
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_CLEAN_FILES = 

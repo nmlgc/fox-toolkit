@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: fxpcxio.cpp,v 1.5 2001/12/29 06:27:21 jeroen Exp $                       *
+* $Id: fxpcxio.cpp,v 1.5.4.2 2002/10/03 06:08:49 fox Exp $                       *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -148,6 +148,60 @@ static FXbool loadPCX4(FXStream& store,FXuchar* pic,FXuchar* colormap,FXint w,FX
 
 /*******************************************************************************/
 
+// 4 planes, 1 bpp
+
+static FXbool loadPCX4x1(FXStream& store,FXuchar* pic,FXuchar* colormap,FXint w,FXint h,FXint bpl){
+  FXuchar *pp=pic,c,*cm;
+  FXint x,y,i,rc,bpl4=bpl*4;
+  FXuint mask;
+  FXuchar *buf;
+  FXuchar c0,c1,c2,c3;
+
+  // temp buf
+  FXMALLOC (&buf,FXuchar,bpl4);
+  if(!buf) return FALSE;
+
+  // Decompress image
+  for(y=0; y<h; y++){
+    x=0;
+    while(x<bpl4){
+      store >> c;
+      if((c&0xC0)==0xC0){
+        rc=c&0x3F;
+        store >> c;
+        memset (&buf [x],c,rc);
+        x+=rc;
+      }
+      else{
+        buf [x] = c;
+        x++;
+      }
+    }
+
+    // decode line
+    for (x = 0; x<bpl; x++){
+      c0 = buf [x];
+      c1 = buf [x + bpl];
+      c2 = buf [x + 2 * bpl];
+      c3 = buf [x + 3 * bpl];
+      for(i=7,mask=128; i>=0; i--,mask >>= 1)
+        if(x*4+i<w){
+          cm=colormap+3*(((c0 & mask) >> i) + (((c1 & mask) >> i) << 1) +
+             (((c2 & mask) >> i) << 2) + (((c3 & mask) >> i) << 3));
+          *pp++=*cm++;
+          *pp++=*cm++;
+          *pp++=*cm;
+        }
+      }
+  }
+  // clear buf
+  FXFREE (&buf);
+
+  return TRUE;
+  }
+
+/*******************************************************************************/
+
 
 static FXbool loadPCX8(FXStream& store,FXuchar* pic,FXint w,FXint h,FXint bpl){
   FXuchar colormap[256*3];
@@ -269,9 +323,9 @@ FXbool fxloadPCX (FXStream& store,FXuchar*& data,FXColor& transp,FXint& width,FX
   for (i = 0; i < 48; i++)
     store >> Colormap [i];
 
-  // Check Reserved
+  // Get Reserved
   store >> Reserved;
-  if (Reserved != 0) return FALSE;
+  //if(Reserved != 0) return FALSE;
 
   // Get NPlanes
   store >> NPlanes;
@@ -288,8 +342,7 @@ FXbool fxloadPCX (FXStream& store,FXuchar*& data,FXColor& transp,FXint& width,FX
 
   // Error checking
   if (BitsPerPixel != 1 && BitsPerPixel != 4 && BitsPerPixel != 8) return FALSE;
-  if (NPlanes != 1 && NPlanes != 3) return FALSE;
-  if (BitsPerPixel != 8 && NPlanes != 1) return FALSE;
+  if (NPlanes != 1 && NPlanes != 3 && NPlanes != 4) return FALSE;
 
   FXTRACE ((150,"fxloadPCX: width=%d height=%d nbits=%d\n",width,height,BitsPerPixel));
 
@@ -298,8 +351,10 @@ FXbool fxloadPCX (FXStream& store,FXuchar*& data,FXColor& transp,FXint& width,FX
   if(!data) return FALSE;
 
   // load up the image
-  if(BitsPerPixel==1)
+  if(BitsPerPixel==1 && NPlanes == 1)
     ok=loadPCX1(store,data,Colormap,width,height,BytesPerLine);
+  else if (BitsPerPixel == 1 && NPlanes == 4)
+    ok=loadPCX4x1(store,data,Colormap,width,height,BytesPerLine);
   else if(BitsPerPixel==4)
     ok=loadPCX4(store,data,Colormap,width,height,BytesPerLine);
   else if(BitsPerPixel==8 && NPlanes==1)

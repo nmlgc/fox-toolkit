@@ -260,5 +260,7 @@ $(CURSORS)
 EXTRA_DIST = Makefile.bc \
              Makefile.bc.resp \
              Makefile.icc \
-             Makefile.icc.resp
+             Makefile.icc.resp \
+             Makefile.dmc \
+             Makefile.dmc.resp
 

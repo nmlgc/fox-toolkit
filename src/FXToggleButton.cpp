@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXToggleButton.cpp,v 1.31 2002/01/18 22:43:06 jeroen Exp $               *
+* $Id: FXToggleButton.cpp,v 1.31.4.1 2003/06/20 19:02:07 fox Exp $               *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -169,7 +169,7 @@ FXbool FXToggleButton::canFocus() const { return 1; }
 
 // Update value from a message
 long FXToggleButton::onCmdSetValue(FXObject*,FXSelector,void* ptr){
-  setState((FXint)(long)ptr);
+  setState((FXint)(FXuval)ptr);
   return 1;
   }
 

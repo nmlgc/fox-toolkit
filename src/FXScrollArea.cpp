@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXScrollArea.cpp,v 1.22 2002/01/18 22:43:04 jeroen Exp $                 *
+* $Id: FXScrollArea.cpp,v 1.22.4.1 2003/06/20 19:02:07 fox Exp $                 *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -160,7 +160,7 @@ void FXScrollArea::moveContents(FXint x,FXint y){
 
 // Changed
 long FXScrollArea::onHScrollerChanged(FXObject*,FXSelector,void* ptr){
-  FXint new_x=-(FXint)(long)ptr;
+  FXint new_x=-(FXint)(FXival)ptr;
   if(new_x!=pos_x){
     moveContents(new_x,pos_y);
     }
@@ -171,7 +171,7 @@ long FXScrollArea::onHScrollerChanged(FXObject*,FXSelector,void* ptr){
 
 // Changed
 long FXScrollArea::onVScrollerChanged(FXObject*,FXSelector,void* ptr){
-  FXint new_y=-(FXint)(long)ptr;
+  FXint new_y=-(FXint)(FXival)ptr;
   if(new_y!=pos_y){
     moveContents(pos_x,new_y);
     }
@@ -183,7 +183,7 @@ long FXScrollArea::onVScrollerChanged(FXObject*,FXSelector,void* ptr){
 // Dragged
 long FXScrollArea::onHScrollerDragged(FXObject*,FXSelector,void* ptr){
   if(!(options&SCROLLERS_DONT_TRACK)){
-    FXint new_x=-(FXint)(long)ptr;
+    FXint new_x=-(FXint)(FXival)ptr;
     if(new_x!=pos_x){
       moveContents(new_x,pos_y);
       }
@@ -196,7 +196,7 @@ long FXScrollArea::onHScrollerDragged(FXObject*,FXSelector,void* ptr){
 // Dragged
 long FXScrollArea::onVScrollerDragged(FXObject*,FXSelector,void* ptr){
   if(!(options&SCROLLERS_DONT_TRACK)){
-    FXint new_y=-(FXint)(long)ptr;
+    FXint new_y=-(FXint)(FXival)ptr;
     if(new_y!=pos_y){
       moveContents(pos_x,new_y);
       }

@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: Preferences.cpp,v 1.47 2002/02/26 18:47:38 fox Exp $                     *
+* $Id: Preferences.cpp,v 1.47.4.1 2003/06/20 19:02:07 fox Exp $                     *
 ********************************************************************************/
 #include "fx.h"
 #include "FXRex.h"
@@ -433,13 +433,13 @@ long Preferences::onCmdStyleColor(FXObject*,FXSelector sel,void* ptr){
   FXint curstyle=stylelist->getCurrentItem();
   FXHiliteStyle style=getOwner()->getStyleColors(curstyle);
   switch(SELID(sel)){
-    case ID_STYLE_NORMAL_FG: style.normalForeColor=(FXColor)(long)ptr; break;
-    case ID_STYLE_NORMAL_BG: style.normalBackColor=(FXColor)(long)ptr; break;
-    case ID_STYLE_SELECT_FG: style.selectForeColor=(FXColor)(long)ptr; break;
-    case ID_STYLE_SELECT_BG: style.selectBackColor=(FXColor)(long)ptr; break;
-    case ID_STYLE_HILITE_FG: style.hiliteForeColor=(FXColor)(long)ptr; break;
-    case ID_STYLE_HILITE_BG: style.hiliteBackColor=(FXColor)(long)ptr; break;
-    case ID_STYLE_ACTIVE_BG: style.activeBackColor=(FXColor)(long)ptr; break;
+    case ID_STYLE_NORMAL_FG: style.normalForeColor=(FXColor)(FXuval)ptr; break;
+    case ID_STYLE_NORMAL_BG: style.normalBackColor=(FXColor)(FXuval)ptr; break;
+    case ID_STYLE_SELECT_FG: style.selectForeColor=(FXColor)(FXuval)ptr; break;
+    case ID_STYLE_SELECT_BG: style.selectBackColor=(FXColor)(FXuval)ptr; break;
+    case ID_STYLE_HILITE_FG: style.hiliteForeColor=(FXColor)(FXuval)ptr; break;
+    case ID_STYLE_HILITE_BG: style.hiliteBackColor=(FXColor)(FXuval)ptr; break;
+    case ID_STYLE_ACTIVE_BG: style.activeBackColor=(FXColor)(FXuval)ptr; break;
     }
   getOwner()->setStyleColors(curstyle,style);
   return 1;

@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXTopWindow.cpp,v 1.72 2002/01/18 22:43:07 jeroen Exp $                  *
+* $Id: FXTopWindow.cpp,v 1.72.4.1 2002/08/06 19:33:31 fox Exp $                  *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -688,7 +688,7 @@ void FXTopWindow::setdecorations(){
 
 // Change decorations
 void FXTopWindow::setDecorations(FXuint decorations){
-  FXuint opts=(decorations&~DECOR_ALL) | (decorations&DECOR_ALL);
+  FXuint opts=(options&~DECOR_ALL) | (decorations&DECOR_ALL);
   if(options!=opts){
     options=opts;
     if(xid) setdecorations();

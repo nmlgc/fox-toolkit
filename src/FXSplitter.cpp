@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXSplitter.cpp,v 1.26 2002/01/18 22:43:04 jeroen Exp $                   *
+* $Id: FXSplitter.cpp,v 1.26.4.1 2003/06/06 19:32:03 fox Exp $                   *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -434,7 +434,7 @@ long FXSplitter::onLeftBtnPress(FXObject*,FXSelector,void* ptr){
   FXEvent* ev=(FXEvent*)ptr;
   if(isEnabled()){
     grab();
-    if(target && target->handle(this,MKUINT(message,SEL_LEFTBUTTONRELEASE),ptr)) return 1;
+    if(target && target->handle(this,MKUINT(message,SEL_LEFTBUTTONPRESS),ptr)) return 1;
     if(options&SPLITTER_VERTICAL){
       window=findVSplit(ev->win_y);
       if(window){

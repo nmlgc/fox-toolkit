@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXSettings.cpp,v 1.16 2002/02/27 20:48:36 fox Exp $                      *
+* $Id: FXSettings.cpp,v 1.16.4.1 2002/11/13 15:14:07 fox Exp $                      *
 ********************************************************************************/
 #ifdef HAVE_VSSCANF
 #ifndef _GNU_SOURCE
@@ -115,7 +115,7 @@ FXbool FXSettings::parseFile(const FXString& filename,FXbool mark){
             goto next;
             }
           if(len>=MAXNAME){
-            fxwarning("%s:%d: section name to long.\n",filename.text(),lineno);
+            fxwarning("%s:%d: section name too long.\n",filename.text(),lineno);
             goto next;
             }
           name[len]=c;
@@ -145,7 +145,7 @@ FXbool FXSettings::parseFile(const FXString& filename,FXbool mark){
             goto next;
             }
           if(len>=MAXNAME-1){
-            fxwarning("%s:%d: key name to long.\n",filename.text(),lineno);
+            fxwarning("%s:%d: key name too long.\n",filename.text(),lineno);
             goto next;
             }
           name[len]=c;

@@ -66,4 +66,5 @@ dctest_SOURCES		= dctest.cpp dippy.h
 
 
 EXTRA_DIST = Makefile.bc \
-             Makefile.icc
+             Makefile.icc \
+             Makefile.dmc

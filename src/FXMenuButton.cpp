@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXMenuButton.cpp,v 1.25 2002/01/18 22:43:01 jeroen Exp $                 *
+* $Id: FXMenuButton.cpp,v 1.25.4.1 2002/07/08 15:16:58 fox Exp $                 *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -601,7 +601,7 @@ long FXMenuButton::onPaint(FXObject*,FXSelector,void* ptr){
       dc.setForeground(textColor);
       drawLabel(dc,label,hotoff,tx,ty,tw,th);
       if(hasFocus()){
-        dc.drawFocusRectangle(border+2,border+2,width-2*border-4,height-2*border-4);
+        dc.drawFocusRectangle(border+1,border+1,width-2*border-2,height-2*border-2);
         }
       }
     else{

@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXTreeList.cpp,v 1.85 2002/01/18 22:43:07 jeroen Exp $                   *
+* $Id: FXTreeList.cpp,v 1.85.4.3 2003/03/03 16:12:41 fox Exp $                   *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -1017,6 +1017,7 @@ long FXTreeList::onFocusOut(FXObject* sender,FXSelector sel,void* ptr){
 long FXTreeList::onPaint(FXObject*,FXSelector,void* ptr){
   FXEvent* event=(FXEvent*)ptr;
   FXTreeItem* item=firstitem;
+  FXTreeItem* p;
   FXint yh,xh,x,y,w,h,xp,hh;
   FXDCWindow dc(this,event);
   dc.setTextFont(font);
@@ -1039,11 +1040,11 @@ long FXTreeList::onPaint(FXObject*,FXSelector,void* ptr){
         yh=y+hh;
         xh=x-indent+(SIDE_SPACING/2);
         dc.setForeground(lineColor);
-        dc.setFillStyle(FILL_STIPPLED);
         dc.setStipple(STIPPLE_GRAY,pos_x&1,pos_y&1);
         if(options&TREELIST_SHOWS_LINES){                   // Connect items with lines
-          FXTreeItem* p=item->parent;
+          p=item->parent;
           xp=xh;
+          dc.setFillStyle(FILL_STIPPLED);
           while(p){
             xp-=(indent+p->getHeight(this)/2);
             if(p->next) dc.fillRectangle(xp,y,1,h);
@@ -1302,7 +1303,7 @@ hop:  lookup=FXString::null;
         }
       return 1;
     default:
-      if((event->state&(CONTROLMASK|ALTMASK)) || ((FXuchar)event->text[0]<32)) return 0;
+      if((event->state&(CONTROLMASK|ALTMASK)) || !isprint((FXuchar)event->text[0])) return 0;
       lookup.append(event->text);
       if(lookuptimer) getApp()->removeTimeout(lookuptimer);
       lookuptimer=getApp()->addTimeout(getApp()->getTypingSpeed(),this,ID_LOOKUPTIMER);
@@ -2190,10 +2191,22 @@ void FXTreeList::removeItem(FXTreeItem* item,FXbool notify){
     // Notify item will be deleted
     if(notify && target){target->handle(this,MKUINT(message,SEL_DELETED),(void*)item);}
 
-    // Adjust pointers
-    if(anchoritem==item){ anchoritem=(anchoritem->next ? anchoritem->next : anchoritem->prev); }
-    if(extentitem==item){ extentitem=(extentitem->next ? extentitem->next : extentitem->prev); }
-    if(currentitem==item){ currentitem=(currentitem->next ? currentitem->next : currentitem->prev); }
+    // Adjust pointers; suggested by Alan Ott <ott@acusoft.com>
+    if(anchoritem==item){
+      if(anchoritem->next) anchoritem=anchoritem->next;
+      else if(anchoritem->prev) anchoritem=anchoritem->prev;
+      else anchoritem=anchoritem->parent;
+      }
+    if(extentitem==item){
+      if(extentitem->next) extentitem=extentitem->next;
+      else if(extentitem->prev) extentitem=extentitem->prev;
+      else extentitem=extentitem->parent;
+      }
+    if(currentitem==item){
+      if(currentitem->next) currentitem=currentitem->next;
+      else if(currentitem->prev) currentitem=currentitem->prev;
+      else currentitem=currentitem->parent;
+      }
 
     // Remove item from list
     if(item->prev) item->prev->next=item->next; else if(item->parent) item->parent->first=item->next; else firstitem=item->next;
@@ -2234,22 +2247,6 @@ void FXTreeList::removeItems(FXTreeItem* fm,FXTreeItem* to,FXbool notify){
       }
     while(item!=to);
     }
-//   if(fm && to){
-//     FXTreeItem *item;
-//     if(fm->prev) fm->prev->next=to->next; else if(fm->parent) fm->parent->first=to->next; else firstitem=to->next;
-//     if(to->next) to->next->prev=fm->prev; else if(to->parent) to->parent->last=fm->prev; else lastitem=fm->prev;
-//     do{
-//       item=fm;
-//       if(currentitem==item) currentitem=NULL;
-//       if(anchoritem==item) anchoritem=NULL;
-//       if(extentitem==item) extentitem=NULL;
-//       removeItems(item->first,item->last,notify);
-//       fm=fm->next;
-//       delete item;
-//       }
-//     while(item!=to);
-//     recalc();
-//     }
   }
 
 

@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXVisual.cpp,v 1.41 2002/01/26 00:18:50 jeroen Exp $                     *
+* $Id: FXVisual.cpp,v 1.41.4.1 2003/04/30 03:38:37 fox Exp $                     *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -930,7 +930,7 @@ void FXVisual::setupcolormap(){
     }
   else{
     if((flags&VISUAL_OWNCOLORMAP) || (visual!=DefaultVisual(DISPLAY(getApp()),DefaultScreen(DISPLAY(getApp()))))){
-      colormap=XCreateColormap(DISPLAY(getApp()),RootWindow(DISPLAY(getApp()),0),((Visual*)visual),AllocNone);
+      colormap=XCreateColormap(DISPLAY(getApp()),RootWindow(DISPLAY(getApp()),DefaultScreen(DISPLAY(getApp()))),((Visual*)visual),AllocNone);
       FXTRACE((150,"%s::create: allocate colormap\n",getClassName()));
       freemap=TRUE;
       }

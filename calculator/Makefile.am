@@ -50,5 +50,6 @@ CLEANFILES = icons.h icons.cpp
 
 EXTRA_DIST = $(man_MANS) \
              Makefile.bc \
-             Makefile.icc
+             Makefile.icc \
+             Makefile.dmc
 

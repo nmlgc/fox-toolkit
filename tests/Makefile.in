@@ -1,4 +1,4 @@
-# Makefile.in generated automatically by automake 1.4-p5 from Makefile.am
+# Makefile.in generated automatically by automake 1.4-p6 from Makefile.am
 
 # Copyright (C) 1994, 1995-8, 1999, 2001 Free Software Foundation, Inc.
 # This Makefile.in is free software; the Free Software Foundation
@@ -126,7 +126,7 @@ dirlist_SOURCES = dirlist.cpp
 button_SOURCES = button.cpp
 dctest_SOURCES = dctest.cpp dippy.h
 
-EXTRA_DIST = Makefile.bc              Makefile.icc
+EXTRA_DIST = Makefile.bc              Makefile.icc              Makefile.dmc
 
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_CLEAN_FILES = 

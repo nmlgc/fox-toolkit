@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: reswrap.cpp,v 1.3 2001/01/25 19:48:40 jeroen Exp $                       *
+* $Id: reswrap.cpp,v 1.3.4.1 2002/07/26 02:41:54 fox Exp $                       *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxdefs.h"
@@ -36,7 +36,7 @@
 
   To do:
   - Need option to place #include "icons.h" or something into icons.cc
-  
+
 */
 
 const char version[]="1.0.4";
@@ -83,14 +83,14 @@ char ppm_getc(FILE* file){
     }
   return ch;
   }
-  
+
 
 /* Get integer */
 int ppm_getint(FILE* file){
   register char ch;
   register int i;
-  do{ 
-    ch=ppm_getc(file); 
+  do{
+    ch=ppm_getc(file);
     }
   while(ch==' ' || ch=='\t' || ch=='\n' || ch=='\r');
   if(ch<'0' || ch>'9'){
@@ -98,13 +98,13 @@ int ppm_getint(FILE* file){
     exit(1);
     }
   i=0;
-  do{ 
-    i=i*10+ch-'0'; ch=ppm_getc(file); 
+  do{
+    i=i*10+ch-'0'; ch=ppm_getc(file);
     }
   while(ch>='0' && ch<='9');
   return i;
   }
-  
+
 
 /* Get raw byte */
 unsigned char ppm_getrawbyte(FILE* file){
@@ -116,8 +116,8 @@ unsigned char ppm_getrawbyte(FILE* file){
     }
   return (unsigned char)iby;
   }
-  
-  
+
+
 /* Read PPM file */
 unsigned char* ppm_read(FILE* file,int& cols,int& rows){
   unsigned char* pixels,*pix;
@@ -127,7 +127,7 @@ unsigned char* ppm_read(FILE* file,int& cols,int& rows){
 
   /* Get format */
   format=ppm_readmagicnumber(file);
-    
+
   /* Get size */
   cols=ppm_getint(file);
   rows=ppm_getint(file);
@@ -136,7 +136,7 @@ unsigned char* ppm_read(FILE* file,int& cols,int& rows){
     fprintf(stderr,"Illegal maxval value: %d.\n",maxval);
     exit(1);
     }
-  
+
   /* Create memory */
   pixels=(unsigned char*)malloc(3*rows*cols);
   if(!pixels){
@@ -172,7 +172,7 @@ unsigned char* ppm_read(FILE* file,int& cols,int& rows){
           }
         }
       break;
-      
+
     default:
       fprintf(stderr,"Unknown format.\n");
       exit(1);
@@ -200,7 +200,7 @@ void printusage(){
   }
 
 
-  
+
 /* Main */
 int main(int argc,char **argv){
   FILE *resfile,*outfile;
@@ -222,13 +222,13 @@ int main(int argc,char **argv){
   include=0;
   ppm=0;
   data=0;
-  
+
   /* Process options */
   for(i=1; i<argc; i++){
-    
+
     /* Option */
     if(argv[i][0]=='-'){
-      
+
       /* Change output file */
       if(argv[i][1]=='o'){
         i++;
@@ -237,7 +237,7 @@ int main(int argc,char **argv){
           exit(1);
           }
         if(outfile!=stdout) fclose(outfile);
-        if(argv[i][2]=='a'){
+        if(argv[i-1][2]=='a'){
           outfile=fopen(argv[i],"a");
           }
         else{
@@ -248,45 +248,45 @@ int main(int argc,char **argv){
           exit(1);
           }
         }
-      
+
       /* Print help */
       else if(argv[i][1]=='h'){
         printusage();
         exit(0);
         }
-      
+
       /* Print version */
       else if(argv[i][1]=='v'){
         fprintf(stderr,"reswrap version %s\n",version);
         exit(0);
         }
-      
+
       /* Switch to decimal */
       else if(argv[i][1]=='d'){
         hex=0;
         }
-      
+
       /* Switch to hex */
       else if(argv[i][1]=='x'){
         hex=1;
         }
-      
+
       /* Suppress header */
       else if(argv[i][1]=='s'){
         header=0;
         }
-      
+
       /* Generate as external reference */
       else if(argv[i][1]=='e'){
         external=1;
         }
-      
+
       /* Building include file implies also extern */
       else if(argv[i][1]=='i'){
         include=1;
         external=1;
         }
-      
+
       /* Change number of columns */
       else if(argv[i][1]=='c'){
         i++;
@@ -299,7 +299,7 @@ int main(int argc,char **argv){
           exit(1);
           }
         }
-      
+
       /* Override resource name */
       else if(argv[i][1]=='n'){
         i++;
@@ -311,41 +311,41 @@ int main(int argc,char **argv){
         name[sizeof(name)-1]=0;
         override=1;
         }
-      
+
       /* PPM File */
       else if(argv[i][1]=='p' && argv[i][2]=='p' && argv[i][3]=='m'){
         ppm=1;
         }
       }
-    
+
     /* Resource */
     else{
       col=0;
       first=1;
-      
+
       /* Get file name */
 #ifndef WIN32
-      if((filename=strrchr(argv[i],PATHSEP))!=0) 
-        filename=filename+1; 
-      else 
+      if((filename=strrchr(argv[i],PATHSEP))!=0)
+        filename=filename+1;
+      else
         filename=argv[i];
 #else
-      if((filename=strrchr(argv[i],'\\'))!=0) 
+      if((filename=strrchr(argv[i],'\\'))!=0)
         filename=filename+1;
       else if((filename=strrchr(argv[i],'/'))!=0) // For CYGWIN bash
 	filename=filename+1;
-      else 
+      else
         filename=argv[i];
 #endif
-      
+
       /* Output header */
       if(header){
         fprintf(outfile,"/* Generated by reswrap from file %s */\n",filename);
         }
-      
+
       /* Determine resource name from file name */
       if(!override){
-        strncpy(name,filename,sizeof(name)); 
+        strncpy(name,filename,sizeof(name));
         name[sizeof(name)-1]=0;
         if((ptr=strrchr(name,'.'))!=0) *ptr=0;
         for(k=j=0; name[j]; j++){
@@ -361,14 +361,14 @@ int main(int argc,char **argv){
           exit(1);
           }
         }
-      
+
       /* Open data file */
       resfile=fopen(argv[i],"rb");
       if(!resfile){
         fprintf(stderr,"reswrap: unable to open input file %s\n",argv[i]);
         exit(1);
         }
-      
+
       /* Read in if PPM file */
       if(ppm){
         data=ppm_read(resfile,ppm_w,ppm_h);
@@ -377,13 +377,13 @@ int main(int argc,char **argv){
           fprintf(outfile,"#define %s_height %d\n",name,ppm_h);
           }
         }
-        
+
       /* Generate external reference for #include's */
       if(external){ fprintf(outfile,"extern "); }
-      
+
       /* Output declaration */
       fprintf(outfile,"const unsigned char %s[]",name);
-      
+
       /* Generate resource array */
       if(!include){
         fprintf(outfile,"={\n  ");
@@ -425,11 +425,11 @@ int main(int argc,char **argv){
           }
         fprintf(outfile,"\n  }");
         }
-    
+
       fprintf(outfile,";\n\n");
- 
+
       if(data) free(data);
-      
+
       fclose(resfile);
       override=0;
       }
@@ -438,4 +438,4 @@ int main(int argc,char **argv){
   }
 
 
-  
+

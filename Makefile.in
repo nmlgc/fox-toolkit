@@ -1,4 +1,4 @@
-# Makefile.in generated automatically by automake 1.4-p5 from Makefile.am
+# Makefile.in generated automatically by automake 1.4-p6 from Makefile.am
 
 # Copyright (C) 1994, 1995-8, 1999, 2001 Free Software Foundation, Inc.
 # This Makefile.in is free software; the Free Software Foundation
@@ -365,6 +365,9 @@ drop: dist-all
 	cp $(distdir).zip /home/ftp/pub
 	cd /home/ftp/pub && ln -sf $(distdir).tar.gz fox-latest.tar.gz
 	cd /home/ftp/pub && ln -sf $(distdir).zip fox-latest.zip
+
+diff: distdir
+	-diff -P -c -r fox-1.0.9 $(distdir) > fox-patch-1.0.9-$(distdir)
 
 bak:
 	tar cvzf fox-cvs.tar.gz /mnt/zip/FOX

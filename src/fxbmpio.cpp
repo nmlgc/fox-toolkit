@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: fxbmpio.cpp,v 1.20 2002/01/18 22:43:07 jeroen Exp $                      *
+* $Id: fxbmpio.cpp,v 1.20.4.3 2002/11/20 07:45:52 fox Exp $                      *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -257,6 +257,25 @@ static FXbool loadBMP8(FXStream& store,FXuchar* pic8,FXint w,FXint h,FXint comp)
   }
 
 
+// Contributed by Janusz Ganczarski <janusz.ganczarski@wp.pl>
+static FXbool loadBMP16(FXStream& store,FXuchar* pic16,FXint w,FXint h){
+  register int i,j,padb;
+  FXuchar *pp,c;
+  FXuint rgb16;
+  padb=(4-((w*2)%4))&0x03;
+  for(i=h-1; i>=0; i--){
+    pp=pic16+(i*w*3);
+    for(j=0; j<w; j++){
+      rgb16=read16(store);
+      *pp++=((rgb16 >> 10) & 0x1F) << 3; // R
+      *pp++=((rgb16 >> 5) & 0x1F) << 3;  // G
+      *pp++=(rgb16 & 0x1F) << 3;         // B
+      }
+    for(j=0; j<padb; j++) store >> c;
+    }
+  return TRUE;
+  }
+
 
 static FXbool loadBMP24(FXStream& store,FXuchar* pic24,FXint w,FXint h){
   int   i,j,padb;
@@ -275,6 +294,22 @@ static FXbool loadBMP24(FXStream& store,FXuchar* pic24,FXint w,FXint h){
   return TRUE;
   }
 
+
+static FXbool loadBMP32(FXStream& store,FXuchar* pic32,FXint w,FXint h){
+  register int i,j;
+  FXuchar *pp,c;
+  for(i=h-1; i>=0; i--){
+    pp=pic32+(i*w*3);
+    for(j=0; j<w; j++){
+      store >> pp[2];       // Blue
+      store >> pp[1];       // Green
+      store >> pp[0];       // Red
+      store >> c;
+      pp += 3;
+      }
+    }
+  return TRUE;
+  }
 
 /*******************************************************************************/
 
@@ -329,16 +364,16 @@ FXbool fxloadBMP(FXStream& store,FXuchar*& data,FXColor& transp,FXint& width,FXi
     biClrUsed       = biClrImportant  = 0;
     }
 
+  FXTRACE((150,"fxloadBMP: width=%d height=%d nbits=%d compression=%d\n",biWidth,biHeight,biBitCount,biCompression));
 
-  // Error checking
-  if((biBitCount!=1 && biBitCount!=4 && biBitCount!=8 && biBitCount!=24) || biPlanes!=1 || biCompression>BIH_RLE4){
-    return FALSE;
-    }
+  // Ought to be 1
+  if(biPlanes!=1) return FALSE;
 
-  // More checking
-  if(((biBitCount==1 || biBitCount==24) && biCompression!=BIH_RGB) || (biBitCount==4 && biCompression==BIH_RLE8) || (biBitCount==8 && biCompression==BIH_RLE4)) {
-    return FALSE;
-    }
+  // Check for supported depths
+  if(biBitCount!=1 && biBitCount!=4 && biBitCount!=8 && biBitCount!=16 && biBitCount!=24 && biBitCount!=32) return FALSE;
+
+  // Check for supported compressions
+  if(biCompression!=BIH_RGB && biCompression!=BIH_RLE4 && biCompression!=BIH_RLE8) return FALSE;
 
   // Skip ahead to colormap
   bPad=0;
@@ -351,7 +386,7 @@ FXbool fxloadBMP(FXStream& store,FXuchar*& data,FXColor& transp,FXint& width,FXi
     }
 
   // load up colormap, if any
-  if(biBitCount!=24){
+  if(biBitCount!=24 && biBitCount!=16 && biBitCount!=32){
     cmaplen = biClrUsed ? biClrUsed : 1 << biBitCount;
     for(i=0; i<cmaplen; i++){
       store >> colormap[3*i+2];
@@ -372,7 +407,6 @@ FXbool fxloadBMP(FXStream& store,FXuchar*& data,FXColor& transp,FXint& width,FXi
       bPad--;
       }
     }
-  FXTRACE((150,"fxloadBMP: width=%d height=%d nbits=%d\n",biWidth,biHeight,biBitCount));
 
   // Allocate memory
   maxpixels=biWidth*biHeight;
@@ -389,8 +423,14 @@ FXbool fxloadBMP(FXStream& store,FXuchar*& data,FXColor& transp,FXint& width,FXi
   else if(biBitCount==8){
     ok=loadBMP8(store,&data[2*maxpixels],biWidth,biHeight,biCompression);
     }
-  else{
+  else if(biBitCount==16){
+    ok=loadBMP16(store,data,biWidth,biHeight);
+    }
+  else if(biBitCount==24){
     ok=loadBMP24(store,data,biWidth,biHeight);
+    }
+  else{
+    ok=loadBMP32(store,data,biWidth,biHeight);
     }
 
   if(!ok) return FALSE;
@@ -399,7 +439,7 @@ FXbool fxloadBMP(FXStream& store,FXuchar*& data,FXColor& transp,FXint& width,FXi
   height=biHeight;
 
   // Apply colormap
-  if(biBitCount!=24){
+  if(biBitCount!=24 && biBitCount!=16 && biBitCount!=32){
     for(i=0; i<maxpixels; i++){
       ix=data[2*maxpixels+i];
       data[3*i+0]=colormap[3*ix+0];

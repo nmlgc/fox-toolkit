@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXListBox.cpp,v 1.21 2002/02/12 02:56:43 fox Exp $                       *
+* $Id: FXListBox.cpp,v 1.21.4.1 2003/06/20 19:02:07 fox Exp $                       *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -172,7 +172,7 @@ void FXListBox::layout(){
 
 // Update value from a message
 long FXListBox::onCmdSetValue(FXObject*,FXSelector,void* ptr){
-  setCurrentItem((FXint)(long)ptr);
+  setCurrentItem((FXint)(FXival)ptr);
   return 1;
   }
 
@@ -194,9 +194,9 @@ long FXListBox::onCmdSetIntValue(FXObject*,FXSelector,void* ptr){
 // Forward clicked message from list to target
 long FXListBox::onListClicked(FXObject*,FXSelector,void* ptr){
   button->handle(this,MKUINT(ID_UNPOST,SEL_COMMAND),NULL);    // Unpost the list
-  if(0<=((FXint)(long)ptr)){
-    field->setText(getItemText((FXint)(long)ptr));
-    field->setIcon(getItemIcon((FXint)(long)ptr));
+  if(0<=((FXint)(FXival)ptr)){
+    field->setText(getItemText((FXint)(FXival)ptr));
+    field->setIcon(getItemIcon((FXint)(FXival)ptr));
     if(target){target->handle(this,MKUINT(message,SEL_COMMAND),ptr);}
     }
   return 1;
@@ -229,7 +229,7 @@ long FXListBox::onFocusUp(FXObject*,FXSelector,void*){
   else if(0<index) index--;
   if(0<=index && index<getNumItems()){
     setCurrentItem(index);
-    if(target){target->handle(this,MKUINT(message,SEL_COMMAND),(void*)index);}
+    if(target){target->handle(this,MKUINT(message,SEL_COMMAND),(void*)(FXival)index);}
     }
   return 1;
   }
@@ -242,7 +242,7 @@ long FXListBox::onFocusDown(FXObject*,FXSelector,void*){
   else if(index<getNumItems()-1) index++;
   if(0<=index && index<getNumItems()){
     setCurrentItem(index);
-    if(target){target->handle(this,MKUINT(message,SEL_COMMAND),(void*)index);}
+    if(target){target->handle(this,MKUINT(message,SEL_COMMAND),(void*)(FXival)index);}
     }
   return 1;
   }

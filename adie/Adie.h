@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: Adie.h,v 1.26 2002/02/21 16:16:08 fox Exp $                              *
+* $Id: Adie.h,v 1.26.4.1 2002/04/30 13:13:07 fox Exp $                              *
 ********************************************************************************/
 #ifndef ADIE_H
 #define ADIE_H
@@ -37,7 +37,7 @@ class Preferences;
 
 
 // Mini application object
-class FXAPI TextWindow : public FXMainWindow {
+class TextWindow : public FXMainWindow {
   FXDECLARE(TextWindow)
 protected:
   struct Bookmark {
@@ -353,7 +353,7 @@ public:
 
   // Determine language from filename
   FXString getLanguage(const FXString& filename);
-  
+
   // Read syntax for language
   void readSyntax(const FXString& language);
 
@@ -362,7 +362,7 @@ public:
 
   // Delete style
   void deleteStyle(FXint index);
-  
+
   // Append style
   void appendStyle(const FXString& name,const FXHiliteStyle& style);
 

@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXSwitcher.cpp,v 1.17 2002/01/24 19:01:00 jeroen Exp $                   *
+* $Id: FXSwitcher.cpp,v 1.17.4.1 2003/06/20 19:02:07 fox Exp $                   *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -87,7 +87,7 @@ long FXSwitcher::onPaint(FXObject*,FXSelector,void* ptr){
 
 // Update value from a message
 long FXSwitcher::onCmdSetValue(FXObject*,FXSelector,void* ptr){
-  setCurrent((FXint)(long)ptr);
+  setCurrent((FXint)(FXival)ptr);
   return 1;
   }
 
@@ -172,7 +172,7 @@ void FXSwitcher::layout(){
 void FXSwitcher::setCurrent(FXint panel,FXbool notify){
   if(0<=panel && current!=panel){
     current=panel;
-    if(notify && target){ target->handle(this,MKUINT(message,SEL_COMMAND),(void*)current); }
+    if(notify && target){ target->handle(this,MKUINT(message,SEL_COMMAND),(void*)(FXival)current); }
     recalc();
     }
   }

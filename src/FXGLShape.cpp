@@ -21,7 +21,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXGLShape.cpp,v 1.20 2002/01/18 22:43:00 jeroen Exp $                    *
+* $Id: FXGLShape.cpp,v 1.20.4.1 2003/07/27 01:15:11 fox Exp $                    *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -134,7 +134,7 @@ FXGLShape::FXGLShape(FXfloat x,FXfloat y,FXfloat z,FXuint opts,const FXMaterial&
 FXGLShape::FXGLShape(const FXGLShape& orig):FXGLObject(orig){
   position=orig.position;
   material[0]=orig.material[0];
-  material[1]=orig.material[2];
+  material[1]=orig.material[1];
   range=orig.range;
   options=orig.options;
   tip=orig.tip;

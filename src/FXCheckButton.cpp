@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXCheckButton.cpp,v 1.36 2002/01/18 22:42:58 jeroen Exp $                *
+* $Id: FXCheckButton.cpp,v 1.36.4.1 2003/06/20 19:02:07 fox Exp $                *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -153,7 +153,7 @@ long FXCheckButton::onUnknown(FXObject*,FXSelector,void*){
 
 // Update value from a message
 long FXCheckButton::onCmdSetValue(FXObject*,FXSelector,void* ptr){
-  setCheck((FXbool)(long)ptr);
+  setCheck((FXbool)(FXuval)ptr);
   return 1;
   }
 

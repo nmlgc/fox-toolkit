@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXDirBox.cpp,v 1.25 2002/02/26 22:01:04 fox Exp $                        *
+* $Id: FXDirBox.cpp,v 1.25.4.1 2002/08/05 16:14:30 fox Exp $                        *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -487,6 +487,7 @@ void FXDirBox::load(FXStream& store){
 
 // Delete it
 FXDirBox::~FXDirBox(){
+  clearItems();
   delete foldericon;
   delete cdromicon;
   delete desktopicon;

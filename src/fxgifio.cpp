@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: fxgifio.cpp,v 1.31 2002/01/18 22:43:07 jeroen Exp $                      *
+* $Id: fxgifio.cpp,v 1.31.4.3 2003/05/12 11:04:35 fox Exp $                      *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -62,26 +62,6 @@ extern FXAPI FXbool fxloadGIF(FXStream& store,FXuchar*& data,FXColor& transp,FXi
 extern FXAPI FXbool fxsaveGIF(FXStream& store,const FXuchar *data,FXColor transp,FXint width,FXint height);
 
 
-/*******************************************************************************/
-
-static const FXuchar EGApalette[16][3]={
-  {  0,   0,   0},
-  {  0,   0, 128},
-  {  0, 128,   0},
-  {  0, 128, 128},
-  {128,   0,   0},
-  {128,   0, 128},
-  {128, 128,   0},
-  {200, 200, 200},
-  {100, 100, 100},
-  {100, 100, 255},
-  {100, 255, 100},
-  {100, 255, 255},
-  {255, 100, 100},
-  {255, 100, 255},
-  {255, 255, 100},
-  {255, 255, 255}
-  };
 
 
 /*******************************************************************************/
@@ -140,18 +120,16 @@ FXbool fxloadGIF(FXStream& store,FXuchar*& data,FXColor& transp,FXint& width,FXi
   BitMask=ncolors-1;
   resolution=((flags&0x70)>>3)+1;
 
+  // Preset first in case index refers outside map
+  memset(colormap,0,256*3);
+
+  // If no colormap, spec says first 2 colors are black and white
+  colormap[0]=colormap[1]=colormap[2]=0;
+  colormap[3]=colormap[4]=colormap[5]=255;
+
   // Get colormap
   if(flags&COLORMAP){
     store.load(colormap,3*ncolors);
-    }
-
-  // Fill with simple palette
-  else{
-    for(i=0; i<256; i++){
-      colormap[3*i+0]=EGApalette[i&15][0];
-      colormap[3*i+1]=EGApalette[i&15][1];
-      colormap[3*i+2]=EGApalette[i&15][2];
-      }
     }
 
   // Assume no alpha
@@ -175,6 +153,20 @@ FXbool fxloadGIF(FXStream& store,FXuchar*& data,FXColor& transp,FXint& width,FXi
         store >> alpha;         // Alpha color index
         store >> c3;
         havealpha=(flags&1);
+        // Make unique transparency color; patch
+        // from Daniel Gehriger <bulk@linkcad.com>
+        if(havealpha){
+          for(i=ncolors-1; i>=0; --i){
+            if(colormap[3*i+0]==colormap[3*alpha+0] && colormap[3*i+1]==colormap[3*alpha+1] && colormap[3*i+2]==colormap[3*alpha+2] && i!=alpha){
+              if(++colormap[3*alpha+0]==0){
+                if(++colormap[3*alpha+1]==0){
+                  ++colormap[3*alpha+2];
+                  }
+                }
+              i=ncolors;        // Try again with new value
+              }
+            }
+          }
         }
 
       // Other extension
@@ -438,6 +430,8 @@ FXbool fxloadGIF(FXStream& store,FXuchar*& data,FXColor& transp,FXint& width,FXi
       transp=FXRGB(colormap[3*alpha],colormap[3*alpha+1],colormap[3*alpha+2]);
 
       // We're done!
+      store >> c1;
+      
       return TRUE;
       }
 

@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: fxxpmio.cpp,v 1.17 2002/01/18 22:43:08 jeroen Exp $                      *
+* $Id: fxxpmio.cpp,v 1.17.4.1 2003/05/12 11:04:35 fox Exp $                      *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -310,8 +310,7 @@ FXbool fxsaveXPM(FXStream& store,const FXuchar *data,FXColor transp,FXint width,
         }
       }
     store << quote;
-    if(i<height-1) store << comma;
-    store << newline;
+    if(i<height-1){ store << comma; store << newline; }
     }
   store.save("};\n",3);
   FXFREE(&pixels);

@@ -1,0 +1,242 @@
+##############################################################################
+#									     #
+#			FOX:  A Free C++ Class Library for X		     #
+#									     #
+##############################################################################
+# Contributed by: Andre Fornacon <afo@zlug.org>                              #
+##############################################################################
+# $Id: Makefile.dmc,v 1.1.2.2 2002/07/23 06:10:24 fox Exp $		     #
+##############################################################################
+# This library is free software; you can redistribute it and/or 	     #
+# modify it under the terms of the GNU Library General Public		     #
+# License as published by the Free Software Foundation; either		     #
+# version 2 of the License, or (at your option) any later version.	     #
+#									     #
+# This library is distributed in the hope that it will be useful,	     #
+# but WITHOUT ANY WARRANTY; without even the implied warranty of	     #
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	See the GNU	     #
+# Library General Public License for more details.			     #
+#									     #
+# You should have received a copy of the GNU Library General Public	     #
+# License along with this library; if not, write to the Free		     #
+# Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.	     #
+##############################################################################
+
+# Digital Mars C++ Compiler 8.x or later
+CXX	  = sc
+RM	  = del
+LIB	  = lib
+RCC	  = rcc
+TOPDIR	  = ..
+CXXFLAGS  = -mn -WD -5 -a8
+DEFINES   = -DFOX_BIGENDIAN=0 -DNDEBUG -D_WINDOWS -DWIN32 -DHAVE_OPENGL #-DHAVE_PNG_H -DHAVE_JPEG_H -DHAVE_TIFF_H -DXMD_H
+INCDIRS   = -I$(TOPDIR)/include
+FOXLIB	  = $(TOPDIR)\src\fox.lib
+
+
+.SUFFIXES: .cpp .c
+
+SOURCES = FX4Splitter.cpp \
+	  FXAccelTable.cpp \
+	  FXApp.cpp \
+	  FXArrowButton.cpp \
+	  FXBMPIcon.cpp \
+	  FXBMPImage.cpp \
+	  FXBitmap.cpp \
+	  FXButton.cpp \
+	  FXCURCursor.cpp \
+	  FXCanvas.cpp \
+	  FXCharset.cpp \
+	  FXCheckButton.cpp \
+	  FXColorBar.cpp \
+	  FXColorDialog.cpp \
+	  FXColorNames.cpp \
+	  FXColorSelector.cpp \
+	  FXColorWell.cpp \
+	  FXColorWheel.cpp \
+	  FXComboBox.cpp \
+	  FXComposite.cpp \
+	  FXCursor.cpp \
+	  FXDC.cpp \
+	  FXDCPrint.cpp \
+	  FXDCWindow.cpp \
+	  FXDHMat.cpp \
+	  FXDHVec.cpp \
+	  FXDQuat.cpp \
+	  FXDVec.cpp \
+	  FXDataTarget.cpp \
+	  FXDebugTarget.cpp \
+	  FXDelegator.cpp \
+	  FXDial.cpp \
+	  FXDialogBox.cpp \
+	  FXDict.cpp \
+	  FXDirBox.cpp \
+	  FXDirDialog.cpp \
+	  FXDirList.cpp \
+	  FXDirSelector.cpp \
+	  FXDocument.cpp \
+	  FXDragCorner.cpp \
+	  FXDrawable.cpp \
+	  FXDriveBox.cpp \
+	  FXException.cpp \
+	  FXFile.cpp \
+	  FXFileDialog.cpp \
+	  FXFileDict.cpp \
+	  FXFileList.cpp \
+	  FXFileSelector.cpp \
+	  FXFont.cpp \
+	  FXFontDialog.cpp \
+	  FXFontSelector.cpp \
+	  FXFrame.cpp \
+	  FXGIFCursor.cpp \
+	  FXGIFIcon.cpp \
+	  FXGIFImage.cpp \
+	  FXGLCanvas.cpp \
+	  FXGLCone.cpp \
+	  FXGLContext.cpp \
+	  FXGLCube.cpp \
+	  FXGLCylinder.cpp \
+	  FXGLObject.cpp \
+	  FXGLShape.cpp \
+	  FXGLSphere.cpp \
+	  FXGLTriangleMesh.cpp \
+	  FXGLViewer.cpp \
+	  FXGLVisual.cpp \
+	  FXGroupBox.cpp \
+	  FXHMat.cpp \
+	  FXHVec.cpp \
+	  FXHeader.cpp \
+	  FXHorizontalFrame.cpp \
+	  FXICOIcon.cpp \
+	  FXICOImage.cpp \
+	  FXIcon.cpp \
+	  FXIconList.cpp \
+	  FXId.cpp \
+	  FXImage.cpp \
+	  FXImageView.cpp \
+	  FXInputDialog.cpp \
+	  FXJPGIcon.cpp \
+	  FXJPGImage.cpp \
+	  FXLabel.cpp \
+	  FXList.cpp \
+	  FXListBox.cpp \
+	  FXMDIButton.cpp \
+	  FXMDIChild.cpp \
+	  FXMDIClient.cpp \
+	  FXMainWindow.cpp \
+	  FXMatrix.cpp \
+	  FXMenubar.cpp \
+	  FXMenuButton.cpp \
+	  FXMenuCaption.cpp \
+	  FXMenuCascade.cpp \
+	  FXMenuCommand.cpp \
+	  FXMenuPane.cpp \
+	  FXMenuSeparator.cpp \
+	  FXMenuTitle.cpp \
+	  FXMessageBox.cpp \
+	  FXObject.cpp \
+	  FXObjectList.cpp \
+	  FXOptionMenu.cpp \
+	  FXPCXIcon.cpp \
+	  FXPCXImage.cpp \
+	  FXPNGIcon.cpp \
+	  FXPNGImage.cpp \
+	  FXPacker.cpp \
+	  FXPicker.cpp \
+	  FXPopup.cpp \
+	  FXPoint.cpp \
+	  FXPrintDialog.cpp \
+	  FXProgressBar.cpp \
+	  FXProgressDialog.cpp \
+	  FXQuat.cpp \
+	  FXRGBIcon.cpp \
+	  FXRGBImage.cpp \
+	  FXRadioButton.cpp \
+	  FXRange.cpp \
+	  FXRecentFiles.cpp \
+	  FXRectangle.cpp \
+	  FXRegion.cpp \
+	  FXRegistry.cpp \
+	  FXReplaceDialog.cpp \
+	  FXRex.cpp \
+	  FXRootWindow.cpp \
+	  FXScrollArea.cpp \
+	  FXScrollWindow.cpp \
+	  FXScrollbar.cpp \
+	  FXSearchDialog.cpp \
+	  FXSeparator.cpp \
+	  FXSettings.cpp \
+	  FXShell.cpp \
+	  FXShutter.cpp \
+	  FXSize.cpp \
+	  FXSlider.cpp \
+	  FXSpinner.cpp \
+	  FXSplitter.cpp \
+	  FXStatusbar.cpp \
+	  FXStatusline.cpp \
+	  FXStream.cpp \
+	  FXString.cpp \
+	  FXStringDict.cpp \
+	  FXSwitcher.cpp \
+	  FXTGAIcon.cpp \
+	  FXTGAImage.cpp \
+	  FXTIFIcon.cpp \
+	  FXTIFImage.cpp \
+	  FXTabBar.cpp \
+	  FXTabBook.cpp \
+	  FXTabItem.cpp \
+	  FXTable.cpp \
+	  FXText.cpp \
+	  FXTextField.cpp \
+	  FXToggleButton.cpp \
+	  FXToolbar.cpp \
+	  FXToolbarGrip.cpp \
+	  FXToolbarShell.cpp \
+	  FXToolbarTab.cpp \
+	  FXTooltip.cpp \
+	  FXTopWindow.cpp \
+	  FXTreeList.cpp \
+	  FXTreeListBox.cpp \
+	  FXUndoList.cpp \
+	  FXURL.cpp \
+	  FXVec.cpp \
+	  FXVerticalFrame.cpp \
+	  FXVisual.cpp \
+	  FXWindow.cpp \
+	  FXXPMIcon.cpp \
+	  FXXPMImage.cpp \
+	  fxbmpio.cpp \
+	  fxcurio.cpp \
+	  fxfilematch.cpp \
+	  fxgifio.cpp \
+	  fxicoio.cpp \
+	  fxjpegio.cpp \
+	  fxpcxio.cpp \
+	  fxpngio.cpp \
+	  fxpriv.cpp \
+	  fxquantize.cpp \
+	  fxrgbio.cpp \
+	  fxtargaio.cpp \
+	  fxtifio.cpp \
+	  fxutils.cpp \
+	  fxwinkbd.cpp \
+	  fxxpmio.cpp \
+	  vsscanf.cpp
+
+OBJECTS = $(SOURCES:.cpp=.obj)
+
+.cpp.obj:
+	$(CXX) -c $(INCDIRS) $(CXXFLAGS) $(DEFINES) $<
+
+all: $(FOXLIB)
+
+clean:
+	del $(FOXLIB)
+	del *.obj
+
+# Make the library
+$(FOXLIB): $(OBJECTS) Makefile.dmc.resp
+	touch $(FOXLIB)
+	del $(FOXLIB)
+	$(RCC) -32 -oversion.res version.rc
+	$(LIB) $(FOXLIB) /C /P:64 @Makefile.dmc.resp

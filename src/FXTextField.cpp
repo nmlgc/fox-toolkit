@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXTextField.cpp,v 1.79 2002/02/22 06:50:41 fox Exp $                  *
+* $Id: FXTextField.cpp,v 1.79.4.3 2003/02/25 23:10:54 fox Exp $                  *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -934,7 +934,7 @@ void FXTextField::drawPWDTextFragment(FXDCWindow& dc,FXint x,FXint y,FXint fm,FX
 
 // Draw range of text
 void FXTextField::drawTextRange(FXDCWindow& dc,FXint fm,FXint to){
-  FXint sx,ex,xx,yy,cw,hh,ww; FXint si,ei;
+  register FXint sx,ex,xx,yy,cw,hh,ww,si,ei,lx,rx;
   if(to<=fm) return;
   dc.setTextFont(font);
 
@@ -981,6 +981,24 @@ void FXTextField::drawTextRange(FXDCWindow& dc,FXint fm,FXint to){
       xx=shift+border+padleft;
       }
 
+    // Reduce to avoid drawing excessive amounts of text
+    lx=xx+cw*fm;
+    rx=xx+cw*to;
+    while(fm<to){
+      if(lx+cw>=0) break;
+      lx+=cw;
+      fm++;
+      }
+    while(fm<to){
+      if(rx-cw<width) break;
+      rx-=cw;
+      to--;
+      }
+      
+    // Adjust selected range
+    if(si<fm) si=fm;
+    if(ei>to) ei=to;
+      
     // Nothing selected
     if(!hasSelection() || to<=si || ei<=fm){
       drawPWDTextFragment(dc,xx,yy,fm,to);
@@ -1033,6 +1051,26 @@ void FXTextField::drawTextRange(FXDCWindow& dc,FXint fm,FXint to){
       xx=shift+border+padleft;
       }
 
+    // Reduce to avoid drawing excessive amounts of text
+    lx=xx+font->getTextWidth(&contents[0],fm);
+    rx=lx+font->getTextWidth(&contents[fm],to-fm);
+    while(fm<to){
+      cw=font->getTextWidth(&contents[fm],1);
+      if(lx+cw>=0) break;
+      lx+=cw;
+      fm++;
+      }
+    while(fm<to){
+      cw=font->getTextWidth(&contents[to-1],1);
+      if(rx-cw<width) break;
+      rx-=cw;
+      to--;
+      }
+      
+    // Adjust selected range
+    if(si<fm) si=fm;
+    if(ei>to) ei=to;
+      
     // Nothing selected
     if(!hasSelection() || to<=si || ei<=fm){
       drawTextFragment(dc,xx,yy,fm,to);
@@ -1093,6 +1131,15 @@ long FXTextField::onPaint(FXObject*,FXSelector,void* ptr){
   // Draw text, clipped against frame interior
   dc.setClipRectangle(border,border,width-(border<<1),height-(border<<1));
   drawTextRange(dc,0,contents.length());
+
+  // Draw caret
+  if(flags&FLAG_CARET){
+    int xx=coord(cursor)-1;
+    dc.setForeground(textColor);
+    dc.fillRectangle(xx,padtop+border,1,height-padbottom-padtop-(border<<1));
+    dc.fillRectangle(xx-2,padtop+border,5,1);
+    dc.fillRectangle(xx-2,height-border-padbottom-1,5,1);
+    }
   return 1;
   }
 
@@ -1594,22 +1641,28 @@ void FXTextField::setText(const FXString& text){
 
 // Set text color
 void FXTextField::setTextColor(FXColor clr){
-  textColor=clr;
-  update();
+  if(textColor!=clr){
+    textColor=clr;
+    update();
+    }
   }
 
 
 // Set select background color
 void FXTextField::setSelBackColor(FXColor clr){
-  selbackColor=clr;
-  update();
+  if(selbackColor!=clr){
+    selbackColor=clr;
+    update();
+    }
   }
 
 
 // Set selected text color
 void FXTextField::setSelTextColor(FXColor clr){
-  seltextColor=clr;
-  update();
+  if(seltextColor!=clr){
+    seltextColor=clr;
+    update();
+    }
   }
 
 

@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXFontSelector.cpp,v 1.28 2002/01/18 22:43:00 jeroen Exp $               *
+* $Id: FXFontSelector.cpp,v 1.28.4.1 2003/06/20 19:02:07 fox Exp $               *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -233,7 +233,7 @@ void FXFontSelector::listFontFaces(){
   if(FXFont::listFonts(fonts,numfonts,"",FONTWEIGHT_DONTCARE,FONTSLANT_DONTCARE,selected.setwidth,selected.encoding,selected.flags)){
     FXASSERT(0<numfonts);
     for(f=0; f<numfonts; f++){
-      familylist->appendItem(fonts[f].face,NULL,(void*)fonts[f].flags);
+      familylist->appendItem(fonts[f].face,NULL,(void*)(FXuval)fonts[f].flags);
       if(strcmp(selected.face,fonts[f].face)==0) selindex=f;
       }
     if(selindex==-1) selindex=0;
@@ -277,7 +277,7 @@ void FXFontSelector::listWeights(){
           }
 
         // Add it
-        weightlist->appendItem(wgt,NULL,(void*)ww);
+        weightlist->appendItem(wgt,NULL,(void*)(FXuval)ww);
 
         // Remember if this was the current selection
         if(selected.weight==ww) selindex=weightlist->getNumItems()-1;
@@ -288,7 +288,7 @@ void FXFontSelector::listWeights(){
     if(0<weightlist->getNumItems()){
       weightlist->setCurrentItem(selindex);
       weight->setText(weightlist->getItemText(selindex));
-      selected.weight=(FXuint)(long)weightlist->getItemData(selindex);
+      selected.weight=(FXuint)(FXuval)weightlist->getItemData(selindex);
       }
     FXFREE(&fonts);
     }
@@ -321,7 +321,7 @@ void FXFontSelector::listSlants(){
           }
 
         // Add it
-        stylelist->appendItem(slt,NULL,(void*)s);
+        stylelist->appendItem(slt,NULL,(void*)(FXuval)s);
 
         // Remember if this was the current selection
         if(selected.slant == s) selindex=stylelist->getNumItems()-1;
@@ -332,7 +332,7 @@ void FXFontSelector::listSlants(){
     if(0<stylelist->getNumItems()){
       stylelist->setCurrentItem(selindex);
       style->setText(stylelist->getItemText(selindex));
-      selected.slant=(FXuint)(long)stylelist->getItemData(selindex);
+      selected.slant=(FXuint)(FXuval)stylelist->getItemData(selindex);
       }
     FXFREE(&fonts);
     }
@@ -355,7 +355,7 @@ void FXFontSelector::listFontSizes(){
       for(f=0; f<ARRAYNUMBER(sizeint); f++){
         s=sizeint[f];
         string.format("%.1f",0.1*s);
-        sizelist->appendItem(string,NULL,(void*)s);
+        sizelist->appendItem(string,NULL,(void*)(FXuval)s);
 //        sizelist->appendItem(FXStringVal(0.1*sizeint[f],6,MAYBE),NULL,(void*)s);
 //        sizelist->appendItem(FXStringVal(s/10),NULL,(void*)s);
         if(selected.size == s) selindex=sizelist->getNumItems()-1;
@@ -367,7 +367,7 @@ void FXFontSelector::listFontSizes(){
         s=fonts[f].size;
         if(s!=lasts){
           string.format("%.1f",0.1*s);
-          sizelist->appendItem(string,NULL,(void*)s);
+          sizelist->appendItem(string,NULL,(void*)(FXuval)s);
 //          sizelist->appendItem(FXStringVal(0.1*s,6,MAYBE),NULL,(void*)s);
 //          sizelist->appendItem(FXStringVal(s/10),NULL,(void*)s);
           if(selected.size == s) selindex=sizelist->getNumItems()-1;
@@ -379,7 +379,7 @@ void FXFontSelector::listFontSizes(){
     if(0<sizelist->getNumItems()){
       sizelist->setCurrentItem(selindex);
       size->setText(sizelist->getItemText(selindex));
-      selected.size=(FXuint)(long)sizelist->getItemData(selindex);
+      selected.size=(FXuint)(FXuval)sizelist->getItemData(selindex);
       }
     FXFREE(&fonts);
     }
@@ -423,7 +423,7 @@ void FXFontSelector::previewFont(){
 
 // Selected font family
 long FXFontSelector::onCmdFamily(FXObject*,FXSelector,void* ptr){
-  strncpy(selected.face,familylist->getItemText((FXint)(long)ptr).text(),sizeof(selected.face));
+  strncpy(selected.face,familylist->getItemText((FXint)(FXival)ptr).text(),sizeof(selected.face));
   family->setText(selected.face);
   listWeights();
   listSlants();
@@ -435,8 +435,8 @@ long FXFontSelector::onCmdFamily(FXObject*,FXSelector,void* ptr){
 
 // Changed weight setting
 long FXFontSelector::onCmdWeight(FXObject*,FXSelector,void* ptr){
-  selected.weight=(FXuint)(long)weightlist->getItemData((FXint)(long)ptr);
-  weight->setText(weightlist->getItemText((FXint)(long)ptr));
+  selected.weight=(FXuint)(FXuval)weightlist->getItemData((FXint)(FXival)ptr);
+  weight->setText(weightlist->getItemText((FXint)(FXival)ptr));
   listSlants();
   listFontSizes();
   previewFont();
@@ -446,8 +446,8 @@ long FXFontSelector::onCmdWeight(FXObject*,FXSelector,void* ptr){
 
 // User clicked up directory button
 long FXFontSelector::onCmdSize(FXObject*,FXSelector,void* ptr){
-  selected.size=(FXuint)(long)sizelist->getItemData((FXint)(long)ptr);
-  size->setText(sizelist->getItemText((FXint)(long)ptr));
+  selected.size=(FXuint)(FXuval)sizelist->getItemData((FXint)(FXival)ptr);
+  size->setText(sizelist->getItemText((FXint)(FXival)ptr));
   previewFont();
   return 1;
   }
@@ -465,8 +465,8 @@ long FXFontSelector::onCmdSizeText(FXObject*,FXSelector,void*){
 
 // User clicked up directory button
 long FXFontSelector::onCmdStyle(FXObject*,FXSelector,void* ptr){
-  selected.slant=(FXuint)(long)stylelist->getItemData((FXint)(long)ptr);
-  style->setText(stylelist->getItemText((FXint)(long)ptr));
+  selected.slant=(FXuint)(FXuval)stylelist->getItemData((FXint)(FXival)ptr);
+  style->setText(stylelist->getItemText((FXint)(FXival)ptr));
   listFontSizes();
   previewFont();
   return 1;
@@ -482,7 +482,7 @@ long FXFontSelector::onCmdStyleText(FXObject*,FXSelector,void*){
 // Character set
 long FXFontSelector::onCmdCharset(FXObject*,FXSelector,void*){
   FXint index=charset->getCurrentItem();
-  FXuint enc=(FXuint)(long)charset->getItemData(index);
+  FXuint enc=(FXuint)(FXuval)charset->getItemData(index);
   selected.encoding=(FXFontEncoding)enc;
   listFontFaces();
   listWeights();
@@ -496,7 +496,7 @@ long FXFontSelector::onCmdCharset(FXObject*,FXSelector,void*){
 // Update character set
 long FXFontSelector::onUpdCharset(FXObject*,FXSelector,void*){
   for(int i=0; i<charset->getNumItems(); i++){
-    if(selected.encoding == (FXuint)(long)charset->getItemData(i)){
+    if(selected.encoding == (FXuint)(FXuval)charset->getItemData(i)){
       charset->setCurrentItem(i);
       break;
       }
@@ -508,7 +508,7 @@ long FXFontSelector::onUpdCharset(FXObject*,FXSelector,void*){
 // Changed set width
 long FXFontSelector::onCmdSetWidth(FXObject*,FXSelector,void*){
   FXint index=setwidth->getCurrentItem();
-  selected.setwidth=(FXuint)(long)setwidth->getItemData(index);
+  selected.setwidth=(FXuint)(FXuval)setwidth->getItemData(index);
   listFontFaces();
   listWeights();
   listSlants();
@@ -529,7 +529,7 @@ long FXFontSelector::onUpdSetWidth(FXObject*,FXSelector,void*){
 long FXFontSelector::onCmdPitch(FXObject*,FXSelector,void*){
   FXint index=pitch->getCurrentItem();
   selected.flags&=~(FONTPITCH_FIXED|FONTPITCH_VARIABLE);
-  selected.flags|=(FXuint)(long)pitch->getItemData(index);
+  selected.flags|=(FXuint)(FXuval)pitch->getItemData(index);
   listFontFaces();
   listWeights();
   listSlants();

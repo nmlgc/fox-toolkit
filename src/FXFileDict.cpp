@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXFileDict.cpp,v 1.33 2002/01/23 18:53:58 jeroen Exp $                   *
+* $Id: FXFileDict.cpp,v 1.33.4.1 2003/05/21 15:09:58 fox Exp $                   *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -41,12 +41,13 @@
 
 // Additional image formats may be turned on
 #ifdef ALL_IMAGE_FORMATS
-#include "FXJPGIcon.h"
-#include "FXPNGIcon.h"
 #include "FXPCXIcon.h"
 #include "FXTGAIcon.h"
 #include "FXICOIcon.h"
 #include "FXRGBIcon.h"
+#include "FXJPGIcon.h"
+#include "FXPNGIcon.h"
+#include "FXTIFIcon.h"
 #endif
 
 

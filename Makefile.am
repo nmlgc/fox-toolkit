@@ -24,6 +24,9 @@ drop: dist-all
 	cd /home/ftp/pub && ln -sf $(distdir).zip fox-latest.zip
 
 
+diff: distdir
+	-diff -P -c -r fox-1.0.9 $(distdir) > fox-patch-1.0.9-$(distdir)
+
 bak:
 	tar cvzf fox-cvs.tar.gz /mnt/zip/FOX
 

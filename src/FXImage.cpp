@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXImage.cpp,v 1.67 2002/01/18 22:43:00 jeroen Exp $                      *
+* $Id: FXImage.cpp,v 1.67.4.1 2002/05/13 21:10:32 fox Exp $                      *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -313,12 +313,6 @@ void FXImage::restore(){
     // Get Visual
     vis=(Visual*)visual->visual;
     dd=visual->getDepth();
-    redmask=vis->red_mask;
-    greenmask=vis->green_mask;
-    bluemask=vis->blue_mask;
-    redshift=findshift(redmask);
-    greenshift=findshift(greenmask);
-    blueshift=findshift(bluemask);
 
     // Just in case you're on a high-end system
     FXASSERT(vis->map_entries<=MAX_MAPSIZE);
@@ -382,6 +376,11 @@ void FXImage::restore(){
 
       {
       XColor colors[MAX_MAPSIZE];
+      
+      // Get masks
+      redmask=vis->red_mask;
+      greenmask=vis->green_mask;
+      bluemask=vis->blue_mask;
 
       // Read back the colormap and convert to more usable form
       if(vis->c_class!=TrueColor && vis->c_class!=DirectColor){
@@ -392,15 +391,15 @@ void FXImage::restore(){
         }
       else{
         red=green=blue=0;
-        red1=lowbit(vis->red_mask);
-        green1=lowbit(vis->green_mask);
-        blue1=lowbit(vis->blue_mask);
+        red1=lowbit(redmask);
+        green1=lowbit(greenmask);
+        blue1=lowbit(bluemask);
         for(i=0; i<vis->map_entries; i++){
           colors[i].pixel=red|green|blue;
           colors[i].flags=DoRed|DoGreen|DoBlue;
-          if(red<vis->red_mask) red+=red1;
-          if(green<vis->green_mask) green+=green1;
-          if(blue<vis->blue_mask) blue+=blue1;
+          if(red<redmask) red+=red1;
+          if(green<greenmask) green+=green1;
+          if(blue<bluemask) blue+=blue1;
           }
         }
       XQueryColors(DISPLAY(getApp()),visual->colormap,colors,vis->map_entries);
@@ -439,6 +438,9 @@ void FXImage::restore(){
         case 32:
         default:
           FXASSERT(vis->c_class==TrueColor || vis->c_class==DirectColor);
+          redshift=findshift(redmask);
+          greenshift=findshift(greenmask);
+          blueshift=findshift(bluemask);
           for(y=0; y<height; y++){
             for(x=0; x<width; x++){
               pixel=XGetPixel(xim,x,y);

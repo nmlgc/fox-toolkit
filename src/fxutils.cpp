@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: fxutils.cpp,v 1.71 2002/02/27 02:27:36 fox Exp $                         *
+* $Id: fxutils.cpp,v 1.71.4.5 2003/08/14 03:44:46 fox Exp $                         *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -61,59 +61,6 @@ FXuint fxrandom(FXuint& seed){
   return seed;
   }
 
-
-// Allocate memory
-FXint fxmalloc(void** ptr,unsigned long size){
-  FXASSERT(ptr);
-  *ptr=malloc(size);
-  return *ptr!=NULL;
-  }
-
-
-// Allocate cleaned memory
-FXint fxcalloc(void** ptr,unsigned long size){
-  FXASSERT(ptr);
-  *ptr=calloc(size,1);
-  return *ptr!=NULL;
-  }
-
-
-// Resize memory
-FXint fxresize(void** ptr,unsigned long size){
-  FXASSERT(ptr);
-  void *p=realloc(*ptr,size);
-  if(!size || p){ *ptr=p; return TRUE; }
-  return FALSE;
-  }
-
-
-// Allocate and initialize memory
-FXint fxmemdup(void** ptr,unsigned long size,const void* src){
-  FXASSERT(ptr);
-  *ptr=NULL;
-  if(src){
-    *ptr=malloc(size);
-    if(*ptr){ memcpy(*ptr,src,size); return TRUE; }
-    }
-  return FALSE;
-  }
-
-
-// Free memory, resets ptr to NULL afterward
-void fxfree(void** ptr){
-  FXASSERT(ptr);
-  if(*ptr) free(*ptr);
-  *ptr=NULL;
-  }
-
-
-// String duplicate
-FXchar *fxstrdup(const FXchar* str){
-  FXchar *copy;
-  FXMALLOC(&copy,FXchar,strlen(str)+1);
-  strcpy(copy,str);
-  return copy;
-  }
 
 #ifdef WIN32
 
@@ -504,13 +451,22 @@ FXColor makeShadowColor(FXColor clr){
 FXchar* fxgetusername(FXchar* result,FXuint uid){
   if(!result){fxerror("fxgetusername: NULL result argument.\n");}
 #ifndef WIN32
+#ifdef FOX_THREAD_SAFE
+  struct passwd pwdresult,*pwd;
+  char buffer[1024];
+  if(getpwuid_r(uid,&pwdresult,buffer,sizeof(buffer),&pwd)==0 && pwd)
+    strcpy(result,pwd->pw_name);
+  else
+    sprintf(result,"%d",uid);
+#else
   struct passwd *pwd;
   if((pwd=getpwuid(uid))!=NULL)
     strcpy(result,pwd->pw_name);
   else
     sprintf(result,"%d",uid);
+#endif
 #else
-//  sprintf(result,"%d",uid);
+//sprintf(result,"%d",uid);
   strcpy(result,"user");
 #endif
   return result;
@@ -521,13 +477,22 @@ FXchar* fxgetusername(FXchar* result,FXuint uid){
 FXchar* fxgetgroupname(FXchar* result,FXuint gid){
   if(!result){fxerror("fxgetgroupname: NULL result argument.\n");}
 #ifndef WIN32
+#ifdef FOX_THREAD_SAFE
+  struct group grpresult,*grp;
+  char buffer[1024];
+  if(getgrgid_r(gid,&grpresult,buffer,sizeof(buffer),&grp)==0 && grp)
+    strcpy(result,grp->gr_name);
+  else
+    sprintf(result,"%d",gid);
+#else
   struct group *grp;
   if((grp=getgrgid(gid))!=NULL)
     strcpy(result,grp->gr_name);
   else
     sprintf(result,"%d",gid);
+#endif
 #else
-  //sprintf(result,"%d",gid);
+//sprintf(result,"%d",gid);
   strcpy(result,"group");
 #endif
   return result;

@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXFileSelector.cpp,v 1.101 2002/02/27 03:45:55 fox Exp $                  *
+* $Id: FXFileSelector.cpp,v 1.101.4.9 2003/06/20 19:02:07 fox Exp $                  *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -117,7 +117,7 @@
 
   - When changing filter, maybe update the extension (if not more than
     one extension given).
-    
+
   - Perhaps ".." should be excluded from SELECTFILE_MULTIPLE_ALL selections.
 */
 
@@ -396,9 +396,11 @@ FXFileSelector::FXFileSelector(FXComposite *p,FXObject* tgt,FXSelector sel,FXuin
   readonly->hide();
   if(table){
     table->addAccel(MKUINT(KEY_BackSpace,0),this,MKUINT(ID_DIRECTORY_UP,SEL_COMMAND));
+    table->addAccel(MKUINT(KEY_Delete,0),this,MKUINT(ID_DELETE,SEL_COMMAND));
     table->addAccel(MKUINT(KEY_h,CONTROLMASK),this,MKUINT(ID_HOME,SEL_COMMAND));
     table->addAccel(MKUINT(KEY_w,CONTROLMASK),this,MKUINT(ID_WORK,SEL_COMMAND));
     table->addAccel(MKUINT(KEY_n,CONTROLMASK),this,MKUINT(ID_NEW,SEL_COMMAND));
+    table->addAccel(MKUINT(KEY_a,CONTROLMASK),filebox,MKUINT(FXFileList::ID_SELECT_ALL,SEL_COMMAND));
     table->addAccel(MKUINT(KEY_b,CONTROLMASK),filebox,MKUINT(FXFileList::ID_SHOW_BIG_ICONS,SEL_COMMAND));
     table->addAccel(MKUINT(KEY_s,CONTROLMASK),filebox,MKUINT(FXFileList::ID_SHOW_MINI_ICONS,SEL_COMMAND));
     table->addAccel(MKUINT(KEY_l,CONTROLMASK),filebox,MKUINT(FXFileList::ID_SHOW_DETAILS,SEL_COMMAND));
@@ -407,42 +409,18 @@ FXFileSelector::FXFileSelector(FXComposite *p,FXObject* tgt,FXSelector sel,FXuin
   setPatternList(allfiles);
   setDirectory(FXFile::getCurrentDirectory());
   filebox->setFocus();
-  }
-
-
-// Double-clicked item in file list
-long FXFileSelector::onCmdItemDblClicked(FXObject*,FXSelector,void* ptr){
-  FXint index=(FXint)(long)ptr;
-
-  FXTRACE((1,"FXFileSelector::onCmdItemDblClicked\n"));
-
-  if(index<0) return 1;
-
-  // If directory, open the directory
-  if(filebox->isItemDirectory(index)){
-    setDirectory(filebox->getItemPathname(index));
-    return 1;
-    }
-
-  // Only return if we wanted a file
-  if(selectmode!=SELECTFILE_DIRECTORY){
-    if(filebox->isItemFile(index)){
-      FXObject *tgt=accept->getTarget();
-      FXSelector sel=accept->getSelector();
-      if(tgt) tgt->handle(accept,MKUINT(sel,SEL_COMMAND),(void*)1);
-      }
-    }
-  return 1;
+  accept->hide();
   }
 
 
 // Change in items which are selected
 long FXFileSelector::onCmdItemSelected(FXObject*,FXSelector,void* ptr){
-  FXint index=(FXint)(long)ptr;
+  register FXint index=(FXint)(FXival)ptr;
+  register FXint i;
   FXString text,file;
   if(selectmode==SELECTFILE_MULTIPLE){
-    for(FXint i=0; i<filebox->getNumItems(); i++){
-      if(filebox->isItemFile(i) && filebox->isItemSelected(i)){
+    for(i=0; i<filebox->getNumItems(); i++){
+      if(filebox->isItemSelected(i) && !filebox->isItemDirectory(i)){
         if(!text.empty()) text+=' ';
         text+="\""+filebox->getItemFilename(i)+"\"";
         }
@@ -450,7 +428,7 @@ long FXFileSelector::onCmdItemSelected(FXObject*,FXSelector,void* ptr){
     filename->setText(text);
     }
   else if(selectmode==SELECTFILE_MULTIPLE_ALL){
-    for(FXint i=0; i<filebox->getNumItems(); i++){
+    for(i=0; i<filebox->getNumItems(); i++){
       if(filebox->isItemSelected(i) && filebox->getItemFilename(i)!=".."){
         if(!text.empty()) text+=' ';
         text+="\""+filebox->getItemFilename(i)+"\"";
@@ -465,7 +443,7 @@ long FXFileSelector::onCmdItemSelected(FXObject*,FXSelector,void* ptr){
       }
     }
   else{
-    if(filebox->isItemFile(index)){
+    if(!filebox->isItemDirectory(index)){
       text=filebox->getItemFilename(index);
       filename->setText(text);
       }
@@ -479,7 +457,7 @@ long FXFileSelector::onCmdItemDeselected(FXObject*,FXSelector,void*){
   FXString text,file;
   if(selectmode==SELECTFILE_MULTIPLE){
     for(FXint i=0; i<filebox->getNumItems(); i++){
-      if(filebox->isItemFile(i) && filebox->isItemSelected(i)){
+      if(filebox->isItemSelected(i) && !filebox->isItemDirectory(i)){
         if(!text.empty()) text+=' ';
         text+="\""+filebox->getItemFilename(i)+"\"";
         }
@@ -499,6 +477,28 @@ long FXFileSelector::onCmdItemDeselected(FXObject*,FXSelector,void*){
   }
 
 
+// Double-clicked item in file list
+long FXFileSelector::onCmdItemDblClicked(FXObject*,FXSelector,void* ptr){
+  FXSelector sel=accept->getSelector();
+  FXObject *tgt=accept->getTarget();
+  FXint index=(FXint)(FXival)ptr;
+  if(0<=index){
+
+    // If directory, open the directory
+    if(filebox->isItemDirectory(index)){
+      setDirectory(filebox->getItemPathname(index));
+      return 1;
+      }
+
+    // Only return if we wanted a file
+    if(selectmode!=SELECTFILE_DIRECTORY){
+      if(tgt) tgt->handle(accept,MKUINT(sel,SEL_COMMAND),(void*)(FXuval)1);
+      }
+    }
+  return 1;
+  }
+
+
 // Hit the accept button or enter in text field
 long FXFileSelector::onCmdAccept(FXObject*,FXSelector,void*){
   FXSelector sel=accept->getSelector();
@@ -507,89 +507,64 @@ long FXFileSelector::onCmdAccept(FXObject*,FXSelector,void*){
   // Get (first) filename
   FXString path=getFilename();
 
-//FXString *list;
-//FXint     count,i;
-//count=FXFile::listFiles(list,path,"*",LIST_ALL_FILES|LIST_ALL_DIRS);
-//for(i=0; i<count; i++){ FXTRACE((1,"list[%d]=%s\n",i,list[i].text())); }
-//delete [] list;
-//return 1;
+  // Only do something if a selection was made
+  if(!path.empty()){
 
-  // Is directory?
-  if(FXFile::isDirectory(path)){
+    // Is directory?
+    if(FXFile::isDirectory(path)){
 
-    // In directory mode:- we got our answer!
-    if(selectmode==SELECTFILE_DIRECTORY){
-      if(tgt) tgt->handle(accept,MKUINT(sel,SEL_COMMAND),(void*)1);
+      // In directory mode:- we got our answer!
+      if(selectmode==SELECTFILE_DIRECTORY || selectmode==SELECTFILE_MULTIPLE_ALL){
+        if(tgt) tgt->handle(accept,MKUINT(sel,SEL_COMMAND),(void*)(FXuval)1);
+        return 1;
+        }
+
+      // Hop over to that directory
+      dirbox->setDirectory(path);
+      filebox->setDirectory(path);
+      filename->setText(FXString::null);
       return 1;
       }
 
-    // Hop over to that directory
-    dirbox->setDirectory(path);
-    filebox->setDirectory(path);
-    filename->setText(FXString::null);
-    return 1;
-    }
+    // Get directory part of path
+    FXString dir=FXFile::directory(path);
 
-  // Get directory part of path
-  FXString dir=FXFile::directory(path);
+    // In file mode, directory part of path should exist
+    if(FXFile::isDirectory(dir)){
 
-  // In file mode, directory part of path should exist
-  if(FXFile::isDirectory(dir)){
+      // In any mode, existing directory part is good enough
+      if(selectmode==SELECTFILE_ANY){
+        if(tgt) tgt->handle(accept,MKUINT(sel,SEL_COMMAND),(void*)(FXuval)1);
+        return 1;
+        }
 
-    // In any mode, existing directory part is good enough
-    if(selectmode==SELECTFILE_ANY){
-      if(tgt) tgt->handle(accept,MKUINT(sel,SEL_COMMAND),(void*)1);
-      return 1;
-      }
-
-    // In existing mode, the whole filename must exist and be a file
-    else if(selectmode==SELECTFILE_EXISTING){
-      if(FXFile::isFile(path)){
-        if(tgt) tgt->handle(accept,MKUINT(sel,SEL_COMMAND),(void*)1);
+      // Otherwise, the whole filename must exist and be a file
+      else if(FXFile::exists(path)){
+        if(tgt) tgt->handle(accept,MKUINT(sel,SEL_COMMAND),(void*)(FXuval)1);
         return 1;
         }
       }
 
-    // In multiple mode, return if all selected files exist
-    else if(selectmode==SELECTFILE_MULTIPLE){
-      for(FXint i=0; i<filebox->getNumItems(); i++){
-        if(filebox->isItemSelected(i) && filebox->isItemFile(i)){
-          if(tgt) tgt->handle(accept,MKUINT(sel,SEL_COMMAND),(void*)1);
-          return 1;
-          }
-        }
+    // Go up to the lowest directory which still exists
+    while(!FXFile::isTopDirectory(dir) && !FXFile::isDirectory(dir)){
+      dir=FXFile::upLevel(dir);
       }
-      
-    // Multiple files and/or directories
-    else{
-      for(FXint i=0; i<filebox->getNumItems(); i++){
-        if(filebox->isItemSelected(i) && filebox->getItemFilename(i)!=".."){
-          if(tgt) tgt->handle(accept,MKUINT(sel,SEL_COMMAND),(void*)1);
-          return 1;
-          }
-        }
-      }
+
+    // Switch as far as we could go
+    dirbox->setDirectory(dir);
+    filebox->setDirectory(dir);
+
+    // Put the tail end back for further editing
+    FXASSERT(dir.length()<=path.length());
+    if(ISPATHSEP(path[dir.length()]))
+      path.remove(0,dir.length()+1);
+    else
+      path.remove(0,dir.length());
+
+    // Replace text box with new stuff
+    filename->setText(path);
+    filename->selectAll();
     }
-
-  // Go up to the lowest directory which still exists
-  while(!FXFile::isTopDirectory(dir) && !FXFile::isDirectory(dir)){
-    dir=FXFile::upLevel(dir);
-    }
-
-  // Switch as far as we could go
-  dirbox->setDirectory(dir);
-  filebox->setDirectory(dir);
-
-  // Put the tail end back for further editing
-  FXASSERT(dir.length()<=path.length());
-  if(ISPATHSEP(path[dir.length()]))
-    path.remove(0,dir.length()+1);
-  else
-    path.remove(0,dir.length());
-
-  // Replace text box with new stuff
-  filename->setText(path);
-  filename->selectAll();
 
   // Beep
   getApp()->beep();
@@ -813,6 +788,7 @@ long FXFileSelector::onPopupMenu(FXObject*,FXSelector,void* ptr){
   new FXMenuCommand(&filemenu,"Up one level",updiricon,this,ID_DIRECTORY_UP);
   new FXMenuCommand(&filemenu,"Home directory",homeicon,this,ID_HOME);
   new FXMenuCommand(&filemenu,"Work directory",workicon,this,ID_WORK);
+  new FXMenuCommand(&filemenu,"Select all",NULL,filebox,FXFileList::ID_SELECT_ALL);
   new FXMenuSeparator(&filemenu);
 
   FXMenuPane sortmenu(this);
@@ -838,7 +814,9 @@ long FXFileSelector::onPopupMenu(FXObject*,FXSelector,void* ptr){
   new FXMenuCascade(&filemenu,"Bookmarks",NULL,&bookmarks);
   new FXMenuCommand(&bookmarks,"Set bookmark",markicon,this,ID_BOOKMARK);
   new FXMenuCommand(&bookmarks,"Clear bookmarks",clearicon,&mrufiles,FXRecentFiles::ID_CLEAR);
-  new FXMenuSeparator(&bookmarks);
+  FXMenuSeparator* sep1=new FXMenuSeparator(&bookmarks);
+  sep1->setTarget(&mrufiles);
+  sep1->setSelector(FXRecentFiles::ID_ANYFILES);
   new FXMenuCommand(&bookmarks,NULL,NULL,&mrufiles,FXRecentFiles::ID_FILE_1);
   new FXMenuCommand(&bookmarks,NULL,NULL,&mrufiles,FXRecentFiles::ID_FILE_2);
   new FXMenuCommand(&bookmarks,NULL,NULL,&mrufiles,FXRecentFiles::ID_FILE_3);
@@ -931,6 +909,10 @@ FXString FXFileSelector::getDirectory() const {
 // Set file name
 void FXFileSelector::setFilename(const FXString& path){
   FXString abspath=FXFile::absolute(path);
+  filebox->setCurrentFile(abspath);
+  dirbox->setDirectory(FXFile::directory(abspath));
+  filename->setText(FXFile::name(abspath));
+  /*
   if(selectmode==SELECTFILE_DIRECTORY){
     filebox->setDirectory(abspath);
     dirbox->setDirectory(abspath);
@@ -941,12 +923,33 @@ void FXFileSelector::setFilename(const FXString& path){
     dirbox->setDirectory(FXFile::directory(abspath));
     filename->setText(FXFile::name(abspath));
     }
+    */
   }
 
 
 // Get complete path + filename
 FXString FXFileSelector::getFilename() const {
-  return FXFile::absolute(filebox->getDirectory(),filename->getText());
+  register FXint i;
+  if(selectmode==SELECTFILE_MULTIPLE_ALL){
+    for(i=0; i<filebox->getNumItems(); i++){
+      if(filebox->isItemSelected(i) && filebox->getItemFilename(i)!=".."){
+        return FXFile::absolute(filebox->getDirectory(),filebox->getItemFilename(i));
+        }
+      }
+    }
+  else if(selectmode==SELECTFILE_MULTIPLE){
+    for(i=0; i<filebox->getNumItems(); i++){
+      if(filebox->isItemSelected(i) && !filebox->isItemDirectory(i)){
+        return FXFile::absolute(filebox->getDirectory(),filebox->getItemFilename(i));
+        }
+      }
+    }
+  else{
+    if(!filename->getText().empty()){
+      return FXFile::absolute(filebox->getDirectory(),filename->getText());
+      }
+    }
+  return FXString::null;
   }
 
 
@@ -973,14 +976,14 @@ FXString* FXFileSelector::getFilenames() const {
       }
     else{
       for(i=n=0; i<filebox->getNumItems(); i++){
-        if(filebox->isItemSelected(i) && filebox->isItemFile(i)){
+        if(filebox->isItemSelected(i) && !filebox->isItemDirectory(i)){
           n++;
           }
         }
       if(n){
         files=new FXString [n+1];
         for(i=n=0; i<filebox->getNumItems(); i++){
-          if(filebox->isItemSelected(i) && filebox->isItemFile(i)){
+          if(filebox->isItemSelected(i) && !filebox->isItemDirectory(i)){
             files[n++]=filebox->getItemPathname(i);
             }
           }
@@ -1008,9 +1011,9 @@ void FXFileSelector::setPatternList(const FXchar **ptrns){
 
 // Change patterns, each pattern separated by newline
 void FXFileSelector::setPatternList(const FXString& patterns){
-  FXString pat; FXint i;
+  FXString pat;
   filefilter->clearItems();
-  for(i=0; !(pat=patterns.extract(i,'\n')).empty(); i++){
+  for(FXint i=0; !(pat=patterns.extract(i,'\n')).empty(); i++){
     filefilter->appendItem(pat);
     }
   if(!filefilter->getNumItems()) filefilter->appendItem(allfiles);
@@ -1020,8 +1023,8 @@ void FXFileSelector::setPatternList(const FXString& patterns){
 
 // Return list of patterns
 FXString FXFileSelector::getPatternList() const {
-  FXString pat; FXint i;
-  for(i=0; i<filefilter->getNumItems(); i++){
+  FXString pat;
+  for(FXint i=0; i<filefilter->getNumItems(); i++){
     if(!pat.empty()) pat+='\n';
     pat+=filefilter->getItemText(i);
     }
@@ -1208,9 +1211,11 @@ FXFileSelector::~FXFileSelector(){
   FXAccelTable *table=getShell()->getAccelTable();
   if(table){
     table->removeAccel(MKUINT(KEY_BackSpace,0));
+    table->removeAccel(MKUINT(KEY_Delete,0));
     table->removeAccel(MKUINT(KEY_h,CONTROLMASK));
     table->removeAccel(MKUINT(KEY_w,CONTROLMASK));
     table->removeAccel(MKUINT(KEY_n,CONTROLMASK));
+    table->removeAccel(MKUINT(KEY_a,CONTROLMASK));
     table->removeAccel(MKUINT(KEY_b,CONTROLMASK));
     table->removeAccel(MKUINT(KEY_s,CONTROLMASK));
     table->removeAccel(MKUINT(KEY_l,CONTROLMASK));

@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXProgressDialog.cpp,v 1.8 2002/01/18 22:43:02 jeroen Exp $              *
+* $Id: FXProgressDialog.cpp,v 1.8.4.1 2003/06/20 19:02:07 fox Exp $              *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -99,7 +99,7 @@ long FXProgressDialog::onCmdCancel(FXObject* sender,FXSelector sel,void* ptr){
 
 // Change dial value
 long FXProgressDialog::onCmdSetValue(FXObject*,FXSelector,void* ptr){
-  setProgress((FXuint)(long)ptr);
+  setProgress((FXuint)(FXuval)ptr);
   return 1;
   }
 

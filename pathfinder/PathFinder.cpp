@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: PathFinder.cpp,v 1.57 2002/01/14 05:52:05 jeroen Exp $                   *
+* $Id: PathFinder.cpp,v 1.57.4.2 2003/06/20 19:02:07 fox Exp $                   *
 ********************************************************************************/
 #include "xincs.h"
 #include "fx.h"
@@ -425,7 +425,6 @@ PathFinderMain::~PathFinderMain(){
   delete associations;
   delete filemenu;
   delete editmenu;
-  delete commandmenu;
   delete viewmenu;
   delete gomenu;
   delete arrangemenu;
@@ -516,7 +515,7 @@ long PathFinderMain::onUpdOpen(FXObject* sender,FXSelector,void*){
 
 // File Item was double-clicked
 long PathFinderMain::onCmdFileDblClicked(FXObject*,FXSelector,void* ptr){
-  FXint index=(FXint)(long)ptr;
+  FXint index=(FXint)(FXival)ptr;
   if(0<=index){
 
     // If directory, open the directory

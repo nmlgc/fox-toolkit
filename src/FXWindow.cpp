@@ -21,7 +21,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXWindow.cpp,v 1.192 2002/01/18 22:43:07 jeroen Exp $                    *
+* $Id: FXWindow.cpp,v 1.192.4.4 2003/06/09 14:07:32 fox Exp $                    *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -1162,18 +1162,18 @@ void FXWindow::create(){
       HWND hParent=(HWND)parent->id();
       if(flags&FLAG_SHELL){
         if(isMemberOf(FXMETACLASS(FXTopWindow))){
-          dwStyle=WS_OVERLAPPEDWINDOW;
+          dwStyle=WS_OVERLAPPEDWINDOW|WS_CLIPSIBLINGS|WS_CLIPCHILDREN;
           }
         else if(doesOverrideRedirect()){
           // To control window placement or control decoration, a window manager
           // often needs to redirect map or configure requests. Popup windows, however,
           // often need to be mapped without a window manager getting in the way.
-          dwStyle=WS_POPUP;
+          dwStyle=WS_POPUP|WS_CLIPSIBLINGS|WS_CLIPCHILDREN;
           dwExStyle=WS_EX_TOOLWINDOW;
           }
         else{
           // Other top-level shell windows (like dialogs)
-          dwStyle=WS_POPUP|WS_CAPTION;
+          dwStyle=WS_POPUP|WS_CAPTION|WS_CLIPSIBLINGS|WS_CLIPCHILDREN;
           dwExStyle=WS_EX_DLGMODALFRAME|WS_EX_TOOLWINDOW;
           // if(hParent==GetDesktopWindow() && getApp()->getMainWindow()!=0){
           // if(getApp()->getMainWindow()->id()) hParent=(HWND)getApp()->getMainWindow()->id();
@@ -1194,9 +1194,13 @@ void FXWindow::create(){
       // Uh-oh, we failed
       if(!xid){ fxerror("%s::create: unable to create window.\n",getClassName()); }
 
-      // Show if it was supposed to be
-      if(flags&FLAG_SHOWN) ShowWindow((HWND)xid,SW_SHOWNOACTIVATE);
-
+      // Show if it was supposed to be.  Apparently, initial state
+      // is neither shown nor hidden, so an explicit hide is needed.
+      // Patch thanks to "Glenn Shen" <shen@hks.com>
+      if(flags&FLAG_SHOWN)
+        ShowWindow((HWND)xid,SW_SHOWNOACTIVATE);
+      else
+        ShowWindow((HWND)xid,SW_HIDE);
 #endif
       }
     }
@@ -1829,6 +1833,7 @@ void FXWindow::repaint(){
 
 // Move window
 void FXWindow::move(FXint x,FXint y){
+  FXTRACE((200,"%s::move: x=%d y=%d\n",getClassName(),x,y));
   if((flags&FLAG_DIRTY)||(x!=xpos)||(y!=ypos)){
     xpos=x;
     ypos=y;
@@ -1839,7 +1844,7 @@ void FXWindow::move(FXint x,FXint y){
 #ifndef WIN32
       XMoveWindow(DISPLAY(getApp()),xid,x,y);
 #else
-      SetWindowPos((HWND)xid,NULL,x,y,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_NOACTIVATE);
+      SetWindowPos((HWND)xid,NULL,x,y,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_NOACTIVATE|SWP_NOOWNERZORDER);
 #endif
       if(flags&FLAG_DIRTY) layout();
       }
@@ -1849,13 +1854,16 @@ void FXWindow::move(FXint x,FXint y){
 
 // Move and resize
 void FXWindow::position(FXint x,FXint y,FXint w,FXint h){
-  FXTRACE((100,"%s::position: x=%d y=%d w=%d h=%d\n",getClassName(),x,y,w,h));
+  register FXint ow=width;
+  register FXint oh=height;
+  FXTRACE((200,"%s::position: x=%d y=%d w=%d h=%d\n",getClassName(),x,y,w,h));
   if(w<0) w=0;
   if(h<0) h=0;
-  FXbool resized=(w!=width)||(h!=height);
-  if((flags&FLAG_DIRTY)||(x!=xpos)||(y!=ypos)||resized){
+  if((flags&FLAG_DIRTY)||(x!=xpos)||(y!=ypos)||(w!=ow)||(h!=oh)){
     xpos=x;
     ypos=y;
+    width=w;
+    height=h;
     if(xid){
 
       // Alas, we have to generate some protocol here even if the placement
@@ -1863,28 +1871,22 @@ void FXWindow::position(FXint x,FXint y,FXint w,FXint h){
       // there are ways to change the placement w/o going through position()!
 #ifndef WIN32
       if(0<w && 0<h){
-        if((flags&FLAG_SHOWN) && (width<=0 || height<=0)){
+        if((flags&FLAG_SHOWN) && (ow<=0 || oh<=0)){
           XMapWindow(DISPLAY(getApp()),xid);
           }
         XMoveResizeWindow(DISPLAY(getApp()),xid,x,y,w,h);
         }
-      else if(0<width && 0<height){
+      else if(0<ow && 0<oh){
         XUnmapWindow(DISPLAY(getApp()),xid);
         }
 #else
-      SetWindowPos((HWND)xid,NULL,x,y,w,h,SWP_NOZORDER|SWP_NOACTIVATE);
+      SetWindowPos((HWND)xid,NULL,x,y,w,h,SWP_NOZORDER|SWP_NOACTIVATE|SWP_NOOWNERZORDER);
 #endif
-      width=w;
-      height=h;
 
       // We don't have to layout the interior of this widget unless
       // the size has changed or it was marked as dirty:- this is
       // a very good optimization as it's applied recursively!
-      if((flags&FLAG_DIRTY)||resized) layout();
-      }
-    else{
-      width=w;
-      height=h;
+      if((flags&FLAG_DIRTY)||(w!=ow)||(h!=oh)) layout();
       }
     }
   }
@@ -1892,34 +1894,33 @@ void FXWindow::position(FXint x,FXint y,FXint w,FXint h){
 
 // Resize
 void FXWindow::resize(FXint w,FXint h){
+  register FXint ow=width;
+  register FXint oh=height;
+  FXTRACE((200,"%s::resize: w=%d h=%d\n",getClassName(),w,h));
   if(w<0) w=0;
   if(h<0) h=0;
-  if((flags&FLAG_DIRTY)||(w!=width)||(h!=height)){
+  if((flags&FLAG_DIRTY)||(w!=ow)||(h!=oh)){
+    width=w;
+    height=h;
     if(xid){
 
       // Similar as for position(), we have to generate protocol here..
 #ifndef WIN32
       if(0<w && 0<h){
-        if((flags&FLAG_SHOWN) && (width<=0 || height<=0)){
+        if((flags&FLAG_SHOWN) && (ow<=0 || oh<=0)){
           XMapWindow(DISPLAY(getApp()),xid);
           }
         XResizeWindow(DISPLAY(getApp()),xid,w,h);
         }
-      else if(0<width && 0<height){
+      else if(0<ow && 0<oh){
         XUnmapWindow(DISPLAY(getApp()),xid);
         }
 #else
-      SetWindowPos((HWND)xid,NULL,0,0,w,h,SWP_NOMOVE|SWP_NOZORDER|SWP_NOACTIVATE);
+      SetWindowPos((HWND)xid,NULL,0,0,w,h,SWP_NOMOVE|SWP_NOZORDER|SWP_NOACTIVATE|SWP_NOOWNERZORDER);
 #endif
 
       // And of course the size has changed so layout is needed
-      width=w;
-      height=h;
       layout();
-      }
-    else{
-      width=w;
-      height=h;
       }
     }
   }
@@ -2707,7 +2708,7 @@ FXbool FXWindow::handleDrag(FXint x,FXint y,FXDragAction action){
     // Get drop window
     point.x=x;
     point.y=y;
-    window=WindowFromPoint(point);
+    window=WindowFromPoint(point);// FIXME this finds only enabled/visible windows
     while(window){
       version=(FXuint)GetProp(window,(LPCTSTR)MAKELONG(getApp()->xdndAware,0));
       if(version) break;

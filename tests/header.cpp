@@ -5,7 +5,7 @@
 *********************************************************************************
 * Copyright (C) 1997 by Jeroen van der Zijp.   All Rights Reserved.             *
 *********************************************************************************
-* $Id: header.cpp,v 1.16 2001/11/02 06:07:19 jeroen Exp $                       *
+* $Id: header.cpp,v 1.16.4.1 2003/06/20 19:02:07 fox Exp $                       *
 ********************************************************************************/
 #include "fx.h"
 #include <stdio.h>
@@ -66,9 +66,9 @@ public:
   };
 
 
-  
+
 /*******************************************************************************/
-  
+
 // Map
 FXDEFMAP(HeaderWindow) HeaderWindowMap[]={
   FXMAPFUNC(SEL_COMMAND,  HeaderWindow::ID_ABOUT,      HeaderWindow::onCmdAbout),
@@ -84,12 +84,12 @@ FXIMPLEMENT(HeaderWindow,FXMainWindow,HeaderWindowMap,ARRAYNUMBER(HeaderWindowMa
 
 // Make some windows
 HeaderWindow::HeaderWindow(FXApp* a):FXMainWindow(a,"Header Control Test",NULL,NULL,DECOR_ALL,0,0,800,600){
-  
+
   // Make menu bar
   menubar=new FXMenubar(this,LAYOUT_SIDE_TOP|LAYOUT_FILL_X);
-  
+
   new FXStatusbar(this,LAYOUT_SIDE_BOTTOM|LAYOUT_FILL_X);
-  
+
   filemenu=new FXMenuPane(this);
   new FXMenuCommand(filemenu,"&Quit\tCtl-Q\tQuit the application",NULL,getApp(),FXApp::ID_QUIT);
   new FXMenuTitle(menubar,"&File",NULL,filemenu);
@@ -99,18 +99,18 @@ HeaderWindow::HeaderWindow(FXApp* a):FXMainWindow(a,"Header Control Test",NULL,N
 
   // Make Main Window contents
   contents=new FXVerticalFrame(this,FRAME_SUNKEN|FRAME_THICK|LAYOUT_SIDE_TOP|LAYOUT_FILL_X|LAYOUT_FILL_Y,0,0,0,0, 0,0,0,0, 0,0);
-  
+
   // Make header control
   header1=new FXHeader(contents,this,ID_HEADER,HEADER_BUTTON|FRAME_RAISED|FRAME_THICK|LAYOUT_FILL_X);
-  
+
   // Document icon
   doc=new FXGIFIcon(getApp(),minidoc);
-  
+
   header1->appendItem("Name",doc,150);
   header1->appendItem("Type",NULL,120);
   header1->appendItem("Layout Option",doc,230);
   header1->appendItem("Attributes",NULL,80);
- 
+
   // Below header
   panes=new FXHorizontalFrame(contents,FRAME_SUNKEN|FRAME_THICK|LAYOUT_SIDE_TOP|LAYOUT_FILL_X|LAYOUT_FILL_Y,0,0,0,0, 0,0,0,0, 0,0);
 
@@ -166,7 +166,7 @@ HeaderWindow::HeaderWindow(FXApp* a):FXMainWindow(a,"Header Control Test",NULL,N
   // Whip out a tooltip control, jeez, that's hard
   new FXTooltip(getApp());
   }
-  
+
 
 HeaderWindow::~HeaderWindow(){
   delete filemenu;
@@ -185,7 +185,7 @@ long HeaderWindow::onCmdAbout(FXObject*,FXSelector,void*){
 
 // Changed the header control
 long HeaderWindow::onCmdHeader(FXObject*,FXSelector,void* ptr){
-  FXint which=(FXint)(long)ptr;
+  FXint which=(FXint)(FXival)ptr;
   FXASSERT(0<=which && which<4);
   FXTRACE((1,"Width of item %d = %d\n",which,header1->getItemSize(which)));
   list[which]->setWidth(header1->getItemSize(which));
@@ -195,7 +195,7 @@ long HeaderWindow::onCmdHeader(FXObject*,FXSelector,void* ptr){
 
 // Clicked a header button:- we highlight all in the list
 long HeaderWindow::onCmdHeaderButton(FXObject*,FXSelector,void* ptr){
-  FXint which=(FXint)(long)ptr;
+  FXint which=(FXint)(FXival)ptr;
   FXint i;
   FXASSERT(0<=which && which<4);
   for(i=0; i<list[which]->getNumItems(); i++){
@@ -228,18 +228,18 @@ int main(int argc,char *argv[]){
 
   // Make application
   FXApp application("Header","FoxTest");
-    
+
   // Initialize application and open display;
   // FOX will parse some parameters, and leave the remaining
   // ones for the main application.
   application.init(argc,argv);
-  
+
   // Make window
   new HeaderWindow(&application);
 
   // Create all the windows.
   application.create();
-  
+
   // Run the application
   return application.run();
   }

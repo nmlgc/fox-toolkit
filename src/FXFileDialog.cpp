@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXFileDialog.cpp,v 1.23 2002/01/18 22:42:59 jeroen Exp $                 *
+* $Id: FXFileDialog.cpp,v 1.23.4.3 2003/03/27 20:34:43 fox Exp $                 *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -240,9 +240,9 @@ FXString FXFileDialog::getOpenFilename(FXWindow* owner,const FXString& caption,c
   FXFileDialog opendialog(owner,caption);
   FXString filename;
   opendialog.setSelectMode(SELECTFILE_EXISTING);
+  opendialog.setFilename(path);
   opendialog.setPatternList(patterns);
   opendialog.setCurrentPattern(initial);
-  opendialog.setFilename(path);
   if(opendialog.execute()){
     filename=opendialog.getFilename();
     if(FXFile::isFile(filename)) return filename;
@@ -255,9 +255,9 @@ FXString FXFileDialog::getOpenFilename(FXWindow* owner,const FXString& caption,c
 FXString FXFileDialog::getSaveFilename(FXWindow* owner,const FXString& caption,const FXString& path,const FXString& patterns,FXint initial){
   FXFileDialog savedialog(owner,caption);
   savedialog.setSelectMode(SELECTFILE_ANY);
+  savedialog.setFilename(path);
   savedialog.setPatternList(patterns);
   savedialog.setCurrentPattern(initial);
-  savedialog.setFilename(path);
   if(savedialog.execute()){
     return savedialog.getFilename();
     }
@@ -269,9 +269,9 @@ FXString FXFileDialog::getSaveFilename(FXWindow* owner,const FXString& caption,c
 FXString* FXFileDialog::getOpenFilenames(FXWindow* owner,const FXString& caption,const FXString& path,const FXString& patterns,FXint initial){
   FXFileDialog opendialog(owner,caption);
   opendialog.setSelectMode(SELECTFILE_MULTIPLE);
+  opendialog.setFilename(path);
   opendialog.setPatternList(patterns);
   opendialog.setCurrentPattern(initial);
-  opendialog.setDirectory(path);
   if(opendialog.execute()){
     return opendialog.getFilenames();
     }

@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXText.cpp,v 1.214 2002/02/06 22:07:56 fox Exp $                         *
+* $Id: FXText.cpp,v 1.214.4.6 2003/06/20 19:02:07 fox Exp $                         *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -1207,7 +1207,7 @@ FXint FXText::getPosAt(FXint x,FXint y) const {
   FXASSERT(0<=ls);
   FXASSERT(ls<=le);
   FXASSERT(le<=length);
-  if(ls<le && isspace(getChar(le-1))) le--;   // Does NOT include last newline or blank
+  if(ls<le && (((ch=getChar(le-1))=='\n') || (le<length && isspace(ch)))) le--;
   cx=0;
   while(ls<le){
     ch=getChar(ls);
@@ -1695,7 +1695,7 @@ void FXText::replaceStyledText(FXint pos,FXint m,const FXchar *text,FXint n,FXin
     what[0]=pos;
     what[1]=n;
     target->handle(this,MKUINT(message,SEL_INSERTED),(void*)what);
-    target->handle(this,MKUINT(message,SEL_CHANGED),(void*)cursorpos);
+    target->handle(this,MKUINT(message,SEL_CHANGED),(void*)(FXival)cursorpos);
     }
   }
 
@@ -1713,10 +1713,10 @@ void FXText::appendStyledText(const FXchar *text,FXint n,FXint style,FXbool noti
   FXTRACE((130,"appendStyledText(text,%d)\n",n));
   replace(length,0,text,n,style);
   if(notify && target){
-    what[0]=length;
+    what[0]=length-n;   // Place where added; thanks to Sander Jansen <sxj@cfdrc.com>
     what[1]=n;
     target->handle(this,MKUINT(message,SEL_INSERTED),(void*)what);
-    target->handle(this,MKUINT(message,SEL_CHANGED),(void*)cursorpos);
+    target->handle(this,MKUINT(message,SEL_CHANGED),(void*)(FXival)cursorpos);
     }
   }
 
@@ -1737,7 +1737,7 @@ void FXText::insertStyledText(FXint pos,const FXchar *text,FXint n,FXint style,F
     what[0]=pos;
     what[1]=n;
     target->handle(this,MKUINT(message,SEL_INSERTED),(void*)what);
-    target->handle(this,MKUINT(message,SEL_CHANGED),(void*)cursorpos);
+    target->handle(this,MKUINT(message,SEL_CHANGED),(void*)(FXival)cursorpos);
     }
   }
 
@@ -1760,14 +1760,14 @@ void FXText::removeText(FXint pos,FXint n,FXbool notify){
   FXTRACE((130,"removeText(%d,%d)\n",pos,n));
   replace(pos,n,NULL,0,0);
   if(notify && target){
-    target->handle(this,MKUINT(message,SEL_CHANGED),(void*)cursorpos);
+    target->handle(this,MKUINT(message,SEL_CHANGED),(void*)(FXival)cursorpos);
     }
   }
 
 
 // Grab range of text
 void FXText::extractText(FXchar *text,FXint pos,FXint n) const {
-  if(n<0 || pos<0 || length<pos+n || !text){ fxerror("%s::extractText: bad argument.\n",getClassName()); }
+  if(n<0 || pos<0 || length<pos+n){ fxerror("%s::extractText: bad argument.\n",getClassName()); }
   FXASSERT(0<=n && 0<=pos && pos+n<=length);
   if(pos+n<=gapstart){
     memcpy(text,&buffer[pos],n);
@@ -1784,7 +1784,7 @@ void FXText::extractText(FXchar *text,FXint pos,FXint n) const {
 
 // Grab range of style
 void FXText::extractStyle(FXchar *style,FXint pos,FXint n) const {
-  if(n<0 || pos<0 || length<pos+n || !style){ fxerror("%s::extractStyle: bad argument.\n",getClassName()); }
+  if(n<0 || pos<0 || length<pos+n){ fxerror("%s::extractStyle: bad argument.\n",getClassName()); }
   FXASSERT(0<=n && 0<=pos && pos+n<=length);
   if(sbuffer){
     if(pos+n<=gapstart){
@@ -1876,7 +1876,7 @@ void FXText::setStyledText(const FXchar* text,FXint n,FXint style,FXbool notify)
     what[0]=0;
     what[1]=n;
     target->handle(this,MKUINT(message,SEL_INSERTED),(void*)what);
-    target->handle(this,MKUINT(message,SEL_CHANGED),(void*)cursorpos);
+    target->handle(this,MKUINT(message,SEL_CHANGED),(void*)(FXival)cursorpos);
     }
   recalc();
   layout();
@@ -3683,8 +3683,8 @@ long FXText::onCmdSelectMatching(FXObject*,FXSelector,void*){
   }
 
 
-static const FXchar righthand[]="}])";
-static const FXchar lefthand[]="{[(";
+static const FXchar righthand[]="}])>";
+static const FXchar lefthand[]="{[(<";
 
 
 // Select entire enclosing block
@@ -3861,7 +3861,7 @@ long FXText::onCmdReplace(FXObject*,FXSelector,void*){
         to=end[0];
         }
       }
-    if(0<fm){
+    if(0<=fm){
       len=replacevalue.length();
       replaceText(fm,to-fm,replacevalue.text(),len,TRUE);
       setCursorPos(fm+len,TRUE);
@@ -4396,7 +4396,7 @@ void FXText::setCursorPos(FXint pos,FXbool notify){
     showCursor(FLAG_CARET);
     prefcol=-1;
     if(target && notify){
-      target->handle(this,MKUINT(message,SEL_CHANGED),(void*)cursorpos);
+      target->handle(this,MKUINT(message,SEL_CHANGED),(void*)(FXival)cursorpos);
       }
     }
   }

@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXGLViewer.cpp,v 1.104 2002/01/18 22:43:00 jeroen Exp $                  *
+* $Id: FXGLViewer.cpp,v 1.104.4.3 2003/06/20 19:02:07 fox Exp $                  *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -1264,8 +1264,6 @@ void FXGLViewer::drawLasso(FXint x0,FXint y0,FXint x1,FXint y1){
     // You have OpenGL 1.1 or better, but chances are it
     // still doesn't work, because you may have an incomplete
     // implementation [DEC], or perhaps broken hardware.
-    //glBlendFunc(GL_ONE_MINUS_DST_COLOR,GL_ZERO);
-    //glEnable(GL_BLEND);
 
     // If it works for you, uncomment the lines below,
     // and comment the ones above...
@@ -2245,7 +2243,7 @@ long FXGLViewer::onCmdXYZDial(FXObject*,FXSelector sel,void* ptr){
   const FXVec xaxis(1.0f,0.0f,0.0f);
   const FXVec yaxis(0.0f,1.0f,0.0f);
   const FXVec zaxis(0.0f,0.0f,1.0f);
-  FXint dialnew=(FXint)(long)ptr;
+  FXint dialnew=(FXint)(FXival)ptr;
   FXfloat ang;
   FXQuat q;
   if(SELTYPE(sel)==SEL_CHANGED){
@@ -2386,8 +2384,10 @@ long FXGLViewer::onCmdPrintImage(FXObject*,FXSelector,void*){
       return 1;
       }
 
-    // Repaint quickly
-    update();
+    // Repaint now
+    repaint();
+
+    // Flush commands
     getApp()->flush(TRUE);
 
     // Page header
@@ -2573,8 +2573,10 @@ long FXGLViewer::onCmdPrintVector(FXObject*,FXSelector,void*){
       return 1;
       }
 
-    // Repaint quickly
-    update();
+    // Repaint now
+    repaint();
+
+    // Flush commands
     getApp()->flush(TRUE);
 
     // Page header
@@ -2712,7 +2714,7 @@ long FXGLViewer::onUpdCurrent(FXObject* sender,FXSelector,void*){
 
 // Set background color
 long FXGLViewer::onCmdBackColor(FXObject*,FXSelector sel,void* ptr){
-  FXColor color=(FXColor)(long)ptr;
+  FXColor color=(FXColor)(FXuval)ptr;
   background=color;
   if(SELTYPE(sel)==SEL_COMMAND || !turbomode){
     update();
@@ -2724,14 +2726,14 @@ long FXGLViewer::onCmdBackColor(FXObject*,FXSelector sel,void* ptr){
 // Update background color
 long FXGLViewer::onUpdBackColor(FXObject* sender,FXSelector,void*){
   FXColor clr=background;
-  sender->handle(this,MKUINT(FXWindow::ID_SETVALUE,SEL_COMMAND),(void*)clr);
+  sender->handle(this,MKUINT(FXWindow::ID_SETVALUE,SEL_COMMAND),(void*)(FXuval)clr);
   return 1;
   }
 
 
 // Set ambient light color
 long FXGLViewer::onCmdAmbientColor(FXObject*,FXSelector sel,void* ptr){
-  FXColor color=(FXColor)(long)ptr;
+  FXColor color=(FXColor)(FXuval)ptr;
   ambient=color;
   if(SELTYPE(sel)==SEL_COMMAND || !turbomode){
     update();
@@ -2743,14 +2745,14 @@ long FXGLViewer::onCmdAmbientColor(FXObject*,FXSelector sel,void* ptr){
 // Update ambient light color
 long FXGLViewer::onUpdAmbientColor(FXObject* sender,FXSelector,void*){
   FXColor clr=ambient;
-  sender->handle(this,MKUINT(FXWindow::ID_SETVALUE,SEL_COMMAND),(void*)clr);
+  sender->handle(this,MKUINT(FXWindow::ID_SETVALUE,SEL_COMMAND),(void*)(FXuval)clr);
   return 1;
   }
 
 
 // Set ambient light color
 long FXGLViewer::onCmdLightAmbient(FXObject*,FXSelector sel,void* ptr){
-  FXColor color=(FXColor)(long)ptr;
+  FXColor color=(FXColor)(FXuval)ptr;
   light.ambient=color;
   if(SELTYPE(sel)==SEL_COMMAND || !turbomode){
     update();
@@ -2762,14 +2764,14 @@ long FXGLViewer::onCmdLightAmbient(FXObject*,FXSelector sel,void* ptr){
 // Update ambient light color
 long FXGLViewer::onUpdLightAmbient(FXObject* sender,FXSelector,void*){
   FXColor clr=light.ambient;
-  sender->handle(this,MKUINT(FXWindow::ID_SETVALUE,SEL_COMMAND),(void*)clr);
+  sender->handle(this,MKUINT(FXWindow::ID_SETVALUE,SEL_COMMAND),(void*)(FXuval)clr);
   return 1;
   }
 
 
 // Set diffuse light color
 long FXGLViewer::onCmdLightDiffuse(FXObject*,FXSelector sel,void* ptr){
-  FXColor color=(FXColor)(long)ptr;
+  FXColor color=(FXColor)(FXuval)ptr;
   light.diffuse=color;
   if(SELTYPE(sel)==SEL_COMMAND || !turbomode){
     update();
@@ -2781,14 +2783,14 @@ long FXGLViewer::onCmdLightDiffuse(FXObject*,FXSelector sel,void* ptr){
 // Update diffuse light color
 long FXGLViewer::onUpdLightDiffuse(FXObject* sender,FXSelector,void*){
   FXColor clr=light.diffuse;
-  sender->handle(this,MKUINT(FXWindow::ID_SETVALUE,SEL_COMMAND),(void*)clr);
+  sender->handle(this,MKUINT(FXWindow::ID_SETVALUE,SEL_COMMAND),(void*)(FXuval)clr);
   return 1;
   }
 
 
 // Set specular light color
 long FXGLViewer::onCmdLightSpecular(FXObject*,FXSelector sel,void* ptr){
-  FXColor color=(FXColor)(long)ptr;
+  FXColor color=(FXColor)(FXuval)ptr;
   light.specular=color;
   if(SELTYPE(sel)==SEL_COMMAND || !turbomode){
     update();
@@ -2800,7 +2802,7 @@ long FXGLViewer::onCmdLightSpecular(FXObject*,FXSelector sel,void* ptr){
 // Update specular light color
 long FXGLViewer::onUpdLightSpecular(FXObject* sender,FXSelector,void*){
   FXColor clr=light.specular;
-  sender->handle(this,MKUINT(FXWindow::ID_SETVALUE,SEL_COMMAND),(void*)clr);
+  sender->handle(this,MKUINT(FXWindow::ID_SETVALUE,SEL_COMMAND),(void*)(FXuval)clr);
   return 1;
   }
 

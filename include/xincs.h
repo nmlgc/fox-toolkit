@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: xincs.h,v 1.34 2002/01/18 22:42:55 jeroen Exp $                          *
+* $Id: xincs.h,v 1.34.4.4 2003/05/01 20:22:52 fox Exp $                          *
 ********************************************************************************/
 #ifndef XINCS_H
 #define XINCS_H
@@ -82,6 +82,11 @@
 #include <direct.h>
 #define vsnprintf _vsnprintf
 #endif
+#ifdef __SC__           /* Digital Mars C++ Compiler */
+#include <direct.h>
+#include <io.h>         /* for _access() */
+#define vsnprintf _vsnprintf
+#endif
 
 #endif
 
@@ -111,10 +116,8 @@
 #endif
 #ifdef HAVE_DIRENT_H
 #include <dirent.h>
-#define NAMLEN(dirent) strlen((dirent)->d_name)
 #else
 #define dirent direct
-#define NAMLEN(dirent) (dirent)->d_namlen
 #ifdef HAVE_SYS_NDIR_H
 #include <sys/ndir.h>
 #endif
@@ -128,6 +131,16 @@
 #ifdef HAVE_XSHM
 #include <sys/ipc.h>
 #include <sys/shm.h>
+#endif
+
+// For thread-safe readdir_r, we sometimes need extra
+// space above and beyond the space for dirent itself
+#ifdef HAVE_DIRENT_H
+#ifndef WIN32
+struct fxdirent : dirent {
+  char buffer[256];
+  };
+#endif
 #endif
 
 
@@ -170,6 +183,12 @@
 // OpenGL includes
 #ifdef HAVE_OPENGL
 #include <GL/gl.h>
+#ifndef GLAPIENTRY
+#define GLAPIENTRY
+#endif
+#ifndef GLAPI
+#define GLAPI
+#endif
 #include <GL/glu.h>
 #ifndef WIN32
 #include <GL/glx.h>

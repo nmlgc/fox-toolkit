@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: PathFinder.h,v 1.20 2001/12/10 23:37:59 jeroen Exp $                     *
+* $Id: PathFinder.h,v 1.20.4.1 2002/04/17 18:45:00 fox Exp $                     *
 ********************************************************************************/
 #ifndef PATHFINDER_H
 #define PATHFINDER_H
@@ -35,7 +35,6 @@ protected:
   PropertyDialog    *property;
   FXMenuPane        *filemenu;
   FXMenuPane        *editmenu;
-  FXMenuPane        *commandmenu;
   FXMenuPane        *viewmenu;
   FXMenuPane        *gomenu;
   FXMenuPane        *arrangemenu;

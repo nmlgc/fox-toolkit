@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXMatrix.cpp,v 1.17 2002/01/18 22:43:01 jeroen Exp $                     *
+* $Id: FXMatrix.cpp,v 1.17.4.1 2002/05/31 15:00:46 fox Exp $                     *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -258,11 +258,7 @@ void FXMatrix::setNumRows(FXint nr){
 
 // Get number of rows
 FXint FXMatrix::getNumRows() const {
-  register FXWindow *child;
-  register FXint n;
-  if(!(options&MATRIX_BY_COLUMNS)) return num;
-  for(child=getFirst(),n=0; child; child=child->getNext()){ if(child->shown()) n++; }
-  return (n+num-1)/num;
+  return (options&MATRIX_BY_COLUMNS) ? (numChildren()+num-1)/num : num;
   }
 
 
@@ -275,11 +271,7 @@ void FXMatrix::setNumColumns(FXint nc){
 
 // Get number of columns
 FXint FXMatrix::getNumColumns() const {
-  register FXWindow *child;
-  register FXint n;
-  if(options&MATRIX_BY_COLUMNS) return num;
-  for(child=getFirst(),n=0; child; child=child->getNext()){ if(child->shown()) n++; }
-  return (n+num-1)/num;
+  return (options&MATRIX_BY_COLUMNS) ? num : (numChildren()+num-1)/num;
   }
 
 

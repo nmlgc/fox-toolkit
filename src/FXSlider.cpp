@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXSlider.cpp,v 1.33 2002/01/18 22:43:04 jeroen Exp $                     *
+* $Id: FXSlider.cpp,v 1.33.4.2 2003/06/20 19:02:07 fox Exp $                     *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -247,7 +247,7 @@ long FXSlider::onQueryTip(FXObject* sender,FXSelector,void*){
 
 // Update value from a message
 long FXSlider::onCmdSetValue(FXObject*,FXSelector,void* ptr){
-  setValue((FXint)(long)ptr);
+  setValue((FXint)(FXival)ptr);
   return 1;
   }
 
@@ -350,7 +350,7 @@ long FXSlider::onLeftBtnPress(FXObject*,FXSelector,void* ptr){
     if(p>range[1]) p=range[1];
     if(p!=pos){
       setValue(p);
-      if(target) target->handle(this,MKUINT(message,SEL_CHANGED),(void*)pos);
+      if(target) target->handle(this,MKUINT(message,SEL_CHANGED),(void*)(FXival)pos);
       flags|=FLAG_CHANGED;
       }
     flags&=~FLAG_UPDATE;
@@ -370,9 +370,9 @@ long FXSlider::onLeftBtnRelease(FXObject*,FXSelector,void* ptr){
     flags&=~FLAG_PRESSED;
     flags&=~FLAG_CHANGED;
     flags|=FLAG_UPDATE;
-    if(target && target->handle(this,MKUINT(message,SEL_LEFTBUTTONPRESS),ptr)) return 1;
+    if(target && target->handle(this,MKUINT(message,SEL_LEFTBUTTONRELEASE),ptr)) return 1;
     if(flgs&FLAG_CHANGED){
-      if(target) target->handle(this,MKUINT(message,SEL_COMMAND),(void*)pos);
+      if(target) target->handle(this,MKUINT(message,SEL_COMMAND),(void*)(FXival)pos);
       }
     return 1;
     }
@@ -424,7 +424,7 @@ long FXSlider::onMotion(FXObject*,FXSelector,void* ptr){
     if(p>range[1]) p=range[1];
     if(pos!=p){
       pos=p;
-      if(target) target->handle(this,MKUINT(message,SEL_CHANGED),(void*)pos);
+      if(target) target->handle(this,MKUINT(message,SEL_CHANGED),(void*)(FXival)pos);
       flags|=FLAG_CHANGED;
       }
     return 1;
@@ -440,7 +440,7 @@ long FXSlider::onMiddleBtnPress(FXObject*,FXSelector,void* ptr){
   flags&=~FLAG_TIP;
   if(isEnabled()){
     grab();
-    if(target && target->handle(this,MKUINT(message,SEL_MIDDLEBUTTONRELEASE),ptr)) return 1;
+    if(target && target->handle(this,MKUINT(message,SEL_MIDDLEBUTTONPRESS),ptr)) return 1;
     dragpoint=headsize/2;
     yy=border+padtop+2;
     xx=border+padleft+2;
@@ -480,7 +480,7 @@ long FXSlider::onMiddleBtnPress(FXObject*,FXSelector,void* ptr){
     if(p>range[1]) p=range[1];
     if(p!=pos){
       pos=p;
-      if(target) target->handle(this,MKUINT(message,SEL_CHANGED),(void*)pos);
+      if(target) target->handle(this,MKUINT(message,SEL_CHANGED),(void*)(FXival)pos);
       flags|=FLAG_CHANGED;
       }
     flags|=FLAG_PRESSED;
@@ -503,7 +503,7 @@ long FXSlider::onMiddleBtnRelease(FXObject*,FXSelector,void* ptr){
     setValue(pos);                                                 // Hop to exact position
     if(target && target->handle(this,MKUINT(message,SEL_MIDDLEBUTTONRELEASE),ptr)) return 1;
     if(flgs&FLAG_CHANGED){
-      if(target) target->handle(this,MKUINT(message,SEL_COMMAND),(void*)pos);
+      if(target) target->handle(this,MKUINT(message,SEL_COMMAND),(void*)(FXival)pos);
       }
     return 1;
     }
@@ -534,7 +534,7 @@ long FXSlider::onTimeInc(FXObject*,FXSelector,void*){
     }
   if(p!=pos){
     setValue(p);
-    if(target) target->handle(this,MKUINT(message,SEL_CHANGED),(void*)pos);
+    if(target) target->handle(this,MKUINT(message,SEL_CHANGED),(void*)(FXival)pos);
     flags|=FLAG_CHANGED;
     return 1;
     }
@@ -554,7 +554,7 @@ long FXSlider::onTimeDec(FXObject*,FXSelector,void*){
     }
   if(p!=pos){
     setValue(p);
-    if(target) target->handle(this,MKUINT(message,SEL_CHANGED),(void*)pos);
+    if(target) target->handle(this,MKUINT(message,SEL_CHANGED),(void*)(FXival)pos);
     flags|=FLAG_CHANGED;
     return 1;
     }

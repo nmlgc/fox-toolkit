@@ -21,7 +21,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXProgressBar.cpp,v 1.26 2002/01/18 22:43:01 jeroen Exp $                *
+* $Id: FXProgressBar.cpp,v 1.26.4.3 2003/06/20 19:02:07 fox Exp $                *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -135,7 +135,7 @@ void FXProgressBar::detach(){
 
 // Update progress value from a message
 long FXProgressBar::onCmdSetValue(FXObject*,FXSelector,void* ptr){
-  setProgress((FXuint)(long)ptr);
+  setProgress((FXuint)(FXuval)ptr);
   return 1;
   }
 
@@ -193,12 +193,6 @@ long FXProgressBar::onPaint(FXObject*,FXSelector,void *ptr){
       dc.fillArc(tx,ty,d,d,5760,-barfilled);
       }
 
-    // Draw outside circle
-//     dc.setForeground(shadowColor);
-//     dc.drawArc(tx,ty+1,d,d,45*64,135*64);
-//     dc.setForeground(baseColor);
-//     dc.drawArc(tx-1,ty,d,d,270*64,135*64);
-
     dc.setForeground(borderColor);
     dc.drawArc(tx+1,ty,d,d,90*64,45*64);
     dc.drawArc(tx,ty+1,d,d,135*64,45*64);
@@ -213,6 +207,7 @@ long FXProgressBar::onPaint(FXObject*,FXSelector,void *ptr){
 
     // Draw text
     if(options&PROGRESSBAR_PERCENTAGE){
+      dc.setTextFont(font);
       tw=font->getTextWidth("100%",4);
       if(tw>(11*d)/16) return 1;
       th=font->getFontHeight();
@@ -256,6 +251,7 @@ long FXProgressBar::onPaint(FXObject*,FXSelector,void *ptr){
 
     // Draw text
     if(options&PROGRESSBAR_PERCENTAGE){
+      dc.setTextFont(font);
       sprintf(numtext,"%d%%",percent);
       n=strlen(numtext);
       tw=font->getTextWidth(numtext,n);
@@ -308,6 +304,7 @@ long FXProgressBar::onPaint(FXObject*,FXSelector,void *ptr){
 
     // Draw text
     if(options&PROGRESSBAR_PERCENTAGE){
+      dc.setTextFont(font);
       sprintf(numtext,"%d%%",percent);
       n=strlen(numtext);
       tw=font->getTextWidth(numtext,n-1); // Not including the % looks better
@@ -374,29 +371,37 @@ void FXProgressBar::setTotal(FXuint value){
 
 // Change bar color
 void FXProgressBar::setBarColor(FXColor clr){
-  barColor=clr;
-  update(border,border,width-(border<<1),height-(border<<1));
+  if(barColor!=clr){
+    barColor=clr;
+    update(border,border,width-(border<<1),height-(border<<1));
+    }
   }
 
 
 // Change bar background color
 void FXProgressBar::setBarBGColor(FXColor clr){
-  barBGColor=clr;
-  update(border,border,width-(border<<1),height-(border<<1));
+  if(barBGColor!=clr){
+    barBGColor=clr;
+    update(border,border,width-(border<<1),height-(border<<1));
+    }
   }
 
 
 // Change text foreground color
-void FXProgressBar::setTextColor(FXColor clr) {
-  textNumColor=clr;
-  update();
+void FXProgressBar::setTextColor(FXColor clr){
+  if(textNumColor!=clr){
+    textNumColor=clr;
+    update();
+    }
   }
 
 
 // Change alternate text color
 void FXProgressBar::setTextAltColor(FXColor clr) {
-  textAltColor=clr;
-  update();
+  if(textAltColor!=clr){
+    textAltColor=clr;
+    update();
+    }
   }
 
 

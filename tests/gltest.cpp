@@ -18,7 +18,7 @@ const FXuint TIMER_INTERVAL = 100;
 
 
 // Settings dialog thanks to Sander Jansen <sxj@cfdrc.com>
-class FXAPI SettingsDialog : public FXDialogBox {
+class SettingsDialog : public FXDialogBox {
   FXDECLARE(SettingsDialog)
 private:
   SettingsDialog(){}
@@ -149,7 +149,7 @@ SettingsDialog::~SettingsDialog(){
 
 
 // Event Handler Object
-class FXAPI GLTestWindow : public FXMainWindow {
+class GLTestWindow : public FXMainWindow {
   FXDECLARE(GLTestWindow)
 
 private:
@@ -175,7 +175,7 @@ public:
     ID_STOP,
     ID_TIMEOUT,
     ID_CHORE,
-    ID_OPENGL,
+    ID_OPENGL
     };
 
   // Message handlers

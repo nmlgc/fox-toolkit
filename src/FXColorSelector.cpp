@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXColorSelector.cpp,v 1.43 2002/01/18 22:42:58 jeroen Exp $              *
+* $Id: FXColorSelector.cpp,v 1.43.4.1 2003/06/20 19:02:07 fox Exp $              *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -757,7 +757,7 @@ long FXColorSelector::onCmdAlphaSlider(FXObject* sender,FXSelector sel,void*){
   sender->handle(this,MKUINT(ID_GETINTVALUE,SEL_COMMAND),(void*)&value);
   hsva[3]=rgba[3]=0.003921568627f*value;
   updateWell();
-  handle(this,MKUINT(ID_COLOR,SELTYPE(sel)),(void*)well->getRGBA());
+  handle(this,MKUINT(ID_COLOR,SELTYPE(sel)),(void*)(FXuval)well->getRGBA());
   return 1;
   }
 
@@ -768,7 +768,7 @@ long FXColorSelector::onCmdAlphaText(FXObject* sender,FXSelector,void*){
   sender->handle(this,MKUINT(ID_GETREALVALUE,SEL_COMMAND),(void*)&value);
   hsva[3]=rgba[3]=0.003921568627f*value;
   updateWell();
-  handle(this,MKUINT(ID_COLOR,SEL_COMMAND),(void*)well->getRGBA());
+  handle(this,MKUINT(ID_COLOR,SEL_COMMAND),(void*)(FXuval)well->getRGBA());
   return 1;
   }
 
@@ -825,7 +825,7 @@ long FXColorSelector::onCmdWheel(FXObject*,FXSelector sel,void*){
   //hsva[2]=wheel->getVal();
   fxhsv_to_rgb(rgba[0],rgba[1],rgba[2],hsva[0],hsva[1],hsva[2]);
   updateWell();
-  handle(this,MKUINT(ID_COLOR,SELTYPE(sel)),(void*)well->getRGBA());
+  handle(this,MKUINT(ID_COLOR,SELTYPE(sel)),(void*)(FXuval)well->getRGBA());
   return 1;
   }
 
@@ -846,7 +846,7 @@ long FXColorSelector::onCmdBar(FXObject*,FXSelector sel,void*){
   hsva[2]=bar->getVal();
   fxhsv_to_rgb(rgba[0],rgba[1],rgba[2],hsva[0],hsva[1],hsva[2]);
   updateWell();
-  handle(this,MKUINT(ID_COLOR,SELTYPE(sel)),(void*)well->getRGBA());
+  handle(this,MKUINT(ID_COLOR,SELTYPE(sel)),(void*)(FXuval)well->getRGBA());
   return 1;
   }
 
@@ -870,7 +870,7 @@ long FXColorSelector::onCmdRGBSlider(FXObject*,FXSelector sel,void*){
   rgba[which]=0.003921568627f*rgbaslider[which]->getValue();
   fxrgb_to_hsv(hsva[0],hsva[1],hsva[2],rgba[0],rgba[1],rgba[2]);
   updateWell();
-  handle(this,MKUINT(ID_COLOR,SELTYPE(sel)),(void*)well->getRGBA());
+  handle(this,MKUINT(ID_COLOR,SELTYPE(sel)),(void*)(FXuval)well->getRGBA());
   return 1;
   }
 
@@ -881,7 +881,7 @@ long FXColorSelector::onCmdRGBText(FXObject*,FXSelector sel,void*){
   rgba[which]=0.003921568627f*FXFloatVal(rgbatext[which]->getText());
   fxrgb_to_hsv(hsva[0],hsva[1],hsva[2],rgba[0],rgba[1],rgba[2]);
   updateWell();
-  handle(this,MKUINT(ID_COLOR,SEL_COMMAND),(void*)well->getRGBA());
+  handle(this,MKUINT(ID_COLOR,SEL_COMMAND),(void*)(FXuval)well->getRGBA());
   return 1;
   }
 
@@ -914,7 +914,7 @@ long FXColorSelector::onCmdHSVSlider(FXObject*,FXSelector sel,void*){
   hsva[which]=factor[which]*hsvaslider[which]->getValue();
   fxhsv_to_rgb(rgba[0],rgba[1],rgba[2],hsva[0],hsva[1],hsva[2]);
   updateWell();
-  handle(this,MKUINT(ID_COLOR,SELTYPE(sel)),(void*)well->getRGBA());
+  handle(this,MKUINT(ID_COLOR,SELTYPE(sel)),(void*)(FXuval)well->getRGBA());
   return 1;
   }
 
@@ -926,7 +926,7 @@ long FXColorSelector::onCmdHSVText(FXObject*,FXSelector sel,void*){
   hsva[which]=factor[which]*FXFloatVal(hsvatext[which]->getText());
   fxhsv_to_rgb(rgba[0],rgba[1],rgba[2],hsva[0],hsva[1],hsva[2]);
   updateWell();
-  handle(this,MKUINT(ID_COLOR,SEL_COMMAND),(void*)well->getRGBA());
+  handle(this,MKUINT(ID_COLOR,SEL_COMMAND),(void*)(FXuval)well->getRGBA());
   return 1;
   }
 
@@ -960,7 +960,7 @@ long FXColorSelector::onCmdCMYSlider(FXObject*,FXSelector sel,void*){
   fxrgb_to_hsv(hsva[0],hsva[1],hsva[2],rgba[0],rgba[1],rgba[2]);
   hsva[3]=rgba[3];
   updateWell();
-  handle(this,MKUINT(ID_COLOR,SELTYPE(sel)),(void*)well->getRGBA());
+  handle(this,MKUINT(ID_COLOR,SELTYPE(sel)),(void*)(FXuval)well->getRGBA());
   return 1;
   }
 
@@ -972,7 +972,7 @@ long FXColorSelector::onCmdCMYText(FXObject*,FXSelector sel,void*){
   fxrgb_to_hsv(hsva[0],hsva[1],hsva[2],rgba[0],rgba[1],rgba[2]);
   hsva[3]=rgba[3];
   updateWell();
-  handle(this,MKUINT(ID_COLOR,SEL_COMMAND),(void*)well->getRGBA());
+  handle(this,MKUINT(ID_COLOR,SEL_COMMAND),(void*)(FXuval)well->getRGBA());
   return 1;
   }
 
@@ -1000,7 +1000,7 @@ long FXColorSelector::onCmdColorPick(FXObject*,FXSelector,void* ptr){
   FXPoint *point=(FXPoint*)ptr;
   FXDCWindow dc(getRoot());
   setRGBA(dc.readPixel(point->x,point->y));
-  handle(this,MKUINT(ID_COLOR,SEL_COMMAND),(void*)well->getRGBA());
+  handle(this,MKUINT(ID_COLOR,SEL_COMMAND),(void*)(FXuval)well->getRGBA());
   return 1;
   }
 
@@ -1010,7 +1010,7 @@ long FXColorSelector::onCmdColorPick(FXObject*,FXSelector,void* ptr){
 
 // Dropped color in main well
 long FXColorSelector::onChgWell(FXObject*,FXSelector,void* ptr){
-  FXColor color=(FXColor)(long)ptr;
+  FXColor color=(FXColor)(FXuval)ptr;
   if(isOpaqueOnly()) color|=FXRGBA(0,0,0,255);
   rgba[0]=0.003921568627f*FXREDVAL(color);
   rgba[1]=0.003921568627f*FXGREENVAL(color);
@@ -1024,7 +1024,7 @@ long FXColorSelector::onChgWell(FXObject*,FXSelector,void* ptr){
 
 // Command from main well
 long FXColorSelector::onCmdWell(FXObject*,FXSelector,void*){
-  handle(this,MKUINT(ID_COLOR,SEL_COMMAND),(void*)well->getRGBA());
+  handle(this,MKUINT(ID_COLOR,SEL_COMMAND),(void*)(FXuval)well->getRGBA());
   return 1;
   }
 
@@ -1040,7 +1040,7 @@ void FXColorSelector::updateWell(){
 
 // Clicked on color in list
 long FXColorSelector::onCmdList(FXObject*,FXSelector,void* ptr){
-  FXint index=(FXint)(long)ptr;
+  FXint index=(FXint)(FXival)ptr;
   FXColor clr=fxcolornames[index].color;
   if(isOpaqueOnly()) clr|=FXRGBA(0,0,0,255);
   rgba[0]=0.003921568627f*FXREDVAL(clr);
@@ -1050,7 +1050,7 @@ long FXColorSelector::onCmdList(FXObject*,FXSelector,void* ptr){
   fxrgb_to_hsv(hsva[0],hsva[1],hsva[2],rgba[0],rgba[1],rgba[2]);
   hsva[3]=rgba[3];
   updateWell();
-  handle(this,MKUINT(ID_COLOR,SEL_COMMAND),(void*)well->getRGBA());
+  handle(this,MKUINT(ID_COLOR,SEL_COMMAND),(void*)(FXuval)well->getRGBA());
   return 1;
   }
 
@@ -1060,7 +1060,7 @@ long FXColorSelector::onCmdList(FXObject*,FXSelector,void* ptr){
 
 // Custom well changed
 long FXColorSelector::onChgCustomWell(FXObject*,FXSelector sel,void* ptr){
-  FXColor color=(FXColor)(long)ptr;
+  FXColor color=(FXColor)(FXuval)ptr;
   FXuint which=SELID(sel)-ID_CUSTOM_FIRST;
   FXASSERT(which<24);
   getApp()->reg().writeColorEntry("SETTINGS",wellname[which],color);
@@ -1070,17 +1070,17 @@ long FXColorSelector::onChgCustomWell(FXObject*,FXSelector sel,void* ptr){
 
 // Custom well clicked
 long FXColorSelector::onCmdCustomWell(FXObject*,FXSelector,void* ptr){
-  FXColor color=(FXColor)(long)ptr;
+  FXColor color=(FXColor)(FXuval)ptr;
   if(isOpaqueOnly()) color|=FXRGBA(0,0,0,255);
   setRGBA(color);
-  handle(this,MKUINT(ID_COLOR,SEL_COMMAND),(void*)well->getRGBA());
+  handle(this,MKUINT(ID_COLOR,SEL_COMMAND),(void*)(FXuval)well->getRGBA());
   return 1;
   }
 
 
 // Switching active pane
 long FXColorSelector::onCmdActivePane(FXObject*,FXSelector,void* ptr){
-  getApp()->reg().writeIntEntry("SETTINGS","activecolorpane",(FXint)(long)ptr);
+  getApp()->reg().writeIntEntry("SETTINGS","activecolorpane",(FXint)(FXival)ptr);
   return 1;
   }
 
@@ -1090,21 +1090,21 @@ long FXColorSelector::onCmdActivePane(FXObject*,FXSelector,void* ptr){
 
 // Forward to target
 long FXColorSelector::onCmdColor(FXObject*,FXSelector,void*){
-  if(target) target->handle(this,MKUINT(message,SEL_COMMAND),(void*)well->getRGBA());
+  if(target) target->handle(this,MKUINT(message,SEL_COMMAND),(void*)(FXuval)well->getRGBA());
   return 1;
   }
 
 
 // Forward to target
 long FXColorSelector::onChgColor(FXObject*,FXSelector,void*){
-  if(target) target->handle(this,MKUINT(message,SEL_CHANGED),(void*)well->getRGBA());
+  if(target) target->handle(this,MKUINT(message,SEL_CHANGED),(void*)(FXuval)well->getRGBA());
   return 1;
   }
 
 
 // Set color
 long FXColorSelector::onCmdSetValue(FXObject*,FXSelector,void* ptr){
-  setRGBA((FXColor)(long)ptr);
+  setRGBA((FXColor)(FXuval)ptr);
   return 1;
   }
 

@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXOptionMenu.cpp,v 1.32 2002/01/18 22:43:01 jeroen Exp $                 *
+* $Id: FXOptionMenu.cpp,v 1.32.4.2 2003/06/20 19:02:07 fox Exp $                 *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -503,8 +503,6 @@ long FXOptionMenu::onLeftBtnPress(FXObject*,FXSelector,void* ptr){
         handle(this,MKUINT(ID_POST,SEL_COMMAND),NULL);
         }
       }
-    flags|=FLAG_PRESSED;
-    flags&=~FLAG_UPDATE;
     return 1;
     }
   return 0;
@@ -516,8 +514,6 @@ long FXOptionMenu::onLeftBtnRelease(FXObject*,FXSelector,void* ptr){
   FXEvent* ev=(FXEvent*)ptr;
   flags&=~FLAG_TIP;
   if(isEnabled()){
-    flags|=FLAG_UPDATE;
-    flags&=~FLAG_PRESSED;
     if(target && target->handle(this,MKUINT(message,SEL_LEFTBUTTONRELEASE),ptr)) return 1;
     if(ev->moved && pane){ handle(this,MKUINT(ID_UNPOST,SEL_COMMAND),NULL); }
     return 1;
@@ -555,6 +551,7 @@ long FXOptionMenu::onCmdPost(FXObject*,FXSelector,void*){
     pane->popup(this,x,y,width,pane->getDefaultHeight());
     current->setFocus();
     if(!grabbed()) grab();
+    flags&=~FLAG_UPDATE;
     }
   return 1;
   }
@@ -566,6 +563,7 @@ long FXOptionMenu::onCmdUnpost(FXObject*,FXSelector,void* ptr){
   if(pane && pane->shown()){
     pane->popdown();
     if(grabbed()) ungrab();
+    flags|=FLAG_UPDATE;
     if(ptr) setCurrent((FXOption*)ptr);
     }
   return 1;
@@ -574,7 +572,7 @@ long FXOptionMenu::onCmdUnpost(FXObject*,FXSelector,void* ptr){
 
 // Update value from a message
 long FXOptionMenu::onCmdSetValue(FXObject*,FXSelector,void* ptr){
-  setCurrentNo((FXint)(long)ptr);
+  setCurrentNo((FXint)(FXival)ptr);
   return 1;
   }
 

@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXColorWell.cpp,v 1.40 2002/01/18 22:42:58 jeroen Exp $                  *
+* $Id: FXColorWell.cpp,v 1.40.4.1 2003/06/20 19:02:07 fox Exp $                  *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -258,7 +258,7 @@ long FXColorWell::onDNDLeave(FXObject* sender,FXSelector sel,void* ptr){
   if(FXFrame::onDNDLeave(sender,sel,ptr)) return 1;
   flags|=FLAG_UPDATE;
   if(oldrgba!=rgba){
-    handle(this,MKUINT(0,SEL_CHANGED),(void*)oldrgba);
+    handle(this,MKUINT(0,SEL_CHANGED),(void*)(FXuval)oldrgba);
     }
   return 1;
   }
@@ -278,7 +278,7 @@ long FXColorWell::onDNDMotion(FXObject* sender,FXSelector sel,void* ptr){
   if(getDNDData(FROM_DRAGNDROP,colorType,(FXuchar*&)clr,len)){
     color=FXRGBA((clr[0]+128)/257,(clr[1]+128)/257,(clr[2]+128)/257,(clr[3]+128)/257);
     FXFREE(&clr);
-    handle(this,MKUINT(0,SEL_CHANGED),(void*)color);
+    handle(this,MKUINT(0,SEL_CHANGED),(void*)(FXuval)color);
     acceptDrop(DRAG_COPY);
     return 1;
     }
@@ -291,7 +291,7 @@ long FXColorWell::onDNDMotion(FXObject* sender,FXSelector sel,void* ptr){
 
     // Accept the drop only if it was a valid color name
     if(color!=FXRGBA(0,0,0,0)){
-      handle(this,MKUINT(0,SEL_CHANGED),(void*)color);
+      handle(this,MKUINT(0,SEL_CHANGED),(void*)(FXuval)color);
       acceptDrop(DRAG_COPY);
       return 1;
       }
@@ -310,7 +310,7 @@ long FXColorWell::onDNDDrop(FXObject* sender,FXSelector sel,void* ptr){
 
   // Now send the command because the drop was finalized
   if(oldrgba!=rgba){
-    handle(this,MKUINT(0,SEL_COMMAND),(void*)rgba);
+    handle(this,MKUINT(0,SEL_COMMAND),(void*)(FXuval)rgba);
     oldrgba=rgba;
     return 1;
     }
@@ -475,14 +475,14 @@ long FXColorWell::onLeftBtnRelease(FXObject*,FXSelector,void* ptr){
     if(target && target->handle(this,MKUINT(message,SEL_LEFTBUTTONRELEASE),ptr)) return 1;
     if(flgs&FLAG_DODRAG){handle(this,MKUINT(0,SEL_ENDDRAG),ptr);}
     if(event->click_count==1){
-      handle(this,MKUINT(0,SEL_CLICKED),(void*)rgba);
-      if(!event->moved){handle(this,MKUINT(0,SEL_COMMAND),(void*)rgba);}
+      handle(this,MKUINT(0,SEL_CLICKED),(void*)(FXuval)rgba);
+      if(!event->moved){handle(this,MKUINT(0,SEL_COMMAND),(void*)(FXuval)rgba);}
       }
     else if(event->click_count==2){
-      handle(this,MKUINT(0,SEL_DOUBLECLICKED),(void*)rgba);
+      handle(this,MKUINT(0,SEL_DOUBLECLICKED),(void*)(FXuval)rgba);
       }
     else if(event->click_count==3){
-      handle(this,MKUINT(0,SEL_TRIPLECLICKED),(void*)rgba);
+      handle(this,MKUINT(0,SEL_TRIPLECLICKED),(void*)(FXuval)rgba);
       }
     return 1;
     }
@@ -514,8 +514,8 @@ long FXColorWell::onMiddleBtnRelease(FXObject*,FXSelector,void* ptr){
     if(getDNDData(FROM_SELECTION,colorType,(FXuchar*&)clr,len)){
       color=FXRGBA((clr[0]+128)/257,(clr[1]+128)/257,(clr[2]+128)/257,(clr[3]+128)/257);
       FXFREE(&clr);
-      handle(this,MKUINT(0,SEL_CHANGED),(void*)color);
-      handle(this,MKUINT(0,SEL_COMMAND),(void*)color);
+      handle(this,MKUINT(0,SEL_CHANGED),(void*)(FXuval)color);
+      handle(this,MKUINT(0,SEL_COMMAND),(void*)(FXuval)color);
       return 1;
       }
 
@@ -524,8 +524,8 @@ long FXColorWell::onMiddleBtnRelease(FXObject*,FXSelector,void* ptr){
       FXRESIZE(&str,FXchar,len+1); str[len]='\0';
       color=fxcolorfromname(str);
       FXFREE(&str);
-      handle(this,MKUINT(0,SEL_CHANGED),(void*)color);
-      handle(this,MKUINT(0,SEL_COMMAND),(void*)color);
+      handle(this,MKUINT(0,SEL_CHANGED),(void*)(FXuval)color);
+      handle(this,MKUINT(0,SEL_COMMAND),(void*)(FXuval)color);
       return 1;
       }
     }
@@ -559,12 +559,12 @@ long FXColorWell::onKeyRelease(FXObject*,FXSelector,void* ptr){
     if(target && target->handle(this,MKUINT(message,SEL_KEYRELEASE),ptr)) return 1;
     switch(event->code){
       case KEY_space:
-        handle(this,MKUINT(0,SEL_CLICKED),(void*)rgba);
-        handle(this,MKUINT(0,SEL_COMMAND),(void*)rgba);
+        handle(this,MKUINT(0,SEL_CLICKED),(void*)(FXuval)rgba);
+        handle(this,MKUINT(0,SEL_COMMAND),(void*)(FXuval)rgba);
         return 1;
       case KEY_KP_Enter:
       case KEY_Return:
-        handle(this,MKUINT(0,SEL_DOUBLECLICKED),(void*)rgba);
+        handle(this,MKUINT(0,SEL_DOUBLECLICKED),(void*)(FXuval)rgba);
         return 1;
       }
     }
@@ -574,10 +574,10 @@ long FXColorWell::onKeyRelease(FXObject*,FXSelector,void* ptr){
 
 // Change color value
 long FXColorWell::onChanged(FXObject*,FXSelector,void* ptr){
-  FXColor clr=(FXColor)(long)ptr;
+  FXColor clr=(FXColor)(FXuval)ptr;
   if(clr!=rgba){
     setRGBA(clr);
-    if(target) target->handle(this,MKUINT(message,SEL_CHANGED),(void*)rgba);
+    if(target) target->handle(this,MKUINT(message,SEL_CHANGED),(void*)(FXuval)rgba);
     }
   return 1;
   }
@@ -585,7 +585,7 @@ long FXColorWell::onChanged(FXObject*,FXSelector,void* ptr){
 
 // Command from cell
 long FXColorWell::onCommand(FXObject*,FXSelector,void*){
-  return target && target->handle(this,MKUINT(message,SEL_COMMAND),(void*)rgba);
+  return target && target->handle(this,MKUINT(message,SEL_COMMAND),(void*)(FXuval)rgba);
   }
 
 
@@ -593,7 +593,7 @@ long FXColorWell::onCommand(FXObject*,FXSelector,void*){
 long FXColorWell::onClicked(FXObject*,FXSelector,void*){
   FXDragType types[2];
 
-  if(target && target->handle(this,MKUINT(message,SEL_CLICKED),(void*)rgba)) return 1;
+  if(target && target->handle(this,MKUINT(message,SEL_CLICKED),(void*)(FXuval)rgba)) return 1;
 
   // Double click means claim selection
   if(!hasSelection()){
@@ -609,7 +609,7 @@ long FXColorWell::onClicked(FXObject*,FXSelector,void*){
 long FXColorWell::onDoubleClicked(FXObject*,FXSelector,void*){
 
   // Double click
-  if(target && target->handle(this,MKUINT(message,SEL_DOUBLECLICKED),(void*)rgba)) return 1;
+  if(target && target->handle(this,MKUINT(message,SEL_DOUBLECLICKED),(void*)(FXuval)rgba)) return 1;
 
   // Can not be edited
   if(options&COLORWELL_SOURCEONLY) return 1;
@@ -624,8 +624,8 @@ long FXColorWell::onDoubleClicked(FXObject*,FXSelector,void*){
 
   // We canceled, so restore the old color
   if(!colordialog.execute()){
-    handle(this,MKUINT(0,SEL_CHANGED),(void*)oldcolor);
-    handle(this,MKUINT(0,SEL_COMMAND),(void*)oldcolor);
+    handle(this,MKUINT(0,SEL_CHANGED),(void*)(FXuval)oldcolor);
+    handle(this,MKUINT(0,SEL_COMMAND),(void*)(FXuval)oldcolor);
     }
   return 1;
   }
@@ -633,7 +633,7 @@ long FXColorWell::onDoubleClicked(FXObject*,FXSelector,void*){
 
 // Triple clicked in well, to edit its color; only if not a source-only well
 long FXColorWell::onTripleClicked(FXObject*,FXSelector,void*){
-  return target && target->handle(this,MKUINT(message,SEL_TRIPLECLICKED),(void*)rgba);
+  return target && target->handle(this,MKUINT(message,SEL_TRIPLECLICKED),(void*)(FXuval)rgba);
   }
 
 
@@ -650,7 +650,7 @@ long FXColorWell::onUngrabbed(FXObject* sender,FXSelector sel,void* ptr){
 // Change from another Color Well
 long FXColorWell::onChgColorWell(FXObject*,FXSelector,void* ptr){
   flags&=~FLAG_UPDATE;
-  setRGBA((FXColor)(long)ptr);
+  setRGBA((FXColor)(FXuval)ptr);
   if(target) target->handle(this,MKUINT(message,SEL_CHANGED),ptr);
   return 1;
   }
@@ -658,7 +658,7 @@ long FXColorWell::onChgColorWell(FXObject*,FXSelector,void* ptr){
 
 // Command from another Color Well
 long FXColorWell::onCmdColorWell(FXObject*,FXSelector,void* ptr){
-  setRGBA((FXColor)(long)ptr);
+  setRGBA((FXColor)(FXuval)ptr);
   if(target) target->handle(this,MKUINT(message,SEL_COMMAND),ptr);
   flags|=FLAG_UPDATE;
   return 1;
@@ -699,7 +699,7 @@ void FXColorWell::setRGBA(FXColor clr){
 
 // Set color
 long FXColorWell::onCmdSetValue(FXObject*,FXSelector,void* ptr){
-  setRGBA((FXColor)(long)ptr);
+  setRGBA((FXColor)(FXuval)ptr);
   return 1;
   }
 

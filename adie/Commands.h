@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: Commands.h,v 1.5 2002/02/27 05:12:45 fox Exp $                           *
+* $Id: Commands.h,v 1.5.4.1 2002/04/30 13:13:07 fox Exp $                           *
 ********************************************************************************/
 #ifndef COMMANDS_H
 #define COMMANDS_H
@@ -31,7 +31,7 @@ class FXText;
 
 
 // Undo record for text fragment
-class FXAPI FXTextCommand : public FXCommand {
+class FXTextCommand : public FXCommand {
 protected:
   FXText *text;     // Text widget
   FXchar *buffer;   // Character buffer
@@ -46,7 +46,7 @@ public:
 
 
 // Insert command
-class FXAPI FXTextInsert : public FXTextCommand {
+class FXTextInsert : public FXTextCommand {
 public:
   FXTextInsert(FXText* txt,FXint p,FXint ni);
   virtual FXString undoName() const { return "Undo insert"; }
@@ -57,7 +57,7 @@ public:
 
 
 // Delete command
-class FXAPI FXTextDelete : public FXTextCommand {
+class FXTextDelete : public FXTextCommand {
 public:
   FXTextDelete(FXText* txt,FXint p,FXint nd);
   virtual FXString undoName() const { return "Undo delete"; }

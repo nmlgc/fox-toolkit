@@ -5,7 +5,7 @@
 *********************************************************************************
 * Copyright (C) 2000 by Jeroen van der Zijp.   All Rights Reserved.             *
 *********************************************************************************
-* $Id: imageviewer.cpp,v 1.75 2002/01/22 23:12:53 jeroen Exp $                  *
+* $Id: imageviewer.cpp,v 1.75.4.1 2003/06/20 19:02:07 fox Exp $                  *
 ********************************************************************************/
 #include "fx.h"
 #ifdef HAVE_PNG_H
@@ -571,7 +571,7 @@ long ImageWindow::onCmdRecentFile(FXObject*,FXSelector,void* ptr){
 
 // Command from the tree list
 long ImageWindow::onCmdFileList(FXObject*,FXSelector,void* ptr){
-  FXint index=(FXint)(long)ptr;
+  FXint index=(FXint)(FXival)ptr;
   if(0<=index){
     if(filelist->isItemDirectory(index)){
       filelist->setDirectory(filelist->getItemPathname(index));

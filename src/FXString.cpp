@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXString.cpp,v 1.64 2002/02/27 20:48:36 fox Exp $                        *
+* $Id: FXString.cpp,v 1.64.4.3 2003/01/09 18:35:37 fox Exp $                        *
 ********************************************************************************/
 #ifdef HAVE_VSSCANF
 #ifndef _GNU_SOURCE
@@ -1098,30 +1098,20 @@ FXStream& operator>>(FXStream& store,FXString& s){
 FXString& FXString::vformat(const char *fmt,va_list args){
   register FXint len=0;
   if(fmt && *fmt){
-    register FXint s=strlen(fmt);
-#if (__GLIBC__ > 2) || (__GLIBC__ == 2 && __GLIBC_MINOR__ >= 1)
-    s+=128;                    // Add a bit of slop
-    while(1){
-      size(s+1);
-      len=vsnprintf(str,s+1,fmt,args)+1;
-      if(len<=s) break;
-      s=len;
-      }
-#elif (__GLIBC__ == 2) || defined(WIN32)
-    s+=128;                    // Add a bit of slop
-    do{
-      size(s+1);
-      len=vsnprintf(str,s+1,fmt,args)+1;
-      s<<=1;                  // Double the buffer size if it didn't fit
-      }
-    while(len<=0);
+    register FXint s=strlen(fmt);       // Result is longer than format string
+#if (__GLIBC__ >= 2) || defined(WIN32)
+    s+=128;
+x:  size(s);
+    len=vsnprintf(str,s,fmt,args);
+    if(len<0){ s<<=1; goto x; }         // Some implementations return -1 if not enough room
+    if(s<=len){ s=len+1; goto x; }      // Others return how much space would be needed
 #else
-    s+=1024;                  // Add a lot of slop
-    size(s+1);
-    len=vsprintf(str,fmt,args)+1;
+    s+=1024;                            // Add a lot of slop
+    size(s);
+    len=vsprintf(str,fmt,args);
 #endif
     }
-  size(len);
+  size(len+1);
   return *this;
   }
 

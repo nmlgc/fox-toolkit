@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXDragCorner.cpp,v 1.17 2002/01/18 22:42:59 jeroen Exp $                 *
+* $Id: FXDragCorner.cpp,v 1.17.4.1 2002/07/17 01:58:32 fox Exp $                 *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -180,15 +180,19 @@ long FXDragCorner::onMotion(FXObject*,FXSelector,void* ptr){
 
 // Set highlight color
 void FXDragCorner::setHiliteColor(FXColor clr){
-  hiliteColor=clr;
-  update();
+  if(hiliteColor!=clr){
+    hiliteColor=clr;
+    update();
+    }
   }
 
 
 // Set shadow color
 void FXDragCorner::setShadowColor(FXColor clr){
-  shadowColor=clr;
-  update();
+  if(shadowColor!=clr){
+    shadowColor=clr;
+    update();
+    }
   }
 
 

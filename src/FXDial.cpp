@@ -21,7 +21,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXDial.cpp,v 1.18 2002/01/18 22:42:59 jeroen Exp $                       *
+* $Id: FXDial.cpp,v 1.18.4.1 2003/06/20 19:02:07 fox Exp $                       *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -138,7 +138,7 @@ long FXDial::onQueryTip(FXObject* sender,FXSelector,void*){
 
 // Update value from a message
 long FXDial::onCmdSetValue(FXObject*,FXSelector,void* ptr){
-  setValue((FXint)(long)ptr);
+  setValue((FXint)(FXival)ptr);
   return 1;
   }
 
@@ -229,7 +229,7 @@ long FXDial::onLeftBtnRelease(FXObject*,FXSelector,void* ptr){
     flags&=~FLAG_PRESSED;
     if(target && target->handle(this,MKUINT(message,SEL_LEFTBUTTONRELEASE),ptr)) return 1;
     if(flags&FLAG_CHANGED){
-      if(target) target->handle(this,MKUINT(message,SEL_COMMAND),(void*)pos);
+      if(target) target->handle(this,MKUINT(message,SEL_COMMAND),(void*)(FXival)pos);
       }
     flags&=~FLAG_CHANGED;
     return 1;
@@ -279,7 +279,7 @@ long FXDial::onMotion(FXObject*,FXSelector,void* ptr){
         notchangle=(notchoffset+(3600*(pos-range[0]))/incr)%3600;
         update(border+padleft+1,border+padtop+1,width-(border<<1)-padleft-padright-2,height-(border<<1)-padtop-padbottom-2);
         flags|=FLAG_CHANGED;
-        if(target) target->handle(this,MKUINT(message,SEL_CHANGED),(void*)pos);
+        if(target) target->handle(this,MKUINT(message,SEL_CHANGED),(void*)(FXival)pos);
         return 1;
         }
       }
@@ -318,8 +318,8 @@ long FXDial::onMouseWheel(FXObject*,FXSelector,void* ptr){
       FXASSERT(range[0]<=pos && pos<=range[1]);
       notchangle=(notchoffset+(3600*(pos-range[0]))/incr)%3600;
       update(border+padleft+1,border+padtop+1,width-(border<<1)-padleft-padright-2,height-(border<<1)-padtop-padbottom-2);
-      if(target) target->handle(this,MKUINT(message,SEL_CHANGED),(void*)pos);
-      if(target) target->handle(this,MKUINT(message,SEL_COMMAND),(void*)pos);
+      if(target) target->handle(this,MKUINT(message,SEL_CHANGED),(void*)(FXival)pos);
+      if(target) target->handle(this,MKUINT(message,SEL_COMMAND),(void*)(FXival)pos);
       return 1;
       }
     }

@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXComboBox.cpp,v 1.21 2002/01/18 22:42:59 jeroen Exp $                   *
+* $Id: FXComboBox.cpp,v 1.21.4.1 2003/06/20 19:02:07 fox Exp $                   *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -201,8 +201,8 @@ long FXComboBox::onFwdToText(FXObject* sender,FXSelector sel,void* ptr){
 // Forward clicked message from list to target
 long FXComboBox::onListClicked(FXObject*,FXSelector,void* ptr){
   button->handle(this,MKUINT(ID_UNPOST,SEL_COMMAND),NULL);    // Unpost the list
-  if(0<=((FXint)(long)ptr)){
-    field->setText(list->getItemText((FXint)(long)ptr));
+  if(0<=((FXint)(FXival)ptr)){
+    field->setText(list->getItemText((FXint)(FXival)ptr));
     if(target){target->handle(this,MKUINT(message,SEL_COMMAND),(void*)getText().text());}
     }
   return 1;

@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXToolbar.cpp,v 1.61 2002/01/18 22:43:06 jeroen Exp $                    *
+* $Id: FXToolbar.cpp,v 1.61.4.1 2002/10/03 06:08:48 fox Exp $                    *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -472,7 +472,7 @@ void FXToolbar::setDockingSide(FXuint side){
 
 // Get toolbar orientation
 FXuint FXToolbar::getDockingSide() const {
-  return (options&LAYOUT_SIDE_MASK)!=0;
+  return (options&LAYOUT_SIDE_MASK);
   }
 
 

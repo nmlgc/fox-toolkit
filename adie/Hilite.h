@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: Hilite.h,v 1.11 2002/01/25 14:23:10 jeroen Exp $                         *
+* $Id: Hilite.h,v 1.11.4.1 2002/04/30 13:13:07 fox Exp $                         *
 ********************************************************************************/
 #ifndef HILITE_H
 #define HILITE_H
@@ -31,7 +31,7 @@ struct HLNode;
 
 
 // Highlight engine
-class FXAPI Hilite {
+class Hilite {
 private:
   HLNode  *root;  // Root of all syntax nodes
 private:
@@ -44,13 +44,13 @@ public:
 
   // Stylize text
   void stylize(const FXchar* text,FXchar *style,FXint fm,FXint to) const;
-  
+
   // Stylize text from given node
   void stylize(const FXchar* text,FXchar *style,FXint fm,FXint to,const HLNode* start) const;
 
   // Append highlight pattern
   HLNode *append(const FXchar* pattern,FXint style,FXint priority=0,FXint context=0,HLNode *parent=NULL);
-  
+
   // Remove highlight pattern
   void remove(HLNode* node);
 
@@ -59,25 +59,25 @@ public:
 
   // Find pattern node by style
   HLNode *find(FXint style) const;
-  
+
   // Get top node
   HLNode *top() const { return root; }
 
   // Style of the pattern node
   FXint style(HLNode *node) const;
-  
+
   // Context of the pattern node
   FXint context(HLNode *node) const;
-  
+
   // Get parent of pattern node
   HLNode *parent(HLNode *node) const;
-  
+
   // Get first alternative of pattern node
   HLNode *alternative(HLNode *node) const;
-  
+
   // Get subnode of pattern node
   HLNode *sub(HLNode *node) const;
-  
+
   // Clean up
   ~Hilite();
   };

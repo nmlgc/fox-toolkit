@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: fx3d.h,v 1.5 2002/01/18 22:42:55 jeroen Exp $                            *
+* $Id: fx3d.h,v 1.5.4.1 2003/04/08 14:06:03 fox Exp $                            *
 ********************************************************************************/
 #ifndef FX3D_H
 #define FX3D_H
@@ -33,6 +33,12 @@
 #endif
 #ifdef HAVE_OPENGL
 #include <GL/gl.h>
+#ifndef GLAPIENTRY
+#define GLAPIENTRY
+#endif
+#ifndef GLAPI
+#define GLAPI
+#endif
 #include <GL/glu.h>
 #endif
 

@@ -4,7 +4,6 @@
 *                                                                               *
 *********************************************************************************
 * Author: Janusz Ganczarski (POWER)   Email: JanuszG@enter.net.pl               *
-*                                     WWW: http://www.januszg.hg.pl             *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -20,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: fxtargaio.cpp,v 1.3 2002/01/21 19:26:59 jeroen Exp $                     *
+* $Id: fxtargaio.cpp,v 1.3.4.2 2002/06/27 13:22:36 fox Exp $                    *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -58,13 +57,12 @@ static FXbool loadTarga32(FXStream& store,FXuchar* data,FXint width,FXint height
     // Origin in upper left-hand corner
     if((imgdescriptor&0x20)==0x20){
       for(i=0; i<height; i++){
-        pp=data+(i*width*3);
         for(j=0; j<width; j++){
-          store >> pp[2];       // Blue
-          store >> pp[1];       // Green
-          store >> pp[0];       // Red
-          store >> pp[3];       // Alpha
-          pp += 4;
+          store >> data[2];       // Blue
+          store >> data[1];       // Green
+          store >> data[0];       // Red
+          store >> data[3];       // Alpha
+          data += 4;
           }
         }
       }
@@ -194,12 +192,11 @@ static FXbool loadTarga24(FXStream& store,FXuchar* data,FXint width,FXint height
     // Origin in upper left-hand corner
     if((imgdescriptor & 0x20) == 0x20){
       for(i=0; i<height; i++){
-        pp=data+(i*width*3);
         for(j=0; j<width; j++){
-          store >> pp[2];       // Blue
-          store >> pp[1];       // Green
-          store >> pp[0];       // Red
-          pp+=3;
+          store >> data[2];       // Blue
+          store >> data[1];       // Green
+          store >> data[0];       // Red
+          data+=3;
           }
         }
       }
@@ -312,7 +309,7 @@ static FXbool loadTarga16(FXStream& store,FXuchar* data,FXint width,FXint height
   int i,j,rc;
   FXuchar *pp,c;
   FXuchar R,G,B;
-  FXuint bgr16;
+  FXuint rgb16;
 
   // 2 - Uncompressed, RGB images.
   if(ImageType==2){
@@ -321,10 +318,10 @@ static FXbool loadTarga16(FXStream& store,FXuchar* data,FXint width,FXint height
     if((imgdescriptor&0x20)==0x20){
       for(i=0; i<height; i++){
         for(j=0; j<width; j++){
-          bgr16=read16(store);
-          *data++=(bgr16&0x7c00) << 1;  // Red
-          *data++=(bgr16&0x03e0) << 6;  // Green
-          *data++=(bgr16&0x001f) << 11; // Blue
+          rgb16=read16(store);
+          *data++=((rgb16 >> 10) & 0x1F) << 3; // R
+          *data++=((rgb16 >> 5) & 0x1F) << 3;  // G
+          *data++=(rgb16 & 0x1F) << 3;         // B
           }
         }
       }
@@ -333,10 +330,10 @@ static FXbool loadTarga16(FXStream& store,FXuchar* data,FXint width,FXint height
       for(i=height-1; i>=0; i--){
         pp=data+(i*width*3);
         for(j=0; j<width; j++){
-          bgr16=read16(store);
-          *pp++=(bgr16&0x7c00) << 1;  // Red
-          *pp++=(bgr16&0x03e0) << 6;  // Green
-          *pp++=(bgr16&0x001f) << 11; // Blue
+          rgb16=read16(store);
+          *pp++=((rgb16 >> 10) & 0x1F) << 3; // R
+          *pp++=((rgb16 >> 5) & 0x1F) << 3;  // G
+          *pp++=(rgb16 & 0x1F) << 3;         // B
           }
         }
       }
@@ -360,12 +357,12 @@ static FXbool loadTarga16(FXStream& store,FXuchar* data,FXint width,FXint height
             j+=rc;
 
             // read Pixel Value field -
-            bgr16 = read16 (store);
+            rgb16 = read16 (store);
 
             // get R, G, B values
-            R=(bgr16&0x7c00) << 1;  // Red
-            G=(bgr16&0x03e0) << 6;  // Green
-            B=(bgr16&0x001f) << 11; // Blue
+            R=((rgb16 >> 10) & 0x1F) << 3; // R
+            G=((rgb16 >> 5) & 0x1F) << 3;  // G
+            B=(rgb16 & 0x1F) << 3;         // B
             while(rc--){
               *data++=R; // Red
               *data++=G; // Green
@@ -378,10 +375,10 @@ static FXbool loadTarga16(FXStream& store,FXuchar* data,FXint width,FXint height
             rc=c+1;
             j+=rc;
             while(rc--){
-              bgr16=read16(store);
-              *data++=(bgr16&0x7c00) << 1;  // Red
-              *data++=(bgr16&0x03e0) << 6;  // Green
-              *data++=(bgr16&0x001f) << 11; // Blue
+              rgb16=read16(store);
+              *data++=((rgb16 >> 10) & 0x1F) << 3; // R
+              *data++=((rgb16 >> 5) & 0x1F) << 3;  // G
+              *data++=(rgb16 & 0x1F) << 3;         // B
               }
             }
           }
@@ -404,12 +401,12 @@ static FXbool loadTarga16(FXStream& store,FXuchar* data,FXint width,FXint height
             j+=rc;
 
             // read Pixel Value field
-            bgr16=read16(store);
+            rgb16=read16(store);
 
             // get R, G, B values
-            R=(bgr16&0x7c00) << 1;  // Red
-            G=(bgr16&0x03e0) << 6;  // Green
-            B=(bgr16&0x001f) << 11; // Blue
+            R=((rgb16 >> 10) & 0x1F) << 3; // R
+            G=((rgb16 >> 5) & 0x1F) << 3;  // G
+            B=(rgb16 & 0x1F) << 3;         // B
             while(rc--){
               *pp++=R; // Red
               *pp++=G; // Green
@@ -422,10 +419,10 @@ static FXbool loadTarga16(FXStream& store,FXuchar* data,FXint width,FXint height
             rc=c+1;
             j+=rc;
             while(rc--){
-              bgr16=read16(store);
-              *pp++=(bgr16&0x7c00) << 1;  // Red
-              *pp++=(bgr16&0x03e0) << 6;  // Green
-              *pp++=(bgr16&0x001f) << 11; // Blue
+              rgb16=read16(store);
+              *pp++=((rgb16 >> 10) & 0x1F) << 3; // R
+              *pp++=((rgb16 >> 5) & 0x1F) << 3;  // G
+              *pp++=(rgb16 & 0x1F) << 3;         // B
               }
             }
           }
@@ -773,9 +770,9 @@ FXbool fxloadTGA(FXStream& store,FXuchar*& data,FXuint& channels,FXint& width,FX
       case 16:
         for(i=0; i<ColorMapLength; i++){
           rgb16 = read16 (store);
-          colormap[i*3] = (rgb16 & 0x7c00) << 1;
-          colormap[i*3+1] = (rgb16 & 0x03e0) << 6;
-          colormap[i*3+2] = (rgb16 & 0x001f) << 11;
+          colormap[i*3] = (rgb16 & 0x1F) << 3;           // B
+          colormap[i*3+1] = ((rgb16 >> 5) & 0x1F) << 3;  // G
+          colormap[i*3+2] = ((rgb16 >> 10) & 0x1F) << 3; // R
           }
         break;
 

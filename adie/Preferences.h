@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: Preferences.h,v 1.21 2002/02/20 07:02:12 fox Exp $                       *
+* $Id: Preferences.h,v 1.21.4.1 2002/04/30 13:13:07 fox Exp $                       *
 ********************************************************************************/
 #ifndef PREFERENCES_H
 #define PREFERENCES_H
@@ -31,7 +31,7 @@
 class TextWindow;
 
 
-class FXAPI Preferences : public FXDialogBox {
+class Preferences : public FXDialogBox {
   FXDECLARE(Preferences)
 protected:
   FXText          *filepattext;
@@ -69,13 +69,13 @@ public:
   long onUpdStyleDelete(FXObject*,FXSelector,void*);
   long onCmdStyleColor(FXObject*,FXSelector,void*);
   long onUpdStyleColor(FXObject*,FXSelector,void*);
-  
+
   long onCmdLangIndex(FXObject*,FXSelector,void*);
   long onCmdLangNew(FXObject*,FXSelector,void*);
   long onCmdLangDelete(FXObject*,FXSelector,void*);
   long onCmdLangChanged(FXObject*,FXSelector,void*);
   long onUpdLangSelected(FXObject*,FXSelector,void*);
-  
+
   long onCmdSyntaxLang(FXObject*,FXSelector,void*);
   long onCmdSyntaxIndex(FXObject*,FXSelector,void*);
   long onCmdSyntaxNew(FXObject*,FXSelector,void*);
@@ -102,7 +102,7 @@ public:
     ID_LANG_NEW,
     ID_LANG_DELETE,
     ID_LANG_CHANGED,
-    
+
     ID_SYNTAX_LANG,
     ID_SYNTAX_INDEX,
     ID_SYNTAX_NEW,
@@ -112,19 +112,19 @@ public:
     ID_LAST
     };
 public:
-  
+
   // Create preferences dialog
   Preferences(TextWindow *owner);
 
   // Owner is text window
   TextWindow* getOwner() const { return (TextWindow*)FXDialogBox::getOwner(); }
-  
+
   // Set filename patterns
   void setPatterns(const FXString& patterns);
-  
+
   // Get filename patterns
   FXString getPatterns() const;
-  
+
   // Clean up
   virtual ~Preferences();
   };

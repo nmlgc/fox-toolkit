@@ -12,4 +12,5 @@ reswrap_SOURCES	= reswrap.cpp
 EXTRA_DIST      = $(man_MANS) \
                   maketree \
                   Makefile.bc \
-                  Makefile.icc
+                  Makefile.icc \
+                  Makefile.dmc

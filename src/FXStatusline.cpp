@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXStatusline.cpp,v 1.14 2002/01/18 22:43:04 jeroen Exp $                 *
+* $Id: FXStatusline.cpp,v 1.14.4.1 2002/07/17 01:58:32 fox Exp $                 *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -221,15 +221,19 @@ void FXStatusline::setFont(FXFont* fnt){
 
 // Set text color
 void FXStatusline::setTextColor(FXColor clr){
-  textColor=clr;
-  update(border,border,width-(border<<1),height-(border<<1));
+  if(textColor!=clr){
+    textColor=clr;
+    update(border,border,width-(border<<1),height-(border<<1));
+    }
   }
 
 
 // Set text highlight color
 void FXStatusline::setTextHighlightColor(FXColor clr){
-  textHighlightColor=clr;
-  update(border,border,width-(border<<1),height-(border<<1));
+  if(textHighlightColor!=clr){
+    textHighlightColor=clr;
+    update(border,border,width-(border<<1),height-(border<<1));
+    }
   }
 
 

@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXMDIChild.cpp,v 1.36 2002/01/18 22:43:01 jeroen Exp $                   *
+* $Id: FXMDIChild.cpp,v 1.36.4.1 2002/07/17 01:58:32 fox Exp $                   *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -1121,43 +1121,55 @@ long FXMDIChild::onUpdMenuWindow(FXObject* sender,FXSelector,void*){
 
 // Set base color
 void FXMDIChild::setBaseColor(FXColor clr){
-  baseColor=clr;
-  update();
+  if(baseColor!=clr){
+    baseColor=clr;
+    update();
+    }
   }
 
 
 // Set highlight color
 void FXMDIChild::setHiliteColor(FXColor clr){
-  hiliteColor=clr;
-  update();
+  if(hiliteColor!=clr){
+    hiliteColor=clr;
+    update();
+    }
   }
 
 
 // Set shadow color
 void FXMDIChild::setShadowColor(FXColor clr){
-  shadowColor=clr;
-  update();
+  if(shadowColor!=clr){
+    shadowColor=clr;
+    update();
+    }
   }
 
 
 // Set border color
 void FXMDIChild::setBorderColor(FXColor clr){
-  borderColor=clr;
-  update();
+  if(borderColor!=clr){
+    borderColor=clr;
+    update();
+    }
   }
 
 
 // Set title color
 void FXMDIChild::setTitleColor(FXColor clr){
-  titleColor=clr;
-  update();
+  if(titleColor!=clr){
+    titleColor=clr;
+    update();
+    }
   }
 
 
 // Set title color
 void FXMDIChild::setTitleBackColor(FXColor clr){
-  titleBackColor=clr;
-  update();
+  if(titleBackColor!=clr){
+    titleBackColor=clr;
+    update();
+    }
   }
 
 

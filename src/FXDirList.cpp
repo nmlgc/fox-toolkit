@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXDirList.cpp,v 1.63 2002/02/26 04:51:43 fox Exp $                    *
+* $Id: FXDirList.cpp,v 1.63.4.5 2003/05/01 18:02:01 fox Exp $                   *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -981,7 +981,8 @@ FXbool FXDirList::scanRootDir(FXbool relist){
 
     // Refresh subitems of root if necessary
     if(stat(pathname,&info)==0){
-      filetime=FXMAX(info.st_mtime,info.st_ctime);
+      filetime=info.st_mtime;
+      if(filetime<0) filetime=0;
       if(relist || (item->date!=filetime) || ((filetime==0) && (counter==0))){
         if(listSubDir(item,pathname)){
           sortChildItems(item);
@@ -1023,7 +1024,8 @@ FXbool FXDirList::scanSubDir(FXDirItem *par,FXchar *pathname,FXbool relist){
 
         // Refresh subitems of item if necessary
         if(stat(pathname,&info)==0){
-          filetime=FXMAX(info.st_mtime,info.st_ctime);
+          filetime=info.st_mtime;
+          if(filetime<0) filetime=0;
           if(relist || (item->date!=filetime) || ((filetime==0) && (counter==0))){
             if(listSubDir(item,pathname)){
               sortChildItems(item);
@@ -1077,7 +1079,12 @@ FXbool FXDirList::listSubDir(FXDirItem *par,FXchar *pathname){
     if(!ISPATHSEP(*(pathtail-1))) *pathtail++=PATHSEP;
 
     // Process directory entries
+#ifdef FOX_THREAD_SAFE
+    struct fxdirent dirresult;
+    while(readdir_r(dirp,&dirresult,&dp)==0 && dp){
+#else
     while((dp=readdir(dirp))!=NULL){
+#endif
       name=dp->d_name;
 
       // A dot special file?
@@ -1100,7 +1107,8 @@ FXbool FXDirList::listSubDir(FXDirItem *par,FXchar *pathname){
       if(!S_ISDIR(info.st_mode) && !((options&DIRLIST_SHOWFILES) && fxfilematch(pattern.text(),name,matchmode))) continue;
 
       // File change/mod time
-      filetime=FXMAX(info.st_mtime,info.st_ctime);
+      filetime=info.st_mtime;
+      if(filetime<0) filetime=0;
 
       // Find it
       for(item=before; item; item=item->inext){
@@ -1110,9 +1118,9 @@ FXbool FXDirList::listSubDir(FXDirItem *par,FXchar *pathname){
             before=before->inext;
             if(it->prev) it->prev->next=it->next; else it->parent->first=it->next;
             if(it->next) it->next->prev=it->prev; else it->parent->last=it->prev;
+            removeItems(it->first,it->last);
             if(currentitem==it) currentitem=NULL;
             if(anchoritem==it) anchoritem=NULL;
-            removeItems(it->first,it->last);
             changed=TRUE;
             delete it;
             }
@@ -1217,9 +1225,9 @@ fnd:  item->iprev=after;
     before=before->inext;
     if(it->prev) it->prev->next=it->next; else it->parent->first=it->next;
     if(it->next) it->next->prev=it->prev; else it->parent->last=it->prev;
+    removeItems(it->first,it->last);
     if(currentitem==it) currentitem=NULL;
     if(anchoritem==it) anchoritem=NULL;
-    removeItems(it->first,it->last);
     changed=TRUE;
     delete it;
     }
@@ -1358,20 +1366,20 @@ FXbool FXDirList::scanRootDir(FXbool relist){
     // Refresh subitems of root if necessary
     hFile=CreateFile(pathname,GENERIC_READ,0,NULL,OPEN_EXISTING,FILE_FLAG_BACKUP_SEMANTICS,NULL);
     if(hFile!=INVALID_HANDLE_VALUE){
-      if(GetFileTime(hFile,NULL,NULL,&ftLastWriteTime)){
-
-        // Convert
-        filetime=fxfiletime(ftLastWriteTime);
-
-        if(relist || (item->date!=filetime) || (filetime==0) && (counter==0)){
-          if(listSubDir(item,pathname)){
-            sortChildItems(item);
-            changed=TRUE;
-            }
-          }
-        item->date=filetime;
-        }
+      GetFileTime(hFile,NULL,NULL,&ftLastWriteTime);
       CloseHandle(hFile);
+
+      // Convert
+      filetime=fxfiletime(ftLastWriteTime);
+      if(filetime<0) filetime=0;
+
+      if(relist || (item->date!=filetime) || (filetime==0) && (counter==0)){
+        if(listSubDir(item,pathname)){
+          sortChildItems(item);
+          changed=TRUE;
+          }
+        }
+      item->date=filetime;
       }
 
     // Then check subdirectories
@@ -1407,20 +1415,20 @@ FXbool FXDirList::scanSubDir(FXDirItem *par,FXchar *pathname,FXbool relist){
         // Refresh subitems of item if necessary
         hFile=CreateFile(pathname,GENERIC_READ,0,NULL,OPEN_EXISTING,FILE_FLAG_BACKUP_SEMANTICS,NULL);
         if(hFile!=INVALID_HANDLE_VALUE){
-          if(GetFileTime(hFile,NULL,NULL,&ftLastWriteTime)){
-
-            // Convert
-            filetime=fxfiletime(ftLastWriteTime);
-
-            if(relist || (item->date!=filetime) || ((filetime==0) && (counter==0))){
-              if(listSubDir(item,pathname)){
-                sortChildItems(item);
-                changed=TRUE;
-                }
-              }
-            item->date=filetime;
-            }
+          GetFileTime(hFile,NULL,NULL,&ftLastWriteTime);
           CloseHandle(hFile);
+
+          // Convert
+          filetime=fxfiletime(ftLastWriteTime);
+          if(filetime<0) filetime=0;
+
+          if(relist || (item->date!=filetime) || ((filetime==0) && (counter==0))){
+            if(listSubDir(item,pathname)){
+              sortChildItems(item);
+              changed=TRUE;
+              }
+            }
+          item->date=filetime;
           }
 
         // Then check subdirectories
@@ -1483,6 +1491,7 @@ FXbool FXDirList::listSubDir(FXDirItem *par,FXchar *pathname){
 
       // Convert it
       filetime=fxfiletime(ffData.ftLastWriteTime);
+      if(filetime<0) filetime=0;
 
       // Find it
       for(item=before; item; item=item->inext){
@@ -1492,9 +1501,9 @@ FXbool FXDirList::listSubDir(FXDirItem *par,FXchar *pathname){
             before=before->inext;
             if(it->prev) it->prev->next=it->next; else it->parent->first=it->next;
             if(it->next) it->next->prev=it->prev; else it->parent->last=it->prev;
+            removeItems(it->first,it->last);
             if(currentitem==it) currentitem=NULL;
             if(anchoritem==it) anchoritem=NULL;
-            removeItems(it->first,it->last);
             changed=TRUE;
             delete it;
             }
@@ -1602,9 +1611,9 @@ fnd:  item->iprev=after;
     before=before->inext;
     if(it->prev) it->prev->next=it->next; else it->parent->first=it->next;
     if(it->next) it->next->prev=it->prev; else it->parent->last=it->prev;
+    removeItems(it->first,it->last);
     if(currentitem==it) currentitem=NULL;
     if(anchoritem==it) anchoritem=NULL;
-    removeItems(it->first,it->last);
     changed=TRUE;
     delete it;
     }

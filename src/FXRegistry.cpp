@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXRegistry.cpp,v 1.32 2002/01/23 18:53:58 jeroen Exp $                   *
+* $Id: FXRegistry.cpp,v 1.32.4.1 2003/05/16 10:54:30 fox Exp $                   *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -549,6 +549,7 @@ FXbool FXRegistry::writeToRegistryGroup(void* org,const char* groupname){
   FXStringDict *group;
   if(RegCreateKeyEx((HKEY)org,groupname,0,REG_NONE,REG_OPTION_NON_VOLATILE,KEY_WRITE|KEY_READ,NULL,&groupkey,&disp)==ERROR_SUCCESS){
 
+/*
     // First, purge all existing sections
     sectionindex=0;
     sectionsize=MAXNAME;
@@ -556,6 +557,14 @@ FXbool FXRegistry::writeToRegistryGroup(void* org,const char* groupname){
       RegDeleteKey(groupkey,section);
       sectionsize=MAXNAME;
       sectionindex++;
+      }
+*/
+    // First, purge all existing sections
+    while(1){
+      sectionindex=0;
+      sectionsize=MAXNAME;
+      if(RegEnumKeyEx(groupkey,sectionindex,section,&sectionsize,NULL,NULL,NULL,&writetime)!=ERROR_SUCCESS) break;
+      RegDeleteKey(groupkey,section);
       }
 
     // Dump the registry, writing only marked entries

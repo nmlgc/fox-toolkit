@@ -21,7 +21,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXDCPrint.cpp,v 1.26 2002/01/18 22:42:59 jeroen Exp $                    *
+* $Id: FXDCPrint.cpp,v 1.26.4.1 2003/03/27 20:34:43 fox Exp $                    *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -710,7 +710,11 @@ void FXDCPrint::drawText(FXint x,FXint y,const FXchar* string,FXuint len){
   outf("%d scalefont\n",font->getSize()/10);
   outf("setfont\n");
   outf("newpath\n%g %g moveto\n(",xx,yy);
-  for(int i=0; i<len; i++) outf("%c",string[i]);
+  for(FXuint i=0; i<len; i++){ 
+    if(string[i]=='(') outf("\\050"); 
+    else if(string[i]==')') outf("\\051"); 
+    else outf("%c",string[i]);
+    } 
   outf(") show\n");
   outf("grestore\n");
   }

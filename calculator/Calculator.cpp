@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: Calculator.cpp,v 1.36 2001/12/13 17:26:50 jeroen Exp $                   *
+* $Id: Calculator.cpp,v 1.36.4.2 2003/06/20 19:02:07 fox Exp $                   *
 ********************************************************************************/
 #include "fx.h"
 #include "fxkeys.h"
@@ -947,34 +947,6 @@ static FXdouble combinations(FXdouble n,FXdouble r){
   }
 
 
-// Repair missing functions for Windows
-#ifdef WIN32
-
-static double sgn1(double x){
-  return x >= 0.0 ? 1.0 : -1.0;
-  }
-
-static double __log1p(double x){
-  return log(x+1.0);
-  }
-
-static double asinh(double x){
-  register double y=fabs(x);
-  return __log1p((y*y/(sqrt(y*y+1.0)+1.0)+y)*sgn1(x));
-  }
-
-static double acosh(double x){
-  return log(x+sqrt(x-1.0)*sqrt(x+1.0));
-  }
-
-
-static double atanh(double x){
-  register double y=fabs(x);
-  return -0.5*__log1p(-(y+y)/(1.0+y))*sgn1(x);
-  }
-
-#endif
-
 // Reset calculator
 void Calculator::clearAll(){
   setDisplayValue(0.0);
@@ -1074,13 +1046,16 @@ void Calculator::unary(FXuchar op){
       acc=tanh(val);
       break;
     case UN_ASINH:
-      acc=asinh(val);
+      acc=log(val+sqrt(val*val+1.0));   // Tired of #ifdef's:- just expand definitions (Abramowitz & Stegun, pp. 87)
+      //acc=asinh(val);
       break;
     case UN_ACOSH:
-      acc=acosh(val);
+      acc=log(val+sqrt(val*val-1.0));   // Same here
+      //acc=acosh(val);
       break;
     case UN_ATANH:
-      acc=atanh(val);
+      acc=0.5*log((1.0+val)/(1.0-val)); // And here
+      //acc=atanh(val);
     default:
       break;
     }
@@ -1112,7 +1087,7 @@ void Calculator::dyop(FXuchar op){
     case DY_ADD:
       acc=acc+val;
       break;
-    case DY_MOD:                // Theo Veenker <Theo.Veenker@let.uu.nl> suggested this new definition of "mod": 
+    case DY_MOD:                // Theo Veenker <Theo.Veenker@let.uu.nl> suggested this new definition of "mod":
       val=fabs(val);            // x = a div |b|        ; with a round toward 0
       acc=fmod(acc,val);        // y = a mod |b|
       break;                    // a = x * |b| + y
@@ -1220,7 +1195,7 @@ long Calculator::onCmdPreferences(FXObject*,FXSelector,void*){
 
 // Change colors
 long Calculator::onCmdColor(FXObject*,FXSelector sel,void* ptr){
-  FXColor clr=(FXColor)(long)ptr;
+  FXColor clr=(FXColor)(FXuval)ptr;
   switch(SELID(sel)){
     case ID_COLOR_DISPLAY: setDisplayColor(clr); break;
     case ID_COLOR_DIGITS: setDigitColor(clr); break;

@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXHeader.cpp,v 1.31 2002/01/18 22:43:00 jeroen Exp $                     *
+* $Id: FXHeader.cpp,v 1.31.4.2 2003/06/20 19:02:07 fox Exp $                     *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -329,7 +329,7 @@ FXint FXHeader::replaceItem(FXint index,FXHeaderItem* item,FXbool notify){
   if(index<0 || nitems<=index){ fxerror("%s::replaceItem: index out of range.\n",getClassName()); }
 
   // Notify item will be replaced
-  if(notify && target){target->handle(this,MKUINT(message,SEL_REPLACED),(void*)index);}
+  if(notify && target){target->handle(this,MKUINT(message,SEL_REPLACED),(void*)(FXival)index);}
 
   // Copy the size over
   item->setSize(items[index]->getSize());
@@ -368,7 +368,7 @@ FXint FXHeader::insertItem(FXint index,FXHeaderItem* item,FXbool notify){
   nitems++;
 
   // Notify item has been inserted
-  if(notify && target){target->handle(this,MKUINT(message,SEL_INSERTED),(void*)index);}
+  if(notify && target){target->handle(this,MKUINT(message,SEL_INSERTED),(void*)(FXival)index);}
 
   // Redo layout
   recalc();
@@ -413,7 +413,7 @@ void FXHeader::removeItem(FXint index,FXbool notify){
   if(index<0 || nitems<=index){ fxerror("%s::removeItem: index out of range.\n",getClassName()); }
 
   // Notify item will be deleted
-  if(notify && target){target->handle(this,MKUINT(message,SEL_DELETED),(void*)index);}
+  if(notify && target){target->handle(this,MKUINT(message,SEL_DELETED),(void*)(FXival)index);}
 
   // Remove item from list
   nitems--;
@@ -429,8 +429,8 @@ void FXHeader::removeItem(FXint index,FXbool notify){
 void FXHeader::clearItems(FXbool notify){
 
   // Delete items
-  for(FXint index=0; index<nitems; index++){
-    if(notify && target){target->handle(this,MKUINT(message,SEL_DELETED),(void*)index);}
+  for(FXint index=nitems-1; 0<=index; index--){
+    if(notify && target){target->handle(this,MKUINT(message,SEL_DELETED),(void*)(FXival)index);}
     delete items[index];
     }
 
@@ -787,7 +787,7 @@ long FXHeader::onLeftBtnRelease(FXObject*,FXSelector,void* ptr){
       if(!(options&HEADER_TRACKING)){
         drawSplit(activepos+activesize);
         setItemSize(active,activesize);
-        if(target) target->handle(this,MKUINT(message,SEL_CHANGED),(void*)active);
+        if(target) target->handle(this,MKUINT(message,SEL_CHANGED),(void*)(FXival)active);
         }
       flags&=~FLAG_DODRAG;
       }
@@ -797,7 +797,7 @@ long FXHeader::onLeftBtnRelease(FXObject*,FXSelector,void* ptr){
         update(0,activepos,width,activesize);
       else
         update(activepos,0,activesize,height);
-      if(target) target->handle(this,MKUINT(message,SEL_COMMAND),(void*)active);
+      if(target) target->handle(this,MKUINT(message,SEL_COMMAND),(void*)(FXival)active);
       }
     return 1;
     }
@@ -836,7 +836,7 @@ long FXHeader::onMotion(FXObject*,FXSelector,void* ptr){
           }
         else{
           setItemSize(active,activesize);
-          if(target) target->handle(this,MKUINT(message,SEL_CHANGED),(void*)active);
+          if(target) target->handle(this,MKUINT(message,SEL_CHANGED),(void*)(FXival)active);
           }
         }
       }

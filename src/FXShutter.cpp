@@ -21,7 +21,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXShutter.cpp,v 1.18 2002/01/18 22:43:04 jeroen Exp $                    *
+* $Id: FXShutter.cpp,v 1.18.4.2 2003/06/20 19:02:07 fox Exp $                    *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -144,7 +144,7 @@ FXDEFMAP(FXShutter) FXShutterMap[]={
 
 
 // Object implementation
-FXIMPLEMENT(FXShutter,FXPacker,FXShutterMap,ARRAYNUMBER(FXShutterMap))
+FXIMPLEMENT(FXShutter,FXVerticalFrame,FXShutterMap,ARRAYNUMBER(FXShutterMap))
 
 
 // Make shutter
@@ -172,9 +172,10 @@ long FXShutter::onFocusDown(FXObject* sender,FXSelector sel,void* ptr){
   return FXVerticalFrame::onFocusNext(sender,sel,ptr);
   }
 
+
 // Update value from a message
 long FXShutter::onCmdSetValue(FXObject*,FXSelector,void* ptr){
-  setCurrent((FXint)(long)ptr);
+  setCurrent((FXint)(FXival)ptr);
   return 1;
   }
 
@@ -221,7 +222,7 @@ long FXShutter::onOpenItem(FXObject* sender,FXSelector,void*){
     closingHeight=closingItem->getHeight();
     closingHadScrollbar=closingItem->scrollWindow->verticalScrollbar()->shown();
     timer=getApp()->addTimeout(getApp()->getAnimSpeed(),this,FXShutter::ID_SHUTTER_TIMEOUT);
-    if(target) target->handle(this,MKUINT(message,SEL_COMMAND),(void*)current);
+    if(target) target->handle(this,MKUINT(message,SEL_COMMAND),(void*)(FXival)current);
     }
   return 1;
   }

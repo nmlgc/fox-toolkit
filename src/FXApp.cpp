@@ -21,7 +21,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXApp.cpp,v 1.359 2002/02/27 05:18:56 fox Exp $                          *
+* $Id: FXApp.cpp,v 1.359.4.5 2003/06/20 19:02:07 fox Exp $                          *
 ********************************************************************************/
 #ifdef WIN32
 #if _WIN32_WINNT < 0x0400
@@ -845,12 +845,17 @@ FXbool FXApp::openDisplay(const FXchar* dpyname){
 
     // Open input method
 #ifndef NO_XIM
+    xic=NULL;
     xim=(void*)XOpenIM((Display*)display,NULL,NULL,NULL);
     if(xim){
+#ifndef _AIX
       xic=XCreateIC((XIM)xim,XNInputStyle,XIMPreeditNothing|XIMStatusNothing,XNClientWindow,XDefaultRootWindow((Display*)display),NULL);
+#else
+      // Suggested by Terry Bezue <terryb@nc.rr.com> for AIX
+      xic=XCreateIC((XIM)xim,XNInputStyle,XIMPreeditNothing|XIMStatusNone,XNClientWindow,XDefaultRootWindow((Display*)display),NULL);
+#endif
       if(xic) XmbResetIC((XIC)xic);
       }
-    if(!xic) fxwarning("%s::openDisplay: unable to initialize input method\n",getClassName());
 #endif
 
     // Window manager communication
@@ -1198,7 +1203,7 @@ void FXApp::signalhandler(int sig){
 // the message to the target right here in the handler; you probably
 // want to use this one only in ``desperate'' situations.
 void FXApp::immediatesignalhandler(int sig){
-  if(app->signals[sig].target) app->signals[sig].target->handle(app,MKUINT(app->signals[sig].message,SEL_SIGNAL),(void*)sig);
+  if(app->signals[sig].target) app->signals[sig].target->handle(app,MKUINT(app->signals[sig].message,SEL_SIGNAL),(void*)(FXival)sig);
   }
 
 
@@ -1589,7 +1594,7 @@ FXbool FXApp::getNextEvent(FXRawEvent& ev,FXbool blocking){
     for(FXint sig=0; sig<MAXSIGNALS; sig++){
       if(signals[sig].notified){
         signals[sig].notified=FALSE;
-        if(signals[sig].target && signals[sig].target->handle(this,MKUINT(signals[sig].message,SEL_SIGNAL),(void*)sig)){
+        if(signals[sig].target && signals[sig].target->handle(this,MKUINT(signals[sig].message,SEL_SIGNAL),(void*)(FXival)sig)){
           refresh();
           return FALSE;
           }
@@ -1737,17 +1742,17 @@ FXbool FXApp::getNextEvent(FXRawEvent& ev,FXbool blocking){
 
         // Check file descriptors
         if(FD_ISSET(fff,&readfds)){
-          if(in.read.target && in.read.target->handle(this,MKUINT(in.read.message,SEL_IO_READ),(void*)fff)){
+          if(in.read.target && in.read.target->handle(this,MKUINT(in.read.message,SEL_IO_READ),(void*)(FXival)fff)){
             refresh();
             }
           }
         if(FD_ISSET(fff,&writefds)){
-          if(in.write.target && in.write.target->handle(this,MKUINT(in.write.message,SEL_IO_WRITE),(void*)fff)){
+          if(in.write.target && in.write.target->handle(this,MKUINT(in.write.message,SEL_IO_WRITE),(void*)(FXival)fff)){
             refresh();
             }
           }
         if(FD_ISSET(fff,&exceptfds)){
-          if(in.excpt.target && in.excpt.target->handle(this,MKUINT(in.read.message,SEL_IO_EXCEPT),(void*)fff)){
+          if(in.excpt.target && in.excpt.target->handle(this,MKUINT(in.read.message,SEL_IO_EXCEPT),(void*)(FXival)fff)){
             refresh();
             }
           }
@@ -2927,6 +2932,11 @@ void FXApp::init(int& argc,char** argv,FXbool connect){
   FXASSERT(sizeof(FXint)==4);
   FXASSERT(sizeof(FXfloat)==4);
   FXASSERT(sizeof(FXdouble)==8);
+#ifdef WIN32
+  FXASSERT(sizeof(HWND)==sizeof(FXID));
+#else
+  FXASSERT(sizeof(Window)==sizeof(FXID));
+#endif
 
   // Long is not always available on all implementations
 #ifdef FX_LONG
@@ -3609,7 +3619,7 @@ return 0;
         tme.dwFlags=TME_LEAVE;
         tme.hwndTrack=(HWND)hwnd;
         tme.dwHoverTime=HOVER_DEFAULT;
-#if __IBMCPP__ ||  defined(__MINGW32__)
+#if __IBMCPP__ ||  defined(__MINGW32__) || defined(__SC__)
         TrackMouseEvent(&tme);
 #else
         _TrackMouseEvent(&tme);

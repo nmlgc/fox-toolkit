@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: fxjpegio.cpp,v 1.25 2002/01/21 19:28:28 jeroen Exp $                     *
+* $Id: fxjpegio.cpp,v 1.25.4.1 2003/07/27 01:15:11 fox Exp $                     *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -119,8 +119,10 @@ static boolean fill_input_buffer(j_decompress_ptr cinfo){
     src->pub.next_input_byte=src->buffer;
     src->pub.bytes_in_buffer=2;
     }
-  src->pub.next_input_byte=src->buffer;
-  src->pub.bytes_in_buffer=1;
+  else{
+    src->pub.next_input_byte=src->buffer;
+    src->pub.bytes_in_buffer=1;
+    }
   return TRUE;
   }
 

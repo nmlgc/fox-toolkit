@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXTabBar.cpp,v 1.4 2002/01/18 22:43:05 jeroen Exp $                      *
+* $Id: FXTabBar.cpp,v 1.4.4.1 2003/06/20 19:02:07 fox Exp $                      *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -270,7 +270,7 @@ void FXTabBar::layout(){
 void FXTabBar::setCurrent(FXint panel,FXbool notify){
   if(0<=panel && panel!=current){
     current=panel;
-    if(notify && target){ target->handle(this,MKUINT(message,SEL_COMMAND),(void*)current); }
+    if(notify && target){ target->handle(this,MKUINT(message,SEL_COMMAND),(void*)(FXival)current); }
     recalc();
     }
   }
@@ -353,7 +353,7 @@ long FXTabBar::onFocusRight(FXObject*,FXSelector,void* ptr){
 
 // Update value from a message
 long FXTabBar::onCmdSetValue(FXObject*,FXSelector,void* ptr){
-  setCurrent((FXint)(long)ptr);
+  setCurrent((FXint)(FXival)ptr);
   return 1;
   }
 

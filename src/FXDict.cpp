@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXDict.cpp,v 1.17 2002/01/23 18:53:58 jeroen Exp $                       *
+* $Id: FXDict.cpp,v 1.17.4.1 2002/03/19 14:11:00 fox Exp $                       *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -297,12 +297,11 @@ void FXDict::clear(){
   register FXint i;
   for(i=0; i<total; i++){
     if(dict[i].hash>=0){
+      dict[i].hash=-1;
       free(dict[i].key);
       deleteData(dict[i].data);
       }
     }
-  FXFREE(&dict);
-  total=0;
   number=0;
   }
 
@@ -310,6 +309,7 @@ void FXDict::clear(){
 // Destroy table
 FXDict::~FXDict(){
   clear();
+  FXFREE(&dict);
   dict=(FXDictEntry*)-1;
   }
 

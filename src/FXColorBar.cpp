@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXColorBar.cpp,v 1.10 2002/01/18 22:42:58 jeroen Exp $                    *
+* $Id: FXColorBar.cpp,v 1.10.4.1 2003/01/16 18:32:07 fox Exp $                    *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -76,7 +76,7 @@ FXColorBar::FXColorBar(){
   }
 
 
-// Make a color well
+// Make a color bar
 FXColorBar::FXColorBar(FXComposite* p,FXObject* tgt,FXSelector sel,FXuint opts,FXint x,FXint y,FXint w,FXint h,FXint pl,FXint pr,FXint pt,FXint pb):
   FXFrame(p,opts,x,y,w,h,pl,pr,pt,pb){
   flags|=FLAG_ENABLED;

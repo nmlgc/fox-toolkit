@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXPacker.cpp,v 1.24 2002/02/02 01:03:41 fox Exp $                     *
+* $Id: FXPacker.cpp,v 1.24.4.1 2002/07/17 01:58:32 fox Exp $                     *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -241,29 +241,37 @@ FXuint FXPacker::getPackingHints() const {
 
 // Set base color
 void FXPacker::setBaseColor(FXColor clr){
-  baseColor=clr;
-  update();
+  if(baseColor!=clr){
+    baseColor=clr;
+    update();
+    }
   }
 
 
 // Set highlight color
 void FXPacker::setHiliteColor(FXColor clr){
-  hiliteColor=clr;
-  update();
+  if(hiliteColor!=clr){
+    hiliteColor=clr;
+    update();
+    }
   }
 
 
 // Set shadow color
 void FXPacker::setShadowColor(FXColor clr){
-  shadowColor=clr;
-  update();
+  if(shadowColor!=clr){
+    shadowColor=clr;
+    update();
+    }
   }
 
 
 // Set border color
 void FXPacker::setBorderColor(FXColor clr){
-  borderColor=clr;
-  update();
+  if(borderColor!=clr){
+    borderColor=clr;
+    update();
+    }
   }
 
 

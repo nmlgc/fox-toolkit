@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: fxdefs.h,v 1.95 2002/02/27 02:27:36 fox Exp $                            *
+* $Id: fxdefs.h,v 1.95.4.3 2003/06/20 19:02:07 fox Exp $                            *
 ********************************************************************************/
 #ifndef FXDEFS_H
 #define FXDEFS_H
@@ -311,16 +311,25 @@ typedef FXObject              *FXObjectPtr;
 #define FX_LONG
 typedef unsigned __int64       FXulong;
 typedef __int64                FXlong;
-#elif defined(__GNUG__) || defined(__GNUC__) || defined(__SUNPRO_CC)
+#elif defined(__GNUG__) || defined(__GNUC__) || defined(__SUNPRO_CC) || defined(__MWERKS__) || defined(__SC__)
 #define FX_LONG
 typedef unsigned long long int FXulong;
 typedef long long int          FXlong;
 #endif
 
 
+// Integral types large enough to hold value of a pointer
+#if defined(_MSC_VER) && defined(_WIN64)
+typedef __int64                FXival;
+typedef unsigned __int64       FXuval;
+#else
+typedef long                   FXival;
+typedef unsigned long          FXuval;
+#endif
+
 // Handle to something in server
 #ifndef WIN32
-typedef unsigned int           FXID;
+typedef unsigned long          FXID;
 #else
 typedef void*                  FXID;
 #endif

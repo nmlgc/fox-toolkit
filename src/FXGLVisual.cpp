@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXGLVisual.cpp,v 1.34 2002/01/18 22:43:00 jeroen Exp $                   *
+* $Id: FXGLVisual.cpp,v 1.34.4.1 2003/02/28 22:46:02 fox Exp $                   *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -337,13 +337,10 @@ void FXGLVisual::create(){
           // Accumulation buffers
           dmatch+=daccred+daccgreen+daccblue+daccalpha;
 
-          // Want alpha
+          // Extra penalty for no alpha if we asked for alpha, but no
+          // penalty at all if there is alpha and we didn't ask for it.
           if(alphaSize>0){
             if(glalpha<1) dmatch+=100000;
-            else dmatch+=dalpha;
-            }
-          else{
-            if(glalpha>0) dmatch+=100000;
             }
 
           // Wanted Z-buffer
@@ -503,9 +500,6 @@ void FXGLVisual::create(){
           // Prefer better Z than asked, but colors more important
           ddepth = gldepth-depthSize; if(ddepth<0) ddepth *= -10;
 
-          // Want the best colors, of course
-          dmatch=dred+dgreen+dblue;
-
           // We care about colors and Z depth more than stencil depth
           dstencil = glstencil-stencilSize; if(dstencil<0) dstencil *= -1;
 
@@ -526,13 +520,10 @@ void FXGLVisual::create(){
             dmatch+=10000;
             }
 
-          // Want alpha
+          // Extra penalty for no alpha if we asked for alpha, but no
+          // penalty at all if there is alpha and we didn't ask for it.
           if(alphaSize>0){
-            if(glalpha<1) dmatch+=1000000;
-            else dmatch+=dalpha;
-            }
-          else{
-            if(glalpha>0) dmatch+=1000000;
+            if(glalpha<1) dmatch+=100000;
             }
 
           // Wanted Z-buffer

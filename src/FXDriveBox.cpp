@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXDriveBox.cpp,v 1.10 2002/02/05 03:59:27 fox Exp $                    *
+* $Id: FXDriveBox.cpp,v 1.10.4.2 2003/06/20 19:02:07 fox Exp $                    *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -408,10 +408,10 @@ void FXDriveBox::listDrives(){
 // Forward clicked message from list to target
 long FXDriveBox::onListClicked(FXObject*,FXSelector,void* ptr){
   button->handle(this,MKUINT(ID_UNPOST,SEL_COMMAND),NULL);    // Unpost the list
-  if(0<=((FXint)(long)ptr)){
-    field->setText(getItemText((FXint)(long)ptr));
-    field->setIcon(getItemIcon((FXint)(long)ptr));
-    if(target){target->handle(this,MKUINT(message,SEL_COMMAND),(void*)getItemText((long)ptr).text());}
+  if(0<=((FXint)(FXival)ptr)){
+    field->setText(getItemText((FXint)(FXival)ptr));
+    field->setIcon(getItemIcon((FXint)(FXival)ptr));
+    if(target){target->handle(this,MKUINT(message,SEL_COMMAND),(void*)getItemText((FXint)(FXival)ptr).text());}
     }
   return 1;
   }
@@ -419,7 +419,7 @@ long FXDriveBox::onListClicked(FXObject*,FXSelector,void* ptr){
 
 // List has changed
 long FXDriveBox::onListChanged(FXObject*,FXSelector,void* ptr){
-  return target && target->handle(this,MKUINT(message,SEL_CHANGED),(void*)getItemText((long)ptr).text());
+  return target && target->handle(this,MKUINT(message,SEL_CHANGED),(void*)getItemText((FXint)(FXival)ptr).text());
   }
 
 
@@ -434,7 +434,7 @@ FXbool FXDriveBox::setDrive(const FXString& drive){
 
 // Return current drive
 FXString FXDriveBox::getDrive() const {
-  return getItemText(getCurrentItem()); 
+  return getItemText(getCurrentItem());
   }
 
 
@@ -470,6 +470,7 @@ void FXDriveBox::load(FXStream& store){
 
 // Delete it
 FXDriveBox::~FXDriveBox(){
+  clearItems();
   delete foldericon;
   delete cdromicon;
   delete desktopicon;

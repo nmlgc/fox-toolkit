@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: Adie.cpp,v 1.67 2002/02/27 05:12:45 fox Exp $                            *
+* $Id: Adie.cpp,v 1.67.4.1 2003/06/20 19:02:07 fox Exp $                            *
 ********************************************************************************/
 #include "fx.h"
 #include "fxkeys.h"
@@ -1868,7 +1868,7 @@ long TextWindow::onUpdWheelAdjust(FXObject* sender,FXSelector,void*){
 
 // Change text color
 long TextWindow::onCmdTextForeColor(FXObject*,FXSelector,void* ptr){
-  editor->setTextColor((FXColor)(long)ptr);
+  editor->setTextColor((FXColor)(FXuval)ptr);
   return 1;
   }
 
@@ -1882,7 +1882,7 @@ long TextWindow::onUpdTextForeColor(FXObject* sender,FXSelector,void*){
 
 // Change text background color
 long TextWindow::onCmdTextBackColor(FXObject*,FXSelector,void* ptr){
-  editor->setBackColor((FXColor)(long)ptr);
+  editor->setBackColor((FXColor)(FXuval)ptr);
   return 1;
   }
 
@@ -1896,7 +1896,7 @@ long TextWindow::onUpdTextBackColor(FXObject* sender,FXSelector,void*){
 
 // Change selected text foreground color
 long TextWindow::onCmdTextSelForeColor(FXObject*,FXSelector,void* ptr){
-  editor->setSelTextColor((FXColor)(long)ptr);
+  editor->setSelTextColor((FXColor)(FXuval)ptr);
   return 1;
   }
 
@@ -1911,7 +1911,7 @@ long TextWindow::onUpdTextSelForeColor(FXObject* sender,FXSelector,void*){
 
 // Change selected text background color
 long TextWindow::onCmdTextSelBackColor(FXObject*,FXSelector,void* ptr){
-  editor->setSelBackColor((FXColor)(long)ptr);
+  editor->setSelBackColor((FXColor)(FXuval)ptr);
   return 1;
   }
 
@@ -1925,7 +1925,7 @@ long TextWindow::onUpdTextSelBackColor(FXObject* sender,FXSelector,void*){
 
 // Change hilight text color
 long TextWindow::onCmdTextHiliteForeColor(FXObject*,FXSelector,void* ptr){
-  editor->setHiliteTextColor((FXColor)(long)ptr);
+  editor->setHiliteTextColor((FXColor)(FXuval)ptr);
   return 1;
   }
 
@@ -1939,7 +1939,7 @@ long TextWindow::onUpdTextHiliteForeColor(FXObject* sender,FXSelector,void*){
 
 // Change hilight text background color
 long TextWindow::onCmdTextHiliteBackColor(FXObject*,FXSelector,void* ptr){
-  editor->setHiliteBackColor((FXColor)(long)ptr);
+  editor->setHiliteBackColor((FXColor)(FXuval)ptr);
   return 1;
   }
 
@@ -1953,7 +1953,7 @@ long TextWindow::onUpdTextHiliteBackColor(FXObject* sender,FXSelector,void*){
 
 // Change active text background color
 long TextWindow::onCmdTextActBackColor(FXObject*,FXSelector,void* ptr){
-  editor->setActiveBackColor((FXColor)(long)ptr);
+  editor->setActiveBackColor((FXColor)(FXuval)ptr);
   return 1;
   }
 
@@ -1967,7 +1967,7 @@ long TextWindow::onUpdTextActBackColor(FXObject* sender,FXSelector,void*){
 
 // Change cursor color
 long TextWindow::onCmdTextCursorColor(FXObject*,FXSelector,void* ptr){
-  editor->setCursorColor((FXColor)(long)ptr);
+  editor->setCursorColor((FXColor)(FXuval)ptr);
   return 1;
   }
 
@@ -1981,7 +1981,7 @@ long TextWindow::onUpdTextCursorColor(FXObject* sender,FXSelector,void*){
 
 // Change line numbers background color
 long TextWindow::onCmdTextBarColor(FXObject*,FXSelector,void* ptr){
-  editor->setBarColor((FXColor)(long)ptr);
+  editor->setBarColor((FXColor)(FXuval)ptr);
   return 1;
   }
 
@@ -1995,7 +1995,7 @@ long TextWindow::onUpdTextBarColor(FXObject* sender,FXSelector,void*){
 
 // Change line numbers color
 long TextWindow::onCmdTextNumberColor(FXObject*,FXSelector,void* ptr){
-  editor->setNumberColor((FXColor)(long)ptr);
+  editor->setNumberColor((FXColor)(FXuval)ptr);
   return 1;
   }
 
@@ -2010,7 +2010,7 @@ long TextWindow::onUpdTextNumberColor(FXObject* sender,FXSelector,void*){
 
 // Change both tree background color
 long TextWindow::onCmdDirBackColor(FXObject*,FXSelector,void* ptr){
-  dirlist->setBackColor((FXColor)(long)ptr);
+  dirlist->setBackColor((FXColor)(FXuval)ptr);
   return 1;
   }
 
@@ -2025,7 +2025,7 @@ long TextWindow::onUpdDirBackColor(FXObject* sender,FXSelector,void*){
 
 // Change both text and tree selected background color
 long TextWindow::onCmdDirSelBackColor(FXObject*,FXSelector,void* ptr){
-  dirlist->setSelBackColor((FXColor)(long)ptr);
+  dirlist->setSelBackColor((FXColor)(FXuval)ptr);
   return 1;
   }
 
@@ -2039,7 +2039,7 @@ long TextWindow::onUpdDirSelBackColor(FXObject* sender,FXSelector,void*){
 
 // Change both text and tree text color
 long TextWindow::onCmdDirForeColor(FXObject*,FXSelector,void* ptr){
-  dirlist->setTextColor((FXColor)(long)ptr);
+  dirlist->setTextColor((FXColor)(FXuval)ptr);
   return 1;
   }
 
@@ -2053,7 +2053,7 @@ long TextWindow::onUpdDirForeColor(FXObject* sender,FXSelector,void*){
 
 // Change both text and tree
 long TextWindow::onCmdDirSelForeColor(FXObject*,FXSelector,void* ptr){
-  dirlist->setSelTextColor((FXColor)(long)ptr);
+  dirlist->setSelTextColor((FXColor)(FXuval)ptr);
   return 1;
   }
 
@@ -2068,7 +2068,7 @@ long TextWindow::onUpdDirSelForeColor(FXObject* sender,FXSelector,void*){
 
 // Change both text and tree
 long TextWindow::onCmdDirLineColor(FXObject*,FXSelector,void* ptr){
-  dirlist->setLineColor((FXColor)(long)ptr);
+  dirlist->setLineColor((FXColor)(FXuval)ptr);
   return 1;
   }
 

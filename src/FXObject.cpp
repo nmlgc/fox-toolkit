@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXObject.cpp,v 1.12 2002/01/18 22:43:01 jeroen Exp $                     *
+* $Id: FXObject.cpp,v 1.12.4.1 2003/08/14 03:44:46 fox Exp $                     *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -38,6 +38,73 @@
   - We need a table of all metaclasses, as we should be able to create any type of
     object during deserialization...
 */
+
+/*******************************************************************************/
+
+
+// Allocate memory
+FXint fxmalloc(void** ptr,unsigned long size){
+  *ptr=NULL;
+  if(size!=0){
+    if((*ptr=malloc(size))==NULL) return FALSE;
+    }
+  return TRUE;
+  }
+
+
+// Allocate cleaned memory
+FXint fxcalloc(void** ptr,unsigned long size){
+  *ptr=NULL;
+  if(size!=0){
+    if((*ptr=calloc(size,1))==NULL) return FALSE;
+    }
+  return TRUE;
+  }
+
+
+// Resize memory
+FXint fxresize(void** ptr,unsigned long size){
+  register void *p=NULL;
+  if(size!=0){
+    if((p=realloc(*ptr,size))==NULL) return FALSE;
+    }
+  else{
+    if(*ptr) free(*ptr);
+    }
+  *ptr=p;
+  return TRUE;
+  }
+
+
+// Allocate and initialize memory
+FXint fxmemdup(void** ptr,unsigned long size,const void* src){
+  *ptr=NULL;
+  if(size!=0 && src!=NULL){
+    if((*ptr=malloc(size))==NULL) return FALSE;
+    memcpy(*ptr,src,size);
+    }
+  return TRUE;
+  }
+
+
+// String duplicate
+FXchar *fxstrdup(const FXchar* str){
+  register FXchar *copy;
+  if(str!=NULL && (copy=(FXchar*)malloc(strlen(str)+1))!=NULL){
+    strcpy(copy,str);
+    return copy;
+    }
+  return NULL;
+  }
+
+
+// Free memory, resets ptr to NULL afterward
+void fxfree(void** ptr){
+  if(*ptr){
+    free(*ptr);
+    *ptr=NULL;
+    }
+  }
 
 
 /*************************  FXMetaClass Implementation  ************************/
