@@ -1,0 +1,351 @@
+<HTML>
+<HEAD>
+<title>FOX</title>
+</HEAD>
+
+<p>
+<center>
+<H1>Welcome to the FOX Home Page</h1>
+</center>
+<p>
+<center>
+Last Update: 2/3/98
+</center>
+<p>
+
+<h3><b>What is FOX?</B></h3>
+<p>
+<b>FOX</b> stands for <b>F</b>ree <b>O</b>bjects for <b>X</b>.  FOX is a C++ Class Library for building GUI's under X.  However, it is one of the design goals to make FOX-based applications themselves
+independent of X, so that they may be ported to other platforms simply by porting FOX itself.
+<p>
+FOX intends to provide a rich, easily extensible and customizable, collection of user-interface 
+widgets with the visual characteristics of Windows. 
+
+<p>
+<h3>Genesis</h3>
+<p>
+I have been terribly unhappy with existing GUI toolkits (XForms, Motif, Xt, etc.), especially
+when working with C++.  As a consequence, I have built <em>C++ wrapper</em> libraries for
+Motif (now part of CFDRC's VCE), and Windows (my own toil and trouble at home). 
+All of those C++ wrapper libraries suffer from the fundamental problem that, as the 
+basic widgets in their original implementation are not implemented using C++, 
+none of the widget behaviour and drawing characteristics can be changed by 
+<em>subclassing</em> and <em>overloading</em>.
+<p>
+As subclassing and overloading are natural things to do in C++, what's needed is a GUI
+toolkit that is designed with such things in mind from the very beginning.  In addition,
+we would like to be <em>closer to the metal</em>, i.e. have fewer layers of software between
+the application and the hardware.  The more layers are involved, the more buggy, bloated, and
+slow a piece of software gets.
+<p>
+Hence, FOX is written directly on top of Xlib.  All widgets in FOX are completely defined
+from C++ objects, and all important functions (such as drawing, etc) can be overloaded
+to customize behaviour. 
+
+<p>
+<h3>Why write this?</h3>
+<p>
+Most existing GUI toolkits have been written in C. While it is possible to create C++
+wrapper libraries to give these toolkits a new leash on life and make them look like C++,
+the fact is that such wrappers are missing some fundamental benefits provided with C++.
+<p>
+In addition, in the course of my work on VCE and CFD-VIEW, some novel GUI concepts 
+(persistence, gui-updating, tooltips, object-orientation, messaging, drag-and-drop, etc.) 
+have been explored which may offer significant benefits for GUI programming.  
+None of the existing toolkits offer these things in a natural manner. 
+
+<p>
+<h3>FOX Features</h3>
+<p>
+Here's a summary of the ideas that are being implemented in the FOX library.
+<ul>
+<li><b>Easy to use</b>.  If you're familiar with Motif, you will know what I mean.  The
+goal of FOX is to use about one line of C++ code for each widget. Here's an example of
+how to place a button:
+<p>
+<pre>
+	new FXButton(dialogbox,"Hello",NULL,dialogbox,CMD_HELLO);
+</pre>
+As you see, you pass in the parent object as the first argument; the new item will
+get added automatically as a child of its parent.  
+When pressed, this will send a message of type <em>SEL_COMMAND</em>, and selector 
+<em>CMD_HELLO</em>, to the object <em>dialogbox</em>,
+which is also the FXButton's parent widget.  Buttons have a whole bunch of additional
+parameters, but all of those are set to sensible defaults and do not have to
+be specified.
+
+<p>
+<li><b>No direct X dependencies.</B>  While FOX itself is written on top of X Windows,
+the applications using FOX will not depend on X.  Consequently, when FOX will be
+ported to other platforms, the applications get a <em>free</em> ride and will be
+ported as well.
+The way FOX does this is by hiding all X Windows dependent behaviour in its base classes.
+This makes most of FOX itself independent as well.
+Finally, as the underlying window system is hidden from applications, the <em>only thing
+the application programmer needs to learn is C++ and FOX</em>!
+
+<p>
+<li><b>Not a wrapper</b>.  As FOX is designed right on top of Xlib, most interesting
+behaviour, such as drawing methods, can be overloaded.  Here's how you would make
+your own button:
+<p>
+<pre>
+	// In the header file...
+	class FXMyButton : public FXButton {
+	  FXDECLARE(FXMyButton)
+        public:
+          long onPaint(FXObject* sender,FXSelector sel,void* ptr);
+	public:
+	  FXMyButton(FXBaseComposite *parent,...);
+	  };	
+</pre>
+<p>
+Where you implement a handler for the <em>onPaint</em>, it will be found in preference
+to the one in the base class; thus FXMyButtons will be rendered using
+this function, but behave normally in all other respects, as only drawing has
+been overloaded.
+As you see, this is more or less as you expect using C++.  Yet C++ wrappers will
+be unable to deliver such customizability except in the most simple cases.
+The only difference is the FXDECLARE macro.  This is used for declaring proper meta-class 
+and message mapping of this object, and is mandatory boilerplate for FXObject derived classes.
+
+	  
+<p>
+<li><b>Object Oriented</b>.  Written entirely in C++, all GUI widgets in FOX are C++
+objects.  FOX uses strongly typed widgets, so that you will be able to take advantage
+of C++ type checking most of the time. For example, in Motif, all widgets are of
+type Widget, but not all widgets allow the same functions to be invoked upon them;
+consequently, this can lead to trouble.  As FOX has strongly typed widgets, this
+is much less likely to happen in FOX.
+ 
+
+<p>
+<li><b>Target/Message</b> instead of callbacks.  All objects in FOX derive from FXObject.
+In order to get a notification from a GUI widget, a FOX object registers itself as the
+target of a certain widget.  A message is also associated with the widget, so that the
+target may know from which widget the notification originated.
+A message is comprised of a type (high 16 bits), as well as a selector (low 16 bits).  
+The association between a message and a particular member function of the target object
+is defined in a function map or message map.
+The special type 0 is reserved from messages directly originated from the user.
+Note that FOX does <em>not</em> use the signal/slot system; even though I consider this
+a very elegant method, the signal/slot system relies on compile-time knowledge of the
+sender/receiver combination to instantiate the proper template classes.  I consider this
+a serious drawback for FOX.  In FOX, it will be possible to serialize/deserialize GUI
+objects, just like any other regular C++ object.  One can therefore implement applications
+such as <em>Interface Designers</em> which create and modify GUI objects, then save
+the results to a stream for later perusal be applications.  
+Thus, we clearly to be able to set up connections between objects at run time.  FOX's
+approach with the Target/Message system clearly provides this.
+
+<p>
+<li><b>Event Translation</b>.  All events from X are translated before being passed into
+the system.  This is to isolate as much as possible the application program from X, as
+mentioned before.
+
+<p>
+<li><b>Archivability</b>.  One of the goals of FOX is to allow all objects derived from
+FXObject to be archivable, or <em>streamable</em>.  Application of this concept to GUI widgets has
+some interesting implications:
+
+<p>
+<ul>
+<li>Need for a two-step widget creation process.  
+<ul>
+<p><li>In the first phase, C++ objects are de-archived from
+the stream, and their member variables reconstructed from the stream data.  No X server
+side data exist yet at this point.  
+
+<p><li>In the second phase, the X server side windows are created.  As all widgets are
+ultimately linked into a list hanging of FXApp, a single call to FXApp::create will
+do the job.  At this point, the application is fully functional.
+</ul>
+
+<p>
+<li>A GUI builder built with FOX will be able to create and manipulate the <em>true</em> FOX
+widget objects; no GUI mock-ups are needed; as long as the GUI builder has linked in
+(statically or dynamically) all the code implementing the objects, the objects under 
+the GUI builder will be working with <em>fully functional</em> instances.
+
+<p>
+At the end of the GUI building process, the widgets will be streamed out to file, and
+either compiled into the code (as a static data array), or as an external file, to be
+read in when the application is started.
+
+<p>
+<li>End-users could read an application's GUI stream and customize it if they so
+desire, perhaps change to another language; no recompilation is needed.
+</ul>
+
+<p>
+<li><b>GUI Updating</b>. As mentioned before, FOX translates all X events into FOX events.
+However, it also synthesizes some special events.  A special type of synthesized event is
+the GUI update pseudo-event.  These events are activated during idle-processing, i.e.
+just before blocking to get new events.  GUI update events solve in a convenient way
+some common problems in GUI software development.
+<p>
+
+<ul>
+<li>Various buttons and menu-options should not be available to the user in all
+situations.  To solve this problem, most toolkits allow the programmer to enable, 
+(sensitize), or disable (desensitize) buttons.  To the user, this provides nice cues to the state of 
+the program.  However, to the programmer of a large application, this may become a
+nightmare.  Each and every button or control pressed in the GUI may change the state
+of the application, and may cause many buttons and menus need to be updated.  
+
+<p>
+If one has <em>M</em> buttons, and <em>N</em> widgets to be updated, this can lead to
+a lot of (boring) programming, implementing <em>M</em>*<em>N</em> combinations.
+
+<p>
+<li>To solve this, FOX simply sends synthesized update messages to each widget whenever
+nothing else is being done.  The messages consist of the same selector, but the type
+is set to SEL_UPDATE, instead of SEL_COMMAND.  This way, all an application programmer
+needs to do is catch those messages, and change the state of the control.  Clearly,
+decoupling command handling from update handling reduces the aforementioned problem
+to a mere <em>M</em>+<em>N</em> combinations.
+
+<p>
+Moreover, if the state of a program may change asynchronously (e.g. with multi-threaded
+programming), the GUI will keep track.
+</ul>
+
+<p>
+<li><b>Drag and Drop</b>. FOX will have support for 
+<a href="http://www.cco.caltech.edu/~jafl/xdnd/">XDND</a> built in.  The X DND protocol
+will be able to support transport of a very wide variety of data types, by using MIME.
+It will also be able to transport serialized (archived) FOX objects.
+Thus, applications build with FOX will be capable of drag-and drop behaviour with minimal effort.
+</ul>
+
+<p>
+<h3>FTP</h3>
+<p>
+FTP FOX from <a href="ftp://cyberia.cfdrc.com/pub/fox.tar.gz">here</a>.  You may want to check
+here often, as it is upgraded almost daily.
+
+<p>
+<h3>News</h3>
+<p>
+Some late breaking news:
+<p>
+<ul>
+<li>
+We now have the X selection mechanism working: so you can paste text into text fields
+with the familiar middle mouse button.  It will be extended toward other types in the 
+future.
+
+<li>
+The OffiX DnD will be replaced with <a href="http://www.cco.caltech.edu/~jafl/xdnd/">XDND</a>.
+XDND will provide feedback from the target to the source, so that the source can,
+for example, change its icon.  It also offers a more open-ended list of data types.
+Stay tuned for this new facility.
+
+
+<li>
+The GUI update mechanism works!!  During idle processing, the system will automatically
+cycle through all widgets, and send them a SEL_UPDATE message.
+The return value of a message-handler is now used to indicate that the message has
+been handled; if it has, it is assumed that the applications state has been changed, and
+that refresh is needed.
+
+<li>
+The event input functionality has been improved, and should now be much more
+responsive:- basically, the system now only falls into idle processing when both local
+client-side as well as server-side events for the application are exhausted.
+
+<li>
+The focus management has been started, but is not yet complete.
+
+</ul>
+
+<P>
+<p>
+<h3>Example GUI's</h3>
+<p>
+Here's an example, a DTF File Viewer written by CFDRC. 
+<p>
+<img align=center border=2 src="zonedata.gif">
+
+<p>
+<p>
+
+<p>
+<h3>Drag and Drop Topics</h3>
+<p>
+There is still heated debate over a good X Drag and Drop protocol.  Hence, I
+will summarize a few basic requirememts which a DND protocol should provide.
+
+<p>
+<ul>
+<li><b>Open-Ended drop types</b>.  We can not pin down what type of stuff should
+be dragged and dropped between applications.  However, it is up to a good DND 
+protocol to package the drop data with sufficient meta-data that some sense can
+be made out of it.
+In particular:
+<p>
+<ul>
+  <li>The receiver should be able to manipulate the drop data as uninterpreted
+       stream of bytes, at the very least. 
+<p>
+  <li>Preferably, some indication of the type of data, e.g. MIME content-type.
+      This would allow the drop target to delegate handling of this type to
+      some other library or application.
+</ul>
+<p>
+<li><b>Drop Actions</b>.  We do not always just want to copy data.  For example,
+an application may wish to perform different actions upon the drop data dependent
+on the type of drop being performed.  We discern at the very least:
+<p>
+<ul>
+<li>Move. If the drop has been accepted by the target, the original copy at the
+drag source will be removed.
+<p>
+<li>Copy. The target will have a copy of the same data.
+<p>
+<li>Link. The target will have a reference to the same data as the source.
+</ul>
+<p>
+<li><b>Pre-Drop Feedback</b>.  Feedback from the drop target is needed. I can think
+of several reasons:
+<p>
+<ul>
+<li>Simple visual feedback from the drop-target to the user, indicating that the
+drop will or will not be accepted.  This can be accomplised by the drop-target receiving
+a message from the drag-source indicating the type of the data about to be dropped.
+<p>
+<li>Feedback to the drag-source.  A mesage back from the drop-target to the drag-source
+that indicates a drop of the given data type will or will not be accepted.  The
+drag-source could use this for example to change the drag cursor.  A more advanced
+message may indicate to the drag-source a subset of the drag data type which the
+drop-target understands.
+</ul>
+
+<p>
+<li><b>Post-Drop Feedback</b>.  Further feedback from the drop target after the
+drop has been processed successfully.  This is useful:
+<p>
+<ul>
+<li>The drag-source should NOT assume a drop was successfull until a feedback
+message has been received.  Assuming drops are successful 
+w/o having received such a confirmation message may lead to loss of data, and this
+will most likely not be appreciated.
+<p>
+</ul>
+
+</ul>
+
+<p>
+<img align=left border=0 src="owl-anim.gif">
+<p>
+<FONT SIZE=-1>
+Copyright &copy 1997 Jeroen van der Zijp, all rights reserved.
+</FONT>
+<p>
+<a href="http://www.apache.org/"><img align=left border=0 src="/icons/apache_pb.gif"></a>
+<a href="../install-guide-2.2.2.html/gs.html"><img align=right border=0 src="PoweredByLinux.g
+if"></a>
+
+</p>
+</BODY>
+</HTML>

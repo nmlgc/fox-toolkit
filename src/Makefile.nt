@@ -1,0 +1,79 @@
+##############################################################################
+#                                                                            #
+#                       FOX:  A Free C++ Class Library for X                 #
+#                                                                            #
+##############################################################################
+# Copyright (C) 1997 by Jeroen van der Zijp.   All Rights Reserved.          #
+##############################################################################
+# $Id: Makefile.nt,v 1.3 1998/10/03 05:17:14 jeroen Exp $                   #
+##############################################################################
+# This library is free software; you can redistribute it and/or              #
+# modify it under the terms of the GNU Library General Public                #
+# License as published by the Free Software Foundation; either               #
+# version 2 of the License, or (at your option) any later version.           #
+#                                                                            #
+# This library is distributed in the hope that it will be useful,            #
+# but WITHOUT ANY WARRANTY; without even the implied warranty of             #
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU          #
+# Library General Public License for more details.                           #
+#                                                                            #
+# You should have received a copy of the GNU Library General Public          #
+# License along with this library; if not, write to the Free                 #
+# Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.         #
+##############################################################################
+
+
+CC = cl
+FLGS = /MLd /W3 /GX /Z7 /Od
+CFLAGS = $(FLGS) /TP
+DEFINES = -DHAVE_OPENGL -DHUMMINGBIRD -DWIN32
+INCDIRS = -I../include -ID:/libs/include -I/exceed.nt/xdk/include
+FOXLIB = ../lib/fox.lib
+
+.SUFFIXES: .cc .c
+
+SOURCES = FXStream.cc FXObject.cc FXObjectList.cc FXFont.cc FXRootWindow.cc\
+          FXApp.cc FXWindow.cc FXFrame.cc fxutils.cc FXId.cc FXButton.cc\
+          FXString.cc FXComposite.cc FXShell.cc FXLabel.cc FXIcon.cc FXHeader.cc\
+          FXImage.cc FXDrawable.cc FXTab.cc FXMenu.cc FXCheckButton.cc\
+          FXTextField.cc FXList.cc FXScrollbar.cc FXSpinner.cc FXDebugTarget.cc\
+          FXScrollWindow.cc FXTreeList.cc FXMessageBox.cc FXCursor.cc\
+          FXCanvas.cc FXGroupBox.cc FXListBox.cc FXSplitter.cc FXMatrix.cc\
+          FXGLCanvas.cc FXSlider.cc FXStatusbar.cc FXPacker.cc FXText.cc\
+          FXHorizontalFrame.cc FXVerticalFrame.cc FXDataTarget.cc \
+          FXRange.cc FXGLViewer.cc FXShutter.cc FXColorWell.cc FXMenuButton.cc\
+          FXAccelTable.cc FXIconList.cc FXProgressBar.cc FXFileList.cc\
+          fxregex.cc FXDirList.cc FXColorNames.cc FXFileSelector.cc FXPopup.cc\
+          FXFileDialog.cc FXTopWindow.cc FXDialogBox.cc FXRadioButton.cc\
+          FXMainWindow.cc FXResources.cc FXGIFImage.cc FXBMPImage.cc\
+          fxgifio.cc fxbmpio.cc FXGIFIcon.cc FXBMPIcon.cc FXVec.cc FXHVec.cc\
+          FXDVec.cc FXDHVec.cc FXHMat.cc FXQuat.cc FXTooltip.cc FXDial.cc\
+          FXGLObject.cc FXMDIClient.cc FXMDIChild.cc FXMDIButton.cc\
+          FXColorDialog.cc FXColorSelector.cc FXOptionMenu.cc FXArrowButton.cc \
+          FXMenuBar.cc
+
+
+OBJECTS = $(SOURCES:.cc=.obj)
+
+%.obj: %.cc
+	$(CC) /c $(INCDIRS) $(CFLAGS) $(DEFINES) $*.cc
+
+all: $(FOXLIB)
+	
+
+clean:
+	del *.obj *~
+
+realclean: clean
+
+
+# Make the library
+$(FOXLIB): $(OBJECTS)
+	LIB /OUT:$(FOXLIB) $(OBJECTS)
+
+dep: $(SOURCES)
+	gcc -I../include -MM $(SOURCES) >depend
+
+
+include depend
+

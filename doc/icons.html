@@ -1,0 +1,268 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+<HEAD>
+   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+   <META NAME="GENERATOR" CONTENT="Mozilla/4.06 [en] (X11; I; Linux 2.0.34 i686) [Netscape]">
+   <META NAME="Author" CONTENT="Jeroen van der Zijp">
+   <META NAME="Description" CONTENT="Icons and Images in FOX">
+   <TITLE>Icons and Images</TITLE>
+</HEAD>
+<BODY TEXT="#000000" BGCOLOR="#FFEDED" LINK="#0000EF" VLINK="#51188E" ALINK="#FF0000" BACKGROUND="foxback.gif">
+
+<CENTER><U><FONT COLOR="#990000"><FONT SIZE=+4>Icons and Images in FOX</FONT></FONT></U></CENTER>
+
+<P><A NAME="ICONS"></A><U><FONT COLOR="#990000"><FONT SIZE=+4>Icons and
+Images.</FONT></FONT></U>
+<P>Icons and Images are part an parcel of attractive, user-friendly Graphical
+User Interfaces these days.&nbsp; Consequently, considerable effort has
+been expended in designing FOX to allow icon- and image-rich applications
+to be developed with the greatest ease.
+<P>In FOX, Images and Icons are objects that represent picture data.&nbsp;
+Images are simple pictures, whereas Icons are pictures with a <I>shape
+mask</I> that may be used to effectively mask out a certain area of the
+picture, and allow part the background to peek through as if the picture
+were transparent in some areas.
+<P>Both Icons and Images may have <B>Client</B> <B>side</B> <B><I>pixel
+data</I></B> as well as an <B>X Server side</B> <B><I>pixmap</I></B> representation.&nbsp;
+The typical application will construct the client-side pixel data by filling
+the Icon or Image with a picture, then create the server-side representation
+[after contact with the X Server has been established] by calling i<TT>con->create()</TT>,
+which creates an server side <I>pixmap</I> and uses a call to&nbsp; <TT>icon->render()</TT>
+to fill the pixmap with the pixel data .
+<P>Note that this is a two-step process which is very similar to that of
+constructing and creating regular FOX Widgets.&nbsp; This is no accident.&nbsp;
+The FOX philosophy is to construct [client-side] data structures such as
+Widgets and Icons and Images etc., then with all the information available,
+create their X Server side representation in one fell swoop by calling
+<TT>app->create()</TT>.
+<P>When you have given Buttons or Labels or other FOX Widgets icons, a
+call to that Widget's <TT>create()</TT> member function will also automatically
+call its icon <TT>create()</TT>.&nbsp; To allow icons to be shared by multiple
+Widgets, it is specifically allowed to call <TT>create()</TT> more than
+once on an icon or image.
+<P>In many cases, after calling an icon's create() member function, there
+is no need to keep the client-side pixel data around; thus, FOX icons will
+in most cases release the memory taken up by the pixel data.&nbsp; Should
+you want to repeatedly change the pixel data, however, FXIcon and FXImage
+have an option <B>IMAGE_KEEP</B> to allow you to hang on to the pixel data
+in the client.&nbsp; After making changes to the pixel data, you can call
+<TT>icon->render()</TT>
+again to render it into the pixmap.
+<BR>&nbsp;
+<P><U><FONT COLOR="#990000"><FONT SIZE=+4>Image Formats Supported.</FONT></FONT></U>
+<P>Currently, FOX supports both <B>GIF</B> and <B>BMP</B> based icons.&nbsp;
+In the near future, <B>XPM</B> will be added as a convenience.&nbsp; The
+most preferred format is GIF, as it is about 10 times more compact than
+XPM, and about 2 times more compact than BMP.&nbsp; This is of some concern,
+as applications may have lots of icons [some analysis of our own applications
+revealed than one application's executable had about 1MB worth of XPM icons;
+with GIF, this would have been less than a 100kB].
+<BR>&nbsp;
+<P><U><FONT COLOR="#990000"><FONT SIZE=+4>Incorporating Icons and Images
+into an Application.</FONT></FONT></U>
+<P>One crucial problem with icon-rich applications is where to keep all
+those icons; obviously, keeping icons in separate files allows end-users
+to substitute icons and perhaps change them with an Icon Editor program.&nbsp;
+However, such a scenario also poses a maintainance problem:- software becomes
+extraordinarily dependent on specifics of a user installation, and end-users
+may actually break software by substituting corrupted icon files by accident,
+or perhaps other applications may overwrite them.&nbsp; Another common
+problem is the need for end-users to set paths and enironment variables.
+<P>To eliminate these problems, the FOX approach is to <B><I>embed</I></B>
+all icons and images right into the application's executable.&nbsp; This
+is done by simply by compiling the icons into the code in the form of C
+data statements, and then linking then in.
+<BR>It is my experience that the number of users that actually wants to
+change icons themselves is very small; most users simply appreciate the
+ease of installation.&nbsp; However, should you desire to place icons in
+files, FOX supports this also.
+<P>In order to embed icons and images easily, the FOX distribution offers
+a small programming tool called&nbsp;<A NAME="RESWRAP"></A><B><I>reswrap</I></B>
+to perform the job of turning an image file into an embeddable C data array,
+which can then be easily compiled into the application as part of the normal
+build process.
+<P>For example, given as input a GIF file image such as below:
+<BR>&nbsp;
+<BR>&nbsp;
+<BR>
+<BR>
+<BR>
+<CENTER>
+<P><IMG SRC="bigpenguin.gif" HEIGHT=57 WIDTH=48>
+<BR>Figure 1. Linux Penguin from file <I>bigpenguin.gif</I>.</CENTER>
+
+<BR>&nbsp;
+<P><BR>
+<BR>
+<BR>
+<P>&nbsp;After processing this file, reswrap generates a C data statement
+such as:
+<BR>&nbsp;
+<BLOCKQUOTE><TT>/* Generated by reswrap from file <I>bigpenguin.gif</I>
+*/</TT>
+<BR><TT>const unsigned char bigpenguin[]={</TT>
+<BR><TT>&nbsp; 0x47,0x49,0x46,0x38,0x37,0x61,0x30,0x00,0x39,0x00,0xf3,0x00,0x00,0xb2,0xc0,0xdc,</TT>
+<BR><TT>&nbsp; ...............................................................................</TT>
+<BR><TT>&nbsp; ...............................................................................</TT>
+<BR><TT>&nbsp; 0xf4,0xe0,0x63,0x90,0x7c,0x7d,0x40,0xc5,0x92,0x0c,0x34,0x39,0x41,0x04,0x00,0x3b</TT>
+<BR><TT>&nbsp; };</TT></BLOCKQUOTE>
+This can then be subsequently compiled into an object file, and linked
+in with the executable.&nbsp; To make use of such an icon, FOX supports
+deserialization from a <I>memory stream</I>.
+<BR>The icon data above could be used as follows to create an Icon:
+<BR>&nbsp;
+<BLOCKQUOTE><TT>FXIcon *tux_icon = new FXGIFIcon(application,bigpenguin);</TT></BLOCKQUOTE>
+This one statement creates an icon object, then deserializes the icon data
+from the GIF stream to build the icon's internal pixel data.&nbsp; A subsequent
+call:
+<BR>&nbsp;
+<BLOCKQUOTE><TT>tux_icon->create();</TT></BLOCKQUOTE>
+Will create an X pixmap, render the icon into it, and subsequently release
+the pixel data after it is no longer needed.&nbsp; If you had created the
+icon with the IMAGE_KEEP option, the pixel data would have been kept around
+for subsequent manipulation by your application, and perhaps repeated rendering.
+<P>To draw the icon in a window, simply:
+<BR>&nbsp;
+<BLOCKQUOTE><TT>window->drawIcon(tux_icon,x,y);</TT></BLOCKQUOTE>
+will do the job.
+<BR>&nbsp;
+<P><U><FONT COLOR="#990000"><FONT SIZE=+4>If Icons Look Funny...</FONT></FONT></U>
+<P>Sometimes, your icons may look funny.&nbsp; This is usually because
+FOX Icon routines determine the wrong value for the transparency color.&nbsp;
+FOX can handle images with a true alpha-channel, or images with a special
+transparency color.&nbsp; The latter is the more common approach, as many
+file formats do not support true alpha channels.
+<BR>Different image formats guess the transparency color in different ways.
+<P>For <B><I>GIF</I></B> Images, FOX uses the following algorithm:
+<BR>&nbsp;
+<UL>
+<LI>
+If a transparent color is found in the GIF file, that color is used.</LI>
+
+<LI>
+If not, the background color is used.</LI>
+
+<LI>
+If the option IMAGE_ALPHACOLOR is used when constructing the icon, the
+specified color is used.</LI>
+
+<LI>
+Finally, if the option IMAGE_OPAQUE is used, the icon is forced to be non-transparent.</LI>
+</UL>
+
+<P><BR>For <B><I>BMP</I></B> images, there is no background or transparency
+color in the image file format; the algorithm is simpler:
+<BR>&nbsp;
+<UL>
+<LI>
+The assumed transparency color is the same as the default GUI background
+color, which is FXRGB(192,192,192).</LI>
+
+<LI>
+If the option IMAGE_ALPHACOLOR is used when constructing the icon, the
+specified color is used.</LI>
+
+<LI>
+Finally, if the option IMAGE_OPAQUE is used, the icon is forced to be non-transparent.</LI>
+</UL>
+
+<P><BR>In most cases, you will create your icons simply as below:
+<BR>&nbsp;
+<BLOCKQUOTE><FONT FACE="Courier New,Courier">new FXGIFIcon(app,picture_data);</FONT></BLOCKQUOTE>
+
+<P><BR>In some cases, when you want to override the transparency color,
+construct your icons as:
+<BR>&nbsp;
+<BLOCKQUOTE><FONT FACE="Courier New,Courier">new FXGIFIcon(app,picture_data,FXRGB(192,192,192),IMAGE_ALPHACOLOR);</FONT></BLOCKQUOTE>
+
+<P><BR>To create an completely opaque icon:
+<BLOCKQUOTE><FONT FACE="Courier New,Courier"></FONT>&nbsp;
+<BR><FONT FACE="Courier New,Courier">new FXGIFIcon(app,picture_data,0,IMAGE_OPQUE);</FONT></BLOCKQUOTE>
+
+<P><BR>For more information on graphics file formats and their idiosyncracies,
+see&nbsp; the <A HREF="http://www.dcs.ed.ac.uk/~mxr/gfx/index-hi.html">Graphics
+File Format Web Site</A>.
+<BR>&nbsp;
+<BR>&nbsp;
+<P><A NAME="RESWRAPDOC"></A><U><FONT COLOR="#990000"><FONT SIZE=+4>More
+on Reswrap.</FONT></FONT></U>
+<BR>&nbsp;
+<P>The reswrap tool has a number of options to make it convenient to build
+C source and header files automatically from image files as a part of your
+regular project build process.&nbsp; Reswrap is normally invoked as follows:
+<BR>&nbsp;
+<BR>&nbsp;
+<BLOCKQUOTE><TT><B>reswrap</B> [options] [-o[a] outfile]&nbsp; files....</TT></BLOCKQUOTE>
+Invoking reswrap with <TT>-o outfile</TT> will make reswrap write its output
+on the file <B><I>outfile</I></B>.&nbsp; With <TT>-oa outfile</TT>, reswrap
+will append additional data at the end of <B><I>outfile</I></B>.
+<BR>Any number of input files may be specified.&nbsp; Reswrap typically
+produces one data statement for each of the input files specified on the
+command line.
+<P>Reswrap understands a few additional options:
+<P><B><I>-h</I></B>
+<BLOCKQUOTE>Will print out a summary of the supported options.</BLOCKQUOTE>
+<B><I>-v</I></B>
+<BLOCKQUOTE>Will print out the version number.</BLOCKQUOTE>
+<B><I>-d</I></B>
+<BLOCKQUOTE>Reswrap normally generates its output as hexadecimal numbers;
+the -d option will make reswrap generate decimal numbers.</BLOCKQUOTE>
+<B><I>-x</I></B>
+<BLOCKQUOTE>Forces reswrap to generate hexadecimal numbers [the default].</BLOCKQUOTE>
+<B><I>-e</I></B>
+<BLOCKQUOTE>Places the storage modifier <B><TT>extern</TT></B> in front
+of the data array, ensuring that the data array can be linked with other
+compilation units.</BLOCKQUOTE>
+<B><I>-i</I></B>
+<BLOCKQUOTE>Instead of a data array statement, reswrap will generate a
+declaration only.&nbsp; For example,</BLOCKQUOTE>
+
+<BLOCKQUOTE><TT>&nbsp;&nbsp;&nbsp; reswrap -i bigpenguin.gif</TT></BLOCKQUOTE>
+
+<BLOCKQUOTE>will produce the output:</BLOCKQUOTE>
+
+<BLOCKQUOTE><TT>&nbsp;&nbsp;&nbsp; /* Generated by reswrap from file bigpenguin.gif
+*/</TT>
+<BR><TT>&nbsp;&nbsp;&nbsp; extern const unsigned char bigpenguin[];</TT>
+<BR>&nbsp;
+<P>Which you could include as a header file into whichever source file
+needs access to the data.</BLOCKQUOTE>
+<B><I>-s</I></B>
+<BLOCKQUOTE>This option suppresses comments inserted by reswrap to indicate
+the original file name from which the data statement was generated.</BLOCKQUOTE>
+<B><I>-n name</I></B>
+<BLOCKQUOTE>Instead of taking the filename less the extension, reswrap
+substitutes <I>name</I> for the name of the resource.</BLOCKQUOTE>
+<B><I>-c cols</I></B>
+<BLOCKQUOTE>Uses <I>cols</I> columns instead of the default 16 columns
+in the data statements generated by reswrap.</BLOCKQUOTE>
+<B><I>-ppm</I></B>
+<BLOCKQUOTE>Assumes the source file is a Portable Pixmap (ppm) file.&nbsp;
+Reswrap will output a simple rgb array.</BLOCKQUOTE>
+Example of using reswrap in your Application's Makefile:
+<BR>&nbsp;
+<BR>&nbsp;
+<BLOCKQUOTE><TT>OBJECTS = icons.o myapp.o</TT></BLOCKQUOTE>
+
+<BLOCKQUOTE><TT>ICONS = bigpenguin.gif applogo.gif</TT></BLOCKQUOTE>
+
+<BLOCKQUOTE><TT>icons.h: $(ICONS)</TT>
+<BR><TT>&nbsp;reswrap -e -o icons.h $(ICONS)</TT>
+<P><TT>icons.cc: $(ICONS)</TT>
+<BR><TT>&nbsp;reswrap -o icons.cc $(ICONS)</TT>
+<P><TT>myapp: $(OBJECTS)</TT>
+<BR><TT>&nbsp;&nbsp; gcc -o myapp $(OBJECTS) -lFOX -lm -lSM -lICE -lXext
+-lX11</TT>
+<P><TT>myapp.o: myapp.cc icons.h</TT>
+<BR>&nbsp;</BLOCKQUOTE>
+This will cause make to generate two files, <TT>icons.h</TT> and <TT>icons.cc</TT>
+which contain the declarations and definitions respectively for all the
+reswrapped icons listed in the ICONS variable.
+<BR>&nbsp;
+<BR>&nbsp;
+<BR>&nbsp;
+<BLOCKQUOTE>
+<HR WIDTH="100%"></BLOCKQUOTE>
+<FONT SIZE=-1>Copyright &copy; 1998 Jeroen van der Zijp, all rights reserved.</FONT>
+</BODY>
+</HTML>

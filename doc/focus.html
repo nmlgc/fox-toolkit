@@ -1,0 +1,138 @@
+Hello,
+
+
+
+I got the focus movement basically working (the mechanism); run groupbox and
+tab/backtab your way between all the buttons.  Hitting space or return with
+focus on a button will now invoke it just as if you had used the mouse.
+Not all widgets properly cooperate with it yet.  [Widgets which can accept
+the focus should return TRUE in their overload of canFocus() ].
+
+The dispatch of keyboard events is now implemented.  Here's how it works:
+
+        - Each widget has a focus, which indicates the current child that
+          has the focus.
+
+        - When a key is pressed/released, it first gets sent to the shell widget.
+
+        - If the widget's focus variable has been set, it will first try to
+          dispatch the event to the focused child.
+
+        - If the focus widget is not set, or if the focus widget didn't handle the key
+          event, this widget's accelerator table will be checked [accelerator tables
+          have not yet been implemented, but essentially it's a hash table that maps
+          a keycode + modifiers (ALT/SHIFT/CNTL) to a direct message to an object].
+
+        - If the widget has an accelerator table, and the key/modifier combination is
+          found, the key event will be dispatched to the object given in the table.
+
+        - If the widget does not have an accelerator table, or if there's no matching
+          accelerator, the widget will proceed with ``default keyboard processing.''
+
+        - In default keyboard processing, the space and enter keys are reported to
+          the focus widget as button activate messages; if there is no focus widget, or
+          if the focus widget does not handle it, it returns FALSE.
+
+        - Also in default keyboard processing, the tab, backtab, and arrow keys are
+          translated into focus movement messages. and resent to the widget itself.
+          By resending these to itself, different widgets can perform different things,
+          based on these messages (e.g. non-composite widgets do not handle focus change
+          messages).
+
+        - When none of the above applies, the widgets keyboard message handler
+          returns FALSE.  At this point, its parent will have a crack at it.
+
+This mechanism looks very complicated, but it's needed:
+
+        - A text widget inside some other widgets will certainly want to have a first
+          crack at arrow keys, tabs, and its own accelerators.
+
+        - A matrix layout widget will want to handle the arrow keys intelligently.
+          A menubar widget will deal differently with arrow keys.
+
+        - A shell widget, trying to move its focus forward, will cycle back to the first
+          focusable child when it hits the end; repeated tabbing will get you back
+          where you started.
+
+
+Functions setFocus() and killFocus() work properly now. There's a difference
+between a widget being in the focus chain (down from the shell) v.s. actually
+having the keyboard focus: when you move your cursor over a window (or click-to
+focus, depending on your window manager), all widgets in the chain are notified that
+they now have the REAL focus.  Conversely, when you move your cursor out of a
+window, they are notified they no longer have the REAL focus.
+
+In a nutshell, when you add/remove items to/from List or TreeLists, when you add/remove
+children to/from Composites, flags will be set that indicate that a recalc() may
+be needed.
+
+When the idle processing starts, this will then happen.  Thus, you can add 1000's of items
+w/o any noticable slowdown. (It seems to improve performance by 2-3 orders of magnitude;
+previously, adding elements caused a torrent of events.
+
+With the new system, recalc()'s are put off till the last minute.  Unfortunately, this new
+mechanism can not stand alone.  A similar mechanism is needed for repainting.
+In future, when you call update(), it will add a repaint rectangle or union the
+old repaint rectangle with the new one.  Then it will repaint during idle processing.
+So it's a bit chaotic right now, but it should become VERY SPEEDY when it's all done.
+
+Also, I'm afraid the messagebox is broken right now. This is due to the class hierarchy changes,
+and the new layout of FXTopWindow.  CWW had some nice suggestions for improvements, but those
+have not yet been implemented.
+
+layout() is now protected.  recalc() will be also.
+I'm in the process of redesigning this mechanism.
+
+
+
+I got the focus movement basically working (the mechanism); run groupbox and tab/backtab
+your way between all the buttons.
+
+Hitting space or return with focus on a button will now invoke it just as if you had used the
+mouse.
+
+Not all widgets properly cooperate with it yes.  [Widgets which can accept the focus should 
+return TRUE in their overload of canFocus() ].
+
+The dispatch of keyboard events is now implemented.  Here's how it works:
+
+        - Each widget has a focus, which indicates the current child that has the focus.
+        - When a key is pressed/released, it first gets sent to the shell widget.
+
+        - Each widget looks if it's focus has been set; if so, it tried to dispatch
+          the key event to the focus widget.
+
+        - If the focus widget is not set, or if the focus widget didn't handle the key
+          event, this widgets accelerator table will be checked [accelerator tables
+          have not yet been implemented, but essentially it's a hash table that maps
+          a keycode + modifiers (ALT/SHIFT/CTL...) to a direct message to an object].
+
+        - If the widget has an accelerator table, and the key/modifier combination is
+          found, the key event will be dispatched to the object given in the table.
+
+        - If the widget does not have an accelerator table, or if there's no matching
+          accelerator, the widget will proceed with ``default keyboard processing.''
+
+        - In default keyboard processing, the space and enter keys are reported to
+          the focus widget (if there is one),
+
+layout() is now protected.  recalc() will be also.
+I'm in the process of redesigning this mechanism.
+
+In a nutshell, when you add/remove items to/from List or TreeLists, when you add/remove
+children to/from Composites, flags will be set that indicate that a recalc() may
+be needed.
+
+When the idle processing starts, this will then happen.  Thus, you can add 1000's of items 
+w/o any noticable slowdown. (It seems to improve performance by 2-3 orders of magnitude; 
+previously, adding elements caused a torrent of events.
+
+With the new system, recalc()'s are put off till the last minute.  Unfortunately, this new 
+mechanism can not stand alone.  A similar mechanism is needed for repainting.
+In future, when you call update(), it will add a repaint rectangle or union the
+old repaint rectangle with the new one.  Then it will repaint during idle processing.
+So it's a bit chaotic right now, but it should become VERY SPEEDY when it's all done.
+
+Also, I'm afraid the messagebox is broken right now. This is due to the class hierarchy changes,
+and the new layout of FXTopWindow.  CWW had some nice suggestions for improvements, but those 
+have not yet been implemented.

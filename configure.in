@@ -1,0 +1,85 @@
+dnl Process this file with autoconf to produce a configure script.
+AC_INIT(include/FXMenu.h)
+
+dnl Prevents setting flags.
+CXXFLAGS=""
+
+dnl Checks for programs.
+AC_PROG_MAKE_SET
+AC_PROG_CC
+AC_PROG_CPP
+AC_PROG_CXX
+AC_PROG_RANLIB
+
+dnl Checks for header files.
+AC_PATH_X
+AC_PATH_XTRA
+
+dnl Checks for typedefs, structures, and compiler characteristics.
+AC_HEADER_TIME
+AC_CHECK_HEADERS(unistd.h)
+AC_HEADER_DIRENT
+AC_CHECK_HEADERS(sys/param.h)
+AC_CHECK_HEADERS(sys/select.h)
+
+dnl Check for shared memory
+XSHM="HAVE_XSHM"
+AC_CHECK_HEADER(X11/extensions/XShm.h,,XSHM="")
+AC_CHECK_HEADER(sys/ipc.h,,XSHM="")
+AC_CHECK_HEADER(sys/shm.h,,XSHM="")
+if test "x$XSHM" = "xHAVE_XSHM" ; then
+CXXFLAGS="${CXXFLAGS} -DHAVE_XSHM"
+fi
+
+dnl Checks for library functions.
+dnl AC_FUNC_VPRINTF
+dnl AC_CHECK_FUNCS(gettimeofday)
+
+dnl Debugging turned on
+AC_MSG_CHECKING(for debugging)
+AC_ARG_ENABLE(debug,[  --enable-debug          compile for debugging])
+AC_MSG_RESULT([$enable_debug])
+if test "x$enable_debug" = "xyes" ; then
+CXXFLAGS="${CXXFLAGS} -g -DDEBUG"
+fi
+
+dnl Building for release
+AC_MSG_CHECKING(for release build)
+AC_ARG_ENABLE(debug,[  --enable-release        compile for release])
+AC_MSG_RESULT([$enable_release])
+if test "x$enable_release" = "xyes" ; then
+CXXFLAGS="${CXXFLAGS} -O2 -DNDEBUG"
+fi
+
+
+dnl Compile with 3D support
+AC_MSG_CHECKING(for 3D support)
+AC_ARG_ENABLE(opengl,[  --with-opengl           choices are yes, opengl, or mesa])
+AC_MSG_RESULT([$with_opengl])
+if test "x$with_opengl" = "xyes" ; then
+CXXFLAGS="${CXXFLAGS} -DHAVE_OPENGL"
+GL_LIBS="-lGL -lGLU"
+elif test "x$with_opengl" = "xopengl" ; then
+CXXFLAGS="${CXXFLAGS} -DHAVE_OPENGL"
+GL_LIBS="-lGL -lGLU"
+elif test "x$with_opengl" = "xmesa" ; then
+CXXFLAGS="${CXXFLAGS} -DHAVE_OPENGL -DHAVE_MESA"
+GL_LIBS="-lMesaGL -lMesaGLU"
+fi
+AC_SUBST(GL_LIBS)
+
+
+dnl add copious amounts of debugging with gcc, egcs, etc
+if test "${GXX}" = "yes" ; then
+CXXFLAGS="${CXXFLAGS} -Wall -Wmissing-prototypes -Woverloaded-virtual"
+fi
+
+
+dnl Done.
+AC_OUTPUT(src/Makefile tests/Makefile utils/Makefile pathfinder/Makefile Makefile)
+
+echo ""
+echo "Configure finished!"
+echo "              Do:  'make' to compile FOX."
+echo ""
+

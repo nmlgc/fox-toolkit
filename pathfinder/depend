@@ -1,0 +1,32 @@
+PathFinder.o: PathFinder.cpp ../include/xincs.h ../include/fx.h \
+ ../include/fxdefs.h ../include/FXStream.h ../include/FXString.h \
+ ../include/FXObject.h ../include/FXObjectList.h \
+ ../include/FXAccelTable.h ../include/FXApp.h ../include/FXId.h \
+ ../include/FXFont.h ../include/FXDrawable.h ../include/FXImage.h \
+ ../include/FXGIFImage.h ../include/FXBMPImage.h ../include/FXIcon.h \
+ ../include/FXGIFIcon.h ../include/FXBMPIcon.h ../include/FXWindow.h \
+ ../include/FXFrame.h ../include/FXLabel.h ../include/FXDial.h \
+ ../include/FXColorWell.h ../include/FXTextField.h \
+ ../include/FXButton.h ../include/FXCheckButton.h \
+ ../include/FXRadioButton.h ../include/FXArrowButton.h \
+ ../include/FXMenuButton.h ../include/FXComposite.h \
+ ../include/FXPacker.h ../include/FXHorizontalFrame.h \
+ ../include/FXVerticalFrame.h ../include/FXMatrix.h \
+ ../include/FXSpinner.h ../include/FXRootWindow.h \
+ ../include/FXCanvas.h ../include/FXGroupBox.h ../include/FXShell.h \
+ ../include/FXTooltip.h ../include/FXPopup.h ../include/FXTopWindow.h \
+ ../include/FXDialogBox.h ../include/FXMainWindow.h \
+ ../include/FXMenu.h ../include/FXMenuBar.h ../include/FXOptionMenu.h \
+ ../include/FXTab.h ../include/FXScrollbar.h \
+ ../include/FXScrollWindow.h ../include/FXList.h \
+ ../include/FXListBox.h ../include/FXTreeList.h \
+ ../include/FXStatusbar.h ../include/FXMessageBox.h \
+ ../include/FXDirList.h ../include/FXSlider.h ../include/FXSplitter.h \
+ ../include/FXHeader.h ../include/FXShutter.h ../include/FXIconList.h \
+ ../include/FXFileList.h ../include/FXFileSelector.h \
+ ../include/FXFileDialog.h ../include/FXColorSelector.h \
+ ../include/FXColorDialog.h ../include/FXText.h \
+ ../include/FXProgressBar.h ../include/FXMDIButton.h \
+ ../include/FXMDIClient.h ../include/FXMDIChild.h \
+ ../include/FXDataTarget.h ../include/FXDebugTarget.h PathFinder.h \
+ icons.h

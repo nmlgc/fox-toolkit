@@ -1,0 +1,590 @@
+FXStream.o: FXStream.cpp ../include/xincs.h ../include/fxdefs.h \
+ ../include/FXStream.h ../include/FXObject.h
+FXObject.o: FXObject.cpp ../include/xincs.h ../include/fxdefs.h \
+ ../include/FXStream.h ../include/FXObject.h
+FXObjectList.o: FXObjectList.cpp ../include/xincs.h \
+ ../include/fxdefs.h ../include/FXStream.h ../include/FXObject.h \
+ ../include/FXObjectList.h
+FXFont.o: FXFont.cpp ../include/xincs.h ../include/fxdefs.h \
+ ../include/FXStream.h ../include/FXString.h ../include/FXObject.h \
+ ../include/FXApp.h ../include/FXId.h ../include/FXFont.h
+FXRootWindow.o: FXRootWindow.cpp ../include/xincs.h \
+ ../include/fxdefs.h ../include/FXStream.h ../include/FXString.h \
+ ../include/FXObject.h ../include/FXAccelTable.h \
+ ../include/FXObjectList.h ../include/FXApp.h ../include/FXId.h \
+ ../include/FXDrawable.h ../include/FXWindow.h ../include/FXFrame.h \
+ ../include/FXComposite.h ../include/FXRootWindow.h \
+ ../include/FXShell.h
+FXApp.o: FXApp.cpp ../include/xincs.h ../include/fxdefs.h \
+ ../include/fxkeys.h ../include/FXStream.h ../include/FXString.h \
+ ../include/FXObject.h ../include/FXAccelTable.h \
+ ../include/FXObjectList.h ../include/FXApp.h ../include/FXId.h \
+ ../include/FXCursor.h ../include/FXFont.h ../include/FXDrawable.h \
+ ../include/FXImage.h ../include/FXIcon.h ../include/FXGIFIcon.h \
+ ../include/FXWindow.h ../include/FXFrame.h ../include/FXLabel.h \
+ ../include/FXButton.h ../include/FXComposite.h \
+ ../include/FXRootWindow.h ../include/FXShell.h \
+ ../include/FXTopWindow.h ../include/FXDialogBox.h \
+ ../include/FXMessageBox.h
+FXWindow.o: FXWindow.cpp ../include/xincs.h ../include/fxdefs.h \
+ ../include/fxkeys.h ../include/FXStream.h ../include/FXString.h \
+ ../include/FXObject.h ../include/FXAccelTable.h \
+ ../include/FXObjectList.h ../include/FXApp.h ../include/FXId.h \
+ ../include/FXCursor.h ../include/FXDrawable.h ../include/FXWindow.h \
+ ../include/FXFrame.h ../include/FXComposite.h \
+ ../include/FXRootWindow.h ../include/FXShell.h
+FXFrame.o: FXFrame.cpp ../include/fxdefs.h ../include/FXStream.h \
+ ../include/FXString.h ../include/FXObject.h ../include/FXAccelTable.h \
+ ../include/FXObjectList.h ../include/FXApp.h ../include/FXId.h \
+ ../include/FXCursor.h ../include/FXDrawable.h ../include/FXWindow.h \
+ ../include/FXFrame.h ../include/FXComposite.h ../include/FXShell.h
+fxutils.o: fxutils.cpp ../include/xincs.h ../include/fxdefs.h \
+ ../include/fxkeys.h
+FXId.o: FXId.cpp ../include/xincs.h ../include/fxdefs.h \
+ ../include/FXStream.h ../include/FXString.h ../include/FXObject.h \
+ ../include/FXObjectList.h ../include/FXApp.h ../include/FXId.h
+FXButton.o: FXButton.cpp ../include/xincs.h ../include/fxdefs.h \
+ ../include/FXStream.h ../include/FXString.h ../include/FXObject.h \
+ ../include/FXAccelTable.h ../include/FXObjectList.h \
+ ../include/FXApp.h ../include/FXId.h ../include/FXFont.h \
+ ../include/FXDrawable.h ../include/FXImage.h ../include/FXIcon.h \
+ ../include/FXWindow.h ../include/FXFrame.h ../include/FXLabel.h \
+ ../include/FXButton.h ../include/FXComposite.h \
+ ../include/FXStatusbar.h ../include/FXShell.h ../include/FXPopup.h \
+ ../include/FXMenu.h ../include/FXTooltip.h
+FXString.o: FXString.cpp ../include/xincs.h ../include/fxdefs.h \
+ ../include/FXStream.h ../include/FXString.h
+FXComposite.o: FXComposite.cpp ../include/xincs.h ../include/fxdefs.h \
+ ../include/FXStream.h ../include/FXString.h ../include/FXObject.h \
+ ../include/FXAccelTable.h ../include/FXObjectList.h \
+ ../include/FXApp.h ../include/FXId.h ../include/FXDrawable.h \
+ ../include/FXWindow.h ../include/FXFrame.h ../include/FXComposite.h \
+ ../include/FXShell.h
+FXShell.o: FXShell.cpp ../include/xincs.h ../include/fxdefs.h \
+ ../include/FXStream.h ../include/FXString.h ../include/FXObject.h \
+ ../include/FXAccelTable.h ../include/FXObjectList.h \
+ ../include/FXApp.h ../include/FXId.h ../include/FXCursor.h \
+ ../include/FXDrawable.h ../include/FXWindow.h ../include/FXFrame.h \
+ ../include/FXComposite.h ../include/FXRootWindow.h \
+ ../include/FXShell.h
+FXLabel.o: FXLabel.cpp ../include/xincs.h ../include/fxdefs.h \
+ ../include/FXStream.h ../include/FXString.h ../include/FXObject.h \
+ ../include/FXAccelTable.h ../include/FXObjectList.h \
+ ../include/FXApp.h ../include/FXId.h ../include/FXFont.h \
+ ../include/FXDrawable.h ../include/FXImage.h ../include/FXIcon.h \
+ ../include/FXWindow.h ../include/FXFrame.h ../include/FXComposite.h \
+ ../include/FXLabel.h
+FXIcon.o: FXIcon.cpp ../include/xincs.h ../include/fxdefs.h \
+ ../include/FXStream.h ../include/FXString.h ../include/FXObject.h \
+ ../include/FXObjectList.h ../include/FXApp.h ../include/FXId.h \
+ ../include/FXDrawable.h ../include/FXImage.h ../include/FXIcon.h
+FXHeader.o: FXHeader.cpp ../include/fxdefs.h ../include/FXStream.h \
+ ../include/FXString.h ../include/FXObject.h ../include/FXAccelTable.h \
+ ../include/FXObjectList.h ../include/FXApp.h ../include/FXId.h \
+ ../include/FXFont.h ../include/FXDrawable.h ../include/FXImage.h \
+ ../include/FXIcon.h ../include/FXWindow.h ../include/FXFrame.h \
+ ../include/FXComposite.h ../include/FXHeader.h \
+ ../include/FXHeaderItem.h
+FXImage.o: FXImage.cpp ../include/xincs.h ../include/fxdefs.h \
+ ../include/FXStream.h ../include/FXString.h ../include/FXObject.h \
+ ../include/FXObjectList.h ../include/FXApp.h ../include/FXId.h \
+ ../include/FXDrawable.h ../include/FXImage.h
+FXDrawable.o: FXDrawable.cpp ../include/xincs.h ../include/fxdefs.h \
+ ../include/FXStream.h ../include/FXString.h ../include/FXObject.h \
+ ../include/FXObjectList.h ../include/FXApp.h ../include/FXId.h \
+ ../include/FXFont.h ../include/FXDrawable.h ../include/FXImage.h \
+ ../include/FXIcon.h
+FXTab.o: FXTab.cpp ../include/xincs.h ../include/fxdefs.h \
+ ../include/FXStream.h ../include/FXString.h ../include/FXObject.h \
+ ../include/FXAccelTable.h ../include/FXObjectList.h \
+ ../include/FXApp.h ../include/FXId.h ../include/FXFont.h \
+ ../include/FXDrawable.h ../include/FXImage.h ../include/FXIcon.h \
+ ../include/FXWindow.h ../include/FXFrame.h ../include/FXLabel.h \
+ ../include/FXComposite.h ../include/FXStatusbar.h \
+ ../include/FXShell.h ../include/FXTooltip.h ../include/FXTab.h
+FXMenu.o: FXMenu.cpp ../include/xincs.h ../include/fxdefs.h \
+ ../include/FXStream.h ../include/FXString.h ../include/FXObject.h \
+ ../include/FXAccelTable.h ../include/FXObjectList.h \
+ ../include/FXApp.h ../include/FXId.h ../include/FXFont.h \
+ ../include/FXDrawable.h ../include/FXImage.h ../include/FXIcon.h \
+ ../include/FXGIFIcon.h ../include/FXWindow.h ../include/FXFrame.h \
+ ../include/FXLabel.h ../include/FXButton.h ../include/FXMenuButton.h \
+ ../include/FXComposite.h ../include/FXStatusbar.h \
+ ../include/FXShell.h ../include/FXPopup.h ../include/FXMenu.h \
+ ../include/FXMDIButton.h ../include/FXMDIChild.h \
+ ../include/FXScrollbar.h ../include/FXScrollWindow.h \
+ ../include/FXMDIClient.h
+FXCheckButton.o: FXCheckButton.cpp ../include/xincs.h \
+ ../include/fxdefs.h ../include/FXStream.h ../include/FXString.h \
+ ../include/FXObject.h ../include/FXAccelTable.h \
+ ../include/FXObjectList.h ../include/FXApp.h ../include/FXId.h \
+ ../include/FXFont.h ../include/FXDrawable.h ../include/FXImage.h \
+ ../include/FXIcon.h ../include/FXWindow.h ../include/FXFrame.h \
+ ../include/FXLabel.h ../include/FXCheckButton.h
+FXTextField.o: FXTextField.cpp ../include/xincs.h ../include/fxdefs.h \
+ ../include/fxkeys.h ../include/FXStream.h ../include/FXString.h \
+ ../include/FXObject.h ../include/FXAccelTable.h \
+ ../include/FXObjectList.h ../include/FXApp.h ../include/FXId.h \
+ ../include/FXFont.h ../include/FXCursor.h ../include/FXDrawable.h \
+ ../include/FXImage.h ../include/FXIcon.h ../include/FXWindow.h \
+ ../include/FXFrame.h ../include/FXLabel.h ../include/FXTextField.h \
+ ../include/FXComposite.h ../include/FXStatusbar.h \
+ ../include/FXShell.h ../include/FXTooltip.h
+FXList.o: FXList.cpp ../include/xincs.h ../include/fxdefs.h \
+ ../include/fxkeys.h ../include/FXStream.h ../include/FXString.h \
+ ../include/FXObject.h ../include/FXAccelTable.h \
+ ../include/FXObjectList.h ../include/FXApp.h ../include/FXId.h \
+ ../include/FXFont.h ../include/FXDrawable.h ../include/FXImage.h \
+ ../include/FXIcon.h ../include/FXWindow.h ../include/FXFrame.h \
+ ../include/FXLabel.h ../include/FXTextField.h ../include/FXButton.h \
+ ../include/FXComposite.h ../include/FXCanvas.h ../include/FXShell.h \
+ ../include/FXScrollbar.h ../include/FXScrollWindow.h \
+ ../include/FXList.h ../include/FXListItem.h
+FXScrollbar.o: FXScrollbar.cpp ../include/xincs.h ../include/fxdefs.h \
+ ../include/FXStream.h ../include/FXString.h ../include/FXObject.h \
+ ../include/FXAccelTable.h ../include/FXObjectList.h \
+ ../include/FXApp.h ../include/FXId.h ../include/FXDrawable.h \
+ ../include/FXImage.h ../include/FXIcon.h ../include/FXWindow.h \
+ ../include/FXFrame.h ../include/FXComposite.h ../include/FXLabel.h \
+ ../include/FXButton.h ../include/FXArrowButton.h \
+ ../include/FXScrollbar.h
+FXSpinner.o: FXSpinner.cpp ../include/xincs.h ../include/fxdefs.h \
+ ../include/fxkeys.h ../include/FXStream.h ../include/FXString.h \
+ ../include/FXObject.h ../include/FXAccelTable.h \
+ ../include/FXObjectList.h ../include/FXApp.h ../include/FXId.h \
+ ../include/FXDrawable.h ../include/FXImage.h ../include/FXIcon.h \
+ ../include/FXWindow.h ../include/FXFrame.h ../include/FXLabel.h \
+ ../include/FXTextField.h ../include/FXButton.h \
+ ../include/FXArrowButton.h ../include/FXComposite.h \
+ ../include/FXPacker.h ../include/FXSpinner.h
+FXDebugTarget.o: FXDebugTarget.cpp ../include/xincs.h \
+ ../include/fxdefs.h ../include/FXStream.h ../include/FXObject.h \
+ ../include/FXDebugTarget.h
+FXScrollWindow.o: FXScrollWindow.cpp ../include/xincs.h \
+ ../include/fxdefs.h ../include/FXStream.h ../include/FXString.h \
+ ../include/FXObject.h ../include/FXAccelTable.h \
+ ../include/FXObjectList.h ../include/FXApp.h ../include/FXId.h \
+ ../include/FXDrawable.h ../include/FXImage.h ../include/FXIcon.h \
+ ../include/FXWindow.h ../include/FXFrame.h ../include/FXComposite.h \
+ ../include/FXCanvas.h ../include/FXLabel.h ../include/FXButton.h \
+ ../include/FXScrollbar.h ../include/FXScrollWindow.h
+FXTreeList.o: FXTreeList.cpp ../include/xincs.h ../include/fxdefs.h \
+ ../include/fxkeys.h ../include/FXStream.h ../include/FXString.h \
+ ../include/FXObject.h ../include/FXAccelTable.h \
+ ../include/FXObjectList.h ../include/FXApp.h ../include/FXId.h \
+ ../include/FXFont.h ../include/FXDrawable.h ../include/FXImage.h \
+ ../include/FXIcon.h ../include/FXWindow.h ../include/FXFrame.h \
+ ../include/FXLabel.h ../include/FXButton.h ../include/FXComposite.h \
+ ../include/FXStatusbar.h ../include/FXCanvas.h ../include/FXShell.h \
+ ../include/FXTooltip.h ../include/FXScrollbar.h \
+ ../include/FXScrollWindow.h ../include/FXTreeList.h \
+ ../include/FXTreeItem.h
+FXMessageBox.o: FXMessageBox.cpp ../include/fxdefs.h \
+ ../include/FXStream.h ../include/FXString.h ../include/FXObject.h \
+ ../include/FXAccelTable.h ../include/FXObjectList.h \
+ ../include/FXApp.h ../include/FXId.h ../include/FXDrawable.h \
+ ../include/FXImage.h ../include/FXIcon.h ../include/FXWindow.h \
+ ../include/FXFrame.h ../include/FXLabel.h ../include/FXButton.h \
+ ../include/FXComposite.h ../include/FXPacker.h \
+ ../include/FXHorizontalFrame.h ../include/FXVerticalFrame.h \
+ ../include/FXShell.h ../include/FXTopWindow.h \
+ ../include/FXDialogBox.h ../include/FXMessageBox.h
+FXCursor.o: FXCursor.cpp ../include/xincs.h ../include/fxdefs.h \
+ ../include/FXStream.h ../include/FXString.h ../include/FXObject.h \
+ ../include/FXObjectList.h ../include/FXApp.h ../include/FXId.h \
+ ../include/FXCursor.h
+FXCanvas.o: FXCanvas.cpp ../include/fxdefs.h ../include/FXStream.h \
+ ../include/FXString.h ../include/FXObject.h ../include/FXAccelTable.h \
+ ../include/FXObjectList.h ../include/FXApp.h ../include/FXId.h \
+ ../include/FXDrawable.h ../include/FXWindow.h ../include/FXFrame.h \
+ ../include/FXComposite.h ../include/FXCanvas.h
+FXGroupBox.o: FXGroupBox.cpp ../include/fxdefs.h ../include/FXStream.h \
+ ../include/FXString.h ../include/FXObject.h ../include/FXAccelTable.h \
+ ../include/FXObjectList.h ../include/FXApp.h ../include/FXId.h \
+ ../include/FXFont.h ../include/FXDrawable.h ../include/FXWindow.h \
+ ../include/FXFrame.h ../include/FXLabel.h ../include/FXComposite.h \
+ ../include/FXPacker.h ../include/FXGroupBox.h
+FXListBox.o: FXListBox.cpp ../include/xincs.h ../include/fxdefs.h \
+ ../include/FXStream.h ../include/FXString.h ../include/FXObject.h \
+ ../include/FXAccelTable.h ../include/FXObjectList.h \
+ ../include/FXApp.h ../include/FXId.h ../include/FXDrawable.h \
+ ../include/FXWindow.h ../include/FXFrame.h ../include/FXLabel.h \
+ ../include/FXTextField.h ../include/FXButton.h \
+ ../include/FXArrowButton.h ../include/FXComposite.h \
+ ../include/FXPacker.h ../include/FXShell.h ../include/FXPopup.h \
+ ../include/FXScrollbar.h ../include/FXScrollWindow.h \
+ ../include/FXList.h ../include/FXListBox.h
+FXSplitter.o: FXSplitter.cpp ../include/xincs.h ../include/fxdefs.h \
+ ../include/FXStream.h ../include/FXString.h ../include/FXObject.h \
+ ../include/FXAccelTable.h ../include/FXObjectList.h \
+ ../include/FXApp.h ../include/FXId.h ../include/FXDrawable.h \
+ ../include/FXWindow.h ../include/FXFrame.h ../include/FXComposite.h \
+ ../include/FXSplitter.h
+FXMatrix.o: FXMatrix.cpp ../include/xincs.h ../include/fxdefs.h \
+ ../include/FXStream.h ../include/FXString.h ../include/FXObject.h \
+ ../include/FXAccelTable.h ../include/FXObjectList.h \
+ ../include/FXApp.h ../include/FXId.h ../include/FXDrawable.h \
+ ../include/FXWindow.h ../include/FXFrame.h ../include/FXComposite.h \
+ ../include/FXPacker.h ../include/FXMatrix.h ../include/FXShell.h
+FXGLCanvas.o: FXGLCanvas.cpp ../include/xincs.h ../include/fxdefs.h \
+ ../include/FXStream.h ../include/FXString.h ../include/FXObject.h \
+ ../include/FXAccelTable.h ../include/FXObjectList.h \
+ ../include/FXApp.h ../include/FXId.h ../include/FXDrawable.h \
+ ../include/FXWindow.h ../include/FXCursor.h ../include/FXGLCanvas.h
+FXSlider.o: FXSlider.cpp ../include/xincs.h ../include/fxdefs.h \
+ ../include/FXStream.h ../include/FXString.h ../include/FXObject.h \
+ ../include/FXAccelTable.h ../include/FXObjectList.h \
+ ../include/FXApp.h ../include/FXId.h ../include/FXDrawable.h \
+ ../include/FXImage.h ../include/FXIcon.h ../include/FXWindow.h \
+ ../include/FXFrame.h ../include/FXComposite.h ../include/FXLabel.h \
+ ../include/FXButton.h ../include/FXSlider.h
+FXStatusbar.o: FXStatusbar.cpp ../include/xincs.h ../include/fxdefs.h \
+ ../include/FXStream.h ../include/FXString.h ../include/FXObject.h \
+ ../include/FXAccelTable.h ../include/FXObjectList.h \
+ ../include/FXApp.h ../include/FXId.h ../include/FXFont.h \
+ ../include/FXDrawable.h ../include/FXImage.h ../include/FXIcon.h \
+ ../include/FXWindow.h ../include/FXFrame.h ../include/FXComposite.h \
+ ../include/FXStatusbar.h
+FXPacker.o: FXPacker.cpp ../include/xincs.h ../include/fxdefs.h \
+ ../include/FXStream.h ../include/FXString.h ../include/FXObject.h \
+ ../include/FXAccelTable.h ../include/FXObjectList.h \
+ ../include/FXApp.h ../include/FXId.h ../include/FXDrawable.h \
+ ../include/FXWindow.h ../include/FXFrame.h ../include/FXComposite.h \
+ ../include/FXPacker.h ../include/FXShell.h
+FXText.o: FXText.cpp ../include/xincs.h ../include/fxdefs.h \
+ ../include/fxkeys.h ../include/FXStream.h ../include/FXString.h \
+ ../include/FXObject.h ../include/FXAccelTable.h \
+ ../include/FXObjectList.h ../include/FXApp.h ../include/FXId.h \
+ ../include/FXFont.h ../include/FXDrawable.h ../include/FXImage.h \
+ ../include/FXIcon.h ../include/FXWindow.h ../include/FXFrame.h \
+ ../include/FXComposite.h ../include/FXScrollbar.h \
+ ../include/FXScrollWindow.h ../include/FXText.h \
+ ../include/FXStatusbar.h ../include/FXShell.h ../include/FXTooltip.h
+FXHorizontalFrame.o: FXHorizontalFrame.cpp ../include/fxdefs.h \
+ ../include/FXStream.h ../include/FXString.h ../include/FXObject.h \
+ ../include/FXAccelTable.h ../include/FXObjectList.h \
+ ../include/FXApp.h ../include/FXId.h ../include/FXDrawable.h \
+ ../include/FXWindow.h ../include/FXFrame.h ../include/FXComposite.h \
+ ../include/FXPacker.h ../include/FXHorizontalFrame.h \
+ ../include/FXShell.h
+FXVerticalFrame.o: FXVerticalFrame.cpp ../include/fxdefs.h \
+ ../include/FXStream.h ../include/FXString.h ../include/FXObject.h \
+ ../include/FXAccelTable.h ../include/FXObjectList.h \
+ ../include/FXApp.h ../include/FXId.h ../include/FXDrawable.h \
+ ../include/FXWindow.h ../include/FXFrame.h ../include/FXComposite.h \
+ ../include/FXPacker.h ../include/FXVerticalFrame.h \
+ ../include/FXShell.h
+FXDataTarget.o: FXDataTarget.cpp ../include/xincs.h \
+ ../include/fxdefs.h ../include/fxkeys.h ../include/FXStream.h \
+ ../include/FXString.h ../include/FXObject.h ../include/FXAccelTable.h \
+ ../include/FXObjectList.h ../include/FXApp.h ../include/FXId.h \
+ ../include/FXCursor.h ../include/FXDrawable.h ../include/FXWindow.h \
+ ../include/FXFrame.h ../include/FXComposite.h \
+ ../include/FXRootWindow.h ../include/FXShell.h \
+ ../include/FXDataTarget.h
+FXRange.o: FXRange.cpp ../include/xincs.h ../include/fxdefs.h \
+ ../include/FXStream.h ../include/FXObject.h ../include/FXVec.h \
+ ../include/FXRange.h
+FXGLViewer.o: FXGLViewer.cpp ../include/xincs.h ../include/fxdefs.h \
+ ../include/FXStream.h ../include/FXVec.h ../include/FXHVec.h \
+ ../include/FXQuat.h ../include/FXHMat.h ../include/FXRange.h \
+ ../include/FXString.h ../include/FXObject.h ../include/FXAccelTable.h \
+ ../include/FXObjectList.h ../include/FXApp.h ../include/FXId.h \
+ ../include/FXDrawable.h ../include/FXWindow.h ../include/FXFrame.h \
+ ../include/FXComposite.h ../include/FXStatusbar.h \
+ ../include/FXShell.h ../include/FXTooltip.h ../include/FXLabel.h \
+ ../include/FXColorWell.h ../include/FXCursor.h \
+ ../include/FXGLCanvas.h ../include/FXGLViewer.h \
+ ../include/FXGLObject.h jitter.h
+FXShutter.o: FXShutter.cpp ../include/fxdefs.h ../include/FXStream.h \
+ ../include/FXString.h ../include/FXObject.h ../include/FXAccelTable.h \
+ ../include/FXObjectList.h ../include/FXApp.h ../include/FXId.h \
+ ../include/FXDrawable.h ../include/FXImage.h ../include/FXIcon.h \
+ ../include/FXWindow.h ../include/FXFrame.h ../include/FXComposite.h \
+ ../include/FXPacker.h ../include/FXVerticalFrame.h \
+ ../include/FXLabel.h ../include/FXButton.h ../include/FXScrollbar.h \
+ ../include/FXScrollWindow.h ../include/FXShutter.h \
+ ../include/FXShell.h
+FXColorWell.o: FXColorWell.cpp ../include/xincs.h ../include/fxdefs.h \
+ ../include/FXStream.h ../include/FXString.h ../include/FXObject.h \
+ ../include/FXAccelTable.h ../include/FXObjectList.h \
+ ../include/FXApp.h ../include/FXId.h ../include/FXFont.h \
+ ../include/FXDrawable.h ../include/FXImage.h ../include/FXIcon.h \
+ ../include/FXWindow.h ../include/FXFrame.h ../include/FXComposite.h \
+ ../include/FXLabel.h ../include/FXColorWell.h
+FXMenuButton.o: FXMenuButton.cpp ../include/xincs.h \
+ ../include/fxdefs.h ../include/FXStream.h ../include/FXString.h \
+ ../include/FXObject.h ../include/FXAccelTable.h \
+ ../include/FXObjectList.h ../include/FXApp.h ../include/FXId.h \
+ ../include/FXFont.h ../include/FXDrawable.h ../include/FXImage.h \
+ ../include/FXIcon.h ../include/FXWindow.h ../include/FXFrame.h \
+ ../include/FXLabel.h ../include/FXButton.h ../include/FXMenuButton.h \
+ ../include/FXComposite.h ../include/FXStatusbar.h \
+ ../include/FXShell.h ../include/FXPopup.h ../include/FXMenu.h \
+ ../include/FXTooltip.h
+FXAccelTable.o: FXAccelTable.cpp ../include/xincs.h \
+ ../include/fxdefs.h ../include/FXStream.h ../include/FXObject.h \
+ ../include/FXAccelTable.h
+FXIconList.o: FXIconList.cpp ../include/xincs.h ../include/fxdefs.h \
+ ../include/fxkeys.h ../include/FXStream.h ../include/FXString.h \
+ ../include/FXObject.h ../include/FXAccelTable.h \
+ ../include/FXObjectList.h ../include/FXApp.h ../include/FXId.h \
+ ../include/FXFont.h ../include/FXDrawable.h ../include/FXImage.h \
+ ../include/FXIcon.h ../include/FXWindow.h ../include/FXFrame.h \
+ ../include/FXLabel.h ../include/FXButton.h ../include/FXComposite.h \
+ ../include/FXCanvas.h ../include/FXShell.h ../include/FXScrollbar.h \
+ ../include/FXScrollWindow.h ../include/FXHeader.h \
+ ../include/FXIconList.h ../include/FXIconItem.h
+FXProgressBar.o: FXProgressBar.cpp ../include/xincs.h \
+ ../include/fxdefs.h ../include/FXStream.h ../include/FXString.h \
+ ../include/FXObject.h ../include/FXAccelTable.h \
+ ../include/FXObjectList.h ../include/FXApp.h ../include/FXId.h \
+ ../include/FXFont.h ../include/FXDrawable.h ../include/FXImage.h \
+ ../include/FXIcon.h ../include/FXWindow.h ../include/FXFrame.h \
+ ../include/FXComposite.h ../include/FXLabel.h \
+ ../include/FXProgressBar.h
+FXFileList.o: FXFileList.cpp ../include/xincs.h ../include/fxdefs.h \
+ ../include/fxkeys.h ../include/FXStream.h ../include/FXString.h \
+ ../include/FXObject.h ../include/FXAccelTable.h \
+ ../include/FXObjectList.h ../include/FXApp.h ../include/FXId.h \
+ ../include/FXFont.h ../include/FXDrawable.h ../include/FXImage.h \
+ ../include/FXIcon.h ../include/FXGIFIcon.h ../include/FXWindow.h \
+ ../include/FXFrame.h ../include/FXLabel.h ../include/FXButton.h \
+ ../include/FXComposite.h ../include/FXCanvas.h ../include/FXShell.h \
+ ../include/FXScrollbar.h ../include/FXScrollWindow.h \
+ ../include/FXHeader.h ../include/FXIconList.h ../include/FXFileList.h \
+ ../include/FXIconItem.h ../include/FXFileItem.h
+fxregex.o: fxregex.cpp ../include/xincs.h ../include/fxdefs.h \
+ ../include/fxregex.h
+FXDirList.o: FXDirList.cpp ../include/xincs.h ../include/fxdefs.h \
+ ../include/fxkeys.h ../include/FXStream.h ../include/FXString.h \
+ ../include/FXObject.h ../include/FXAccelTable.h \
+ ../include/FXObjectList.h ../include/FXApp.h ../include/FXId.h \
+ ../include/FXFont.h ../include/FXDrawable.h ../include/FXImage.h \
+ ../include/FXIcon.h ../include/FXGIFIcon.h ../include/FXWindow.h \
+ ../include/FXFrame.h ../include/FXLabel.h ../include/FXButton.h \
+ ../include/FXComposite.h ../include/FXCanvas.h ../include/FXShell.h \
+ ../include/FXScrollbar.h ../include/FXScrollWindow.h \
+ ../include/FXTreeList.h ../include/FXDirList.h \
+ ../include/FXTreeItem.h ../include/FXDirItem.h
+FXColorNames.o: FXColorNames.cpp ../include/xincs.h \
+ ../include/fxdefs.h ../include/fxkeys.h
+FXFileSelector.o: FXFileSelector.cpp ../include/xincs.h \
+ ../include/fxdefs.h ../include/fxkeys.h ../include/FXStream.h \
+ ../include/FXString.h ../include/FXObject.h ../include/FXAccelTable.h \
+ ../include/FXObjectList.h ../include/FXApp.h ../include/FXId.h \
+ ../include/FXFont.h ../include/FXDrawable.h ../include/FXImage.h \
+ ../include/FXIcon.h ../include/FXGIFIcon.h ../include/FXWindow.h \
+ ../include/FXFrame.h ../include/FXLabel.h ../include/FXTextField.h \
+ ../include/FXButton.h ../include/FXComposite.h ../include/FXPacker.h \
+ ../include/FXHorizontalFrame.h ../include/FXMatrix.h \
+ ../include/FXCanvas.h ../include/FXShell.h ../include/FXScrollbar.h \
+ ../include/FXScrollWindow.h ../include/FXHeader.h \
+ ../include/FXIconList.h ../include/FXFileList.h \
+ ../include/FXFileSelector.h
+FXPopup.o: FXPopup.cpp ../include/xincs.h ../include/fxdefs.h \
+ ../include/fxkeys.h ../include/FXStream.h ../include/FXString.h \
+ ../include/FXObject.h ../include/FXAccelTable.h \
+ ../include/FXObjectList.h ../include/FXApp.h ../include/FXId.h \
+ ../include/FXCursor.h ../include/FXDrawable.h ../include/FXWindow.h \
+ ../include/FXFrame.h ../include/FXComposite.h \
+ ../include/FXRootWindow.h ../include/FXShell.h ../include/FXPopup.h
+FXFileDialog.o: FXFileDialog.cpp ../include/xincs.h \
+ ../include/fxdefs.h ../include/fxkeys.h ../include/FXStream.h \
+ ../include/FXString.h ../include/FXObject.h ../include/FXAccelTable.h \
+ ../include/FXObjectList.h ../include/FXApp.h ../include/FXId.h \
+ ../include/FXFont.h ../include/FXDrawable.h ../include/FXImage.h \
+ ../include/FXIcon.h ../include/FXGIFIcon.h ../include/FXWindow.h \
+ ../include/FXFrame.h ../include/FXLabel.h ../include/FXButton.h \
+ ../include/FXComposite.h ../include/FXPacker.h ../include/FXCanvas.h \
+ ../include/FXShell.h ../include/FXTopWindow.h \
+ ../include/FXDialogBox.h ../include/FXScrollbar.h \
+ ../include/FXScrollWindow.h ../include/FXHeader.h \
+ ../include/FXIconList.h ../include/FXFileList.h \
+ ../include/FXTextField.h ../include/FXFileSelector.h \
+ ../include/FXFileDialog.h
+FXTopWindow.o: FXTopWindow.cpp ../include/xincs.h ../include/fxdefs.h \
+ ../include/FXStream.h ../include/FXString.h ../include/FXObject.h \
+ ../include/FXAccelTable.h ../include/FXObjectList.h \
+ ../include/FXApp.h ../include/FXId.h ../include/FXCursor.h \
+ ../include/FXDrawable.h ../include/FXWindow.h ../include/FXFrame.h \
+ ../include/FXComposite.h ../include/FXRootWindow.h \
+ ../include/FXShell.h ../include/FXTopWindow.h
+FXDialogBox.o: FXDialogBox.cpp ../include/xincs.h ../include/fxdefs.h \
+ ../include/FXStream.h ../include/FXString.h ../include/FXObject.h \
+ ../include/FXAccelTable.h ../include/FXObjectList.h \
+ ../include/FXApp.h ../include/FXId.h ../include/FXCursor.h \
+ ../include/FXDrawable.h ../include/FXWindow.h ../include/FXFrame.h \
+ ../include/FXComposite.h ../include/FXRootWindow.h \
+ ../include/FXShell.h ../include/FXTopWindow.h \
+ ../include/FXDialogBox.h
+FXRadioButton.o: FXRadioButton.cpp ../include/xincs.h \
+ ../include/fxdefs.h ../include/FXStream.h ../include/FXString.h \
+ ../include/FXObject.h ../include/FXAccelTable.h \
+ ../include/FXObjectList.h ../include/FXApp.h ../include/FXId.h \
+ ../include/FXFont.h ../include/FXDrawable.h ../include/FXImage.h \
+ ../include/FXIcon.h ../include/FXWindow.h ../include/FXFrame.h \
+ ../include/FXLabel.h ../include/FXRadioButton.h
+FXMainWindow.o: FXMainWindow.cpp ../include/xincs.h \
+ ../include/fxdefs.h ../include/FXStream.h ../include/FXString.h \
+ ../include/FXObject.h ../include/FXAccelTable.h \
+ ../include/FXObjectList.h ../include/FXApp.h ../include/FXId.h \
+ ../include/FXCursor.h ../include/FXDrawable.h ../include/FXWindow.h \
+ ../include/FXFrame.h ../include/FXComposite.h \
+ ../include/FXRootWindow.h ../include/FXShell.h \
+ ../include/FXTopWindow.h ../include/FXMainWindow.h
+FXResources.o: FXResources.cpp ../include/fxdefs.h
+FXGIFImage.o: FXGIFImage.cpp ../include/xincs.h ../include/fxdefs.h \
+ ../include/FXStream.h ../include/FXString.h ../include/FXObject.h \
+ ../include/FXObjectList.h ../include/FXApp.h ../include/FXId.h \
+ ../include/FXDrawable.h ../include/FXImage.h ../include/FXGIFImage.h
+FXBMPImage.o: FXBMPImage.cpp ../include/xincs.h ../include/fxdefs.h \
+ ../include/FXStream.h ../include/FXString.h ../include/FXObject.h \
+ ../include/FXObjectList.h ../include/FXApp.h ../include/FXId.h \
+ ../include/FXDrawable.h ../include/FXImage.h ../include/FXBMPImage.h
+fxgifio.o: fxgifio.cpp ../include/xincs.h ../include/fxdefs.h \
+ ../include/FXStream.h
+fxbmpio.o: fxbmpio.cpp ../include/xincs.h ../include/fxdefs.h \
+ ../include/FXStream.h
+FXGIFIcon.o: FXGIFIcon.cpp ../include/xincs.h ../include/fxdefs.h \
+ ../include/FXStream.h ../include/FXString.h ../include/FXObject.h \
+ ../include/FXObjectList.h ../include/FXApp.h ../include/FXId.h \
+ ../include/FXDrawable.h ../include/FXImage.h ../include/FXIcon.h \
+ ../include/FXGIFIcon.h
+FXBMPIcon.o: FXBMPIcon.cpp ../include/xincs.h ../include/fxdefs.h \
+ ../include/FXStream.h ../include/FXString.h ../include/FXObject.h \
+ ../include/FXObjectList.h ../include/FXApp.h ../include/FXId.h \
+ ../include/FXDrawable.h ../include/FXImage.h ../include/FXIcon.h \
+ ../include/FXBMPIcon.h
+FXVec.o: FXVec.cpp ../include/xincs.h ../include/fxdefs.h \
+ ../include/FXStream.h ../include/FXObject.h ../include/FXVec.h
+FXHVec.o: FXHVec.cpp ../include/xincs.h ../include/fxdefs.h \
+ ../include/FXStream.h ../include/FXObject.h ../include/FXHVec.h
+FXDVec.o: FXDVec.cpp ../include/xincs.h ../include/fxdefs.h \
+ ../include/FXStream.h ../include/FXObject.h ../include/FXDVec.h
+FXDHVec.o: FXDHVec.cpp ../include/xincs.h ../include/fxdefs.h \
+ ../include/FXStream.h ../include/FXObject.h ../include/FXDHVec.h
+FXHMat.o: FXHMat.cpp ../include/xincs.h ../include/fxdefs.h \
+ ../include/FXStream.h ../include/FXObject.h ../include/FXVec.h \
+ ../include/FXHVec.h ../include/FXQuat.h ../include/FXHMat.h
+FXQuat.o: FXQuat.cpp ../include/xincs.h ../include/fxdefs.h \
+ ../include/FXStream.h ../include/FXObject.h ../include/FXVec.h \
+ ../include/FXHVec.h ../include/FXQuat.h
+FXTooltip.o: FXTooltip.cpp ../include/xincs.h ../include/fxdefs.h \
+ ../include/FXStream.h ../include/FXString.h ../include/FXObject.h \
+ ../include/FXAccelTable.h ../include/FXObjectList.h \
+ ../include/FXApp.h ../include/FXId.h ../include/FXFont.h \
+ ../include/FXCursor.h ../include/FXDrawable.h ../include/FXWindow.h \
+ ../include/FXFrame.h ../include/FXComposite.h \
+ ../include/FXRootWindow.h ../include/FXShell.h ../include/FXTooltip.h
+FXDial.o: FXDial.cpp ../include/xincs.h ../include/fxdefs.h \
+ ../include/FXStream.h ../include/FXString.h ../include/FXObject.h \
+ ../include/FXAccelTable.h ../include/FXObjectList.h \
+ ../include/FXApp.h ../include/FXId.h ../include/FXDrawable.h \
+ ../include/FXImage.h ../include/FXIcon.h ../include/FXWindow.h \
+ ../include/FXFrame.h ../include/FXComposite.h ../include/FXLabel.h \
+ ../include/FXDial.h
+FXGLObject.o: FXGLObject.cpp ../include/xincs.h ../include/fxdefs.h \
+ ../include/FXStream.h ../include/FXVec.h ../include/FXHVec.h \
+ ../include/FXQuat.h ../include/FXHMat.h ../include/FXRange.h \
+ ../include/FXString.h ../include/FXObject.h ../include/FXAccelTable.h \
+ ../include/FXObjectList.h ../include/FXApp.h ../include/FXId.h \
+ ../include/FXDrawable.h ../include/FXWindow.h ../include/FXCursor.h \
+ ../include/FXGLCanvas.h ../include/FXGLViewer.h \
+ ../include/FXGLObject.h ../include/FXComposite.h ../include/FXShell.h \
+ ../include/FXTooltip.h
+FXMDIClient.o: FXMDIClient.cpp ../include/xincs.h ../include/fxdefs.h \
+ ../include/FXStream.h ../include/FXString.h ../include/FXObject.h \
+ ../include/FXAccelTable.h ../include/FXObjectList.h \
+ ../include/FXApp.h ../include/FXId.h ../include/FXDrawable.h \
+ ../include/FXImage.h ../include/FXIcon.h ../include/FXWindow.h \
+ ../include/FXFrame.h ../include/FXLabel.h ../include/FXButton.h \
+ ../include/FXComposite.h ../include/FXShell.h ../include/FXPopup.h \
+ ../include/FXMenu.h ../include/FXMenuBar.h ../include/FXMDIChild.h \
+ ../include/FXScrollbar.h ../include/FXScrollWindow.h \
+ ../include/FXMDIClient.h
+FXMDIChild.o: FXMDIChild.cpp ../include/xincs.h ../include/fxdefs.h \
+ ../include/FXStream.h ../include/FXString.h ../include/FXObject.h \
+ ../include/FXAccelTable.h ../include/FXObjectList.h \
+ ../include/FXApp.h ../include/FXId.h ../include/FXFont.h \
+ ../include/FXDrawable.h ../include/FXImage.h ../include/FXIcon.h \
+ ../include/FXGIFIcon.h ../include/FXWindow.h ../include/FXFrame.h \
+ ../include/FXLabel.h ../include/FXButton.h ../include/FXMenuButton.h \
+ ../include/FXComposite.h ../include/FXShell.h ../include/FXPopup.h \
+ ../include/FXMenu.h ../include/FXScrollbar.h \
+ ../include/FXScrollWindow.h ../include/FXMDIButton.h \
+ ../include/FXMDIChild.h ../include/FXMDIClient.h
+FXMDIButton.o: FXMDIButton.cpp ../include/xincs.h ../include/fxdefs.h \
+ ../include/FXStream.h ../include/FXString.h ../include/FXObject.h \
+ ../include/FXAccelTable.h ../include/FXObjectList.h \
+ ../include/FXApp.h ../include/FXId.h ../include/FXFont.h \
+ ../include/FXDrawable.h ../include/FXImage.h ../include/FXIcon.h \
+ ../include/FXGIFIcon.h ../include/FXWindow.h ../include/FXFrame.h \
+ ../include/FXLabel.h ../include/FXButton.h ../include/FXComposite.h \
+ ../include/FXShell.h ../include/FXPopup.h ../include/FXMenu.h \
+ ../include/FXScrollbar.h ../include/FXScrollWindow.h \
+ ../include/FXMDIButton.h ../include/FXMDIChild.h \
+ ../include/FXMDIClient.h
+FXColorDialog.o: FXColorDialog.cpp ../include/xincs.h \
+ ../include/fxdefs.h ../include/fxkeys.h ../include/FXStream.h \
+ ../include/FXString.h ../include/FXObject.h ../include/FXAccelTable.h \
+ ../include/FXObjectList.h ../include/FXApp.h ../include/FXId.h \
+ ../include/FXFont.h ../include/FXDrawable.h ../include/FXImage.h \
+ ../include/FXIcon.h ../include/FXGIFIcon.h ../include/FXWindow.h \
+ ../include/FXFrame.h ../include/FXLabel.h ../include/FXColorWell.h \
+ ../include/FXButton.h ../include/FXComposite.h ../include/FXPacker.h \
+ ../include/FXCanvas.h ../include/FXShell.h ../include/FXTopWindow.h \
+ ../include/FXDialogBox.h ../include/FXScrollbar.h \
+ ../include/FXScrollWindow.h ../include/FXList.h \
+ ../include/FXTextField.h ../include/FXSlider.h \
+ ../include/FXColorSelector.h ../include/FXColorDialog.h
+FXColorSelector.o: FXColorSelector.cpp ../include/xincs.h \
+ ../include/fxdefs.h ../include/fxkeys.h ../include/FXStream.h \
+ ../include/FXString.h ../include/FXObject.h ../include/FXAccelTable.h \
+ ../include/FXObjectList.h ../include/FXApp.h ../include/FXId.h \
+ ../include/FXFont.h ../include/FXDrawable.h ../include/FXImage.h \
+ ../include/FXIcon.h ../include/FXGIFIcon.h ../include/FXWindow.h \
+ ../include/FXFrame.h ../include/FXLabel.h ../include/FXColorWell.h \
+ ../include/FXTextField.h ../include/FXButton.h \
+ ../include/FXComposite.h ../include/FXPacker.h ../include/FXTab.h \
+ ../include/FXHorizontalFrame.h ../include/FXVerticalFrame.h \
+ ../include/FXMatrix.h ../include/FXCanvas.h ../include/FXShell.h \
+ ../include/FXScrollbar.h ../include/FXSlider.h \
+ ../include/FXScrollWindow.h ../include/FXList.h \
+ ../include/FXColorSelector.h
+FXOptionMenu.o: FXOptionMenu.cpp ../include/xincs.h \
+ ../include/fxdefs.h ../include/fxkeys.h ../include/FXStream.h \
+ ../include/FXString.h ../include/FXObject.h ../include/FXAccelTable.h \
+ ../include/FXObjectList.h ../include/FXApp.h ../include/FXId.h \
+ ../include/FXFont.h ../include/FXDrawable.h ../include/FXImage.h \
+ ../include/FXIcon.h ../include/FXWindow.h ../include/FXFrame.h \
+ ../include/FXLabel.h ../include/FXComposite.h \
+ ../include/FXStatusbar.h ../include/FXShell.h ../include/FXPopup.h \
+ ../include/FXButton.h ../include/FXMenuButton.h \
+ ../include/FXTooltip.h ../include/FXOptionMenu.h
+FXArrowButton.o: FXArrowButton.cpp ../include/xincs.h \
+ ../include/fxdefs.h ../include/FXStream.h ../include/FXString.h \
+ ../include/FXObject.h ../include/FXAccelTable.h \
+ ../include/FXObjectList.h ../include/FXApp.h ../include/FXId.h \
+ ../include/FXFont.h ../include/FXDrawable.h ../include/FXImage.h \
+ ../include/FXIcon.h ../include/FXWindow.h ../include/FXFrame.h \
+ ../include/FXLabel.h ../include/FXButton.h ../include/FXArrowButton.h \
+ ../include/FXComposite.h ../include/FXStatusbar.h \
+ ../include/FXShell.h ../include/FXPopup.h ../include/FXMenu.h \
+ ../include/FXTooltip.h
+FXMenuBar.o: FXMenuBar.cpp ../include/xincs.h ../include/fxdefs.h \
+ ../include/FXStream.h ../include/FXString.h ../include/FXObject.h \
+ ../include/FXAccelTable.h ../include/FXObjectList.h \
+ ../include/FXApp.h ../include/FXId.h ../include/FXFont.h \
+ ../include/FXDrawable.h ../include/FXImage.h ../include/FXIcon.h \
+ ../include/FXGIFIcon.h ../include/FXWindow.h ../include/FXFrame.h \
+ ../include/FXLabel.h ../include/FXButton.h ../include/FXMenuButton.h \
+ ../include/FXComposite.h ../include/FXStatusbar.h \
+ ../include/FXShell.h ../include/FXPopup.h ../include/FXMenu.h \
+ ../include/FXMenuBar.h ../include/FXMDIButton.h \
+ ../include/FXMDIChild.h ../include/FXScrollbar.h \
+ ../include/FXScrollWindow.h ../include/FXMDIClient.h
+fxicl.o: fxicl.cpp ../include/xincs.h ../include/fxdefs.h \
+ ../include/FXStream.h ../include/FXString.h ../include/FXObject.h \
+ ../include/FXObjectList.h ../include/FXApp.h ../include/FXId.h \
+ ../include/FXDrawable.h ../include/FXImage.h ../include/fxicl.h

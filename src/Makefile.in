@@ -1,0 +1,102 @@
+##############################################################################
+#                                                                            #
+#                       FOX:  A Free C++ Class Library for X                 #
+#                                                                            #
+##############################################################################
+# Copyright (C) 1997 by Jeroen van der Zijp.   All Rights Reserved.          #
+##############################################################################
+# $Id: Makefile.in,v 1.53 1998/10/28 07:58:58 jeroen Exp $                   #
+##############################################################################
+# This library is free software; you can redistribute it and/or              #
+# modify it under the terms of the GNU Library General Public                #
+# License as published by the Free Software Foundation; either               #
+# version 2 of the License, or (at your option) any later version.           #
+#                                                                            #
+# This library is distributed in the hope that it will be useful,            #
+# but WITHOUT ANY WARRANTY; without even the implied warranty of             #
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU          #
+# Library General Public License for more details.                           #
+#                                                                            #
+# You should have received a copy of the GNU Library General Public          #
+# License along with this library; if not, write to the Free                 #
+# Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.         #
+##############################################################################
+
+
+SHELL     = /bin/sh
+CC        = @CC@
+CXX       = @CXX@
+CPP       = @CPP@
+RM        = rm -f
+AR        = ar rc
+RANLIB    = @RANLIB@
+SRCDIR    = @srcdir@
+TOPDIR    = @top_srcdir@
+CFLAGS    = @CFLAGS@
+CXXFLAGS  = @CXXFLAGS@
+DEFINES   = @DEFS@
+CPPFLAGS  = @CPPFLAGS@
+LDFLAGS   = @LDFLAGS@ @X_LIBS@
+X11LIBS   = @X_PRE_LIBS@ -lXext -lX11 @X_EXTRA_LIBS@
+GLLIBS    = @GL_LIBS@
+INCDIRS   = -I$(TOPDIR)/include @X_CFLAGS@
+LIBDIRS   = @X_LIBS@ -L$(TOPDIR)/lib
+FOXLIB    = $(TOPDIR)/lib/libFOX.a
+
+
+.SUFFIXES: .cpp .c
+
+SOURCES = FXStream.cpp FXObject.cpp FXObjectList.cpp FXFont.cpp FXRootWindow.cpp\
+          FXApp.cpp FXWindow.cpp FXFrame.cpp fxutils.cpp FXId.cpp FXButton.cpp\
+          FXString.cpp FXComposite.cpp FXShell.cpp FXLabel.cpp FXIcon.cpp FXHeader.cpp\
+          FXImage.cpp FXDrawable.cpp FXTab.cpp FXMenu.cpp FXCheckButton.cpp\
+          FXTextField.cpp FXList.cpp FXScrollbar.cpp FXSpinner.cpp FXDebugTarget.cpp\
+          FXScrollWindow.cpp FXTreeList.cpp FXMessageBox.cpp FXCursor.cpp\
+          FXCanvas.cpp FXGroupBox.cpp FXListBox.cpp FXSplitter.cpp FXMatrix.cpp\
+          FXGLCanvas.cpp FXSlider.cpp FXStatusbar.cpp FXPacker.cpp FXText.cpp\
+          FXHorizontalFrame.cpp FXVerticalFrame.cpp FXDataTarget.cpp \
+          FXRange.cpp FXGLViewer.cpp FXShutter.cpp FXColorWell.cpp FXMenuButton.cpp\
+          FXAccelTable.cpp FXIconList.cpp FXProgressBar.cpp FXFileList.cpp\
+          fxregex.cpp FXDirList.cpp FXColorNames.cpp FXFileSelector.cpp FXPopup.cpp\
+          FXFileDialog.cpp FXTopWindow.cpp FXDialogBox.cpp FXRadioButton.cpp\
+          FXMainWindow.cpp FXResources.cpp FXGIFImage.cpp FXBMPImage.cpp\
+          fxgifio.cpp fxbmpio.cpp FXGIFIcon.cpp FXBMPIcon.cpp FXVec.cpp FXHVec.cpp\
+          FXDVec.cpp FXDHVec.cpp FXHMat.cpp FXQuat.cpp FXTooltip.cpp FXDial.cpp\
+          FXGLObject.cpp FXMDIClient.cpp FXMDIChild.cpp FXMDIButton.cpp\
+          FXColorDialog.cpp FXColorSelector.cpp FXOptionMenu.cpp FXArrowButton.cpp \
+          FXMenuBar.cpp fxicl.cpp
+
+
+OBJECTS = $(SOURCES:.cpp=.o)
+
+.cpp.o:
+	$(CXX) -c $(INCDIRS) $(CXXFLAGS) $(DEFINES) $*.cpp
+
+all: $(FOXLIB)
+
+
+drop: $(FOXLIB)
+	cp $(TOPDIR)/include/*.h $(DROPDIR)/include/FOX
+	cp $(FOXLIB) $(DROPDIR)/lib/$(ARCH)/libFOX.a
+
+
+clean:
+	$(RM) *.o *~
+
+
+realclean: clean
+	$(RM) Makefile
+
+
+# Make the library
+$(FOXLIB): $(OBJECTS)
+	$(AR) $(FOXLIB) $(OBJECTS)
+	$(RANLIB) $(FOXLIB)
+
+
+dep: $(SOURCES)
+	$(CXX) -I../include -MM $(SOURCES) >depend
+
+
+include depend
+

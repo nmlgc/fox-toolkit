@@ -1,0 +1,249 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+<HEAD>
+   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+   <META NAME="Author" CONTENT="Jeroen van der Zijp">
+   <META NAME="GENERATOR" CONTENT="Mozilla/4.06 [en] (X11; I; Linux 2.0.34 i686) [Netscape]">
+   <META NAME="Description" CONTENT="FOX Main Page">
+   <META NAME="Keywords" CONTENT="FOX, GUI, Toolkit, C++ Class Library">
+   <TITLE>Welcome to FOX</TITLE>
+</HEAD>
+<BODY TEXT="#000000" BGCOLOR="#FFFFFF" LINK="#0000EE" VLINK="#551A8B" ALINK="#FF0000" BACKGROUND="foxback.gif">
+
+<CENTER><IMG SRC="foxlogo.gif" BORDER=3 HEIGHT=120 WIDTH=160>
+<BR>&nbsp;
+<P><U><FONT COLOR="#990000"><FONT SIZE=+4>Welcome To FOX!</FONT></FONT></U>
+<BR><U><FONT COLOR="#990000"><FONT SIZE=-1>Last update: 10/22/98</FONT></FONT></U></CENTER>
+
+<BR>&nbsp;
+<P><BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<P><U><FONT COLOR="#990000"><FONT SIZE=+4>What Is FOX?</FONT></FONT></U>
+<P>FOX is a C++ based Toolkit for developing Graphical User Interfaces
+easily and effectively.&nbsp;&nbsp; It offers a wide, and growing, collection
+of Controls, and provides state of the art facilities such as <I>drag and
+drop</I>, <I>selection</I>, as well as <I>OpenGL</I> widgets for 3D graphical
+manipulation.&nbsp; FOX also implements <I>icons</I>, <I>images</I>, and
+user-convenience features such as <I>status line help, </I>and<I> tooltips.&nbsp;</I>
+Tooltips may even be used for 3D objects!
+<P>Considerable importance has been placed on making FOX one of the fastest
+toolkits around, and to minimize memory use:- FOX uses a number of techniques
+to speed up drawing and spatial layout of the GUI.&nbsp; Memory is conserved
+by allowing programmers to create and destroy GUI elements on the fly.
+<P>Even though FOX offers a large collection of Controls already, FOX leverages
+C++ to allow programmers to easily build additional Controls and GUI elements,
+simply by taking existing controls, and creating a derived class which
+simply adds or redefines the desired behavior.
+<P>One of the prime design goals of FOX is the <I>ease of programming</I>;
+thus, most controls can be created using a single line of C++ code; most
+parameters have sensible default values, so that they may be omitted, and
+layout managers ensure that designers of GUI's do not have to worry about
+precise alignments.
+<P>Another nice feature of FOX which significantly reduces the number of
+lines of code which have to be written is FOX's ability to have widgets
+connect to each other, and passing certain commands between them; for example,
+a menu entry Hide Toolbar can be directly <I>connected</I> to the Toolbar,
+and cause it to hide.
+<P>Finally, FOX makes it easy to maintain the state of the GUI in an application
+by having the GUI elements automatically updating themselves by interrogating
+the application's state.&nbsp; This feature eliminates the large amount
+of effort that may go into sensitizing, graying out, checking/unchecking
+etc. depending on the application state.
+<BR>&nbsp;
+<BR>&nbsp;
+<P><U><FONT COLOR="#990000"><FONT SIZE=+4>Where to get it?</FONT></FONT></U>
+<P>You can FTP the complete <A HREF="ftp://cyberia.cfdrc.com/pub/fox.tar.gz">FOX
+GUI </A>toolkit from our FTP site: <A HREF="ftp://cyberia.cfdrc.com">ftp://cyberia.cfdrc.com.</A>&nbsp;&nbsp;
+The tar-ball includes this on-line documentation you see here.
+<BR>&nbsp;
+<BR>&nbsp;
+<P><U><FONT COLOR="#990000"><FONT SIZE=+4>Mailing List.</FONT></FONT></U>
+<P>To stay informed, we now have a mailing list for FOX.&nbsp; <FONT COLOR="#000000">To
+subscribe, </FONT>send mail to <A HREF="mailto:fox-users-request@cfdrc.com">fox-users-request@cfdrc.com
+</A>with
+the word subscribe in the message body.
+<BR>Messages to the list can be sent to <A HREF="mailto:fox-users@cfdrc.com">fox-users@cfdrc.com</A>.&nbsp;
+FOX announcements will be made through this list also.
+<BR>&nbsp;
+<P><U><FONT COLOR="#990000"><FONT SIZE=+4>Some Screen Shots.</FONT></FONT></U>
+<P>This <A HREF="pcboard.gif">picture</A> shows FOX being used in a PC
+board design application.&nbsp; It highlights the use of the FXTreeList
+widget (on the left), the FXShutter widget (on the right) and the OpenGL
+FXGLViewer widgets, as well as the Multiple Document Interface Widgets
+(center).&nbsp; This other <A HREF="textedit.gif">picture</A> shows the
+text editor application in the process of opening another file.The FOX
+<A HREF="pathfinder.gif">PathFinder</A>, a File Explorer program being
+developed using FOX, is shown <A HREF="pathfinder.gif">here</A>.
+<P><A HREF="http://home.bip.net/mikael_aronsson/">Magic Light</A>&nbsp;
+is a FOX-based GUI for a ray-tracing program being developed my&nbsp; <A HREF="mailto:mikael.aronsson@flygt.com">Mikael
+Aronsson</A>.
+<BR>&nbsp;
+<BR>&nbsp;
+<P><U><FONT COLOR="#990000"><FONT SIZE=+4>FOX <I>is</I> Platform Independence!</FONT></FONT></U>
+<P>FOX is in the process of being ported to the <A HREF="platforms.html#WINNT">Windows
+NT</A> platform. Before sending me any nasty comments, please read this
+more detailed explanation of the <A HREF="platforms.html#PLATFORMS">reasons</A>.
+Other platforms such as LINUX GGI may be in our future as well.
+<BR>&nbsp;
+<BR>&nbsp;
+<BR>&nbsp;
+<P><U><FONT COLOR="#990000"><FONT SIZE=+4>Table of Contents.</FONT></FONT></U>
+<BR>&nbsp;
+<TABLE BORDER=0 CELLSPACING=20 WIDTH="100%" NOSAVE >
+<TR NOSAVE>
+<TD WIDTH="25%" NOSAVE>
+<DIV ALIGN=right><FONT FACE="Times New Roman,Times"><FONT COLOR="#330000"><FONT SIZE=+4><A HREF="foreword.html#FOREWORD">Foreword</A></FONT></FONT></FONT></DIV>
+</TD>
+
+<TD NOSAVE>What FOX is, why it was written, and what are its main features.</TD>
+</TR>
+
+<TR>
+<TD WIDTH="25%">
+<DIV ALIGN=right><FONT FACE="Times New Roman,Times"><FONT COLOR="#330000"><FONT SIZE=+4><A HREF="introduction.html#FOX Programming.">Introduction</A></FONT></FONT></FONT></DIV>
+</TD>
+
+<TD>A quick introduction to programming with FOX, and an overview of the
+concepts used in FOX development.</TD>
+</TR>
+
+<TR>
+<TD>
+<DIV ALIGN=right><FONT FACE="Times New Roman,Times"><FONT COLOR="#330000"><FONT SIZE=+4><A HREF="messages.html#MESSAGES">Targets
+and Messages</A></FONT></FONT></FONT></DIV>
+</TD>
+
+<TD>How FOX notifies applications about the users actions, mouse clicks
+and state changes through messages sent to a target.</TD>
+</TR>
+
+<TR>
+<TD>
+<DIV ALIGN=right><FONT COLOR="#330000"><FONT SIZE=+4><A HREF="guiupdate.html#UPDATING">Updating
+Control State</A></FONT></FONT></DIV>
+</TD>
+
+<TD>FOX automatically updates the application's controls through the use
+of messages send during the GUI Update Phase.&nbsp; This section explains
+how to use this feature and&nbsp;</TD>
+</TR>
+
+<TR>
+<TD>
+<DIV ALIGN=right><FONT SIZE=+4>Timers and Chores</FONT></DIV>
+</TD>
+
+<TD>How to use the&nbsp; FOX timer facility to perform some task at an
+appointed time, and how to use chores to execute background tasks during
+idle processing.</TD>
+</TR>
+
+<TR>
+<TD>
+<DIV ALIGN=right><FONT FACE="Times New Roman,Times"><FONT COLOR="#330000"><FONT SIZE=+4>The
+FXWindow Class</FONT></FONT></FONT></DIV>
+</TD>
+
+<TD>The basic FXWindow class, which is the basis of all FOX controls is
+explained in more detail.</TD>
+</TR>
+
+<TR>
+<TD>
+<DIV ALIGN=right><FONT SIZE=+4><A HREF="layout.html#LAYOUT">Layout Managers</A></FONT></DIV>
+</TD>
+
+<TD>The FOX Layout Managers provide a convenient way of arranging your
+GUI Widgets without the need for explicit specification of coordinates
+and dimensions.&nbsp;</TD>
+</TR>
+
+<TR>
+<TD>
+<DIV ALIGN=right><FONT SIZE=+4>Keyboard Focus</FONT></DIV>
+</TD>
+
+<TD>How the keyboard focus is moved around from one widget to another,
+and what is the effect of this.</TD>
+</TR>
+
+<TR>
+<TD>
+<DIV ALIGN=right><FONT SIZE=+4><A HREF="icons.html#ICONS">Icons and Images</A></FONT></DIV>
+</TD>
+
+<TD>Enrich your applications with icons. With FOX's built-in icon and image
+classes, this becomes very easy.&nbsp;</TD>
+</TR>
+
+<TR>
+<TD>
+<DIV ALIGN=right><FONT SIZE=+4>Help and Tool Tips</FONT></DIV>
+</TD>
+
+<TD>Status line help and Tooltips are a nice way of allowing users to learn
+about a program without consulting oracles to devine the meaning of an
+icon-button.&nbsp;</TD>
+</TR>
+
+<TR>
+<TD>
+<DIV ALIGN=right><FONT SIZE=+4><A HREF="draganddrop.html#DRAGNDROP">Drag
+and Drop</A></FONT></DIV>
+</TD>
+
+<TD>Drag and drop are part and parcel of any modern GUI driven application.&nbsp;
+FOX provides a number of convenient hooks to allow you to move data between
+different Widgets, and even between different applications running on different
+hosts.</TD>
+</TR>
+
+<TR NOSAVE>
+<TD ALIGN=RIGHT NOSAVE><FONT SIZE=+4>Using the OpenGL Viewer</FONT></TD>
+
+<TD>FOX provides a convenient way to start with 3D OpenGL programming.&nbsp;
+The&nbsp; GLCanvas widget provides a basic 3D&nbsp; drawing surface.&nbsp;
+The&nbsp; GLViewer widget provides a complete camera model and interactive
+manipulation capability, including 3D picking, dragging, and Tooltips.</TD>
+</TR>
+
+<TR>
+<TD>
+<DIV ALIGN=right><FONT SIZE=+4><A HREF="serialization.html#SERIALIZATION">Serialization
+of Objects</A></FONT></DIV>
+</TD>
+
+<TD>FOX provides serialization of both data and objects in a machine-independent,
+portable manner, by means of its built-in Stream classes.&nbsp;</TD>
+</TR>
+
+<TR>
+<TD>
+<DIV ALIGN=right><FONT SIZE=+4><A HREF="widgets.html#SUBCLASSING">Writing
+Your Own Widgets</A></FONT></DIV>
+</TD>
+
+<TD>FOX is designed to make it easy to build new widgets.&nbsp; As FOX
+is completely implemented in C++, you can use common C++ derivation to
+create new Widgets from existing ones.&nbsp;</TD>
+</TR>
+</TABLE>
+
+<P><U><FONT COLOR="#990000"><FONT SIZE=+4>Sponsor.</FONT></FONT></U>
+<P>The FOX project owes&nbsp; a debt of gratitude to <A HREF="http://www.cfdrc.com">CFD
+Research Corp.</A>, which has allowed me to develop this library under
+LGPL, supplied hosting and moreover has allowed substantial contributions
+made by other CFDRC employees to be incorporated into the library.&nbsp;
+Please take a minute to visit the main CFD Reseach web page.
+<BR>
+<HR WIDTH="100%"><FONT SIZE=-1>Copyright &copy; 1998 <A HREF="mailto:jvz@cfdrc.com">Jeroen
+van der Zijp</A>, all rights reserved.</FONT>
+</BODY>
+</HTML>

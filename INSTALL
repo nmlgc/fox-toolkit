@@ -1,0 +1,50 @@
+                                The FOX GUI Library Installation
+                                ================================
+                                
+                                
+
+
+For LINUX systems.
+==================
+
+You will need to install the MESA graphics library.  FOX is being developed
+on RedHat 5.1+Mesa-devel-2.6 RPM.  It is known to work with Mesa 2.5 also.
+I recommend Mesa 2.6 or above, as FOX will take advantage of the Mesa ``swap-hack''
+to increase redrawing performance.
+
+
+./configure --with-opengl=mesa
+
+
+
+For other UNIX systems.
+=======================
+
+For other unix systems which have OpenGL installed, you can type:
+
+./configure --with-opengl
+
+
+
+If you need to compile FOX with debugging enabled, add the --enable-debug
+option also when running configure.
+
+After configure runs its course, simply type ``make'' to build the library.
+
+
+FOX should compile on most unix platforms; we have tested the following:
+SGI, IBM, HP, SUN, DEC, all with gcc; however, FOX uses a fairly conservative
+subset of C++, and should be no problem to port to other, more primitive, C++
+compilers.
+
+On SGI IRIX 6.4, use: CC.clean -n32
+
+When programming against FOX, you should only have to include "fx.h", and
+for 3D programs, "fx3d.h".  To use keyboard symbols, include "fxkeys.h" also.
+Specifically, to remain portable application programs should NOT include any X
+window header files.
+
+You may of course need other system headers ("stdio.h", "gl.h", etc).
+
+
+

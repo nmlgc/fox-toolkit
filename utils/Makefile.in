@@ -1,0 +1,84 @@
+##############################################################################
+#                                                                            #
+#                       FOX:  A Free C++ Class Library for X                 #
+#                                                                            #
+##############################################################################
+# Copyright (C) 1997 by Jeroen van der Zijp.   All Rights Reserved.          #
+##############################################################################
+# $Id: Makefile.in,v 1.9 1998/10/26 23:31:18 jvz Exp $                    #
+##############################################################################
+# This library is free software; you can redistribute it and/or              #
+# modify it under the terms of the GNU Library General Public                #
+# License as published by the Free Software Foundation; either               #
+# version 2 of the License, or (at your option) any later version.           #
+#                                                                            #
+# This library is distributed in the hope that it will be useful,            #
+# but WITHOUT ANY WARRANTY; without even the implied warranty of             #
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU          #
+# Library General Public License for more details.                           #
+#                                                                            #
+# You should have received a copy of the GNU Library General Public          #
+# License along with this library; if not, write to the Free                 #
+# Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.         #
+##############################################################################
+
+
+SHELL     = /bin/sh
+CC        = @CC@
+CXX       = @CXX@
+CPP       = @CPP@
+RM        = rm -f
+AR        = ar rc
+RANLIB    = @RANLIB@
+SRCDIR    = @srcdir@
+TOPDIR    = @top_srcdir@
+CFLAGS    = @CFLAGS@
+CXXFLAGS  = @CXXFLAGS@
+DEFINES   = @DEFS@
+CPPFLAGS  = @CPPFLAGS@
+LDFLAGS   = @LDFLAGS@
+X11LIBS   = @X_PRE_LIBS@ -lXext -lX11 @X_EXTRA_LIBS@
+GLLIBS    = @GL_LIBS@
+INCDIRS   = -I$(TOPDIR)/include @X_CFLAGS@
+LIBDIRS   = @X_LIBS@ -L$(TOPDIR)/lib
+
+.SUFFIXES: .cpp .c
+
+
+PROGRAMS  = reswrap uuidgen
+
+SOURCES = clstab.cpp reswrap.cpp uuidgen.cpp
+
+
+OBJECTS = $(SOURCES:.cpp=.o)
+
+.cpp.o:
+	$(CXX) -c $(INCDIRS) $(CXXFLAGS) $(DEFINES) $*.cpp
+
+all: $(PROGRAMS)
+
+drop: $(PROGRAMS)
+	for i in $(PROGRAMS); do \
+	cp $$i $(DROPDIR)/bin/$(ARCH)/$$i; \
+	done
+
+clstab: $(FOXLIB) clstab.o
+	$(CXX) -o $@ $(LDFLAGS) $(LIBDIRS) clstab.o -lm $(X11LIBS)
+
+reswrap: $(FOXLIB) reswrap.o
+	$(CXX) -o $@ $(LDFLAGS) $(LIBDIRS) reswrap.o -lm $(X11LIBS)
+
+uuidgen: $(FOXLIB) uuidgen.o
+	$(CXX) -o $@ $(LDFLAGS) $(LIBDIRS) uuidgen.o -lm $(X11LIBS)
+
+clean:
+	$(RM) *.o *~
+
+realclean: clean
+	$(RM) $(PROGRAMS)
+	$(RM) Makefile
+
+dep: $(SOURCES)
+	$(CXX) -I../include -MM $(SOURCES) >depend
+
+include depend

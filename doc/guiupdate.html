@@ -1,0 +1,243 @@
+<HTML>
+<HEAD>
+   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+   <META NAME="Author" CONTENT="Jeroen van der Zijp">
+   <META NAME="GENERATOR" CONTENT="Mozilla/4.05 [en] (X11; I; Linux 2.0.34 i686) [Netscape]">
+   <META NAME="Description" CONTENT="Widget Updating">
+   <META NAME="Keywords" CONTENT="FOX, GUI, Toolkit, C++ Class Library">
+   <TITLE>Messages</TITLE>
+</HEAD>
+<BODY TEXT="#000000" BGCOLOR="#FFFFFF" LINK="#0000EE" VLINK="#551A8B" ALINK="#FF0000" BACKGROUND="foxback.gif">
+
+<CENTER><U><FONT COLOR="#990000"><FONT SIZE=+4>Automatic GUI Updating</FONT></FONT></U></CENTER>
+
+<CENTER>&nbsp;</CENTER>
+<A NAME="UPDATING"></A><U><FONT COLOR="#990000"><FONT SIZE=+4>What is Automatic
+GUI Updating?</FONT></FONT></U>
+<BR>&nbsp;
+
+<P>Complex graphical user interfaces can have hundreds of Controls.&nbsp;
+Applications typically have a number of different states, and not every
+Control is applicable in every state.&nbsp; Some Buttons or other Controls
+may even be dangerous in some states.&nbsp;&nbsp; Controls which are not
+appropriate in certain application states are typically made unavailable
+to the user by&nbsp; <I>desensitizing</I> them (``grey-out''), or <I>hiding</I>
+them, or some other means.
+
+<P>Another issue is that Controls are often used to reflect the application's
+state, rather than just control it; for example, CheckButtons are shown
+as checked, Sliders indicate by their position the currently selected value,
+and so on.
+
+<P>The application programmer is faced with the issue of making sure that
+each and every Control is properly set in each state of the application.&nbsp;
+As each action from the user could potentially cause a state change in
+every Control in the application, the situation quickly becomes a combinatorial
+nightmare.
+
+<P>A new type of message called the GUI-Update message can solve this problem.&nbsp;
+The quintessential idea is that Controls update themselves by interrogating
+the application state.
+
+<P>Thus, rather than N action messages updating M controls (involving an
+amount of programming proportional to N*M), we just have N messages from
+Controls to perform some sort of action changing the application state,
+and M update messages from Controls to inquire about the new application
+state.
+
+<P>Clearly, the amount of programming involved is simply proportional to
+M+N.&nbsp; For realistic size projects, this is a big win.
+<BR>&nbsp;
+<BR>&nbsp;
+
+<P><U><FONT COLOR="#990000"><FONT SIZE=+4>GUI Updating Example.</FONT></FONT></U>
+
+<P>An example of GUI Updating is given in the ScribbleApp program.&nbsp;
+The ScribbleApp program allows lines to be drawn in some canvas.&nbsp;
+To clear the canvas, the users invokes the <B><FONT FACE="Arial,Helvetica"><U>C</U>lear</FONT></B>
+Button.&nbsp; The <B><FONT FACE="Arial,Helvetica"><U>C</U>lear </FONT></B>Button
+is to be available only when something has been scribbled; otherwise, it
+is to be grayed out or desensitized.&nbsp; One can accomplish this in FOX
+as follows:
+<BR>&nbsp;
+<BR>&nbsp;
+<PRE><FONT FACE="Courier New,Courier">&nbsp;&nbsp;&nbsp; // Construct the Clear Button</FONT></PRE>
+
+<PRE><FONT FACE="Courier New,Courier">&nbsp;&nbsp;&nbsp; new FXButton(buttonFrame,"&amp;Clear",NULL,app,<FONT COLOR="#000000">ScribbleApp::</FONT><FONT COLOR="#FF6666">ID_CLEAR</FONT>,FRAME_THICK|FRAME_RAISED|LAYOUT_FILL_X|LAYOUT_TOP|LAYOUT_LEFT,0,0,0,0,10,10,5,5);</FONT></PRE>
+This constructs a new Button object, which will send a message ID_CLEAR
+to the application object (app).
+
+<P>In the application object, we catch <B><I>two</I></B> message types
+from the Clear button:
+<BR>&nbsp;
+<PRE><FONT FACE="Courier New,Courier">&nbsp;&nbsp;&nbsp; // Message Map for the Scribble App class</FONT></PRE>
+
+<PRE><FONT FACE="Courier New,Courier">&nbsp;&nbsp;&nbsp; FXDEFMAP(ScribbleApp) ScribbleAppMap[]={</FONT></PRE>
+
+<PRE><FONT FACE="Courier New,Courier">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; FXMAPFUNC(SEL_LEFTBUTTONPRESS,&nbsp;&nbsp; ScribbleApp::ID_MOUSE,&nbsp; ScribbleApp::onMouseDown),</FONT></PRE>
+
+<PRE><FONT FACE="Courier New,Courier">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; FXMAPFUNC(SEL_LEFTBUTTONRELEASE, ScribbleApp::ID_MOUSE,&nbsp; ScribbleApp::onMouseUp),</FONT></PRE>
+
+<PRE><FONT FACE="Courier New,Courier">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; FXMAPFUNC(SEL_MOTION,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ScribbleApp::ID_MOUSE,&nbsp; ScribbleApp::onMouseMove),</FONT></PRE>
+
+<PRE><FONT FACE="Courier New,Courier"><FONT COLOR="#000000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; FXMAPFUNC(</FONT><FONT COLOR="#FF6666">SEL_COMMAND</FONT><FONT COLOR="#000000">,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ScribbleApp::</FONT><FONT COLOR="#FF6666">ID_CLEAR</FONT><FONT COLOR="#000000">,&nbsp; ScribbleApp::</FONT><FONT COLOR="#FF6666">onCmdClear</FONT><FONT COLOR="#000000">),</FONT></FONT></PRE>
+
+<PRE><FONT FACE="Courier New,Courier"><FONT COLOR="#000000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; FXMAPFUNC(</FONT><FONT COLOR="#FF6666">SEL_UPDATE</FONT><FONT COLOR="#000000">,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ScribbleApp::</FONT><FONT COLOR="#FF6666">ID_CLEAR</FONT><FONT COLOR="#000000">,&nbsp; ScribbleApp::</FONT><FONT COLOR="#FF6666">onUpdClear</FONT><FONT COLOR="#000000">),</FONT></FONT></PRE>
+
+<PRE><FONT FACE="Courier New,Courier">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; };</FONT></PRE>
+The SEL_COMMAND message indicates that the Clear button has been pressed;
+its action will be to clear the drawing canvas:
+<BR>&nbsp;
+<BR>&nbsp;
+<PRE><FONT FACE="Courier New,Courier">&nbsp;&nbsp;&nbsp; // Handle the clear message</FONT></PRE>
+
+<PRE><FONT FACE="Courier New,Courier">&nbsp;&nbsp;&nbsp; long ScribbleApp::<FONT COLOR="#FF6666">onCmdClear</FONT>(FXObject*,FXSelector,void*){</FONT></PRE>
+
+<PRE><FONT FACE="Courier New,Courier">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; canvas->clearWindow();</FONT></PRE>
+
+<PRE><FONT FACE="Courier New,Courier">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; dirty=0;</FONT></PRE>
+
+<PRE><FONT FACE="Courier New,Courier">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return 1;</FONT></PRE>
+
+<PRE><FONT FACE="Courier New,Courier">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }</FONT></PRE>
+The SEL_UPDATE message is sent when the Clear Button updates itself.&nbsp;
+The GUI-Update handler determines whether the Clear Button should be sensitized
+or not depending on whether any drawing has taken place in the canvas;
+this is kept track of through a flag variable dirty:
+<BR>&nbsp;
+<PRE><FONT FACE="Courier New,Courier">&nbsp;&nbsp;&nbsp; // Handle the GUI Update from the Clear button</FONT></PRE>
+
+<PRE><FONT FACE="Courier New,Courier">&nbsp;&nbsp;&nbsp; long ScribbleApp::<FONT COLOR="#FF6666">onUpdClear</FONT>(FXObject* sender,FXSelector,void*){</FONT></PRE>
+
+<PRE><FONT FACE="Courier New,Courier">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; FXButton* button=(FXButton*)sender;</FONT></PRE>
+
+<PRE><FONT FACE="Courier New,Courier">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Button is available when canvas is dirty only</FONT></PRE>
+
+<PRE><FONT FACE="Courier New,Courier">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; dirty ? button->enable() : button->disable();</FONT></PRE>
+
+<PRE><FONT FACE="Courier New,Courier">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return 1;</FONT></PRE>
+
+<PRE><FONT FACE="Courier New,Courier">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }</FONT></PRE>
+Note that in this case we know the origin of the message (the <I>sender</I>)
+to be of the type FXButton, so we can simply cast the sender object down
+to the appropriate type.
+<BR>In general however, we may not always know [the only thing we know
+is that the sender is of type FXObject].
+<BR>In such a case, the GUI Update handler should <I>send a message back
+</I>to the sender.&nbsp;&nbsp; We can safely do this since all FOX objects
+are derived from FXObject, and FXObject's can be sent messages.&nbsp; This
+leads to the following code:
+<BR>&nbsp;
+<PRE><FONT FACE="Courier New,Courier">&nbsp;&nbsp;&nbsp; // Update sender</FONT></PRE>
+
+<PRE><FONT FACE="Courier New,Courier">&nbsp;&nbsp;&nbsp; long ScribbleApp::<FONT COLOR="#FF6666">onUpdClear</FONT>(FXObject* sender,FXSelector,void*){</FONT></PRE>
+
+<PRE><FONT FACE="Courier New,Courier">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; FXuint msg=dirty ? ID_ENABLE : ID_DISABLE;</FONT></PRE>
+
+<PRE><FONT FACE="Courier New,Courier">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; sender->handle(this,MKUINT(msg,SEL_COMMAND),NULL);</FONT></PRE>
+
+<PRE><FONT FACE="Courier New,Courier">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return 1;</FONT></PRE>
+
+<PRE><FONT FACE="Courier New,Courier">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }</FONT></PRE>
+Many FOX Widgets understand the ID_ENABLE, and ID_DISABLE messages;&nbsp;
+if however, a message is sent to a sender that doesn't, nothing bad will
+happen as no message handler will be associated with the message.
+<BR>&nbsp;
+
+<P><U><FONT COLOR="#990000"><FONT SIZE=+4>When is GUI Updating Performed?</FONT></FONT></U>
+
+<P>In FOX, automatic GUI Updating is performed automatically after <B><I>handled</I></B>
+events.&nbsp; This is why it is important to return <B>1</B> or <B>0</B>
+in your message handlers.:
+<BR>&nbsp;
+<UL>
+<LI>
+If you return <B>1</B>, the message is considered handled, and a GUI Update
+pass will be performed by FOX.</LI>
+
+<LI>
+If you return <B>0</B>, the message is considered unhandled, and since
+unhandled messages should not have changed the application's state, no
+GUI Update is performed.</LI>
+</UL>
+For increased efficiency, FOX does not perform GUI Updating until catching
+up with the event stream; also, FOX checks for new events between each
+GUI Update message, to prevent ``event-deafness'' for extended periods
+of time.&nbsp; Even so, it is important to restrict your GUI Update message
+handlers to small routines, and to not perform any major computations in
+GUI Update message handlers.
+
+<P>As part of the GUI Update of each widget, layout is performed also.&nbsp;
+Thus, many layout changes may be peformed during regular (non gui-update)
+message handling without any additional overhead:- FOX not only delays
+painting, but also layout computation until idle-processing time.&nbsp;
+This makes FOX extremely fast.
+<BR>However, since layout computation is performed during GUI-Update processing,
+GUI Update message handlers should avoid making changes to Controls that
+could cause layout computation, as these changes will not be handled till
+the next GUI Update cycle.
+<BR>&nbsp;
+<BR><U>&nbsp;</U>
+<BR><U><FONT COLOR="#990000"><FONT SIZE=+4>Automatic Gray Out or Hide.</FONT></FONT></U>
+<BR>&nbsp;
+<BR>FOX also has the option to automatically gray out or hide certain Widgets.&nbsp;
+Both options work very similar, and differ only visually.&nbsp; When automatic
+grayout is in effect, the Widget will be automatically grayed out (disabled,
+or desensitized to user inputs), when one of the following is true:
+<BR>&nbsp;
+<OL>
+<LI>
+The Widget's target is NULL.</LI>
+
+<LI>
+The Widget's target does not handle the Widget's SEL_UPDATE message.</LI>
+</OL>
+
+
+<P>If the above is not true, the Widget will be sensitized or enabled again.
+
+<P>Why is this useful?&nbsp; If a Widget's target is an object that performs
+some sort of message <B><I>delegation</I></B> (for example, FXMDIClient
+and FXMDIChild do this), then the ability to handle a certain SEL_UPDATE
+message may depend on the delegate object that is in effect at the time
+the update message is sent.&nbsp;&nbsp; If the particular delegate in effect
+does not handle the update message, there is no handler to make a Widget
+assume the correct state.
+
+<P>With automatic gray out, however, the absence of a handler for the SEL_UPDATE
+message can be turned into an action to gray out the Widget instead.&nbsp;
+This will keep the GUI consistent even in the absence of update message
+handlers.
+
+<P>The automatic gray out technique is of particular significance when
+using MDI (Multiple Document Interface) widgets as both FXMDIClient and
+FXMDIChild perform message delegation.&nbsp; Messages from the pulldown
+menus are typically sent to the FXMDIClient, and then subsequently forwarded
+by the FXMDIClient to the active FXMDIChild (Sometimes, there are no FXMDIChild
+windows, and the message can not be forwarded and then the message handler
+returns 0).
+
+<P>As automatic gray out of Widgets will cause a gray out if no handler
+for the SEL_UPDATE message is found, it is imperative that the SEL_UPDATE
+must always be handled when the Widget should be sensitive.&nbsp; The update
+message handler does not necessarily have to do anything, it just needs
+to return 1.
+
+<P>To handle this common situation, FXWindow defines just such a message
+handler for you:&nbsp; <B>FXWindow::onUpdYes()<TT> </TT></B>will do nothing
+but return a 1.&nbsp; You can simply append this to your message map as
+in:
+<BR>&nbsp;
+<BLOCKQUOTE><TT>FXMAPFUNC(SEL_UPDATE,ID_MYMENU,<FONT COLOR="#000000">FXWindow::onUpdYes</FONT>)</TT></BLOCKQUOTE>
+
+
+<P>That will take care of it.&nbsp; Of course if the update message should
+do something, you should write your own handler and make it return 1.
+<BR>&nbsp;
+
+<P>
+<HR WIDTH="100%">
+<BR><FONT SIZE=-1>Copyright &copy; 1998 <A HREF="mailto:jvz@cfdrc.com">Jeroen
+van der Zijp</A>, all rights reserved.</FONT>
+</BODY>
+</HTML>

@@ -1,0 +1,139 @@
+##############################################################################
+#                                                                            #
+#                       FOX:  A Free C++ Class Library for X                 #
+#                                                                            #
+##############################################################################
+# Copyright (C) 1997 by Jeroen van der Zijp.   All Rights Reserved.          #
+##############################################################################
+# $Id: Makefile.in,v 1.26 1998/10/26 23:31:17 jvz Exp $                   #
+##############################################################################
+# This library is free software; you can redistribute it and/or              #
+# modify it under the terms of the GNU Library General Public                #
+# License as published by the Free Software Foundation; either               #
+# version 2 of the License, or (at your option) any later version.           #
+#                                                                            #
+# This library is distributed in the hope that it will be useful,            #
+# but WITHOUT ANY WARRANTY; without even the implied warranty of             #
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU          #
+# Library General Public License for more details.                           #
+#                                                                            #
+# You should have received a copy of the GNU Library General Public          #
+# License along with this library; if not, write to the Free                 #
+# Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.         #
+##############################################################################
+
+
+SHELL     = /bin/sh
+CC        = @CC@
+CXX       = @CXX@
+CPP       = @CPP@
+RM        = rm -f
+AR        = ar rc
+NM        = nm
+CLSTAB    = ../utils/clstab
+RANLIB    = @RANLIB@
+SRCDIR    = @srcdir@
+TOPDIR    = @top_srcdir@
+CFLAGS    = @CFLAGS@
+CXXFLAGS  = @CXXFLAGS@
+DEFINES   = @DEFS@
+CPPFLAGS  = @CPPFLAGS@
+LDFLAGS   = @LDFLAGS@
+X11LIBS   = @X_PRE_LIBS@ -lXext -lX11 @X_EXTRA_LIBS@
+GLLIBS    = @GL_LIBS@
+INCDIRS   = -I$(TOPDIR)/include @X_CFLAGS@
+LIBDIRS   = @X_LIBS@ -L$(TOPDIR)/lib
+FOXLIB    = $(TOPDIR)/lib/libFOX.a
+
+.SUFFIXES: .cpp .c
+
+
+PROGRAMS  = textedit datatarget dirlist mditest groupbox glviewer iconlist window scribble splitter \
+           shutter image gltest header hello hello2 dialog
+
+
+SOURCES = window.cpp mditest.cpp groupbox.cpp scribble.cpp splitter.cpp header.cpp textedit.cpp \
+          iconlist.cpp gltest.cpp shutter.cpp glviewer.cpp image.cpp hello.cpp hello2.cpp dirlist.cpp\
+	  datatarget.cpp dialog.cpp
+
+
+OBJECTS = $(SOURCES:.cpp=.o)
+
+
+.cpp.o:
+	$(CXX) -c $(INCDIRS) $(CXXFLAGS) $(DEFINES) $*.cpp
+
+
+all: $(PROGRAMS)
+
+
+mditest: $(FOXLIB) mditest.o
+	$(CXX) -o $@ $(LDFLAGS) $(LIBDIRS) mditest.o -lFOX -lm $(X11LIBS)
+
+datatarget: $(FOXLIB) datatarget.o
+	$(CXX) -o $@ $(LDFLAGS) $(LIBDIRS) datatarget.o -lFOX -lm $(X11LIBS)
+
+window: $(FOXLIB) window.o
+	$(CXX) -o $@ $(LDFLAGS) $(LIBDIRS) window.o -lFOX -lm $(X11LIBS)
+
+hello: $(FOXLIB) hello.o
+	$(CXX) -o $@ $(LDFLAGS) $(LIBDIRS) hello.o -lFOX -lm $(X11LIBS)
+
+hello2: $(FOXLIB) hello2.o
+	$(CXX) -o $@ $(LDFLAGS) $(LIBDIRS) hello2.o -lFOX -lm $(X11LIBS)
+
+dirlist: $(FOXLIB) dirlist.o
+	$(CXX) -o $@ $(LDFLAGS) $(LIBDIRS) dirlist.o -lFOX -lm $(X11LIBS)
+
+groupbox: $(FOXLIB) groupbox.o
+	$(CXX) -o $@ $(LDFLAGS) $(LIBDIRS) groupbox.o -lFOX -lm $(X11LIBS)
+
+scribble: $(FOXLIB) scribble.o
+	$(CXX) -o $@ $(LDFLAGS) $(LIBDIRS) scribble.o -lFOX -lm $(X11LIBS) 
+
+splitter: $(FOXLIB) splitter.o
+	$(CXX) -o $@ $(LDFLAGS) $(LIBDIRS) splitter.o -lFOX -lm $(X11LIBS) 
+
+iconlist: $(FOXLIB) iconlist.o
+	$(CXX) -o $@ $(LDFLAGS) $(LIBDIRS) iconlist.o -lFOX -lm $(X11LIBS)
+
+header: $(FOXLIB) header.o
+	$(CXX) -o $@ $(LDFLAGS) $(LIBDIRS) header.o -lFOX -lm $(X11LIBS)
+
+shutter: $(FOXLIB) shutter.o
+	$(CXX) -o $@ $(LDFLAGS) $(LIBDIRS) shutter.o -lFOX -lm $(X11LIBS)
+
+image: $(FOXLIB) image.o
+	$(CXX) -o $@ $(LDFLAGS) $(LIBDIRS) image.o -lFOX -lm $(X11LIBS)
+
+textedit: $(FOXLIB) textedit.o
+	$(CXX) -o $@ $(LDFLAGS) $(LIBDIRS) textedit.o -lFOX -lm $(X11LIBS)
+
+gltest: $(FOXLIB) gltest.o
+	$(CXX) -o $@ $(LDFLAGS) $(LIBDIRS) gltest.o -lFOX $(GLLIBS) -lm $(X11LIBS)
+
+glviewer: $(FOXLIB) glviewer.o
+	$(CXX) -o $@ $(LDFLAGS) $(LIBDIRS) glviewer.o -lFOX $(GLLIBS) -lm $(X11LIBS)
+
+dialog: $(FOXLIB) dialog.o
+	$(CXX) -o $@ $(LDFLAGS) $(LIBDIRS) dialog.o -lFOX $(GLLIBS) -lm $(X11LIBS)
+        
+
+drop:
+	cp textedit $(DROPDIR)/bin/$(ARCH)/textedit
+
+
+clean:
+	$(RM) *.o *~
+
+
+realclean: clean
+	$(RM) $(PROGRAMS)
+	$(RM) Makefile
+
+
+dep: $(SOURCES)
+	$(CXX) -I../include -MM $(SOURCES) >depend
+
+
+include depend
