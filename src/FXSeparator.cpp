@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXSeparator.cpp,v 1.13 2002/01/18 22:43:04 jeroen Exp $                  *
+* $Id: FXSeparator.cpp,v 1.13.4.2 2003/09/03 00:51:27 fox Exp $                  *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -90,19 +90,19 @@ long FXHorizontalSeparator::onPaint(FXObject*,FXSelector,void* ptr){
   yy=border+padtop+(height-padbottom-padtop-(border<<1)-hh)/2;
   if(options&SEPARATOR_GROOVE){
     dc.setForeground(shadowColor);
-    dc.drawLine(border+padleft,yy,width-padright-padleft-(border<<1),yy);
+    dc.fillRectangle(border+padleft,yy,width-padright-padleft-(border<<1),1);
     dc.setForeground(hiliteColor);
-    dc.drawLine(border+padleft,yy+1,width-padright-padleft-(border<<1),yy+1);
+    dc.fillRectangle(border+padleft,yy+1,width-padright-padleft-(border<<1),1);
     }
   else if(options&SEPARATOR_RIDGE){
     dc.setForeground(hiliteColor);
-    dc.drawLine(border+padleft,yy,width-padright-padleft-(border<<1),yy);
+    dc.fillRectangle(border+padleft,yy,width-padright-padleft-(border<<1),1);
     dc.setForeground(shadowColor);
-    dc.drawLine(border+padleft,yy+1,width-padright-padleft-(border<<1),yy+1);
+    dc.fillRectangle(border+padleft,yy+1,width-padright-padleft-(border<<1),1);
     }
   else if(options&SEPARATOR_LINE){
     dc.setForeground(borderColor);
-    dc.drawLine(border+padleft,yy,width-padright-padleft-(border<<1),yy);
+    dc.fillRectangle(border+padleft,yy,width-padright-padleft-(border<<1),1);
     }
   return 1;
   }
@@ -151,19 +151,19 @@ long FXVerticalSeparator::onPaint(FXObject*,FXSelector,void* ptr){
   xx=border+padleft+(width-padleft-padright-(border<<1)-ww)/2;
   if(options&SEPARATOR_GROOVE){
     dc.setForeground(shadowColor);
-    dc.drawLine(xx,padtop+border,xx,height-padtop-padbottom-(border<<1));
+    dc.fillRectangle(xx,padtop+border,1,height-padtop-padbottom-(border<<1));
     dc.setForeground(hiliteColor);
-    dc.drawLine(xx+1,padtop+border,xx+1,height-padtop-padbottom-(border<<1));
+    dc.fillRectangle(xx+1,padtop+border,1,height-padtop-padbottom-(border<<1));
     }
   else if(options&SEPARATOR_RIDGE){
     dc.setForeground(hiliteColor);
-    dc.drawLine(xx,padtop+border,xx,height-padtop-padbottom-(border<<1));
+    dc.fillRectangle(xx,padtop+border,1,height-padtop-padbottom-(border<<1));
     dc.setForeground(shadowColor);
-    dc.drawLine(xx+1,padtop+border,xx+1,height-padtop-padbottom-(border<<1));
+    dc.fillRectangle(xx+1,padtop+border,1,height-padtop-padbottom-(border<<1));
     }
   else if(options&SEPARATOR_LINE){
     dc.setForeground(borderColor);
-    dc.drawLine(xx,padtop+border,xx,height-padtop-padbottom-(border<<1));
+    dc.fillRectangle(xx,padtop+border,1,height-padtop-padbottom-(border<<1));
     }
   return 1;
   }

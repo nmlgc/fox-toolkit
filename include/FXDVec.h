@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXDVec.h,v 1.7 2002/01/18 22:42:52 jeroen Exp $                          *
+* $Id: FXDVec.h,v 1.7.4.1 2004/06/04 04:37:04 fox Exp $                          *
 ********************************************************************************/
 #ifndef FXDVEC_H
 #define FXDVEC_H
@@ -71,7 +71,6 @@ public:
 
   /// Other operators
   friend FXDVec operator-(const FXDVec& a){return FXDVec(-a.v[0],-a.v[1],-a.v[2]);}
-  friend FXDVec operator!(const FXDVec& a){return a.v[0]==0.0 && a.v[1]==0.0 && a.v[2]==0.0;}
   friend FXDVec operator+(const FXDVec& a,const FXDVec& b){return FXDVec(a.v[0]+b.v[0],a.v[1]+b.v[1],a.v[2]+b.v[2]);}
   friend FXDVec operator-(const FXDVec& a,const FXDVec& b){return FXDVec(a.v[0]-b.v[0],a.v[1]-b.v[1],a.v[2]-b.v[2]);}
   friend FXDVec operator*(const FXDVec& a,FXdouble n){return FXDVec(a.v[0]*n,a.v[1]*n,a.v[2]*n);}
@@ -82,6 +81,9 @@ public:
   /// Dot and cross products
   friend FXdouble operator*(const FXDVec& a,const FXDVec& b){return a.v[0]*b.v[0]+a.v[1]*b.v[1]+a.v[2]*b.v[2];}
   friend FXDVec operator^(const FXDVec& a,const FXDVec& b){return FXDVec(a.v[1]*b.v[2]-a.v[2]*b.v[1], a.v[2]*b.v[0]-a.v[0]*b.v[2], a.v[0]*b.v[1]-a.v[1]*b.v[0]);}
+
+  /// Test if zero
+  friend int operator!(const FXDVec& a){return a.v[0]==0.0 && a.v[1]==0.0 && a.v[2]==0.0;}
 
   /// Equality tests
   friend int operator==(const FXDVec& a,const FXDVec& b){return a.v[0]==b.v[0] && a.v[1]==b.v[1] && a.v[2]==b.v[2];}

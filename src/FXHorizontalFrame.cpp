@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXHorizontalFrame.cpp,v 1.13 2002/01/18 22:43:00 jeroen Exp $            *
+* $Id: FXHorizontalFrame.cpp,v 1.13.4.1 2003/09/18 13:54:29 fox Exp $            *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -65,7 +65,7 @@ FXHorizontalFrame::FXHorizontalFrame(FXComposite* p,FXuint opts,FXint x,FXint y,
 
 
 // Compute minimum width based on child layout hints
-int FXHorizontalFrame::getDefaultWidth(){
+FXint FXHorizontalFrame::getDefaultWidth(){
   register FXint w,wcum,wmax,numc,mw=0;
   register FXWindow* child;
   register FXuint hints;
@@ -93,7 +93,7 @@ int FXHorizontalFrame::getDefaultWidth(){
 
 
 // Compute minimum height based on child layout hints
-int FXHorizontalFrame::getDefaultHeight(){
+FXint FXHorizontalFrame::getDefaultHeight(){
   register FXint h,hmax,mh=0;
   register FXWindow* child;
   register FXuint hints;

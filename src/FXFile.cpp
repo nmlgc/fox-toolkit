@@ -21,7 +21,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXFile.cpp,v 1.131.4.10 2003/05/02 17:36:58 fox Exp $                     *
+* $Id: FXFile.cpp,v 1.131.4.11 2003/09/16 02:48:05 fox Exp $                     *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -110,6 +110,8 @@ FXbool FXFile::setCurrentDirectory(const FXString& path){
 FXString FXFile::getCurrentDrive(){
 #ifdef WIN32
   FXchar buffer[MAXPATHLEN];
+//buffer[0]=_getdrive()+'a'-1;
+//buffer[1]=':';
   if(GetCurrentDirectory(MAXPATHLEN,buffer) && isalpha((FXuchar)buffer[0]) && buffer[1]==':'){
     buffer[0]=tolower((FXuchar)buffer[0]);
     return FXString(buffer,2);
@@ -129,6 +131,7 @@ FXbool FXFile::setCurrentDrive(const FXString& prefix){
     buffer[0]=prefix[0];
     buffer[1]=':';
     buffer[2]='\0';
+//  return _chdrive(tolower(buffer[0])-'a'+1)==0;
     return SetCurrentDirectory(buffer);
     }
   return FALSE;

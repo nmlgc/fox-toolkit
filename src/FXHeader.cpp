@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXHeader.cpp,v 1.31.4.2 2003/06/20 19:02:07 fox Exp $                     *
+* $Id: FXHeader.cpp,v 1.31.4.3 2003/08/15 12:57:44 fox Exp $                     *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -314,7 +314,7 @@ FXHeaderItem *FXHeader::createItem(const FXString& text,FXIcon* icon,FXint size,
 
 // Retrieve item
 FXHeaderItem *FXHeader::retrieveItem(FXint index) const {
-  if(index<0 || nitems<index){ fxerror("%s::retrieveItem: index out of range.\n",getClassName()); }
+  if(index<0 || nitems<=index){ fxerror("%s::retrieveItem: index out of range.\n",getClassName()); }
   return items[index];
   }
 

@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: fxutils.cpp,v 1.71.4.5 2003/08/14 03:44:46 fox Exp $                         *
+* $Id: fxutils.cpp,v 1.71.4.6 2003/11/07 13:57:53 fox Exp $                         *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -684,7 +684,7 @@ int fxpointsize_to_height(HDC hdc,unsigned size){
   pt.x=0;
   pt.y=(int)(size*cyDpi/72);
   DPtoLP(hdc,&pt,1);
-  return -(int)(fabs(pt.y)/10.0+0.5);
+  return -(int)(fabs((double)pt.y)/10.0+0.5);
   }
 
 
@@ -708,7 +708,7 @@ unsigned fxheight_to_pointsize(HDC hdc,int height){
   pt.x=0;
   pt.y=10*height;
   LPtoDP(hdc,&pt,1);
-  return (FXuint)(72*pt.y/cyDpi);
+  return (FXuint)(72.0*pt.y/cyDpi);
   }
 
 #endif

@@ -5,7 +5,7 @@
 // FOX version
 #define FOX_MAJOR  1
 #define FOX_MINOR  0
-#define FOX_LEVEL  44
+#define FOX_LEVEL  53
 
 
 

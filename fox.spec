@@ -1,10 +1,10 @@
 Summary: Shared libraries for the FOX 1.0.x toolkit.
 Name: fox
-Version: 1.0.43
+Version: 1.0.52
 Release: 1
 Copyright: LGPL
 Group: System Environment/Libraries
-Source: ftp://ftp.fox-toolkit.org/pub/fox-1.0.43.tar.gz
+Source: ftp://ftp.fox-toolkit.org/pub/fox-1.0.52.tar.gz
 URL: http://www.fox-toolkit.org
 Packager: Lyle Johnson (lyle@users.sourceforge.net)
 BuildRoot: %{_tmppath}/%{name}-buildroot
@@ -66,9 +66,10 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root)
+/usr/fox
 /usr/lib/libFOX.so
 /usr/lib/libFOX-1.0.so.0
-/usr/lib/libFOX-1.0.so.0.0.43
+/usr/lib/libFOX-1.0.so.0.0.52
 %doc doc
 %doc ADDITIONS AUTHORS INSTALL LICENSE README TRACING index.html
 
@@ -90,6 +91,9 @@ rm -rf $RPM_BUILD_ROOT
 /usr/bin/calculator
 
 %changelog
+* Thu Dec 4 2003 Lyle Johnson <lyle@knology.net>
+- incorporated Yan-Fa Li's changes for compatibility with latest RPM tools.
+
 * Wed Aug 27 2002 Lyle Johnson <lyle@users.sourceforge.net>
 - remove Makefile scraps from the doc subdirectories
 

@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXImage.cpp,v 1.67.4.1 2002/05/13 21:10:32 fox Exp $                      *
+* $Id: FXImage.cpp,v 1.67.4.3 2003/08/14 22:28:42 fox Exp $                      *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -376,7 +376,7 @@ void FXImage::restore(){
 
       {
       XColor colors[MAX_MAPSIZE];
-      
+
       // Get masks
       redmask=vis->red_mask;
       greenmask=vis->green_mask;
@@ -422,13 +422,27 @@ void FXImage::restore(){
         case 6:
         case 7:
         case 8:
-          for(y=0; y<height; y++){
-            for(x=0; x<width; x++){
-              pixel=XGetPixel(xim,x,y);
-              img[0]=rtab[pixel];
-              img[1]=gtab[pixel];
-              img[2]=btab[pixel];
-              img+=channels;
+          if(options&IMAGE_ALPHA){
+            for(y=0; y<height; y++){
+              for(x=0; x<width; x++){
+                pixel=XGetPixel(xim,x,y);
+                img[0]=rtab[pixel];
+                img[1]=gtab[pixel];
+                img[2]=btab[pixel];
+                img[3]=255;
+                img+=4;
+                }
+              }
+            }
+          else{
+            for(y=0; y<height; y++){
+              for(x=0; x<width; x++){
+                pixel=XGetPixel(xim,x,y);
+                img[0]=rtab[pixel];
+                img[1]=gtab[pixel];
+                img[2]=btab[pixel];
+                img+=3;
+                }
               }
             }
           break;
@@ -441,16 +455,33 @@ void FXImage::restore(){
           redshift=findshift(redmask);
           greenshift=findshift(greenmask);
           blueshift=findshift(bluemask);
-          for(y=0; y<height; y++){
-            for(x=0; x<width; x++){
-              pixel=XGetPixel(xim,x,y);
-              r=(pixel&redmask)>>redshift;
-              g=(pixel&greenmask)>>greenshift;
-              b=(pixel&bluemask)>>blueshift;
-              img[0]=rtab[r];
-              img[1]=gtab[g];
-              img[2]=btab[b];
-              img+=channels;
+          if(options&IMAGE_ALPHA){
+            for(y=0; y<height; y++){
+              for(x=0; x<width; x++){
+                pixel=XGetPixel(xim,x,y);
+                r=(pixel&redmask)>>redshift;
+                g=(pixel&greenmask)>>greenshift;
+                b=(pixel&bluemask)>>blueshift;
+                img[0]=rtab[r];
+                img[1]=gtab[g];
+                img[2]=btab[b];
+                img[3]=255;
+                img+=4;
+                }
+              }
+            }
+          else{
+            for(y=0; y<height; y++){
+              for(x=0; x<width; x++){
+                pixel=XGetPixel(xim,x,y);
+                r=(pixel&redmask)>>redshift;
+                g=(pixel&greenmask)>>greenshift;
+                b=(pixel&bluemask)>>blueshift;
+                img[0]=rtab[r];
+                img[1]=gtab[g];
+                img[2]=btab[b];
+                img+=3;
+                }
               }
             }
           break;
@@ -531,15 +562,30 @@ void FXImage::restore(){
       // Stuff it into our own data structure
       img=data;
       pix=pixels;
-      for(y=0; y<height; y++){
-        for(x=0; x<width; x++){
-          img[0]=pix[2];
-          img[1]=pix[1];
-          img[2]=pix[0];
-          img+=channels;
-          pix+=3;
+      if(options&IMAGE_ALPHA){
+        for(y=0; y<height; y++){
+          for(x=0; x<width; x++){
+            img[0]=pix[2];
+            img[1]=pix[1];
+            img[2]=pix[0];
+            img[3]=255;
+            img+=4;
+            pix+=3;
+            }
+          pix+=skip;
           }
-        pix+=skip;
+        }
+      else{
+        for(y=0; y<height; y++){
+          for(x=0; x<width; x++){
+            img[0]=pix[2];
+            img[1]=pix[1];
+            img[2]=pix[0];
+            img+=3;
+            pix+=3;
+            }
+          pix+=skip;
+          }
         }
       FXFREE(&pixels);
       ::DeleteDC(hdcmem);

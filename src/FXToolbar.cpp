@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXToolbar.cpp,v 1.61.4.1 2002/10/03 06:08:48 fox Exp $                    *
+* $Id: FXToolbar.cpp,v 1.61.4.2 2003/09/18 13:54:29 fox Exp $                    *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -164,7 +164,7 @@ FXToolbar::FXToolbar(FXComposite* p,FXuint opts,FXint x,FXint y,FXint w,FXint h,
 
 
 // Compute minimum width based on child layout hints
-int FXToolbar::getDefaultWidth(){
+FXint FXToolbar::getDefaultWidth(){
   register FXint w,wcum,wmax,mw,n;
   register FXWindow* child;
   register FXuint hints;
@@ -191,7 +191,7 @@ int FXToolbar::getDefaultWidth(){
 
 
 // Compute minimum height based on child layout hints
-int FXToolbar::getDefaultHeight(){
+FXint FXToolbar::getDefaultHeight(){
   register FXint h,hcum,hmax,mh,n;
   register FXWindow* child;
   register FXuint hints;

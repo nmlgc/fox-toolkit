@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXText.cpp,v 1.214.4.6 2003/06/20 19:02:07 fox Exp $                         *
+* $Id: FXText.cpp,v 1.214.4.7 2003/09/13 03:37:02 fox Exp $                         *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -2583,12 +2583,12 @@ long FXText::onSelectionRequest(FXObject* sender,FXSelector sel,void* ptr){
   if(FXScrollArea::onSelectionRequest(sender,sel,ptr)) return 1;
 
   // Return text of the selection
-  if(event->target==stringType){
+  if(event->target==stringType || event->target==textType){
     FXASSERT(selstartpos<=selendpos);
     len=selendpos-selstartpos;
     FXMALLOC(&data,FXuchar,len);
     extractText((FXchar*)data,selstartpos,len);
-    setDNDData(FROM_SELECTION,stringType,data,len);
+    setDNDData(FROM_SELECTION,event->target,data,len);
     return 1;
     }
 
@@ -2625,7 +2625,7 @@ long FXText::onClipboardRequest(FXObject* sender,FXSelector sel,void* ptr){
   if(FXScrollArea::onClipboardRequest(sender,sel,ptr)) return 1;
 
   // Requested data from clipboard
-  if(event->target==stringType){
+  if(event->target==stringType || event->target==textType){
     FXASSERT(cliplength);
 #ifndef WIN32
     FXMALLOC(&data,FXuchar,cliplength);
@@ -2638,7 +2638,7 @@ long FXText::onClipboardRequest(FXObject* sender,FXSelector sel,void* ptr){
       c=clipbuffer[j];
       if(c=='\n'){data[i++]='\r';data[i++]='\n';}else{data[i++]=c;}
       }
-    setDNDData(FROM_CLIPBOARD,stringType,data,i+1);
+    setDNDData(FROM_CLIPBOARD,event->target,data,i+1);
 #endif
     return 1;
     }
@@ -3292,11 +3292,12 @@ long FXText::onCmdInsertTab(FXObject*,FXSelector,void*){
 
 // Cut
 long FXText::onCmdCutSel(FXObject*,FXSelector,void*){
-  FXDragType types[1];
+  FXDragType types[2];
   if(selstartpos<selendpos){
     if(isEditable()){
       types[0]=stringType;
-      if(acquireClipboard(types,1)){
+      types[1]=textType;
+      if(acquireClipboard(types,2)){
         FXFREE(&clipbuffer);
         FXASSERT(selstartpos<=selendpos);
         cliplength=selendpos-selstartpos;
@@ -3321,10 +3322,11 @@ long FXText::onCmdCutSel(FXObject*,FXSelector,void*){
 
 // Copy
 long FXText::onCmdCopySel(FXObject*,FXSelector,void*){
-  FXDragType types[1];
+  FXDragType types[2];
   if(selstartpos<selendpos){
     types[0]=stringType;
-    if(acquireClipboard(types,1)){
+    types[1]=textType;
+    if(acquireClipboard(types,2)){
       FXFREE(&clipbuffer);
       FXASSERT(selstartpos<=selendpos);
       cliplength=selendpos-selstartpos;
@@ -4501,7 +4503,7 @@ FXbool FXText::extendSelection(FXint pos,FXTextSelectionMode select,FXbool notif
 
 // Set selection
 FXbool FXText::setSelection(FXint pos,FXint len,FXbool notify){
-  FXDragType types[1];
+  FXDragType types[2];
   FXint what[2];
   FXint ep=pos+len;
   FXint sp=pos;
@@ -4541,7 +4543,8 @@ FXbool FXText::setSelection(FXint pos,FXint len,FXbool notify){
     // Acquire selection
     if(sp!=ep){
       types[0]=stringType;
-      if(!hasSelection()) acquireSelection(types,1);
+      types[1]=textType;
+      if(!hasSelection()) acquireSelection(types,2);
       if(notify && target){
         what[0]=selstartpos;
         what[1]=selendpos-selstartpos;

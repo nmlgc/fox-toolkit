@@ -5,7 +5,7 @@
 *********************************************************************************
 * Copyright (C) 1997 by Jeroen van der Zijp.   All Rights Reserved.             *
 *********************************************************************************
-* $Id: groupbox.cpp,v 1.47 2002/02/26 17:20:12 fox Exp $                     *
+* $Id: groupbox.cpp,v 1.47.4.1 2003/09/16 02:48:05 fox Exp $                     *
 ********************************************************************************/
 #include "fx.h"
 #include <stdio.h>
@@ -453,6 +453,7 @@ long GroupWindow::onCmdFileDlgDirectory(FXObject*,FXSelector,void*){
 // Open
 long GroupWindow::onCmdDirDlg(FXObject*,FXSelector,void*){
    FXDirDialog open(this,"Open some file");
+   open.setDirectory("d:\\");
    if(open.execute()){
      fxmessage("Dir=%s\n",open.getDirectory().text());
      }

@@ -21,7 +21,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXDCPrint.cpp,v 1.26.4.1 2003/03/27 20:34:43 fox Exp $                    *
+* $Id: FXDCPrint.cpp,v 1.26.4.2 2004/03/03 19:02:17 fox Exp $                    *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -136,7 +136,8 @@ void FXDCPrint::bbox(FXfloat x,FXfloat y){
 void FXDCPrint::tfm(FXfloat& xo,FXfloat& yo,FXfloat xi,FXfloat yi){
   if(flags&PRINT_LANDSCAPE){
     xo=yi;
-    yo=mediaheight-xi;
+    yo=xi;
+//    yo=mediaheight-xi;
     }
   else{
     xo=xi;
@@ -215,6 +216,16 @@ FXbool FXDCPrint::beginPrint(FXPrinter& job){
     docbb.ymin=(FXfloat)job.bottommargin;
     docbb.ymax=(FXfloat)(job.mediaheight-job.topmargin);
     outf("%%%%BoundingBox: %d %d %d %d\n",(int)docbb.xmin,(int)docbb.ymin,(int)docbb.xmax,(int)docbb.ymax);
+    }
+
+  // Portrait/landscape
+  if(flags&PRINT_LANDSCAPE){
+    outf("%%%%Orientation: Landscape\n");
+    }
+  else{
+    // I am not sure this should be here, so I leave it commented out
+    // (portrait seems to be default anyway)
+    //outf("%%%%Orientation: Portrait\n");
     }
 
   // Calculate number of pages
@@ -450,11 +461,13 @@ FXbool FXDCPrint::beginPage(FXuint page){
   outf("%%%%EndPageSetup\n");
   outf("gsave\n");
 
+/*
   // Maybe in landscape?
   if(flags&PRINT_LANDSCAPE){
     outf("%g %g translate\n",mediawidth,0.0);
     outf("90 rotate\n");
     }
+*/
 
   return TRUE;
   }
@@ -710,11 +723,11 @@ void FXDCPrint::drawText(FXint x,FXint y,const FXchar* string,FXuint len){
   outf("%d scalefont\n",font->getSize()/10);
   outf("setfont\n");
   outf("newpath\n%g %g moveto\n(",xx,yy);
-  for(FXuint i=0; i<len; i++){ 
-    if(string[i]=='(') outf("\\050"); 
-    else if(string[i]==')') outf("\\051"); 
+  for(FXuint i=0; i<len; i++){
+    if(string[i]=='(') outf("\\050");
+    else if(string[i]==')') outf("\\051");
     else outf("%c",string[i]);
-    } 
+    }
   outf(") show\n");
   outf("grestore\n");
   }

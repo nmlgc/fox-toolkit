@@ -21,7 +21,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXApp.cpp,v 1.359.4.5 2003/06/20 19:02:07 fox Exp $                          *
+* $Id: FXApp.cpp,v 1.359.4.6 2004/01/09 19:11:55 fox Exp $                          *
 ********************************************************************************/
 #ifdef WIN32
 #if _WIN32_WINNT < 0x0400
@@ -3737,7 +3737,7 @@ return 0;
         event.type=SEL_UNMAP;
         if(window->handle(this,MKUINT(0,SEL_UNMAP),&event)) refresh();
         }
-      return 0;
+      return DefWindowProc((HWND)hwnd,iMsg,wParam,lParam);
 
     // Create
     case WM_CREATE:

@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXDirList.cpp,v 1.63.4.5 2003/05/01 18:02:01 fox Exp $                   *
+* $Id: FXDirList.cpp,v 1.63.4.7 2003/09/16 02:48:05 fox Exp $                   *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -1329,11 +1329,6 @@ FXbool FXDirList::scanRootDir(FXbool relist){
     pathname[3]='\0';
     }
 
-//   pathname[0]=_getdrive()+'a'-1;
-//   pathname[1]=':';
-//   pathname[2]=PATHSEP;
-//   pathname[3]='\0';
-
   // Create root item if we don't have one yet
   if(!firstitem){
     item=(FXDirItem*)createItem(pathname,harddiskicon,harddiskicon,NULL);
@@ -1683,7 +1678,6 @@ void FXDirList::setDirectory(const FXString& pathname){    // FIXME notify argum
         FXString drive(path.left(2));
         drive.append(PATHSEP);
         if(firstitem->label!=drive){
-//          if(_chdrive(drive[0]-'a'+1)==0){
           if(FXFile::setCurrentDrive(drive)){
             FXchar itempath[MAXPATHLEN+1];
             FXbool changed;
@@ -1730,7 +1724,6 @@ void FXDirList::setCurrentFile(const FXString& pathname){    // FIXME notify arg
         FXString drive(path.left(2));
         drive.append(PATHSEP);
         if(firstitem->label!=drive){
-//          if(_chdrive(drive[0]-'a'+1)==0){
           if(FXFile::setCurrentDrive(drive)){
             FXchar itempath[MAXPATHLEN+1];
             FXbool changed;

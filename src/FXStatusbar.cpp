@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXStatusbar.cpp,v 1.14 2002/01/18 22:43:04 jeroen Exp $                  *
+* $Id: FXStatusbar.cpp,v 1.14.4.1 2003/09/18 13:54:29 fox Exp $                  *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -67,7 +67,7 @@ FXStatusbar::FXStatusbar(FXComposite* p,FXuint opts,FXint x,FXint y,FXint w,FXin
 
 
 // Compute minimum width based on child layout hints
-int FXStatusbar::getDefaultWidth(){
+FXint FXStatusbar::getDefaultWidth(){
   register FXint w,wcum,numc;
   register FXWindow* child;
   register FXuint hints;
@@ -88,7 +88,7 @@ int FXStatusbar::getDefaultWidth(){
 
 
 // Compute minimum height based on child layout hints
-int FXStatusbar::getDefaultHeight(){
+FXint FXStatusbar::getDefaultHeight(){
   register FXint h,hmax;
   register FXWindow* child;
   register FXuint hints;

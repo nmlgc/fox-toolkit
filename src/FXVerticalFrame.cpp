@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXVerticalFrame.cpp,v 1.13 2002/01/18 22:43:07 jeroen Exp $              *
+* $Id: FXVerticalFrame.cpp,v 1.13.4.1 2003/09/18 13:54:29 fox Exp $              *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -64,7 +64,7 @@ FXVerticalFrame::FXVerticalFrame(FXComposite* p,FXuint opts,FXint x,FXint y,FXin
 
 
 // Compute minimum width based on child layout hints
-int FXVerticalFrame::getDefaultWidth(){
+FXint FXVerticalFrame::getDefaultWidth(){
   register FXint w,wmax,mw=0;
   register FXWindow* child;
   register FXuint hints;
@@ -87,7 +87,7 @@ int FXVerticalFrame::getDefaultWidth(){
 
 
 // Compute minimum height based on child layout hints
-int FXVerticalFrame::getDefaultHeight(){
+FXint FXVerticalFrame::getDefaultHeight(){
   register FXint h,hcum,hmax,numc,mh=0;
   register FXWindow* child;
   register FXuint hints;

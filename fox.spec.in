@@ -66,6 +66,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root)
+/usr/fox
 /usr/lib/libFOX.so
 /usr/lib/libFOX-@LT_RELEASE@.so.@LT_CURRENT@
 /usr/lib/libFOX-@LT_RELEASE@.so.@LT_CURRENT@.@LT_AGE@.@LT_REVISION@
@@ -90,6 +91,9 @@ rm -rf $RPM_BUILD_ROOT
 /usr/bin/calculator
 
 %changelog
+* Thu Dec 4 2003 Lyle Johnson <lyle@knology.net>
+- incorporated Yan-Fa Li's changes for compatibility with latest RPM tools.
+
 * Wed Aug 27 2002 Lyle Johnson <lyle@users.sourceforge.net>
 - remove Makefile scraps from the doc subdirectories
 

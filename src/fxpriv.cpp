@@ -268,7 +268,7 @@ void FXApp::clipboardGetTypes(FXWindow* window,FXDragType*& types,FXuint& numtyp
   numtypes=0;
   if(clipboardWindow){
     FXMEMDUP(&types,FXDragType,xcbTypeList,xcbNumTypes);
-    numtypes=xselNumTypes;
+    numtypes=xcbNumTypes;
     }
   else{
     answer=fxsendrequest((Display*)display,window->id(),xcbSelection,ddeAtom,ddeTargets,event.time);

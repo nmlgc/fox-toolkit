@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXDHVec.h,v 1.8 2002/01/18 22:42:51 jeroen Exp $                         *
+* $Id: FXDHVec.h,v 1.8.4.1 2004/06/04 04:37:04 fox Exp $                         *
 ********************************************************************************/
 #ifndef FXDHVEC_H
 #define FXDHVEC_H
@@ -77,7 +77,6 @@ public:
 
   /// Other operators
   friend FXDHVec operator-(const FXDHVec& a){return FXDHVec(-a.v[0],-a.v[1],-a.v[2],-a.v[3]);}
-  friend FXDHVec operator!(const FXDHVec& a){return a.v[0]==0.0 && a.v[1]==0.0 && a.v[2]==0.0 && a.v[3]==0.0;}
   friend FXDHVec operator+(const FXDHVec& a,const FXDHVec& b){return FXDHVec(a.v[0]+b.v[0],a.v[1]+b.v[1],a.v[2]+b.v[2],a.v[3]+b.v[3]);}
   friend FXDHVec operator-(const FXDHVec& a,const FXDHVec& b){return FXDHVec(a.v[0]-b.v[0],a.v[1]-b.v[1],a.v[2]-b.v[2],a.v[3]-b.v[3]);}
   friend FXDHVec operator*(const FXDHVec& a,FXdouble n){return FXDHVec(a.v[0]*n,a.v[1]*n,a.v[2]*n,a.v[3]*n);}
@@ -87,6 +86,9 @@ public:
 
   /// Dot product
   friend FXdouble operator*(const FXDHVec& a,const FXDHVec& b){return a.v[0]*b.v[0]+a.v[1]*b.v[1]+a.v[2]*b.v[2]+a.v[3]*b.v[3];}
+
+  /// Test if zero
+  friend int operator!(const FXDHVec& a){return a.v[0]==0.0 && a.v[1]==0.0 && a.v[2]==0.0 && a.v[3]==0.0;}
 
   /// Equality tests
   friend int operator==(const FXDHVec& a,const FXDHVec& b){return a.v[0]==b.v[0] && a.v[1]==b.v[1] && a.v[2]==b.v[2] && a.v[3]==b.v[3];}

@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXTopWindow.cpp,v 1.72.4.1 2002/08/06 19:33:31 fox Exp $                  *
+* $Id: FXTopWindow.cpp,v 1.72.4.2 2003/09/18 13:54:29 fox Exp $                  *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -838,7 +838,7 @@ void FXTopWindow::position(FXint x,FXint y,FXint w,FXint h){
 
 
 // Compute minimum width based on child layout hints
-int FXTopWindow::getDefaultWidth(){
+FXint FXTopWindow::getDefaultWidth(){
   register FXint w,wcum,wmax,mw=0;
   register FXWindow* child;
   register FXuint hints;
@@ -868,7 +868,7 @@ int FXTopWindow::getDefaultWidth(){
 
 
 // Compute minimum height based on child layout hints
-int FXTopWindow::getDefaultHeight(){
+FXint FXTopWindow::getDefaultHeight(){
   register FXint h,hcum,hmax,mh=0;
   register FXWindow* child;
   register FXuint hints;

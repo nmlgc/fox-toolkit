@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXPacker.cpp,v 1.24.4.1 2002/07/17 01:58:32 fox Exp $                     *
+* $Id: FXPacker.cpp,v 1.24.4.2 2003/09/18 13:54:29 fox Exp $                     *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -488,7 +488,7 @@ long FXPacker::onFocusRight(FXObject*,FXSelector sel,void* ptr){
 
 
 // Compute minimum width based on child layout hints
-int FXPacker::getDefaultWidth(){
+FXint FXPacker::getDefaultWidth(){
   register FXint w,wcum,wmax,mw=0;
   register FXWindow* child;
   register FXuint hints,side;
@@ -519,7 +519,7 @@ int FXPacker::getDefaultWidth(){
 
 
 // Compute minimum height based on child layout hints
-int FXPacker::getDefaultHeight(){
+FXint FXPacker::getDefaultHeight(){
   register FXint h,hcum,hmax,mh=0;
   register FXWindow* child;
   register FXuint hints,side;

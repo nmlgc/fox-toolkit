@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXFileDict.cpp,v 1.33.4.1 2003/05/21 15:09:58 fox Exp $                   *
+* $Id: FXFileDict.cpp,v 1.33.4.2 2003/11/18 02:13:53 fox Exp $                   *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -329,6 +329,8 @@ FXFileDict::FXFileDict(FXApp* a,FXSettings* db):app(a),settings(db){
 
 // Create new association from extension
 void *FXFileDict::createData(const void* ptr){
+  register const FXchar *p=(const FXchar*)ptr;
+  register FXchar *q;
   FXchar command[COMMANDLEN];
   FXchar extension[EXTENSIONLEN];
   FXchar mimetype[MIMETYPELEN];
@@ -337,51 +339,52 @@ void *FXFileDict::createData(const void* ptr){
   FXchar mininame[ICONNAMELEN];
   FXchar mininameopen[ICONNAMELEN];
   FXFileAssoc *fileassoc;
-  const FXchar *p;
-  FXchar *q;
 
   FXTRACE((300,"FXFileDict: adding association: %s\n",(FXchar*)ptr));
 
   // Make association record
   fileassoc=new FXFileAssoc;
 
-  // Scan entry
-  p=(FXchar*)ptr;
-  q=command;
-  while(*p && *p!=';' && (q<&command[COMMANDLEN-1])) *q++=*p++;
-  *q='\0';
+  // Parse command
+  for(q=command; *p && *p!=';' && q<command+COMMANDLEN-1; *q++=*p++); *q='\0';
+  
+  // Skip section separator
   if(*p==';') p++;
 
-  q=extension;
-  while(*p && *p!=';' && (q<&command[EXTENSIONLEN-1])) *q++=*p++;
-  *q='\0';
+  // Parse extension type
+  for(q=extension; *p && *p!=';' && q<extension+EXTENSIONLEN-1; *q++=*p++); *q='\0';
+  
+  // Skip section separator
   if(*p==';') p++;
 
-  q=bigname;
-  while(*p && *p!=';' && *p!=':' && (q<&command[ICONNAMELEN-1])) *q++=*p++;
-  *q='\0';
+  // Parse big icon name
+  for(q=bigname; *p && *p!=';' && *p!=':' && q<bigname+ICONNAMELEN-1; *q++=*p++); *q='\0';
+  
+  // Skip icon separator
   if(*p==':') p++;
 
-  q=bignameopen;
-  while(*p && *p!=';' && (q<&command[ICONNAMELEN-1])) *q++=*p++;
-  *q='\0';
+  // Parse big open icon name
+  for(q=bignameopen; *p && *p!=';' && q<bignameopen+ICONNAMELEN-1; *q++=*p++); *q='\0';
+  
+  // Skip section separator
   if(*p==';') p++;
 
-  q=mininame;
-  while(*p && *p!=';' && *p!=':' && (q<&command[ICONNAMELEN-1])) *q++=*p++;
-  *q='\0';
+  // Parse mini icon name
+  for(q=mininame; *p && *p!=';' && *p!=':' && q<mininame+ICONNAMELEN-1; *q++=*p++); *q='\0';
+  
+  // Skip icon separator
   if(*p==':') p++;
 
-  q=mininameopen;
-  while(*p && *p!=';' && (q<&command[ICONNAMELEN-1])) *q++=*p++;
-  *q='\0';
+  // Parse mini open icon name
+  for(q=mininameopen; *p && *p!=';' && q<mininameopen+ICONNAMELEN-1; *q++=*p++); *q='\0';
+  
+  // Skip section separator
   if(*p==';') p++;
 
-  q=mimetype;
-  while(*p && *p!=';' && (q<&command[MIMETYPELEN-1])) *q++=*p++;
-  *q='\0';
+  // Parse mime type
+  for(q=mimetype; *p && *p!=';' && q<mimetype+MIMETYPELEN-1; *q++=*p++); *q='\0';
 
-  FXTRACE((300,"FXFileDict: command=\"%s\" extension=\"%s\" mimetype=\"%s\" big=\"%s\"|\"%s\" mini=\"%s\"|\"%s\"\n",command,extension,mimetype,bigname,bignameopen,mininame,mininameopen));
+  FXTRACE((300,"FXFileDict: command=\"%s\" extension=\"%s\" mimetype=\"%s\" big=\"%s\" bigopen=\"%s\" mini=\"%s\" miniopen=\"%s\"\n",command,extension,mimetype,bigname,bignameopen,mininame,mininameopen));
 
   // Initialize association data
   fileassoc->command=command;

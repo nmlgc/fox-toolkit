@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: fxtifio.cpp,v 1.11 2002/01/21 19:26:59 jeroen Exp $                      *
+* $Id: fxtifio.cpp,v 1.11.4.1 2004/03/03 19:02:17 fox Exp $                      *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -133,6 +133,16 @@ static int tif_close_store(thandle_t){
   }
 
 
+// Dummy map file
+static int tif_map_store(thandle_t, tdata_t*, toff_t*){
+  return 0;
+  }
+
+
+// Dummy unmap file
+static void tif_unmap_store(thandle_t, tdata_t, toff_t){
+  }
+
 // Compute size of what's been written
 static toff_t tif_size_store(thandle_t handle){
   tiff_store_handle *h=(tiff_store_handle*)handle;
@@ -157,7 +167,7 @@ FXbool fxloadTIF(FXStream& store,FXuchar*& data,FXColor&,FXint& width,FXint& hei
   s_handle.error=FALSE;
 
   // Open image
-  image=TIFFClientOpen("tiff","rm",(thandle_t)&s_handle,tif_read_store,tif_write_store,tif_seek_store,tif_close_store,tif_size_store,NULL,NULL);
+  image=TIFFClientOpen("tiff","rm",(thandle_t)&s_handle,tif_read_store,tif_write_store,tif_seek_store,tif_close_store,tif_size_store,tif_map_store,tif_unmap_store);
   if(image){
     TIFFRGBAImage img;
     char emsg[1024];
@@ -245,7 +255,7 @@ FXbool fxsaveTIF(FXStream& store,const FXuchar* data,FXColor,FXint width,FXint h
   s_handle.error=FALSE;
 
   // Open image
-  image=TIFFClientOpen("tiff","w",(thandle_t)&s_handle,tif_dummy_read_store,tif_write_store,tif_seek_store,tif_close_store,tif_size_store,NULL,NULL);
+  image=TIFFClientOpen("tiff","w",(thandle_t)&s_handle,tif_dummy_read_store,tif_write_store,tif_seek_store,tif_close_store,tif_size_store,tif_map_store,tif_unmap_store);
   if(image){
 
     // Size of a strip is 16kb
