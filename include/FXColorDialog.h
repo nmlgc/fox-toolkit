@@ -3,7 +3,7 @@
 *                           C o l o r   D i a l o g                             *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1998,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXColorDialog.h,v 1.17 2004/02/08 17:17:33 fox Exp $                     *
+* $Id: FXColorDialog.h,v 1.19 2005/01/16 16:06:06 fox Exp $                     *
 ********************************************************************************/
 #ifndef FXCOLORDIALOG_H
 #define FXCOLORDIALOG_H
@@ -38,7 +38,7 @@ class FXColorSelector;
 * The Color dialog is a standard dialog panel used to edit colors.
 * Colors can be edited via RGB (Red, Green, Blue additive color model),
 * via HSV (Hue, Saturation, Value color modal), via CMY (Cyan, Magenta,
-* Yellow substractive color model), or by name.
+* Yellow subtractive color model), or by name.
 * Commonly used colors can be dragged into a number of small color wells
 * to be used repeatedly; colors dropped into the small color wells are
 * automatically saved into the registry for future use.

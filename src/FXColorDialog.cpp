@@ -3,7 +3,7 @@
 *                           C o l o r   D i a l o g                             *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1998,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,12 +19,14 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXColorDialog.cpp,v 1.22 2004/02/08 17:29:06 fox Exp $                   *
+* $Id: FXColorDialog.cpp,v 1.29 2005/01/16 16:06:06 fox Exp $                   *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
 #include "fxdefs.h"
 #include "fxkeys.h"
+#include "FXHash.h"
+#include "FXThread.h"
 #include "FXStream.h"
 #include "FXString.h"
 #include "FXSize.h"
@@ -32,7 +34,6 @@
 #include "FXRectangle.h"
 #include "FXSettings.h"
 #include "FXRegistry.h"
-#include "FXHash.h"
 #include "FXApp.h"
 #include "FXId.h"
 #include "FXDrawable.h"
@@ -75,7 +76,7 @@ FXIMPLEMENT(FXColorDialog,FXDialogBox,FXColorDialogMap,ARRAYNUMBER(FXColorDialog
 
 // Separator item
 FXColorDialog::FXColorDialog(FXWindow* owner,const FXString& name,FXuint opts,FXint x,FXint y,FXint w,FXint h):
-  FXDialogBox(owner,name,opts|DECOR_TITLE|DECOR_BORDER|DECOR_RESIZE,x,y,w,h,0,0,0,0,4,4){
+  FXDialogBox(owner,name,opts|DECOR_TITLE|DECOR_BORDER|DECOR_RESIZE|DECOR_CLOSE,x,y,w,h,0,0,0,0,4,4){
   colorbox=new FXColorSelector(this,this,ID_COLORSELECTOR,LAYOUT_FILL_X|LAYOUT_FILL_Y);
   colorbox->acceptButton()->setTarget(this);
   colorbox->acceptButton()->setSelector(FXDialogBox::ID_ACCEPT);
@@ -98,15 +99,13 @@ FXColor FXColorDialog::getRGBA() const {
 
 // Forward ColorSelector color change to target [a color well]
 long FXColorDialog::onChgColor(FXObject*,FXSelector,void* ptr){
-  if(target) target->handle(this,FXSEL(SEL_CHANGED,message),ptr);
-  return 1;
+  return target && target->tryHandle(this,FXSEL(SEL_CHANGED,message),ptr);
   }
 
 
 // Forward ColorSelector color command to target [a color well]
 long FXColorDialog::onCmdColor(FXObject*,FXSelector,void* ptr){
-  if(target) target->handle(this,FXSEL(SEL_COMMAND,message),ptr);
-  return 1;
+  return target && target->tryHandle(this,FXSEL(SEL_COMMAND,message),ptr);
   }
 
 

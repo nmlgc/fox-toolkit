@@ -3,7 +3,7 @@
 *                       T e x t   S e a r c h   D i a l o g                     *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2000,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 2000,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,11 +19,13 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXSearchDialog.cpp,v 1.26 2004/02/08 17:29:07 fox Exp $                  *
+* $Id: FXSearchDialog.cpp,v 1.29 2005/01/16 16:06:07 fox Exp $                  *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
 #include "fxdefs.h"
+#include "FXHash.h"
+#include "FXThread.h"
 #include "FXStream.h"
 #include "FXString.h"
 #include "FXSize.h"
@@ -31,7 +33,6 @@
 #include "FXRectangle.h"
 #include "FXRegistry.h"
 #include "FXAccelTable.h"
-#include "FXHash.h"
 #include "FXApp.h"
 #include "FXFont.h"
 #include "FXFrame.h"

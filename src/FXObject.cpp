@@ -3,7 +3,7 @@
 *                         T o p l e v el   O b j e c t                          *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,13 +19,15 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXObject.cpp,v 1.32 2004/02/08 17:29:06 fox Exp $                        *
+* $Id: FXObject.cpp,v 1.40 2005/02/06 17:20:00 fox Exp $                        *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
 #include "fxdefs.h"
+#include "FXHash.h"
 #include "FXStream.h"
 #include "FXObject.h"
+#include "FXException.h"
 
 
 /*
@@ -40,12 +42,7 @@
 */
 
 
-#define HASH1(x,n) (((unsigned int)(x))%(n))            // Number [0..n-1]
-#define HASH2(x,n) (1|(((unsigned int)(x)*17)%((n)-1))) // Number [1..n-2]
-#define MAX_LOAD   80                                   // Maximum hash table load factor (%)
-#define MIN_LOAD   10                                   // Minimum hash table load factor (%)
-#define DEF_SIZE   128                                  // Initial table size (MUST be power of 2)
-#define EMPTYSLOT  ((FXMetaClass*)-1L)                  // Previously used, now empty slot
+#define EMPTYSLOT  ((FXMetaClass*)-1L)
 
 
 using namespace FX;
@@ -140,8 +137,8 @@ static inline FXuint hashstring(const FXchar* str){
 
 
 // Constructor adds metaclass to the table
-FXMetaClass::FXMetaClass(const FXchar* name,FXObject *(fac)(),const FXMetaClass* base,const void* ass,FXuint nass,FXuint assz,FXuint len):
-  className(name),manufacture(fac),baseClass(base),assoc(ass),nassocs(nass),assocsz(assz),namelen(len){
+FXMetaClass::FXMetaClass(const FXchar* name,FXObject *(fac)(),const FXMetaClass* base,const void* ass,FXuint nass,FXuint assz):
+  className(name),manufacture(fac),baseClass(base),assoc(ass),nassocs(nass),assocsz(assz){
   register FXuint p,x,m;
 
   // Adding one
@@ -272,7 +269,7 @@ void FXMetaClass::resize(FXuint n){
 /***************************  FXObject Implementation  *************************/
 
 // Have to do this one `by hand' as it has no base class
-const FXMetaClass FXObject::metaClass("FXObject",FXObject::manufacture,NULL,NULL,0,0,sizeof("FXObject"));
+const FXMetaClass FXObject::metaClass("FXObject",FXObject::manufacture,NULL,NULL,0,0);
 
 
 // Build an object
@@ -286,6 +283,13 @@ const FXchar* FXObject::getClassName() const { return getMetaClass()->getClassNa
 // Check if object belongs to a class
 FXbool FXObject::isMemberOf(const FXMetaClass* metaclass) const {
   return getMetaClass()->isSubClassOf(metaclass);
+  }
+
+
+// Try handle message safely; we catch only resource exceptions, things like 
+// running out of memory, window handles, system resources; others are ignored.
+long FXObject::tryHandle(FXObject* sender,FXSelector sel,void* ptr){
+  try { return handle(sender,sel,ptr); } catch(const FXResourceException&) { return 0; }
   }
 
 

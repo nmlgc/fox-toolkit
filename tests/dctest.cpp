@@ -5,7 +5,7 @@
 *********************************************************************************
 * Copyright (C) 1999,2003 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
-* $Id: dctest.cpp,v 1.31 2004/01/15 01:29:19 fox Exp $                          *
+* $Id: dctest.cpp,v 1.37 2004/12/02 14:44:24 fox Exp $                          *
 ********************************************************************************/
 #include "fx.h"
 #include <string.h>
@@ -468,6 +468,8 @@ protected:
   FXBitmap          *bitmap;          // Test bitmap
   FXint              ang1;            // Arc angle 1
   FXint              ang2;            // Arc angle 2
+  FXint              cornerw;         // Corner width
+  FXint              cornerh;         // Corner height
 
   // Widgets
   FXCanvas          *linesCanvas;
@@ -481,6 +483,8 @@ protected:
   FXMenuPane        *filemenu;
   FXDataTarget       ang1_target;
   FXDataTarget       ang2_target;
+  FXDataTarget       cornerw_target;
+  FXDataTarget       cornerh_target;
 
   // Icons
   FXIcon            *lssolid;
@@ -651,9 +655,7 @@ FXIMPLEMENT(DCTestWindow,FXMainWindow,DCTestWindowMap,ARRAYNUMBER(DCTestWindowMa
 
 
 // Make some windows
-DCTestWindow::DCTestWindow(FXApp *app):FXMainWindow(app,"Device Context Test",NULL,NULL,DECOR_ALL,0,0,850,740){
-
-  FXuint opts=FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_FILL_Y;
+DCTestWindow::DCTestWindow(FXApp *app):FXMainWindow(app,"Device Context Test",NULL,NULL,DECOR_ALL,0,0,900,820){
 
   // Preferred line attributes
   lineStyle=LINE_SOLID;
@@ -661,7 +663,7 @@ DCTestWindow::DCTestWindow(FXApp *app):FXMainWindow(app,"Device Context Test",NU
   joinStyle=JOIN_MITER;
 
   // Tooltip
-  FXToolTip *tooltip=new FXToolTip(getApp());
+  new FXToolTip(getApp());
 
   // Alpha cursor
   alphacursor=new FXCursor(getApp(),cursordata,16,16,8,8);
@@ -822,6 +824,20 @@ DCTestWindow::DCTestWindow(FXApp *app):FXMainWindow(app,"Device Context Test",NU
   FXSlider* sang2=new FXSlider(arcangles,&ang2_target,FXDataTarget::ID_VALUE,LAYOUT_CENTER_Y|LAYOUT_FILL_X|SLIDER_INSIDE_BAR|LAYOUT_FILL_COLUMN);
   sang2->setRange(-360,360);
 
+  // Radii for rounded rectangles
+  new FXLabel(controls,"Radii:",NULL,LAYOUT_LEFT);
+  FXMatrix *radii=new FXMatrix(controls,3,FRAME_RIDGE|MATRIX_BY_COLUMNS|LAYOUT_FILL_X, 0,0,0,0, 2,2,2,2, 4,4);
+
+  new FXLabel(radii,"Crnw:",NULL,LAYOUT_LEFT);
+  new FXTextField(radii,4,&cornerw_target,FXDataTarget::ID_VALUE,TEXTFIELD_INTEGER|JUSTIFY_RIGHT|FRAME_SUNKEN|FRAME_THICK);
+  FXSlider* scornw=new FXSlider(radii,&cornerw_target,FXDataTarget::ID_VALUE,LAYOUT_CENTER_Y|LAYOUT_FILL_X|SLIDER_INSIDE_BAR|LAYOUT_FILL_COLUMN);
+  scornw->setRange(0,100);
+
+  new FXLabel(radii,"Crnh:",NULL,LAYOUT_LEFT);
+  new FXTextField(radii,4,&cornerh_target,FXDataTarget::ID_VALUE,TEXTFIELD_INTEGER|JUSTIFY_RIGHT|FRAME_SUNKEN|FRAME_THICK);
+  FXSlider* scornh=new FXSlider(radii,&cornerh_target,FXDataTarget::ID_VALUE,LAYOUT_CENTER_Y|LAYOUT_FILL_X|SLIDER_INSIDE_BAR|LAYOUT_FILL_COLUMN);
+  scornh->setRange(0,100);
+
   // Font
   FXHorizontalFrame *fonts=new FXHorizontalFrame(controls,FRAME_RIDGE|LAYOUT_FILL_X|PACK_UNIFORM_WIDTH, 0,0,0,0, 2,2,2,2, 0,0);
   new FXButton(fonts,"Font Dialog...\tChange the text font",NULL,this,ID_FONT,BUTTON_TOOLBAR|JUSTIFY_CENTER_X|FRAME_RAISED|LAYOUT_FILL_X|LAYOUT_FILL_Y);
@@ -839,7 +855,7 @@ DCTestWindow::DCTestWindow(FXApp *app):FXMainWindow(app,"Device Context Test",NU
   FXTabBook *tabbook=new FXTabBook(contents,NULL,0,LAYOUT_FILL_X|LAYOUT_FILL_Y|LAYOUT_RIGHT);
 
   // First page shows various line styles
-  FXTabItem *linesTab=new FXTabItem(tabbook,"&Lines",NULL);
+  new FXTabItem(tabbook,"&Lines",NULL);
   FXPacker *linesPage=new FXPacker(tabbook,FRAME_THICK|FRAME_RAISED);
 
 
@@ -851,7 +867,7 @@ DCTestWindow::DCTestWindow(FXApp *app):FXMainWindow(app,"Device Context Test",NU
   linesCanvas->setDragCursor(alphacursor);
 
   // Second page shows different shapes
-  FXTabItem *shapesTab=new FXTabItem(tabbook,"&Shapes",NULL);
+  new FXTabItem(tabbook,"&Shapes",NULL);
   FXPacker *shapesPage=new FXPacker(tabbook,FRAME_THICK|FRAME_RAISED);
   frame=new FXHorizontalFrame(shapesPage,FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_FILL_Y,0,0,0,0, 0,0,0,0);
   shapesCanvas=new FXCanvas(frame,this,ID_SHAPES,LAYOUT_FILL_X|LAYOUT_FILL_Y);
@@ -861,7 +877,7 @@ DCTestWindow::DCTestWindow(FXApp *app):FXMainWindow(app,"Device Context Test",NU
   shapesCanvas->setDragCursor(gifcursor);
 
   // Third page shows images
-  FXTabItem *imagesTab=new FXTabItem(tabbook,"&Images",NULL);
+  new FXTabItem(tabbook,"&Images",NULL);
   FXPacker *imagesPage=new FXPacker(tabbook,FRAME_THICK|FRAME_RAISED);
   frame=new FXHorizontalFrame(imagesPage,FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_FILL_Y,0,0,0,0, 0,0,0,0);
   imagesCanvas=new FXCanvas(frame,this,ID_IMAGES,LAYOUT_FILL_X|LAYOUT_FILL_Y);
@@ -900,6 +916,16 @@ DCTestWindow::DCTestWindow(FXApp *app):FXMainWindow(app,"Device Context Test",NU
   ang2_target.connect(ang2);
   ang2_target.setTarget(this);
   ang2_target.setSelector(ID_REDRAW);
+
+  cornerw=10;
+  cornerh=10;
+
+  cornerw_target.connect(cornerw);
+  cornerw_target.setTarget(this);
+  cornerw_target.setSelector(ID_REDRAW);
+  cornerh_target.connect(cornerh);
+  cornerh_target.setTarget(this);
+  cornerh_target.setSelector(ID_REDRAW);
 
   }
 
@@ -1090,7 +1116,7 @@ long DCTestWindow::onCmdFont(FXObject*,FXSelector,void*){
 
 // User changes the line width
 long DCTestWindow::onLineWidth(FXObject*,FXSelector,void*){
-  linesCanvas->update(0,0,linesCanvas->getWidth(),linesCanvas->getHeight());
+  linesCanvas->update();
   return 1;
   }
 
@@ -1098,7 +1124,8 @@ long DCTestWindow::onLineWidth(FXObject*,FXSelector,void*){
 // Change stipple
 long DCTestWindow::onCmdStipple(FXObject*,FXSelector sel,void*){
   stipple=(FXStipplePattern)(STIPPLE_NONE+FXSELID(sel)-ID_STIPPLE_0);
-  linesCanvas->update(0,0,linesCanvas->getWidth(),linesCanvas->getHeight());
+  linesCanvas->update();
+  shapesCanvas->update();
   return 1;
   }
 
@@ -1106,7 +1133,8 @@ long DCTestWindow::onCmdStipple(FXObject*,FXSelector sel,void*){
 // Changed Fill Style
 long DCTestWindow::onCmdFillStyle(FXObject*,FXSelector sel,void*){
   fillStyle=(FXFillStyle)(FILL_SOLID+FXSELID(sel)-ID_FILL_SOLID);
-  linesCanvas->update(0,0,linesCanvas->getWidth(),linesCanvas->getHeight());
+  linesCanvas->update();
+  shapesCanvas->update();
   return 1;
   }
 
@@ -1122,7 +1150,7 @@ long DCTestWindow::onUpdFillStyle(FXObject* sender,FXSelector sel,void*){
 
 
 // Redraw
-long DCTestWindow::onCmdRedraw(FXObject*,FXSelector sel,void*){
+long DCTestWindow::onCmdRedraw(FXObject*,FXSelector,void*){
   linesCanvas->update(0,0,linesCanvas->getWidth(),linesCanvas->getHeight());
   return 1;
   }
@@ -1159,6 +1187,87 @@ long DCTestWindow::onPaintShapes(FXObject *sender,FXSelector,void *ptr){
   dc.setForeground(foreWell->getRGBA());
   dc.setBackground(backWell->getRGBA());
   dc.drawBitmap(bitmap,115,5);
+
+  FXPoint poly_letter[10];
+
+  // Letter 'F'
+  poly_letter[0].x=0;  poly_letter[0].y=0;
+  poly_letter[1].x=45; poly_letter[1].y=0;
+  poly_letter[2].x=45; poly_letter[2].y=15;
+  poly_letter[3].x=15; poly_letter[3].y=15;
+  poly_letter[4].x=15; poly_letter[4].y=30;
+  poly_letter[5].x=30; poly_letter[5].y=30;
+  poly_letter[6].x=30; poly_letter[6].y=45;
+  poly_letter[7].x=15; poly_letter[7].y=45;
+  poly_letter[8].x=15; poly_letter[8].y=75;
+  poly_letter[9].x=0;  poly_letter[9].y=75;
+
+  // Region for F
+  FXRegion letter_F(poly_letter,10);
+
+  // Letter O outside
+  poly_letter[0].x=15; poly_letter[0].y=0;
+  poly_letter[1].x=30; poly_letter[1].y=0;
+  poly_letter[2].x=45; poly_letter[2].y=15;
+  poly_letter[3].x=45; poly_letter[3].y=60;
+  poly_letter[4].x=30; poly_letter[4].y=75;
+  poly_letter[5].x=15; poly_letter[5].y=75;
+  poly_letter[6].x=0;  poly_letter[6].y=60;
+  poly_letter[7].x=0;  poly_letter[7].y=15;
+
+  // Region for outer O
+  FXRegion letter_O(poly_letter,8);
+
+  // Letter O inside
+  poly_letter[0].x=22; poly_letter[0].y=15;
+  poly_letter[1].x=30; poly_letter[1].y=22;
+  poly_letter[2].x=30; poly_letter[2].y=53;
+  poly_letter[3].x=22; poly_letter[3].y=60;
+  poly_letter[4].x=15; poly_letter[4].y=53;
+  poly_letter[5].x=15; poly_letter[5].y=22;
+
+  // Substract inner O
+  letter_O -= FXRegion(poly_letter,6);
+
+  // Letter X left slant
+  poly_letter[0].x=0;  poly_letter[0].y=0;
+  poly_letter[1].x=15; poly_letter[1].y=0;
+  poly_letter[2].x=45; poly_letter[2].y=75;
+  poly_letter[3].x=30; poly_letter[3].y=75;
+
+  // Region for X
+  FXRegion letter_X(poly_letter,4);
+
+  // Letter X right slant
+  poly_letter[0].x=0;  poly_letter[0].y=75;
+  poly_letter[1].x=15; poly_letter[1].y=75;
+  poly_letter[2].x=45; poly_letter[2].y=0;
+  poly_letter[3].x=30; poly_letter[3].y=0;
+
+  // Add slants together
+  letter_X += FXRegion(poly_letter,4);
+
+  // Make the word "FOX"
+  FXRegion word_FOX=letter_F.offset(100,100)+letter_O.offset(150,100)+letter_X.offset(200,100);
+
+  // Set foreground and background
+  dc.setForeground(foreWell->getRGBA());
+  dc.setBackground(backWell->getRGBA());
+
+  // Set stipple and fill
+  dc.setStipple(stipple);
+  dc.setFillStyle(fillStyle);
+  dc.setTile(textureImage);
+
+  // Set region for clip
+  dc.setClipRegion(word_FOX);
+
+  // Get region bounds
+  FXRectangle rect=word_FOX.bounds();
+
+  // Draw through region
+  dc.fillRectangles(&rect,1);
+
   return 1;
   }
 
@@ -1224,22 +1333,26 @@ void DCTestWindow::drawPage(FXDC& dc,FXint w,FXint h){
   dc.fillArc(200,120,100,100,64*ang1,64*ang2);
   dc.fillChord(400,120,100,100,64*ang1,64*ang2);
 
+  dc.drawRoundRectangle(300,230,100,60, cornerw,cornerh);
+
+  dc.fillRoundRectangle(420,230,100,60, cornerw,cornerh);
+
   FXPoint poly[5];
-  poly[0].x=200;          poly[0].y=230;
+  poly[0].x=50;          poly[0].y=230;
   poly[1].x=poly[0].x+40; poly[1].y=poly[0].y+20;
   poly[2].x=poly[0].x+30; poly[2].y=poly[0].y+60;
   poly[3].x=poly[0].x-30; poly[3].y=poly[0].y+60;
   poly[4].x=poly[0].x-40; poly[4].y=poly[0].y+20;
   dc.fillPolygon(poly,5);
 
-  poly[0].x=300;          poly[0].y=230;
+  poly[0].x=150;          poly[0].y=230;
   poly[1].x=poly[0].x+30; poly[1].y=poly[0].y+60;
   poly[2].x=poly[0].x-40; poly[2].y=poly[0].y+20;
   poly[3].x=poly[0].x+40; poly[3].y=poly[0].y+20;
   poly[4].x=poly[0].x-30; poly[4].y=poly[0].y+60;
   dc.fillComplexPolygon(poly,5);
 
-  poly[0].x=400;          poly[0].y=230;
+  poly[0].x=250;          poly[0].y=230;
   poly[1].x=poly[0].x+30; poly[1].y=poly[0].y+60;
   poly[2].x=poly[0].x-40; poly[2].y=poly[0].y+20;
   poly[3].x=poly[0].x+40; poly[3].y=poly[0].y+20;
@@ -1253,6 +1366,9 @@ void DCTestWindow::drawPage(FXDC& dc,FXint w,FXint h){
   concave[2].x=concave[0].x;    concave[2].y=concave[0].y+40;
   concave[3].x=concave[0].x-40; concave[3].y=concave[0].y-20;
   dc.fillConcavePolygon(concave,4);
+
+  dc.drawEllipse(50,500,100,60);
+  dc.fillEllipse(250,500,100,60);
 
   // Draw a pale blue dot :-)
   dc.setForeground(FXRGB(128,128,255));

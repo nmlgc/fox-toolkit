@@ -3,7 +3,7 @@
 *                    F o l d i n g   L i s t   W i d g e t                      *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXFoldingList.h,v 1.16 2004/03/15 16:05:28 fox Exp $                     *
+* $Id: FXFoldingList.h,v 1.27 2005/02/06 17:20:00 fox Exp $                     *
 ********************************************************************************/
 #ifndef FXFOLDINGLIST_H
 #define FXFOLDINGLIST_H
@@ -72,17 +72,17 @@ protected:
   FXFoldingItem():parent(NULL),prev(NULL),next(NULL),first(NULL),last(NULL),openIcon(NULL),closedIcon(NULL),data(NULL),state(0),x(0),y(0){}
   virtual void draw(const FXFoldingList* list,FXDC& dc,FXint x,FXint y,FXint w,FXint h) const;
   virtual FXint hitItem(const FXFoldingList* list,FXint x,FXint y) const;
-protected:
+public:
   enum{
-    SELECTED        = 1,
-    FOCUS           = 2,
-    DISABLED        = 4,
-    OPENED          = 8,
-    EXPANDED        = 16,
-    HASITEMS        = 32,
-    DRAGGABLE       = 64,
-    OPENICONOWNED   = 128,
-    CLOSEDICONOWNED = 256
+    SELECTED        = 1,        /// Selected
+    FOCUS           = 2,        /// Focus
+    DISABLED        = 4,        /// Disabled
+    OPENED          = 8,        /// Opened
+    EXPANDED        = 16,       /// Expanded
+    HASITEMS        = 32,       /// Has virtual subitems
+    DRAGGABLE       = 64,       /// Draggable
+    OPENICONOWNED   = 128,      /// Open icon owned by item
+    CLOSEDICONOWNED = 256       /// Close icon owned by item
     };
 public:
 
@@ -114,19 +114,19 @@ public:
   FXint getNumChildren() const;
 
   /// Change item label
-  virtual void setText(const FXString& txt){ label=txt; }
+  virtual void setText(const FXString& txt);
 
   /// Get item label
   const FXString& getText() const { return label; }
 
-  /// Change open icon
-  virtual void setOpenIcon(FXIcon* icn){ openIcon=icn; }
+  /// Change open icon, deleting old icon if it was owned
+  virtual void setOpenIcon(FXIcon* icn,FXbool owned=FALSE);
 
   /// Get open icon
   FXIcon* getOpenIcon() const { return openIcon; }
 
-  /// Change closed icon
-  virtual void setClosedIcon(FXIcon* icn){ closedIcon=icn; }
+  /// Change closed icon, deleting old icon if it was owned
+  virtual void setClosedIcon(FXIcon* icn,FXbool owned=FALSE);
 
   /// Get closed icon
   FXIcon* getClosedIcon() const { return closedIcon; }
@@ -173,18 +173,12 @@ public:
   /// Return true if this item is draggable
   FXbool isDraggable() const { return (state&DRAGGABLE)!=0; }
 
-  /// Make open and or icon owned by the item
-  virtual void setIconOwned(FXuint owned=(OPENICONOWNED|CLOSEDICONOWNED));
-
-  /// Return open icon and closed icon ownership status
-  FXuint isIconOwned() const { return (state&(OPENICONOWNED|CLOSEDICONOWNED)); }
-
   /// Return TRUE if subitems, real or imagined
   FXbool hasItems() const { return (state&HASITEMS)!=0; }
-  
+
   /// Change has items flag
   void setHasItems(FXbool flag);
-  
+
   /// Return true if descendent of parent item
   FXbool isChildOf(const FXFoldingItem* item) const;
 
@@ -355,6 +349,12 @@ public:
   /// Return header control
   FXHeader* getHeader() const { return header; }
 
+  /// Set headers from array of strings
+  void setHeaders(const FXchar** strings,FXint size=1);
+
+  /// Set headers from newline separated strings
+  void setHeaders(const FXString& strings,FXint size=1);
+
   /// Append header with given text and optional icon
   void appendHeader(const FXString& text,FXIcon *icon=NULL,FXint size=1);
 
@@ -397,38 +397,32 @@ public:
   /// Return last root item
   FXFoldingItem* getLastItem() const { return lastitem; }
 
-  /// Prepend new [possibly subclassed] item as first child of p
-  FXFoldingItem* addItemFirst(FXFoldingItem* p,FXFoldingItem* item,FXbool notify=FALSE);
+  /// Fill list by appending items from array of strings
+  FXint fillItems(FXFoldingItem* father,const FXchar** strings,FXIcon* oi=NULL,FXIcon* ci=NULL,void* ptr=NULL,FXbool notify=FALSE);
 
-  /// Prepend new item with given text and optional icon, and user-data pointer as first child of p
-  FXFoldingItem* addItemFirst(FXFoldingItem* p,const FXString& text,FXIcon* oi=NULL,FXIcon* ci=NULL,void* ptr=NULL,FXbool notify=FALSE);
+  /// Fill list by appending items from newline separated strings
+  FXint fillItems(FXFoldingItem* father,const FXString& strings,FXIcon* oi=NULL,FXIcon* ci=NULL,void* ptr=NULL,FXbool notify=FALSE);
 
-  /// Append new [possibly subclassed] item as last child of p
-  FXFoldingItem* addItemLast(FXFoldingItem* p,FXFoldingItem* item,FXbool notify=FALSE);
+  /// Insert [possibly subclassed] item under father before other item
+  FXFoldingItem* insertItem(FXFoldingItem* other,FXFoldingItem* father,FXFoldingItem* item,FXbool notify=FALSE);
 
-  /// Append new item with given text and optional icon, and user-data pointer as last child of p
-  FXFoldingItem* addItemLast(FXFoldingItem* p,const FXString& text,FXIcon* oi=NULL,FXIcon* ci=NULL,void* ptr=NULL,FXbool notify=FALSE);
+  /// Insert item with given text and optional icons, and user-data pointer under father before other item
+  FXFoldingItem* insertItem(FXFoldingItem* other,FXFoldingItem* father,const FXString& text,FXIcon* oi=NULL,FXIcon* ci=NULL,void* ptr=NULL,FXbool notify=FALSE);
 
-  /// Append new [possibly subclassed] item after to other item
-  FXFoldingItem* addItemAfter(FXFoldingItem* other,FXFoldingItem* item,FXbool notify=FALSE);
+  /// Append [possibly subclassed] item as last child of father
+  FXFoldingItem* appendItem(FXFoldingItem* father,FXFoldingItem* item,FXbool notify=FALSE);
 
-  /// Append new item with given text and optional icon, and user-data pointer after to other item
-  FXFoldingItem* addItemAfter(FXFoldingItem* other,const FXString& text,FXIcon* oi=NULL,FXIcon* ci=NULL,void* ptr=NULL,FXbool notify=FALSE);
+  /// Append item with given text and optional icons, and user-data pointer as last child of father
+  FXFoldingItem* appendItem(FXFoldingItem* father,const FXString& text,FXIcon* oi=NULL,FXIcon* ci=NULL,void* ptr=NULL,FXbool notify=FALSE);
 
-  /// Prepend new [possibly subclassed] item prior to other item
-  FXFoldingItem* addItemBefore(FXFoldingItem* other,FXFoldingItem* item,FXbool notify=FALSE);
+  /// Prepend [possibly subclassed] item as first child of father
+  FXFoldingItem* prependItem(FXFoldingItem* father,FXFoldingItem* item,FXbool notify=FALSE);
 
-  /// Prepend new item with given text and optional icon, and user-data pointer prior to other item
-  FXFoldingItem* addItemBefore(FXFoldingItem* other,const FXString& text,FXIcon* oi=NULL,FXIcon* ci=NULL,void* ptr=NULL,FXbool notify=FALSE);
+  /// Prepend item with given text and optional icons, and user-data pointer as first child of father
+  FXFoldingItem* prependItem(FXFoldingItem* father,const FXString& text,FXIcon* oi=NULL,FXIcon* ci=NULL,void* ptr=NULL,FXbool notify=FALSE);
 
-  /// Reparent item under parent p
-  void reparentItem(FXFoldingItem* item,FXFoldingItem* p);
-
-  // Move item before other
-  FXFoldingItem* moveItemBefore(FXFoldingItem* other,FXFoldingItem* item);
-
-  // Move item after other
-  FXFoldingItem* moveItemAfter(FXFoldingItem* other,FXFoldingItem* item);
+  /// Move item under father before other item
+  FXFoldingItem *moveItem(FXFoldingItem* other,FXFoldingItem* father,FXFoldingItem* item);
 
   /// Remove item
   void removeItem(FXFoldingItem* item,FXbool notify=FALSE);
@@ -446,16 +440,34 @@ public:
   FXint getItemHeight(const FXFoldingItem* item) const { return item->getHeight(this); }
 
   /// Get item at x,y, if any
-  FXFoldingItem* getItemAt(FXint x,FXint y) const;
+  virtual FXFoldingItem* getItemAt(FXint x,FXint y) const;
 
   /**
-  * Search items for item by name, starting from start item; the
-  * flags argument controls the search direction, and case sensitivity.
+  * Search items by name, beginning from item start.  If the start item
+  * is NULL the search will start at the first, top-most item in the list.
+  * Flags may be SEARCH_FORWARD or SEARCH_BACKWARD to control the search
+  * direction; this can be combined with SEARCH_NOWRAP or SEARCH_WRAP
+  * to control whether the search wraps at the start or end of the list.
+  * The option SEARCH_IGNORECASE causes a case-insensitive match.  Finally,
+  * passing SEARCH_PREFIX causes searching for a prefix of the item name.
+  * Return NULL if no matching item is found.
   */
   FXFoldingItem* findItem(const FXString& text,FXFoldingItem* start=NULL,FXuint flags=SEARCH_FORWARD|SEARCH_WRAP) const;
 
+  /**
+  * Search items by associated user data, beginning from item start. If the
+  * start item is NULL the search will start at the first, top-most item
+  * in the list.  Flags may be SEARCH_FORWARD or SEARCH_BACKWARD to control
+  * the search direction; this can be combined with SEARCH_NOWRAP or SEARCH_WRAP
+  * to control whether the search wraps at the start or end of the list.
+  * The option SEARCH_IGNORECASE causes a case-insensitive match.  Finally,
+  * passing SEARCH_PREFIX causes searching for a prefix of the item name.
+  * Return NULL if no matching item is found.
+  */
+  FXFoldingItem* findItemByData(const void *ptr,FXFoldingItem* start=NULL,FXuint flags=SEARCH_FORWARD|SEARCH_WRAP) const;
+
   /// Scroll to make item visible
-  void makeItemVisible(FXFoldingItem* item);
+  virtual void makeItemVisible(FXFoldingItem* item);
 
   /// Change item's text
   void setItemText(FXFoldingItem* item,const FXString& text);
@@ -463,14 +475,14 @@ public:
   /// Return item's text
   FXString getItemText(const FXFoldingItem* item) const;
 
-  /// Change item's open icon
-  void setItemOpenIcon(FXFoldingItem* item,FXIcon* icon);
+  /// Change item's open icon, deleting old icon if it was owned
+  void setItemOpenIcon(FXFoldingItem* item,FXIcon* icon,FXbool owned=FALSE);
 
   /// Return item's open icon
   FXIcon* getItemOpenIcon(const FXFoldingItem* item) const;
 
-  /// Chance item's closed icon
-  void setItemClosedIcon(FXFoldingItem* item,FXIcon* icon);
+  /// Chance item's closed icon, deleting old icon if it was owned
+  void setItemClosedIcon(FXFoldingItem* item,FXIcon* icon,FXbool owned=FALSE);
 
   /// Return item's closed icon
   FXIcon* getItemClosedIcon(const FXFoldingItem* item) const;
@@ -509,40 +521,40 @@ public:
   void updateItem(FXFoldingItem* item);
 
   /// Enable item
-  FXbool enableItem(FXFoldingItem* item);
+  virtual FXbool enableItem(FXFoldingItem* item);
 
   /// Disable item
-  FXbool disableItem(FXFoldingItem* item);
+  virtual FXbool disableItem(FXFoldingItem* item);
 
   /// Select item
-  FXbool selectItem(FXFoldingItem* item,FXbool notify=FALSE);
+  virtual FXbool selectItem(FXFoldingItem* item,FXbool notify=FALSE);
 
   /// Deselect item
-  FXbool deselectItem(FXFoldingItem* item,FXbool notify=FALSE);
+  virtual FXbool deselectItem(FXFoldingItem* item,FXbool notify=FALSE);
 
   /// Toggle item selection
-  FXbool toggleItem(FXFoldingItem* item,FXbool notify=FALSE);
+  virtual FXbool toggleItem(FXFoldingItem* item,FXbool notify=FALSE);
 
   /// Extend selection from anchor item to item
-  FXbool extendSelection(FXFoldingItem* item,FXbool notify=FALSE);
+  virtual FXbool extendSelection(FXFoldingItem* item,FXbool notify=FALSE);
 
   /// Deselect all items
-  FXbool killSelection(FXbool notify=FALSE);
+  virtual FXbool killSelection(FXbool notify=FALSE);
 
   /// Open item
-  FXbool openItem(FXFoldingItem* item,FXbool notify=FALSE);
+  virtual FXbool openItem(FXFoldingItem* item,FXbool notify=FALSE);
 
   /// Close item
-  FXbool closeItem(FXFoldingItem* item,FXbool notify=FALSE);
+  virtual FXbool closeItem(FXFoldingItem* item,FXbool notify=FALSE);
 
   /// Collapse tree
-  FXbool collapseTree(FXFoldingItem* tree,FXbool notify=FALSE);
+  virtual FXbool collapseTree(FXFoldingItem* tree,FXbool notify=FALSE);
 
   /// Expand tree
-  FXbool expandTree(FXFoldingItem* tree,FXbool notify=FALSE);
+  virtual FXbool expandTree(FXFoldingItem* tree,FXbool notify=FALSE);
 
   /// Change current item
-  void setCurrentItem(FXFoldingItem* item,FXbool notify=FALSE);
+  virtual void setCurrentItem(FXFoldingItem* item,FXbool notify=FALSE);
 
   /// Return current item, if any
   FXFoldingItem* getCurrentItem() const { return currentitem; }
@@ -617,7 +629,7 @@ public:
   void setHelpText(const FXString& text);
 
   /// Get the status line help text for this list
-  FXString getHelpText() const { return help; }
+  const FXString& getHelpText() const { return help; }
 
   /// Save object to a stream
   virtual void save(FXStream& store) const;

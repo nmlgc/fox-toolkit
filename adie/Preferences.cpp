@@ -3,7 +3,7 @@
 *                        P r e f e r e n c e s   D i a l o g                    *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1998,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This program is free software; you can redistribute it and/or modify          *
 * it under the terms of the GNU General Public License as published by          *
@@ -19,7 +19,7 @@
 * along with this program; if not, write to the Free Software                   *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: Preferences.cpp,v 1.63 2004/05/16 20:35:09 fox Exp $                     *
+* $Id: Preferences.cpp,v 1.65 2005/01/16 16:06:06 fox Exp $                     *
 ********************************************************************************/
 #include "fx.h"
 #include "icons.h"
@@ -253,15 +253,15 @@ FXString Preferences::getPatterns() const {
 
 // Set language syntax
 void Preferences::setSyntax(FXSyntax* syn){
-  stylelist->clearItems();
+  stylelist->clearItems(TRUE);
   if(syn){
     for(FXint i=1; i<syn->getNumRules(); i++){
-      stylelist->appendItem(syn->getRule(i)->getName());
+      stylelist->appendItem(syn->getRule(i)->getName(),NULL,NULL,TRUE);
       }
     }
   }
-  
-  
+
+
 // Clean up
 Preferences::~Preferences(){
   delete pal;

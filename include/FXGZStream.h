@@ -3,7 +3,7 @@
 *                        G Z S t r e a m  C l a s s e s                         *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2002,2004 by Sander Jansen.   All Rights Reserved.              *
+* Copyright (C) 2002,2005 by Sander Jansen.   All Rights Reserved.              *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXGZStream.h,v 1.4 2004/02/08 17:17:33 fox Exp $                         *
+* $Id: FXGZStream.h,v 1.9 2005/01/16 16:06:06 fox Exp $                         *
 ********************************************************************************/
 #ifdef HAVE_ZLIB_H
 #ifndef FXGZSTREAM_H
@@ -51,8 +51,11 @@ public:
   /// Close file stream
   virtual FXbool close();
 
+  /// Get position
+  FXlong position() const { return FXStream::position(); }
+
   /// Move to position
-  virtual FXbool position(long,FXWhence){ return FALSE; }
+  virtual FXbool position(FXlong,FXWhence){ return FALSE; }
 
   /// Save single items to stream
   FXGZFileStream& operator<<(const FXuchar& v){ FXStream::operator<<(v); return *this; }
@@ -63,10 +66,8 @@ public:
   FXGZFileStream& operator<<(const FXint& v){ FXStream::operator<<(v); return *this; }
   FXGZFileStream& operator<<(const FXfloat& v){ FXStream::operator<<(v); return *this; }
   FXGZFileStream& operator<<(const FXdouble& v){ FXStream::operator<<(v); return *this; }
-#ifdef FX_LONG
   FXGZFileStream& operator<<(const FXlong& v){ FXStream::operator<<(v); return *this; }
   FXGZFileStream& operator<<(const FXulong& v){ FXStream::operator<<(v); return *this; }
-#endif
 
   /// Save arrays of items to stream
   FXGZFileStream& save(const FXuchar* p,unsigned long n){ FXStream::save(p,n); return *this; }
@@ -77,10 +78,8 @@ public:
   FXGZFileStream& save(const FXint* p,unsigned long n){ FXStream::save(p,n); return *this; }
   FXGZFileStream& save(const FXfloat* p,unsigned long n){ FXStream::save(p,n); return *this; }
   FXGZFileStream& save(const FXdouble* p,unsigned long n){ FXStream::save(p,n); return *this; }
-#ifdef FX_LONG
   FXGZFileStream& save(const FXlong* p,unsigned long n){ FXStream::save(p,n); return *this; }
   FXGZFileStream& save(const FXulong* p,unsigned long n){ FXStream::save(p,n); return *this; }
-#endif
 
   /// Load single items from stream
   FXGZFileStream& operator>>(FXuchar& v){ FXStream::operator>>(v); return *this; }
@@ -91,10 +90,8 @@ public:
   FXGZFileStream& operator>>(FXint& v){ FXStream::operator>>(v); return *this; }
   FXGZFileStream& operator>>(FXfloat& v){ FXStream::operator>>(v); return *this; }
   FXGZFileStream& operator>>(FXdouble& v){ FXStream::operator>>(v); return *this; }
-#ifdef FX_LONG
   FXGZFileStream& operator>>(FXlong& v){ FXStream::operator>>(v); return *this; }
   FXGZFileStream& operator>>(FXulong& v){ FXStream::operator>>(v); return *this; }
-#endif
 
   /// Load arrays of items from stream
   FXGZFileStream& load(FXuchar* p,unsigned long n){ FXStream::load(p,n); return *this; }
@@ -105,10 +102,8 @@ public:
   FXGZFileStream& load(FXint* p,unsigned long n){ FXStream::load(p,n); return *this; }
   FXGZFileStream& load(FXfloat* p,unsigned long n){ FXStream::load(p,n); return *this; }
   FXGZFileStream& load(FXdouble* p,unsigned long n){ FXStream::load(p,n); return *this; }
-#ifdef FX_LONG
   FXGZFileStream& load(FXlong* p,unsigned long n){ FXStream::load(p,n); return *this; }
   FXGZFileStream& load(FXulong* p,unsigned long n){ FXStream::load(p,n); return *this; }
-#endif
 
   /// Save object
   FXGZFileStream& saveObject(const FXObject* v){ FXStream::saveObject(v); return *this; }

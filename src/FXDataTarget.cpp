@@ -3,7 +3,7 @@
 *                              D a t a   T a r g e t                            *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,12 +19,14 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXDataTarget.cpp,v 1.29 2004/02/08 17:29:06 fox Exp $                    *
+* $Id: FXDataTarget.cpp,v 1.33 2005/01/16 16:06:06 fox Exp $                    *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
 #include "fxdefs.h"
 #include "fxkeys.h"
+#include "FXHash.h"
+#include "FXThread.h"
 #include "FXStream.h"
 #include "FXString.h"
 #include "FXSize.h"
@@ -32,7 +34,6 @@
 #include "FXRectangle.h"
 #include "FXSettings.h"
 #include "FXRegistry.h"
-#include "FXHash.h"
 #include "FXApp.h"
 #include "FXWindow.h"
 #include "FXDataTarget.h"
@@ -50,6 +51,7 @@
   - Catch SEL_CHANGED when we have expunged this from FXTextField.
   - DT_VOID, i.e. unconnected FXDataTarget maybe it should grey out corresponding
     widgets.
+  - Need to add ID_GETLONGVALUE/ID_SETLONGVALUE message handlers some day.
 */
 
 using namespace FX;
@@ -103,6 +105,16 @@ long FXDataTarget::onCmdValue(FXObject* sender,FXSelector sel,void*){
     case DT_UINT:
       sender->handle(this,FXSEL(SEL_COMMAND,FXWindow::ID_GETINTVALUE),data);
       break;
+    case DT_LONG:
+      i=(FXint) *((FXlong*)data);
+      sender->handle(this,FXSEL(SEL_COMMAND,FXWindow::ID_GETINTVALUE),(void*)&i);
+      *((FXlong*)data)=i;
+      break;
+    case DT_ULONG:
+      i=(FXint) *((FXulong*)data);
+      sender->handle(this,FXSEL(SEL_COMMAND,FXWindow::ID_GETINTVALUE),(void*)&i);
+      *((FXulong*)data)=i;
+      break;
     case DT_FLOAT:
       d=*((FXfloat*)data);
       sender->handle(this,FXSEL(SEL_COMMAND,FXWindow::ID_GETREALVALUE),(void*)&d);
@@ -149,6 +161,14 @@ long FXDataTarget::onUpdValue(FXObject* sender,FXSelector,void*){
     case DT_UINT:
       sender->handle(this,FXSEL(SEL_COMMAND,FXWindow::ID_SETINTVALUE),data);
       break;
+    case DT_LONG:
+      i=(FXint) *((FXlong*)data);
+      sender->handle(this,FXSEL(SEL_COMMAND,FXWindow::ID_SETINTVALUE),(void*)&i);
+      break;
+    case DT_ULONG:
+      i=(FXint) *((FXulong*)data);
+      sender->handle(this,FXSEL(SEL_COMMAND,FXWindow::ID_SETINTVALUE),(void*)&i);
+      break;
     case DT_FLOAT:
       d=*((FXfloat*)data);
       sender->handle(this,FXSEL(SEL_COMMAND,FXWindow::ID_SETREALVALUE),(void*)&d);
@@ -186,6 +206,12 @@ long FXDataTarget::onCmdOption(FXObject*,FXSelector sel,void*){
     case DT_UINT:
       *((FXuint*)data)=num;
       break;
+    case DT_LONG:
+      *((FXlong*)data)=num;
+      break;
+    case DT_ULONG:
+      *((FXulong*)data)=num;
+      break;
     case DT_FLOAT:
       *((FXfloat*)data)=(FXfloat)num;
       break;
@@ -222,6 +248,12 @@ long FXDataTarget::onUpdOption(FXObject* sender,FXSelector sel,void*){
       break;
     case DT_UINT:
       i=*((FXuint*)data);
+      break;
+    case DT_LONG:
+      i=(FXint) *((FXlong*)data);
+      break;
+    case DT_ULONG:
+      i=(FXint) *((FXulong*)data);
       break;
     case DT_FLOAT:
       i=(FXint) *((FXfloat*)data);

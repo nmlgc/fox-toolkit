@@ -3,7 +3,7 @@
 *              P r i v a t e   I n t e r n a l   F u n c t i o n s              *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2000,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 2000,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,12 +19,14 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: fxpriv.cpp,v 1.32.2.1 2004/08/13 05:16:16 fox Exp $                          *
+* $Id: fxpriv.cpp,v 1.39 2005/01/16 16:06:07 fox Exp $                          *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
 #include "fxdefs.h"
 #include "fxpriv.h"
+#include "FXHash.h"
+#include "FXThread.h"
 #include "FXStream.h"
 #include "FXString.h"
 #include "FXSize.h"
@@ -32,7 +34,6 @@
 #include "FXRectangle.h"
 #include "FXObject.h"
 #include "FXRegistry.h"
-#include "FXHash.h"
 #include "FXApp.h"
 #include "FXId.h"
 #include "FXDrawable.h"
@@ -160,12 +161,10 @@ static FXuint fxrecvprop(Display *display,Window window,Atom prop,Atom& type,FXu
   unsigned long tfroffset,tfrsize,tfrleft;
   unsigned char *ptr;
   int format;
-  //FXTRACE((100,"fxrecvprop: maxtfrsize=%lu\n",maxtfrsize));
   tfroffset=0;
 
   // Read next chunk of data from property
   while(XGetWindowProperty(display,window,prop,tfroffset>>2,maxtfrsize>>2,False,AnyPropertyType,&type,&format,&tfrsize,&tfrleft,&ptr)==Success && type!=None){
-    //FXTRACE((100,"fxrecvprop: type=%d format=%d tfrsize=%d tfrleft=%d\n",type,format,tfrsize,tfrleft));
     tfrsize*=(format>>3);
 
     // Grow the array to accomodate new data
@@ -182,7 +181,6 @@ static FXuint fxrecvprop(Display *display,Window window,Atom prop,Atom& type,FXu
   // Delete property after we're done
   XDeleteProperty(display,window,prop);
   XFlush(display);
-  //FXTRACE((100,"fxrecvprop: read=%lu\n",tfroffset));
   return tfroffset;
   }
 
@@ -200,11 +198,9 @@ Atom fxrecvdata(Display *display,Window window,Atom prop,Atom incr,Atom& type,FX
     // First, see what we've got
     if(XGetWindowProperty(display,window,prop,0,0,False,AnyPropertyType,&type,&format,&tfrsize,&tfrleft,&ptr)==Success && type!=None){
       XFree(ptr);
-      //FXTRACE((100,"fxrecvdata: type=%d format=%d tfrsize=%d tfrleft=%d\n",type,format,tfrsize,tfrleft));
 
       // Incremental transfer
       if(type==incr){
-        //FXTRACE((100,"fxrecvdata: incr\n"));
 
         // Delete the INCR property
         XDeleteProperty(display,window,prop);
@@ -215,7 +211,6 @@ Atom fxrecvdata(Display *display,Window window,Atom prop,Atom incr,Atom& type,FX
 
           // Wrong type of notify event; perhaps stale event
           if(ev.xproperty.atom!=prop || ev.xproperty.state!=PropertyNewValue) continue;
-          //FXTRACE((100,"fxwaitforevent: got it\n"));
 
           // See what we've got
           if(XGetWindowProperty(display,window,prop,0,0,False,AnyPropertyType,&type,&format,&tfrsize,&tfrleft,&ptr)==Success && type!=None){
@@ -249,6 +244,7 @@ Atom fxrecvdata(Display *display,Window window,Atom prop,Atom incr,Atom& type,FX
 
 
 /*******************************************************************************/
+
 
 
 // Change PRIMARY selection data
@@ -390,31 +386,6 @@ void FXApp::dragdropGetTypes(const FXWindow*,FXDragType*& types,FXuint& numtypes
   }
 
 
-// Make GC for given visual and depth; graphics exposures optional
-GC fxmakegc(Display *display,Visual* visual,FXint depth,FXbool gex){
-  XGCValues gval;
-  FXID drawable;
-  GC gg;
-
-  gval.fill_style=FillSolid;
-  gval.graphics_exposures=gex;
-
-  // For default visual; this is easy as we already have a matching window
-  if(visual==DefaultVisual(display,DefaultScreen(display))){
-    gg=XCreateGC(display,XDefaultRootWindow(display),GCFillStyle|GCGraphicsExposures,&gval);
-    }
-
-  // For arbitrary visual; create a temporary pixmap of the same depth as the visual
-  else{
-    drawable=XCreatePixmap(display,XDefaultRootWindow(display),1,1,depth);
-    gg=XCreateGC(display,drawable,GCFillStyle|GCGraphicsExposures,&gval);
-    XFreePixmap(display,drawable);
-    }
-
-  return gg;
-  }
-
-
 /*******************************************************************************/
 
 // MSWIN
@@ -495,7 +466,7 @@ void FXApp::selectionSetData(const FXWindow*,FXDragType,FXuchar* data,FXuint siz
 
 
 // Retrieve PRIMARY selection data
-void FXApp::selectionGetData(const FXWindow* window,FXDragType type,FXuchar*& data,FXuint& size){
+void FXApp::selectionGetData(const FXWindow*,FXDragType type,FXuchar*& data,FXuint& size){
   data=NULL;
   size=0;
   if(selectionWindow){
@@ -514,7 +485,7 @@ void FXApp::selectionGetData(const FXWindow* window,FXDragType type,FXuchar*& da
 
 
 // Retrieve PRIMARY selection types
-void FXApp::selectionGetTypes(const FXWindow* window,FXDragType*& types,FXuint& numtypes){
+void FXApp::selectionGetTypes(const FXWindow*,FXDragType*& types,FXuint& numtypes){
   types=NULL;
   numtypes=0;
   if(selectionWindow){

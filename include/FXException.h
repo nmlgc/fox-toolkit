@@ -3,7 +3,7 @@
 *                          E x c e p t i o n  T y p e s                         *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2000,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 2000,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXException.h,v 1.10 2004/02/08 17:17:33 fox Exp $                        *
+* $Id: FXException.h,v 1.13 2005/01/16 16:06:06 fox Exp $                       *
 ********************************************************************************/
 #ifndef FXEXCEPTION_H
 #define FXEXCEPTION_H
@@ -88,6 +88,36 @@ private:
 public:
   FXMemoryException():FXResourceException(FXMemoryException::exceptionName){}
   FXMemoryException(const FXchar *msg):FXResourceException(msg){}
+  };
+
+
+/// Window exception
+class FXAPI FXWindowException : public FXResourceException {
+private:
+  static const FXchar exceptionName[];
+public:
+  FXWindowException():FXResourceException(FXWindowException::exceptionName){}
+  FXWindowException(const FXchar *msg):FXResourceException(msg){}
+  };
+
+
+/// Image, cursor, bitmap exception
+class FXAPI FXImageException : public FXResourceException {
+private:
+  static const FXchar exceptionName[];
+public:
+  FXImageException():FXResourceException(FXImageException::exceptionName){}
+  FXImageException(const FXchar *msg):FXResourceException(msg){}
+  };
+
+
+/// Font exception
+class FXAPI FXFontException : public FXResourceException {
+private:
+  static const FXchar exceptionName[];
+public:
+  FXFontException():FXResourceException(FXFontException::exceptionName){}
+  FXFontException(const FXchar *msg):FXResourceException(msg){}
   };
 
 }

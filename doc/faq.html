@@ -71,6 +71,7 @@ Questions
   <a href="#UPDATING">The TextField stops updating while the cursor is in it.</a><BR>
   <a href="#DLLS">Building and using DLL's with FOX under Windows.</a><BR>
   <a href="#MDI">Creating an MDI application.</a><BR>
+  <a href="#HANDLES">MS-Windows GDI handle limits.</a><BR>
 </ul>
 
 
@@ -2026,6 +2027,38 @@ deactivateDocument() should tear down the user interface and leave
 widgets in their pristine state [as if there were no document].
 
 
+<!--- TOPIC TITLE -->
+<p>
+<table width=100% cellpadding=0 cellspacing=2><tr><td width=100% valign=bottom id=HEADLINE><b>
+<a NAME="HANDLES"></a>MS-Windows GDI handle limits.
+<br><img src='art/line.gif' width=100% height=1></b></td></tr></table>
+</p>
+<!--- TOPIC TITLE -->
+<p>
+MS-Windows has finite limits on GDI handles; the maximum number of HWND handles
+in the entire system is determined by 16-bit handle values.  There is also a maximum
+number of bitmap handles.
+<p>
+These limits manifest themselves when calls to create() are failing by throwing
+an exception.  <br>
+Windows NT, 2K, and XP probably have higher limits than Windows 95, Windows 98,
+and Windows ME.
+<p>
+It is therefore important to make sure that resources are deleted as soon as
+they're no longer needed.  Since its pretty fast to create resources, its best
+to delay creation of windows and icons until they're actually needed.
+<p>
+In particular, dialogs should "own" their icons, and delete them in the dialog's
+destructor.  Try to construct dialogs only when they're actually brought on-screen,
+and try to delete them when the interaction with them is done.
+<p>
+Note that un-created() icons and images do not use any handles in the system, so
+refrain from calling create() on icons or images if all you want to do is load
+and manipulate the image's pixel data.  You only need to call create() when images
+are to be drawn into or used as sources for drawing (like e.g. drawing onto
+widgets).
+
+
 <p>
 <table width=100% cellpadding=0 cellspacing=0><tr><td width=100% valign=top id=HEADLINE align=right>
 <img src='art/line.gif' width=100% height=1>
@@ -2048,7 +2081,7 @@ google_ad_format = "728x90_as";
 <p>
 <table width=100% cellpadding=0 cellspacing=0><tr><td width=100% valign=top id=HEADLINE align=right>
 <img src='art/line.gif' width=100% height=1><font size=-1>
-Copyright &copy; 1997-2004 Jeroen van der Zijp</font>
+Copyright &copy; 1997-2005 Jeroen van der Zijp</font>
 </td></tr></table>
 </p>
 <!--- COPYRIGHT -->

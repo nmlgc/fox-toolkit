@@ -3,7 +3,7 @@
 *                   M e m o r y   S t r e a m   C l a s s e s                   *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,11 +19,12 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXMemoryStream.cpp,v 1.5.2.1 2005/06/22 03:32:59 fox Exp $                   *
+* $Id: FXMemoryStream.cpp,v 1.10 2005/01/16 16:06:07 fox Exp $                   *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
 #include "fxdefs.h"
+#include "FXHash.h"
 #include "FXStream.h"
 #include "FXString.h"
 #include "FXObject.h"
@@ -52,7 +53,7 @@ FXMemoryStream::FXMemoryStream(const FXObject* cont):FXStream(cont){
 
 // Write at least count bytes from the buffer
 unsigned long FXMemoryStream::writeBuffer(unsigned long count){
-  if(owns){ setSpace(getSpace()+count); }
+  if(owns){ setSpace(pos+count); }
   return endptr-wrptr;
   }
 
@@ -147,7 +148,7 @@ FXbool FXMemoryStream::close(){
 // Move to position; if saving and we own the buffer, try to resize
 // and 0-fill the space; if loading and not out of range, move the pointer;
 // otherwise, return error code.
-FXbool FXMemoryStream::position(long offset,FXWhence whence){
+FXbool FXMemoryStream::position(FXlong offset,FXWhence whence){
   if(dir==FXStreamDead){ fxerror("FXMemoryStream::position: stream is not open.\n"); }
   if(code==FXStreamOK){
     if(whence==FXFromCurrent) offset=offset+pos;

@@ -3,7 +3,7 @@
 *                       F i l e   S t r e a m   C l a s s                       *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,15 +19,15 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXFileStream.cpp,v 1.13.2.1 2005/03/18 05:37:07 fox Exp $                     *
+* $Id: FXFileStream.cpp,v 1.19 2005/01/16 16:06:07 fox Exp $                    *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
 #include "fxdefs.h"
+#include "FXHash.h"
 #include "FXStream.h"
 #include "FXString.h"
 #include "FXObject.h"
-#include "FXStream.h"
 #include "FXFileStream.h"
 
 
@@ -60,12 +60,14 @@ unsigned long FXFileStream::writeBuffer(unsigned long){
   if(code==FXStreamOK){
     m=wrptr-rdptr;
     n=::write(file,rdptr,m);
-    if(0<n){
-      m-=n;
-      if(m){memmove(begptr,rdptr+n,m);}
-      rdptr=begptr;
-      wrptr=begptr+m;
+    if(n<0){
+      code=FXStreamFull;
+      return endptr-wrptr;
       }
+    m-=n;
+    if(m){memmove(begptr,rdptr+n,m);}
+    rdptr=begptr;
+    wrptr=begptr+m;
     return endptr-wrptr;
     }
   return 0;
@@ -85,9 +87,11 @@ unsigned long FXFileStream::readBuffer(unsigned long){
     rdptr=begptr;
     wrptr=begptr+m;
     n=::read(file,wrptr,endptr-wrptr);
-    if(0<n){
-      wrptr+=n;
+    if(n<0){
+      code=FXStreamEnd;
+      return wrptr-rdptr;
       }
+    wrptr+=n;
     return wrptr-rdptr;
     }
   return 0;
@@ -132,8 +136,8 @@ FXbool FXFileStream::close(){
 
 
 // Move to position
-FXbool FXFileStream::position(long offset,FXWhence whence){
-  register long p;
+FXbool FXFileStream::position(FXlong offset,FXWhence whence){
+  register FXlong p;
   if(dir==FXStreamDead){ fxerror("FXMemoryStream::position: stream is not open.\n"); }
   if(code==FXStreamOK){
     FXASSERT(FXFromStart==SEEK_SET);

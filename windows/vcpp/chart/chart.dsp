@@ -51,7 +51,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LIB32=link.exe -lib
 # ADD BASE LIB32 /nologo
-# ADD LIB32 /out:"..\..\..\lib\CHART-1.2.lib"
+# ADD LIB32 /out:"..\..\..\lib\CHART-1.4.lib"
 # SUBTRACT LIB32 /nologo
 
 !ELSEIF  "$(CFG)" == "chart - Win32 Debug"
@@ -77,7 +77,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LIB32=link.exe -lib
 # ADD BASE LIB32 /nologo
-# ADD LIB32 /out:"..\..\..\lib\CHARTD-1.2.lib"
+# ADD LIB32 /out:"..\..\..\lib\CHARTD-1.4.lib"
 # SUBTRACT LIB32 /nologo
 
 !ENDIF 

@@ -5,7 +5,7 @@
 *********************************************************************************
 * Copyright (C) 1997 by Jeroen van der Zijp.   All Rights Reserved.             *
 *********************************************************************************
-* $Id: splitter.cpp,v 1.29 2004/02/13 22:48:37 fox Exp $                        *
+* $Id: splitter.cpp,v 1.33 2004/10/31 16:21:57 fox Exp $                        *
 ********************************************************************************/
 #include "fx.h"
 #include <stdio.h>
@@ -183,58 +183,51 @@ SplitterWindow::SplitterWindow(FXApp* a):FXMainWindow(a,"Splitter Test",NULL,NUL
 
   new FXMenuTitle(menubar,"&Mode",NULL,modemenu);
 
-  FXFoldingList *tree=new FXFoldingList(group1,NULL,0,FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_FILL_Y|LAYOUT_TOP|LAYOUT_RIGHT|FOLDINGLIST_SHOWS_BOXES|FOLDINGLIST_SHOWS_LINES|FOLDINGLIST_EXTENDEDSELECT);
-  FXFoldingItem *branch,*twig,*leaf,*topmost;
+  FXTreeList *tree=new FXTreeList(group1,NULL,0,FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_FILL_Y|LAYOUT_TOP|LAYOUT_RIGHT|TREELIST_SHOWS_BOXES|TREELIST_SHOWS_LINES|TREELIST_EXTENDEDSELECT);
+  FXTreeItem *branch,*twig,*leaf,*topmost;
 
-  tree->appendHeader("Caption",NULL,100);
-  tree->appendHeader("More detailed caption",NULL,100);
-
-  topmost=tree->addItemLast(0,"Top\tblabla",folder_open,folder_closed);
+  topmost=tree->appendItem(0,"Top",folder_open,folder_closed);
   tree->expandTree(topmost);
-    tree->addItemLast(topmost,"First\tblabla",doc,doc);
-    tree->addItemLast(topmost,"Second\tblabla",doc,doc);
-    tree->addItemLast(topmost,"Third\tblabla",bigdoc,bigdoc);
-    branch=tree->addItemLast(topmost,"Fourth\tblabla",folder_open,folder_closed);
+    tree->appendItem(topmost,"First",doc,doc);
+    tree->appendItem(topmost,"Second",doc,doc);
+    tree->appendItem(topmost,"Third",bigdoc,bigdoc);
+    branch=tree->appendItem(topmost,"Fourth",folder_open,folder_closed);
     tree->expandTree(branch);
-      tree->addItemLast(branch,"Fourth-First\tblabla",doc,doc);
-      tree->addItemLast(branch,"Fourth-Second\tblabla",doc,doc);
-      twig=tree->addItemLast(branch,"Fourth-Third\tblabla",folder_open,folder_closed);
-        tree->addItemLast(twig,"Fourth-Third-First\tblabla",doc,doc);
-        tree->addItemLast(twig,"Fourth-Third-Second\tblabla",doc,doc);
-        tree->addItemLast(twig,"Fourth-Third-Third\tblabla",doc,doc);
-        leaf=tree->addItemLast(twig,"Fourth-Third-Fourth\tblabla",folder_open,folder_closed);
+      tree->appendItem(branch,"Fourth-First",doc,doc);
+      tree->appendItem(branch,"Fourth-Second",doc,doc);
+      twig=tree->appendItem(branch,"Fourth-Third",folder_open,folder_closed);
+        tree->appendItem(twig,"Fourth-Third-First",doc,doc);
+        tree->appendItem(twig,"Fourth-Third-Second",doc,doc);
+        tree->appendItem(twig,"Fourth-Third-Third",doc,doc);
+        leaf=tree->appendItem(twig,"Fourth-Third-Fourth",folder_open,folder_closed);
         leaf->setEnabled(FALSE);
-          tree->addItemLast(leaf,"Fourth-Third-Fourth-First\tblabla",doc,doc);
-          tree->addItemLast(leaf,"Fourth-Third-Fourth-Second\tblabla",doc,doc);
-          tree->addItemLast(leaf,"Fourth-Third-Fourth-Third\tblabla",doc,doc);
-      twig=tree->addItemLast(branch,"Fourth-Fourth\tblabla",folder_open,folder_closed);
-        tree->addItemLast(twig,"Fourth-Fourth-First\tblabla",doc,doc);
-        tree->addItemLast(twig,"Fourth-Fourth-Second\tblabla",doc,doc);
-        tree->addItemLast(twig,"Fourth-Fourth-Third\tblabla",doc,doc);
+          tree->appendItem(leaf,"Fourth-Third-Fourth-First",doc,doc);
+          tree->appendItem(leaf,"Fourth-Third-Fourth-Second",doc,doc);
+          tree->appendItem(leaf,"Fourth-Third-Fourth-Third",doc,doc);
+      twig=tree->appendItem(branch,"Fourth-Fourth",folder_open,folder_closed);
+        tree->appendItem(twig,"Fourth-Fourth-First",doc,doc);
+        tree->appendItem(twig,"Fourth-Fourth-Second",doc,doc);
+        tree->appendItem(twig,"Fourth-Fourth-Third",doc,doc);
         for(i=0; i<10; i++){
-          char name[50];
-          sprintf(name,"%09d\tblabla",i);
-          tree->addItemLast(twig,name,doc,doc);
+          tree->prependItem(twig,FXStringVal(i),doc,doc);
           }
-      twig=tree->addItemLast(branch,"Fourth-Fifth\tblabla",folder_open,folder_closed);
+      twig=tree->appendItem(branch,"Fourth-Fifth",folder_open,folder_closed);
       tree->expandTree(twig);
-        tree->addItemLast(twig,"Fourth-Fifth-First\tblabla",doc,doc);
-        tree->addItemLast(twig,"Fourth-Fifth-Second\tblabla",doc,doc);
-        tree->addItemLast(twig,"Fourth-Fifth-Third\tblabla",doc,doc);
+        tree->appendItem(twig,"Fourth-Fifth-First",doc,doc);
+        tree->appendItem(twig,"Fourth-Fifth-Second",doc,doc);
+        tree->appendItem(twig,"Fourth-Fifth-Third",doc,doc);
         for(i=0; i<10; i++){
-          char name[50];
-          sprintf(name,"%09d\tblabla",i);
-          tree->addItemLast(twig,name,doc,doc);
+          tree->appendItem(twig,FXStringVal(i),doc,doc);
           }
-    tree->addItemLast(topmost,"Fifth\tblabla",doc,doc);
-    tree->addItemLast(topmost,"Sixth\tblabla",doc,doc);
-    branch=tree->addItemLast(topmost,"Seventh\tblabla",folder_open,folder_closed);
-      tree->addItemLast(branch,"Seventh-First\tblabla",doc,doc);
-      tree->addItemLast(branch,"Seventh-Second\tblabla",doc,doc);
-      tree->addItemLast(branch,"Seventh-Third\tblabla",doc,doc);
-    tree->addItemLast(topmost,"Eighth\tblabla",doc,doc);
+    tree->appendItem(topmost,"Fifth",doc,doc);
+    tree->appendItem(topmost,"Sixth",doc,doc);
+    branch=tree->appendItem(topmost,"Seventh",folder_open,folder_closed);
+      tree->appendItem(branch,"Seventh-First",doc,doc);
+      tree->appendItem(branch,"Seventh-Second",doc,doc);
+      tree->appendItem(branch,"Seventh-Third",doc,doc);
+    tree->appendItem(topmost,"Eighth",doc,doc);
 
-
+  
   new FXLabel(group2,"Matrix",NULL,LAYOUT_CENTER_X);
   new FXHorizontalSeparator(group2,SEPARATOR_GROOVE|LAYOUT_FILL_X);
   FXMatrix* matrix=new FXMatrix(group2,2,MATRIX_BY_COLUMNS|LAYOUT_FILL_X);

@@ -5,7 +5,7 @@
 *********************************************************************************
 * Copyright (C) 1997 by Jeroen van der Zijp.   All Rights Reserved.             *
 *********************************************************************************
-* $Id: switcher.cpp,v 1.14 2004/02/08 17:05:35 fox Exp $                        *
+* $Id: switcher.cpp,v 1.15 2004/12/02 14:44:24 fox Exp $                        *
 ********************************************************************************/
 #include "fx.h"
 #include <stdio.h>
@@ -119,7 +119,7 @@ SwitcherTest::SwitcherTest(FXApp *a):FXMainWindow(a,"Switcher Test",NULL,NULL,DE
   filelist=new FXFileList(switcher,NULL,0,ICONLIST_EXTENDEDSELECT);
 
   // Third item is a directory list
-  dirlist=new FXDirList(switcher,0,NULL,0,TREELIST_SHOWS_LINES|TREELIST_SHOWS_BOXES);
+  dirlist=new FXDirList(switcher,NULL,0,TREELIST_SHOWS_LINES|TREELIST_SHOWS_BOXES);
 
   // Add buttons
   new FXLabel(buttons,"These buttons below\nare connected to the\nFXSwitcher Control.\nSo they are checked\nautomatically depending\non the active page\nof the switcher.",NULL,LAYOUT_FILL_Y|JUSTIFY_LEFT|JUSTIFY_TOP);

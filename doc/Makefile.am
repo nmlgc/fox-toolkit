@@ -1,7 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 
-#htmldir = $(prefix)/@PACKAGE@/html
-htmldir = $(datadir)/doc/fox-1.2/html
+htmldir = $(datadir)/doc/@PACKAGE@-@FOX_MAJOR_VERSION@.@FOX_MINOR_VERSION@/html
 
 SUBDIRS = art screenshots
 
@@ -27,6 +26,7 @@ footer.html \
 foreword.html \
 fox.html \
 goals.html \
+gpgkey.html \
 guiupdate.html \
 header.html \
 home.html \
@@ -40,7 +40,7 @@ menu.html \
 messages.html \
 news.html \
 news1.html \
-oldfox.html \
+news2.html \
 page.css \
 pathfinder.html \
 projects.html \

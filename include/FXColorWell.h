@@ -3,7 +3,7 @@
 *                         C o l o r W e l l   W i d g e t                       *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1998,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXColorWell.h,v 1.30 2004/02/08 17:17:33 fox Exp $                       *
+* $Id: FXColorWell.h,v 1.33 2005/01/16 16:06:06 fox Exp $                       *
 ********************************************************************************/
 #ifndef FXCOLORWELL_H
 #define FXCOLORWELL_H
@@ -89,11 +89,8 @@ public:
   long onSelectionLost(FXObject*,FXSelector,void*);
   long onSelectionGained(FXObject*,FXSelector,void*);
   long onSelectionRequest(FXObject*,FXSelector,void*);
-  long onChanged(FXObject*,FXSelector,void*);
-  long onCommand(FXObject*,FXSelector,void*);
   long onClicked(FXObject*,FXSelector,void*);
   long onDoubleClicked(FXObject*,FXSelector,void*);
-  long onTripleClicked(FXObject*,FXSelector,void*);
   long onCmdSetValue(FXObject*,FXSelector,void*);
   long onCmdSetIntValue(FXObject*,FXSelector,void*);
   long onCmdGetIntValue(FXObject*,FXSelector,void*);
@@ -137,7 +134,7 @@ public:
   virtual void killFocus();
 
   /// Set color
-  void setRGBA(FXColor clr);
+  void setRGBA(FXColor clr,FXbool notify=FALSE);
 
   /// Get color
   FXColor getRGBA() const { return rgba; }
@@ -146,13 +143,13 @@ public:
   void setHelpText(const FXString& text){ help=text; }
 
   /// Get status line help text for this color well
-  FXString getHelpText() const { return help; }
+  const FXString& getHelpText() const { return help; }
 
   /// Set tool tip message for this color well
   void setTipText(const FXString& text){ tip=text; }
 
   /// Get tool tip message for this color well
-  FXString getTipText() const { return tip; }
+  const FXString& getTipText() const { return tip; }
 
   /// Return true if only opaque colors allowed
   FXbool isOpaqueOnly() const;

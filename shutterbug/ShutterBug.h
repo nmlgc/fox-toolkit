@@ -3,7 +3,7 @@
 *                S h u t t e r   B u g   A p p l i c a t i o n                  *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2003 by Jeroen van der Zijp.   All Rights Reserved.             *
+* Copyright (C) 2003,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This program is free software; you can redistribute it and/or modify          *
 * it under the terms of the GNU General Public License as published by          *
@@ -19,7 +19,7 @@
 * along with this program; if not, write to the Free Software                   *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: ShutterBug.h,v 1.17 2004/04/28 16:29:07 fox Exp $                        *
+* $Id: ShutterBug.h,v 1.19 2005/01/16 16:06:06 fox Exp $                        *
 ********************************************************************************/
 #ifndef SHUTTERBUG_H
 #define SHUTTERBUG_H
@@ -140,7 +140,9 @@ public:
     ID_SIZE_CUSTOM,
     ID_SIZE_8X8=ID_SIZE_CUSTOM+8,
     ID_SIZE_16X16=ID_SIZE_CUSTOM+16,
+    ID_SIZE_24X24=ID_SIZE_CUSTOM+24,
     ID_SIZE_32X32=ID_SIZE_CUSTOM+32,
+    ID_SIZE_48X48=ID_SIZE_CUSTOM+48,
     ID_SIZE_64X64=ID_SIZE_CUSTOM+64,
     ID_SIZE_128X128=ID_SIZE_CUSTOM+128,
     ID_SIZE_256X256=ID_SIZE_CUSTOM+256,

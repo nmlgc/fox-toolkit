@@ -50,7 +50,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LIB32=link.exe -lib
 # ADD BASE LIB32 /nologo
-# ADD LIB32 /out:"..\..\..\lib\FOX-1.2.lib"
+# ADD LIB32 /out:"..\..\..\lib\FOX-1.4.lib"
 # SUBTRACT LIB32 /nologo
 
 !ELSEIF  "$(CFG)" == "fox - Win32 Debug"
@@ -76,7 +76,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LIB32=link.exe -lib
 # ADD BASE LIB32 /nologo
-# ADD LIB32 /out:"..\..\..\lib\FOXD-1.2.lib"
+# ADD LIB32 /out:"..\..\..\lib\FOXD-1.4.lib"
 # SUBTRACT LIB32 /nologo
 
 !ENDIF 
@@ -100,6 +100,14 @@ SOURCE=..\..\..\src\FX4Splitter.cpp
 # Begin Source File
 
 SOURCE=..\..\..\include\FX4Splitter.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\src\FX7Segment.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\include\FX7Segment.h
 # End Source File
 # Begin Source File
 
@@ -199,19 +207,19 @@ SOURCE=..\..\..\include\FXCanvas.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\src\FXCharset.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\include\FXCharset.h
-# End Source File
-# Begin Source File
-
 SOURCE=..\..\..\src\FXCheckButton.cpp
 # End Source File
 # Begin Source File
 
 SOURCE=..\..\..\include\FXCheckButton.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\src\FXChoiceBox.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\include\FXChoiceBox.h
 # End Source File
 # Begin Source File
 
@@ -404,6 +412,38 @@ SOURCE=..\..\..\src\FXDLL.cpp
 # Begin Source File
 
 SOURCE=..\..\..\include\FXDLL.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\src\FXDockBar.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\include\FXDockBar.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\src\FXDockHandler.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\include\FXDockHandler.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\src\FXDockSite.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\include\FXDockSite.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\src\FXDockTitle.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\include\FXDockTitle.h
 # End Source File
 # Begin Source File
 
@@ -683,6 +723,14 @@ SOURCE=..\..\..\include\FXGroupBox.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\src\FXGUISignal.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\include\FXGUISignal.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\src\FXGzStream.cpp
 # End Source File
 # Begin Source File
@@ -743,6 +791,14 @@ SOURCE=..\..\..\include\FXIcon.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\src\FXIconDict.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\include\FXIconDict.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\src\FXIconList.cpp
 # End Source File
 # Begin Source File
@@ -751,11 +807,39 @@ SOURCE=..\..\..\include\FXIconList.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\src\FXIconSource.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\include\FXIconSource.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\src\FXId.cpp
 # End Source File
 # Begin Source File
 
 SOURCE=..\..\..\include\FXId.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\src\FXIFFIcon.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\include\FXIFFIcon.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\src\FXIFFImage.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\include\FXIFFImage.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\src\fxiffio.cpp
 # End Source File
 # Begin Source File
 
@@ -908,6 +992,14 @@ SOURCE=..\..\..\src\FXMDIClient.cpp
 # Begin Source File
 
 SOURCE=..\..\..\include\FXMDIClient.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\src\FXMemMap.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\include\FXMemMap.h
 # End Source File
 # Begin Source File
 
@@ -1195,6 +1287,26 @@ SOURCE=..\..\..\include\FXRangef.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\src\FXRASIcon.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\include\FXRASIcon.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\src\FXRASImage.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\include\FXRASImage.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\src\fxrasio.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\src\FXRealSlider.cpp
 # End Source File
 # Begin Source File
@@ -1404,6 +1516,14 @@ SOURCE=..\..\..\src\FXSpinner.cpp
 # Begin Source File
 
 SOURCE=..\..\..\include\FXSpinner.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\src\FXSplashWindow.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\include\FXSplashWindow.h
 # End Source File
 # Begin Source File
 
@@ -1671,7 +1791,15 @@ SOURCE=..\..\..\include\FXURL.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\src\FXUTF16Codec.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\include\FXUTF16Codec.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\src\FXUTF32Codec.cpp
 # End Source File
 # Begin Source File
 
@@ -1691,7 +1819,15 @@ SOURCE=..\..\..\src\fxutils.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\src\FXVec2d.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\include\FXVec2d.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\src\FXVec2f.cpp
 # End Source File
 # Begin Source File
 
@@ -1771,14 +1907,6 @@ SOURCE=..\..\..\include\FXWizard.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\src\FXWString.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\include\FXWString.h
-# End Source File
-# Begin Source File
-
 SOURCE=..\..\..\src\fxwuquantize.cpp
 # End Source File
 # Begin Source File
@@ -1832,6 +1960,10 @@ SOURCE=..\..\..\src\icons.h
 # Begin Source File
 
 SOURCE=..\..\..\src\jitter.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\src\strtoll.cpp
 # End Source File
 # Begin Source File
 

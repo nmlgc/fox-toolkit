@@ -3,7 +3,7 @@
 *                   F i l e   S e l e c t i o n   D i a l o g                   *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1998,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXFileDialog.h,v 1.26 2004/02/20 21:16:57 fox Exp $                      *
+* $Id: FXFileDialog.h,v 1.31 2005/02/08 03:23:28 fox Exp $                      *
 ********************************************************************************/
 #ifndef FXFILEDIALOG_H
 #define FXFILEDIALOG_H
@@ -41,6 +41,7 @@ protected:
   FXFileSelector *filebox;
 protected:
   FXFileDialog(){}
+  void initdialog();
 private:
   FXFileDialog(const FXFileDialog&);
   FXFileDialog &operator=(const FXFileDialog&);
@@ -51,6 +52,9 @@ public:
 
   /// Construct free-floating file dialog box
   FXFileDialog(FXApp* a,const FXString& name,FXuint opts=0,FXint x=0,FXint y=0,FXint w=500,FXint h=300);
+
+  /// Hide this window
+  virtual void hide();
 
   /// Change file name
   void setFilename(const FXString& path);
@@ -101,6 +105,12 @@ public:
   /// Change pattern text for pattern number
   void setPatternText(FXint patno,const FXString& text);
 
+  /// Allow pattern entry
+  void allowPatternEntry(FXbool allow);
+
+  /// Return TRUE if pattern entry is allowed
+  FXbool allowPatternEntry() const;
+
   /// Change directory
   void setDirectory(const FXString& path);
 
@@ -112,12 +122,6 @@ public:
 
   /// Return the inter-item spacing (in pixels)
   FXint getItemSpace() const;
-
-  /// Change File List style
-  void setFileBoxStyle(FXuint style);
-
-  /// Return File List style
-  FXuint getFileBoxStyle() const;
 
   /// Change file selection mode
   void setSelectMode(FXuint mode);
@@ -131,6 +135,24 @@ public:
   /// Return wildcard matching mode
   FXuint getMatchMode() const;
 
+  /// Return TRUE if showing hidden files
+  FXbool showHiddenFiles() const;
+
+  /// Show or hide hidden files
+  void showHiddenFiles(FXbool showing);
+
+  /// Return TRUE if image preview on
+  FXbool showImages() const;
+
+  /// Show or hide preview images
+  void showImages(FXbool showing);
+
+  /// Return images preview size
+  FXint getImageSize() const;
+
+  /// Change images preview size
+  void setImageSize(FXint size);
+
   /// Show readonly button
   void showReadOnly(FXbool show);
 
@@ -142,6 +164,12 @@ public:
 
   /// Get readonly state
   FXbool getReadOnly() const;
+
+  /// Change File List style
+  void setFileBoxStyle(FXuint style);
+
+  /// Return File List style
+  FXuint getFileBoxStyle() const;
 
   /// Open existing filename
   static FXString getOpenFilename(FXWindow* owner,const FXString& caption,const FXString& path,const FXString& patterns="*",FXint initial=0);

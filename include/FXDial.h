@@ -3,7 +3,7 @@
 *                              D i a l   W i d g e t                            *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1998,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXDial.h,v 1.27 2004/02/08 17:17:33 fox Exp $                            *
+* $Id: FXDial.h,v 1.30 2005/01/16 16:06:06 fox Exp $                            *
 ********************************************************************************/
 #ifndef FXDIAL_H
 #define FXDIAL_H
@@ -42,12 +42,14 @@ enum {
 
 
 /**
-* The dial widget is a valuator widget which is able to provide a cyclic
-* value range, or a simple linear value range.  Optionally, the zero point
-* may be displayed by means of a colored notch.
+* The Dial widget is a valuator widget which is able to provide a cyclic
+* value range when the DIAL_CYCLIC is passed, or a simple linear value range.
 * While being turned, the dial sends a SEL_CHANGED message to its target;
 * at the end of the interaction, a SEL_COMMAND message is sent.
-* The message data represents the current value, of type FXint.
+* The message data represents the current value, of type FXint.  The options
+* DIAL_VERTICAL and DIAL_HORIZONTAL control the orientation of the dial.
+* An optional notch can be used to indicate the zero-position of
+* the dial; display of the notch is controlled by the DIAL_HAS_NOTCH option.
 */
 class FXAPI FXDial : public FXFrame {
   FXDECLARE(FXDial)
@@ -159,13 +161,13 @@ public:
   void setHelpText(const FXString& text);
 
   /// Get the current help text
-  FXString getHelpText() const { return help; }
+  const FXString& getHelpText() const { return help; }
 
   /// Set the tip text to be displayed in the tooltip
   void setTipText(const FXString& text);
 
   /// Get the current tooltip text value
-  FXString getTipText() const { return tip; }
+  const FXString& getTipText() const { return tip; }
 
   /// Save to stream
   virtual void save(FXStream& store) const;

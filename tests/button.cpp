@@ -3,9 +3,9 @@
 *                                 Button Test                                   *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2003 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1998,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
-* $Id: button.cpp,v 1.14 2003/10/05 17:16:27 fox Exp $                          *
+* $Id: button.cpp,v 1.15 2005/01/04 07:50:58 fox Exp $                          *
 ********************************************************************************/
 #include "fx.h"
 #include <stdio.h>
@@ -171,7 +171,7 @@ ButtonWindow::ButtonWindow(FXApp* a):FXMainWindow(a,"Button Test",NULL,NULL,DECO
   contents=new FXHorizontalFrame(this,LAYOUT_SIDE_LEFT|FRAME_NONE|LAYOUT_FILL_X|LAYOUT_FILL_Y|PACK_UNIFORM_WIDTH,0,0,0,0,20,20,20,20);
 
   icon=new FXGIFIcon(getApp(),bigpenguin);
-  
+
   // The button
   button=new FXButton(contents,
                       "&This is a multi-line label on\na button to show off the full\ncapabilities of the button object\tIt also has a tooltip\n[which by the way can be multi-line also]\tAnd some helpful message for the status line.",
@@ -213,8 +213,8 @@ ButtonWindow::ButtonWindow(FXApp* a):FXMainWindow(a,"Button Test",NULL,NULL,DECO
 ButtonWindow::~ButtonWindow(){
   delete icon;
   }
-  
-  
+
+
 // Start
 void ButtonWindow::create(){
   FXMainWindow::create();

@@ -3,7 +3,7 @@
 *                     D i r e c t o r y   L i s t   W i d g e t                 *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1998,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXDirList.h,v 1.59 2004/02/08 17:17:33 fox Exp $                         *
+* $Id: FXDirList.h,v 1.66 2005/01/16 16:06:06 fox Exp $                         *
 ********************************************************************************/
 #ifndef FXDIRLIST_H
 #define FXDIRLIST_H
@@ -53,19 +53,19 @@ protected:
   FXFileAssoc  *assoc;                // File association
   FXDirItem    *link;                 // Link to next item
   FXDirItem    *list;                 // List of child items
-  unsigned long size;                 // File size (if a file)
+  FXlong        size;                 // File size (if a file)
   FXTime        date;                 // Time of item
 protected:
-  FXDirItem():assoc(NULL),link(NULL),list(NULL),size(0),date(0){}
-protected:
+  FXDirItem():assoc(NULL),link(NULL),list(NULL),size(0L),date(0){}
+public:
   enum {
-    FOLDER      = 512,                // Directory item
-    EXECUTABLE  = 1024,               // Executable item
-    SYMLINK     = 2048,               // Symbolic linked item
-    CHARDEV     = 4096,               // Character special item
-    BLOCKDEV    = 8192,               // Block special item
-    FIFO        = 16384,              // FIFO item
-    SOCK        = 32768               // Socket item
+    FOLDER      = 512,          /// Directory item
+    EXECUTABLE  = 1024,         /// Executable item
+    SYMLINK     = 2048,         /// Symbolic linked item
+    CHARDEV     = 4096,         /// Character special item
+    BLOCKDEV    = 8192,         /// Block special item
+    FIFO        = 16384,        /// FIFO item
+    SOCK        = 32768         /// Socket item
     };
 public:
 
@@ -100,14 +100,21 @@ public:
   FXFileAssoc* getAssoc() const { return assoc; }
 
   /// Return the file size for this item
-  unsigned long getSize() const { return size; }
+  FXlong getSize() const { return size; }
 
   /// Return the date for this item
   FXTime getDate() const { return date; }
   };
 
 
-/// Directory tree List
+/**
+* A Directory List widget provides a tree-structured view of the file system.
+* It automatically updates itself periodically by re-scanning the file system
+* for any changes.  As it scans the displayed directories and files, it automatically
+* determines the icons to be displayed by consulting the file-associations registry
+* settings.  A number of messages can be sent to the Directory List to control the
+* filter pattern, sorting order, case sensitivity, and hidden file display mode.
+*/
 class FXAPI FXDirList : public FXTreeList {
   FXDECLARE(FXDirList)
 protected:

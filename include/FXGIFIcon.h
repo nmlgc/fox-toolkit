@@ -3,7 +3,7 @@
 *                        G I F   I c o n   O b j e c t                          *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXGIFIcon.h,v 1.17 2004/04/24 14:10:29 fox Exp $                         *
+* $Id: FXGIFIcon.h,v 1.21 2005/01/16 16:06:06 fox Exp $                         *
 ********************************************************************************/
 #ifndef FXGIFICON_H
 #define FXGIFICON_H
@@ -38,6 +38,8 @@ protected:
 private:
   FXGIFIcon(const FXGIFIcon&);
   FXGIFIcon &operator=(const FXGIFIcon&);
+public:
+  static const FXchar fileExt[];
 public:
 
   /// Construct an icon from memory stream formatted as GIF format
@@ -59,6 +61,12 @@ public:
 #define FXLOADGIF
 
 /**
+* Check if stream contains a GIF, return TRUE if so.
+*/
+extern FXAPI FXbool fxcheckGIF(FXStream& store);
+
+
+/**
 * Load an GIF (Graphics Interchange Format) file from a stream.
 * Upon successful return, the pixel array and size are returned.
 * If an error occurred, the pixel array is set to NULL.
@@ -67,7 +75,9 @@ extern FXAPI FXbool fxloadGIF(FXStream& store,FXColor*& data,FXint& width,FXint&
 
 
 /**
-* Save an GIF (Graphics Interchange Format) file to a stream.
+* Save an GIF (Graphics Interchange Format) file to a stream.  The flag
+* "fast" is used to select the faster Floyd-Steinberg dither method instead
+* of the slower Wu quantization algorithm.
 */
 extern FXAPI FXbool fxsaveGIF(FXStream& store,const FXColor *data,FXint width,FXint height,FXbool fast=TRUE);
 

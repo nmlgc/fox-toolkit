@@ -19,7 +19,7 @@
 # along with this program; if not, write to the Free Software                   #
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    #
 #################################################################################
-# $Id: Adie.stx,v 1.4.2.1 2004/05/19 03:35:41 fox Exp $                             #
+# $Id: Adie.stx,v 1.27 2004/12/26 21:39:41 fox Exp $                            #
 #################################################################################
 
 #
@@ -35,6 +35,9 @@
 #
 # - Rule name is used as registry key; should be unique if
 #   different colors are desired!
+#
+# - A backslash "\" escapes only if followed by '"'; otherwise its
+#   just a backslash.
 #
 
 
@@ -77,7 +80,7 @@ end
 language "C++"
 
   # File patterns for this language mode
-  filesmatch "*.C,*.cpp,*.cc,*.cxx,*.c++,*.H,*.hpp,*.hh,*.h++,*.h"
+  filesmatch "*.C,*.cpp,*.cc,*.cxx,*.c++,*.H,*.hpp,*.hh,*.hxx,*.h++,*.h"
 
   # Word delimiters
   delimiters "~.,/\`'!@#$%^&*()-=+{}|[]\":;<>?"
@@ -128,7 +131,7 @@ language "C++"
       pattern     "\\."
     end
     rule "Format"
-      pattern "%[#0 +-]?\d*(\\.(\*|\d*))?l?[diouxXeEfFgGaAcsp]"
+      pattern "%[\*ahlLq#0 +-]?\d*(\.(\*|\d*))?l?([dDiouxXeEfFgGaAcsp]|\[.*?\])"
     end
   end
 
@@ -153,13 +156,17 @@ language "C++"
     openpattern  "^\s*#"
     closepattern "$"
     rule "PreprocessorContinuation"
-      pattern "\\n"
+      pattern "\\\n"
     end
   end
 
   # Special macros
   rule "FOXMacro"
-    pattern     "\<(FXDEFMAP|FXMALLOC|FXFREE|FXCALLOC|FXRESIZE|FXMEMDUP|FXTRACE|FXMAPFUNCS|FXMAPFUNC|FXIMPLEMENT|FXDECLARE|FXMAPTYPES|FXMAPTYPE|FXRGBA|FXRGB|FXREDVAL|FXGREENVAL|FXBLUEVAL|FXALPHAVAL|FXASSERT|FXSELID|FXSELTYPE|FXSEL|ARRAYNUMBER)\>"
+    pattern     "\<(FXAPI|FXDEFMAP|FXMALLOC|FXFREE|FXCALLOC|FXRESIZE|FXMEMDUP|FXTRACE|FXMAPFUNCS|FXMAPFUNC|FXIMPLEMENT|FXIMPLEMENT_ABSTRACT|FXDECLARE|FXDECLARE_ABSTRACT|FXMAPTYPES|FXMAPTYPE|FXMETACLASS|FXRGBA|FXRGB|FXREDVAL|FXGREENVAL|FXBLUEVAL|FXALPHAVAL|FXASSERT|FXSELID|FXSELTYPE|FXSEL|FXMINMAX|FXMIN3|FXMIN|FXMAX3|FXMAX|FXSWAP|FXCLAMP|FXABS|FXLERP|ARRAYNUMBER|STRUCTOFFSET|CONTAINER)\>"
+  end
+
+  rule "FOXType"
+    pattern     "\<(FXchar|FXuchar|FXbool|FXushort|FXshort|FXuint|FXwchar|FXint|FXfloat|FXdouble|FXulong|FXlong|FXival|FXuval|FXColor|FXObject|FXString|FXWString)\>"
   end
 
   rule "Keyword"
@@ -175,7 +182,7 @@ language "C++"
   end
 
   rule "Operator"
-    pattern     "(\+\+|\+=|\+|--|-=|->\*|->|-|==|=|&&|&=|&|\|\\||\|=|\||\^=|\^|<<=|<<|<=|<|>>=|>>|>=|>|!=|!|~=|~|\*=|\*|/=|/|%=|%)"
+    pattern     "(\{|\}|\+\+|\+=|\+|--|-=|->\*|->|-|==|=|&&|&=|&|\|\||\|=|\||\^=|\^|<<=|<<|<=|<|>>=|>>|>=|>|!=|!|~=|~|\*=|\*|/=|/|%=|%)"
   end
 
 end
@@ -204,6 +211,12 @@ language "C"
     end
   end
 
+  # C++ style comment
+  rule "CPPComment"
+    openpattern   "//"
+    closepattern  "$"
+  end
+
   # String
   rule "String"
     openpattern   "\""
@@ -219,7 +232,7 @@ language "C"
       pattern     "\\."
     end
     rule "Format"
-      pattern "%[#0 +-]?\d*(\\.(\*|\d*))?l?[diouxXeEfFgGaAcsp]"
+      pattern "%[\*ahlLq#0 +-]?\d*(\.(\*|\d*))?l?([dDiouxXeEfFgGaAcsp]|\[.*?\])"
     end
   end
 
@@ -244,7 +257,7 @@ language "C"
     openpattern  "^\s*#"
     closepattern "$"
     rule "PreprocessorContinuation"
-      pattern "\\n"
+      pattern "\\\n"
     end
   end
 
@@ -261,7 +274,7 @@ language "C"
   end
 
   rule "Operator"
-    pattern     "(\+\+|\+=|\+|--|-=|->\*|->|-|==|=|&&|&=|&|\|\\||\|=|\||\^=|\^|<<=|<<|<=|<|>>=|>>|>=|>|!=|!|~=|~|\*=|\*|/=|/|%=|%)"
+    pattern     "(\+\+|\+=|\+|--|-=|->\*|->|-|==|=|&&|&=|&|\|\||\|=|\||\^=|\^|<<=|<<|<=|<|>>=|>>|>=|>|!=|!|~=|~|\*=|\*|/=|/|%=|%)"
   end
 
 end
@@ -303,21 +316,36 @@ end
 
 
 language "Configure"
-  filesmatch "*.in"
-  rule "String1"
-    pattern    "'(\\\\\\\\|\\\\'|.)*?'"
-  end
-  rule "String2"
-    pattern    "\"(\\\\\\\\|\\\\\"|.)*?\""
+  filesmatch "configure.in,configure.ac"
+  rule "Comment"
+    pattern    "\<dnl\>.*?$"
   end
   rule "Comment"
-    pattern    "\\<dnl\\>.*?$"
+    pattern    "#.*?$"
+  end
+  rule "String"
+    openpattern  "'"
+    closepattern "'"
+    rule "ControlEscape"
+      pattern     "\\."
+    end
+  end
+  rule "String"
+    openpattern  "\""
+    closepattern "\""
+    rule "ControlEscape"
+      pattern     "\\."
+    end
   end
   rule "Macro"
-    pattern    "\\<A[CM]\\w*\\>"
+    pattern    "\<A[CM]\w*\>"
   end
   rule "ShellResult"
-    pattern    "`(\\\\\\\\|\\\\`|.)*?`"
+    openpattern  "`"
+    closepattern "`"
+    rule "ControlEscape"
+      pattern     "\\."
+    end
   end
 end
 
@@ -328,10 +356,10 @@ language "Python"
     pattern     "\<((0[xX][0-9a-fA-F]+)|((\d+\.?\d*)|(\.\d+))([eE](\+|-)?\d+)?)(L|l|UL|ul|u|U|F|f)?\>"
   end
   rule "String"
-    pattern    "(\\\".*?\\\")|(\\'.*?\\')"
+    pattern    "(\".*\")|('.*')"
   end
   rule "Comment"
-    pattern    "#.*?$"
+    pattern    "#.*$"
   end
   rule "Operator"
     pattern     "\+\+|\+=|\+|--|-=|-|==|=|&&|&=|&|=|^=|^|<<=|<<|<=|<|>>=|>>|>=|>|!=|!=|!|~=|~|\*=|\*|/=|/|%=|%"
@@ -370,3 +398,368 @@ language "Ruby"
     pattern     "\<(alias|and|BEGIN|begin|break|case|class|def|defined|do|else|elsif|END|end|ensure|false|for|if|in|module|next|nil|not|or|redo|rescue|retry|return|self|super|then|true|undef|unless|until|when|while|yield)\>"
   end
 end
+
+language "Xml/Html"
+  filesmatch "*.xml,*.htm,*.html,*.ui"
+  rule "Comment"
+    openpattern   "<!--"
+    closepattern  "-->"
+  end
+
+  rule "Entity"
+    openpattern   "\&"
+    closepattern  ";"
+  end
+
+  rule "Instruction"
+    openpattern   "<\?"
+    closepattern  "\?>"
+    rule "String"
+      openpattern   "\""
+      closepattern  "\""
+      rule "Entity"
+        openpattern   "\&"
+        closepattern  ";"
+        stoppattern   "(?=\")"
+      end
+    end
+    rule "String"
+      openpattern   "\'"
+      closepattern  "\'"
+      rule "Entity"
+        openpattern   "\&"
+        closepattern  ";"
+        stoppattern   "(?=\")"
+      end
+    end
+  end
+
+  rule "Node"
+    openpattern   "<"
+    closepattern  ">"
+    rule "String"
+      openpattern   "\""
+      closepattern  "\""
+      rule "Entity"
+        openpattern   "\&"
+        closepattern  ";"
+        stoppattern   "(?=\")"
+      end
+    end
+    rule "String"
+      openpattern   "\'"
+      closepattern  "\'"
+      rule "Entity"
+        openpattern   "\&"
+        closepattern  ";"
+        stoppattern   "(?=\")"
+      end
+    end
+  end
+end
+
+# IDL interface definition language
+language "IDL"
+
+  # File patterns for this language mode
+  filesmatch "*.idl"
+
+  # Word delimiters
+  delimiters "~.,/\`'!@#$%^&*()-=+{}|[]\":;<>?"
+
+  # // style comment
+  rule "CPPComment"
+    openpattern   "//"
+    closepattern  "$"
+    rule "FIXME"
+      pattern     "FIXME"
+    end
+  end
+
+  # /* */ style comment
+  rule "CComment"
+    openpattern   "/\*"
+    closepattern  "\*/"
+    rule "FIXME"
+      pattern     "FIXME"
+    end
+  end
+
+  # String
+  rule "String"
+    openpattern   "\""
+    closepattern  "\""
+    stoppattern   "$"
+    rule "OctalEscape"
+      pattern     "\\\d+"
+    end
+    rule "HexEscape"
+      pattern     "\\x\h+"
+    end
+    rule "ControlEscape"
+      pattern     "\\."
+    end
+    rule "Format"
+      pattern "%[\*hlLq#0 +-]?\d*(\.(\*|\d*))?l?[diouxXeEfFgGaAcsp]"
+    end
+  end
+
+
+  # Char constant
+  rule "Char"
+    openpattern  "'"
+    closepattern "'"
+    rule "OctalEscape"
+      pattern "\\\d+"
+    end
+    rule "HexEscape"
+      pattern     "\\x\h+"
+    end
+    rule "ControlEscape"
+      pattern "\\."
+    end
+  end
+
+  # Preprocessor
+  rule "Preprocessor"
+    openpattern  "^\s*#"
+    closepattern "$"
+    rule "PreprocessorContinuation"
+      pattern "\\\n"
+    end
+  end
+
+  rule "Keyword"
+    pattern     "\<(attribute|component|comsumes|context|custom|exception|emits|eventtype|factory|finder|fixed|getraises|home|import|interface|local|module|multiple|native|oneway|primarykey|private|provides|public|publishes|raises|readonly|setraises|supports|truncatable|typedef|typeid|typeprefix|uses|ValueBase|valuetype)\>"
+  end
+
+  rule "Direction"
+    pattern     "\<(in|inout|out)\>"
+  end
+
+  rule "Number"
+    pattern     "\<((0[xX][0-9a-fA-F]+)|((\d+\.?\d*)|(\.\d+))([eE](\+|-)?\d+)?)(L|l|UL|ul|u|U|F|f)?\>"
+  end
+
+  rule "Type"
+    pattern     "\<(unsigned|signed|int|char|octet|any|wchar|short|long|hyper|float|double|boolean|complex|void|struct|union|enum|switch|case|default|sequence|string|wstring|Object)\>"
+  end
+
+  rule "Operator"
+    pattern     "(\{|\}|\+\+|\+=|\+|--|-=|->\*|->|-|==|=|&&|&=|&|\|\||\|=|\||\^=|\^|<<=|<<|<=|<|>>=|>>|>=|>|!=|!|~=|~|\*=|\*|/=|/|%=|%)"
+  end
+end
+
+# C# programming language
+language "C#"
+
+  # File patterns for this language mode
+  filesmatch "*.cs"
+
+  # Word delimiters
+  delimiters "~.,/\`'!@#$%^&*()-=+{}|[]\":;<>?"
+
+  # Line comment
+  rule "LineComment"
+    openpattern   "//"
+    closepattern  "$"
+  end
+
+  # Multiline comment
+  rule "MultiLineComment"
+    openpattern   "/\*"
+    closepattern  "\*/"
+  end
+
+  # String
+  rule "String"
+    openpattern   "\""
+    closepattern  "\""
+    stoppattern   "$"
+    rule "OctalEscape"
+      pattern     "\\\d+"
+    end
+    rule "HexEscape"
+      pattern     "\\x\h+"
+    end
+    rule "ControlEscape"
+      pattern     "\\."
+    end
+  end
+
+
+  # Char constant
+  rule "Char"
+    openpattern  "'"
+    closepattern "'"
+    rule "OctalEscape"
+      pattern "\\\d+"
+    end
+    rule "HexEscape"
+      pattern     "\\x\h+"
+    end
+    rule "ControlEscape"
+      pattern "\\."
+    end
+  end
+
+  # Preprocessor
+  rule "Preprocessor"
+    openpattern  "^\s*#"
+    closepattern "$"
+    rule "PreprocessorContinuation"
+      pattern "\\\n"
+    end
+  end
+
+  rule "Keyword"
+    pattern     "\<(abstract|base|break|case|catch|checked|class|const|continue|default|delegate|do|else|enum|event|explicit|extern|false|finally|fixed|for|foreach|goto|if|implicit|in|interface|internal|lock|namespace|new|null|object|operator|out|override|params|private|protected|public|readonly|ref|return|sealed|sizeof|stackalloc|static|struct|switch|this|throw|true|try|typeof|unchecked|unsafe|using|virtual|while|is|as)\>"
+  end
+
+  rule "Number"
+    pattern     "\<((0[xX][0-9a-fA-F]+)|((\d+\.?\d*)|(\.\d+))([eE](\+|-)?\d+)?)(U|u|L|l|UL|Ul|uL|ul|LU|Lu|lU|lu|F|f|D|d|M|m)?\>"
+  end
+
+  rule "Type"
+    pattern     "\<(bool|byte|double|float|int|sbyte|short|void|ushort|long|uint|ulong|char|string|decimal)\>"
+  end
+
+  rule "Operator"
+    pattern     "(\{|\}|\+\+|\+=|\+|--|-=|->\*|->|-|==|=|&&|&=|&|\|\||\|=|\||\^=|\^|<<=|<<|<=|<|>>=|>>|>=|>|!=|!|~=|~|\*=|\*|/=|/|%=|%)"
+  end
+
+end
+
+
+# HTLM/PHP Markup patterns
+# Contributed by: Andy Preston <mail@andy-preston.co.uk>
+language "Markup"
+    filesmatch "*.html,*.xhtml,*.xml,*.sgml,*.php"
+    rule "PHP"
+       openpattern "<\?php"
+       closepattern "\?>"
+       rule "String"
+           openpattern   "\""
+           closepattern  "\""
+           rule "ControlEscape"
+              pattern     "\\."
+           end
+           rule "Variable"
+             pattern "\$[A-Za-z_][0-9A-Za-z_]*"
+           end
+       end
+       rule "SString"
+           openpattern   "'"
+           closepattern  "'"
+           rule "SQuote"
+              pattern     "''"
+           end
+       end
+       rule "Number"
+           pattern "\<((0[xX][0-9a-fA-F]+)|((\d+\.?\d*)|(\.\d+))([eE](\+|-)?\d+)?)\>"
+       end
+       rule "Variable"
+          pattern "\$\$?[A-Za-z_][0-9A-Za-z_]*"
+       end
+       rule "Comment"
+          pattern    "#.*?$"
+       end
+       rule "CPPComment"
+          openpattern   "//"
+          closepattern  "$"
+       end
+       rule "CComment"
+          openpattern   "/\*"
+          closepattern  "\*/"
+       end
+       rule "Keyword"
+          pattern "\<(and|break|case|class|do|echo|else|elseif|endfor|endwhile|for|function|global|if|include|new|or|print|return|static|switch|while|xor)\>"
+       end
+       rule "Operator"
+          # there's a bit of a kludge here, for the "?" operator, a "?" matches against the "?>" at the end of a block of PHP
+          # so I've had to make it \?[^>] which means the character following the "?" is treated as part of the operator
+          # If you write this: "$x = $y ? 1 : 2" it looks fine, but if you write "$x=$y?1:2" the "1" is shown as part of the operator
+          pattern "(,|=|\+=|-=|\*=|/=|\.=|%=|&=|\|=|\^=|~=|<<=|>>=|:|\?[^>]|\|\||&&|\||\^|&|==|!=|===|!==|<|<=|>|>=|<<|>>|\+|-|\.|\*|/|%|!|~|\+\+|--|\(int\)|\(double\)|\(string\)|\(array\)|\(object\)|@|\[|\])
+       end
+    end
+    rule "Comment"
+       openpattern "<!--"
+       closepattern "-->"
+    end
+    rule "Tag"
+       openpattern "<"
+       closepattern ">"
+       rule "Attribute"
+          pattern " [A-Za-z_][A-Za-z0-9_-]+"
+       end
+       rule "Value"
+          pattern "=?\"[^\"]*\""
+          rule "HexTriplet"
+              pattern "#[0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]"
+          end
+       end
+    end
+    rule "Special"
+       openpattern "&"
+       closepattern ";"
+    end
+end
+
+language "Make"
+  filesmatch "*Makefile*"
+  rule "Comment"
+    openpattern  "#"
+    closepattern "$"
+    rule "CommentContinuation"
+      pattern "\\\n"
+    end
+  end
+  rule "Assignment"
+    openpattern "^( *| [ \t]*)[A-Za-z0-9_+$()][^ \t\n]*[ \t]*(\+=|:=|=)"
+    closepattern "$"
+    rule "AssignmentContinuation"
+      pattern "\\\n"
+    end
+    rule "AssignmentComment"
+      openpattern "#"
+      closepattern "$"
+    end
+  end
+  rule "DependencyLine"
+    openpattern "^( *| [ \t]*)(.DEFAULT|.DELETE_ON_ERROR|.EXPORT_ALL_VARIABLES.IGNORE|.INTERMEDIATE|.PHONY|.POSIX|.PRECIOUS|.SECONDARY|.SILENT|.SUFFIXES)*(([A-Za-z0-9./$(){} _@^<*?%+-]*(\\\n)){,8}[A-Za-z0-9./$(){} _@^<*?%+-]*)::?"
+    closepattern "$|;"
+    rule "DependencyContinuation"
+      pattern "\\\n"
+    end
+  end
+  rule "String"
+    openpattern   "\""
+    closepattern  "\""
+    stoppattern   "$"
+    rule "OctalEscape"
+      pattern     "\\\d+"
+    end
+    rule "HexEscape"
+      pattern     "\\x\h+"
+    end
+    rule "ControlEscape"
+      pattern     "\\."
+    end
+  end
+  rule "String"
+    openpattern   "'"
+    closepattern  "'"
+    stoppattern   "$"
+    rule "OctalEscape"
+      pattern     "\\\d+"
+    end
+    rule "HexEscape"
+      pattern     "\\x\h+"
+    end
+    rule "ControlEscape"
+      pattern     "\\."
+    end
+  end
+end
+
+

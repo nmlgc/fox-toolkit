@@ -3,7 +3,7 @@
 *                            V i s u a l   C l a s s                            *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1999,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1999,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,12 +19,13 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXGLVisual.cpp,v 1.53 2004/05/15 07:39:51 fox Exp $                      *
+* $Id: FXGLVisual.cpp,v 1.61 2005/01/31 17:53:07 fox Exp $                      *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
 #include "fxdefs.h"
-#include "fxpriv.h"
+#include "FXHash.h"
+#include "FXThread.h"
 #include "FXStream.h"
 #include "FXString.h"
 #include "FXSize.h"
@@ -33,7 +34,6 @@
 #include "FXSettings.h"
 #include "FXRegistry.h"
 #include "FXAccelTable.h"
-#include "FXHash.h"
 #include "FXApp.h"
 #include "FXFont.h"
 #include "FXGLVisual.h"
@@ -446,8 +446,8 @@ void FXGLVisual::create(){
       setupcolormap();
 
       // Make GC's for this visual
-      gc=fxmakegc(DISPLAY(getApp()),(Visual*)visual,depth,FALSE);
-      scrollgc=fxmakegc(DISPLAY(getApp()),(Visual*)visual,depth,TRUE);
+      gc=setupgc(FALSE);
+      scrollgc=setupgc(TRUE);
 
       xid=1;
 
@@ -1015,12 +1015,103 @@ FXGLVisual::~FXGLVisual(){
 /*******************************************************************************/
 
 
+#if defined(HAVE_XFT_H) && defined(HAVE_GL_H)  
+
+// Xft version
+static void glXUseXftFont(XftFont* font,int first,int count,int listBase){
+  GLint swapbytes,lsbfirst,rowlength,skiprows,skippixels,alignment,list;
+  GLfloat x0,y0,dx,dy;
+  FT_Face face;
+  FT_Error err;
+  FXint i,size,x,y;
+  FXuchar *glyph;
+
+  // Save the current packing mode for bitmaps
+  glGetIntegerv(GL_UNPACK_SWAP_BYTES,&swapbytes);
+  glGetIntegerv(GL_UNPACK_LSB_FIRST,&lsbfirst);
+  glGetIntegerv(GL_UNPACK_ROW_LENGTH,&rowlength);
+  glGetIntegerv(GL_UNPACK_SKIP_ROWS,&skiprows);
+  glGetIntegerv(GL_UNPACK_SKIP_PIXELS,&skippixels);
+  glGetIntegerv(GL_UNPACK_ALIGNMENT,&alignment);
+
+  // Set desired packing modes
+  glPixelStorei(GL_UNPACK_SWAP_BYTES,GL_FALSE);
+  glPixelStorei(GL_UNPACK_LSB_FIRST,GL_FALSE);
+  glPixelStorei(GL_UNPACK_ROW_LENGTH,0);
+  glPixelStorei(GL_UNPACK_SKIP_ROWS,0);
+  glPixelStorei(GL_UNPACK_SKIP_PIXELS,0);
+  glPixelStorei(GL_UNPACK_ALIGNMENT,1);
+
+  // Get face info
+  face=XftLockFace(font);
+
+  // Render font glyphs; use FreeType to render to bitmap
+  for(i=first; i<count; i++){
+    list=listBase+i;
+
+    // Load glyph
+    err=FT_Load_Glyph(face,FT_Get_Char_Index(face,i),FT_LOAD_DEFAULT);
+    if(err){ fxwarning("glXUseXftFont: unable to load glyph.\n"); return; }
+
+    // Render glyph
+    err=FT_Render_Glyph(face->glyph,FT_RENDER_MODE_MONO);
+    if(err){ fxwarning("glXUseXftFont: unable to render glyph.\n"); return; }
+
+    // Pitch may be negative, its the stride between rows
+    size=FXABS(face->glyph->bitmap.pitch) * face->glyph->bitmap.rows;
+
+    // Glyph coordinates; note info in freetype is 6-bit fixed point
+    x0=-(face->glyph->metrics.horiBearingX>>6);
+    y0=(face->glyph->metrics.height-face->glyph->metrics.horiBearingY)>>6;
+    dx=face->glyph->metrics.horiAdvance>>6;
+    dy=0;
+
+    // Allocate glyph data
+    FXMALLOC(&glyph,FXuchar,size);
+
+    // Copy into OpenGL bitmap format; note OpenGL upside down
+    for(y=0; y<face->glyph->bitmap.rows; y++){
+      for(x=0; x<face->glyph->bitmap.pitch; x++){
+        glyph[y*face->glyph->bitmap.pitch+x]=face->glyph->bitmap.buffer[(face->glyph->bitmap.rows-y-1)*face->glyph->bitmap.pitch+x];
+        }
+      }
+
+    // Put bitmap into display list
+    glNewList(list,GL_COMPILE);
+    glBitmap(FXABS(face->glyph->bitmap.pitch)<<3,face->glyph->bitmap.rows,x0,y0,dx,dy,glyph);
+    glEndList();
+
+    // Free glyph data
+    FXFREE(&glyph);
+    }
+
+  // Restore packing modes
+  glPixelStorei(GL_UNPACK_SWAP_BYTES,swapbytes);
+  glPixelStorei(GL_UNPACK_LSB_FIRST,lsbfirst);
+  glPixelStorei(GL_UNPACK_ROW_LENGTH,rowlength);
+  glPixelStorei(GL_UNPACK_SKIP_ROWS,skiprows);
+  glPixelStorei(GL_UNPACK_SKIP_PIXELS,skippixels);
+  glPixelStorei(GL_UNPACK_ALIGNMENT,alignment);
+
+  // Unlock face
+  XftUnlockFace(font);
+  }
+
+
+#endif
+
+
 // Create a display list of bitmaps from font glyphs in a font
 void glUseFXFont(FXFont* font,int first,int count,int list){
   if(!font || !font->id()){ fxerror("glUseFXFont: invalid font.\n"); }
+  FXTRACE((100,"glUseFXFont: first=%d count=%d list=%d\n",first,count,list));
 #ifdef HAVE_GL_H
 #ifndef WIN32
+#ifdef HAVE_XFT_H                       // Using XFT
+  glXUseXftFont((XftFont*)font->id(),first,count,list);
+#else                                   // Using XLFD
   glXUseXFont((Font)font->id(),first,count,list);
+#endif
 #else
   HDC hdc=wglGetCurrentDC();
   HFONT oldfont=(HFONT)SelectObject(hdc,(HFONT)font->id());

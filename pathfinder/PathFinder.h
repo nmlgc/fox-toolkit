@@ -3,7 +3,7 @@
 *              T h e   P a t h F i n d e r   F i l e   B r o w s e r            *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2003 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1998,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This program is free software; you can redistribute it and/or modify          *
 * it under the terms of the GNU General Public License as published by          *
@@ -19,7 +19,7 @@
 * along with this program; if not, write to the Free Software                   *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: PathFinder.h,v 1.36 2003/12/03 06:55:24 fox Exp $                        *
+* $Id: PathFinder.h,v 1.38 2005/01/16 16:06:06 fox Exp $                        *
 ********************************************************************************/
 #ifndef PATHFINDER_H
 #define PATHFINDER_H
@@ -49,19 +49,19 @@ protected:
   FXMenuPane        *prefmenu;
   FXMenuPane        *helpmenu;
   FXMenuPane        *bookmarkmenu;
-  FXDirBox          *dirbox;
-  FXSwitcher        *switcher;
+  FXDirBox          *dirbox;		// Directory box
+  FXSwitcher        *switcher;		// Switcher for preview
   FXSplitter        *splitter;
   FXVerticalFrame   *group1;
   FXVerticalFrame   *group2;
-  FXDirList         *dirlist;
-  FXFileList        *filelist;
-  FXComboBox        *pattern;
-  FXTextField       *address;
-  FXImageView       *imagepreview;
-  FXRecentFiles      bookmarkeddirs;
-  FXFileDict        *associations;
-  FXIcon            *foxbigicon;
+  FXDirList         *dirlist;		// Directory tree
+  FXFileList        *filelist;		// File list
+  FXComboBox        *pattern;		// Filter pattern
+  FXTextField       *address;		// Address field
+  FXImageView       *imagepreview;	// Image preview panel
+  FXRecentFiles      bookmarkeddirs;	// Bookmarked directories
+  FXFileDict        *associations;	// File associations
+  FXIcon            *foxbigicon;	// Icons
   FXIcon            *foxminiicon;
   FXIcon            *cuticon;
   FXIcon            *copyicon;
@@ -89,21 +89,24 @@ protected:
   FXIcon            *rotatelefticon;
   FXIcon            *rotaterighticon;
   FXIcon            *quiticon;
-  FXString           visiteddir[10];
-  FXString           editor;
-  FXString           terminal;
-  FXString           program;
-  FXint              visiting;
-  FXbool             preview;
-  FXbool             blending;
+  FXString           editor;		// Editor command
+  FXString           terminal;		// Terminal command
+  FXString           program;		// Last program
+  FXString           visiteddir[10];	// Visited directories
+  FXint              visiting;		// Currently visited directory
+  FXbool             preview;		// Preview mode
+  FXbool             blending;		// Icon blending
 protected:
   PathFinderMain(){}
+  FXint getNumFilenames() const;
+  FXString* getFilenames() const;
   void visitDirectory(const FXString& dir);
   void setPatterns(const FXString& patterns);
   FXString getPatterns() const;
   void setCurrentPattern(FXint n);
   FXint getCurrentPattern() const;
-  FXbool loadImage(const FXString& filename);
+  FXbool previewImage(const FXString& filename);
+  void closePreview();
 public:
   long onCmdAbout(FXObject*,FXSelector,void*);
   long onCmdClosePreview(FXObject*,FXSelector,void*);

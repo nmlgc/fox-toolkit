@@ -3,7 +3,7 @@
 *       S i n g l e - P r e c i s i o n   3 - E l e m e n t   V e c t o r       *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1994,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1994,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,11 +19,12 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXVec3f.cpp,v 1.4 2004/02/08 17:29:07 fox Exp $                          *
+* $Id: FXVec3f.cpp,v 1.9 2005/01/16 16:06:07 fox Exp $                          *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
 #include "fxdefs.h"
+#include "FXHash.h"
 #include "FXStream.h"
 #include "FXObject.h"
 #include "FXVec2f.h"
@@ -31,6 +32,7 @@
 
 
 using namespace FX;
+
 
 /*******************************************************************************/
 
@@ -63,12 +65,26 @@ FXVec3f normalize(const FXVec3f& a){
   }
 
 
+// Compute normal from three points a,b,c
+FXVec3f normal(const FXVec3f& a,const FXVec3f& b,const FXVec3f& c){
+  return normalize((b-a)^(c-a));
+  }
+
+
+// Compute approximate normal from four points a,b,c,d
+FXVec3f normal(const FXVec3f& a,const FXVec3f& b,const FXVec3f& c,const FXVec3f& d){
+  return normalize((c-a)^(d-b));
+  }
+
+
+// Save vector to stream
 FXStream& operator<<(FXStream& store,const FXVec3f& v){
   store << v.x << v.y << v.z;
   return store;
   }
 
 
+// Load vector from stream
 FXStream& operator>>(FXStream& store,FXVec3f& v){
   store >> v.x >> v.y >> v.z;
   return store;

@@ -3,7 +3,7 @@
 *             D y n a m i c   L i n k   L i b r a r y   S u p p o r t           *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2002,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 2002,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,11 +19,14 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXDLL.cpp,v 1.11 2004/02/08 17:29:06 fox Exp $                            *
+* $Id: FXDLL.cpp,v 1.15 2005/01/16 16:06:06 fox Exp $                           *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
 #include "fxdefs.h"
+#include "FXHash.h"
+#include "FXStream.h"
+#include "FXString.h"
 #include "FXDLL.h"
 #ifndef WIN32
 #include <dlfcn.h>
@@ -86,6 +89,7 @@ void* fxdllOpen(const FXchar *dllname){
   return NULL;
   }
 
+
 // Close DLL of given dllhandle
 void fxdllClose(void* dllhandle){
   if(dllhandle){
@@ -109,6 +113,21 @@ void* fxdllSymbol(void* dllhandle,const FXchar* dllsymbol){
     }
   return NULL;
   }
+
+
+// Return the string error message when loading dll's.
+// Suggested by Rafael de Pelegrini Soares <rafael@enq.ufrgs.br>
+FXString fxdllError(){
+#ifdef WIN32
+  DWORD dw=GetLastError();
+  FXchar buffer[512];
+  FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM,NULL,dw,MAKELANGID(LANG_NEUTRAL,SUBLANG_DEFAULT),(LPTSTR)&buffer,sizeof(buffer),NULL);
+  return buffer;
+#else
+  return dlerror();
+#endif
+  }
+
 
 }
 

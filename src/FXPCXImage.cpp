@@ -3,7 +3,7 @@
 *                            P C X   I m a g e   O b j e c t                    *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2001,2004 by Janusz Ganczarski.   All Rights Reserved.          *
+* Copyright (C) 2001,2005 by Janusz Ganczarski.   All Rights Reserved.          *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,11 +19,13 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXPCXImage.cpp,v 1.16 2004/02/08 17:29:07 fox Exp $                      *
+* $Id: FXPCXImage.cpp,v 1.21 2005/01/16 16:06:07 fox Exp $                      *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
 #include "fxdefs.h"
+#include "FXHash.h"
+#include "FXThread.h"
 #include "FXStream.h"
 #include "FXMemoryStream.h"
 #include "FXString.h"
@@ -31,7 +33,6 @@
 #include "FXPoint.h"
 #include "FXRectangle.h"
 #include "FXRegistry.h"
-#include "FXHash.h"
 #include "FXApp.h"
 #include "FXId.h"
 #include "FXDrawable.h"
@@ -51,19 +52,21 @@ using namespace FX;
 
 namespace FX {
 
+
+// Suggested file extension
+const FXchar FXPCXImage::fileExt[]="pcx";
+
+
 // Object implementation
 FXIMPLEMENT(FXPCXImage,FXImage,NULL,0)
 
 
-
 // Initialize
-FXPCXImage::FXPCXImage(FXApp* a,const void *pix,FXuint opts,FXint w,FXint h):
-  FXImage(a,NULL,opts,w,h){
+FXPCXImage::FXPCXImage(FXApp* a,const void *pix,FXuint opts,FXint w,FXint h):FXImage(a,NULL,opts,w,h){
   if(pix){
     FXMemoryStream ms;
     ms.open(FXStreamLoad,(FXuchar*)pix);
-    fxloadPCX(ms,data,width,height);
-    options|=IMAGE_OWNED;
+    loadPixels(ms);
     ms.close();
     }
   }
@@ -71,17 +74,21 @@ FXPCXImage::FXPCXImage(FXApp* a,const void *pix,FXuint opts,FXint w,FXint h):
 
 // Save pixel data only
 FXbool FXPCXImage::savePixels(FXStream& store) const {
-  if(!fxsavePCX(store,data,width,height)) return FALSE;
-  return TRUE;
+  if(fxsavePCX(store,data,width,height)){
+    return TRUE;
+    }
+  return FALSE;
   }
 
 
 // Load pixel data only
 FXbool FXPCXImage::loadPixels(FXStream& store){
-  if(options&IMAGE_OWNED){ FXFREE(&data); }
-  if(!fxloadPCX(store,data,width,height)) return FALSE;
-  options|=IMAGE_OWNED;
-  return TRUE;
+  FXColor *pixels; FXint w,h;
+  if(fxloadPCX(store,pixels,w,h)){
+    setData(pixels,IMAGE_OWNED,w,h);
+    return TRUE;
+    }
+  return FALSE;
   }
 
 
@@ -90,5 +97,3 @@ FXPCXImage::~FXPCXImage(){
   }
 
 }
-
-

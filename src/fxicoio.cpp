@@ -20,11 +20,12 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: fxicoio.cpp,v 1.22.2.1 2004/08/13 05:16:16 fox Exp $                         *
+* $Id: fxicoio.cpp,v 1.27 2005/01/15 19:54:15 fox Exp $                         *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
 #include "fxdefs.h"
+#include "FXHash.h"
 #include "FXStream.h"
 
 /*
@@ -50,6 +51,7 @@ using namespace FX;
 
 namespace FX {
 
+extern FXAPI FXbool fxcheckICO(FXStream& store);
 extern FXAPI FXbool fxloadICO(FXStream& store,FXColor*& data,FXint& width,FXint& height,FXint& xspot,FXint& yspot);
 extern FXAPI FXbool fxsaveICO(FXStream& store,const FXColor *data,FXint width,FXint height,FXint xspot=-1,FXint yspot=-1);
 
@@ -69,9 +71,20 @@ static inline FXuint read32(FXStream& store){
   }
 
 
+// Check if stream contains ICO
+FXbool fxcheckICO(FXStream& store){
+  FXshort signature[3];
+  signature[0]=read16(store);
+  signature[1]=read16(store);
+  signature[2]=read16(store);
+  store.position(-6,FXFromCurrent);
+  return signature[0]==0 && (signature[1]==1 || signature[1]==2) && signature[2]>=1;
+  }
+
+
 // Load ICO image from stream
 FXbool fxloadICO(FXStream& store,FXColor*& data,FXint& width,FXint& height,FXint& xspot,FXint& yspot){
-  unsigned long base,header;
+  FXlong   base,header;
   FXColor  colormap[256],*pp;
   FXshort  idReserved;
   FXshort  idType;
@@ -265,7 +278,7 @@ FXbool fxloadICO(FXStream& store,FXColor*& data,FXint& width,FXint& height,FXint
     }
 
   // Read 1-bit alpha data if no alpha channel, and skip otherwise.
-  // We need to skip instead of just quite reading because the image
+  // We need to skip instead of just quit reading because the image
   // may be embedded in a larger stream and we need the byte-count to
   // remain correct for the format.
   if(biBitCount==32){

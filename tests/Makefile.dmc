@@ -5,7 +5,7 @@
 ##############################################################################
 # Contributed by: Andre Fornacon <afo@zlug.org>                              #
 ##############################################################################
-# $Id: Makefile.dmc,v 1.7.2.1 2004/05/19 03:35:41 fox Exp $                      #
+# $Id: Makefile.dmc,v 1.11 2005/02/04 04:33:19 fox Exp $                     #
 ##############################################################################
 # This library is free software; you can redistribute it and/or              #
 # modify it under the terms of the GNU Library General Public                #
@@ -33,11 +33,13 @@ LDFLAGS	  =
 LIBS	  = advapi32.lib+shell32.lib+gdi32.lib+wsock32.lib+winspool.lib
 GLLIBS    = opengl32.lib+glu32.lib
 INCDIRS   = -I$(TOPDIR)\include
-FOXLIB    = $(TOPDIR)\src\FOX-1.2.lib
+FOXLIB    = $(TOPDIR)\src\FOX-1.4.lib
 
 PROGRAMS  = \
+	ControlPanel.exe \
 	rex.exe \
 	minheritance.exe \
+	memmap.exe \
 	mditest.exe \
 	table.exe \
 	groupbox.exe \
@@ -70,11 +72,17 @@ PROGRAMS  = \
 
 all: $(PROGRAMS)
 
+ControlPanel.exe: $(FOXLIB) ControlPanel.obj
+	$(LD) $(LDFLAGS) ControlPanel.obj $(FOXLIB) $(LIBS)
+
 rex.exe: $(FOXLIB) rex.obj
 	$(LD) $(LDFLAGS) rex.obj $(FOXLIB) $(LIBS)
 
 minheritance.exe: $(FOXLIB) minheritance.obj
 	$(LD) $(LDFLAGS) minheritance.obj $(FOXLIB) $(LIBS)
+
+memmap.exe: $(FOXLIB) memmap.obj
+	$(LD) $(LDFLAGS) memmap.obj $(FOXLIB) $(LIBS)
 
 wizard.exe: $(FOXLIB) wizard.obj
 	$(LD) $(LDFLAGS) wizard.obj $(FOXLIB) $(LIBS)

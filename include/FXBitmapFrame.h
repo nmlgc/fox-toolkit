@@ -3,7 +3,7 @@
 *                       B i t m a p   F r a m e   W i d g e t                   *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2001,2004 by H. J. Daniel III. All Rights Reserved.             *
+* Copyright (C) 2001,2005 by H. J. Daniel III. All Rights Reserved.             *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXBitmapFrame.h,v 1.3 2004/03/03 19:25:34 fox Exp $                      *
+* $Id: FXBitmapFrame.h,v 1.5 2005/01/16 16:06:06 fox Exp $                      *
 ********************************************************************************/
 #ifndef FXBITMAPFRAME_H
 #define FXBITMAPFRAME_H
@@ -32,9 +32,9 @@ namespace FX {
 
 
 /**
-* The image frame is a simple frame widget displaying
-* an image; the image is not owned by the image frame so
-* it must be explicitly deleted elsewhere.
+* The bitmap frame is a simple frame widget displaying an monochrome bitmap
+* image; the bitmap is not owned by the bitmap frame so it must be explicitly
+* deleted elsewhere.
 */
 class FXAPI FXBitmapFrame : public FXFrame {
   FXDECLARE(FXBitmapFrame)

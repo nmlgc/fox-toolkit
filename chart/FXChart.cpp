@@ -3,7 +3,7 @@
 *                        C h a r t   B a s e   W i d g e t                      *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2003 by Jeroen van der Zijp.   All Rights Reserved.             *
+* Copyright (C) 2003,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXChart.cpp,v 1.13 2003/10/04 04:53:51 fox Exp $                         *
+* $Id: FXChart.cpp,v 1.15 2005/01/16 16:06:06 fox Exp $                         *
 ********************************************************************************/
 #include "fx.h"
 #ifdef HAVE_PNG_H
@@ -35,7 +35,7 @@
 
 /*
   Notes:
-*/ 
+*/
 
 
 using namespace FX;
@@ -50,8 +50,8 @@ FXDEFMAP(FXChart) FXChartMap[]={
   FXMAPFUNC(SEL_PAINT,0,FXChart::onPaint),
   FXMAPFUNC(SEL_CLIPBOARD_LOST,0,FXChart::onClipboardLost),
   FXMAPFUNC(SEL_CLIPBOARD_REQUEST,0,FXChart::onClipboardRequest),
-  FXMAPFUNC(SEL_UPDATE,FXWindow::ID_QUERY_TIP,FXChart::onQueryTip),
-  FXMAPFUNC(SEL_UPDATE,FXWindow::ID_QUERY_HELP,FXChart::onQueryHelp),
+  FXMAPFUNC(SEL_QUERY_TIP,0,FXChart::onQueryTip),
+  FXMAPFUNC(SEL_QUERY_HELP,0,FXChart::onQueryHelp),
   };
 
 
@@ -236,20 +236,22 @@ FXTRACE((1,"fillRectangle(%d,%d,%d,%d) width=%d n=%d\n",xl,0,xr-xl,height,width,
   }
 
 
-// We were asked about status text
-long FXChart::onQueryHelp(FXObject* sender,FXSelector,void*){
-  if(!help.empty() && (flags&FLAG_HELP)){
-    sender->handle(this,FXSEL(SEL_COMMAND,ID_SETSTRINGVALUE),(void*)&help);
+// We were asked about tip text
+long FXChart::onQueryTip(FXObject* sender,FXSelector sel,void* ptr){
+  if(FXWindow::onQueryTip(sender,sel,ptr)) return 1;
+  if((flags&FLAG_TIP) && !tip.empty()){
+    sender->handle(this,FXSEL(SEL_COMMAND,ID_SETSTRINGVALUE),(void*)&tip);
     return 1;
     }
   return 0;
   }
 
 
-// We were asked about tip text
-long FXChart::onQueryTip(FXObject* sender,FXSelector,void*){
-  if(!tip.empty() && (flags&FLAG_TIP)){
-    sender->handle(this,FXSEL(SEL_COMMAND,ID_SETSTRINGVALUE),(void*)&tip);
+// We were asked about status text
+long FXChart::onQueryHelp(FXObject* sender,FXSelector sel,void* ptr){
+  if(FXWindow::onQueryHelp(sender,sel,ptr)) return 1;
+  if((flags&FLAG_HELP) && !help.empty()){
+    sender->handle(this,FXSEL(SEL_COMMAND,ID_SETSTRINGVALUE),(void*)&help);
     return 1;
     }
   return 0;

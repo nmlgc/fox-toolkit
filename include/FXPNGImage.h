@@ -3,7 +3,7 @@
 *                          P N G   I m a g e   O b j e c t                      *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1999,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1999,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXPNGImage.h,v 1.15 2004/02/08 17:17:34 fox Exp $                        *
+* $Id: FXPNGImage.h,v 1.19 2005/01/16 16:06:06 fox Exp $                        *
 ********************************************************************************/
 #ifndef FXPNGIMAGE_H
 #define FXPNGIMAGE_H
@@ -40,6 +40,8 @@ private:
   FXPNGImage(const FXPNGImage&);
   FXPNGImage &operator=(const FXPNGImage&);
 public:
+  static const FXchar fileExt[];
+public:
 
   /// Construct an image from memory stream formatted in PNG format
   FXPNGImage(FXApp *a,const void *pix=NULL,FXuint opts=0,FXint w=1,FXint h=1);
@@ -50,9 +52,18 @@ public:
   /// Load pixels from stream in PNG format
   virtual FXbool savePixels(FXStream& store) const;
 
+  /// True if format is supported
+  static const FXbool supported;
+
   /// Destroy
   virtual ~FXPNGImage();
   };
+
+
+/**
+* Check if stream contains a PNG, return TRUE if so.
+*/
+extern FXAPI FXbool fxcheckPNG(FXStream& store);
 
 
 /**

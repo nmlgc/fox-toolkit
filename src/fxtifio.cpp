@@ -3,7 +3,7 @@
 *                          T I F F   I n p u t / O u t p u t                    *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2001,2004 Eric Gillet.   All Rights Reserved.                   *
+* Copyright (C) 2001,2005 Eric Gillet.   All Rights Reserved.                   *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,11 +19,12 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: fxtifio.cpp,v 1.27 2004/04/08 16:24:48 fox Exp $                         *
+* $Id: fxtifio.cpp,v 1.31 2005/01/16 16:06:07 fox Exp $                         *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
 #include "fxdefs.h"
+#include "FXHash.h"
 #include "FXStream.h"
 #ifdef HAVE_TIFF_H
 #include <tiffio.h>
@@ -57,6 +58,7 @@ using namespace FX;
 namespace FX {
 
 
+extern FXAPI FXbool fxcheckTIF(FXStream& store);
 extern FXAPI FXbool fxloadTIF(FXStream& store,FXColor*& data,FXint& width,FXint& height,FXushort& codec);
 extern FXAPI FXbool fxsaveTIF(FXStream& store,const FXColor* data,FXint width,FXint height,FXushort codec);
 
@@ -154,6 +156,15 @@ static void tif_unmap_store(thandle_t, tdata_t, toff_t){
 static toff_t tif_size_store(thandle_t handle){
   tiff_store_handle *h=(tiff_store_handle*)handle;
   return (h->end-h->begin);
+  }
+
+
+// Check if stream contains a TIFF
+FXbool fxcheckTIF(FXStream& store){
+  FXuchar signature[2];
+  store.load(signature,2);
+  store.position(-2,FXFromCurrent);
+  return (signature[0]==0x4d && signature[1]==0x4d) || (signature[0]==0x49 && signature[1]==0x49);
   }
 
 

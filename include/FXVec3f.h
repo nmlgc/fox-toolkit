@@ -3,7 +3,7 @@
 *       S i n g l e - P r e c i s i o n   3 - E l e m e n t   V e c t o r       *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1994,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1994,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXVec3f.h,v 1.8 2004/05/13 22:36:05 fox Exp $                            *
+* $Id: FXVec3f.h,v 1.12 2005/01/16 16:06:06 fox Exp $                           *
 ********************************************************************************/
 #ifndef FXVEC3F_H
 #define FXVEC3F_H
@@ -42,7 +42,7 @@ public:
   /// Copy constructor
   FXVec3f(const FXVec3f& v){x=v.x;y=v.y;z=v.z;}
 
-  // Initialize from array of floats
+  /// Initialize from array of floats
   FXVec3f(const FXfloat v[]){x=v[0];y=v[1];z=v[2];}
 
   /// Initialize with components
@@ -88,7 +88,7 @@ public:
   /// Adding
   friend FXAPI FXVec3f operator+(const FXVec3f& a,const FXVec3f& b){return FXVec3f(a.x+b.x,a.y+b.y,a.z+b.z);}
 
-  /// Substracting
+  /// Subtracting
   friend FXAPI FXVec3f operator-(const FXVec3f& a,const FXVec3f& b){return FXVec3f(a.x-b.x,a.y-b.y,a.z-b.z);}
 
   /// Scaling
@@ -140,6 +140,12 @@ public:
   /// Lowest or highest components
   friend FXAPI FXVec3f lo(const FXVec3f& a,const FXVec3f& b){return FXVec3f(FXMIN(a.x,b.x),FXMIN(a.y,b.y),FXMIN(a.z,b.z));}
   friend FXAPI FXVec3f hi(const FXVec3f& a,const FXVec3f& b){return FXVec3f(FXMAX(a.x,b.x),FXMAX(a.y,b.y),FXMAX(a.z,b.z));}
+
+  /// Compute normal from three points a,b,c
+  friend FXAPI FXVec3f normal(const FXVec3f& a,const FXVec3f& b,const FXVec3f& c);
+
+  /// Compute approximate normal from four points a,b,c,d
+  friend FXAPI FXVec3f normal(const FXVec3f& a,const FXVec3f& b,const FXVec3f& c,const FXVec3f& d);
 
   /// Save vector to a stream
   friend FXAPI FXStream& operator<<(FXStream& store,const FXVec3f& v);

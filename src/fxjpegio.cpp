@@ -3,7 +3,7 @@
 *                      J P E G    I n p u t / O u t p u t                       *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2000,2004 by David Tyree.   All Rights Reserved.                *
+* Copyright (C) 2000,2005 by David Tyree.   All Rights Reserved.                *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,11 +19,12 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: fxjpegio.cpp,v 1.42 2004/04/08 16:24:48 fox Exp $                        *
+* $Id: fxjpegio.cpp,v 1.47 2005/01/16 16:06:07 fox Exp $                        *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
 #include "fxdefs.h"
+#include "FXHash.h"
 #include "FXStream.h"
 #ifdef HAVE_JPEG_H
 extern "C" {
@@ -70,6 +71,7 @@ using namespace FX;
 namespace FX {
 
 
+extern FXAPI FXbool fxcheckJPG(FXStream& store);
 extern FXAPI FXbool fxloadJPG(FXStream& store,FXColor*& data,FXint& width,FXint& height,FXint& quality);
 extern FXAPI FXbool fxsaveJPG(FXStream& store,const FXColor* data,FXint width,FXint height,FXint quality);
 
@@ -157,6 +159,15 @@ static void term_source(j_decompress_ptr){
   }
 
 
+// Check if stream contains a JPG
+FXbool fxcheckJPG(FXStream& store){
+  FXuchar signature[2];
+  store.load(signature,sizeof(signature));
+  store.position(-sizeof(signature),FXFromCurrent);
+  return signature[0]==0xFF && signature[1]==0xD8;
+  }
+
+
 
 // Load a JPEG image
 FXbool fxloadJPG(FXStream& store,FXColor*& data,FXint& width,FXint& height,FXint&){
@@ -177,6 +188,7 @@ FXbool fxloadJPG(FXStream& store,FXColor*& data,FXint& width,FXint& height,FXint
   buffer[0]=NULL;
 
   // initialize the jpeg data structure;
+  memset(&srcinfo,0,sizeof(srcinfo));
   jpeg_create_decompress(&srcinfo);
 
   // setup the error handler
@@ -304,6 +316,7 @@ FXbool fxsaveJPG(FXStream& store,const FXColor* data,FXint width,FXint height,FX
     }
 
   // initialize the structure
+  memset(&dstinfo,0,sizeof(dstinfo));
   jpeg_create_compress(&dstinfo);
 
   // Specify the use of our destination manager
@@ -372,6 +385,7 @@ FXbool fxloadJPG(FXStream&,FXColor*& data,FXint& width,FXint& height,FXint& qual
     }
   width=32;
   height=32;
+  quality=75;
   return TRUE;
   }
 

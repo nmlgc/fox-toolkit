@@ -17,7 +17,7 @@ const FXuint TIMER_INTERVAL = 100;
 /*******************************************************************************/
 
 
-// Settings dialog thanks to Sander Jansen <sxj@cfdrc.com>
+// Settings dialog thanks to Sander Jansen <sander@knology.net>
 class SettingsDialog : public FXDialogBox {
   FXDECLARE(SettingsDialog)
 private:
@@ -32,7 +32,7 @@ public:
 /*******************************************************************************/
 
 
-// Settings dialog thanks to Sander Jansen <sxj@cfdrc.com>
+// Implementation
 FXIMPLEMENT(SettingsDialog,FXDialogBox,NULL,0)
 
 
@@ -209,7 +209,7 @@ public:
 
 
 
-// Message Map for the Scribble App class
+// Message Map 
 FXDEFMAP(GLTestWindow) GLTestWindowMap[]={
 
   //________Message_Type_________ID_____________________Message_Handler_______
@@ -228,7 +228,7 @@ FXDEFMAP(GLTestWindow) GLTestWindowMap[]={
 
 
 
-// Macro for the GLTestApp class hierarchy implementation
+// Implementation
 FXIMPLEMENT(GLTestWindow,FXMainWindow,GLTestWindowMap,ARRAYNUMBER(GLTestWindowMap))
 
 

@@ -3,7 +3,7 @@
 *           D e v i c e   C o n t e x t   F o r   P r i n t i n g               *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1998,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXDCPrint.h,v 1.24 2004/04/05 14:49:33 fox Exp $                         *
+* $Id: FXDCPrint.h,v 1.27 2005/01/16 16:06:06 fox Exp $                         *
 ********************************************************************************/
 #ifndef FXDCPRINT_H
 #define FXDCPRINT_H
@@ -157,13 +157,22 @@ public:
   virtual void drawRectangle(FXint x,FXint y,FXint w,FXint h);
   virtual void drawRectangles(const FXRectangle* rectangles,FXuint nrectangles);
 
+  /// Draw rounded rectangle with ellipse with ew and ellips height eh
+  virtual void drawRoundRectangle(FXint x,FXint y,FXint w,FXint h,FXint ew,FXint eh);
+
   /// Draw arcs
   virtual void drawArc(FXint x,FXint y,FXint w,FXint h,FXint ang1,FXint ang2);
   virtual void drawArcs(const FXArc* arcs,FXuint narcs);
 
+  /// Draw ellipse
+  virtual void drawEllipse(FXint x,FXint y,FXint w,FXint h);
+
   /// Filled rectangles
   virtual void fillRectangle(FXint x,FXint y,FXint w,FXint h);
   virtual void fillRectangles(const FXRectangle* rectangles,FXuint nrectangles);
+
+  /// Filled rounded rectangle with ellipse with ew and ellips height eh
+  virtual void fillRoundRectangle(FXint x,FXint y,FXint w,FXint h,FXint ew,FXint eh);
 
   /// Fill chord
   virtual void fillChord(FXint x,FXint y,FXint w,FXint h,FXint ang1,FXint ang2);
@@ -172,6 +181,9 @@ public:
   /// Draw arcs
   virtual void fillArc(FXint x,FXint y,FXint w,FXint h,FXint ang1,FXint ang2);
   virtual void fillArcs(const FXArc* arcs,FXuint narcs);
+
+  /// Fill ellipse
+  virtual void fillEllipse(FXint x,FXint y,FXint w,FXint h);
 
   /// Filled polygon
   virtual void fillPolygon(const FXPoint* points,FXuint npoints);
@@ -265,7 +277,7 @@ public:
   /// Temporarily public; do not rely on this!!
   void outhex(FXuint hex);
   void outf(const char* format,...);
-  
+
   /// Cleanup
   virtual ~FXDCPrint();
   };

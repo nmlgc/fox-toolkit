@@ -3,7 +3,7 @@
 *                               F o n t   O b j e c t                           *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXFont.h,v 1.43 2004/03/10 23:19:41 fox Exp $                            *
+* $Id: FXFont.h,v 1.47 2005/01/16 16:06:06 fox Exp $                            *
 ********************************************************************************/
 #ifndef FXFONT_H
 #define FXFONT_H
@@ -216,7 +216,7 @@ private:
 protected:
   FXFont();
 #ifndef WIN32
-  char* findbestfont(char* fontname);
+  const char* findbestfont(char* fontname);
   char* findmatch(char* fontname,const char* forge,const char* family);
 #endif
 private:
@@ -231,7 +231,7 @@ public:
   *
   * For example:
   *
-  *     "helvetica [bitstream],12,bold,i,normal,iso8859-1,0"
+  *     "helvetica [bitstream],120,bold,i,normal,iso8859-1,0"
   *
   * Typically, at least the font name, and size must be given for
   * normal font matching.  As a special case, raw X11 fonts can also be
@@ -249,7 +249,7 @@ public:
   /**
   * Construct a font with given name, size in points, weight, slant, character set
   * encoding, setwidth, and hints.
-  * The font name may be comprised of a family name and optional foundry name enclosed in 
+  * The font name may be comprised of a family name and optional foundry name enclosed in
   * square brackets, for example, "helvetica [bitstream]".
   */
   FXFont(FXApp* a,const FXString& face,FXuint sz,FXuint wt=FONTWEIGHT_NORMAL,FXuint sl=FONTSLANT_REGULAR,FXuint enc=FONTENCODING_DEFAULT,FXuint setw=FONTSETWIDTH_DONTCARE,FXuint h=0);
@@ -267,14 +267,14 @@ public:
   virtual void destroy();
 
   /// Get font family name
-  FXString getName() const { return wantedName; }
-  
-  /// Get actual family name 
-  FXString getActualName() const { return actualName; }
+  const FXString& getName() const { return wantedName; }
+
+  /// Get actual family name
+  const FXString& getActualName() const { return actualName; }
 
   /// Get size in deci-points
   FXuint getSize() const { return wantedSize; }
-  
+
   /// Get actual size in deci-points
   FXuint getActualSize() const { return actualSize; }
 
@@ -283,25 +283,25 @@ public:
 
   /// Get actual font weight
   FXuint getActualWeight() const { return actualWeight; }
-  
+
   /// Get slant
   FXuint getSlant() const { return wantedSlant; }
 
   /// Get actual slant
   FXuint getActualSlant() const { return actualSlant; }
-  
+
   /// Get character set encoding
   FXuint getEncoding() const { return wantedEncoding; }
 
   /// Get actual encoding
   FXuint getActualEncoding() const { return actualEncoding; }
-  
+
   /// Get setwidth
   FXuint getSetWidth() const { return wantedSetwidth; }
 
   /// Get actual setwidth
   FXuint getActualSetWidth() const { return actualSetwidth; }
-  
+
   /// Get hints
   FXuint getHints() const { return hints; }
 

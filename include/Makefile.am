@@ -1,9 +1,10 @@
 ## Process this file with automake to produce Makefile.in
 
 
-foxincludedir=$(includedir)/fox-1.2
+foxincludedir=$(includedir)/fox-1.4
 foxinclude_HEADERS =   \
 FX4Splitter.h \
+FX7Segment.h \
 FXAccelTable.h \
 FXApp.h \
 FXArray.h \
@@ -17,8 +18,8 @@ FXButton.h \
 FXBZStream.h \
 FXCURCursor.h \
 FXCanvas.h \
-FXCharset.h \
 FXCheckButton.h \
+FXChoiceBox.h \
 FXColorBar.h \
 FXColorDialog.h \
 FXColorSelector.h \
@@ -41,6 +42,10 @@ FXDirBox.h \
 FXDirDialog.h \
 FXDirList.h \
 FXDirSelector.h \
+FXDockBar.h \
+FXDockHandler.h \
+FXDockSite.h \
+FXDockTitle.h \
 FXDocument.h \
 FXDragCorner.h \
 FXDrawable.h \
@@ -74,14 +79,19 @@ FXGLViewer.h \
 FXGLVisual.h \
 FXGroupBox.h \
 FXGradientBar.h \
+FXGUISignal.h \
 FXGZStream.h \
 FXHash.h \
 FXHeader.h \
 FXHorizontalFrame.h \
 FXICOIcon.h \
 FXICOImage.h \
+FXIFFImage.h \
+FXIFFIcon.h \
 FXIcon.h \
+FXIconDict.h \
 FXIconList.h \
+FXIconSource.h \
 FXId.h \
 FXImage.h \
 FXImageFrame.h \
@@ -102,6 +112,7 @@ FXMat3f.h \
 FXMat4f.h \
 FXMatrix.h \
 FXMemoryStream.h \
+FXMemMap.h \
 FXMenuBar.h \
 FXMenuButton.h \
 FXMenuCaption.h \
@@ -131,6 +142,8 @@ FXProgressBar.h \
 FXProgressDialog.h \
 FXQuatd.h \
 FXQuatf.h \
+FXRASIcon.h \
+FXRASImage.h \
 FXRGBIcon.h \
 FXRGBImage.h \
 FXRadioButton.h \
@@ -160,6 +173,7 @@ FXSlider.h \
 FXSpinner.h \
 FXSpheref.h \
 FXSphered.h \
+FXSplashWindow.h \
 FXSplitter.h \
 FXSpring.h \
 FXStatusBar.h \
@@ -192,9 +206,9 @@ FXTreeListBox.h \
 FXTriStateButton.h \
 FXUndoList.h \
 FXURL.h \
-FXUTF8Codec.h \
 FXUTF16Codec.h \
 FXUTF32Codec.h \
+FXUTF8Codec.h \
 FXVec2d.h \
 FXVec2f.h \
 FXVec3d.h \
@@ -205,7 +219,6 @@ FXVerticalFrame.h \
 FXVisual.h \
 FXWindow.h \
 FXWizard.h \
-FXWString.h \
 FXXBMIcon.h \
 FXXBMImage.h \
 FXXPMIcon.h \

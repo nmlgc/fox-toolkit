@@ -5,7 +5,7 @@
 *********************************************************************************
 * Copyright (C) 1998 by Jeroen van der Zijp.   All Rights Reserved.             *
 *********************************************************************************
-* $Id: iconlist.cpp,v 1.18 2003/12/09 14:10:21 fox Exp $                        *
+* $Id: iconlist.cpp,v 1.20 2004/10/30 06:19:36 fox Exp $                        *
 ********************************************************************************/
 #include "fx.h"
 #include <stdio.h>
@@ -113,7 +113,6 @@ IconListWindow::IconListWindow(FXApp* a):FXMainWindow(a,"Icon List Test",NULL,NU
 
   // Icon list on the right
   iconlist=new FXIconList(subgroup,dbg,1,LAYOUT_FILL_X|LAYOUT_FILL_Y|ICONLIST_DETAILED|ICONLIST_EXTENDEDSELECT);
-
   iconlist->appendHeader("Name",NULL,200);
   iconlist->appendHeader("Type",NULL,100);
   iconlist->appendHeader("Size",NULL,60);
@@ -151,6 +150,8 @@ IconListWindow::IconListWindow(FXApp* a):FXMainWindow(a,"Icon List Test",NULL,NU
   new FXMenuCommand(sortmenu,"Hide status",NULL,status,FXWindow::ID_HIDE);
   new FXMenuCommand(sortmenu,"Show status",NULL,status,FXWindow::ID_SHOW);
   new FXMenuTitle(menubar,"&Sort",NULL,sortmenu);
+
+  new FXToolTip(getApp());
   }
 
 

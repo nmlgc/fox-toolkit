@@ -3,7 +3,7 @@
 *                        C U R   C u r s o r    O b j e c t                     *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2001,2004 by Sander Jansen.   All Rights Reserved.              *
+* Copyright (C) 2001,2005 by Sander Jansen.   All Rights Reserved.              *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXCURCursor.h,v 1.13 2004/01/15 01:38:04 fox Exp $                       *
+* $Id: FXCURCursor.h,v 1.16 2005/01/16 16:06:06 fox Exp $                       *
 ********************************************************************************/
 #ifndef FXCURCURSOR_H
 #define FXCURCURSOR_H
@@ -38,6 +38,8 @@ protected:
 private:
   FXCURCursor(const FXCURCursor&);
   FXCURCursor &operator=(const FXCURCursor&);
+public:
+  static const FXchar fileExt[];
 public:
 
   /**
@@ -59,6 +61,12 @@ public:
 
 #ifndef FXLOADICO
 #define FXLOADICO
+
+/**
+* Check if stream contains a ICO, return TRUE if so.
+*/
+extern FXAPI FXbool fxcheckICO(FXStream& store);
+
 
 /**
 * Load an ICO (Microsoft icon format) file from a stream.

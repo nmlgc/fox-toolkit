@@ -3,7 +3,7 @@
 *                 T o p - L e v e l   W i n d o w   W i d g e t                 *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1998,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXTopWindow.h,v 1.53 2004/02/08 17:17:34 fox Exp $                       *
+* $Id: FXTopWindow.h,v 1.57 2005/01/16 16:06:06 fox Exp $                       *
 ********************************************************************************/
 #ifndef FXTOPWINDOW_H
 #define FXTOPWINDOW_H
@@ -104,8 +104,8 @@ protected:
   void settitle();
   void seticons();
   void setdecorations();
-  FXTopWindow(FXApp* a,const FXString& name,FXIcon *ic,FXIcon *mi,FXuint opts,FXint x,FXint y,FXint w,FXint h,FXint pl,FXint pr,FXint pt,FXint pb,FXint hs,FXint vs);
-  FXTopWindow(FXWindow* owner,const FXString& name,FXIcon *ic,FXIcon *mi,FXuint opts,FXint x,FXint y,FXint w,FXint h,FXint pl,FXint pr,FXint pt,FXint pb,FXint hs,FXint vs);
+  FXTopWindow(FXApp* ap,const FXString& name,FXIcon *ic,FXIcon *mi,FXuint opts,FXint x,FXint y,FXint w,FXint h,FXint pl,FXint pr,FXint pt,FXint pb,FXint hs,FXint vs);
+  FXTopWindow(FXWindow* ow,const FXString& name,FXIcon *ic,FXIcon *mi,FXuint opts,FXint x,FXint y,FXint w,FXint h,FXint pl,FXint pr,FXint pt,FXint pb,FXint hs,FXint vs);
 private:
   FXTopWindow(const FXTopWindow&);
   FXTopWindow& operator=(const FXTopWindow&);
@@ -169,6 +169,12 @@ public:
 
   /// Return the default height of this window
   virtual FXint getDefaultHeight();
+
+  /// Obtain border sizes added to our window by the window manager
+  FXbool getWMBorders(FXint& left,FXint& right,FXint& top,FXint& bottom);
+
+  /// Raise this window to the top of the stacking order
+  virtual void raise();
 
   /// Move this window to the specified position in the parent's coordinates
   virtual void move(FXint x,FXint y);

@@ -3,7 +3,7 @@
 *                  F i l e   P r o p e r t i e s   D i a l o g                  *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2000,2003 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 2000,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This program is free software; you can redistribute it and/or modify          *
 * it under the terms of the GNU General Public License as published by          *
@@ -19,7 +19,7 @@
 * along with this program; if not, write to the Free Software                   *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: PropertyDialog.cpp,v 1.19 2004/02/08 17:05:34 fox Exp $                  *
+* $Id: PropertyDialog.cpp,v 1.20 2005/01/16 16:06:06 fox Exp $                  *
 ********************************************************************************/
 #include "xincs.h"
 #include "fx.h"

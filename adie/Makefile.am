@@ -4,10 +4,12 @@ CXXFLAGS = @CXXFLAGS@ @X_CFLAGS@
 INCLUDES = -I$(top_srcdir)/include -I$(top_builddir)/include
 RESWRAP  = $(top_builddir)/utils/reswrap
 SUFFIXES = .gif .bmp
-LDADD = ../src/libFOX-1.2.la -lm
+LDADD = ../src/libFOX-1.4.la -lm
 
 
 bin_PROGRAMS = adie
+
+bin_SCRIPTS = Adie.stx
 
 man_MANS = adie.1
 
@@ -92,7 +94,6 @@ CLEANFILES = icons.h icons.cpp
 EXTRA_DIST = $(man_MANS) \
 Adie.stx \
 Makefile.bc \
-Makefile.icc \
 Makefile.wc \
 Makefile.dmc
 

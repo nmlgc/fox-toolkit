@@ -3,7 +3,7 @@
 *                          E x c e p t i o n  T y p e s                         *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2000,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 2000,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXException.cpp,v 1.10 2004/02/08 17:29:06 fox Exp $                      *
+* $Id: FXException.cpp,v 1.12 2005/01/16 16:06:07 fox Exp $                     *
 ********************************************************************************/
 #include "fxver.h"
 #include "fxdefs.h"
@@ -49,7 +49,20 @@ const FXchar FXPointerException::exceptionName[]="invalid pointer";
 const FXchar FXResourceException::exceptionName[]="resource exhausted";
 
 
-// Ran out of memory or such
+// Out of memory
 const FXchar FXMemoryException::exceptionName[]="out of memory";
+
+
+// Window exception
+const FXchar FXWindowException::exceptionName[]="window exception";
+
+
+// Image, cursor, bitmap exception
+const FXchar FXImageException::exceptionName[]="image exception";
+
+
+// Font exception
+const FXchar FXFontException::exceptionName[]="font exception";
+
 
 }

@@ -671,17 +671,17 @@ The formal syntax for the syntax file (sic!) is as follows:
 SYNTAXFILE      :       { LANGUAGEBLOCK }
                 ;
 
-LANGUAGEBLOCK   :       language STRING 
-                                { DECLARATION } 
-                                { RULE } 
+LANGUAGEBLOCK   :       language STRING
+                                { DECLARATION }
+                                { RULE }
                         end
                 ;
 
 
 DECLARATION     :       filesmatch STRING
                 |       contentsmatch STRING
-                |       delimiters STRING 
-                |       contextlines NUMBER 
+                |       delimiters STRING
+                |       contextlines NUMBER
                 |       contextchars NUMBER
                 ;
 
@@ -691,15 +691,15 @@ RULE            :       rule STRING
                                 { RULE }
                         end
                 ;
-         
 
-PATTERN         :       pattern STRING 
-                |       openpattern  STRING 
-                |       closepattern  STRING 
-                |       stoppattern  STRING 
+
+PATTERN         :       pattern STRING
+                |       openpattern  STRING
+                |       closepattern  STRING
+                |       stoppattern  STRING
                 ;
-             
-             
+
+
 STRING          :       "text"
                 ;
 
@@ -726,7 +726,7 @@ blocks will be tried first.
 The <b>delimiters</b> expression holds the list of characters used as delimiters
 when editing files of this syntax.
 <p>
-When the editor matches patterns for syntax incremental syntax coloring, it needs a 
+When the editor matches patterns for syntax incremental syntax coloring, it needs a
 certain amount of context around the change being made to the text.  Typically,
 the <b>contextchars</b> should be set to the length of the largest pattern to
 be matched.  The <b>contextlines</b> should be set to the number of lines of
@@ -742,12 +742,12 @@ regular expression <b>pattern</b> and have no subrules.
 Complex rules have a <b>openpattern</b> and a <b>closepattern</b>, and possibly
 a <b>stoppattern</b>.  Complex rules may have any number of subrules.
 <br>
-The matching process is recursive, depth-first.  That means, when matching 
+The matching process is recursive, depth-first.  That means, when matching
 complex rules, first the open pattern is matched, then all of the subrules,
 followed by the close pattern and stop pattern [if specified].  This allows
 for easy to create subpatterns e.g. backslash-escape codes [see example].
 <p>
-The patterns are specified using the perl-like regular expressions also 
+The patterns are specified using the perl-like regular expressions also
 used for search and replace, see above.
 <p>
 As an example, here is a somewhat simplified version of the C++ language
@@ -779,11 +779,11 @@ language "C++"
     openpattern   "\""          # Opening quotes
     closepattern  "\""          # Closing quotes
     stoppattern   "$"           # Don't scan past end of line!
-    
-    rule "OctalEscape"          # Octal character can have more than 1 character; 
+
+    rule "OctalEscape"          # Octal character can have more than 1 character;
       pattern     "\\d+"        # that's why this rule MUST come before "ControlEscape"!
     end
-    
+
     rule "ControlEscape"        # Allow an escape; subrules are matched first
       pattern     "\\."         # so a escaped closing quote is not seen by the "String" rule
     end
@@ -889,7 +889,7 @@ Other Configuration Issues.
 <p>
 <table width=100% cellpadding=0 cellspacing=0><tr><td width=100% valign=top id=HEADLINE align=right>
 <img src='art/line.gif' width=100% height=1><font size=-1>
-Copyright &copy; 1997-2004 Jeroen van der Zijp</font>
+Copyright &copy; 1997-2005 Jeroen van der Zijp</font>
 </td></tr></table>
 </p>
 <!--- COPYRIGHT -->

@@ -3,7 +3,7 @@
 *           D o u b l e - P r e c i s i o n    R a n g e    C l a s s           *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2004 by Jeroen van der Zijp.   All Rights Reserved.             *
+* Copyright (C) 2004,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,11 +19,12 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXRanged.cpp,v 1.7 2004/03/21 19:07:57 fox Exp $                         *
+* $Id: FXRanged.cpp,v 1.10 2005/01/16 16:06:07 fox Exp $                         *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
 #include "fxdefs.h"
+#include "FXHash.h"
 #include "FXStream.h"
 #include "FXVec2d.h"
 #include "FXVec3d.h"
@@ -171,7 +172,7 @@ FXRanged intersect(const FXRanged& a,const FXRanged& b){
   }
 
 
-// Intersect box with plane ax+by+cz+w; returns -1,0,+1
+// Intersect box with normalized plane ax+by+cz+w; returns -1,0,+1
 FXint FXRanged::intersect(const FXVec4d& plane) const {
   FXVec3d lo;
   FXVec3d hi;

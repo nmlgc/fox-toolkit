@@ -3,7 +3,7 @@
 *                          X P M   I n p u t / O u t p u t                      *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2000,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 2000,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,11 +19,12 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: fxxpmio.cpp,v 1.44 2004/04/24 14:10:30 fox Exp $                         *
+* $Id: fxxpmio.cpp,v 1.50 2005/02/04 06:12:58 fox Exp $                         *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
 #include "fxdefs.h"
+#include "FXHash.h"
 #include "FXStream.h"
 #include "fxpriv.h"
 
@@ -51,6 +52,7 @@ using namespace FX;
 namespace FX {
 
 
+extern FXAPI FXbool fxcheckXPM(FXStream& store);
 extern FXAPI FXbool fxloadXPM(const FXchar **pix,FXColor*& data,FXint& width,FXint& height);
 extern FXAPI FXbool fxloadXPM(FXStream& store,FXColor*& data,FXint& width,FXint& height);
 extern FXAPI FXbool fxsaveXPM(FXStream& store,const FXColor *data,FXint width,FXint height,FXbool fast=TRUE);
@@ -91,13 +93,22 @@ static FXint nextword(const FXchar*& src,FXchar* dst){
   while(*src && isspace((FXuchar)*src)) src++;
   while(*src && !isspace((FXuchar)*src)) *ptr++=*src++;
   *ptr=0;
-  return ptr-dst;
+  return (FXint)(ptr-dst);
   }
 
 
 // Is key
 static FXbool iskey(const FXchar *str){
   return ((str[0]=='c' || str[0]=='s' || str[0]=='m' || str[0]=='g') && str[1]==0) || (str[0]=='g' && str[1]=='4' && str[2]==0);
+  }
+
+
+// Check if stream contains a XPM
+FXbool fxcheckXPM(FXStream& store){
+  FXuchar signature[9];
+  store.load(signature,9);
+  store.position(-9,FXFromCurrent);
+  return signature[0]=='/' && signature[1]=='*' && signature[2]==' ' && signature[3]=='X' && signature[4]=='P' && signature[5]=='M' && signature[6]==' ' && signature[7]=='*' && signature[8]=='/';
   }
 
 
@@ -112,6 +123,7 @@ FXbool fxloadXPM(const FXchar **pixels,FXColor*& data,FXint& width,FXint& height
   data=NULL;
   width=0;
   height=0;
+  color=0;
 
   // NULL pointer passed in
   if(!pixels) return FALSE;
@@ -210,6 +222,7 @@ FXbool fxloadXPM(FXStream& store,FXColor*& data,FXint& width,FXint& height){
   data=NULL;
   width=0;
   height=0;
+  color=0;
 
   // Read header line
   readline(store,name,sizeof(name));

@@ -3,7 +3,7 @@
 *                        I C O   I c o n   O b j e c t                          *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2001,2004 by Janusz Ganczarski.   All Rights Reserved.          *
+* Copyright (C) 2001,2005 by Janusz Ganczarski.   All Rights Reserved.          *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXICOIcon.h,v 1.14 2004/01/15 01:38:04 fox Exp $                         *
+* $Id: FXICOIcon.h,v 1.17 2005/01/16 16:06:06 fox Exp $                         *
 ********************************************************************************/
 #ifndef FXICOICON_H
 #define FXICOICON_H
@@ -40,6 +40,8 @@ private:
   FXICOIcon(const FXICOIcon&);
   FXICOIcon &operator=(const FXICOIcon&);
 public:
+  static const FXchar fileExt[];
+public:
 
   /// Construct icon from memory stream formatted in Microsoft icon format
   FXICOIcon(FXApp* a,const void *pix=NULL,FXColor clr=FXRGB(192,192,192),FXuint opts=0,FXint w=1,FXint h=1);
@@ -57,6 +59,12 @@ public:
 
 #ifndef FXLOADICO
 #define FXLOADICO
+
+/**
+* Check if stream contains a ICO, return TRUE if so.
+*/
+extern FXAPI FXbool fxcheckICO(FXStream& store);
+
 
 /**
 * Load an ICO (Microsoft icon format) file from a stream.

@@ -3,7 +3,7 @@
 *                         C u r s o r - O b j e c t                             *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,11 +19,13 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXCursor.cpp,v 1.50.2.1 2004/08/28 01:10:02 fox Exp $                        *
+* $Id: FXCursor.cpp,v 1.55 2005/01/16 16:06:06 fox Exp $                        *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
 #include "fxdefs.h"
+#include "FXHash.h"
+#include "FXThread.h"
 #include "FXStream.h"
 #include "FXString.h"
 #include "FXSize.h"
@@ -31,11 +33,11 @@
 #include "FXRectangle.h"
 #include "FXSettings.h"
 #include "FXRegistry.h"
-#include "FXHash.h"
 #include "FXApp.h"
 #include "FXId.h"
 #include "FXVisual.h"
 #include "FXCursor.h"
+#include "FXException.h"
 
 
 /*
@@ -236,7 +238,9 @@ void FXCursor::create(){
             dstoffset+=dstbytes;
             }
           srcpix=XCreateBitmapFromData(DISPLAY(getApp()),XDefaultRootWindow(DISPLAY(getApp())),(char*)shapebits,width,height);
+          if(!srcpix){ throw FXImageException("unable to create cursor"); }
           mskpix=XCreateBitmapFromData(DISPLAY(getApp()),XDefaultRootWindow(DISPLAY(getApp())),(char*)maskbits,width,height);
+          if(!mskpix){ throw FXImageException("unable to create cursor"); }
           xid=XCreatePixmapCursor(DISPLAY(getApp()),srcpix,mskpix,&color[0],&color[1],hotx,hoty);
           XFreePixmap(DISPLAY(getApp()),srcpix);
           XFreePixmap(DISPLAY(getApp()),mskpix);
@@ -280,7 +284,7 @@ void FXCursor::create(){
           HDC hdc=GetDC(NULL);
           img=CreateDIBSection(hdc,(BITMAPINFO*)&bi,DIB_RGB_COLORS,&imgdata,NULL,0);
           ReleaseDC(NULL,hdc);
-          if(!img){ fxerror("%s::create: unable to create cursor.\n",getClassName()); }
+          if(!img){ throw FXImageException("unable to create cursor"); }
 
           // Fill in data
           FXuint *imgptr=(FXuint*)imgdata;
@@ -298,6 +302,7 @@ void FXCursor::create(){
 
           // Strawman mask bitmap
           mask=CreateBitmap(32,32,1,1,NULL);
+          if(!mask){ throw FXImageException("unable to create cursor"); }
 
           // Create cursor
           ii.fIcon=FALSE;
@@ -339,7 +344,7 @@ void FXCursor::create(){
 #endif
 
       // Were we successful?
-      if(!xid){ fxerror("%s::create: unable to create cursor.\n",getClassName()); }
+      if(!xid){ throw FXImageException("unable to create cursor"); }
 
       // Release pixel buffer
       if(!(options&CURSOR_KEEP)) release();

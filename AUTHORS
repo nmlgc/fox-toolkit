@@ -31,7 +31,7 @@ Angel-Ventura Mendo Gomez <ventura@labri.u-bordeaux.fr>:
 Sean Hubbell:
         Initial version of FXFile API's.
 
-Sander Jansen <sxj@cfdrc.com>:
+Sander Jansen <sander@knology.net>:
         New web pages, new web layout, many useful suggestions and code.
         Code for the round progress dial, and lots of Windows specific nitty-gritties.
         CUR cursor.
@@ -53,8 +53,8 @@ Guoqing Tian:
 David Tyree <celer@ipro.lug.usf.edu>:
         JPEG Image support.
 
-Charles W. Warren <cww@cfdrc.com>:
-        Shutter Widgets contributor.  The concept of the Data Targets.  
+Charles W. Warren charles@moontown.org:
+        Shutter Widgets contributor.  The concept of the Data Targets.
         Charles has also been my principal sounding board for exploring the
         philosophical underpinnings of the FOX Library.
 
@@ -65,6 +65,6 @@ Jeroen van der Zijp <jeroen@fox-toolkit.org>:
         Main FOX Library author.
 
 
-			
+
 The true list should probably be much larger; if you feel I have inadvertantly omitted
 you, please email me jeroen@fox-toolkit.org and I'll add you immediately.

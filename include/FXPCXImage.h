@@ -3,7 +3,7 @@
 *                            P C X   I m a g e   O b j e c t                    *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2001,2004 by Janusz Ganczarski.   All Rights Reserved.          *
+* Copyright (C) 2001,2005 by Janusz Ganczarski.   All Rights Reserved.          *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXPCXImage.h,v 1.12 2004/02/08 17:17:34 fox Exp $                        *
+* $Id: FXPCXImage.h,v 1.15 2005/01/16 16:06:06 fox Exp $                        *
 ********************************************************************************/
 #ifndef FXPCXIMAGE_H
 #define FXPCXIMAGE_H
@@ -39,6 +39,8 @@ private:
   FXPCXImage(const FXPCXImage&);
   FXPCXImage &operator=(const FXPCXImage&);
 public:
+  static const FXchar fileExt[];
+public:
 
   /// Construct image from memory stream formatted in PCX file
   FXPCXImage(FXApp* a,const void *pix=NULL,FXuint opts=0,FXint w=1,FXint h=1);
@@ -52,6 +54,12 @@ public:
   /// Destroy icon
   virtual ~FXPCXImage();
   };
+
+
+/**
+* Check if stream contains a PCX, return TRUE if so.
+*/
+extern FXAPI FXbool fxcheckPCX(FXStream& store);
 
 
 /**

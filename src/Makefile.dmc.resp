@@ -1,4 +1,5 @@
 +FX4Splitter.obj &
++FX7Segment.obj &
 +FXAccelTable.obj &
 +FXApp.obj &
 +FXArrowButton.obj &
@@ -9,8 +10,8 @@
 +FXBZStream.obj &
 +FXCURCursor.obj &
 +FXCanvas.obj &
-+FXCharset.obj &
 +FXCheckButton.obj &
++FXChoiceBox.obj &
 +FXColorBar.obj &
 +FXColorDialog.obj &
 +FXColorNames.obj &
@@ -34,6 +35,10 @@
 +FXDirDialog.obj &
 +FXDirList.obj &
 +FXDirSelector.obj &
++FXDockBar.obj &
++FXDockHandler.obj &
++FXDockSite.obj &
++FXDockTitle.obj &
 +FXDocument.obj &
 +FXDragCorner.obj &
 +FXDrawable.obj &
@@ -66,6 +71,7 @@
 +FXGLVisual.obj &
 +FXGradientBar.obj &
 +FXGroupBox.obj &
++FXGUISignal.obj &
 +FXGZStream.obj &
 +FXHeader.obj &
 +FXHorizontalFrame.obj &
@@ -73,6 +79,7 @@
 +FXICOImage.obj &
 +FXIcon.obj &
 +FXIconList.obj &
++FXIconSource.obj &
 +FXId.obj &
 +FXImage.obj &
 +FXImageFrame.obj &
@@ -147,6 +154,9 @@
 +FXShutter.obj &
 +FXSize.obj &
 +FXSlider.obj &
++FXSpheref.obj &
++FXSphered.obj &
++FXSplashWindow.obj &
 +FXSpinner.obj &
 +FXSplitter.obj &
 +FXSpring.obj &
@@ -179,9 +189,9 @@
 +FXTriStateButton.obj &
 +FXUndoList.obj &
 +FXURL.obj &
-+FXUTF8Codec.obj &
 +FXUTF16Codec.obj &
 +FXUTF32Codec.obj &
++FXUTF8Codec.obj &
 +FXVec2d.obj &
 +FXVec2f.obj &
 +FXVec3d.obj &
@@ -192,7 +202,6 @@
 +FXVisual.obj &
 +FXWindow.obj &
 +FXWizard.obj &
-+FXWString.obj &
 +FXXBMIcon.obj &
 +FXXBMImage.obj &
 +FXXPMImage.obj &
@@ -219,4 +228,5 @@
 +fxxbmio.obj &
 +fxxpmio.obj &
 +icons.obj &
++strtoll.obj &
 +vsscanf.obj

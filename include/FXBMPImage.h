@@ -3,7 +3,7 @@
 *                            B M P   I m a g e   O b j e c t                    *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1998,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXBMPImage.h,v 1.15 2004/02/08 17:17:33 fox Exp $                        *
+* $Id: FXBMPImage.h,v 1.19 2005/01/16 16:06:06 fox Exp $                        *
 ********************************************************************************/
 #ifndef FXBMPIMAGE_H
 #define FXBMPIMAGE_H
@@ -31,7 +31,14 @@
 namespace FX {
 
 
-/// Microsoft Bitmap image
+/**
+* The BMP Image class is a convenience class for working with images in the
+* Microsoft Bitmap (.bmp) graphics file format.  This makes it possible to
+* use resources created with Windows development tools inside FOX without
+* need for graphics file format translators.  The bitmap loaded handles
+* 1, 4, and 8 bit paletted bitmaps, 16 and 24 bit RGB bitmaps, and
+* 32 bit RGBA bitmaps.
+*/
 class FXAPI FXBMPImage : public FXImage {
   FXDECLARE(FXBMPImage)
 protected:
@@ -39,6 +46,8 @@ protected:
 private:
   FXBMPImage(const FXBMPImage&);
   FXBMPImage &operator=(const FXBMPImage&);
+public:
+  static const FXchar fileExt[];
 public:
 
   /// Construct image from memory stream formatted in Microsoft BMP format
@@ -53,6 +62,12 @@ public:
   /// Destroy icon
   virtual ~FXBMPImage();
   };
+
+
+/**
+* Check if stream contains a bitmap, return TRUE if so.
+*/
+extern FXAPI FXbool fxcheckBMP(FXStream& store);
 
 
 /**

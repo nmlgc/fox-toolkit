@@ -3,7 +3,7 @@
 *                           S e t t i n g s   C l a s s                         *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1998,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXSettings.h,v 1.21 2004/02/08 17:17:34 fox Exp $                        *
+* $Id: FXSettings.h,v 1.24 2005/02/02 16:37:40 fox Exp $                        *
 ********************************************************************************/
 #ifndef FXSETTINGS_H
 #define FXSETTINGS_H
@@ -35,9 +35,9 @@ class FXStringDict;
 
 
 /**
-* FXSettings is a key-value database.  This is normally used as
-* part of FXRegistry, but can also be used separately in application
-* that need to maintain a key-value database of their own.
+* The Settings class manages a key-value database.  This is normally used as
+* part of Registry, but can also be used separately in applications that need
+* to maintain a key-value database in a file of their own.
 */
 class FXAPI FXSettings : public FXDict {
   FXDECLARE(FXSettings)
@@ -68,7 +68,7 @@ public:
   /// Obtain the string dictionary for the given section
   FXStringDict* data(FXuint pos) const { return (FXStringDict*)FXDict::data(pos); }
 
-  /// Find string dictionary for the given section
+  /// Find string dictionary for the given section; may be NULL
   FXStringDict* find(const FXchar *section) const { return (FXStringDict*)FXDict::find(section); }
 
   /// Read a formatted registry entry, using scanf-style format

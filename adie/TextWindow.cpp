@@ -3,7 +3,7 @@
 *                     T h e   A d i e   T e x t   E d i t o r                   *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1998,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This program is free software; you can redistribute it and/or modify          *
 * it under the terms of the GNU General Public License as published by          *
@@ -19,7 +19,7 @@
 * along with this program; if not, write to the Free Software                   *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: TextWindow.cpp,v 1.83.2.1 2004/05/18 06:26:03 fox Exp $                      *
+* $Id: TextWindow.cpp,v 1.104 2005/02/04 04:33:18 fox Exp $                      *
 ********************************************************************************/
 #include "fx.h"
 #include "fxkeys.h"
@@ -41,6 +41,7 @@
 #include "TextWindow.h"
 #include "Adie.h"
 #include "icons.h"
+
 
 /*
   Note:
@@ -85,6 +86,7 @@
     in other words, only quit will terminate app.
   - Maybe FXText should have its own accelerator table so that key bindings
     may be changed.
+  - Would be nice to save as HTML.
 */
 
 #define CLOCKTIMER      500
@@ -96,7 +98,7 @@
 // Map
 FXDEFMAP(TextWindow) TextWindowMap[]={
   FXMAPFUNC(SEL_UPDATE,            0,                              TextWindow::onUpdate),
-  FXMAPFUNC(SEL_TIMEOUT,           TextWindow::ID_FILETIME,        TextWindow::onCheckFile),
+  FXMAPFUNC(SEL_FOCUSIN,           0,                              TextWindow::onFocusIn),
   FXMAPFUNC(SEL_TIMEOUT,           TextWindow::ID_CLOCKTIME,       TextWindow::onClock),
   FXMAPFUNC(SEL_COMMAND,           TextWindow::ID_ABOUT,           TextWindow::onCmdAbout),
   FXMAPFUNC(SEL_COMMAND,           TextWindow::ID_HELP,            TextWindow::onCmdHelp),
@@ -260,18 +262,24 @@ TextWindow::TextWindow(Adie* a,const FXString& file):FXMainWindow(a,"Adie",NULL,
   setIcon(getApp()->bigicon);
   setMiniIcon(getApp()->smallicon);
 
+  // Status bar
+  statusbar=new FXStatusBar(this,LAYOUT_SIDE_BOTTOM|LAYOUT_FILL_X|STATUSBAR_WITH_DRAGCORNER|FRAME_RAISED);
+
+  // Sites where to dock
+  topdock=new FXDockSite(this,LAYOUT_SIDE_TOP|LAYOUT_FILL_X);
+  bottomdock=new FXDockSite(this,LAYOUT_SIDE_BOTTOM|LAYOUT_FILL_X);
+  leftdock=new FXDockSite(this,LAYOUT_SIDE_LEFT|LAYOUT_FILL_Y);
+  rightdock=new FXDockSite(this,LAYOUT_SIDE_RIGHT|LAYOUT_FILL_Y);
+
   // Make menu bar
   dragshell1=new FXToolBarShell(this,FRAME_RAISED);
-  menubar=new FXMenuBar(this,dragshell1,LAYOUT_SIDE_TOP|LAYOUT_FILL_X|FRAME_RAISED);
+  menubar=new FXMenuBar(topdock,dragshell1,LAYOUT_DOCK_NEXT|LAYOUT_SIDE_TOP|LAYOUT_FILL_X|FRAME_RAISED);
   new FXToolBarGrip(menubar,menubar,FXMenuBar::ID_TOOLBARGRIP,TOOLBARGRIP_DOUBLE);
 
   // Tool bar
   dragshell2=new FXToolBarShell(this,FRAME_RAISED);
-  toolbar=new FXToolBar(this,dragshell2,LAYOUT_SIDE_TOP|LAYOUT_FILL_X|FRAME_RAISED);
+  toolbar=new FXToolBar(topdock,dragshell2,LAYOUT_DOCK_NEXT|LAYOUT_SIDE_TOP|LAYOUT_FILL_X|FRAME_RAISED);
   new FXToolBarGrip(toolbar,toolbar,FXToolBar::ID_TOOLBARGRIP,TOOLBARGRIP_DOUBLE);
-
-  // Status bar
-  statusbar=new FXStatusBar(this,LAYOUT_SIDE_BOTTOM|LAYOUT_FILL_X|STATUSBAR_WITH_DRAGCORNER|FRAME_RAISED);
 
   // Info about the editor
   new FXButton(statusbar,"\tAbout Adie\tAbout the Adie text editor.",getApp()->smallicon,this,ID_ABOUT,LAYOUT_FILL_Y|LAYOUT_RIGHT);
@@ -318,8 +326,8 @@ TextWindow::TextWindow(Adie* a,const FXString& file):FXMainWindow(a,"Adie",NULL,
   FXHorizontalFrame* treeframe=new FXHorizontalFrame(treebox,FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_FILL_Y,0,0,0,0, 0,0,0,0);
   dirlist=new FXDirList(treeframe,this,ID_OPEN_TREE,DIRLIST_SHOWFILES|DIRLIST_NO_OWN_ASSOC|TREELIST_BROWSESELECT|TREELIST_SHOWS_LINES|TREELIST_SHOWS_BOXES|LAYOUT_FILL_X|LAYOUT_FILL_Y);
   dirlist->setAssociations(getApp()->associations);
-  FXHorizontalFrame* filterframe=new FXHorizontalFrame(treebox,LAYOUT_FILL_X);
-  new FXLabel(filterframe,"Filter:");
+  FXHorizontalFrame* filterframe=new FXHorizontalFrame(treebox,LAYOUT_FILL_X,0,0,0,0, 4,0,0,4);
+  new FXLabel(filterframe,"Filter:",NULL,LAYOUT_CENTER_Y);
   filter=new FXComboBox(filterframe,25,this,ID_FILEFILTER,COMBOBOX_STATIC|LAYOUT_FILL_X|FRAME_SUNKEN|FRAME_THICK);
   filter->setNumVisible(4);
 
@@ -382,13 +390,13 @@ TextWindow::TextWindow(Adie* a,const FXString& file):FXMainWindow(a,"Adie",NULL,
   new FXButton(toolbar,"\tSave As\tSave document to another file.",getApp()->saveasicon,this,ID_SAVEAS,ICON_ABOVE_TEXT|BUTTON_TOOLBAR|FRAME_RAISED|LAYOUT_TOP|LAYOUT_LEFT);
 
   // Spacer
-  new FXToolBarGrip(toolbar,NULL,0,TOOLBARGRIP_SEPARATOR);
+  new FXSeparator(toolbar,SEPARATOR_GROOVE);
 
   // Toobar buttons: Print
   new FXButton(toolbar,"\tPrint\tPrint document.",getApp()->printicon,this,ID_PRINT,ICON_ABOVE_TEXT|BUTTON_TOOLBAR|FRAME_RAISED|LAYOUT_TOP|LAYOUT_LEFT);
 
   // Spacer
-  new FXToolBarGrip(toolbar,NULL,0,TOOLBARGRIP_SEPARATOR);
+  new FXSeparator(toolbar,SEPARATOR_GROOVE);
 
   // Toobar buttons: Editing
   new FXButton(toolbar,"\tCut\tCut selection to clipboard.",getApp()->cuticon,editor,FXText::ID_CUT_SEL,ICON_ABOVE_TEXT|BUTTON_TOOLBAR|FRAME_RAISED|LAYOUT_TOP|LAYOUT_LEFT);
@@ -397,14 +405,14 @@ TextWindow::TextWindow(Adie* a,const FXString& file):FXMainWindow(a,"Adie",NULL,
   new FXButton(toolbar,"\tDelete\t\tDelete selection.",getApp()->deleteicon,editor,FXText::ID_DELETE_SEL,ICON_ABOVE_TEXT|BUTTON_TOOLBAR|FRAME_RAISED|LAYOUT_TOP|LAYOUT_LEFT);
 
   // Spacer
-  new FXToolBarGrip(toolbar,NULL,0,TOOLBARGRIP_SEPARATOR);
+  new FXSeparator(toolbar,SEPARATOR_GROOVE);
 
   // Undo/redo
   new FXButton(toolbar,"\tUndo\tUndo last change.",getApp()->undoicon,&undolist,FXUndoList::ID_UNDO,ICON_ABOVE_TEXT|BUTTON_TOOLBAR|FRAME_RAISED|LAYOUT_TOP|LAYOUT_LEFT);
   new FXButton(toolbar,"\tRedo\tRedo last undo.",getApp()->redoicon,&undolist,FXUndoList::ID_REDO,ICON_ABOVE_TEXT|BUTTON_TOOLBAR|FRAME_RAISED|LAYOUT_TOP|LAYOUT_LEFT);
 
   // Spacer
-  new FXToolBarGrip(toolbar,NULL,0,TOOLBARGRIP_SEPARATOR);
+  new FXSeparator(toolbar,SEPARATOR_GROOVE);
 
   // Search
   new FXButton(toolbar,"\tSearch\tSearch text.",getApp()->searchicon,editor,FXText::ID_SEARCH,ICON_ABOVE_TEXT|BUTTON_TOOLBAR|FRAME_RAISED|LAYOUT_TOP|LAYOUT_LEFT);
@@ -412,7 +420,7 @@ TextWindow::TextWindow(Adie* a,const FXString& file):FXMainWindow(a,"Adie",NULL,
   new FXButton(toolbar,"\tSearch Next Selected\tSearch next occurrence of selected text.",getApp()->searchnexticon,editor,FXText::ID_SEARCH_FORW_SEL,ICON_ABOVE_TEXT|BUTTON_TOOLBAR|FRAME_RAISED|LAYOUT_TOP|LAYOUT_LEFT);
 
   // Spacer
-  new FXToolBarGrip(toolbar,NULL,0,TOOLBARGRIP_SEPARATOR);
+  new FXSeparator(toolbar,SEPARATOR_GROOVE);
 
   // Bookmarks
   new FXButton(toolbar,"\tBookmark\tSet bookmark.",getApp()->bookseticon,this,ID_SET_MARK,ICON_ABOVE_TEXT|BUTTON_TOOLBAR|FRAME_RAISED|LAYOUT_TOP|LAYOUT_LEFT);
@@ -421,13 +429,13 @@ TextWindow::TextWindow(Adie* a,const FXString& file):FXMainWindow(a,"Adie",NULL,
   new FXButton(toolbar,"\tDelete Bookmarks\tDelete all bookmarks.",getApp()->bookdelicon,this,ID_CLEAR_MARKS,ICON_ABOVE_TEXT|BUTTON_TOOLBAR|FRAME_RAISED|LAYOUT_TOP|LAYOUT_LEFT);
 
   // Spacer
-  new FXToolBarGrip(toolbar,NULL,0,TOOLBARGRIP_SEPARATOR);
+  new FXSeparator(toolbar,SEPARATOR_GROOVE);
 
   new FXButton(toolbar,"\tShift left\tShift text left by one.",getApp()->shiftlefticon,editor,FXText::ID_SHIFT_LEFT,ICON_ABOVE_TEXT|BUTTON_TOOLBAR|FRAME_RAISED|LAYOUT_TOP|LAYOUT_LEFT);
   new FXButton(toolbar,"\tShift right\tShift text right by one.",getApp()->shiftrighticon,editor,FXText::ID_SHIFT_RIGHT,ICON_ABOVE_TEXT|BUTTON_TOOLBAR|FRAME_RAISED|LAYOUT_TOP|LAYOUT_LEFT);
 
   // Spacer
-  new FXToolBarGrip(toolbar,NULL,0,TOOLBARGRIP_SEPARATOR);
+  new FXSeparator(toolbar,SEPARATOR_GROOVE);
 
   // Color
   new FXButton(toolbar,"\tFonts\tDisplay font dialog.",getApp()->fontsicon,this,ID_FONT,ICON_ABOVE_TEXT|BUTTON_TOOLBAR|FRAME_RAISED|LAYOUT_TOP|LAYOUT_LEFT);
@@ -635,7 +643,6 @@ void TextWindow::create(){
   helpmenu->create();
   popupmenu->create();
   if(!urilistType){urilistType=getApp()->registerDragType(urilistTypeName);}
-  if(warnchanged) getApp()->addTimeout(this,ID_FILETIME,1);
   getApp()->addTimeout(this,ID_CLOCKTIME,1);
   show(PLACEMENT_DEFAULT);
   editor->setFocus();
@@ -663,7 +670,6 @@ void TextWindow::redraw(){
 // Clean up the mess
 TextWindow::~TextWindow(){
   getApp()->windowlist.remove(this);
-  getApp()->removeTimeout(this,ID_FILETIME);
   getApp()->removeTimeout(this,ID_CLOCKTIME);
   delete font;
   delete dragshell1;
@@ -1359,7 +1365,7 @@ long TextWindow::onCmdAbout(FXObject*,FXSelector,void*){
   FXVerticalFrame* side=new FXVerticalFrame(&about,LAYOUT_SIDE_RIGHT|LAYOUT_FILL_X|LAYOUT_FILL_Y,0,0,0,0, 10,10,10,10, 0,0);
   new FXLabel(side,"A . d . i . e",NULL,JUSTIFY_LEFT|ICON_BEFORE_TEXT|LAYOUT_FILL_X);
   new FXHorizontalSeparator(side,SEPARATOR_LINE|LAYOUT_FILL_X);
-  new FXLabel(side,FXStringFormat("\nThe Adie ADvanced Interactive Editor, version %d.%d.%d.\n\nAdie is a fast and convenient programming text editor and text\nfile viewer with an integrated file browser.\nAdie uses the FOX Toolkit version %d.%d.%d.\nCopyright (C) 2000,2003 Jeroen van der Zijp (jeroen@fox-toolkit.org).\n ",VERSION_MAJOR,VERSION_MINOR,VERSION_PATCH,FOX_MAJOR,FOX_MINOR,FOX_LEVEL),NULL,JUSTIFY_LEFT|LAYOUT_FILL_X|LAYOUT_FILL_Y);
+  new FXLabel(side,FXStringFormat("\nThe Adie ADvanced Interactive Editor, version %d.%d.%d.\n\nAdie is a fast and convenient programming text editor and text\nfile viewer with an integrated file browser.\nAdie uses the FOX Toolkit version %d.%d.%d.\nCopyright (C) 2000,2005 Jeroen van der Zijp (jeroen@fox-toolkit.org).\n ",VERSION_MAJOR,VERSION_MINOR,VERSION_PATCH,FOX_MAJOR,FOX_MINOR,FOX_LEVEL),NULL,JUSTIFY_LEFT|LAYOUT_FILL_X|LAYOUT_FILL_Y);
   FXButton *button=new FXButton(side,"&OK",NULL,&about,FXDialogBox::ID_ACCEPT,BUTTON_INITIAL|BUTTON_DEFAULT|FRAME_RAISED|FRAME_THICK|LAYOUT_RIGHT,0,0,0,0,32,32,2,2);
   button->setFocus();
   about.execute(PLACEMENT_OWNER);
@@ -1499,8 +1505,24 @@ long TextWindow::onCmdOpenSelected(FXObject*,FXSelector,void*){
           }
         }
 
-      // Compiler output in the form filename:lineno: Error message
+      // Compiler output in the form <filename>:<number>: Error message
       else if(sscanf(string.text(),"%[^:]:%d:",name,&lineno)==2){
+        file=FXFile::absolute(dir,name);
+        if(!FXFile::exists(file)){
+          file=FXFile::absolute(dir,string);
+          }
+        }
+
+      // Compiler output in the form <filename>(<number>) : Error message
+      else if(sscanf(string.text(),"%[^(](%d)",name,&lineno)==2){
+        file=FXFile::absolute(dir,name);
+        if(!FXFile::exists(file)){
+          file=FXFile::absolute(dir,string);
+          }
+        }
+
+      // Compiler output in the form "<filename>", line <number>: Error message
+      else if(sscanf(string.text(),"\"%[^\"]\", line %d",name,&lineno)==2){
         file=FXFile::absolute(dir,name);
         if(!FXFile::exists(file)){
           file=FXFile::absolute(dir,string);
@@ -1621,6 +1643,7 @@ long TextWindow::onCmdInsertFile(FXObject*,FXSelector,void*){
   opendialog.setSelectMode(SELECTFILE_EXISTING);
   opendialog.setPatternList(getPatterns());
   opendialog.setCurrentPattern(getCurrentPattern());
+  opendialog.setDirectory(FXFile::directory(filename));
   if(opendialog.execute()){
     setCurrentPattern(opendialog.getCurrentPattern());
     file=opendialog.getFilename();
@@ -1644,6 +1667,7 @@ long TextWindow::onCmdExtractFile(FXObject*,FXSelector,void*){
   savedialog.setSelectMode(SELECTFILE_ANY);
   savedialog.setPatternList(getPatterns());
   savedialog.setCurrentPattern(getCurrentPattern());
+  savedialog.setDirectory(FXFile::directory(filename));
   savedialog.setFilename(file);
   if(savedialog.execute()){
     setCurrentPattern(savedialog.getCurrentPattern());
@@ -1881,9 +1905,7 @@ long TextWindow::onUpdStripReturns(FXObject* sender,FXSelector,void*){
 
 // Enable warning if file changed externally
 long TextWindow::onCmdWarnChanged(FXObject*,FXSelector,void* ptr){
-  getApp()->removeTimeout(this,ID_FILETIME);
   warnchanged=(FXbool)(FXuval)ptr;
-  if(warnchanged) getApp()->addTimeout(this,ID_FILETIME,FILETIMER);
   return 1;
   }
 
@@ -2420,16 +2442,15 @@ long TextWindow::onTextRightMouse(FXObject*,FXSelector,void* ptr){
 /*******************************************************************************/
 
 
-// Update box for readonly display
-long TextWindow::onCheckFile(FXObject*,FXSelector,void*){
-  register long t;
-
-  // FIXME:- only set a flag; pop the dialog later, when focus moves into window.
-  if(filetime!=0){
+// Check file when focus moves in
+long TextWindow::onFocusIn(FXObject* sender,FXSelector sel,void* ptr){
+  register FXTime t;
+  FXMainWindow::onFocusIn(sender,sel,ptr);
+  if(warnchanged && filetime!=0){
     t=FXFile::modified(filename);
     if(t && t!=filetime){
       filetime=t;
-      if(MBOX_CLICKED_OK==FXMessageBox::warning(this,MBOX_OK_CANCEL,"File Was Changed","The file was changed by another program\nReload this file from disk?")){
+      if(MBOX_CLICKED_OK==FXMessageBox::warning(this,MBOX_OK_CANCEL,"File Was Changed","%s\nwas changed by another program. Reload this file from disk?",filename.text())){
         FXint top=editor->getTopLine();
         FXint pos=editor->getCursorPos();
         loadFile(filename);
@@ -2438,7 +2459,6 @@ long TextWindow::onCheckFile(FXObject*,FXSelector,void*){
         }
       }
     }
-  getApp()->addTimeout(this,ID_FILETIME,FILETIMER);
   return 1;
   }
 
@@ -2830,11 +2850,13 @@ void TextWindow::setSyntax(FXSyntax* syn){
     editor->setHiliteStyles(styles.data());
     editor->setStyled(colorize);
     restyleText();
+    currentstyle=0;
     }
   else{
     editor->setDelimiters(FXText::textDelimiters);
     editor->setHiliteStyles(NULL);
     editor->setStyled(FALSE);
+    currentstyle=-1;
     }
   }
 
@@ -2885,8 +2907,59 @@ void TextWindow::writeStyleForRule(const FXString& name,const FXHiliteStyle& sty
   fxnamefromcolor(abg,style.activeBackColor);
   getApp()->reg().writeFormatEntry("STYLE",name.text(),"%s,%s,%s,%s,%s,%s,%s,%d",nfg,nbg,sfg,sbg,hfg,hbg,abg,style.style);
   }
-  
 
+/*
+
+// Read styles
+void Adie::readStyles(){
+  FXchar nfg[100],nbg[100],sfg[100],sbg[100],hfg[100],hbg[100],abg[100],index[10],name[200];
+  FXint  sty,i;
+  nstyles=0;
+  for(i=0; i<MAXSTYLES; i++){
+    sprintf(index,"%d",i+1);
+    if(reg().readFormatEntry("STYLES",index,"%[^,],%[^,],%[^,],%[^,],%[^,],%[^,],%[^,],%[^,],%d",name,nfg,nbg,sfg,sbg,hfg,hbg,abg,&sty)!=9) break;
+    FXTRACE((1,"name=\"%s\" nfg=%s nbg=%s sfg=%s sbg=%s hfg=%s hbg=%s abg=%s sty=%d\n",name,nfg,nbg,sfg,sbg,hfg,hbg,abg,sty));
+    stylename[i]=name;
+    stylecolor[i].normalForeColor=fxcolorfromname(nfg);
+    stylecolor[i].normalBackColor=fxcolorfromname(nbg);
+    stylecolor[i].selectForeColor=fxcolorfromname(sfg);
+    stylecolor[i].selectBackColor=fxcolorfromname(sbg);
+    stylecolor[i].hiliteForeColor=fxcolorfromname(hfg);
+    stylecolor[i].hiliteBackColor=fxcolorfromname(hbg);
+    stylecolor[i].activeBackColor=fxcolorfromname(abg);
+    stylecolor[i].style=sty;
+    nstyles++;
+    }
+  }
+
+
+// Write styles
+void Adie::writeStyles(){
+  FXchar nfg[100],nbg[100],sfg[100],sbg[100],hfg[100],hbg[100],abg[100],name[10];
+  FXint  i;
+  reg().deleteSection("STYLES");
+  for(i=0; i<nstyles; i++){
+    fxnamefromcolor(nfg,stylecolor[i].normalForeColor);
+    fxnamefromcolor(nbg,stylecolor[i].normalBackColor);
+    fxnamefromcolor(sfg,stylecolor[i].selectForeColor);
+    fxnamefromcolor(sbg,stylecolor[i].selectBackColor);
+    fxnamefromcolor(hfg,stylecolor[i].hiliteForeColor);
+    fxnamefromcolor(hbg,stylecolor[i].hiliteBackColor);
+    fxnamefromcolor(abg,stylecolor[i].activeBackColor);
+    sprintf(name,"%d",i+1);
+    reg().writeFormatEntry("STYLES",name,"%s,%s,%s,%s,%s,%s,%s,%s,%d",stylename[i].text(),nfg,nbg,sfg,sbg,hfg,hbg,abg,stylecolor[i].style);
+    }
+  }
+  // Get style pointer
+  FXHiliteStyle* getStyles() const { return styles.data(); }
+
+  // Get particular style
+  const FXHiliteStyle& getStyle(FXint index) const { return styles[index]; }
+
+  // Change particular style
+  void setStyle(FXint index,const FXHiliteStyle& s){ styles[index]=s; }
+
+*/
 
 // Scan backward by context amount
 FXint TextWindow::backwardByContext(FXint pos) const {
@@ -3044,9 +3117,9 @@ void TextWindow::restyleText(FXint pos,FXint del,FXint ins){
       // Style changed in unchanged text
       if(affected>changed){
         restylejump<<=1;
-	      changed=affected;
-       	end=changed+restylejump;
-      	if(end>len) end=len;
+	changed=affected;
+    	end=changed+restylejump;
+    	if(end>len) end=len;
         continue;
         }
 

@@ -3,7 +3,7 @@
 *              F O X   P r i v a t e   I n c l u d e   F i l e s                *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: xincs.h,v 1.56 2004/02/08 17:17:34 fox Exp $                             *
+* $Id: xincs.h,v 1.65 2005/01/28 23:07:35 fox Exp $                             *
 ********************************************************************************/
 #ifndef XINCS_H
 #define XINCS_H
@@ -27,6 +27,22 @@
 
 ////////////////////  DO NOT INCLUDE THIS PRIVATE HEADER FILE  //////////////////
 
+// Thread safe
+#ifndef _POSIX_PTHREAD_SEMANTICS
+#define _POSIX_PTHREAD_SEMANTICS
+#endif
+
+// GNU extras if we can get them
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+
+// Use 64-bit files
+#ifndef WIN32
+#ifndef _FILE_OFFSET_BITS
+#define _FILE_OFFSET_BITS 64
+#endif
+#endif
 
 // Basic includes
 #include <stdio.h>
@@ -49,10 +65,13 @@
 
 #include <grp.h>
 #include <pwd.h>
-
+#include <sys/ioctl.h>
+#ifdef HAVE_SYS_FILIO_H         // Get FIONREAD on Solaris
+#include <sys/filio.h>
+#endif
 #else
 
-#include <io.h>		          // for _access()
+#include <io.h>                 // For _access()
 #if defined(_MSC_VER) || defined(__WATCOMC__)		// Microsoft Visual C++ or Watcom C++
 #include <direct.h>
 #define stat _stat
@@ -71,18 +90,18 @@
 #endif
 #ifdef __BORLANDC__	        // Borland C++ Builder
 #include <dir.h>
-#if __BORLANDC__ <= 0x0530  // C++ Builder 3.0
+#if __BORLANDC__ <= 0x0530      // C++ Builder 3.0
 #define vsnprintf(a, b, c, d) vsprintf(a, c, d)
 #endif
 #define lstat stat
 #endif
-#ifdef __MINGW32__          // GCC MingW32
+#ifdef __MINGW32__              // GCC MingW32
 #include <direct.h>
 #define vsnprintf _vsnprintf
 #endif
-#ifdef __SC__               // Digital Mars C++ Compiler
+#ifdef __SC__                   // Digital Mars C++ Compiler
 #include <direct.h>
-#include <io.h>             // for _access()
+#include <io.h>                 // For _access()
 #define vsnprintf _vsnprintf
 #endif
 
@@ -132,6 +151,9 @@
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #endif
+#ifdef HAVE_MMAP
+#include <sys/mman.h>
+#endif
 
 
 // For thread-safe readdir_r, we sometimes need extra
@@ -157,7 +179,7 @@ struct fxdirent : dirent {
 #ifndef __CYGWIN__
 #include <winsock2.h>
 #endif
-#include <commctrl.h>   // For _TrackMouseEvent
+#include <commctrl.h>           // For _TrackMouseEvent
 
 // X windows includes
 #else
@@ -180,9 +202,15 @@ struct fxdirent : dirent {
 #ifdef HAVE_XFT_H
 #include <X11/Xft/Xft.h>
 #endif
-#ifndef XlibSpecificationRelease        // not defined until X11R5
+#ifdef HAVE_XSHAPE_H
+#include <X11/extensions/shape.h>
+#endif
+#ifdef HAVE_XRANDR_H
+#include <X11/extensions/Xrandr.h>
+#endif
+#ifndef XlibSpecificationRelease        // Not defined until X11R5
 #define NO_XIM
-#elif XlibSpecificationRelease < 6      // need at least Xlib X11R6
+#elif XlibSpecificationRelease < 6      // Need at least Xlib X11R6
 #define NO_XIM
 #endif
 #endif
@@ -190,6 +218,12 @@ struct fxdirent : dirent {
 
 // OpenGL includes
 #ifdef HAVE_GL_H
+#ifndef SUN_OGL_NO_VERTEX_MACROS
+#define SUN_OGL_NO_VERTEX_MACROS
+#endif
+#ifndef HPOGL_SUPPRESS_FAST_API
+#define HPOGL_SUPPRESS_FAST_API
+#endif
 #include <GL/gl.h>
 #ifndef WIN32
 #include <GL/glx.h>

@@ -3,7 +3,7 @@
 *                 M u l i t h r e a d i n g   S u p p o r t                     *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2004 by Jeroen van der Zijp.   All Rights Reserved.             *
+* Copyright (C) 2004,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXThread.h,v 1.16.2.1 2004/12/20 14:32:42 fox Exp $                          *
+* $Id: FXThread.h,v 1.34 2005/01/23 22:28:42 fox Exp $                          *
 ********************************************************************************/
 #ifndef FXTHREAD_H
 #define FXTHREAD_H
@@ -35,29 +35,36 @@ typedef void*         FXThreadID;
 #endif
 
 
+class FXCondition;
+
+
 /**
 * FXMutex provides a mutex which can be used to enforce critical
 * sections around updates of data shared by multiple threads.
 */
 class FXAPI FXMutex {
+  friend class FXCondition;
 private:
-  unsigned long data[12];
+  FXuval data[13];
 private:
   FXMutex(const FXMutex&);
   FXMutex &operator=(const FXMutex&);
 public:
 
   /// Initialize the mutex
-  FXMutex();
+  FXMutex(FXbool recursive=FALSE);
 
   /// Lock the mutex
-  FXbool lock();
+  void lock();
 
-  /// Try to lock the mutex; return TRUE locked
+  /// Return TRUE if succeeded locking the mutex
   FXbool trylock();
 
+  /// Return TRUE if mutex is already locked
+  FXbool locked();
+
   /// Unlock mutex
-  FXbool unlock();
+  void unlock();
 
   /// Delete the mutex
   ~FXMutex();
@@ -73,15 +80,108 @@ public:
 */
 class FXAPI FXMutexLock {
 private:
-  FXMutex& mutex;
+  FXMutex& mtx;
 private:
+  FXMutexLock();
   FXMutexLock(const FXMutexLock&);
   FXMutexLock& operator=(const FXMutexLock&);
 public:
-  FXMutexLock(FXMutex& m):mutex(m){ lock(); }
-  FXbool lock(){ return mutex.lock(); }
-  FXbool unlock(){ return mutex.unlock(); }
+
+  /// Construct & lock associated mutex
+  FXMutexLock(FXMutex& m):mtx(m){ lock(); }
+
+  /// Return reference to associated mutex
+  FXMutex& mutex(){ return mtx; }
+
+  /// Lock mutex
+  void lock(){ mtx.lock(); }
+
+  /// Return TRUE if succeeded locking the mutex
+  FXbool trylock(){ return mtx.trylock(); }
+
+  /// Return TRUE if mutex is already locked
+  FXbool locked(){ return mtx.locked(); }
+
+  /// Unlock mutex
+  void unlock(){ mtx.unlock(); }
+
+  /// Destroy and unlock associated mutex
   ~FXMutexLock(){ unlock(); }
+  };
+
+
+/**
+* A condition allows one or more threads to synchronize
+* to an event.  When a thread calls wait, the associated
+* mutex is unlocked while the thread is blocked.  When the
+* condition becomes signalled, the associated mutex is
+* locked and the thread(s) are reawakened.
+*/
+class FXAPI FXCondition {
+private:
+  FXuval data[12];
+private:
+  FXCondition(const FXCondition&);
+  FXCondition& operator=(const FXCondition&);
+public:
+
+  /// Initialize the condition
+  FXCondition();
+
+  /**
+  * Wait until condition becomes signalled, using given mutex,
+  * which must already have been locked prior to this call.
+  */
+  void wait(FXMutex& mtx);
+
+  /**
+  * Wait until condition becomes signalled, using given mutex,
+  * which must already have been locked prior to this call.
+  * Returns TRUE if successful, FALSE if timeout occurred.
+  */
+  FXbool wait(FXMutex& mtx,FXuint ms);
+
+  /**
+  * Wake or unblock a single blocked thread
+  */
+  void signal();
+
+  /**
+  * Wake or unblock all blocked threads
+  */
+  void broadcast();
+
+  /// Delete the condition
+  ~FXCondition();
+  };
+
+
+/**
+* A semaphore allows for protection of a resource that can
+* be accessed by a fixed number of simultaneous threads.
+*/
+class FXSemaphore {
+private:
+  FXuval data[16];
+private:
+  FXSemaphore(const FXSemaphore&);
+  FXSemaphore& operator=(const FXSemaphore&);
+public:
+
+  /// Initialize semaphore with given count
+  FXSemaphore(FXint initial=1);
+
+  /// Decrement semaphore
+  void wait();
+
+  /// Non-blocking semaphore decrement
+  FXbool trywait();
+
+  /// Increment semaphore
+  void post();
+
+  /// Delete semaphore
+  ~FXSemaphore();
   };
 
 
@@ -95,9 +195,6 @@ public:
 class FXAPI FXThread {
 private:
   FXThreadID tid;
-#ifdef WIN32
-  FXuint     thd;
-#endif
 private:
   FXThread(const FXThread&);
   FXThread &operator=(const FXThread&);
@@ -123,11 +220,10 @@ public:
   */
   FXThreadID id() const;
 
-  /// Return TRUE if this thread is the calling thread.
-  FXbool iscurrent() const;
-
-  /// Return TRUE if this thread is running.
-  FXbool isrunning() const;
+  /**
+  * Return TRUE if this thread is running.
+  */
+  FXbool running() const;
 
   /**
   * Start thread; the thread is started as attached.
@@ -170,10 +266,37 @@ public:
   static void exit(FXint code=0);
 
   /**
-  * Return thread handle of calling thread.
-  * The handle is valid in the context of the current thread.
+  * Make the thread yield its time quantum.
+  */
+  static void yield();
+
+  /**
+  * Make the calling thread sleep for a number of seconds
+  * and nanoseconds.
+  */
+  static void sleep(unsigned long sec,unsigned long nsec=0);
+
+  /**
+  * Return pointer to the FXThread instance associated
+  * with the calling thread; it returns NULL for the main
+  * thread and all threads not created by FOX.
+  */
+  static FXThread* self();
+
+  /**
+  * Return thread id of calling thread.
   */
   static FXThreadID current();
+
+  /**
+  * Set thread priority.
+  */
+  void priority(FXint prio);
+
+  /**
+  * Return thread priority.
+  */
+  FXint priority();
 
   /**
   * Destroy the thread immediately, running or not.

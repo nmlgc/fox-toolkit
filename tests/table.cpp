@@ -5,7 +5,7 @@
 *********************************************************************************
 * Copyright (C) 1997 by Jeroen van der Zijp.   All Rights Reserved.             *
 *********************************************************************************
-* $Id: table.cpp,v 1.61 2004/03/29 15:08:37 fox Exp $                           *
+* $Id: table.cpp,v 1.66 2004/10/28 14:37:23 fox Exp $                           *
 ********************************************************************************/
 #include "fx.h"
 #include <stdio.h>
@@ -193,6 +193,7 @@ TableWindow::TableWindow(FXApp* a):FXMainWindow(a,"Table Widget Test",NULL,NULL,
   table->setItemBorders(9,9,FXTableItem::TBORDER|FXTableItem::LBORDER|FXTableItem::BBORDER);
   table->setItemBorders(9,10,FXTableItem::TBORDER|FXTableItem::RBORDER|FXTableItem::BBORDER);
 
+  table->setItemJustify(10,5,FXTableItem::LEFT|FXTableItem::CENTER_Y);
 
   table->setItemBorders(40,13,FXTableItem::LBORDER|FXTableItem::TBORDER|FXTableItem::RBORDER|FXTableItem::BBORDER);
   table->setItemBorders(49,13,FXTableItem::LBORDER|FXTableItem::TBORDER|FXTableItem::RBORDER|FXTableItem::BBORDER);
@@ -213,13 +214,15 @@ TableWindow::TableWindow(FXApp* a):FXMainWindow(a,"Table Widget Test",NULL,NULL,
   tablemenu=new FXMenuPane(this);
   new FXMenuCheck(tablemenu,"Horizontal grid",table,FXTable::ID_HORZ_GRID);
   new FXMenuCheck(tablemenu,"Vertical grid",table,FXTable::ID_VERT_GRID);
+  new FXMenuCheck(tablemenu,"Editable",table,FXTable::ID_TOGGLE_EDITABLE);
   new FXMenuTitle(menubar,"&Options",NULL,tablemenu);
 
   manipmenu=new FXMenuPane(this);
-  new FXMenuCommand(manipmenu,"Delete Column\tCtl-C",NULL,table,FXTable::ID_DELETE_COLUMN);
-  new FXMenuCommand(manipmenu,"Delete Row\tCtl-R",NULL,table,FXTable::ID_DELETE_ROW);
-  new FXMenuCommand(manipmenu,"Insert Column\tCtl-Shift-C",NULL,table,FXTable::ID_INSERT_COLUMN);
-  new FXMenuCommand(manipmenu,"Insert Row\tCtl-Shift-R",NULL,table,FXTable::ID_INSERT_ROW);
+  new FXMenuCommand(manipmenu,"Edit Cell",NULL,table,FXTable::ID_START_INPUT);
+  new FXMenuCommand(manipmenu,"Delete Column",NULL,table,FXTable::ID_DELETE_COLUMN);
+  new FXMenuCommand(manipmenu,"Delete Row",NULL,table,FXTable::ID_DELETE_ROW);
+  new FXMenuCommand(manipmenu,"Insert Column",NULL,table,FXTable::ID_INSERT_COLUMN);
+  new FXMenuCommand(manipmenu,"Insert Row",NULL,table,FXTable::ID_INSERT_ROW);
   new FXMenuCommand(manipmenu,"Resize table...",NULL,this,TableWindow::ID_RESIZETABLE);
   new FXMenuTitle(menubar,"&Manipulations",NULL,manipmenu);
 
@@ -285,15 +288,15 @@ long TableWindow::onCmdResizeTable(FXObject*,FXSelector,void*){
 
 // Selected
 long TableWindow::onTableSelected(FXObject*,FXSelector,void* ptr){
-  FXTableRange *tr=(FXTableRange*)ptr;
-  FXTRACE((10,"SEL_SELECTED fm.row=%d, fm.col=%d to.row=%d, to.col=%d\n",tr->fm.row,tr->fm.col,tr->to.row,tr->to.col));
+  FXTablePos *tp=(FXTablePos*)ptr;
+  FXTRACE((10,"SEL_SELECTED row=%d, col=%d\n",tp->row,tp->col));
   return 1;
   }
 
 // Deselected
 long TableWindow::onTableDeselected(FXObject*,FXSelector,void* ptr){
-  FXTableRange *tr=(FXTableRange*)ptr;
-  FXTRACE((10,"SEL_DESELECTED fm.row=%d, fm.col=%d to.row=%d, to.col=%d\n",tr->fm.row,tr->fm.col,tr->to.row,tr->to.col));
+  FXTablePos *tp=(FXTablePos*)ptr;
+  FXTRACE((10,"SEL_DESELECTED row=%d, col=%d\n",tp->row,tp->col));
   return 1;
   }
 

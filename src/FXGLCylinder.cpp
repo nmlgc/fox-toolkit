@@ -3,7 +3,7 @@
 *                      O p e n G L   C y l i n d e r   O b j e c t              *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1999,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1999,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * Contributed by: Angel-Ventura Mendo Gomez <ventura@labri.u-bordeaux.fr>       *
 *********************************************************************************
@@ -21,11 +21,13 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXGLCylinder.cpp,v 1.21 2004/02/20 16:29:39 fox Exp $                    *
+* $Id: FXGLCylinder.cpp,v 1.24 2005/01/16 16:06:07 fox Exp $                    *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
 #include "fxdefs.h"
+#include "FXHash.h"
+#include "FXThread.h"
 #include "FXStream.h"
 #include "FXVec2f.h"
 #include "FXVec3f.h"
@@ -40,7 +42,6 @@
 #include "FXRegistry.h"
 #include "FXAccelTable.h"
 #include "FXObjectList.h"
-#include "FXHash.h"
 #include "FXApp.h"
 #include "FXGLViewer.h"
 #include "FXGLCylinder.h"

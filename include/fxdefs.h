@@ -3,7 +3,7 @@
 *                     FOX Definitions, Types, and Macros                        *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: fxdefs.h,v 1.133.2.1 2005/03/24 01:21:16 fox Exp $                           *
+* $Id: fxdefs.h,v 1.145 2005/01/16 16:06:06 fox Exp $                           *
 ********************************************************************************/
 #ifndef FXDEFS_H
 #define FXDEFS_H
@@ -218,6 +218,8 @@ enum FXSelType {
   SEL_IO_WRITE,                       // Write activity on a pipe
   SEL_IO_EXCEPT,                      // Except activity on a pipe
   SEL_PICKED,                         // Picked some location
+  SEL_QUERY_TIP,                      // Message inquiring about tooltip
+  SEL_QUERY_HELP,                     // Message inquiring about statusline help
   SEL_LAST                            // Last message
   };
 
@@ -227,8 +229,13 @@ enum {
   SHIFTMASK        = 0x001,           /// Shift key is down
   CAPSLOCKMASK     = 0x002,           /// Caps Lock key is down
   CONTROLMASK      = 0x004,           /// Ctrl key is down
+#ifdef __APPLE__
+  ALTMASK          = 0x2000           /// Alt key is down
+  METAMASK         = 0x10,            /// Meta key is down
+#else
   ALTMASK          = 0x008,           /// Alt key is down
   METAMASK         = 0x040,           /// Meta key is down
+#endif
   NUMLOCKMASK      = 0x010,           /// Num Lock key is down
   SCROLLLOCKMASK   = 0x0E0,           /// Scroll Lock key is down (seems to vary)
   LEFTBUTTONMASK   = 0x100,           /// Left mouse button is down
@@ -331,14 +338,17 @@ typedef int                    FXint;
 typedef float                  FXfloat;
 typedef double                 FXdouble;
 typedef FXObject              *FXObjectPtr;
-#if defined(_MSC_VER) || (defined(__BCPLUSPLUS__) && __BORLANDC__ > 0x500) || defined(__WATCOM_INT64__)
-#define FX_LONG
+#if defined(__LP64__) || defined(_LP64) || (_MIPS_SZLONG == 64) || (__WORDSIZE == 64)
+typedef unsigned long          FXulong;
+typedef long                   FXlong;
+#elif defined(_MSC_VER) || (defined(__BCPLUSPLUS__) && __BORLANDC__ > 0x500) || defined(__WATCOM_INT64__)
 typedef unsigned __int64       FXulong;
 typedef __int64                FXlong;
-#elif defined(__GNUG__) || defined(__GNUC__) || defined(__SUNPRO_CC) || defined(__MWERKS__) || defined(__SC__)
-#define FX_LONG
-typedef unsigned long long int FXulong;
-typedef long long int          FXlong;
+#elif defined(__GNUG__) || defined(__GNUC__) || defined(__SUNPRO_CC) || defined(__MWERKS__) || defined(__SC__) || defined(_LONGLONG)
+typedef unsigned long long     FXulong;
+typedef long long              FXlong;
+#else
+#error "FXlong and FXulong not defined for this architecture!"
 #endif
 
 // Integral types large enough to hold value of a pointer
@@ -535,24 +545,29 @@ typedef tagMSG                 FXRawEvent;
 
 
 /**
-* Allocate no elements of type to the specified pointer.
+* Allocate a memory block of no elements of type and store a pointer
+* to it into the address pointed to by ptr.
 * Return FALSE if size!=0 and allocation fails, TRUE otherwise.
 * An allocation of a zero size block returns a NULL pointer.
 */
 #define FXMALLOC(ptr,type,no)     (FX::fxmalloc((void **)(ptr),sizeof(type)*(no)))
 
 /**
-* Allocate no elements of type to the specified pointer, and clear this memory to zero.
+* Allocate a zero-filled memory block no elements of type and store a pointer
+* to it into the address pointed to by ptr.
 * Return FALSE if size!=0 and allocation fails, TRUE otherwise.
 * An allocation of a zero size block returns a NULL pointer.
 */
 #define FXCALLOC(ptr,type,no)     (FX::fxcalloc((void **)(ptr),sizeof(type)*(no)))
 
 /**
-* Resize a previously allocated block of memory.
+* Resize the memory block referred to by the pointer at the address ptr, to a
+* hold no elements of type.
 * Returns FALSE if size!=0 and reallocation fails, TRUE otherwise.
 * If reallocation fails, pointer is left to point to old block; a reallocation
 * to a zero size block has the effect of freeing it.
+* The ptr argument must be the address where the pointer to the allocated
+* block is to be stored.
 */
 #define FXRESIZE(ptr,type,no)     (FX::fxresize((void **)(ptr),sizeof(type)*(no)))
 
@@ -560,12 +575,16 @@ typedef tagMSG                 FXRawEvent;
 * Allocate and initialize memory from another block.
 * Return FALSE if size!=0 and source!=NULL and allocation fails, TRUE otherwise.
 * An allocation of a zero size block returns a NULL pointer.
+* The ptr argument must be the address where the pointer to the allocated
+* block is to be stored.
 */
 #define FXMEMDUP(ptr,src,type,no) (FX::fxmemdup((void **)(ptr),(const void*)(src),sizeof(type)*(no)))
 
 /**
 * Free a block of memory allocated with either FXMALLOC, FXCALLOC, FXRESIZE, or FXMEMDUP.
-* It is OK to call free a NULL pointer.
+* It is OK to call free a NULL pointer.  The argument must be the address of the
+* pointer to the block to be released.  The pointer is set to NULL to prevent
+* any further references to the block after releasing it.
 */
 #define FXFREE(ptr)               (FX::fxfree((void **)(ptr)))
 
@@ -574,10 +593,8 @@ typedef tagMSG                 FXRawEvent;
 * These are some of the ISO C99 standard single-precision transcendental functions.
 * On LINUX, specify _GNU_SOURCE or _ISOC99_SOURCE to enable native implementation;
 * otherwise, these macros will be used.  Apple OS-X implements fabsf(x), ceilf(x),
-* Define FLOAT_MATH_FUNCTIONS if these functions are available in some other
-* library you're linking to.
+* floorf(x), and fmodf(x,y).
 */
-#ifndef FLOAT_MATH_FUNCTIONS
 #ifndef __USE_ISOC99
 #ifndef __APPLE__
 #define fabsf(x)    ((float)fabs((double)(x)))
@@ -597,7 +614,6 @@ typedef tagMSG                 FXRawEvent;
 #define expf(x)     ((float)exp((double)(x)))
 #define logf(x)     ((float)log((double)(x)))
 #define log10f(x)   ((float)log10((double)(x)))
-#endif
 #endif
 
 /**********************************  Globals  **********************************/

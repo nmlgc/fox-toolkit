@@ -2,11 +2,9 @@
 
 CXXFLAGS = @CXXFLAGS@ @X_CFLAGS@
 INCLUDES = -I$(top_srcdir)/include -I$(top_builddir)/include
-
-LDADD		= ../src/libFOX-1.2.la -lm
-
-#gltest_LDADD	= $(LDADD) $(GL_LIBS)
-#glviewer_LDADD  = $(LDADD) $(GL_LIBS)
+RESWRAP  = $(top_builddir)/utils/reswrap
+SUFFIXES = .gif .bmp
+LDADD = ../src/libFOX-1.4.la -lm
 
 EXTRA_PROGRAMS	= \
 gltest \
@@ -14,27 +12,29 @@ glviewer
 
 
 noinst_PROGRAMS	= \
+dialog \
+ControlPanel \
+groupbox \
+scribble \
 wizard \
 layout \
 rex \
 table \
+memmap \
 minheritance \
 bitmapviewer \
 imageviewer \
 button \
 datatarget \
 dctest \
-dialog \
 dirlist \
 foursplit \
-groupbox \
 header \
 hello \
 hello2 \
 iconlist \
 image \
 mditest \
-scribble \
 shutter \
 splitter \
 switcher \
@@ -46,6 +46,7 @@ wizard_SOURCES	        = wizard.cpp
 rex_SOURCES	        = rex.cpp
 layout_SOURCES	        = layout.cpp
 minheritance_SOURCES	= minheritance.cpp
+memmap_SOURCES	        = memmap.cpp
 gltest_SOURCES	        = gltest.cpp
 glviewer_SOURCES        = glviewer.cpp
 mditest_SOURCES		= mditest.cpp
@@ -70,10 +71,10 @@ dialog_SOURCES		= dialog.cpp
 dirlist_SOURCES		= dirlist.cpp
 button_SOURCES		= button.cpp
 dctest_SOURCES		= dctest.cpp dippy.h
+ControlPanel_SOURCES    = ControlPanel.cpp controlpanelicon.h
 
 
 
 EXTRA_DIST = Makefile.bc \
-             Makefile.icc \
              Makefile.wc \
              Makefile.dmc

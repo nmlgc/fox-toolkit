@@ -3,7 +3,7 @@
 *                            P P M   I m a g e   O b j e c t                    *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2003,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 2003,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXPPMImage.h,v 1.4 2004/02/08 17:17:34 fox Exp $                         *
+* $Id: FXPPMImage.h,v 1.7 2005/01/16 16:06:06 fox Exp $                         *
 ********************************************************************************/
 #ifndef FXPPMIMAGE_H
 #define FXPPMIMAGE_H
@@ -40,6 +40,8 @@ private:
   FXPPMImage(const FXPPMImage&);
   FXPPMImage &operator=(const FXPPMImage&);
 public:
+  static const FXchar fileExt[];
+public:
 
   /// Construct icon from memory stream formatted in Portable Pixmap format
   FXPPMImage(FXApp* a,const void *pix=NULL,FXuint opts=0,FXint w=1,FXint h=1);
@@ -53,6 +55,12 @@ public:
   /// Destroy icon
   virtual ~FXPPMImage();
   };
+
+
+/**
+* Check if stream contains a PPM, return TRUE if so.
+*/
+extern FXAPI FXbool fxcheckPPM(FXStream& store);
 
 
 /**

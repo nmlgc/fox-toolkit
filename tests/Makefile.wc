@@ -3,9 +3,9 @@
 #                       FOX:  A Free C++ Class Library for X                 #
 #                                                                            #
 ##############################################################################
-# Copyright (C) 1997 by Jeroen van der Zijp.   All Rights Reserved.          #
+# Copyright (C) 1997,2005 by Jeroen van der Zijp.   All Rights Reserved.     #
 ##############################################################################
-# $Id: Makefile.wc,v 1.4.2.1 2004/05/19 03:35:41 fox Exp $                       #
+# $Id: Makefile.wc,v 1.8 2005/02/04 04:33:19 fox Exp $                       #
 ##############################################################################
 # This library is free software; you can redistribute it and/or              #
 # modify it under the terms of the GNU Library General Public                #
@@ -32,11 +32,13 @@ LD	  = wcl386
 LDFLAGS   = -l=nt_win
 GLLIBS    = opengl32.lib glu32.lib
 INCDIRS   = -I$(TOPDIR)\include
-FOXLIB    = $(TOPDIR)\src\FOX-1.2.lib $(%WATCOM)\lib386\nt\comctl32.lib $(%WATCOM)\lib386\nt\wsock32.lib
+FOXLIB    = $(TOPDIR)\src\FOX-1.4.lib $(%WATCOM)\lib386\nt\comctl32.lib $(%WATCOM)\lib386\nt\wsock32.lib
 
 PROGRAMS  =
+PROGRAMS += ControlPanel.exe
 PROGRAMS += rex.exe
 PROGRAMS += minheritance.exe
+PROGRAMS += memmap.exe
 PROGRAMS += mditest.exe
 PROGRAMS += table.exe
 PROGRAMS += groupbox.exe
@@ -66,11 +68,17 @@ PROGRAMS += imageviewer.exe
 
 all: $(PROGRAMS)
 
+ControlPanel.exe: $(FOXLIB) ControlPanel.obj
+	$(LD) $(LDFLAGS) ControlPanel.obj $(FOXLIB)
+
 rex.exe: $(FOXLIB) rex.obj
 	$(LD) rex.obj $(FOXLIB)			# note: create console app
 
 minheritance.exe: $(FOXLIB) minheritance.obj
 	$(LD) minheritance.obj $(FOXLIB)	# note: create console app
+
+memmap.exe: $(FOXLIB) memmap.obj
+	$(LD) memmap.obj $(FOXLIB)	# note: create console app
 
 wizard.exe: $(FOXLIB) wizard.obj
 	$(LD) $(LDFLAGS) wizard.obj $(FOXLIB)

@@ -3,7 +3,7 @@
 *                          C o l o r   S e l e c t o r                          *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1998,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXColorSelector.h,v 1.24 2004/02/08 17:17:33 fox Exp $                   *
+* $Id: FXColorSelector.h,v 1.26 2005/01/16 16:06:06 fox Exp $                   *
 ********************************************************************************/
 #ifndef FXCOLORSELECTOR_H
 #define FXCOLORSELECTOR_H
@@ -78,8 +78,6 @@ private:
   FXColorSelector(const FXColorSelector&);
   FXColorSelector &operator=(const FXColorSelector&);
 public:
-  long onCmdColor(FXObject*,FXSelector,void*);
-  long onChgColor(FXObject*,FXSelector,void*);
   long onCmdWell(FXObject*,FXSelector,void*);
   long onChgWell(FXObject*,FXSelector,void*);
   long onCmdRGBSlider(FXObject*,FXSelector,void*);
@@ -135,7 +133,6 @@ public:
     ID_COLOR_BAR,
     ID_COLOR_LIST,
     ID_WELL_CHANGED,
-    ID_COLOR,
     ID_ACTIVEPANE,
     ID_ALPHA_SLIDER,
     ID_ALPHA_TEXT,

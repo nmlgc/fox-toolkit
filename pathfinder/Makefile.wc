@@ -3,9 +3,9 @@
 #                       FOX:  A Free C++ Class Library for X                 #
 #                                                                            #
 ##############################################################################
-# Copyright (C) 1997,2003 by Jeroen van der Zijp.   All Rights Reserved.     #
+# Copyright (C) 1997,2005 by Jeroen van der Zijp.   All Rights Reserved.     #
 ##############################################################################
-# $Id: Makefile.wc,v 1.5 2004/03/10 23:19:41 fox Exp $                       #
+# $Id: Makefile.wc,v 1.7 2005/02/04 04:33:19 fox Exp $                       #
 ##############################################################################
 # This library is free software; you can redistribute it and/or              #
 # modify it under the terms of the GNU Library General Public                #
@@ -31,7 +31,7 @@ DEFINES   = -DNDEBUG -DFOX_BIGENDIAN=0 -DWIN32 -D_WINDOWS
 LD	  = wcl386
 LDFLAGS   = -l=nt_win
 INCDIRS   = -I$(TOPDIR)\include
-FOXLIB    = $(TOPDIR)\src\FOX-1.1.lib $(%WATCOM)\lib386\nt\comctl32.lib $(%WATCOM)\lib386\nt\wsock32.lib
+FOXLIB    = $(TOPDIR)\src\FOX-1.4.lib $(%WATCOM)\lib386\nt\comctl32.lib $(%WATCOM)\lib386\nt\wsock32.lib
 RESWRAP   = $(TOPDIR)\utils\reswrap.exe
 
 PROGRAMS  = PathFinder.exe

@@ -3,7 +3,7 @@
 *      F i l e   I n f o r m a t i o n   a n d   M a n i p u l a t i o n        *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2000,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 2000,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXFile.h,v 1.65 2004/02/08 17:17:33 fox Exp $                            *
+* $Id: FXFile.h,v 1.69 2005/01/16 16:06:06 fox Exp $                            *
 ********************************************************************************/
 #ifndef FXFILE_H
 #define FXFILE_H
@@ -45,8 +45,11 @@ enum {
   };
 
 
-namespace FXFile {      // FIXME do we still need FXFile namespace at all?
+namespace FXFile {
 
+
+/// Get current user name
+FXString FXAPI getCurrentUserName();
 
 /// Return value of environment variable name
 FXString FXAPI getEnvironment(const FXString& name);
@@ -238,7 +241,7 @@ FXString FXAPI group(const FXString& file);
 FXString FXAPI permissions(FXuint mode);
 
 /// Return file size in bytes
-unsigned long FXAPI size(const FXString& file);
+FXlong FXAPI size(const FXString& file);
 
 /**
 * Return last modified time for this file, on filesystems

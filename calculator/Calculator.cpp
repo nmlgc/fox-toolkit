@@ -3,7 +3,7 @@
 *                  F O X   D e s k t o p   C a l c u l a t o r                  *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2001,2003 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 2001,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This program is free software; you can redistribute it and/or modify          *
 * it under the terms of the GNU General Public License as published by          *
@@ -19,7 +19,7 @@
 * along with this program; if not, write to the Free Software                   *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: Calculator.cpp,v 1.50 2004/03/02 16:37:19 fox Exp $                      *
+* $Id: Calculator.cpp,v 1.54 2005/01/16 16:06:06 fox Exp $                      *
 ********************************************************************************/
 #include "fx.h"
 #include "fxkeys.h"
@@ -207,8 +207,8 @@ Calculator::Calculator(FXApp* a):FXMainWindow(a,"FOX Calculator",NULL,NULL,DECOR
   // Interior
   FXVerticalFrame *vert=new FXVerticalFrame(this,LAYOUT_FILL_X,0,0,0,0, 8,8,8,4, 1,1);
   FXHorizontalFrame *displayframe=new FXHorizontalFrame(vert,LAYOUT_FILL_X,0,0,0,0, 0,0,0,0);
-  new FXButton(displayframe,"FOX Calculator",bigicon,this,ID_PREFERENCES,ICON_BEFORE_TEXT|JUSTIFY_LEFT|LAYOUT_FILL_X|LAYOUT_FILL_Y,0,0,0,0, 4,4,2,2);
-  new FXButton(displayframe,NULL,quest,this,ID_QUESTION,ICON_BEFORE_TEXT|JUSTIFY_LEFT|LAYOUT_FILL_X|LAYOUT_FILL_Y,0,0,0,0, 4,4,2,2);
+  new FXButton(displayframe,"FOX Calculator",bigicon,this,ID_PREFERENCES,ICON_BEFORE_TEXT|JUSTIFY_LEFT|LAYOUT_FILL_Y,0,0,0,0, 4,4,2,2);
+  new FXButton(displayframe,NULL,quest,this,ID_QUESTION,ICON_BEFORE_TEXT|JUSTIFY_LEFT|LAYOUT_FILL_Y,0,0,0,0, 4,4,2,2);
   display=new FXTextField(displayframe,16,this,ID_TEXT,TEXTFIELD_READONLY|FRAME_SUNKEN|FRAME_THICK|JUSTIFY_RIGHT|LAYOUT_FILL_X|LAYOUT_FILL_Y, 0,0,0,0, 4,4,1,1);
   new FXLabel(vert,NULL,cmem,LAYOUT_RIGHT,0,0,0,0, 0,0,0,0);
 
@@ -1060,15 +1060,12 @@ void Calculator::unary(FXuchar op){
       break;
     case UN_ASINH:
       acc=log(val+sqrt(val*val+1.0));   // Tired of #ifdef's:- just expand definitions (Abramowitz & Stegun, pp. 87)
-      //acc=asinh(val);
       break;
     case UN_ACOSH:
       acc=log(val+sqrt(val*val-1.0));   // Same here
-      //acc=acosh(val);
       break;
     case UN_ATANH:
       acc=0.5*log((1.0+val)/(1.0-val)); // And here
-      //acc=atanh(val);
     default:
       break;
     }

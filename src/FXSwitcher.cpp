@@ -3,7 +3,7 @@
 *                      S w i t c h   P a n e l   C l a s s                      *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,18 +19,19 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXSwitcher.cpp,v 1.26 2004/02/08 17:29:07 fox Exp $                      *
+* $Id: FXSwitcher.cpp,v 1.32 2005/01/16 16:06:07 fox Exp $                      *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
 #include "fxdefs.h"
+#include "FXHash.h"
+#include "FXThread.h"
 #include "FXStream.h"
 #include "FXString.h"
 #include "FXSize.h"
 #include "FXPoint.h"
 #include "FXRectangle.h"
 #include "FXRegistry.h"
-#include "FXHash.h"
 #include "FXApp.h"
 #include "FXDCWindow.h"
 #include "FXSwitcher.h"
@@ -175,8 +176,8 @@ void FXSwitcher::layout(){
 void FXSwitcher::setCurrent(FXint panel,FXbool notify){
   if(0<=panel && panel<numChildren() && current!=panel){
     current=panel;
-    if(notify && target){ target->handle(this,FXSEL(SEL_COMMAND,message),(void*)(FXival)current); }
     recalc();
+    if(notify && target){ target->tryHandle(this,FXSEL(SEL_COMMAND,message),(void*)(FXival)current); }
     }
   }
 

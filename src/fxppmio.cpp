@@ -3,7 +3,7 @@
 *                          P P M   I n p u t / O u t p u t                      *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2003,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 2003,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,11 +19,12 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: fxppmio.cpp,v 1.5 2004/04/08 16:24:48 fox Exp $                          *
+* $Id: fxppmio.cpp,v 1.10 2005/01/16 16:06:07 fox Exp $                          *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
 #include "fxdefs.h"
+#include "FXHash.h"
 #include "FXStream.h"
 
 
@@ -42,6 +43,7 @@ using namespace FX;
 namespace FX {
 
 
+extern FXAPI FXbool fxcheckPPM(FXStream& store);
 extern FXAPI FXbool fxloadPPM(FXStream& store,FXColor*& data,FXint& width,FXint& height);
 extern FXAPI FXbool fxsavePPM(FXStream& store,const FXColor *data,FXint width,FXint height);
 
@@ -66,6 +68,15 @@ static FXint getint(FXStream& store){
     if(c<'0' || c>'9') break;
     }
   return num;
+  }
+
+
+// Check if stream contains a PPM
+FXbool fxcheckPPM(FXStream& store){
+  FXuchar signature[2];
+  store.load(signature,2);
+  store.position(-2,FXFromCurrent);
+  return signature[0]=='P' && '1'<=signature[1] && signature[1]<='6';
   }
 
 
@@ -184,7 +195,7 @@ FXbool fxloadPPM(FXStream& store,FXColor*& data,FXint& width,FXint& height){
       break;
     }
 
-  return FALSE;
+  return TRUE;
   }
 
 

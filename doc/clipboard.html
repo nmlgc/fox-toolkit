@@ -22,7 +22,7 @@ Documentation: Clipboard and Primary Selection <A href='clipboard.html' target="
   <p>
   <li><b>Clipboard</b>.  The clipboard is used by typically selecting some object
   or text and <em>copying</em> it to the clipboard using <b>Ctrl-C</b>, or <em>cutting</em>
-  it to the clipboard using <b>Ctrl-X</b>. 
+  it to the clipboard using <b>Ctrl-X</b>.
   Next you can move to another application and <em>pasted</em> the object or text
   into it by using <b>Ctrl-V</b>.<br>
   Conceptually, the clipboard is a memory region which holds on to a copy of the object
@@ -32,7 +32,7 @@ Documentation: Clipboard and Primary Selection <A href='clipboard.html' target="
   memory region serving all applications on the desktop.
   </li>
   <p>
-  <li><b>Primary Selection</b>.  The primary selection is silently established by 
+  <li><b>Primary Selection</b>.  The primary selection is silently established by
   selecting some text in a text field.  It can be <em>pasted</em> into another text
   field simply by using the middle mouse button.  Unlike the clipboard, there is
   no memory region to remember the primary selection other than the selection
@@ -51,13 +51,13 @@ Documentation: Clipboard and Primary Selection <A href='clipboard.html' target="
   <p>
   Whether using the clipboard, drag and drop, or primary selection, applications
   must first agree on the <em>types</em> of data being exchanged.  A single piece
-  of data, for example, an image, may be exchanged using different representations.  
+  of data, for example, an image, may be exchanged using different representations.
   For an image, for instance, the transfer may take place as GIF or BMP formats.
   <p>
   To increase the odds that both the originating application and the receiving one
   support the same data representations, the originating application can furnish
   its list of supported representations for the data.  The receiving application,
-  after inspecting this list, can then ask for the one format of the supplied list 
+  after inspecting this list, can then ask for the one format of the supplied list
   it also supports.
 </ul>
 
@@ -75,7 +75,7 @@ Registering Clipboard Types
   drag type yields a unique number which is guaranteed to be the same for
   all applications on the desktop.<br>
   The Drag Type is created by calling the function:
-  
+
 <pre>
 FXDragType FXApp::<B>registerDragType</B>(const FXString&amp; name) const;
 </pre>
@@ -116,7 +116,7 @@ Clipboard Exchange
   <br>
   The clipboard is said to be <b>owned</b> by a <b>window</b>, meaning that whenever
   such a query must be asnwered, that particular window is the one which will be
-  asked. 
+  asked.
   <br>
   The advantage of this model is that it permits an easy-going decentralized
   scheme where 3rd-party widgets can implement any number of clipboard data types
@@ -126,7 +126,7 @@ Clipboard Exchange
   the clipboard selection, yet will only be called upon to actually supply one
   of these formats during the transaction.
   <p>
-  Upon performing a Cut or Copy to clipboard operation, the originating widget 
+  Upon performing a Cut or Copy to clipboard operation, the originating widget
   will claim ownership of the clipboard by calling:
 
 <pre>
@@ -173,7 +173,7 @@ long MyWidget::onClipboardLost(FXObject* sender,FXSelector sel,void* ptr){
 </pre>
 
 <p>
-A widget which wants to obtain the clipboard selection can ask for the entire 
+A widget which wants to obtain the clipboard selection can ask for the entire
 list of clipboard types by calling:
 
 <pre>
@@ -236,7 +236,7 @@ After handing the array to setDNDData(), the originating widget <em>no longer ow
 data array and should make NO attempts to free it!
 <p>
 To figure out which datatype was requested by the requesting widget, the originating
-widget can inspect the <em>target</em> member of the FXEvent structure passed in the 
+widget can inspect the <em>target</em> member of the FXEvent structure passed in the
 SEL_CLIPBOARD_REQUEST message pointer.
 <p>
 A typical widget implementation first lets its base class inspect the Drag Type,
@@ -246,7 +246,7 @@ long MyWidget::onClipboardRequest(FXObject* sender,FXSelector sel,void* ptr){
 
   // See if base class knows how to deal with the requested clipboard type
   if(BaseClassOfMyWidget::onClipboardRequest(sender,sel,ptr)) return 1;
-  
+
   // See if we can deal with this type ourselves
   if(((FXEvent*)ptr)->target==mydataType){
     FXuchar *data;
@@ -256,10 +256,10 @@ long MyWidget::onClipboardRequest(FXObject* sender,FXSelector sel,void* ptr){
     ...
     fill data
     ...
-    
+
     // Give the array to the system!
     setDNDData(FROM_CLIPBOARD,event->target,data,len);
-    
+
     // Return 1 because it was handled here
     return 1;
     }
@@ -292,15 +292,15 @@ support the same set of clipboard types so it is appropriate to remember the
 clipboard type in a static member variable.</li>
 <p>
 <li>When performing a Cut or Copy to clipboard operation, call acquireClipboard(), and
-if successfully obtaining the clipboard, allocate the necessary memory for keeping a 
+if successfully obtaining the clipboard, allocate the necessary memory for keeping a
 copy of the clipboard selection data.</li>
 <p>
-<li>Alternatively, allocate the memory and remember the clipboard selection when the 
+<li>Alternatively, allocate the memory and remember the clipboard selection when the
 SEL_CLIPBOARD_GAINED is received.</li>
 <p>
 <li>Sit there and wait for a SEL_CLIPBOARD_REQUEST message.  If a request is received,
 try handle the request in the base class, and if still not handled, try handle it
-in the widget.  
+in the widget.
 <br>
 Return 1 only if it was handled.</li>
 <p>
@@ -322,7 +322,7 @@ Clipboard Requestor
 The requestor's responsibilities in a clipboard transaction are as follows:
 <p>
 <li>Upon performing a Paste command, determine the type of data using inquireDNDTypes()
-or offeredDNDType().  Then ask for the data using getDNDData(), passing in the 
+or offeredDNDType().  Then ask for the data using getDNDData(), passing in the
 requested data type, which is typically one of the data types furnished by the
 originator.</li>
 <p>
@@ -340,7 +340,7 @@ Primary Selection Exchange
 <!--- TOPIC TITLE -->
 <ul>
 The primary selection data exchange mechanism is pretty much the same as that for
-the clipboard.  
+the clipboard.
 <br>
 The key difference is that typically, no copy is made of the selection.  As soon as
 some text is selected, the originating window acquires the primary selection.
@@ -358,7 +358,7 @@ to <b>FROM_SELECTION</b>.
 <p>
 <table width=100% cellpadding=0 cellspacing=0><tr><td width=100% valign=top id=HEADLINE align=right>
 <img src='art/line.gif' width=100% height=1>
-<font size=-1>Copyright &copy; 1997-2004 Jeroen van der Zijp</font>
+<font size=-1>Copyright &copy; 1997-2005 Jeroen van der Zijp</font>
 </td></tr></table>
 </p>
 <!--- COPYRIGHT -->

@@ -3,7 +3,7 @@
 *                    I R I S   R G B   I n p u t / O u t p u t                  *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2002,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 2002,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,11 +19,12 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: fxrgbio.cpp,v 1.18 2004/04/08 16:24:48 fox Exp $                         *
+* $Id: fxrgbio.cpp,v 1.22 2005/01/16 16:06:07 fox Exp $                         *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
 #include "fxdefs.h"
+#include "FXHash.h"
 #include "FXStream.h"
 
 
@@ -41,6 +42,7 @@ using namespace FX;
 namespace FX {
 
 
+extern FXAPI FXbool fxcheckRGB(FXStream& store);
 extern FXAPI FXbool fxloadRGB(FXStream& store,FXColor*& data,FXint& width,FXint& height);
 extern FXAPI FXbool fxsaveRGB(FXStream& store,const FXColor *data,FXint width,FXint height);
 
@@ -91,16 +93,21 @@ static void expandrow(FXuchar* optr,FXuchar *iptr){   // FIXME bad data could bl
   }
 
 
+// Check if stream contains a RGB
+FXbool fxcheckRGB(FXStream& store){
+  FXshort signature;
+  signature=read16(store);
+  store.position(-2,FXFromCurrent);
+  return signature==474;
+  }
+
+
 // Load image from stream
 FXbool fxloadRGB(FXStream& store,FXColor*& data,FXint& width,FXint& height){
-  register FXint i,j,c,base,nchannels,dimension,tablen,magic,start,sub,t;
-  FXuchar  storage;
-  FXuchar  bpc;
-  FXuchar  temp[4096];
-  FXuint  *starttab;
-  FXuint  *lengthtab;
-  FXint    total;
-  FXuchar *array;
+  FXint i,j,c,nchannels,dimension,tablen,magic,sub,t,total;
+  FXuchar temp[4096],*array,storage,bpc;
+  FXuint *starttab,*lengthtab;
+  FXlong base,start;
 
   // Null out
   data=NULL;

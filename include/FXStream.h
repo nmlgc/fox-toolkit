@@ -3,7 +3,7 @@
 *       P e r s i s t e n t   S t o r a g e   S t r e a m   C l a s s e s       *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXStream.h,v 1.29 2004/01/13 20:56:04 fox Exp $                          *
+* $Id: FXStream.h,v 1.37 2005/01/16 16:06:06 fox Exp $                          *
 ********************************************************************************/
 #ifndef FXSTREAM_H
 #define FXSTREAM_H
@@ -76,30 +76,23 @@ enum FXWhence {
 * A special container object may be passed in which is placed in the table
 * as if it had been encountered before; this will cause only references to this
 * object to be saved.  The container object is typically the top-level document
-* object which manages all objects contained by it.
+* object which manages all objects contained by it.  Additional objects may be
+* added using addObject(); these will not be actually saved or loaded.
 */
 class FXAPI FXStream {
-private:
-  struct FXStreamHashEntry {
-    FXuint    ref;              // Object reference number
-    FXObject* obj;              // Pointer to object
-    };
-private:
-  const FXObject*    parent;    // Parent object
-  FXStreamHashEntry* table;     // Hash table
-  FXuint             ntable;    // Table size
-  FXuint             no;        // Count objects
-  FXbool             swap;      // Swap bytes on readin
-  void               grow();    // Enlarge the table
 protected:
+  FXHash             hash;      // Hash table
+  const FXObject    *parent;    // Parent object
   FXuchar           *begptr;    // Begin of buffer
   FXuchar           *endptr;    // End of buffer
   FXuchar           *wrptr;     // Write pointer
   FXuchar           *rdptr;     // Read pointer
-  unsigned long      pos;       // Position
+  FXlong             pos;       // Position
   FXStreamDirection  dir;       // Direction of current transfer
   FXStreamStatus     code;      // Status code
+  FXuint             seq;       // Sequence number
   FXbool             owns;      // Stream owns buffer
+  FXbool             swap;      // Swap bytes on readin
 protected:
 
   /**
@@ -160,10 +153,10 @@ public:
   const FXObject* container() const { return parent; }
 
   /// Get position
-  unsigned long position() const { return pos; }
+  FXlong position() const { return pos; }
 
   /// Move to position relative to head, tail, or current location
-  virtual FXbool position(long offset,FXWhence whence=FXFromStart);
+  virtual FXbool position(FXlong offset,FXWhence whence=FXFromStart);
 
   /**
   * Change swap bytes flag.
@@ -175,8 +168,17 @@ public:
   */
   FXbool swapBytes() const { return swap; }
 
-  /// Return implementation's endianness
-  static FXbool isLittleEndian(){ return !FOX_BIGENDIAN; }
+  /**
+  * Set stream to big endian mode if TRUE.  Byte swapping will
+  * be enabled if the machine native byte order is not equal to
+  * the desired byte order.
+  */
+  void setBigEndian(FXbool big){ swap=(big^FOX_BIGENDIAN); }
+
+  /**
+  * Return TRUE if big endian mode.
+  */
+  FXbool isBigEndian() const { return (swap^FOX_BIGENDIAN); }
 
   /// Save single items to stream
   FXStream& operator<<(const FXuchar& v);
@@ -187,10 +189,8 @@ public:
   FXStream& operator<<(const FXint& v){ return *this << reinterpret_cast<const FXuint&>(v); }
   FXStream& operator<<(const FXfloat& v){ return *this << reinterpret_cast<const FXuint&>(v); }
   FXStream& operator<<(const FXdouble& v);
-#ifdef FX_LONG
   FXStream& operator<<(const FXlong& v){ return *this << reinterpret_cast<const FXdouble&>(v); }
   FXStream& operator<<(const FXulong& v){ return *this << reinterpret_cast<const FXdouble&>(v); }
-#endif
 
   /// Save arrays of items to stream
   FXStream& save(const FXuchar* p,unsigned long n);
@@ -201,10 +201,8 @@ public:
   FXStream& save(const FXint* p,unsigned long n){ return save(reinterpret_cast<const FXuint*>(p),n); }
   FXStream& save(const FXfloat* p,unsigned long n){ return save(reinterpret_cast<const FXuint*>(p),n); }
   FXStream& save(const FXdouble* p,unsigned long n);
-#ifdef FX_LONG
   FXStream& save(const FXlong* p,unsigned long n){ return save(reinterpret_cast<const FXdouble*>(p),n); }
   FXStream& save(const FXulong* p,unsigned long n){ return save(reinterpret_cast<const FXdouble*>(p),n); }
-#endif
 
   /// Load single items from stream
   FXStream& operator>>(FXuchar& v);
@@ -215,10 +213,8 @@ public:
   FXStream& operator>>(FXint& v){ return *this >> reinterpret_cast<FXuint&>(v); }
   FXStream& operator>>(FXfloat& v){ return *this >> reinterpret_cast<FXuint&>(v); }
   FXStream& operator>>(FXdouble& v);
-#ifdef FX_LONG
   FXStream& operator>>(FXlong& v){ return *this >> reinterpret_cast<FXdouble&>(v); }
   FXStream& operator>>(FXulong& v){ return *this >> reinterpret_cast<FXdouble&>(v); }
-#endif
 
   /// Load arrays of items from stream
   FXStream& load(FXuchar* p,unsigned long n);
@@ -229,16 +225,17 @@ public:
   FXStream& load(FXint* p,unsigned long n){ return load(reinterpret_cast<FXuint*>(p),n); }
   FXStream& load(FXfloat* p,unsigned long n){ return load(reinterpret_cast<FXuint*>(p),n); }
   FXStream& load(FXdouble* p,unsigned long n);
-#ifdef FX_LONG
   FXStream& load(FXlong* p,unsigned long n){ return load(reinterpret_cast<FXdouble*>(p),n); }
   FXStream& load(FXulong* p,unsigned long n){ return load(reinterpret_cast<FXdouble*>(p),n); }
-#endif
 
   /// Save object
   FXStream& saveObject(const FXObject* v);
 
   /// Load object
   FXStream& loadObject(FXObject*& v);
+
+  /// Add object without saving or loading
+  FXStream& addObject(const FXObject* v);
 
   /// Destructor
   virtual ~FXStream();

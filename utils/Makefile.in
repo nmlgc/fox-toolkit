@@ -99,13 +99,15 @@ X_BASE_LIBS = @X_BASE_LIBS@
 
 CXXFLAGS = @CXXFLAGS@ @X_CFLAGS@
 
+LIBS = 
+
 bin_PROGRAMS = reswrap
 
 man_MANS = reswrap.1
 
 reswrap_SOURCES = reswrap.cpp
 
-EXTRA_DIST = $(man_MANS)                   maketree                   Makefile.bc                   Makefile.icc                   Makefile.wc                   Makefile.dmc
+EXTRA_DIST = $(man_MANS)                   maketree                   Makefile.bc                   Makefile.wc                   Makefile.dmc
 
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_CLEAN_FILES = 
@@ -116,7 +118,6 @@ PROGRAMS =  $(bin_PROGRAMS)
 DEFS = @DEFS@ -I. -I$(srcdir) 
 CPPFLAGS = @CPPFLAGS@
 LDFLAGS = @LDFLAGS@
-LIBS = @LIBS@
 X_CFLAGS = @X_CFLAGS@
 X_LIBS = @X_LIBS@
 X_EXTRA_LIBS = @X_EXTRA_LIBS@

@@ -18,8 +18,6 @@ private:
   FXHorizontalFrame *contents;                // Content frame
   FXVerticalFrame   *canvasFrame;             // Canvas frame
   FXVerticalFrame   *buttonFrame;             // Button frame
-  FXRuler           *hruler;                  // Horizontal ruler
-  FXRuler           *vruler;                  // Vertical ruler
   FXCanvas          *canvas;                  // Canvas to draw into
   int                mdflag;                  // Mouse button down?
   int                dirty;                   // Canvas has been painted?
@@ -53,6 +51,8 @@ public:
 
   // Initialize
   virtual void create();
+
+  virtual ~ScribbleWindow();
   };
 
 
@@ -90,17 +90,9 @@ ScribbleWindow::ScribbleWindow(FXApp *a):FXMainWindow(a,"Scribble Application",N
     // Horizontal divider line
     new FXHorizontalSeparator(canvasFrame,SEPARATOR_GROOVE|LAYOUT_FILL_X);
 
-    // Frame
-    FXVerticalFrame *canvasBox=new FXVerticalFrame(canvasFrame,FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_FILL_Y,0,0,0,0, 0,0,0,0, 0,0);
-    FXMatrix *canvasmat=new FXMatrix(canvasBox,2,MATRIX_BY_COLUMNS|LAYOUT_FILL_X|LAYOUT_FILL_Y,0,0,0,0, 0,0,0,0, 0,0);
-    new FXFrame(canvasmat,LAYOUT_FILL_X|LAYOUT_FILL_Y);
-    hruler=new FXRuler(canvasmat,NULL,0,RULER_HORIZONTAL|RULER_NUMBERS|RULER_TICKS_CENTER|RULER_ARROW|RULER_MARKERS|LAYOUT_FILL_X|LAYOUT_FILL_COLUMN);
-    vruler=new FXRuler(canvasmat,NULL,0,RULER_VERTICAL|RULER_NUMBERS|RULER_TICKS_CENTER|RULER_ARROW|RULER_MARKERS|LAYOUT_FILL_Y|LAYOUT_FILL_ROW);
-//    hruler=new FXRuler(canvasmat,NULL,0,RULER_HORIZONTAL|RULER_TICKS_CENTER|RULER_ARROW|RULER_MARKERS|LAYOUT_FILL_X|LAYOUT_FILL_COLUMN,0,0,0,0,4,4,4,4);
-//    vruler=new FXRuler(canvasmat,NULL,0,RULER_VERTICAL|RULER_TICKS_CENTER|RULER_ARROW|RULER_MARKERS|LAYOUT_FILL_Y|LAYOUT_FILL_ROW,0,0,0,0,4,4,4,4);
 
     // Drawing canvas
-    canvas=new FXCanvas(canvasmat,this,ID_CANVAS,FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_FILL_Y|LAYOUT_FILL_ROW|LAYOUT_FILL_COLUMN);
+    canvas=new FXCanvas(canvasFrame,this,ID_CANVAS,FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_FILL_Y|LAYOUT_FILL_ROW|LAYOUT_FILL_COLUMN);
 
   // RIGHT pane for the buttons
   buttonFrame=new FXVerticalFrame(contents,FRAME_SUNKEN|LAYOUT_FILL_Y|LAYOUT_TOP|LAYOUT_LEFT,0,0,0,0,10,10,10,10);
@@ -123,6 +115,9 @@ ScribbleWindow::ScribbleWindow(FXApp *a):FXMainWindow(a,"Scribble Application",N
   dirty=0;
   }
 
+
+ScribbleWindow::~ScribbleWindow(){
+  }
 
 
 // Create and initialize
@@ -152,10 +147,6 @@ long ScribbleWindow::onMouseDown(FXObject*,FXSelector,void*){
 // The mouse has moved, draw a line
 long ScribbleWindow::onMouseMove(FXObject*, FXSelector, void* ptr){
   FXEvent *ev=(FXEvent*)ptr;
-
-  // Update ruler arrow locations
-  hruler->setValue(ev->win_x);
-  vruler->setValue(ev->win_y);
 
   // Draw
   if(mdflag){

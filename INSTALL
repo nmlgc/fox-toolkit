@@ -34,7 +34,7 @@ For most unix systems you can configure simply as:
 You can disable OpenGL support by configuring as:
 
 
-        ./configure --disable-opengl.
+        ./configure --with-opengl=no
 
 
 After configure runs its course, simply type ``make'' to build the library,
@@ -56,6 +56,36 @@ Specifically, to remain portable application programs should NOT include any X
 window header files.
 
 You may of course need other system headers ("stdio.h", "gl.h", etc).
+
+
+
+Enabling XFT Support.
+=====================
+
+On Linux systems, you can turn on XFT anti-aliased font support.
+
+
+        ./configure --with-xft=yes
+
+
+For portability reasons, the default of this settings is off.
+
+
+
+XCursor Support.
+================
+
+FOX supports Xcursor support where available.  This is normally turned on,
+allowing full alpha-blended cursor support. However, you can disable if
+desired:
+
+
+        ./configure --with-xcursor=no
+
+This will cause to revert to vanilla black/white cursor support only; note
+that your color cursors will still work: they will be thresholded to black
+and white depending on brightness.
+
 
 
 Building for Debug or Release.
@@ -99,6 +129,22 @@ certain systems where shared library support is lacking]:
 to build shared library only:
 
         ./configure  --disable-static
+
+
+
+Thread-safe support.
+====================
+
+It is highly recommended to build FOX with thread-safe API's wherever
+possible; this is accomplished using:
+
+
+        ./configure --enable-threadsafe
+
+Enabling thread-safe will cause FOX to use the thread-safe equivalent
+API's for some common C library functions like getpwuid(), readdir()
+and so on.
+
 
 
 
@@ -197,6 +243,19 @@ library from http://www.graphicswiz.com/png/ and compile it, and pass the
 appropriate flags for your compiler to find the new version.
 If compiling without PNG, pass the flag:  --disable-png; likewise, you
 can disable JPEG with the flag: --disable-jpeg.
+
+
+SGI Altix
+=========
+
+Using Intel C++ compiler on IA64-based Altix system, drop optimization level
+to -O1:
+
+        setenv CXX "icpc -O1"
+        setenv CC "icc -O1"
+
+
+Full optimization with icc compiler appears to generate incorrect code.
 
 
 Using gcc 2.95.2 on IRIX 6.x (Thanks to Theo Venker)
@@ -467,6 +526,7 @@ Applications Using FOX", available in this distribution as the file
 "doc/win32.html".
 
 
+
 Building FOX using Cygwin 1.1
 =============================
 
@@ -521,6 +581,10 @@ When building on Mac OS-X, the following might help:
 
 
 This might help; no guarantees, I can not test this myself....
+For more information, see:
+
+        http://freeride.rubyforge.org/wiki/wiki.pl?MacOSXInstall
+
 
 
 

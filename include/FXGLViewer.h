@@ -3,7 +3,7 @@
 *                      O p e n G L   V i e w e r   W i d g e t                  *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXGLViewer.h,v 1.69 2004/02/20 16:29:39 fox Exp $                        *
+* $Id: FXGLViewer.h,v 1.73 2005/01/16 16:06:06 fox Exp $                        *
 ********************************************************************************/
 #ifndef FXGLVIEWER_H
 #define FXGLVIEWER_H
@@ -88,7 +88,7 @@ typedef FXbool (*FXZSortFunc)(FXfloat*& buffer,FXint& used,FXint& size);
 /********************************  Viewer  Class  ******************************/
 
 
-/// Canvas, an area drawn by another object
+/// OpenGL viewer widget
 class FXAPI FXGLViewer : public FXGLCanvas {
   FXDECLARE(FXGLViewer)
   friend class FXGLObject;
@@ -150,8 +150,8 @@ protected:
 protected:
   FXGLViewer();
   void glsetup();
-  void updateProjection();
-  void updateTransform();
+  virtual void updateProjection();
+  virtual void updateTransform();
   FXVec3f spherePoint(FXint px,FXint py);
   FXQuatf turn(FXint fx,FXint fy,FXint tx,FXint ty);
   void drawWorld(FXViewport& wv);
@@ -358,7 +358,7 @@ public:
   virtual FXGLObject* pick(FXint x,FXint y);
 
   /// Change the model bounding box; this adjusts the viewer
-  FXbool setBounds(const FXRangef& box);
+  virtual FXbool setBounds(const FXRangef& box);
 
   /// Fit viewer to the given bounding box
   FXbool fitToBounds(const FXRangef& box);
@@ -445,13 +445,13 @@ public:
   void setHelpText(const FXString& text);
 
   /// Return help text
-  FXString getHelpText() const { return help; }
+  const FXString& getHelpText() const { return help; }
 
   /// Change tip text
   void setTipText(const FXString&  text);
 
   /// Return tip text
-  FXString getTipText() const { return tip; }
+  const FXString& getTipText() const { return tip; }
 
   /// Return the current transformation matrix
   const FXMat4f& getTransform() const { return transform; }

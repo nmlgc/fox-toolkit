@@ -3,7 +3,7 @@
 *                     D i r e c t o r y   L i s t   O b j e c t                 *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1998,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,12 +19,14 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXDirList.cpp,v 1.130 2004/02/08 17:29:06 fox Exp $                      *
+* $Id: FXDirList.cpp,v 1.137 2005/01/16 16:06:07 fox Exp $                      *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
 #include "fxdefs.h"
 #include "fxkeys.h"
+#include "FXHash.h"
+#include "FXThread.h"
 #include "FXStream.h"
 #include "FXString.h"
 #include "FXSize.h"
@@ -34,7 +36,6 @@
 #include "FXURL.h"
 #include "FXSettings.h"
 #include "FXRegistry.h"
-#include "FXHash.h"
 #include "FXApp.h"
 #include "FXFont.h"
 #include "FXIcon.h"
@@ -724,7 +725,7 @@ void FXDirList::listRootItems(){
   FXFileAssoc *fileassoc;
 
   // First time, make root node
-  if(!item) item=list=(FXDirItem*)addItemLast(NULL,PATHSEPSTRING,harddiskicon,harddiskicon,NULL,TRUE);
+  if(!item) item=list=(FXDirItem*)appendItem(NULL,PATHSEPSTRING,harddiskicon,harddiskicon,NULL,TRUE);
 
   // Root is a directory, has items under it, and is searchable
   item->state|=FXDirItem::FOLDER|FXDirItem::HASITEMS;
@@ -745,7 +746,7 @@ void FXDirList::listRootItems(){
   // Update item information
   item->openIcon=openicon;
   item->closedIcon=closedicon;
-  item->size=0;
+  item->size=0L;
   item->assoc=fileassoc;
   item->date=0;
 
@@ -831,7 +832,7 @@ void FXDirList::listChildItems(FXDirItem *par){
         }
 
       // Not found; prepend before list
-      item=(FXDirItem*)addItemLast(par,name,open_folder,closed_folder,NULL,TRUE);
+      item=(FXDirItem*)appendItem(par,name,open_folder,closed_folder,NULL,TRUE);
 
       // Next gets hung after this one
 fnd:  *pn=item;
@@ -878,7 +879,7 @@ fnd:  *pn=item;
       // Update item information
       item->openIcon=openicon;
       item->closedIcon=closedicon;
-      item->size=(unsigned long)info.st_size;
+      item->size=info.st_size;
       item->assoc=fileassoc;
       item->date=info.st_mtime;
 
@@ -918,7 +919,7 @@ fnd:  *pn=item;
 
 // Convert FILETIME (# 100ns since 01/01/1601) to time_t (# s since 01/01/1970)
 static time_t fxfiletime(const FILETIME& ft){
-  FXlong ll=(((FXlong)ft.dwHighDateTime)<<32) | (FXlong)ft.dwLowDateTime;
+  FXlong ll=(((FXlong)ft.dwHighDateTime)<<32)+((FXlong)ft.dwLowDateTime);
 #if defined(__CYGWIN__) || defined(__MINGW32__)
   ll=ll-116444736000000000LL;
 #elif defined(__WATCOM_INT64__)
@@ -967,7 +968,7 @@ void FXDirList::listRootItems(){
       }
 
     // Not found; prepend before list
-    item=(FXDirItem*)addItemLast(NULL,name,open_folder,closed_folder,NULL,TRUE);
+    item=(FXDirItem*)appendItem(NULL,name,open_folder,closed_folder,NULL,TRUE);
 
     // Next gets hung after this one
 fnd:*pn=item;
@@ -1024,7 +1025,7 @@ fnd:*pn=item;
     // Update item information
     item->openIcon=openicon;
     item->closedIcon=closedicon;
-    item->size=0;
+    item->size=0L;
     item->assoc=fileassoc;
     item->date=0;
 
@@ -1111,7 +1112,7 @@ void FXDirList::listChildItems(FXDirItem *par){
         }
 
       // Not found; prepend before list
-      item=(FXDirItem*)addItemLast(par,name,open_folder,closed_folder,NULL,TRUE);
+      item=(FXDirItem*)appendItem(par,name,open_folder,closed_folder,NULL,TRUE);
 
       // Next gets hung after this one
 fnd:  *pn=item;
@@ -1155,7 +1156,7 @@ fnd:  *pn=item;
       // Update item information
       item->openIcon=openicon;
       item->closedIcon=closedicon;
-      item->size=ffData.nFileSizeLow;
+      item->size=(((FXlong)ffData.nFileSizeHigh)<<32)+((FXlong)ffData.nFileSizeLow);
       item->assoc=fileassoc;
       item->date=fxfiletime(ffData.ftLastWriteTime);
 

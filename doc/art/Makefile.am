@@ -1,6 +1,8 @@
 ## Process this file with automake to produce Makefile.in
 
-artdir = $(prefix)/@PACKAGE@/html/art
+#artdir = $(prefix)/@PACKAGE@/html/art
+artdir = $(datadir)/doc/@PACKAGE@-@FOX_MAJOR_VERSION@.@FOX_MINOR_VERSION@/html/art
+
 
 ART_FILES = \
 bigpenguin.png \

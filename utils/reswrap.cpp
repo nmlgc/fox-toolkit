@@ -3,7 +3,7 @@
 *                R e s o u r c e   W r a p p i n g   U t i l i t y              *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This program is free software; you can redistribute it and/or modify          *
 * it under the terms of the GNU General Public License as published by          *
@@ -19,7 +19,7 @@
 * along with this program; if not, write to the Free Software                   *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: reswrap.cpp,v 1.11 2004/02/25 14:28:45 fox Exp $                         *
+* $Id: reswrap.cpp,v 1.15 2005/02/04 04:33:19 fox Exp $                         *
 ********************************************************************************/
 #include "stdio.h"
 #include "stdlib.h"
@@ -28,16 +28,10 @@
 
 
 
-#define MODE_DECIMAL  0
-#define MODE_HEX      1
-#define MODE_TEXT     2
-
-
-
 /*
 
   Notes:
-  - Updated to version 3.0.
+  - Updated to version 3.2.
   - Can now also generate output as a text string.
   - When ASCII option is used with text string option, it prints human
     readable C-style string, with non-ASCII characters escaped as appropriate.
@@ -47,12 +41,18 @@
   - Added MSDOS mode, useful for wrapping ASCII text.
   - Added option to keep extension (separated by '_').
   - Need option to place #include "icons.h" or something into icons.cpp
-
+  - Always prepend prefix in front of resource name, even if name was overrided
+    because prefix may be namespace name.
 */
 
-const char version[]="3.1.0";
+/*******************************************************************************/
+
+#define MODE_DECIMAL  0
+#define MODE_HEX      1
+#define MODE_TEXT     2
 
 
+const char version[]="3.2.0";
 
 
 /* Print some help */
@@ -86,7 +86,7 @@ void printusage(){
 /* Print version information */
 void printversion(){
   fprintf(stderr,"Reswrap %s %s.\n",version,__DATE__);
-  fprintf(stderr,"Copyright (C) 1997,2004 Jeroen van der Zijp. All Rights Reserved.\n");
+  fprintf(stderr,"Copyright (C) 1997,2005 Jeroen van der Zijp. All Rights Reserved.\n");
   fprintf(stderr,"Please visit: http://www.fox-toolkit.org for further information.\n");
   fprintf(stderr,"\n");
   fprintf(stderr,"This program is free software; you can redistribute it and/or modify\n");
@@ -105,13 +105,47 @@ void printversion(){
   }
 
 
+/* Build resource name */
+void resourcename(char *name,const char* prefix,const char* filename,int keepdot){
+  const char* begin=name;
+  const char* ptr;
+
+  /* Copy prefix */
+  while(*prefix){
+    *name++=*prefix++;
+    }
+
+  /* Get name only; take care of mixed path separator characters on mswindows */
+  if((ptr=strrchr(filename,'/'))!=0) filename=ptr;
+  if((ptr=strrchr(filename,'\\'))!=0) filename=ptr;
+
+  /* Copy filename */
+  while(*filename){
+
+    /* C++ identifier may contain _, alpha, digit (if not first), or namespace separator : */
+    if(*filename==':' || *filename=='_' || isalpha(*filename) || (isdigit(*filename) && (begin!=name))){
+      *name++=*filename;
+      }
+
+    /* We can squash dot extension to _ */
+    else if(*filename=='.'){
+      if(!keepdot) break;
+      *name++='_';
+      }
+
+    filename++;
+    }
+  *name=0;
+  }
+
+
 /* Main */
 int main(int argc,char **argv){
-  char *outfilename,*resfilename,*ptr;
+  char *outfilename,*resfilename;
   FILE *resfile,*outfile;
-  int i,fm,to,cc,b,first,col,append,maxcols,external,header,override,include,mode,colsset,ascii,msdos,keepext,hex,forceunsigned;
+  int i,b,first,col,append,maxcols,external,header,include,mode,colsset,ascii,msdos,keepext,hex,forceunsigned;
   const char *thenamespace,*theprefix;
-  char resname[100];
+  char resname[1000];
 
   /* Initialize */
   outfilename=0;
@@ -120,7 +154,6 @@ int main(int argc,char **argv){
   colsset=0;
   external=0;
   header=1;
-  override=0;
   include=0;
   ascii=0;
   mode=MODE_HEX;
@@ -267,7 +300,6 @@ int main(int argc,char **argv){
     fprintf(outfile,"namespace %s {\n\n",thenamespace);
     }
 
-
   /* Process resource files next */
   for(; i<argc; i++){
 
@@ -280,8 +312,8 @@ int main(int argc,char **argv){
         exit(1);
         }
 
-      /* Get resource name override */
-      strncpy(resname,argv[i],sizeof(resname));
+      /* Get resource name */
+      resourcename(resname,theprefix,argv[i],keepext);
 
       /* Must have following file name */
       if(++i>=argc){
@@ -299,34 +331,14 @@ int main(int argc,char **argv){
       resfilename=argv[i];
 
       /* Get resource name */
-#ifndef WIN32
-      if((ptr=strrchr(resfilename,'/'))!=0)
-        strncpy(resname,ptr,sizeof(resname));
-      else
-        strncpy(resname,resfilename,sizeof(resname));
-#else
-      if((ptr=strrchr(resfilename,'\\'))!=0)
-        strncpy(resname,ptr,sizeof(resname));
-      else if((ptr=strrchr(resfilename,'/'))!=0)      /* For CYGWIN bash */
-        strncpy(resname,ptr,sizeof(resname));
-      else
-        strncpy(resname,resfilename,sizeof(resname));
-#endif
+      resourcename(resname,theprefix,resfilename,keepext);
+      }
 
-      /* Drop extension from resource name */
-      if(!keepext && (ptr=strrchr(resname,'.'))!=0) *ptr=0;
 
-      /* Squeeze out bad characters */
-      for(fm=to=0; (cc=resname[fm])!='\0'; fm++){
-        if(cc=='.') cc='_';
-        if(cc!='_' && !isalpha(cc) && (to==0 || !isdigit(cc))) continue;
-        resname[to++]=cc;
-        }
-      resname[to]='\0';
-      if(to==0){
-        fprintf(stderr,"reswrap: cannot generate resource name from %s\n",resfilename);
-        exit(1);
-        }
+    /* Check resource name not empty */
+    if(*resname==0){
+      fprintf(stderr,"reswrap: empty resource name for %s\n",resfilename);
+      exit(1);
       }
 
     /* Open resource file; always open as binary */
@@ -346,12 +358,12 @@ int main(int argc,char **argv){
 
     /* In text mode, output a 'char' declaration */
     if((mode==MODE_TEXT) && !forceunsigned){
-      fprintf(outfile,"const char %s%s[]",theprefix,resname);
+      fprintf(outfile,"const char %s[]",resname);
       }
-     
+
     /* In binary mode, output a 'unsigned char' declaration */
     else{
-      fprintf(outfile,"const unsigned char %s%s[]",theprefix,resname);
+      fprintf(outfile,"const unsigned char %s[]",resname);
       }
 
     /* Generate resource array */
@@ -413,7 +425,6 @@ int main(int argc,char **argv){
 
     /* Close resource file */
     fclose(resfile);
-    override=0;
     }
 
   /* Output namespace end */

@@ -3,7 +3,7 @@
 *                       M e n u   T i t l e   W i d g e t                       *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,12 +19,14 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXMenuTitle.cpp,v 1.36 2004/02/08 17:29:06 fox Exp $                     *
+* $Id: FXMenuTitle.cpp,v 1.45 2005/02/01 21:29:58 fox Exp $                     *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
 #include "fxdefs.h"
 #include "fxkeys.h"
+#include "FXHash.h"
+#include "FXThread.h"
 #include "FXStream.h"
 #include "FXString.h"
 #include "FXSize.h"
@@ -32,7 +34,6 @@
 #include "FXRectangle.h"
 #include "FXRegistry.h"
 #include "FXAccelTable.h"
-#include "FXHash.h"
 #include "FXApp.h"
 #include "FXDCWindow.h"
 #include "FXFont.h"
@@ -42,18 +43,17 @@
 
 /*
   Notes:
-  - Accelerators.
   - Help text from constructor is third part; second part should be
     accelerator key combination.
   - When menu label changes, hotkey might have to be adjusted.
   - Fix it so menu stays up when after Alt-F, you press Alt-E.
   - Menu items should be derived from FXLabel.
   - Look into SEL_FOCUS_SELF some more...
-  - New:- under W2K, the underscores for the accelerators no longer
-    show up until the ALT key is pressed [but not sure if I like this,
-    as it makes the accelerator undiscoverable].
   - GUI update disabled while menu is popped up.
+  - Menu shows besides Menu Title if menubar is vertical.
 */
+
+
 
 using namespace FX;
 
@@ -179,7 +179,7 @@ long FXMenuTitle::onLeave(FXObject* sender,FXSelector sel,void* ptr){
 long FXMenuTitle::onLeftBtnPress(FXObject*,FXSelector,void* ptr){
   handle(this,FXSEL(SEL_FOCUS_SELF,0),ptr);
   if(isEnabled()){
-    if(target && target->handle(this,FXSEL(SEL_LEFTBUTTONPRESS,message),ptr)) return 1;
+    if(target && target->tryHandle(this,FXSEL(SEL_LEFTBUTTONPRESS,message),ptr)) return 1;
     if(flags&FLAG_ACTIVE){
       handle(this,FXSEL(SEL_COMMAND,ID_UNPOST),NULL);
       }
@@ -196,7 +196,7 @@ long FXMenuTitle::onLeftBtnPress(FXObject*,FXSelector,void* ptr){
 long FXMenuTitle::onLeftBtnRelease(FXObject*,FXSelector,void* ptr){
   FXEvent* event=(FXEvent*)ptr;
   if(isEnabled()){
-    if(target && target->handle(this,FXSEL(SEL_LEFTBUTTONRELEASE,message),ptr)) return 1;
+    if(target && target->tryHandle(this,FXSEL(SEL_LEFTBUTTONRELEASE,message),ptr)) return 1;
     if(event->moved){
       handle(this,FXSEL(SEL_COMMAND,ID_UNPOST),ptr);
       }
@@ -210,7 +210,7 @@ long FXMenuTitle::onLeftBtnRelease(FXObject*,FXSelector,void* ptr){
 long FXMenuTitle::onKeyPress(FXObject*,FXSelector sel,void* ptr){
   if(isEnabled()){
     FXTRACE((200,"%s::onKeyPress %p keysym=0x%04x state=%04x\n",getClassName(),this,((FXEvent*)ptr)->code,((FXEvent*)ptr)->state));
-    if(target && target->handle(this,FXSEL(SEL_KEYPRESS,message),ptr)) return 1;
+    if(target && target->tryHandle(this,FXSEL(SEL_KEYPRESS,message),ptr)) return 1;
     if(pane && pane->shown() && pane->handle(pane,sel,ptr)) return 1;
     }
   return 0;
@@ -221,7 +221,7 @@ long FXMenuTitle::onKeyPress(FXObject*,FXSelector sel,void* ptr){
 long FXMenuTitle::onKeyRelease(FXObject*,FXSelector sel,void* ptr){
   if(isEnabled()){
     FXTRACE((200,"%s::onKeyRelease %p keysym=0x%04x state=%04x\n",getClassName(),this,((FXEvent*)ptr)->code,((FXEvent*)ptr)->state));
-    if(target && target->handle(this,FXSEL(SEL_KEYRELEASE,message),ptr)) return 1;
+    if(target && target->tryHandle(this,FXSEL(SEL_KEYRELEASE,message),ptr)) return 1;
     if(pane && pane->shown() && pane->handle(pane,sel,ptr)) return 1;
     }
   return 0;
@@ -253,10 +253,29 @@ long FXMenuTitle::onHotKeyRelease(FXObject*,FXSelector,void*){
 
 // Post the menu
 long FXMenuTitle::onCmdPost(FXObject*,FXSelector,void*){
-  FXint x,y;
+  FXint x,y,side;
   if(pane && !pane->shown()){
     translateCoordinatesTo(x,y,getRoot(),0,0);
-    pane->popup(getParent(),x-1,y+height);
+    side=getParent()->getLayoutHints();
+    if(side&LAYOUT_SIDE_LEFT){  // Vertical
+      y-=1;
+      if(side&LAYOUT_SIDE_BOTTOM){      // On right
+        x-=pane->getDefaultWidth();
+        }
+      else{                             // On left
+        x+=width;
+        }
+      }
+    else{                       // Horizontal
+      x-=1;
+      if(side&LAYOUT_SIDE_BOTTOM){      // On bottom
+        y-=pane->getDefaultHeight();
+        }
+      else{                             // On top
+        y+=height;
+        }
+      }
+    pane->popup(getParent(),x,y);
     if(!getParent()->grabbed()) getParent()->grab();
     }
   flags&=~FLAG_UPDATE;
@@ -313,6 +332,15 @@ void FXMenuTitle::setFocus(){
 void FXMenuTitle::killFocus(){
   FXMenuCaption::killFocus();
   handle(this,FXSEL(SEL_COMMAND,ID_UNPOST),NULL);
+  }
+
+
+// Change the popup menu
+void FXMenuTitle::setMenu(FXPopup *pup){
+  if(pup!=pane){
+    pane=pup;
+    recalc();
+    }
   }
 
 

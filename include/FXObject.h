@@ -3,7 +3,7 @@
 *                         T o p l e v el   O b j e c t                          *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,10 +19,11 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXObject.h,v 1.25 2004/02/08 17:17:34 fox Exp $                          *
+* $Id: FXObject.h,v 1.33 2005/01/22 21:55:40 fox Exp $                          *
 ********************************************************************************/
 #ifndef FXOBJECT_H
 #define FXOBJECT_H
+
 
 namespace FX {
 
@@ -40,11 +41,10 @@ enum {
   };
 
 
-// Association key
+/// Association key
 typedef FXuint FXSelector;
 
 
-// Forward
 class FXObject;
 
 
@@ -57,7 +57,6 @@ private:
   const void                *assoc;
   FXuint                     nassocs;
   FXuint                     assocsz;
-  FXuint                     namelen;
 private:
   static const FXMetaClass **metaClassTable;
   static FXuint              nmetaClassTable;
@@ -65,7 +64,7 @@ private:
 private:
   static void resize(FXuint n);
 public:
-  FXMetaClass(const FXchar* name,FXObject *(fac)(),const FXMetaClass* base,const void* ass,FXuint nass,FXuint assz,FXuint len);
+  FXMetaClass(const FXchar* name,FXObject *(fac)(),const FXMetaClass* base,const void* ass,FXuint nass,FXuint assz);
 
   /// Check if metaclass is subclass of some other metaclass
   FXbool isSubClassOf(const FXMetaClass* metaclass) const;
@@ -75,9 +74,6 @@ public:
 
   /// Ask class name
   const FXchar* getClassName() const { return className; }
-
-  /// Obtain class name length
-  FXuint getClassNameLength() const { return namelen; }
 
   /// Ask base class
   const FXMetaClass* getBaseClass() const { return baseClass; }
@@ -108,7 +104,7 @@ public:
 /// Macro to set up class implementation
 #define FXIMPLEMENT(classname,baseclassname,mapping,nmappings) \
   FX::FXObject* classname::manufacture(){return new classname;} \
-  const FX::FXMetaClass classname::metaClass(#classname,classname::manufacture,&baseclassname::metaClass,mapping,nmappings,sizeof(classname::FXMapEntry),sizeof(#classname)); \
+  const FX::FXMetaClass classname::metaClass(#classname,classname::manufacture,&baseclassname::metaClass,mapping,nmappings,sizeof(classname::FXMapEntry)); \
   long classname::handle(FX::FXObject* sender,FX::FXSelector sel,void* ptr){ \
     const FXMapEntry* me=(const FXMapEntry*)metaClass.search(sel); \
     return me ? (this->* me->func)(sender,sel,ptr) : baseclassname::handle(sender,sel,ptr); \
@@ -129,7 +125,7 @@ public:
 
 /// Macro to set up abstract class implementation
 #define FXIMPLEMENT_ABSTRACT(classname,baseclassname,mapping,nmappings) \
-  const FX::FXMetaClass classname::metaClass(#classname,NULL,&baseclassname::metaClass,mapping,nmappings,sizeof(classname::FXMapEntry),sizeof(#classname)); \
+  const FX::FXMetaClass classname::metaClass(#classname,NULL,&baseclassname::metaClass,mapping,nmappings,sizeof(classname::FXMapEntry)); \
   long classname::handle(FX::FXObject* sender,FX::FXSelector sel,void* ptr){ \
     const FXMapEntry* me=(const FXMapEntry*)metaClass.search(sel); \
     return me ? (this->* me->func)(sender,sel,ptr) : baseclassname::handle(sender,sel,ptr); \
@@ -156,7 +152,15 @@ public:
 #define FXMAPFUNC(type,key,func) {MKUINT(key,type),MKUINT(key,type),&func}
 
 
-/// Base of all FOX object
+/**
+* Object is the base class for all objects in FOX; in order to receive
+* messages from the user interface, your class must derive from Object.
+* The Object class also provides serialization facilities, with which
+* you can save and restore the object's state.  If you've subclassed
+* from Object, you can save your subclasses' state by overloading the
+* save() and load() functions and use the stream API to serialize its
+* member data.
+*/
 class FXAPI FXObject {
   FXDECLARE(FXObject)
 public:
@@ -171,6 +175,9 @@ public:
 
   /// Check if object is member of metaclass
   FXbool isMemberOf(const FXMetaClass* metaclass) const;
+
+  /// Try handle message safely
+  virtual long tryHandle(FXObject* sender,FXSelector sel,void* ptr);
 
   /// Save object to stream
   virtual void save(FXStream& store) const;

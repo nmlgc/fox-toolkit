@@ -3,7 +3,7 @@
 *                         M e n u R a d i o   W i d g e t                       *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2002,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 2002,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,12 +19,14 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXMenuRadio.cpp,v 1.20 2004/02/08 17:29:06 fox Exp $                     *
+* $Id: FXMenuRadio.cpp,v 1.26 2005/01/16 16:06:07 fox Exp $                     *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
 #include "fxdefs.h"
 #include "fxkeys.h"
+#include "FXHash.h"
+#include "FXThread.h"
 #include "FXStream.h"
 #include "FXString.h"
 #include "FXSize.h"
@@ -32,7 +34,6 @@
 #include "FXRectangle.h"
 #include "FXRegistry.h"
 #include "FXAccelTable.h"
-#include "FXHash.h"
 #include "FXApp.h"
 #include "FXDCWindow.h"
 #include "FXFont.h"
@@ -182,7 +183,7 @@ long FXMenuRadio::onButtonRelease(FXObject*,FXSelector,void*){
   getParent()->handle(this,FXSEL(SEL_COMMAND,ID_UNPOST),NULL);
   if(active){
     setCheck(TRUE);
-    if(target){ target->handle(this,FXSEL(SEL_COMMAND,message),(void*)(FXuval)TRUE); }
+    if(target){ target->tryHandle(this,FXSEL(SEL_COMMAND,message),(void*)(FXuval)TRUE); }
     }
   return 1;
   }
@@ -193,7 +194,6 @@ long FXMenuRadio::onKeyPress(FXObject*,FXSelector,void* ptr){
   FXEvent* event=(FXEvent*)ptr;
   if(!isEnabled()) return 0;
   FXTRACE((200,"%s::onKeyPress %p keysym=0x%04x state=%04x\n",getClassName(),this,event->code,event->state));
-  //if(target && target->handle(this,FXSEL(SEL_KEYPRESS,message),ptr)) return 1;
   switch(event->code){
     case KEY_KP_Enter:
     case KEY_Return:
@@ -210,7 +210,6 @@ long FXMenuRadio::onKeyRelease(FXObject*,FXSelector,void* ptr){
   FXEvent* event=(FXEvent*)ptr;
   if(!isEnabled()) return 0;
   FXTRACE((200,"%s::onKeyRelease %p keysym=0x%04x state=%04x\n",getClassName(),this,event->code,event->state));
-  //if(target && target->handle(this,FXSEL(SEL_KEYRELEASE,message),ptr)) return 1;
   switch(event->code){
     case KEY_KP_Enter:
     case KEY_Return:
@@ -218,7 +217,7 @@ long FXMenuRadio::onKeyRelease(FXObject*,FXSelector,void* ptr){
     case KEY_KP_Space:
       setCheck(TRUE);
       getParent()->handle(this,FXSEL(SEL_COMMAND,ID_UNPOST),NULL);
-      if(target) target->handle(this,FXSEL(SEL_COMMAND,message),(void*)(FXuval)TRUE);
+      if(target) target->tryHandle(this,FXSEL(SEL_COMMAND,message),(void*)(FXuval)TRUE);
       return 1;
     }
   return 0;
@@ -239,7 +238,7 @@ long FXMenuRadio::onHotKeyRelease(FXObject*,FXSelector,void*){
   if(isEnabled()){
     setCheck(TRUE);
     getParent()->handle(this,FXSEL(SEL_COMMAND,ID_UNPOST),NULL);
-    if(target) target->handle(this,FXSEL(SEL_COMMAND,message),(void*)(FXuval)TRUE);
+    if(target) target->tryHandle(this,FXSEL(SEL_COMMAND,message),(void*)(FXuval)TRUE);
     }
   return 1;
   }
@@ -249,7 +248,7 @@ long FXMenuRadio::onHotKeyRelease(FXObject*,FXSelector,void*){
 long FXMenuRadio::onCmdAccel(FXObject*,FXSelector,void*){
   if(isEnabled()){
     setCheck(TRUE);
-    if(target) target->handle(this,FXSEL(SEL_COMMAND,message),(void*)(FXuval)TRUE);
+    if(target) target->tryHandle(this,FXSEL(SEL_COMMAND,message),(void*)(FXuval)TRUE);
     return 1;
     }
   return 0;

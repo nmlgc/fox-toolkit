@@ -3,7 +3,7 @@
 *                  F i l e   S e l e c t i o n   W i d g e t                    *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1998,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXFileSelector.h,v 1.48 2004/03/18 15:25:20 fox Exp $                    *
+* $Id: FXFileSelector.h,v 1.55 2005/02/08 06:12:35 fox Exp $                    *
 ********************************************************************************/
 #ifndef FXFILESELECTOR_H
 #define FXFILESELECTOR_H
@@ -59,7 +59,7 @@ protected:
   FXFileList        *filebox;           // File list widget
   FXTextField       *filename;          // File name entry field
   FXComboBox        *filefilter;        // Combobox for pattern list
-  FXMenuPane        *bookmarks;         // Menu for bookmarks
+  FXMenuPane        *bookmarkmenu;      // Menu for bookmarks
   FXHorizontalFrame *navbuttons;        // Navigation buttons
   FXHorizontalFrame *fileboxframe;      // Frame around file list
   FXMatrix          *entryblock;        // Entry block
@@ -68,7 +68,6 @@ protected:
   FXButton          *accept;            // Accept button
   FXButton          *cancel;            // Cancel button
   FXIcon            *updiricon;         // Up directory icon
-  FXIcon            *newdiricon;        // New directory icon
   FXIcon            *listicon;          // List mode icon
   FXIcon            *detailicon;        // Detail mode icon
   FXIcon            *iconsicon;         // Icon mode icon
@@ -78,11 +77,12 @@ protected:
   FXIcon            *hiddenicon;        // Files hidden icon
   FXIcon            *markicon;          // Book mark icon
   FXIcon            *clearicon;         // Book clear icon
+  FXIcon            *newicon;           // New directory icon
   FXIcon            *deleteicon;        // Delete file icon
   FXIcon            *moveicon;          // Rename file icon
   FXIcon            *copyicon;          // Copy file icon
   FXIcon            *linkicon;          // Link file icon
-  FXRecentFiles      mrufiles;          // Recently visited places
+  FXRecentFiles      bookmarks;         // Bookmarked places
   FXuint             selectmode;        // Select mode
 protected:
   FXFileSelector(){}
@@ -110,6 +110,8 @@ public:
   long onCmdDelete(FXObject*,FXSelector,void*);
   long onUpdSelected(FXObject*,FXSelector,void*);
   long onPopupMenu(FXObject*,FXSelector,void*);
+  long onCmdImageSize(FXObject*,FXSelector,void*);
+  long onUpdImageSize(FXObject*,FXSelector,void*);
 public:
   enum {
     ID_FILEFILTER=FXPacker::ID_LAST,
@@ -117,6 +119,9 @@ public:
     ID_FILELIST,
     ID_DIRECTORY_UP,
     ID_DIRTREE,
+    ID_NORMAL_SIZE,
+    ID_MEDIUM_SIZE,
+    ID_GIANT_SIZE,
     ID_HOME,
     ID_WORK,
     ID_BOOKMARK,
@@ -192,6 +197,12 @@ public:
   /// Change pattern text for pattern number
   void setPatternText(FXint patno,const FXString& text);
 
+  /// Allow pattern entry
+  void allowPatternEntry(FXbool allow);
+
+  /// Return TRUE if pattern entry is allowed
+  FXbool allowPatternEntry() const;
+
   /**
   * Given filename pattern of the form "GIF Format (*.gif)",
   * returns the pattern only, i.e. "*.gif" in this case.
@@ -236,6 +247,24 @@ public:
 
   /// Return wildcard matching mode
   FXuint getMatchMode() const;
+
+  /// Return TRUE if showing hidden files
+  FXbool showHiddenFiles() const;
+
+  /// Show or hide hidden files
+  void showHiddenFiles(FXbool showing);
+
+  /// Return TRUE if image preview on
+  FXbool showImages() const;
+
+  /// Show or hide preview images
+  void showImages(FXbool showing);
+
+  /// Return images preview size
+  FXint getImageSize() const;
+
+  /// Change images preview size
+  void setImageSize(FXint size);
 
   /// Show readonly button
   void showReadOnly(FXbool show);

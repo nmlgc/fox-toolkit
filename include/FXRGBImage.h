@@ -3,7 +3,7 @@
 *                     I R I S   R G B   I m a g e   O b j e c t                 *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2002,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 2002,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXRGBImage.h,v 1.8 2004/02/08 17:17:34 fox Exp $                         *
+* $Id: FXRGBImage.h,v 1.11 2005/01/16 16:06:06 fox Exp $                        *
 ********************************************************************************/
 #ifndef FXRGBIMAGE_H
 #define FXRGBIMAGE_H
@@ -40,6 +40,8 @@ private:
   FXRGBImage(const FXRGBImage&);
   FXRGBImage &operator=(const FXRGBImage&);
 public:
+  static const FXchar fileExt[];
+public:
 
   /// Construct image from memory stream formatted in IRIS-RGB format
   FXRGBImage(FXApp* a,const void *pix=NULL,FXuint opts=0,FXint w=1,FXint h=1);
@@ -54,6 +56,11 @@ public:
   virtual ~FXRGBImage();
   };
 
+
+/**
+* Check if stream contains a RGB, return TRUE if so.
+*/
+extern FXAPI FXbool fxcheckRGB(FXStream& store);
 
 
 /**

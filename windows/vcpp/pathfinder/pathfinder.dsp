@@ -111,6 +111,14 @@ SOURCE=..\..\..\pathfinder\copy.bmp
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\pathfinder\CopyDialog.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\pathfinder\CopyDialog.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\pathfinder\copyit.gif
 # End Source File
 # Begin Source File

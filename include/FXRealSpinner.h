@@ -3,7 +3,7 @@
 *             R e a l - V a l u e d   S p i n n e r  W i d g e t                *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2003,2004 by Bill Baxter.   All Rights Reserved.                *
+* Copyright (C) 2003,2005 by Bill Baxter.   All Rights Reserved.                *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXRealSpinner.h,v 1.9 2004/02/08 17:17:34 fox Exp $                      *
+* $Id: FXRealSpinner.h,v 1.12 2005/01/16 16:06:06 fox Exp $                     *
 ********************************************************************************/
 #ifndef FXREALSPINNER_H
 #define FXREALSPINNER_H
@@ -31,14 +31,14 @@
 namespace FX {
 
 
-// Spinner Options
+/// RealSpinner Options
 enum {
-  REALSPIN_NORMAL  =  0,                // Normal, non-cyclic
-  REALSPIN_CYCLIC  =  0x00020000,       // Cyclic spinner
-  REALSPIN_NOTEXT  =  0x00040000,       // No text visible
-  REALSPIN_NOMAX   =  0x00080000,       // Spin all the way up to infinity
-  REALSPIN_NOMIN   =  0x00100000,       // Spin all the way down to -infinity
-  REALSPIN_LOG     =  0x00200000        // Logarithmic rather than linear
+  REALSPIN_NORMAL  =  0,                /// Normal, non-cyclic
+  REALSPIN_CYCLIC  =  0x00020000,       /// Cyclic spinner
+  REALSPIN_NOTEXT  =  0x00040000,       /// No text visible
+  REALSPIN_NOMAX   =  0x00080000,       /// Spin all the way up to infinity
+  REALSPIN_NOMIN   =  0x00100000,       /// Spin all the way down to -infinity
+  REALSPIN_LOG     =  0x00200000        /// Logarithmic rather than linear
   };
 
 
@@ -68,7 +68,6 @@ public:
   long onCmdIncrement(FXObject*,FXSelector,void*);
   long onUpdDecrement(FXObject*,FXSelector,void*);
   long onCmdDecrement(FXObject*,FXSelector,void*);
-  long onUpdEntry(FXObject*,FXSelector,void*);
   long onCmdEntry(FXObject*,FXSelector,void*);
   long onChgEntry(FXObject*,FXSelector,void*);
   long onWheelEntry(FXObject*,FXSelector,void*);
@@ -157,13 +156,13 @@ public:
   void setHelpText(const FXString& text);
 
   /// Get the status line help text for this spinner
-  FXString getHelpText() const;
+  const FXString& getHelpText() const;
 
   /// Set the tool tip message for this spinner
   void setTipText(const FXString& text);
 
   /// Get the tool tip message for this spinner
-  FXString getTipText() const;
+  const FXString& getTipText() const;
 
   /// Change spinner style
   void setSpinnerStyle(FXuint style);

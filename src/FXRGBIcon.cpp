@@ -3,7 +3,7 @@
 *                      I R I S   R G B   I c o n   O b j e c t                  *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2002,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 2002,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,11 +19,13 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXRGBIcon.cpp,v 1.14 2004/02/08 17:29:07 fox Exp $                        *
+* $Id: FXRGBIcon.cpp,v 1.19 2005/01/16 16:06:07 fox Exp $                       *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
 #include "fxdefs.h"
+#include "FXHash.h"
+#include "FXThread.h"
 #include "FXStream.h"
 #include "FXMemoryStream.h"
 #include "FXString.h"
@@ -33,7 +35,6 @@
 #include "FXObject.h"
 #include "FXSettings.h"
 #include "FXRegistry.h"
-#include "FXHash.h"
 #include "FXApp.h"
 #include "FXId.h"
 #include "FXDrawable.h"
@@ -52,13 +53,17 @@ using namespace FX;
 
 namespace FX {
 
+
+// Suggested file extension
+const FXchar FXRGBIcon::fileExt[]="rgb";
+
+
 // Object implementation
 FXIMPLEMENT(FXRGBIcon,FXIcon,NULL,0)
 
 
 // Initialize nicely
-FXRGBIcon::FXRGBIcon(FXApp* a,const void *pix,FXColor clr,FXuint opts,FXint w,FXint h):
-  FXIcon(a,NULL,clr,opts,w,h){
+FXRGBIcon::FXRGBIcon(FXApp* a,const void *pix,FXColor clr,FXuint opts,FXint w,FXint h):FXIcon(a,NULL,clr,opts,w,h){
   if(pix){
     FXMemoryStream ms;
     ms.open(FXStreamLoad,(FXuchar*)pix);
@@ -70,18 +75,22 @@ FXRGBIcon::FXRGBIcon(FXApp* a,const void *pix,FXColor clr,FXuint opts,FXint w,FX
 
 // Save object to stream
 FXbool FXRGBIcon::savePixels(FXStream& store) const {
-  if(!fxsaveRGB(store,data,width,height)) return FALSE;
-  return TRUE;
+  if(fxsaveRGB(store,data,width,height)){
+    return TRUE;
+    }
+  return FALSE;
   }
 
 
 // Load object from stream
 FXbool FXRGBIcon::loadPixels(FXStream& store){
-  if(options&IMAGE_OWNED){ FXFREE(&data); }
-  if(!fxloadRGB(store,data,width,height)) return FALSE;
-  if(options&IMAGE_ALPHAGUESS) transp=guesstransp();
-  options|=IMAGE_OWNED;
-  return TRUE;
+  FXColor *pixels; FXint w,h;
+  if(fxloadRGB(store,pixels,w,h)){
+    setData(pixels,IMAGE_OWNED,w,h);
+    if(options&IMAGE_ALPHAGUESS) transp=guesstransp();
+    return TRUE;
+    }
+  return FALSE;
   }
 
 
@@ -90,4 +99,3 @@ FXRGBIcon::~FXRGBIcon(){
   }
 
 }
-

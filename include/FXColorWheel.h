@@ -3,7 +3,7 @@
 *                        C o l o r W h e e l   W i d g e t                      *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2001,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 2001,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXColorWheel.h,v 1.23 2004/02/08 17:17:33 fox Exp $                      *
+* $Id: FXColorWheel.h,v 1.26 2005/01/16 16:06:06 fox Exp $                      *
 ********************************************************************************/
 #ifndef FXCOLORWHEEL_H
 #define FXCOLORWHEEL_H
@@ -35,8 +35,9 @@ class FXImage;
 
 
 /**
-* A color wheel is a widget which controls a color by means
-* of the hue, saturation, value color specification system.
+* A Color Wheel is a widget which controls the hue and saturation values of a
+* color.  It is most often used together with a Color Bar which controls the
+* brighness.
 */
 class FXAPI FXColorWheel : public FXFrame {
   FXDECLARE(FXColorWheel)
@@ -112,13 +113,13 @@ public:
   void setHelpText(const FXString& text);
 
   /// Get status line help text for this color well
-  FXString getHelpText() const { return help; }
+  const FXString& getHelpText() const { return help; }
 
   /// Set tool tip message for this color well
   void setTipText(const FXString& text);
 
   /// Get tool tip message for this color well
-  FXString getTipText() const { return tip; }
+  const FXString& getTipText() const { return tip; }
 
   /// Save color well to a stream
   virtual void save(FXStream& store) const;

@@ -3,7 +3,7 @@
 *                        X B M   I c o n   O b j e c t                          *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2003,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 2003,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXXBMIcon.h,v 1.5 2004/02/08 17:17:34 fox Exp $                          *
+* $Id: FXXBMIcon.h,v 1.8 2005/01/16 16:06:06 fox Exp $                          *
 ********************************************************************************/
 #ifndef FXXBMICON_H
 #define FXXBMICON_H
@@ -40,6 +40,8 @@ private:
   FXXBMIcon(const FXXBMIcon&);
   FXXBMIcon &operator=(const FXXBMIcon&);
 public:
+  static const FXchar fileExt[];
+public:
 
   /// Construct icon from memory stream formatted in X Bitmap format
   FXXBMIcon(FXApp* a,const FXuchar *pixels=NULL,const FXuchar *mask=NULL,FXColor clr=FXRGB(192,192,192),FXuint opts=0,FXint w=1,FXint h=1);
@@ -57,6 +59,11 @@ public:
 
 #ifndef FXLOADXBM
 #define FXLOADXBM
+
+/**
+* Check if stream contains a XBM, return TRUE if so.
+*/
+extern FXAPI FXbool fxcheckXBM(FXStream& store);
 
 /**
 * Load an XBM (X Bitmap) from pixel array and mask array.

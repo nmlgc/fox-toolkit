@@ -113,7 +113,13 @@ over than a Tool Tip.</LI>
 <br>
 <UL>
 <UL>
-<LI><B>Tab Books.</B>&nbsp; Ever more sophisticated applications need considerable
+<LI><B>Floatable Tool Bars</B>.&nbsp; Toolbars can be interactively dragged
+and docked or undocked.  Dock sites allow for parking of toolbars side-by-side.</LI>
+</UL>
+</UL>
+<br>
+<UL>
+<UL><LI><B>Tab Books.</B>&nbsp; Ever more sophisticated applications need considerable
 more screen real-estate.&nbsp; With Tab Books, several panels of GUI Widgets
 may be placed on top of each other and flipped over, similar to browsing
 through file folders.</LI>
@@ -178,12 +184,22 @@ rendering facilities which allow a single rendering code to produce output
 to an [user extensible] variety of output devices.<BR>
 </LI>
 <br>
-<LI><B>Facilities</B> to watch network <B>sockets</B>, <B>pipes</B>, and other i/o channels.</LI>
+<LI><B>Facilities</B> to watch network <B>sockets</B>, <B>pipes</B>, and other <B>i/o channels</B>,
+as well as <B>signals</B>.
+Also supported are a <B>thread</B> class, <B>semaphores</B>, <B>mutexes</B>, <B>conditions</B>.  
+The FOX library uses <B>reentrant</B> library functions when compiled normally.</LI>
 </UL>
 </UL>
 <br>
 <UL>
-<LI><B>GUI Updating.&nbsp; </B>FOX makes it easy to keep the graphical user
+<UL>
+<LI><B>C++ Exceptions</B> are used in the library to signal errors during allocation
+of memory, windows, and other system resources, permitting application to handle
+low-resource conditions gracefully.</LI>
+</UL>
+</UL>
+<br>
+<UL><LI><B>GUI Updating.&nbsp; </B>FOX makes it easy to keep the graphical user
 interface consistent with your application data structures using a unique
 facility called GUI Updating.&nbsp; In essence, the FOX Controls such as
 Buttons, Sliders, and so on will continuously interrogate the application&nbsp;
@@ -213,7 +229,7 @@ simply by recompiling.</LI>
 <p>
 <table width=100% cellpadding=0 cellspacing=0><tr><td width=100% valign=top id=HEADLINE align=right>
 <img src='art/line.gif' width=100% height=1><font size=-1>
-Copyright &copy; 1997-2004 Jeroen van der Zijp</font>
+Copyright &copy; 1997-2005 Jeroen van der Zijp</font>
 </td></tr></table>
 </p>
 <!--- COPYRIGHT -->

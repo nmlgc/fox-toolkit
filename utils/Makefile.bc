@@ -3,9 +3,9 @@
 #                       FOX:  A Free C++ Class Library for X                 #
 #                                                                            #
 ##############################################################################
-# Copyright (C) 1997 by Jeroen van der Zijp.   All Rights Reserved.          #
+# Copyright (C) 1997,2005 by Jeroen van der Zijp.   All Rights Reserved.     #
 ##############################################################################
-# $Id: Makefile.bc,v 1.8 2003/08/21 22:15:27 fox Exp $                       #
+# $Id: Makefile.bc,v 1.9 2005/02/04 04:33:19 fox Exp $                       #
 ##############################################################################
 # This library is free software; you can redistribute it and/or              #
 # modify it under the terms of the GNU Library General Public                #

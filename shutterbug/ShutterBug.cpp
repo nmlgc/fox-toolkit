@@ -3,7 +3,7 @@
 *                S h u t t e r   B u g   A p p l i c a t i o n                  *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2003 by Jeroen van der Zijp.   All Rights Reserved.             *
+* Copyright (C) 2003,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This program is free software; you can redistribute it and/or modify          *
 * it under the terms of the GNU General Public License as published by          *
@@ -19,7 +19,7 @@
 * along with this program; if not, write to the Free Software                   *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: ShutterBug.cpp,v 1.26 2004/04/28 16:29:07 fox Exp $                      *
+* $Id: ShutterBug.cpp,v 1.32 2005/02/04 04:33:19 fox Exp $                      *
 ********************************************************************************/
 #include "fx.h"
 #include "fxkeys.h"
@@ -53,7 +53,7 @@
 #define FUDGE         10        // Corner fudge for diagonal dragging
 #define MINSIZE       8         // Minimum snap size
 #define VERSION_MAJOR 2
-#define VERSION_MINOR 0
+#define VERSION_MINOR 1
 #define VERSION_PATCH 0
 
 /*******************************************************************************/
@@ -123,6 +123,7 @@ const FXchar patterns[]=
 #ifdef HAVE_TIFF_H
   "\nTIFF Image (*.tif)"
 #endif
+  "\nRAS Image (*.ras)"
   "\nPS Image (*.ps)"
   ;
 
@@ -145,6 +146,7 @@ enum {
 #ifdef HAVE_TIFF_H
   ,TYPE_TIF
 #endif
+  ,TYPE_RAS
   ,TYPE_PS
   };
 
@@ -237,6 +239,7 @@ void ShutterBug::create(){
   snapper[3]->setBackColor(color);
   moveSnapRectangle(rectangle);
   showSnapRectangle();
+  setShape(bigicon);            // Set window shape based on icon shape mask
   show();
   }
 
@@ -292,16 +295,15 @@ FXbool ShutterBug::snapRectangleShown() const {
   }
 
 
-
 // Get default width
 FXint ShutterBug::getDefaultWidth(){
-  return bigicon->getWidth()+4;
+  return bigicon->getWidth();
   }
 
 
 // Get default height
 FXint ShutterBug::getDefaultHeight(){
-  return bigicon->getHeight()+4;
+  return bigicon->getHeight();
   }
 
 
@@ -409,7 +411,7 @@ long ShutterBug::onPaint(FXObject*,FXSelector,void* ptr){
   dc.fillRectangle(0,0,width,height);
   dc.setForeground(FXRGB(0,0,0));
   dc.drawRectangle(0,0,width-1,height-1);
-  dc.drawIcon(bigicon,2,2);
+  dc.drawIcon(bigicon,0,0);
   return 1;
   }
 
@@ -453,11 +455,13 @@ long ShutterBug::onBtnRelease(FXObject*,FXSelector,void* ptr){
   new FXMenuCascade(&filemenu,"Size",NULL,&sizemenu);
   new FXMenuRadio(&sizemenu,"8x8",this,ID_SIZE_8X8);
   new FXMenuRadio(&sizemenu,"16x16",this,ID_SIZE_16X16);
+  new FXMenuRadio(&sizemenu,"24x24",this,ID_SIZE_24X24);
   new FXMenuRadio(&sizemenu,"32x32",this,ID_SIZE_32X32);
+  new FXMenuRadio(&sizemenu,"48x48",this,ID_SIZE_48X48);
   new FXMenuRadio(&sizemenu,"64x64",this,ID_SIZE_64X64);
   new FXMenuRadio(&sizemenu,"128x128",this,ID_SIZE_128X128);
-  new FXMenuRadio(&sizemenu,"256X256",this,ID_SIZE_256X256);
-  new FXMenuRadio(&sizemenu,"512X512",this,ID_SIZE_512X512);
+  new FXMenuRadio(&sizemenu,"256x256",this,ID_SIZE_256X256);
+  new FXMenuRadio(&sizemenu,"512x512",this,ID_SIZE_512X512);
   new FXMenuRadio(&sizemenu,"Screen",this,ID_SIZE_SCREEN);
   new FXMenuRadio(&sizemenu,"Custom",this,ID_SIZE_CUSTOM);
   FXMenuPane weightmenu(this);
@@ -598,6 +602,7 @@ long ShutterBug::onCmdSnap(FXObject*,FXSelector,void*){
 #ifdef HAVE_TIFF_H
             case TYPE_TIF: ok=fxsaveTIF(outfile,data,rectangle.w,rectangle.h,0); break;
 #endif
+            case TYPE_RAS: ok=fxsaveRAS(outfile,data,rectangle.w,rectangle.h); break;
             case TYPE_PS: ok=fxsavePS(outfile,data,rectangle.w,rectangle.h); break;
             }
           outfile.close();
@@ -859,7 +864,7 @@ long ShutterBug::onCmdAbout(FXObject*,FXSelector,void*){
   FXVerticalFrame* side=new FXVerticalFrame(&about,LAYOUT_SIDE_RIGHT|LAYOUT_FILL_X|LAYOUT_FILL_Y,0,0,0,0, 10,10,10,10, 0,0);
   new FXLabel(side,"ShutterBug",NULL,JUSTIFY_LEFT|ICON_BEFORE_TEXT|LAYOUT_FILL_X);
   new FXHorizontalSeparator(side,SEPARATOR_LINE|LAYOUT_FILL_X);
-  new FXLabel(side,FXStringFormat("\nFOX Screenshot Utility, version %d.%d.%d.\nShutterBug uses the FOX Toolkit version %d.%d.%d.\nCopyright (C) 2003 Jeroen van der Zijp (jeroen@fox-toolkit.org).\n ",VERSION_MAJOR,VERSION_MINOR,VERSION_PATCH,FOX_MAJOR,FOX_MINOR,FOX_LEVEL),NULL,JUSTIFY_LEFT|LAYOUT_FILL_X|LAYOUT_FILL_Y);
+  new FXLabel(side,FXStringFormat("\nFOX Screenshot Utility, version %d.%d.%d.\nShutterBug uses the FOX Toolkit version %d.%d.%d.\nCopyright (C) 2003,2005 Jeroen van der Zijp (jeroen@fox-toolkit.org).\n ",VERSION_MAJOR,VERSION_MINOR,VERSION_PATCH,FOX_MAJOR,FOX_MINOR,FOX_LEVEL),NULL,JUSTIFY_LEFT|LAYOUT_FILL_X|LAYOUT_FILL_Y);
   FXButton *button=new FXButton(side,"&OK",NULL,&about,FXDialogBox::ID_ACCEPT,BUTTON_INITIAL|BUTTON_DEFAULT|FRAME_RAISED|FRAME_THICK|LAYOUT_RIGHT,0,0,0,0,32,32,2,2);
   button->setFocus();
   about.execute();
@@ -938,7 +943,7 @@ long ShutterBug::onCmdLineColor(FXObject*,FXSelector,void*){
 
 
 // Lines inside area
-long ShutterBug::onCmdLineInside(FXObject*,FXSelector sel,void* ptr){
+long ShutterBug::onCmdLineInside(FXObject*,FXSelector,void* ptr){
   inside=(FXbool)(FXuval)ptr;
   moveSnapRectangle(rectangle);
   return 1;
@@ -953,7 +958,7 @@ long ShutterBug::onUpdLineInside(FXObject* sender,FXSelector,void*){
 
 
 // Quantization
-long ShutterBug::onCmdQuantize(FXObject*,FXSelector sel,void* ptr){
+long ShutterBug::onCmdQuantize(FXObject*,FXSelector,void* ptr){
   quantize=(FXbool)(FXuval)ptr;
   return 1;
   }

@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 
-screenshotsdir = $(prefix)/@PACKAGE@/html/screenshots
-
+#screenshotsdir = $(prefix)/@PACKAGE@/html/screenshots
+screenshotsdir = $(datadir)/doc/@PACKAGE@-@FOX_MAJOR_VERSION@.@FOX_MINOR_VERSION@/html/screenshots
 
 # Icons
 SCREENSHOTS_FILES = \
@@ -35,6 +35,7 @@ glview.png \
 goggles.png \
 imagedebugger.gif \
 pathfinder.png \
+pdiary.jpg \
 printdialog.png \
 replacedialog.png \
 SbSScreen1.jpg \
@@ -42,16 +43,15 @@ SbSScreen1_small.jpg \
 scenegraphnavigator.gif \
 scriptolutions.gif \
 searchdialog.png \
-ss1.png \
-ss1_small.png \
-ss2.png \
-ss2_small.png \
-ss3.png \
-ss3_small.png \
+iims1.png \
+iims1_small.png \
+iims2.png \
+iims2_small.png \
+iims3.png \
+iims3_small.png \
 rezound_thumb.gif \
 table.png \
 tmp_vision_snap.jpg \
-tux.jpg \
 tux_small.jpg \
 udine_physics.jpg \
 vorhour1.jpg \
@@ -59,7 +59,8 @@ vorhour1_small.jpg \
 vorhour2.jpg \
 vorhour2_small.jpg \
 xfe.png \
-xfe_small.png
+xfe_small.png \
+xtc.gif
 
 
 screenshots_DATA = $(SCREENSHOTS_FILES)

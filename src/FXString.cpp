@@ -3,7 +3,7 @@
 *                           S t r i n g   O b j e c t                           *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,16 +19,12 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXString.cpp,v 1.116 2004/04/21 20:58:37 fox Exp $                       *
+* $Id: FXString.cpp,v 1.130 2005/01/16 16:06:07 fox Exp $                       *
 ********************************************************************************/
-#ifdef HAVE_VSSCANF
-#ifndef _GNU_SOURCE
-#define _GNU_SOURCE
-#endif
-#endif
 #include "xincs.h"
 #include "fxver.h"
 #include "fxdefs.h"
+#include "FXHash.h"
 #include "FXStream.h"
 #include "FXString.h"
 
@@ -79,14 +75,14 @@ const FXchar FXString::HEX[17]={'0','1','2','3','4','5','6','7','8','9','A','B',
 
 // Change the length of the string to len
 void FXString::length(FXint len){
-  if(((FXint*)str)[-1]!=len){
+  if(*(((FXint*)str)-1)!=len){
     if(0<len){
       if(str==EMPTY)
-        str=sizeof(FXint)+(FXchar*)malloc(sizeof(FXint)+ROUNDUP(1+len));
+        str=sizeof(FXint)+(FXchar*)malloc(ROUNDUP(1+len)+sizeof(FXint));
       else
-        str=sizeof(FXint)+(FXchar*)realloc(str-sizeof(FXint),sizeof(FXint)+ROUNDUP(1+len));
+        str=sizeof(FXint)+(FXchar*)realloc(str-sizeof(FXint),ROUNDUP(1+len)+sizeof(FXint));
       str[len]=0;
-      ((FXint*)str)[-1]=len;
+      *(((FXint*)str)-1)=len;
       }
     else if(str!=EMPTY){
       free(str-sizeof(FXint));
@@ -123,7 +119,7 @@ FXString::FXString(const FXchar* s):str(EMPTY){
 
 // Construct and init with substring
 FXString::FXString(const FXchar* s,FXint n):str(EMPTY){
-  if(0<n){
+  if(s && 0<n){
     length(n);
     memcpy(str,s,n);
     }
@@ -199,7 +195,7 @@ a:e=s;
       i=n;
       while(--i>=0){
         if(delim[i]==c){
-          if(--num) goto b; 
+          if(--num==0) goto b;
           break;
           }
         }
@@ -228,7 +224,7 @@ FXString& FXString::operator=(const FXString& s){
     register FXint len=s.length();
     if(0<len){
       length(len);
-      memcpy(str,s.str,len);
+      memmove(str,s.str,len);
       }
     else{
       length(0);
@@ -244,7 +240,7 @@ FXString& FXString::operator=(const FXchar* s){
     if(s && s[0]){
       register FXint len=strlen(s);
       length(len);
-      memcpy(str,s,len);
+      memmove(str,s,len);
       }
     else{
       length(0);
@@ -323,8 +319,13 @@ FXString& FXString::assign(FXchar c,FXint n){
 
 // Assign first n characters of input string to this string
 FXString& FXString::assign(const FXchar* s,FXint n){
-  length(n);
-  if(0<n){memmove(str,s,n);}
+  if(s && 0<n){
+    length(n);
+    memmove(str,s,n);
+    }
+  else{
+    length(0);
+    }
   return *this;
   }
 
@@ -338,7 +339,14 @@ FXString& FXString::assign(const FXString& s){
 
 // Assign input string to this string
 FXString& FXString::assign(const FXchar* s){
-  assign(s,strlen(s));
+  if(s && s[0]){
+    register FXint n=strlen(s);
+    length(n);
+    memmove(str,s,n);
+    }
+  else{
+    length(0);
+    }
   return *this;
   }
 
@@ -386,7 +394,7 @@ FXString& FXString::insert(FXint pos,FXchar c,FXint n){
 
 // Insert string at position
 FXString& FXString::insert(FXint pos,const FXchar* s,FXint n){
-  if(0<n){
+  if(s && 0<n){
     register FXint len=length();
     length(len+n);
     if(pos<=0){
@@ -414,7 +422,22 @@ FXString& FXString::insert(FXint pos,const FXString& s){
 
 // Insert string at position
 FXString& FXString::insert(FXint pos,const FXchar* s){
-  insert(pos,s,strlen(s));
+  if(s && s[0]){
+    register FXint len=length();
+    register FXint n=strlen(s);
+    length(len+n);
+    if(pos<=0){
+      memmove(&str[n],str,len);
+      memcpy(str,s,n);
+      }
+    else if(pos>=len){
+      memcpy(&str[len],s,n);
+      }
+    else{
+      memmove(&str[pos+n],&str[pos],len-pos);
+      memcpy(&str[pos],s,n);
+      }
+    }
   return *this;
   }
 
@@ -441,7 +464,7 @@ FXString& FXString::append(FXchar c,FXint n){
 
 // Add string to the end
 FXString& FXString::append(const FXchar* s,FXint n){
-  if(0<n){
+  if(s && 0<n){
     register FXint len=length();
     length(len+n);
     memcpy(&str[len],s,n);
@@ -459,7 +482,12 @@ FXString& FXString::append(const FXString& s){
 
 // Add string to the end
 FXString& FXString::append(const FXchar* s){
-  append(s,strlen(s));
+  if(s && s[0]){
+    register FXint len=length();
+    register FXint n=strlen(s);
+    length(len+n);
+    memcpy(&str[len],s,n);
+    }
   return *this;
   }
 
@@ -473,7 +501,7 @@ FXString& FXString::operator+=(const FXString& s){
 
 // Append string
 FXString& FXString::operator+=(const FXchar* s){
-  append(s,strlen(s));
+  append(s);
   return *this;
   }
 
@@ -497,7 +525,7 @@ FXString& FXString::prepend(FXchar c){
 
 // Prepend string
 FXString& FXString::prepend(const FXchar* s,FXint n){
-  if(0<n){
+  if(s && 0<n){
     register FXint len=length();
     length(len+n);
     memmove(&str[n],str,len);
@@ -528,7 +556,13 @@ FXString& FXString::prepend(const FXString& s){
 
 // Prepend string
 FXString& FXString::prepend(const FXchar* s){
-  prepend(s,strlen(s));
+  if(s && s[0]){
+    register FXint len=length();
+    register FXint n=strlen(s);
+    length(len+n);
+    memmove(&str[n],str,len);
+    memcpy(str,s,n);
+    }
   return *this;
   }
 
@@ -649,7 +683,6 @@ FXString& FXString::remove(FXint pos,FXint n){
     }
   return *this;
   }
-
 
 
 // Return number of occurrences of ch in string
@@ -1425,7 +1458,7 @@ FXString& FXString::vformat(const char* fmt,va_list args){
   register FXint len=0;
   if(fmt && *fmt){
     register FXint n=strlen(fmt);       // Result is longer than format string
-#if __GLIBC__>=2 || defined(WIN32)
+#if defined(WIN32) || defined(HAVE_VSNPRINTF)
     n+=128;                             // Add a bit of slop
 x:  length(n);
     len=vsnprintf(str,n+1,fmt,args);
@@ -1494,13 +1527,12 @@ FXString FXStringFormat(const FXchar* fmt,...){
 
 
 // Conversion of integer to string
-FXString FXStringVal(FXint num,FXint base){
-  FXchar buf[34];
-  register FXchar *p=buf+33;
-  register FXuint nn=(FXuint)num;
-  if(base<2 || base>16){fxerror("FXStringVal: base out of range\n");}
-  if(num<0){nn=(FXuint)(~num)+1;}
-  *p='\0';
+FXString FXStringVal(FXlong num,FXint base){
+  FXchar buf[66];
+  register FXchar *p=buf+66;
+  register FXulong nn=(FXulong)num;
+  if(base<2 || base>16){ fxerror("FXStringVal: base out of range.\n"); }
+  if(num<0){nn=(FXulong)(~num)+1;}
   do{
     *--p=FXString::HEX[nn%base];
     nn/=base;
@@ -1508,24 +1540,57 @@ FXString FXStringVal(FXint num,FXint base){
   while(nn);
   if(num<0) *--p='-';
   FXASSERT(buf<=p);
-  return FXString(p,buf+33-p);
+  return FXString(p,buf+66-p);
   }
 
 
-// Conversion of unsigned integer to string
-FXString FXStringVal(FXuint num,FXint base){
-  FXchar buf[34];
-  register FXchar *p=buf+33;
-  register FXuint nn=num;
-  if(base<2 || base>16){fxerror("FXStringVal: base out of range\n");}
-  *p='\0';
+// Conversion of unsigned long to string
+FXString FXStringVal(FXulong num,FXint base){
+  FXchar buf[66];
+  register FXchar *p=buf+66;
+  register FXulong nn=num;
+  if(base<2 || base>16){ fxerror("FXStringVal: base out of range.\n"); }
   do{
     *--p=FXString::HEX[nn%base];
     nn/=base;
     }
   while(nn);
   FXASSERT(buf<=p);
-  return FXString(p,buf+33-p);
+  return FXString(p,buf+66-p);
+  }
+
+
+// Conversion of integer to string
+FXString FXStringVal(FXint num,FXint base){
+  FXchar buf[34];
+  register FXchar *p=buf+34;
+  register FXuint nn=(FXuint)num;
+  if(base<2 || base>16){ fxerror("FXStringVal: base out of range.\n"); }
+  if(num<0){nn=(FXuint)(~num)+1;}
+  do{
+    *--p=FXString::HEX[nn%base];
+    nn/=base;
+    }
+  while(nn);
+  if(num<0) *--p='-';
+  FXASSERT(buf<=p);
+  return FXString(p,buf+34-p);
+  }
+
+
+// Conversion of unsigned integer to string
+FXString FXStringVal(FXuint num,FXint base){
+  FXchar buf[34];
+  register FXchar *p=buf+34;
+  register FXuint nn=num;
+  if(base<2 || base>16){ fxerror("FXStringVal: base out of range.\n"); }
+  do{
+    *--p=FXString::HEX[nn%base];
+    nn/=base;
+    }
+  while(nn);
+  FXASSERT(buf<=p);
+  return FXString(p,buf+34-p);
   }
 
 
@@ -1544,6 +1609,26 @@ FXString FXStringVal(FXdouble num,FXint prec,FXbool exp){
   return FXStringFormat(expo[exp],prec,num);
   }
 
+
+#ifndef HAVE_STRTOLL
+extern "C" FXlong strtoll(const char *nptr, char **endptr, int base);
+#endif
+
+
+#ifndef HAVE_STRTOULL
+extern "C" FXulong strtoull(const char *nptr, char **endptr, int base);
+#endif
+
+
+// Conversion of string to integer
+FXlong FXLongVal(const FXString& s,FXint base){
+  return (FXlong)strtoll(s.str,NULL,base);
+  }
+
+// Conversion of string to unsigned integer
+FXulong FXULongVal(const FXString& s,FXint base){
+  return (FXulong)strtoull(s.str,NULL,base);
+  }
 
 // Conversion of string to integer
 FXint FXIntVal(const FXString& s,FXint base){

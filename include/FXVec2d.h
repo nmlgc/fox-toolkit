@@ -3,7 +3,7 @@
 *       D o u b l e - P r e c i s i o n   2 - E l e m e n t   V e c t o r       *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1994,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1994,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXVec2d.h,v 1.4 2004/02/13 22:48:37 fox Exp $                            *
+* $Id: FXVec2d.h,v 1.7 2005/01/20 07:14:03 fox Exp $                            *
 ********************************************************************************/
 #ifndef FXVEC2D_H
 #define FXVEC2D_H
@@ -41,7 +41,7 @@ public:
   /// Copy constructor
   FXVec2d(const FXVec2d& v){x=v.x;y=v.y;}
 
-  // Initialize from array of floats
+  /// Initialize from array of floats
   FXVec2d(const FXdouble v[]){x=v[0];y=v[1];}
 
   /// Initialize with components
@@ -76,7 +76,7 @@ public:
   /// Adding
   friend FXAPI FXVec2d operator+(const FXVec2d& a,const FXVec2d& b){return FXVec2d(a.x+b.x,a.y+b.y);}
 
-  /// Substracting
+  /// Subtracting
   friend FXAPI FXVec2d operator-(const FXVec2d& a,const FXVec2d& b){return FXVec2d(a.x-b.x,a.y-b.y);}
 
   /// Scaling

@@ -5,7 +5,7 @@
 *********************************************************************************
 * Copyright (C) 2000 by Jeroen van der Zijp.   All Rights Reserved.             *
 *********************************************************************************
-* $Id: imageviewer.cpp,v 1.103 2004/04/28 16:29:07 fox Exp $                    *
+* $Id: imageviewer.cpp,v 1.109 2005/02/02 03:23:11 fox Exp $                    *
 ********************************************************************************/
 #include "fx.h"
 #ifdef HAVE_PNG_H
@@ -42,8 +42,6 @@ protected:
   FXString           filename;              // File being viewed
   FXMenuBar         *menubar;               // Menu bar
   FXToolBar         *toolbar;               // Tool bar
-  FXToolBarShell    *dragshell1;            // Shell for floating menubar
-  FXToolBarShell    *dragshell2;            // Shell for floating toolbar
   FXStatusBar       *statusbar;             // Status bar
   FXSplitter        *splitter;              // Splitter
   FXHorizontalFrame *filebox;               // Box containing directories/files
@@ -265,14 +263,10 @@ ImageWindow::ImageWindow(FXApp* a):FXMainWindow(a,"FOX Image Viewer: - untitled"
   FXColorDialog *colordlg=new FXColorDialog(this,"Color Dialog");
 
   // Make menu bar
-  dragshell1=new FXToolBarShell(this,0);
-  menubar=new FXMenuBar(this,dragshell1,LAYOUT_SIDE_TOP|LAYOUT_FILL_X|FRAME_RAISED);
-  new FXToolBarGrip(menubar,menubar,FXMenuBar::ID_TOOLBARGRIP,TOOLBARGRIP_DOUBLE);
+  menubar=new FXMenuBar(this,LAYOUT_SIDE_TOP|LAYOUT_FILL_X|FRAME_RAISED);
 
   // Tool bar
-  dragshell2=new FXToolBarShell(this,0);
-  toolbar=new FXToolBar(this,dragshell2,LAYOUT_SIDE_TOP|PACK_UNIFORM_WIDTH|PACK_UNIFORM_HEIGHT|FRAME_RAISED|LAYOUT_FILL_X);
-  new FXToolBarGrip(toolbar,toolbar,FXToolBar::ID_TOOLBARGRIP,TOOLBARGRIP_DOUBLE);
+  toolbar=new FXToolBar(this,LAYOUT_SIDE_TOP|PACK_UNIFORM_WIDTH|PACK_UNIFORM_HEIGHT|FRAME_RAISED|LAYOUT_FILL_X);
 
   // Make menu bar
   //menubar=new FXMenuBar(this,LAYOUT_SIDE_TOP|LAYOUT_FILL_X|FRAME_RAISED);
@@ -386,7 +380,7 @@ ImageWindow::ImageWindow(FXApp* a):FXMainWindow(a,"FOX Image Viewer: - untitled"
   new FXMenuCommand(viewmenu,"Rows of icons\t\tView row-wise.",NULL,filelist,FXFileList::ID_ARRANGE_BY_ROWS);
   new FXMenuCommand(viewmenu,"Columns of icons\t\tView column-wise.",NULL,filelist,FXFileList::ID_ARRANGE_BY_COLUMNS);
   new FXMenuCommand(viewmenu,"Toolbar\t\tDisplay toolbar.",NULL,toolbar,FXWindow::ID_TOGGLESHOWN);
-  new FXMenuCommand(viewmenu,"Float toolbar\t\tUndock the toolbar.",NULL,toolbar,FXToolBar::ID_UNDOCK);
+  new FXMenuCommand(viewmenu,"Float toolbar\t\tUndock the toolbar.",NULL,toolbar,FXToolBar::ID_DOCK_FLOAT);
   new FXMenuCommand(viewmenu,"Dock toolbar top\t\tDock the toolbar on the top.",NULL,toolbar,FXToolBar::ID_DOCK_TOP);
   new FXMenuCommand(viewmenu,"Dock toolbar left\t\tDock the toolbar on the left.",NULL,toolbar,FXToolBar::ID_DOCK_LEFT);
   new FXMenuCommand(viewmenu,"Dock toolbar right\t\tDock the toolbar on the right.",NULL,toolbar,FXToolBar::ID_DOCK_RIGHT);
@@ -415,8 +409,6 @@ ImageWindow::~ImageWindow(){
   delete manipmenu;
   delete helpmenu;
   delete viewmenu;
-  delete dragshell1;
-  delete dragshell2;
   delete fileopenicon;
   delete filesaveicon;
   delete cuticon;
@@ -466,6 +458,12 @@ FXbool ImageWindow::loadimage(const FXString& file){
     }
   else if(comparecase(ext,"ppm")==0){
     img=new FXPPMImage(getApp(),NULL,IMAGE_KEEP|IMAGE_SHMI|IMAGE_SHMP);
+    }
+  else if(comparecase(ext,"iff")==0 || comparecase(ext,"lbm")==0){
+    img=new FXIFFImage(getApp(),NULL,IMAGE_KEEP|IMAGE_SHMI|IMAGE_SHMP);
+    }
+  else if(comparecase(ext,"ras")==0){
+    img=new FXRASImage(getApp(),NULL,IMAGE_KEEP|IMAGE_SHMI|IMAGE_SHMP);
     }
 #ifdef HAVE_PNG_H
   else if(comparecase(ext,"png")==0){
@@ -719,7 +717,7 @@ long ImageWindow::onCmdCrop(FXObject*,FXSelector,void*){
   new FXButton(frame,"Cancel",NULL,&croppanel,FXDialogBox::ID_CANCEL,LAYOUT_CENTER_Y|FRAME_RAISED|FRAME_THICK,0,0,0,0, 20,20,4,4);
   new FXButton(frame,"OK",NULL,&croppanel,FXDialogBox::ID_ACCEPT,LAYOUT_CENTER_Y|FRAME_RAISED|FRAME_THICK,0,0,0,0, 30,30,4,4);
   if(!croppanel.execute()) return 1;
-  if(cx<0 || cy<0 || cx+cw>image->getWidth() || cy+ch>image->getHeight()) return 1;
+  if(cx+cw<=0 || cy+ch<=0 || cx>=image->getWidth() || cy>=image->getHeight()) return 1;
   image->crop(cx,cy,cw,ch);
   imageview->setImage(image);
   return 1;
