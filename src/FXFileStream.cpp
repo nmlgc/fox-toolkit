@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXFileStream.cpp,v 1.13 2004/03/02 23:37:10 fox Exp $                     *
+* $Id: FXFileStream.cpp,v 1.13.2.1 2005/03/18 05:37:07 fox Exp $                     *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -60,14 +60,12 @@ unsigned long FXFileStream::writeBuffer(unsigned long){
   if(code==FXStreamOK){
     m=wrptr-rdptr;
     n=::write(file,rdptr,m);
-    if(n<0){
-      code=FXStreamFull;
-      return endptr-wrptr;
+    if(0<n){
+      m-=n;
+      if(m){memmove(begptr,rdptr+n,m);}
+      rdptr=begptr;
+      wrptr=begptr+m;
       }
-    m-=n;
-    if(m){memmove(begptr,rdptr+n,m);}
-    rdptr=begptr;
-    wrptr=begptr+m;
     return endptr-wrptr;
     }
   return 0;
@@ -87,11 +85,9 @@ unsigned long FXFileStream::readBuffer(unsigned long){
     rdptr=begptr;
     wrptr=begptr+m;
     n=::read(file,wrptr,endptr-wrptr);
-    if(n<0){
-      code=FXStreamEnd;
-      return wrptr-rdptr;
+    if(0<n){
+      wrptr+=n;
       }
-    wrptr+=n;
     return wrptr-rdptr;
     }
   return 0;
@@ -144,7 +140,7 @@ FXbool FXFileStream::position(long offset,FXWhence whence){
     FXASSERT(FXFromCurrent==SEEK_CUR);
     FXASSERT(FXFromEnd==SEEK_END);
     if(dir==FXStreamSave){
-    
+
       // Flush unwritten data
       writeBuffer(0);
 

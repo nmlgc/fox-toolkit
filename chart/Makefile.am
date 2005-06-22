@@ -4,22 +4,22 @@ CXXFLAGS = @CXXFLAGS@ @X_CFLAGS@
 INCLUDES = -I$(top_srcdir)/include -I$(top_builddir)/include
 RESWRAP  = $(top_builddir)/utils/reswrap
 SUFFIXES = .gif .bmp
-LDADD	 =  libCHART-1.1.la ../src/libFOX-1.1.la -lm
+LDADD	 =  libCHART-1.2.la ../src/libFOX-1.2.la -lm
 
-lib_LTLIBRARIES = libCHART-1.1.la
+lib_LTLIBRARIES = libCHART-1.2.la
 
-libCHART_1_1_la_LIBADD  = $(X_LIBS) $(X_BASE_LIBS) $(X_EXTRA_LIBS)
+libCHART_1_2_la_LIBADD  = $(X_LIBS) $(X_BASE_LIBS) $(X_EXTRA_LIBS)
 
-libCHART_1_1_la_LDFLAGS = \
+libCHART_1_2_la_LDFLAGS = \
         -version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)    \
 	-export-dynamic
 
-chartincludedir=$(includedir)/fox-1.1/chart
+chartincludedir=$(includedir)/fox-1.2/chart
 
 chartinclude_HEADERS = \
 FXChart.h
 
-libCHART_1_1_la_SOURCES = \
+libCHART_1_2_la_SOURCES = \
 FXChart.cpp
 
 

@@ -5,7 +5,7 @@
 ##############################################################################
 # Copyright (C) 1997,2003 by Jeroen van der Zijp.   All Rights Reserved.     #
 ##############################################################################
-# $Id: Makefile.bc,v 1.91 2004/04/24 02:19:23 fox Exp $                      #
+# $Id: Makefile.bc,v 1.91.2.2 2004/06/24 13:57:24 fox Exp $                      #
 ##############################################################################
 # This library is free software; you can redistribute it and/or 	     #
 # modify it under the terms of the GNU Library General Public		     #
@@ -26,14 +26,13 @@ CXX	  = bcc32
 RM	  = del
 LIB	  = tlib
 TOPDIR	  = ..
-# Uncomment the following two lines for debug builds...
-#CXXFLAGS  = -5 -Od -w-aus -w-ccc -w-csu -w-par -w-pia -w-rch -w-inl -w-ngu
-#DEFINES   = -DFOX_BIGENDIAN=0 -DWIN32 -D_WINDOWS -DHAVE_OPENGL
-# Uncomment the following two lines for release builds...
+# Uncomment the following line for debug builds...
+#CXXFLAGS  = -5 -Od -w-aus -w-ccc -w-csu -w-par -w-pia -w-rch -w-inl -w-ngu -v
+# Uncomment the following line for release builds...
 CXXFLAGS  = -5 -O2 -w-aus -w-ccc -w-csu -w-par -w-pia -w-rch -w-inl -w-ngu
 DEFINES   = -DFOX_BIGENDIAN=0 -DNDEBUG -D_WINDOWS -DWIN32 -DHAVE_GL_H -DHAVE_GLU_H -DHAVE_VSSCANF #-DHAVE_PNG_H -DHAVE_JPEG_H -DHAVE_TIFF_H -DXMD_H
 INCDIRS   = -I$(TOPDIR)/include
-FOXLIB	  = $(TOPDIR)\src\FOX-1.1.lib
+FOXLIB	  = $(TOPDIR)\src\FOX-1.2.lib
 
 
 .SUFFIXES: .cpp .c

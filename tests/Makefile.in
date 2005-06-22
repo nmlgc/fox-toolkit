@@ -59,21 +59,30 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 host_alias = @host_alias@
 host_triplet = @host@
+AR = @AR@
 AS = @AS@
 CC = @CC@
 CPP = @CPP@
 CXX = @CXX@
+CXXCPP = @CXXCPP@
 DLLTOOL = @DLLTOOL@
 ECHO = @ECHO@
+EGREP = @EGREP@
 EXEEXT = @EXEEXT@
+F77 = @F77@
 FOX_BYTEORDER = @FOX_BYTEORDER@
 FOX_MAJOR_VERSION = @FOX_MAJOR_VERSION@
 FOX_MINOR_VERSION = @FOX_MINOR_VERSION@
 FOX_PATCH_LEVEL = @FOX_PATCH_LEVEL@
+GCJ = @GCJ@
+GCJFLAGS = @GCJFLAGS@
 GL_LIBS = @GL_LIBS@
 GL_TESTS = @GL_TESTS@
+HAVE_LIB = @HAVE_LIB@
+LIB = @LIB@
 LIBTOOL = @LIBTOOL@
 LN_S = @LN_S@
+LTLIB = @LTLIB@
 LT_AGE = @LT_AGE@
 LT_CURRENT = @LT_CURRENT@
 LT_RELEASE = @LT_RELEASE@
@@ -83,6 +92,7 @@ OBJDUMP = @OBJDUMP@
 OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
 RANLIB = @RANLIB@
+RC = @RC@
 STRIP = @STRIP@
 VERSION = @VERSION@
 X_BASE_LIBS = @X_BASE_LIBS@
@@ -90,7 +100,7 @@ X_BASE_LIBS = @X_BASE_LIBS@
 CXXFLAGS = @CXXFLAGS@ @X_CFLAGS@
 INCLUDES = -I$(top_srcdir)/include -I$(top_builddir)/include
 
-LDADD = ../src/libFOX-1.1.la -lm
+LDADD = ../src/libFOX-1.2.la -lm
 
 #gltest_LDADD	= $(LDADD) $(GL_LIBS)
 #glviewer_LDADD  = $(LDADD) $(GL_LIBS)
@@ -155,115 +165,115 @@ X_EXTRA_LIBS = @X_EXTRA_LIBS@
 X_PRE_LIBS = @X_PRE_LIBS@
 gltest_OBJECTS =  gltest.$(OBJEXT)
 gltest_LDADD = $(LDADD)
-gltest_DEPENDENCIES =  ../src/libFOX-1.1.la
+gltest_DEPENDENCIES =  ../src/libFOX-1.2.la
 gltest_LDFLAGS = 
 glviewer_OBJECTS =  glviewer.$(OBJEXT)
 glviewer_LDADD = $(LDADD)
-glviewer_DEPENDENCIES =  ../src/libFOX-1.1.la
+glviewer_DEPENDENCIES =  ../src/libFOX-1.2.la
 glviewer_LDFLAGS = 
 wizard_OBJECTS =  wizard.$(OBJEXT)
 wizard_LDADD = $(LDADD)
-wizard_DEPENDENCIES =  ../src/libFOX-1.1.la
+wizard_DEPENDENCIES =  ../src/libFOX-1.2.la
 wizard_LDFLAGS = 
 layout_OBJECTS =  layout.$(OBJEXT)
 layout_LDADD = $(LDADD)
-layout_DEPENDENCIES =  ../src/libFOX-1.1.la
+layout_DEPENDENCIES =  ../src/libFOX-1.2.la
 layout_LDFLAGS = 
 rex_OBJECTS =  rex.$(OBJEXT)
 rex_LDADD = $(LDADD)
-rex_DEPENDENCIES =  ../src/libFOX-1.1.la
+rex_DEPENDENCIES =  ../src/libFOX-1.2.la
 rex_LDFLAGS = 
 table_OBJECTS =  table.$(OBJEXT)
 table_LDADD = $(LDADD)
-table_DEPENDENCIES =  ../src/libFOX-1.1.la
+table_DEPENDENCIES =  ../src/libFOX-1.2.la
 table_LDFLAGS = 
 minheritance_OBJECTS =  minheritance.$(OBJEXT)
 minheritance_LDADD = $(LDADD)
-minheritance_DEPENDENCIES =  ../src/libFOX-1.1.la
+minheritance_DEPENDENCIES =  ../src/libFOX-1.2.la
 minheritance_LDFLAGS = 
 bitmapviewer_OBJECTS =  bitmapviewer.$(OBJEXT)
 bitmapviewer_LDADD = $(LDADD)
-bitmapviewer_DEPENDENCIES =  ../src/libFOX-1.1.la
+bitmapviewer_DEPENDENCIES =  ../src/libFOX-1.2.la
 bitmapviewer_LDFLAGS = 
 imageviewer_OBJECTS =  imageviewer.$(OBJEXT)
 imageviewer_LDADD = $(LDADD)
-imageviewer_DEPENDENCIES =  ../src/libFOX-1.1.la
+imageviewer_DEPENDENCIES =  ../src/libFOX-1.2.la
 imageviewer_LDFLAGS = 
 button_OBJECTS =  button.$(OBJEXT)
 button_LDADD = $(LDADD)
-button_DEPENDENCIES =  ../src/libFOX-1.1.la
+button_DEPENDENCIES =  ../src/libFOX-1.2.la
 button_LDFLAGS = 
 datatarget_OBJECTS =  datatarget.$(OBJEXT)
 datatarget_LDADD = $(LDADD)
-datatarget_DEPENDENCIES =  ../src/libFOX-1.1.la
+datatarget_DEPENDENCIES =  ../src/libFOX-1.2.la
 datatarget_LDFLAGS = 
 dctest_OBJECTS =  dctest.$(OBJEXT)
 dctest_LDADD = $(LDADD)
-dctest_DEPENDENCIES =  ../src/libFOX-1.1.la
+dctest_DEPENDENCIES =  ../src/libFOX-1.2.la
 dctest_LDFLAGS = 
 dialog_OBJECTS =  dialog.$(OBJEXT)
 dialog_LDADD = $(LDADD)
-dialog_DEPENDENCIES =  ../src/libFOX-1.1.la
+dialog_DEPENDENCIES =  ../src/libFOX-1.2.la
 dialog_LDFLAGS = 
 dirlist_OBJECTS =  dirlist.$(OBJEXT)
 dirlist_LDADD = $(LDADD)
-dirlist_DEPENDENCIES =  ../src/libFOX-1.1.la
+dirlist_DEPENDENCIES =  ../src/libFOX-1.2.la
 dirlist_LDFLAGS = 
 foursplit_OBJECTS =  foursplit.$(OBJEXT)
 foursplit_LDADD = $(LDADD)
-foursplit_DEPENDENCIES =  ../src/libFOX-1.1.la
+foursplit_DEPENDENCIES =  ../src/libFOX-1.2.la
 foursplit_LDFLAGS = 
 groupbox_OBJECTS =  groupbox.$(OBJEXT)
 groupbox_LDADD = $(LDADD)
-groupbox_DEPENDENCIES =  ../src/libFOX-1.1.la
+groupbox_DEPENDENCIES =  ../src/libFOX-1.2.la
 groupbox_LDFLAGS = 
 header_OBJECTS =  header.$(OBJEXT)
 header_LDADD = $(LDADD)
-header_DEPENDENCIES =  ../src/libFOX-1.1.la
+header_DEPENDENCIES =  ../src/libFOX-1.2.la
 header_LDFLAGS = 
 hello_OBJECTS =  hello.$(OBJEXT)
 hello_LDADD = $(LDADD)
-hello_DEPENDENCIES =  ../src/libFOX-1.1.la
+hello_DEPENDENCIES =  ../src/libFOX-1.2.la
 hello_LDFLAGS = 
 hello2_OBJECTS =  hello2.$(OBJEXT)
 hello2_LDADD = $(LDADD)
-hello2_DEPENDENCIES =  ../src/libFOX-1.1.la
+hello2_DEPENDENCIES =  ../src/libFOX-1.2.la
 hello2_LDFLAGS = 
 iconlist_OBJECTS =  iconlist.$(OBJEXT)
 iconlist_LDADD = $(LDADD)
-iconlist_DEPENDENCIES =  ../src/libFOX-1.1.la
+iconlist_DEPENDENCIES =  ../src/libFOX-1.2.la
 iconlist_LDFLAGS = 
 image_OBJECTS =  image.$(OBJEXT)
 image_LDADD = $(LDADD)
-image_DEPENDENCIES =  ../src/libFOX-1.1.la
+image_DEPENDENCIES =  ../src/libFOX-1.2.la
 image_LDFLAGS = 
 mditest_OBJECTS =  mditest.$(OBJEXT)
 mditest_LDADD = $(LDADD)
-mditest_DEPENDENCIES =  ../src/libFOX-1.1.la
+mditest_DEPENDENCIES =  ../src/libFOX-1.2.la
 mditest_LDFLAGS = 
 scribble_OBJECTS =  scribble.$(OBJEXT)
 scribble_LDADD = $(LDADD)
-scribble_DEPENDENCIES =  ../src/libFOX-1.1.la
+scribble_DEPENDENCIES =  ../src/libFOX-1.2.la
 scribble_LDFLAGS = 
 shutter_OBJECTS =  shutter.$(OBJEXT)
 shutter_LDADD = $(LDADD)
-shutter_DEPENDENCIES =  ../src/libFOX-1.1.la
+shutter_DEPENDENCIES =  ../src/libFOX-1.2.la
 shutter_LDFLAGS = 
 splitter_OBJECTS =  splitter.$(OBJEXT)
 splitter_LDADD = $(LDADD)
-splitter_DEPENDENCIES =  ../src/libFOX-1.1.la
+splitter_DEPENDENCIES =  ../src/libFOX-1.2.la
 splitter_LDFLAGS = 
 switcher_OBJECTS =  switcher.$(OBJEXT)
 switcher_LDADD = $(LDADD)
-switcher_DEPENDENCIES =  ../src/libFOX-1.1.la
+switcher_DEPENDENCIES =  ../src/libFOX-1.2.la
 switcher_LDFLAGS = 
 tabbook_OBJECTS =  tabbook.$(OBJEXT)
 tabbook_LDADD = $(LDADD)
-tabbook_DEPENDENCIES =  ../src/libFOX-1.1.la
+tabbook_DEPENDENCIES =  ../src/libFOX-1.2.la
 tabbook_LDFLAGS = 
 ratio_OBJECTS =  ratio.$(OBJEXT)
 ratio_LDADD = $(LDADD)
-ratio_DEPENDENCIES =  ../src/libFOX-1.1.la
+ratio_DEPENDENCIES =  ../src/libFOX-1.2.la
 ratio_LDFLAGS = 
 CXXCOMPILE = $(CXX) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
 LTCXXCOMPILE = $(LIBTOOL) --mode=compile $(CXX) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
@@ -1735,7 +1745,9 @@ image.o: image.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXToolBarShell.h ../include/FXToolBarTab.h \
 	../include/FXPrintDialog.h ../include/FXDebugTarget.h \
 	../include/FXPNGImage.h ../include/FXJPGImage.h \
-	../include/FXTIFImage.h ../include/FXGradientBar.h
+	../include/FXTIFImage.h ../include/FXICOImage.h \
+	../include/FXTGAImage.h ../include/FXRGBImage.h \
+	../include/FXGradientBar.h
 imageviewer.o: imageviewer.cpp ../include/fx.h ../include/fxver.h \
 	../include/fxdefs.h ../include/FXException.h \
 	../include/FXStream.h ../include/FXFileStream.h \
@@ -1817,7 +1829,9 @@ imageviewer.o: imageviewer.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXToolBarShell.h ../include/FXToolBarTab.h \
 	../include/FXPrintDialog.h ../include/FXDebugTarget.h \
 	../include/FXPNGImage.h ../include/FXJPGImage.h \
-	../include/FXTIFImage.h
+	../include/FXTIFImage.h ../include/FXICOImage.h \
+	../include/FXTGAImage.h ../include/FXRGBImage.h \
+	../include/FXPPMImage.h
 layout.o: layout.cpp ../include/fx.h ../include/fxver.h \
 	../include/fxdefs.h ../include/FXException.h \
 	../include/FXStream.h ../include/FXFileStream.h \
@@ -2458,7 +2472,8 @@ splitter.o: splitter.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXMDIClient.h ../include/FXMDIChild.h \
 	../include/FXDocument.h ../include/FXToolBarGrip.h \
 	../include/FXToolBarShell.h ../include/FXToolBarTab.h \
-	../include/FXPrintDialog.h ../include/FXDebugTarget.h
+	../include/FXPrintDialog.h ../include/FXDebugTarget.h \
+	../include/FXFoldingList.h
 switcher.o: switcher.cpp ../include/fx.h ../include/fxver.h \
 	../include/fxdefs.h ../include/FXException.h \
 	../include/FXStream.h ../include/FXFileStream.h \

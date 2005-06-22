@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXGLCanvas.cpp,v 1.51 2004/04/28 16:29:07 fox Exp $                      *
+* $Id: FXGLCanvas.cpp,v 1.51.2.1 2004/05/19 03:35:41 fox Exp $                      *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -232,10 +232,14 @@ FXbool FXGLCanvas::makeNonCurrent(){
 
 // Return current context, if any
 void* FXGLCanvas::getCurrentContext(){
+#ifdef HAVE_GL_H
 #ifndef WIN32
-   return (void*)glXGetCurrentContext();
+  return (void*)glXGetCurrentContext();
 #else
-   return (void*)wglGetCurrentContext();
+  return (void*)wglGetCurrentContext();
+#endif
+#else
+  return NULL;
 #endif
   }
 

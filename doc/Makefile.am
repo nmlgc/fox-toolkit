@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 
 #htmldir = $(prefix)/@PACKAGE@/html
-htmldir = $(datadir)/doc/fox-1.1/html
+htmldir = $(datadir)/doc/fox-1.2/html
 
 SUBDIRS = art screenshots
 

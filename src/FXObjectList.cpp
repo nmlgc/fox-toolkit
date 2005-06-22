@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXObjectList.cpp,v 1.30 2004/02/08 17:29:06 fox Exp $                    *
+* $Id: FXObjectList.cpp,v 1.30.2.1 2004/06/12 05:09:53 fox Exp $                    *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -64,7 +64,7 @@ static const FXObject* emptylist[2]={0,0};
 
 // Change number of items in list
 void FXObjectList::no(FXint num){
-  register FXint old=((FXint*)data)[-1];
+  register FXint old=*((FXint*)(data-1));
   if(old!=num){
     if(0<num){
       if(data==EMPTY){
@@ -74,7 +74,7 @@ void FXObjectList::no(FXint num){
         data=1+((FXObject**)realloc(data-1,ROUNDUP(num)*sizeof(FXObject*)+sizeof(FXObject*)));
         }
       if(num>old){memset(data+old,0,(num-old)*sizeof(FXObject*));}
-      ((FXint*)data)[-1]=num;
+      *((FXint*)(data-1))=num;
       }
     else if(data!=EMPTY){
       free(data-1);

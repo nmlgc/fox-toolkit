@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXFile.cpp,v 1.174 2004/04/16 14:25:33 fox Exp $                         *
+* $Id: FXFile.cpp,v 1.174.2.1 2005/06/22 03:32:59 fox Exp $                         *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -226,12 +226,12 @@ FXString FXFile::getExecPath(){
   }
 
 
-/// Return temporary directory.
+// Return temporary directory.
 FXString FXFile::getTempDirectory(){
 #ifndef WIN32
   // Conform Linux File Hierarchy standard; this should be
   // good for SUN, SGI, HP-UX, AIX, and OSF1 also.
-  return FXString("/tmp",5);
+  return FXString("/tmp",4);
 #else
   FXchar buffer[MAXPATHLEN];
   FXuint len=GetTempPath(MAXPATHLEN,buffer);

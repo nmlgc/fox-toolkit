@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXVec4f.h,v 1.9 2004/05/13 22:36:05 fox Exp $                            *
+* $Id: FXVec4f.h,v 1.9.2.1 2004/06/04 04:32:23 fox Exp $                            *
 ********************************************************************************/
 #ifndef FXVEC4F_H
 #define FXVEC4F_H
@@ -106,7 +106,7 @@ public:
   friend FXAPI FXfloat operator*(const FXVec4f& a,const FXVec4f& b){return a.x*b.x+a.y*b.y+a.z*b.z+a.w*b.w;}
 
   /// Test if zero
-  friend FXAPI FXVec4f operator!(const FXVec4f& a){return a.x==0.0f && a.y==0.0f && a.z==0.0f && a.w==0.0f;}
+  friend FXAPI int operator!(const FXVec4f& a){return a.x==0.0f && a.y==0.0f && a.z==0.0f && a.w==0.0f;}
 
   /// Equality tests
   friend FXAPI int operator==(const FXVec4f& a,const FXVec4f& b){return a.x==b.x && a.y==b.y && a.z==b.z && a.w==b.w;}

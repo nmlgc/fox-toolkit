@@ -21,7 +21,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXTable.cpp,v 1.184 2004/04/05 14:49:33 fox Exp $                        *
+* $Id: FXTable.cpp,v 1.184.2.1 2005/06/22 03:32:59 fox Exp $                        *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -1289,10 +1289,8 @@ void FXTable::setCurrentItem(FXint r,FXint c,FXbool notify){
 
 // Set anchor item
 void FXTable::setAnchorItem(FXint r,FXint c){
-  if(r<-1 || nrows<=r){ fxerror("%s::setAnchorItem: row index out of range.\n",getClassName()); }
-  if(c<-1 || ncols<=c){ fxerror("%s::setAnchorItem: column index out of range.\n",getClassName()); }
-  anchor.row=r;
-  anchor.col=c;
+  anchor.row=FXCLAMP(-1,r,nrows-1);
+  anchor.col=FXCLAMP(-1,c,ncols-1);
   }
 
 

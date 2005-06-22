@@ -59,21 +59,30 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 host_alias = @host_alias@
 host_triplet = @host@
+AR = @AR@
 AS = @AS@
 CC = @CC@
 CPP = @CPP@
 CXX = @CXX@
+CXXCPP = @CXXCPP@
 DLLTOOL = @DLLTOOL@
 ECHO = @ECHO@
+EGREP = @EGREP@
 EXEEXT = @EXEEXT@
+F77 = @F77@
 FOX_BYTEORDER = @FOX_BYTEORDER@
 FOX_MAJOR_VERSION = @FOX_MAJOR_VERSION@
 FOX_MINOR_VERSION = @FOX_MINOR_VERSION@
 FOX_PATCH_LEVEL = @FOX_PATCH_LEVEL@
+GCJ = @GCJ@
+GCJFLAGS = @GCJFLAGS@
 GL_LIBS = @GL_LIBS@
 GL_TESTS = @GL_TESTS@
+HAVE_LIB = @HAVE_LIB@
+LIB = @LIB@
 LIBTOOL = @LIBTOOL@
 LN_S = @LN_S@
+LTLIB = @LTLIB@
 LT_AGE = @LT_AGE@
 LT_CURRENT = @LT_CURRENT@
 LT_RELEASE = @LT_RELEASE@
@@ -83,6 +92,7 @@ OBJDUMP = @OBJDUMP@
 OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
 RANLIB = @RANLIB@
+RC = @RC@
 STRIP = @STRIP@
 VERSION = @VERSION@
 X_BASE_LIBS = @X_BASE_LIBS@
@@ -92,11 +102,11 @@ INCLUDES = -I$(top_srcdir)/include -I$(top_builddir)/include
 RESWRAP = $(top_builddir)/utils/reswrap
 SUFFIXES = .gif .bmp
 
-lib_LTLIBRARIES = libFOX-1.1.la
+lib_LTLIBRARIES = libFOX-1.2.la
 
-libFOX_1_1_la_LIBADD = $(X_LIBS) $(X_BASE_LIBS) $(X_EXTRA_LIBS) $(GL_LIBS)
+libFOX_1_2_la_LIBADD = $(X_LIBS) $(X_BASE_LIBS) $(X_EXTRA_LIBS) $(GL_LIBS)
 
-libFOX_1_1_la_LDFLAGS =          -version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)    	-export-dynamic
+libFOX_1_2_la_LDFLAGS =          -version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)    	-export-dynamic
 
 
 #libFOX_la_LDFLAGS = \
@@ -110,7 +120,7 @@ CURSORS =  crosshair.xbm crosshair_mask.xbm dndcopy.xbm dndcopy_mask.xbm dndlink
 ICONS =  arrownext.gif arrowprev.gif bigapp.gif bigcdrom.gif bigcomputer.gif bigdesktop.gif bigdoc.gif bigfloppy.gif bigfolder.gif bigfolderopen.gif bignetdrive.gif bignethood.gif bookset.gif bookclr.gif cmymode.gif dialmode.gif dirupicon.gif deleteicon.gif entericon.gif erroricon.gif eyedrop.gif filecopy.gif filemove.gif filehidden.gif filelink.gif filerename.gif filedelete.gif fileshown.gif foldernew.gif gotohome.gif gotoicon.gif gotowork.gif hsvmode.gif infoicon.gif landscape.gif listmode.gif miniapp.gif minicdrom.gif minicomputer.gif minidesktop.gif minidoc.gif minifloppy.gif minifolder.gif minifolderopen.gif miniharddisk.gif mininetdrive.gif mininethood.gif minizipdrive.gif portrait.gif questionicon.gif rgbmode.gif searchicon.gif showbigicons.gif showdetails.gif showsmallicons.gif warningicon.gif winclose.gif winmaximize.gif winminimize.gif winrestore.gif
 
 
-libFOX_1_1_la_SOURCES =  FX4Splitter.cpp FXAccelTable.cpp FXApp.cpp FXArrowButton.cpp FXBMPIcon.cpp FXBMPImage.cpp FXBitmap.cpp FXBitmapFrame.cpp FXBitmapView.cpp FXButton.cpp FXBZStream.cpp FXCURCursor.cpp FXCanvas.cpp FXCharset.cpp FXCheckButton.cpp FXColorBar.cpp FXColorDialog.cpp FXColorNames.cpp FXColorSelector.cpp FXColorWell.cpp FXColorWheel.cpp FXComboBox.cpp FXComposite.cpp FXCursor.cpp FXDC.cpp FXDCPrint.cpp FXDCWindow.cpp FXDLL.cpp FXDataTarget.cpp FXDebugTarget.cpp FXDelegator.cpp FXDial.cpp FXDialogBox.cpp FXDict.cpp FXDirBox.cpp FXDirDialog.cpp FXDirList.cpp FXDirSelector.cpp FXDocument.cpp FXDragCorner.cpp FXDrawable.cpp FXDriveBox.cpp FXException.cpp FXFile.cpp FXFileDialog.cpp FXFileDict.cpp FXFileList.cpp FXFileSelector.cpp FXFileStream.cpp FXFoldingList.cpp FXFont.cpp FXFontDialog.cpp FXFontSelector.cpp FXFrame.cpp FXGIFCursor.cpp FXGIFIcon.cpp FXGIFImage.cpp FXGLCanvas.cpp FXGLCone.cpp FXGLContext.cpp FXGLCube.cpp FXGLCylinder.cpp FXGLObject.cpp FXGLShape.cpp FXGLSphere.cpp FXGLTriangleMesh.cpp FXGLViewer.cpp FXGLVisual.cpp FXGradientBar.cpp FXGroupBox.cpp FXGZStream.cpp FXHash.cpp FXHeader.cpp FXHorizontalFrame.cpp FXICOIcon.cpp FXICOImage.cpp FXIcon.cpp FXIconList.cpp FXId.cpp FXImage.cpp FXImageFrame.cpp FXImageView.cpp FXInputDialog.cpp FXJPGIcon.cpp FXJPGImage.cpp FXLabel.cpp FXList.cpp FXListBox.cpp FXMDIButton.cpp FXMDIChild.cpp FXMDIClient.cpp FXMainWindow.cpp FXMat3d.cpp FXMat4d.cpp FXMat3f.cpp FXMat4f.cpp FXMatrix.cpp FXMemoryStream.cpp FXMenuBar.cpp FXMenuButton.cpp FXMenuCaption.cpp FXMenuCascade.cpp FXMenuCheck.cpp FXMenuRadio.cpp FXMenuCommand.cpp FXMenuPane.cpp FXMenuSeparator.cpp FXMenuTitle.cpp FXMessageBox.cpp FXObject.cpp FXObjectList.cpp FXOptionMenu.cpp FXPCXIcon.cpp FXPCXImage.cpp FXPNGIcon.cpp FXPNGImage.cpp FXPPMIcon.cpp FXPPMImage.cpp FXPacker.cpp FXPicker.cpp FXPopup.cpp FXPoint.cpp FXPrintDialog.cpp FXProgressBar.cpp FXProgressDialog.cpp FXQuatd.cpp FXQuatf.cpp FXRGBIcon.cpp FXRGBImage.cpp FXRadioButton.cpp FXRangef.cpp FXRanged.cpp FXRealSlider.cpp FXRealSpinner.cpp FXRecentFiles.cpp FXRectangle.cpp FXRegion.cpp FXRegistry.cpp FXReplaceDialog.cpp FXRex.cpp FXRootWindow.cpp FXRuler.cpp FXScrollArea.cpp FXScrollBar.cpp FXScrollPane.cpp FXScrollWindow.cpp FXSearchDialog.cpp FXSeparator.cpp FXSettings.cpp FXShell.cpp FXShutter.cpp FXSize.cpp FXSlider.cpp FXSpinner.cpp FXSpheref.cpp FXSphered.cpp FXSplitter.cpp FXSpring.cpp FXStatusBar.cpp FXStatusLine.cpp FXStream.cpp FXString.cpp FXStringDict.cpp FXSwitcher.cpp FXTGAIcon.cpp FXTGAImage.cpp FXTIFIcon.cpp FXTIFImage.cpp FXTabBar.cpp FXTabBook.cpp FXTabItem.cpp FXTable.cpp FXText.cpp FXTextCodec.cpp FXTextField.cpp FXThread.cpp FXToggleButton.cpp FXToolBar.cpp FXToolBarGrip.cpp FXToolBarShell.cpp FXToolBarTab.cpp FXToolTip.cpp FXTopWindow.cpp FXTreeList.cpp FXTreeListBox.cpp FXTriStateButton.cpp FXUndoList.cpp FXURL.cpp FXUTF8Codec.cpp FXUTF16Codec.cpp FXUTF32Codec.cpp FXVec2d.cpp FXVec2f.cpp FXVec3d.cpp FXVec3f.cpp FXVec4d.cpp FXVec4f.cpp FXVerticalFrame.cpp FXVisual.cpp FXWindow.cpp FXWizard.cpp FXWString.cpp FXXBMIcon.cpp FXXBMImage.cpp FXXPMIcon.cpp FXXPMImage.cpp fxbmpio.cpp fxfilematch.cpp fxgifio.cpp fxicoio.cpp fxjpegio.cpp fxparsegeometry.cpp fxpcxio.cpp fxpngio.cpp fxppmio.cpp fxpriv.h fxpriv.cpp fxpsio.cpp fxfsquantize.cpp fxezquantize.cpp fxwuquantize.cpp fxrgbio.cpp fxtargaio.cpp fxtifio.cpp fxutils.cpp fxwinkbd.cpp fxxbmio.cpp fxxpmio.cpp icons.h icons.cpp jitter.h version.rc version.rc.in vsscanf.cpp $(CURSORS) $(ICONS)
+libFOX_1_2_la_SOURCES =  FX4Splitter.cpp FXAccelTable.cpp FXApp.cpp FXArrowButton.cpp FXBMPIcon.cpp FXBMPImage.cpp FXBitmap.cpp FXBitmapFrame.cpp FXBitmapView.cpp FXButton.cpp FXBZStream.cpp FXCURCursor.cpp FXCanvas.cpp FXCharset.cpp FXCheckButton.cpp FXColorBar.cpp FXColorDialog.cpp FXColorNames.cpp FXColorSelector.cpp FXColorWell.cpp FXColorWheel.cpp FXComboBox.cpp FXComposite.cpp FXCursor.cpp FXDC.cpp FXDCPrint.cpp FXDCWindow.cpp FXDLL.cpp FXDataTarget.cpp FXDebugTarget.cpp FXDelegator.cpp FXDial.cpp FXDialogBox.cpp FXDict.cpp FXDirBox.cpp FXDirDialog.cpp FXDirList.cpp FXDirSelector.cpp FXDocument.cpp FXDragCorner.cpp FXDrawable.cpp FXDriveBox.cpp FXException.cpp FXFile.cpp FXFileDialog.cpp FXFileDict.cpp FXFileList.cpp FXFileSelector.cpp FXFileStream.cpp FXFoldingList.cpp FXFont.cpp FXFontDialog.cpp FXFontSelector.cpp FXFrame.cpp FXGIFCursor.cpp FXGIFIcon.cpp FXGIFImage.cpp FXGLCanvas.cpp FXGLCone.cpp FXGLContext.cpp FXGLCube.cpp FXGLCylinder.cpp FXGLObject.cpp FXGLShape.cpp FXGLSphere.cpp FXGLTriangleMesh.cpp FXGLViewer.cpp FXGLVisual.cpp FXGradientBar.cpp FXGroupBox.cpp FXGZStream.cpp FXHash.cpp FXHeader.cpp FXHorizontalFrame.cpp FXICOIcon.cpp FXICOImage.cpp FXIcon.cpp FXIconList.cpp FXId.cpp FXImage.cpp FXImageFrame.cpp FXImageView.cpp FXInputDialog.cpp FXJPGIcon.cpp FXJPGImage.cpp FXLabel.cpp FXList.cpp FXListBox.cpp FXMDIButton.cpp FXMDIChild.cpp FXMDIClient.cpp FXMainWindow.cpp FXMat3d.cpp FXMat4d.cpp FXMat3f.cpp FXMat4f.cpp FXMatrix.cpp FXMemoryStream.cpp FXMenuBar.cpp FXMenuButton.cpp FXMenuCaption.cpp FXMenuCascade.cpp FXMenuCheck.cpp FXMenuRadio.cpp FXMenuCommand.cpp FXMenuPane.cpp FXMenuSeparator.cpp FXMenuTitle.cpp FXMessageBox.cpp FXObject.cpp FXObjectList.cpp FXOptionMenu.cpp FXPCXIcon.cpp FXPCXImage.cpp FXPNGIcon.cpp FXPNGImage.cpp FXPPMIcon.cpp FXPPMImage.cpp FXPacker.cpp FXPicker.cpp FXPopup.cpp FXPoint.cpp FXPrintDialog.cpp FXProgressBar.cpp FXProgressDialog.cpp FXQuatd.cpp FXQuatf.cpp FXRGBIcon.cpp FXRGBImage.cpp FXRadioButton.cpp FXRangef.cpp FXRanged.cpp FXRealSlider.cpp FXRealSpinner.cpp FXRecentFiles.cpp FXRectangle.cpp FXRegion.cpp FXRegistry.cpp FXReplaceDialog.cpp FXRex.cpp FXRootWindow.cpp FXRuler.cpp FXScrollArea.cpp FXScrollBar.cpp FXScrollPane.cpp FXScrollWindow.cpp FXSearchDialog.cpp FXSeparator.cpp FXSettings.cpp FXShell.cpp FXShutter.cpp FXSize.cpp FXSlider.cpp FXSpinner.cpp FXSpheref.cpp FXSphered.cpp FXSplitter.cpp FXSpring.cpp FXStatusBar.cpp FXStatusLine.cpp FXStream.cpp FXString.cpp FXStringDict.cpp FXSwitcher.cpp FXTGAIcon.cpp FXTGAImage.cpp FXTIFIcon.cpp FXTIFImage.cpp FXTabBar.cpp FXTabBook.cpp FXTabItem.cpp FXTable.cpp FXText.cpp FXTextCodec.cpp FXTextField.cpp FXThread.cpp FXToggleButton.cpp FXToolBar.cpp FXToolBarGrip.cpp FXToolBarShell.cpp FXToolBarTab.cpp FXToolTip.cpp FXTopWindow.cpp FXTreeList.cpp FXTreeListBox.cpp FXTriStateButton.cpp FXUndoList.cpp FXURL.cpp FXUTF8Codec.cpp FXUTF16Codec.cpp FXUTF32Codec.cpp FXVec2d.cpp FXVec2f.cpp FXVec3d.cpp FXVec3f.cpp FXVec4d.cpp FXVec4f.cpp FXVerticalFrame.cpp FXVisual.cpp FXWindow.cpp FXWizard.cpp FXWString.cpp FXXBMIcon.cpp FXXBMImage.cpp FXXPMIcon.cpp FXXPMImage.cpp fxbmpio.cpp fxfilematch.cpp fxgifio.cpp fxicoio.cpp fxjpegio.cpp fxparsegeometry.cpp fxpcxio.cpp fxpngio.cpp fxppmio.cpp fxpriv.h fxpriv.cpp fxpsio.cpp fxfsquantize.cpp fxezquantize.cpp fxwuquantize.cpp fxrgbio.cpp fxtargaio.cpp fxtifio.cpp fxutils.cpp fxwinkbd.cpp fxxbmio.cpp fxxpmio.cpp icons.h icons.cpp jitter.h version.rc version.rc.in vsscanf.cpp $(CURSORS) $(ICONS)
 
 
 EXTRA_DIST = Makefile.bc              Makefile.bc.resp              Makefile.icc              Makefile.icc.resp              Makefile.dmc              Makefile.wc              Makefile.dmc.resp
@@ -128,8 +138,8 @@ X_CFLAGS = @X_CFLAGS@
 X_LIBS = @X_LIBS@
 X_EXTRA_LIBS = @X_EXTRA_LIBS@
 X_PRE_LIBS = @X_PRE_LIBS@
-libFOX_1_1_la_DEPENDENCIES = 
-libFOX_1_1_la_OBJECTS =  FX4Splitter.lo FXAccelTable.lo FXApp.lo \
+libFOX_1_2_la_DEPENDENCIES = 
+libFOX_1_2_la_OBJECTS =  FX4Splitter.lo FXAccelTable.lo FXApp.lo \
 FXArrowButton.lo FXBMPIcon.lo FXBMPImage.lo FXBitmap.lo \
 FXBitmapFrame.lo FXBitmapView.lo FXButton.lo FXBZStream.lo \
 FXCURCursor.lo FXCanvas.lo FXCharset.lo FXCheckButton.lo FXColorBar.lo \
@@ -195,8 +205,8 @@ DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
 
 TAR = gtar
 GZIP_ENV = --best
-SOURCES = $(libFOX_1_1_la_SOURCES)
-OBJECTS = $(libFOX_1_1_la_OBJECTS)
+SOURCES = $(libFOX_1_2_la_SOURCES)
+OBJECTS = $(libFOX_1_2_la_OBJECTS)
 
 all: all-redirect
 .SUFFIXES:
@@ -280,8 +290,8 @@ distclean-libtool:
 
 maintainer-clean-libtool:
 
-libFOX-1.1.la: $(libFOX_1_1_la_OBJECTS) $(libFOX_1_1_la_DEPENDENCIES)
-	$(CXXLINK) -rpath $(libdir) $(libFOX_1_1_la_LDFLAGS) $(libFOX_1_1_la_OBJECTS) $(libFOX_1_1_la_LIBADD) $(LIBS)
+libFOX-1.2.la: $(libFOX_1_2_la_OBJECTS) $(libFOX_1_2_la_DEPENDENCIES)
+	$(CXXLINK) -rpath $(libdir) $(libFOX_1_2_la_LDFLAGS) $(libFOX_1_2_la_OBJECTS) $(libFOX_1_2_la_LIBADD) $(LIBS)
 .cpp.o:
 	$(CXXCOMPILE) -c $<
 .cpp.obj:
@@ -1156,12 +1166,12 @@ FXHorizontalFrame.lo FXHorizontalFrame.o : FXHorizontalFrame.cpp \
 FXICOIcon.lo FXICOIcon.o : FXICOIcon.cpp ../include/xincs.h \
 	../include/fxver.h ../include/fxdefs.h \
 	../include/FXMemoryStream.h ../include/FXStream.h \
-	../include/FXString.h ../include/FXSize.h ../include/FXPoint.h \
-	../include/FXRectangle.h ../include/FXRegistry.h \
-	../include/FXSettings.h ../include/FXDict.h \
-	../include/FXObject.h ../include/FXHash.h ../include/FXApp.h \
-	../include/FXICOIcon.h ../include/FXIcon.h ../include/FXImage.h \
-	../include/FXDrawable.h ../include/FXId.h
+	../include/FXStream.h ../include/FXString.h ../include/FXSize.h \
+	../include/FXPoint.h ../include/FXRectangle.h \
+	../include/FXRegistry.h ../include/FXSettings.h \
+	../include/FXDict.h ../include/FXObject.h ../include/FXHash.h \
+	../include/FXApp.h ../include/FXICOIcon.h ../include/FXIcon.h \
+	../include/FXImage.h ../include/FXDrawable.h ../include/FXId.h
 FXICOImage.lo FXICOImage.o : FXICOImage.cpp ../include/xincs.h \
 	../include/fxver.h ../include/fxdefs.h ../include/FXStream.h \
 	../include/FXMemoryStream.h ../include/FXString.h \

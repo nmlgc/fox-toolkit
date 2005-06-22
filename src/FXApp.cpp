@@ -21,7 +21,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXApp.cpp,v 1.458 2004/05/03 20:42:55 fox Exp $                          *
+* $Id: FXApp.cpp,v 1.458.2.3 2004/12/20 14:32:42 fox Exp $                      *
 ********************************************************************************/
 #ifdef WIN32
 #if _WIN32_WINNT < 0x0400
@@ -722,7 +722,11 @@ FXApp::FXApp(const FXString& name,const FXString& vendor):registry(name,vendor){
   wheelLines=10;
 
   // Make font
-  normalFont=new FXFont(this,"helvetica,90,bold");
+#ifdef HAVE_XFT_H
+  normalFont=new FXFont(this,"Sans,90");
+#else
+  normalFont=new FXFont(this,"helvetica,90");
+#endif
 
   // We delete the stock font
   stockFont=normalFont;
@@ -1292,7 +1296,7 @@ FXuint FXApp::remainingTimeout(FXObject *tgt,FXSelector sel) const {
 #else
       FXlong now=getticktime();
       if(now < t->due){
-        remaining=t->due-now;
+        remaining=(FXuint)(t->due-now);
         }
 #endif
       break;
@@ -1323,7 +1327,7 @@ FXuint FXApp::remainingTimeout(FXTimer *t) const {
 #else
       FXlong now=getticktime();
       if(now < t->due){
-        remaining=t->due-now;
+        remaining=(FXuint)(t->due-now);
         }
 #endif
       break;
@@ -3833,7 +3837,7 @@ long FXApp::dispatchEvent(FXID hwnd,unsigned int iMsg,unsigned int wParam,long l
         tme.dwFlags=TME_LEAVE;
         tme.hwndTrack=(HWND)hwnd;
         tme.dwHoverTime=HOVER_DEFAULT;
-#if defined(__IBMCPP__) ||  defined(__MINGW32__) || defined(__BORLANDC__) || defined(__SC__)
+#if defined(__IBMCPP__) ||  defined(__MINGW32__) || defined(__BORLANDC__) || defined(__SC__) || defined (__WATCOMC__)
         TrackMouseEvent(&tme);
 #else
         _TrackMouseEvent(&tme);

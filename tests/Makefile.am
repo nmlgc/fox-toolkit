@@ -3,7 +3,7 @@
 CXXFLAGS = @CXXFLAGS@ @X_CFLAGS@
 INCLUDES = -I$(top_srcdir)/include -I$(top_builddir)/include
 
-LDADD		= ../src/libFOX-1.1.la -lm
+LDADD		= ../src/libFOX-1.2.la -lm
 
 #gltest_LDADD	= $(LDADD) $(GL_LIBS)
 #glviewer_LDADD  = $(LDADD) $(GL_LIBS)

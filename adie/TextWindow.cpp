@@ -19,7 +19,7 @@
 * along with this program; if not, write to the Free Software                   *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: TextWindow.cpp,v 1.83 2004/05/16 20:35:09 fox Exp $                      *
+* $Id: TextWindow.cpp,v 1.83.2.1 2004/05/18 06:26:03 fox Exp $                      *
 ********************************************************************************/
 #include "fx.h"
 #include "fxkeys.h"
@@ -2875,7 +2875,7 @@ FXHiliteStyle TextWindow::readStyleForRule(const FXString& name){
 
 // Write style
 void TextWindow::writeStyleForRule(const FXString& name,const FXHiliteStyle& style){
-  FXchar nfg[100],nbg[100],sfg[100],sbg[100],hfg[100],hbg[100],abg[100]; FXint sty;
+  FXchar nfg[100],nbg[100],sfg[100],sbg[100],hfg[100],hbg[100],abg[100];
   fxnamefromcolor(nfg,style.normalForeColor);
   fxnamefromcolor(nbg,style.normalBackColor);
   fxnamefromcolor(sfg,style.selectForeColor);
@@ -2886,58 +2886,7 @@ void TextWindow::writeStyleForRule(const FXString& name,const FXHiliteStyle& sty
   getApp()->reg().writeFormatEntry("STYLE",name.text(),"%s,%s,%s,%s,%s,%s,%s,%d",nfg,nbg,sfg,sbg,hfg,hbg,abg,style.style);
   }
   
-/*
 
-// Read styles
-void Adie::readStyles(){
-  FXchar nfg[100],nbg[100],sfg[100],sbg[100],hfg[100],hbg[100],abg[100],index[10],name[200];
-  FXint  sty,i;
-  nstyles=0;
-  for(i=0; i<MAXSTYLES; i++){
-    sprintf(index,"%d",i+1);
-    if(reg().readFormatEntry("STYLES",index,"%[^,],%[^,],%[^,],%[^,],%[^,],%[^,],%[^,],%[^,],%d",name,nfg,nbg,sfg,sbg,hfg,hbg,abg,&sty)!=9) break;
-    FXTRACE((1,"name=\"%s\" nfg=%s nbg=%s sfg=%s sbg=%s hfg=%s hbg=%s abg=%s sty=%d\n",name,nfg,nbg,sfg,sbg,hfg,hbg,abg,sty));
-    stylename[i]=name;
-    stylecolor[i].normalForeColor=fxcolorfromname(nfg);
-    stylecolor[i].normalBackColor=fxcolorfromname(nbg);
-    stylecolor[i].selectForeColor=fxcolorfromname(sfg);
-    stylecolor[i].selectBackColor=fxcolorfromname(sbg);
-    stylecolor[i].hiliteForeColor=fxcolorfromname(hfg);
-    stylecolor[i].hiliteBackColor=fxcolorfromname(hbg);
-    stylecolor[i].activeBackColor=fxcolorfromname(abg);
-    stylecolor[i].style=sty;
-    nstyles++;
-    }
-  }
-
-
-// Write styles
-void Adie::writeStyles(){
-  FXchar nfg[100],nbg[100],sfg[100],sbg[100],hfg[100],hbg[100],abg[100],name[10];
-  FXint  i;
-  reg().deleteSection("STYLES");
-  for(i=0; i<nstyles; i++){
-    fxnamefromcolor(nfg,stylecolor[i].normalForeColor);
-    fxnamefromcolor(nbg,stylecolor[i].normalBackColor);
-    fxnamefromcolor(sfg,stylecolor[i].selectForeColor);
-    fxnamefromcolor(sbg,stylecolor[i].selectBackColor);
-    fxnamefromcolor(hfg,stylecolor[i].hiliteForeColor);
-    fxnamefromcolor(hbg,stylecolor[i].hiliteBackColor);
-    fxnamefromcolor(abg,stylecolor[i].activeBackColor);
-    sprintf(name,"%d",i+1);
-    reg().writeFormatEntry("STYLES",name,"%s,%s,%s,%s,%s,%s,%s,%s,%d",stylename[i].text(),nfg,nbg,sfg,sbg,hfg,hbg,abg,stylecolor[i].style);
-    }
-  }
-  // Get style pointer
-  FXHiliteStyle* getStyles() const { return styles.data(); }
-
-  // Get particular style
-  const FXHiliteStyle& getStyle(FXint index) const { return styles[index]; }
-
-  // Change particular style
-  void setStyle(FXint index,const FXHiliteStyle& s){ styles[index]=s; }
-
-*/
 
 // Scan backward by context amount
 FXint TextWindow::backwardByContext(FXint pos) const {
@@ -3095,9 +3044,9 @@ void TextWindow::restyleText(FXint pos,FXint del,FXint ins){
       // Style changed in unchanged text
       if(affected>changed){
         restylejump<<=1;
-	changed=affected;
-    	end=changed+restylejump;
-    	if(end>len) end=len;
+	      changed=affected;
+       	end=changed+restylejump;
+      	if(end>len) end=len;
         continue;
         }
 

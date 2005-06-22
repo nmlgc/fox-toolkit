@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXMemoryStream.cpp,v 1.5 2004/02/08 17:29:06 fox Exp $                   *
+* $Id: FXMemoryStream.cpp,v 1.5.2.1 2005/06/22 03:32:59 fox Exp $                   *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -52,7 +52,7 @@ FXMemoryStream::FXMemoryStream(const FXObject* cont):FXStream(cont){
 
 // Write at least count bytes from the buffer
 unsigned long FXMemoryStream::writeBuffer(unsigned long count){
-  if(owns){ setSpace(pos+count); }
+  if(owns){ setSpace(getSpace()+count); }
   return endptr-wrptr;
   }
 

@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: fxdefs.h,v 1.133 2004/03/28 23:55:18 fox Exp $                           *
+* $Id: fxdefs.h,v 1.133.2.1 2005/03/24 01:21:16 fox Exp $                           *
 ********************************************************************************/
 #ifndef FXDEFS_H
 #define FXDEFS_H
@@ -573,13 +573,19 @@ typedef tagMSG                 FXRawEvent;
 /**
 * These are some of the ISO C99 standard single-precision transcendental functions.
 * On LINUX, specify _GNU_SOURCE or _ISOC99_SOURCE to enable native implementation;
-* otherwise, these macros will be used.
+* otherwise, these macros will be used.  Apple OS-X implements fabsf(x), ceilf(x),
+* Define FLOAT_MATH_FUNCTIONS if these functions are available in some other
+* library you're linking to.
 */
+#ifndef FLOAT_MATH_FUNCTIONS
 #ifndef __USE_ISOC99
-#define sqrtf(x)    ((float)sqrt((double)(x)))
+#ifndef __APPLE__
 #define fabsf(x)    ((float)fabs((double)(x)))
 #define ceilf(x)    ((float)ceil((double)(x)))
 #define floorf(x)   ((float)floor((double)(x)))
+#define fmodf(x,y)  ((float)fmod((double)(x),(double)(y)))
+#endif
+#define sqrtf(x)    ((float)sqrt((double)(x)))
 #define sinf(x)     ((float)sin((double)(x)))
 #define cosf(x)     ((float)cos((double)(x)))
 #define tanf(x)     ((float)tan((double)(x)))
@@ -589,9 +595,9 @@ typedef tagMSG                 FXRawEvent;
 #define atan2f(y,x) ((float)atan2((double)(y),(double)(x)))
 #define powf(x,y)   ((float)pow((double)(x),(double)(y)))
 #define expf(x)     ((float)exp((double)(x)))
-#define fmodf(x,y)  ((float)fmod((double)(x),(double)(y)))
 #define logf(x)     ((float)log((double)(x)))
 #define log10f(x)   ((float)log10((double)(x)))
+#endif
 #endif
 
 /**********************************  Globals  **********************************/

@@ -4,7 +4,7 @@ CXXFLAGS = @CXXFLAGS@ @X_CFLAGS@
 INCLUDES = -I$(top_srcdir)/include -I$(top_builddir)/include
 RESWRAP  = $(top_builddir)/utils/reswrap
 SUFFIXES = .gif .bmp
-LDADD = ../src/libFOX-1.1.la -lm
+LDADD = ../src/libFOX-1.2.la -lm
 
 
 bin_PROGRAMS = adie

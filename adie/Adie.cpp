@@ -19,10 +19,11 @@
 * along with this program; if not, write to the Free Software                   *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: Adie.cpp,v 1.105 2004/05/15 19:53:06 fox Exp $                           *
+* $Id: Adie.cpp,v 1.105.2.1 2004/05/19 03:35:41 fox Exp $                           *
 ********************************************************************************/
 #include "fx.h"
 #include "fxkeys.h"
+#include <new>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>

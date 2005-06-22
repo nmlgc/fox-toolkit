@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 
 
-foxincludedir=$(includedir)/fox-1.1
+foxincludedir=$(includedir)/fox-1.2
 foxinclude_HEADERS =   \
 FX4Splitter.h \
 FXAccelTable.h \

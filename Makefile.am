@@ -5,13 +5,15 @@ AUTOMAKE_OPTIONS = foreign dist-zip
 #AUTOMAKE_OPTIONS = foreign dist-zip no-dependencies
 
 SUBDIRS    = utils include src chart doc tests shutterbug adie pathfinder calculator windows
-EXTRA_DIST = ADDITIONS AUTHORS INSTALL LICENSE LICENSE_ADDENDUM TRACING README fox.lsm index.html aclocal.m4
+EXTRA_DIST = ADDITIONS AUTHORS INSTALL LICENSE LICENSE_ADDENDUM TRACING README fox.lsm index.html fox-config.in aclocal.m4
+
+bin_SCRIPTS = fox-config
 
 CLEANFILES = fox.tar.gz
 
 snapshot: dist-all
-	cp $(distdir).tar.gz /home/ftp/pub/fox-snapshot.tar.gz
-	cp $(distdir).zip /home/ftp/pub/fox-snapshot.zip
+	cp $(distdir).tar.gz /net/linky/mnt/ftp/pub/fox-snapshot.tar.gz
+	cp $(distdir).zip /net/linky/mnt/ftp/pub/fox-snapshot.zip
 
 
 
@@ -20,10 +22,10 @@ web: distdir
 	cp -r $(distdir)/doc/* /home/html
 
 drop: dist-all
-	cp $(distdir).tar.gz /home/ftp/pub
-	cp $(distdir).zip /home/ftp/pub
-	cd /home/ftp/pub && ln -sf $(distdir).tar.gz fox-latest.tar.gz
-	cd /home/ftp/pub && ln -sf $(distdir).zip fox-latest.zip
+	cp $(distdir).tar.gz /net/linky/mnt/ftp/pub
+	cp $(distdir).zip /net/linky/mnt/ftp/pub
+	cd /net/linky/mnt/ftp/pub && ln -sf $(distdir).tar.gz fox-latest.tar.gz
+	cd /net/linky/mnt/ftp/pub && ln -sf $(distdir).zip fox-latest.zip
 
 
 #diff: distdir

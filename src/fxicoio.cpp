@@ -20,7 +20,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: fxicoio.cpp,v 1.22 2004/04/08 16:24:48 fox Exp $                         *
+* $Id: fxicoio.cpp,v 1.22.2.1 2004/08/13 05:16:16 fox Exp $                         *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -128,7 +128,7 @@ FXbool fxloadICO(FXStream& store,FXColor*& data,FXint& width,FXint& height,FXint
   FXTRACE((1,"fxloadICO: bWidth=%d bHeight=%d bColorCount=%d bReserved=%d xspot=%d yspot=%d dwBytesInRes=%d dwImageOffset=%d\n",bWidth,bHeight,bColorCount,bReserved,xspot,yspot,dwBytesInRes,dwImageOffset));
 
   // Only certain color counts allowed; bColorCount=0 means 256 colors supposedly
-  if(bColorCount!=0 && bColorCount!=2 && bColorCount!=8 && bColorCount!=16) return FALSE;
+  if(bColorCount!=0 && bColorCount!=2 && bColorCount!=4 && bColorCount!=8 && bColorCount!=16) return FALSE;
 
   // Jump to BitmapInfoHeader
   store.position(base+dwImageOffset);

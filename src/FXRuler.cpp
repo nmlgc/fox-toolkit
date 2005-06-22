@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXRuler.cpp,v 1.27 2004/02/08 17:29:07 fox Exp $                         *
+* $Id: FXRuler.cpp,v 1.27.2.1 2004/06/13 03:20:11 fox Exp $                         *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -666,7 +666,7 @@ long FXRuler::onLeftBtnRelease(FXObject*,FXSelector,void* ptr){
   if(isEnabled()){
     ungrab();
     flags|=FLAG_UPDATE;
-    if(target && target->handle(this,FXSEL(SEL_LEFTBUTTONPRESS,message),ptr)) return 1;
+    if(target && target->handle(this,FXSEL(SEL_LEFTBUTTONRELEASE,message),ptr)) return 1;
     return 1;
     }
   return 0;

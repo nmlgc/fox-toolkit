@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXMat4d.cpp,v 1.6 2004/03/09 05:56:35 fox Exp $                          *
+* $Id: FXMat4d.cpp,v 1.6.2.1 2004/06/24 13:57:24 fox Exp $                          *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -323,10 +323,10 @@ FXVec3d operator*(const FXMat4d& m,const FXVec3d& v){
 
 // Make unit matrix
 FXMat4d& FXMat4d::eye(){
-  m[0][0]=1.0f; m[0][1]=0.0f; m[0][2]=0.0f; m[0][3]=0.0f;
-  m[1][0]=0.0f; m[1][1]=1.0f; m[1][2]=0.0f; m[1][3]=0.0f;
-  m[2][0]=0.0f; m[2][1]=0.0f; m[2][2]=1.0f; m[2][3]=0.0f;
-  m[3][0]=0.0f; m[3][1]=0.0f; m[3][2]=0.0f; m[3][3]=1.0f;
+  m[0][0]=1.0; m[0][1]=0.0; m[0][2]=0.0; m[0][3]=0.0;
+  m[1][0]=0.0; m[1][1]=1.0; m[1][2]=0.0; m[1][3]=0.0;
+  m[2][0]=0.0; m[2][1]=0.0; m[2][2]=1.0; m[2][3]=0.0;
+  m[3][0]=0.0; m[3][1]=0.0; m[3][2]=0.0; m[3][3]=1.0;
   return *this;
   }
 
@@ -544,7 +544,7 @@ FXMat4d& FXMat4d::rot(const FXVec3d& v,FXdouble c,FXdouble s){
 
 // Rotate by angle (in radians) about arbitrary vector
 FXMat4d& FXMat4d::rot(const FXVec3d& v,FXdouble phi){
-  return rot(v,cosf(phi),sinf(phi));
+  return rot(v,cos(phi),sin(phi));
   }
 
 
@@ -639,7 +639,7 @@ FXMat4d& FXMat4d::scale(const FXVec3d& v){
   }
 
 
-// Calculate determinant 
+// Calculate determinant
 FXdouble det(const FXMat4d& a){
   return DET4(a[0][0],a[0][1],a[0][2],a[0][3],
               a[1][0],a[1][1],a[1][2],a[1][3],
@@ -667,7 +667,7 @@ FXMat4d invert(const FXMat4d& s){
     pvv=x[i][i];
     pvi=i;
     for(j=i+1; j<4; j++){   // Find pivot (largest in column i)
-      if(fabsf(x[j][i])>fabsf(pvv)){
+      if(fabs(x[j][i])>fabs(pvv)){
         pvi=j;
         pvv=x[j][i];
         }

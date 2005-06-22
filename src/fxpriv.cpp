@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: fxpriv.cpp,v 1.32 2004/02/18 16:06:15 fox Exp $                          *
+* $Id: fxpriv.cpp,v 1.32.2.1 2004/08/13 05:16:16 fox Exp $                          *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -340,7 +340,7 @@ void FXApp::clipboardGetTypes(const FXWindow* window,FXDragType*& types,FXuint& 
   numtypes=0;
   if(clipboardWindow){
     FXMEMDUP(&types,xcbTypeList,FXDragType,xcbNumTypes);
-    numtypes=xselNumTypes;
+    numtypes=xcbNumTypes;
     }
   else{
     answer=fxsendrequest((Display*)display,window->id(),xcbSelection,ddeAtom,ddeTargets,event.time);

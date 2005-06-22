@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXFont.cpp,v 1.94 2004/03/11 00:19:23 fox Exp $                          *
+* $Id: FXFont.cpp,v 1.94.2.1 2004/08/28 01:10:02 fox Exp $                          *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -985,7 +985,9 @@ static FXuint CharSet2FXFontEncoding(BYTE lfCharSet){
     case EASTEUROPE_CHARSET: return FONTENCODING_EASTEUROPE;
     case GB2312_CHARSET: return FONTENCODING_DEFAULT;
     case GREEK_CHARSET: return FONTENCODING_GREEK;
+#if !defined (__WATCOMC__)
     case HANGUL_CHARSET: return FONTENCODING_DEFAULT;
+#endif
     case HEBREW_CHARSET: return FONTENCODING_HEBREW;
     case MAC_CHARSET: return FONTENCODING_DEFAULT;
     case OEM_CHARSET: return FONTENCODING_DEFAULT;

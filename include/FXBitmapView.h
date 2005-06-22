@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXBitmapView.h,v 1.3 2004/03/03 19:25:34 fox Exp $                       *
+* $Id: FXBitmapView.h,v 1.3.2.1 2004/08/13 05:16:16 fox Exp $                       *
 ********************************************************************************/
 #ifndef FXBITMAPVIEW_H
 #define FXBITMAPVIEW_H
@@ -57,7 +57,6 @@ protected:
   FXint     graby;      // Grab point y
 protected:
   FXBitmapView();
-  virtual void layout();
 private:
   FXBitmapView(const FXBitmapView&);
   FXBitmapView &operator=(const FXBitmapView&);
@@ -81,6 +80,9 @@ public:
 
   /// Detach server-side resources
   virtual void detach();
+
+  /// Perform layout immediately
+  virtual void layout();
 
   /// Image view widget can receive focus
   virtual FXbool canFocus() const;

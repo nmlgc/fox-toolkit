@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXTopWindow.cpp,v 1.127 2004/05/04 05:03:38 fox Exp $                    *
+* $Id: FXTopWindow.cpp,v 1.127.2.1 2004/08/13 05:16:16 fox Exp $                    *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -404,10 +404,71 @@ void FXTopWindow::place(FXuint placement){
   wh=getHeight();
 
   // Get root window size
+#ifndef WIN32
   rx=getRoot()->getX();
   ry=getRoot()->getY();
   rw=getRoot()->getWidth();
   rh=getRoot()->getHeight();
+#else
+  OSVERSIONINFO vinfo;
+  RECT rect;
+  memset(&vinfo,0,sizeof(vinfo));
+  vinfo.dwOSVersionInfoSize=sizeof(vinfo);
+  GetVersionEx(&vinfo);
+
+#if (WINVER >= 0x500) || ((defined _WIN32_WINDOWS) && (_WIN32_WINDOWS >= 0x410))
+  HINSTANCE user32;
+  typedef BOOL (WINAPI* PFN_GETMONITORINFOA)(HMONITOR, LPMONITORINFO);
+  typedef HMONITOR (WINAPI* PFN_MONITORFROMRECTA)(LPRECT, DWORD);
+  PFN_GETMONITORINFOA GetMonitorInfoA;
+  PFN_MONITORFROMRECTA MonitorFromRectA;
+
+  // Suggested by "Daniel Gehriger" <gehriger@linkcad.com>
+  // The API does not exist on older Windows NT and 95, so
+  // We can't even link it, let alone call it.
+  // The solution is to ask the DLL if the function exists.
+  if((user32=LoadLibrary("User32")) && (GetMonitorInfoA=reinterpret_cast<PFN_GETMONITORINFOA>(GetProcAddress(user32,"GetMonitorInfoA"))) && (MonitorFromRectA=reinterpret_cast<PFN_MONITORFROMRECTA>(GetProcAddress(user32,"MonitorFromRectA")))){
+    MONITORINFOEX minfo;
+    HMONITOR hMon;
+    if(placement == PLACEMENT_CURSOR){
+      // Use mouse position to select screen.
+      getRoot()->getCursorPosition(x,y,state);
+      rect.left=x;
+      rect.right=x+1;
+      rect.top=y;
+      rect.bottom=y+1;
+      }
+    else{
+      // Use owner to select screen.
+      over=getOwner()?getOwner():getRoot();
+      over->translateCoordinatesTo(ox,oy,getRoot(),0,0);
+      ow=over->getWidth();
+      oh=over->getHeight();
+      rect.left=ox;
+      rect.right=ox+ow;
+      rect.top=oy;
+      rect.bottom=oy+oh;
+      }
+    hMon=MonitorFromRectA(&rect,MONITOR_DEFAULTTOPRIMARY);
+    memset(&minfo,0,sizeof(minfo));
+    minfo.cbSize=sizeof(minfo);
+    GetMonitorInfoA(hMon,&minfo);
+    rx=minfo.rcWork.left;
+    ry=minfo.rcWork.top;
+    rw=minfo.rcWork.right;
+    rh=minfo.rcWork.bottom;
+    }
+  else
+#endif
+    {
+    // On Win95 and WinNT, we have to use the following
+    SystemParametersInfo(SPI_GETWORKAREA,sizeof(RECT),&rect,0);
+    rx=rect.left;
+    ry=rect.top;
+    rw=rect.right-rect.left;
+    rh=rect.bottom-rect.top;
+    }
+#endif
 
   // Placement policy
   switch(placement){

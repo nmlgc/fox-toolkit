@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXThread.h,v 1.16 2004/02/24 22:21:42 fox Exp $                          *
+* $Id: FXThread.h,v 1.16.2.1 2004/12/20 14:32:42 fox Exp $                          *
 ********************************************************************************/
 #ifndef FXTHREAD_H
 #define FXTHREAD_H
@@ -41,7 +41,7 @@ typedef void*         FXThreadID;
 */
 class FXAPI FXMutex {
 private:
-  unsigned long data[8];
+  unsigned long data[12];
 private:
   FXMutex(const FXMutex&);
   FXMutex &operator=(const FXMutex&);

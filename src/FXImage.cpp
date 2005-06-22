@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXImage.cpp,v 1.130 2004/04/28 16:29:07 fox Exp $                        *
+* $Id: FXImage.cpp,v 1.130.2.1 2004/08/28 01:10:02 fox Exp $                        *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -296,8 +296,8 @@ FXbool FXImage::hasAlpha() const {
     }
   return MAYBE;
   }
-  
-  
+
+
 #ifndef WIN32
 
 // Find shift amount
@@ -514,9 +514,9 @@ void FXImage::restore(){
 // Restore client-side pixel buffer from image
 void FXImage::restore(){
   if(xid){
-    register FXint size,bytes_per_line,skip;
-    register FXint x,y;
-    register FXuchar *pixels,*pix,*img;
+    register FXint size,bytes_per_line,skip,x,y;
+    register FXuchar *pix,*img;
+    FXuchar *pixels;
     BITMAPINFO bmi;
     HDC hdcmem;
 

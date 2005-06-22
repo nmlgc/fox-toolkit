@@ -5,7 +5,7 @@
 ##############################################################################
 # Copyright (C) 1997,2003 by Jeroen van der Zijp.   All Rights Reserved.     #
 ##############################################################################
-# $Id: Makefile.wc,v 1.6 2004/03/10 23:19:41 fox Exp $                       #
+# $Id: Makefile.wc,v 1.6.2.1 2004/08/28 01:10:02 fox Exp $                       #
 ##############################################################################
 # This library is free software; you can redistribute it and/or 	     #
 # modify it under the terms of the GNU Library General Public		     #
@@ -288,6 +288,7 @@ OBJECTS += FXCursor.obj
 OBJECTS += FXDC.obj
 OBJECTS += FXDCPrint.obj
 OBJECTS += FXDCWindow.obj
+OBJECTS += FXDLL.obj
 OBJECTS += FXDataTarget.obj
 OBJECTS += FXDebugTarget.obj
 OBJECTS += FXDelegator.obj
@@ -390,8 +391,9 @@ OBJECTS += FXQuatf.obj
 OBJECTS += FXRGBIcon.obj
 OBJECTS += FXRGBImage.obj
 OBJECTS += FXRadioButton.obj
-OBJECTS += FXRanged.obj
 OBJECTS += FXRangef.obj
+OBJECTS += FXRanged.obj
+OBJECTS += FXRealSlider.obj
 OBJECTS += FXRealSpinner.obj
 OBJECTS += FXRecentFiles.obj
 OBJECTS += FXRectangle.obj
@@ -413,7 +415,10 @@ OBJECTS += FXShutter.obj
 OBJECTS += FXSize.obj
 OBJECTS += FXSlider.obj
 OBJECTS += FXSpinner.obj
+OBJECTS += FXSpheref.obj
+OBJECTS += FXSphered.obj
 OBJECTS += FXSplitter.obj
+OBJECTS += FXSpring.obj
 OBJECTS += FXStatusBar.obj
 OBJECTS += FXStatusLine.obj
 OBJECTS += FXStream.obj
@@ -431,6 +436,7 @@ OBJECTS += FXTable.obj
 OBJECTS += FXText.obj
 OBJECTS += FXTextCodec.obj
 OBJECTS += FXTextField.obj
+OBJECTS += FXThread.obj
 OBJECTS += FXToggleButton.obj
 OBJECTS += FXToolBar.obj
 OBJECTS += FXToolBarGrip.obj
@@ -457,9 +463,10 @@ OBJECTS += FXVisual.obj
 OBJECTS += FXWindow.obj
 OBJECTS += FXWizard.obj
 OBJECTS += FXWString.obj
+OBJECTS += FXXBMIcon.obj
+OBJECTS += FXXBMImage.obj
 OBJECTS += FXXPMIcon.obj
 OBJECTS += FXXPMImage.obj
-OBJECTS += fxxbmio.obj
 OBJECTS += fxbmpio.obj
 OBJECTS += fxfilematch.obj
 OBJECTS += fxgifio.obj
@@ -470,12 +477,16 @@ OBJECTS += fxpcxio.obj
 OBJECTS += fxpngio.obj
 OBJECTS += fxppmio.obj
 OBJECTS += fxpriv.obj
-OBJECTS += fxquantize.obj
+OBJECTS += fxpsio.obj
+OBJECTS += fxfsquantize.obj
+OBJECTS += fxezquantize.obj
+OBJECTS += fxwuquantize.obj
 OBJECTS += fxrgbio.obj
 OBJECTS += fxtargaio.obj
 OBJECTS += fxtifio.obj
 OBJECTS += fxutils.obj
 OBJECTS += fxwinkbd.obj
+OBJECTS += fxxbmio.obj
 OBJECTS += fxxpmio.obj
 OBJECTS += icons.obj
 OBJECTS += vsscanf.obj

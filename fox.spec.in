@@ -1,16 +1,17 @@
-Summary: Shared libraries for the FOX @FOX_MAJOR_VERSION@.@FOX_MINOR_VERSION@.x toolkit.
-Name: fox
-Version: @VERSION@
-Release: 1
+%define name fox
+%define version @FOX_MAJOR_VERSION@.@FOX_MINOR_VERSION@.@FOX_PATCH_LEVEL@
+%define release 1
+
+Summary: The FOX toolkit.
+Name: %{name}
+Version: %{version}
+Release: %{release}
 Copyright: LGPL
 Group: System Environment/Libraries
-Source: ftp://ftp.fox-toolkit.org/pub/fox-@VERSION@.tar.gz
+Source: ftp://ftp.fox-toolkit.org/pub/%{name}-%{version}.tar.gz
 URL: http://www.fox-toolkit.org
-Packager: Lyle Johnson (lyle@knology.net)
+Packager: Joshua Weage <joshua.weage@arup.com>
 BuildRoot: %{_tmppath}/%{name}-buildroot
-Prefix: /usr
-
-%define prefix %{_prefix}
 
 %description
 FOX is a C++-based library for graphical user interface development
@@ -42,7 +43,7 @@ running the application.
 %package -n adie
 Summary: Adie Programmer's Text Editor
 Group: X11/Applications
-Version: 2.0.0
+Version: 3.0.0
 
 %description -n adie
 Adie is an extremely fast and convenient programming text editor written using the FOX Toolkit.
@@ -50,7 +51,7 @@ Adie is an extremely fast and convenient programming text editor written using t
 %package -n calculator
 Summary: FOX-based Calculator Applet
 Group: X11/Applications
-Version: 1.0.0
+Version: 2.0.0
 
 %description -n calculator
 The FOX calculator is a simple desktop calculator geared towards the programmer.
@@ -74,7 +75,7 @@ PathFinder is a file browser application written using the FOX Toolkit.
 %package -n shutterbug
 Summary: Shutterbug Screenshot Utility
 Group: X11/Applications
-Version: 1.0.0
+Version: 2.0.0
 
 %description -n shutterbug
 Shutterbug is a FOX-based screenshot utility.
@@ -84,60 +85,77 @@ Shutterbug is a FOX-based screenshot utility.
 
 %build
 CPPFLAGS="$RPM_OPT_FLAGS -frtti" CFLAGS="$RPM_OPT_FLAGS -frtti" \
-./configure --prefix=%{prefix} --enable-release
+%configure --enable-release --enable-threadsafe
+make
 
 %install
-rm -rf $RPM_BUILD_ROOT
-make install prefix=$RPM_BUILD_ROOT/usr
+[ "$RPM_BUILD_ROOT" != "/" ] && rm -rf $RPM_BUILD_ROOT
+%makeinstall
+
 rm -f doc/Makefile.am doc/Makefile.in doc/Makefile
 rm -r doc/art/Makefile.am doc/art/Makefile.in doc/art/Makefile
 rm -f doc/screenshots/Makefile.am doc/screenshots/Makefile.in doc/screenshots/Makefile
 
+# remove docs as they are supplied by rpm
+rm -rf ${RPM_BUILD_ROOT}/%{_datadir}/doc/fox-@FOX_MAJOR_VERSION@.@FOX_MINOR_VERSION@
+rm -rf ${RPM_BUILD_ROOT}/usr/fox
+
 %clean
-rm -rf $RPM_BUILD_ROOT
+[ "$RPM_BUILD_ROOT" != "/" ] && rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root)
-/usr/fox
-/usr/lib/libFOX-1.1.so
-/usr/lib/libFOX-1.1.so.@LT_CURRENT@
-/usr/lib/libFOX-1.1.so.@LT_CURRENT@.@LT_AGE@.@LT_REVISION@
-/usr/lib/libCHART-1.1.so
-/usr/lib/libCHART-1.1.so.@LT_CURRENT@
-/usr/lib/libCHART-1.1.so.@LT_CURRENT@.@LT_AGE@.@LT_REVISION@
+%{_libdir}/libFOX-@FOX_MAJOR_VERSION@.@FOX_MINOR_VERSION@.so
+%{_libdir}/libFOX-@FOX_MAJOR_VERSION@.@FOX_MINOR_VERSION@.so.@LT_CURRENT@
+%{_libdir}/libFOX-@FOX_MAJOR_VERSION@.@FOX_MINOR_VERSION@.so.@LT_CURRENT@.@LT_AGE@.@LT_REVISION@
+%{_libdir}/libCHART-@FOX_MAJOR_VERSION@.@FOX_MINOR_VERSION@.so
+%{_libdir}/libCHART-@FOX_MAJOR_VERSION@.@FOX_MINOR_VERSION@.so.@LT_CURRENT@
+%{_libdir}/libCHART-@FOX_MAJOR_VERSION@.@FOX_MINOR_VERSION@.so.@LT_CURRENT@.@LT_AGE@.@LT_REVISION@
+
 %doc doc
 %doc ADDITIONS AUTHORS INSTALL LICENSE README TRACING index.html
 
 %files devel
 %defattr(-,root,root)
-/usr/bin/reswrap
-/usr/include/fox-1.1
-/usr/lib/libFOX-1.1.la
-/usr/lib/libCHART-1.1.la
-/usr/man/*/*
+%{_bindir}/reswrap
+%{_bindir}/fox-config
+%{_mandir}/man1/reswrap.1*
+%{_includedir}/fox-@FOX_MAJOR_VERSION@.@FOX_MINOR_VERSION@
+%{_libdir}/libFOX-@FOX_MAJOR_VERSION@.@FOX_MINOR_VERSION@.la
+%{_libdir}/libCHART-@FOX_MAJOR_VERSION@.@FOX_MINOR_VERSION@.la
 
 %files static
 %defattr(-,root,root)
-/usr/lib/libFOX-1.1.a
-/usr/lib/libCHART-1.1.a
+%{_libdir}/libFOX-@FOX_MAJOR_VERSION@.@FOX_MINOR_VERSION@.a
+%{_libdir}/libCHART-@FOX_MAJOR_VERSION@.@FOX_MINOR_VERSION@.a
 
 %files -n adie
 %defattr(-,root,root)
-/usr/bin/adie
+%{_bindir}/adie
+%{_bindir}/Adie.stx
+%{_mandir}/man1/adie.1*
 
 %files -n calculator
 %defattr(-,root,root)
-/usr/bin/calculator
+%{_bindir}/calculator
+%{_mandir}/man1/calculator.1*
 
 %files -n pathfinder
 %defattr(-,root,root)
-/usr/bin/PathFinder
+%{_bindir}/PathFinder
+%{_mandir}/man1/PathFinder.1*
 
 %files -n shutterbug
 %defattr(-,root,root)
-/usr/bin/shutterbug
+%{_bindir}/shutterbug
+%{_mandir}/man1/shutterbug.1*
 
 %changelog
+* Fri Aug 20 2004 Joshua Weage <joshua.weage@arup.com>
+- Updated to use built-in RPM macros where possible.
+- Sanity check RPM_BUILD_ROOT before deleting it.
+- Delete docs installed by make, in preference for those from rpm
+
 * Thu Dec 4 2003 Lyle Johnson <lyle@knology.net>
 - incorporated Yan-Fa Li's changes for compatibility with latest RPM tools.
 

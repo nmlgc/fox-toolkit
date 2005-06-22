@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXQuatd.cpp,v 1.7 2004/02/27 18:30:06 fox Exp $                          *
+* $Id: FXQuatd.cpp,v 1.7.2.1 2004/06/24 13:57:24 fox Exp $                          *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -66,17 +66,17 @@ void FXQuatd::setAxisAngle(const FXVec3d& axis,FXdouble phi){
 // for unit quaternion |q| == 1
 void FXQuatd::getAxisAngle(FXVec3d& axis,FXdouble& phi) const {
   register FXdouble n=sqrt(x*x+y*y+z*z);
-  if(n>0.0f){
+  if(n>0.0){
     axis.x=x/n;
     axis.y=y/n;
     axis.z=z/n;
-    phi=2.0f*acos(w);
+    phi=2.0*acos(w);
     }
   else{
-    axis.x=1.0f;
-    axis.y=0.0f;
-    axis.z=0.0f;
-    phi=0.0f;
+    axis.x=1.0;
+    axis.y=0.0;
+    axis.z=0.0;
+    phi=0.0;
     }
   }
 

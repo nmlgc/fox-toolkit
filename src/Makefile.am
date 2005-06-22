@@ -5,11 +5,11 @@ INCLUDES = -I$(top_srcdir)/include -I$(top_builddir)/include
 RESWRAP  = $(top_builddir)/utils/reswrap
 SUFFIXES = .gif .bmp
 
-lib_LTLIBRARIES = libFOX-1.1.la
+lib_LTLIBRARIES = libFOX-1.2.la
 
-libFOX_1_1_la_LIBADD  = $(X_LIBS) $(X_BASE_LIBS) $(X_EXTRA_LIBS) $(GL_LIBS)
+libFOX_1_2_la_LIBADD  = $(X_LIBS) $(X_BASE_LIBS) $(X_EXTRA_LIBS) $(GL_LIBS)
 
-libFOX_1_1_la_LDFLAGS = \
+libFOX_1_2_la_LDFLAGS = \
         -version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)    \
 	-export-dynamic
 
@@ -129,7 +129,7 @@ winminimize.gif \
 winrestore.gif
 
 
-libFOX_1_1_la_SOURCES = \
+libFOX_1_2_la_SOURCES = \
 FX4Splitter.cpp \
 FXAccelTable.cpp \
 FXApp.cpp \

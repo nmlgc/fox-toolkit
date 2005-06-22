@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXPopup.cpp,v 1.73 2004/04/24 00:46:29 fox Exp $                         *
+* $Id: FXPopup.cpp,v 1.73.2.1 2004/08/13 05:16:16 fox Exp $                         *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -751,29 +751,6 @@ void FXPopup::popup(FXWindow* grabto,FXint x,FXint y,FXint w,FXint h){
   GetVersionEx(&vinfo);
 
 #if (WINVER >= 0x500) || ((defined _WIN32_WINDOWS) && (_WIN32_WINDOWS >= 0x410))
-
-/*
-  // Patch from Brian Hook <hook_l@py...>
-  if((vinfo.dwPlatformId==VER_PLATFORM_WIN32_WINDOWS && vinfo.dwMinorVersion>0) || (vinfo.dwPlatformId==VER_PLATFORM_WIN32_NT && vinfo.dwMajorVersion>=5))
-
-    {
-    MONITORINFOEX minfo;
-    HMONITOR hMon;
-    rect.left=x;
-    rect.right=x+w;
-    rect.top=y;
-    rect.bottom=y+h;
-    hMon=MonitorFromRect(&rect,MONITOR_DEFAULTTOPRIMARY);
-    memset(&minfo,0,sizeof(minfo));
-    minfo.cbSize=sizeof(minfo);
-    GetMonitorInfo(hMon,&minfo);
-    rx=minfo.rcWork.left;
-    ry=minfo.rcWork.top;
-    rw=minfo.rcWork.right;
-    rh=minfo.rcWork.bottom;
-    }
-*/
-
 
   HINSTANCE user32;
   typedef BOOL (WINAPI* PFN_GETMONITORINFOA)(HMONITOR, LPMONITORINFO);

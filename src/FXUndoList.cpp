@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXUndoList.cpp,v 1.47 2004/02/08 17:29:07 fox Exp $                      *
+* $Id: FXUndoList.cpp,v 1.47.2.1 2005/03/17 05:20:38 fox Exp $                      *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -227,7 +227,7 @@ void FXUndoList::unmark(){
 
 // Check if marked
 FXbool FXUndoList::marked() const {
-  return marker==0;
+  return (group==NULL) && (marker==0);
   }
 
 
@@ -271,11 +271,13 @@ void FXUndoList::add(FXCommand* command,FXbool doit){
   command->next=g->undolist;
   g->undolist=command;
 
-  // Add new command size
-  space+=command->size();
-
   // Update marker and undo count
   if(this==g){
+
+    // Add new command size
+    space+=command->size();
+    
+    // Update marker and undo counter
     if(marker!=NOMARK) marker++;
     undocount++;
     }
@@ -301,9 +303,6 @@ void FXUndoList::begin(FXCommandGroup *command){
 
   // Hunt for end of group chain
   while(g->group){ g=g->group; }
-
-  // Update space
-  space+=command->size();
 
   // Add to end
   g->group=command;
@@ -337,6 +336,11 @@ void FXUndoList::end(){
 
     // Update marker and undo count
     if(this==g){
+
+      // Update space of completed command group
+      space+=command->size();
+      
+      // Update marker and undo counter
       if(marker!=NOMARK) marker++;
       undocount++;
       }
@@ -344,9 +348,6 @@ void FXUndoList::end(){
 
   // Or delete if empty
   else{
-
-    // Update space
-    space-=command->size();
 
     // Delete bottom group
     delete command;
@@ -366,9 +367,6 @@ void FXUndoList::abort(){
 
   // Hunt for one above end of group chain
   while(g->group->group){ g=g->group; }
-
-  // Update space
-  space-=g->group->size();
 
   // Delete bottom group
   delete g->group;

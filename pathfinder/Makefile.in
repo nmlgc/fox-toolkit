@@ -59,21 +59,30 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 host_alias = @host_alias@
 host_triplet = @host@
+AR = @AR@
 AS = @AS@
 CC = @CC@
 CPP = @CPP@
 CXX = @CXX@
+CXXCPP = @CXXCPP@
 DLLTOOL = @DLLTOOL@
 ECHO = @ECHO@
+EGREP = @EGREP@
 EXEEXT = @EXEEXT@
+F77 = @F77@
 FOX_BYTEORDER = @FOX_BYTEORDER@
 FOX_MAJOR_VERSION = @FOX_MAJOR_VERSION@
 FOX_MINOR_VERSION = @FOX_MINOR_VERSION@
 FOX_PATCH_LEVEL = @FOX_PATCH_LEVEL@
+GCJ = @GCJ@
+GCJFLAGS = @GCJFLAGS@
 GL_LIBS = @GL_LIBS@
 GL_TESTS = @GL_TESTS@
+HAVE_LIB = @HAVE_LIB@
+LIB = @LIB@
 LIBTOOL = @LIBTOOL@
 LN_S = @LN_S@
+LTLIB = @LTLIB@
 LT_AGE = @LT_AGE@
 LT_CURRENT = @LT_CURRENT@
 LT_RELEASE = @LT_RELEASE@
@@ -83,6 +92,7 @@ OBJDUMP = @OBJDUMP@
 OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
 RANLIB = @RANLIB@
+RC = @RC@
 STRIP = @STRIP@
 VERSION = @VERSION@
 X_BASE_LIBS = @X_BASE_LIBS@
@@ -91,7 +101,7 @@ CXXFLAGS = @CXXFLAGS@ @X_CFLAGS@
 INCLUDES = -I$(top_srcdir)/include -I$(top_builddir)/include
 RESWRAP = $(top_builddir)/utils/reswrap
 SUFFIXES = .gif .bmp
-LDADD = ../src/libFOX-1.1.la -lm
+LDADD = ../src/libFOX-1.2.la -lm
 
 bin_PROGRAMS = PathFinder
 
@@ -124,7 +134,7 @@ X_PRE_LIBS = @X_PRE_LIBS@
 PathFinder_OBJECTS =  icons.$(OBJEXT) PathFinder.$(OBJEXT) \
 Preferences.$(OBJEXT) PropertyDialog.$(OBJEXT)
 PathFinder_LDADD = $(LDADD)
-PathFinder_DEPENDENCIES =  ../src/libFOX-1.1.la
+PathFinder_DEPENDENCIES =  ../src/libFOX-1.2.la
 PathFinder_LDFLAGS = 
 CXXCOMPILE = $(CXX) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
 LTCXXCOMPILE = $(LIBTOOL) --mode=compile $(CXX) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
@@ -405,7 +415,9 @@ PathFinder.o: PathFinder.cpp ../include/xincs.h ../include/fx.h \
 	../include/FXPrintDialog.h ../include/FXDebugTarget.h \
 	../include/fxkeys.h PathFinder.h PropertyDialog.h Preferences.h \
 	icons.h ../include/FXPNGImage.h ../include/FXJPGImage.h \
-	../include/FXTIFImage.h
+	../include/FXTIFImage.h ../include/FXICOImage.h \
+	../include/FXTGAImage.h ../include/FXRGBImage.h \
+	../include/FXPCXImage.h
 Preferences.o: Preferences.cpp ../include/fx.h ../include/fxver.h \
 	../include/fxdefs.h ../include/FXException.h \
 	../include/FXStream.h ../include/FXFileStream.h \

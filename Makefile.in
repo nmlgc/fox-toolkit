@@ -61,21 +61,30 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 host_alias = @host_alias@
 host_triplet = @host@
+AR = @AR@
 AS = @AS@
 CC = @CC@
 CPP = @CPP@
 CXX = @CXX@
+CXXCPP = @CXXCPP@
 DLLTOOL = @DLLTOOL@
 ECHO = @ECHO@
+EGREP = @EGREP@
 EXEEXT = @EXEEXT@
+F77 = @F77@
 FOX_BYTEORDER = @FOX_BYTEORDER@
 FOX_MAJOR_VERSION = @FOX_MAJOR_VERSION@
 FOX_MINOR_VERSION = @FOX_MINOR_VERSION@
 FOX_PATCH_LEVEL = @FOX_PATCH_LEVEL@
+GCJ = @GCJ@
+GCJFLAGS = @GCJFLAGS@
 GL_LIBS = @GL_LIBS@
 GL_TESTS = @GL_TESTS@
+HAVE_LIB = @HAVE_LIB@
+LIB = @LIB@
 LIBTOOL = @LIBTOOL@
 LN_S = @LN_S@
+LTLIB = @LTLIB@
 LT_AGE = @LT_AGE@
 LT_CURRENT = @LT_CURRENT@
 LT_RELEASE = @LT_RELEASE@
@@ -85,6 +94,7 @@ OBJDUMP = @OBJDUMP@
 OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
 RANLIB = @RANLIB@
+RC = @RC@
 STRIP = @STRIP@
 VERSION = @VERSION@
 X_BASE_LIBS = @X_BASE_LIBS@
@@ -93,15 +103,19 @@ AUTOMAKE_OPTIONS = foreign dist-zip
 #AUTOMAKE_OPTIONS = foreign dist-zip no-dependencies
 
 SUBDIRS = utils include src chart doc tests shutterbug adie pathfinder calculator windows
-EXTRA_DIST = ADDITIONS AUTHORS INSTALL LICENSE LICENSE_ADDENDUM TRACING README fox.lsm index.html aclocal.m4
+EXTRA_DIST = ADDITIONS AUTHORS INSTALL LICENSE LICENSE_ADDENDUM TRACING README fox.lsm index.html fox-config.in aclocal.m4
+
+bin_SCRIPTS = fox-config
 
 CLEANFILES = fox.tar.gz
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
-CONFIG_CLEAN_FILES =  fox.spec
+CONFIG_CLEAN_FILES =  fox.spec fox-config
+SCRIPTS =  $(bin_SCRIPTS)
+
 DIST_COMMON =  README AUTHORS INSTALL Makefile.am Makefile.in aclocal.m4 \
-config.guess config.sub configure configure.in fox.spec.in install-sh \
-ltmain.sh missing mkinstalldirs
+config.guess config.sub configure configure.in fox-config.in \
+fox.spec.in install-sh ltmain.sh missing mkinstalldirs
 
 
 DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
@@ -126,6 +140,27 @@ $(srcdir)/configure: $(srcdir)/configure.in $(ACLOCAL_M4) $(CONFIGURE_DEPENDENCI
 	cd $(srcdir) && $(AUTOCONF)
 fox.spec: $(top_builddir)/config.status fox.spec.in
 	cd $(top_builddir) && CONFIG_FILES=$@ CONFIG_HEADERS= $(SHELL) ./config.status
+fox-config: $(top_builddir)/config.status fox-config.in
+	cd $(top_builddir) && CONFIG_FILES=$@ CONFIG_HEADERS= $(SHELL) ./config.status
+
+install-binSCRIPTS: $(bin_SCRIPTS)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(bindir)
+	@list='$(bin_SCRIPTS)'; for p in $$list; do \
+	  if test -f $$p; then \
+	    echo " $(INSTALL_SCRIPT) $$p $(DESTDIR)$(bindir)/`echo $$p|sed '$(transform)'`"; \
+	    $(INSTALL_SCRIPT) $$p $(DESTDIR)$(bindir)/`echo $$p|sed '$(transform)'`; \
+	  else if test -f $(srcdir)/$$p; then \
+	    echo " $(INSTALL_SCRIPT) $(srcdir)/$$p $(DESTDIR)$(bindir)/`echo $$p|sed '$(transform)'`"; \
+	    $(INSTALL_SCRIPT) $(srcdir)/$$p $(DESTDIR)$(bindir)/`echo $$p|sed '$(transform)'`; \
+	  else :; fi; fi; \
+	done
+
+uninstall-binSCRIPTS:
+	@$(NORMAL_UNINSTALL)
+	list='$(bin_SCRIPTS)'; for p in $$list; do \
+	  rm -f $(DESTDIR)$(bindir)/`echo $$p|sed '$(transform)'`; \
+	done
 
 # This directory's subdirectories are mostly independent; you can cd
 # into them and run `make' without going through this Makefile.
@@ -287,7 +322,7 @@ check-am: all-am
 check: check-recursive
 installcheck-am:
 installcheck: installcheck-recursive
-install-exec-am:
+install-exec-am: install-binSCRIPTS
 install-exec: install-exec-recursive
 
 install-data-am:
@@ -296,14 +331,15 @@ install-data: install-data-recursive
 install-am: all-am
 	@$(MAKE) $(AM_MAKEFLAGS) install-exec-am install-data-am
 install: install-recursive
-uninstall-am:
+uninstall-am: uninstall-binSCRIPTS
 uninstall: uninstall-recursive
-all-am: Makefile
+all-am: Makefile $(SCRIPTS)
 all-redirect: all-recursive
 install-strip:
 	$(MAKE) $(AM_MAKEFLAGS) AM_INSTALL_PROGRAM_FLAGS=-s install
 installdirs: installdirs-recursive
 installdirs-am:
+	$(mkinstalldirs)  $(DESTDIR)$(bindir)
 
 
 mostlyclean-generic:
@@ -338,11 +374,11 @@ maintainer-clean-am:  maintainer-clean-tags maintainer-clean-generic \
 maintainer-clean: maintainer-clean-recursive
 	-rm -f config.status
 
-.PHONY: install-data-recursive uninstall-data-recursive \
-install-exec-recursive uninstall-exec-recursive installdirs-recursive \
-uninstalldirs-recursive all-recursive check-recursive \
-installcheck-recursive info-recursive dvi-recursive \
-mostlyclean-recursive distclean-recursive clean-recursive \
+.PHONY: uninstall-binSCRIPTS install-binSCRIPTS install-data-recursive \
+uninstall-data-recursive install-exec-recursive \
+uninstall-exec-recursive installdirs-recursive uninstalldirs-recursive \
+all-recursive check-recursive installcheck-recursive info-recursive \
+dvi-recursive mostlyclean-recursive distclean-recursive clean-recursive \
 maintainer-clean-recursive tags tags-recursive mostlyclean-tags \
 distclean-tags clean-tags maintainer-clean-tags distdir info-am info \
 dvi-am dvi check check-am installcheck-am installcheck install-exec-am \
@@ -353,18 +389,18 @@ maintainer-clean-generic clean mostlyclean distclean maintainer-clean
 
 
 snapshot: dist-all
-	cp $(distdir).tar.gz /home/ftp/pub/fox-snapshot.tar.gz
-	cp $(distdir).zip /home/ftp/pub/fox-snapshot.zip
+	cp $(distdir).tar.gz /net/linky/mnt/ftp/pub/fox-snapshot.tar.gz
+	cp $(distdir).zip /net/linky/mnt/ftp/pub/fox-snapshot.zip
 
 web: distdir
 	cd $(distdir)/doc && doxygen doxygen.cfg
 	cp -r $(distdir)/doc/* /home/html
 
 drop: dist-all
-	cp $(distdir).tar.gz /home/ftp/pub
-	cp $(distdir).zip /home/ftp/pub
-	cd /home/ftp/pub && ln -sf $(distdir).tar.gz fox-latest.tar.gz
-	cd /home/ftp/pub && ln -sf $(distdir).zip fox-latest.zip
+	cp $(distdir).tar.gz /net/linky/mnt/ftp/pub
+	cp $(distdir).zip /net/linky/mnt/ftp/pub
+	cd /net/linky/mnt/ftp/pub && ln -sf $(distdir).tar.gz fox-latest.tar.gz
+	cd /net/linky/mnt/ftp/pub && ln -sf $(distdir).zip fox-latest.zip
 
 #diff: distdir
 #	-diff -P -c -r fox-1.1.8 $(distdir) > fox-patch-1.1.8-$(distdir)
