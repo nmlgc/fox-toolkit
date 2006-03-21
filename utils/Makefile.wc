@@ -5,7 +5,7 @@
 ##############################################################################
 # Copyright (C) 1997 by Jeroen van der Zijp.   All Rights Reserved.          #
 ##############################################################################
-# $Id: Makefile.wc,v 1.3 2003/08/21 22:15:27 fox Exp $                       #
+# $Id: Makefile.wc,v 1.5 2005/09/03 07:50:02 fox Exp $                       #
 ##############################################################################
 # This library is free software; you can redistribute it and/or              #
 # modify it under the terms of the GNU Library General Public                #
@@ -25,7 +25,7 @@
 # For use with OpenWatcom C++ v1.0 or later
 CXX       = wpp386
 TOPDIR    = ..
-CXXFLAGS  = /w3 /zq /5r /ei /fp5 /oneatlx /zp=4
+CXXFLAGS  = /w3 /e1 /zq /5r /ei /xs /xr /fp5 /otexan /zp=4
 LD        = wcl386
 LDFLAGS   = 				# note: make console mode application
 DEFINES   = -DNDEBUG -DWIN32 -DFOX_BIGENDIAN=0
@@ -41,10 +41,10 @@ OBJECTS = reswrap.obj
 
 all: $(PROGRAMS)
 
-reswrap.exe: reswrap.obj 
+reswrap.exe: reswrap.obj
 	$(LD) $(LDFLAGS) $(LIBDIRS) reswrap.obj
 
 clean: .SYMBOLIC
 	del *.obj
 	del *.exe
-	del *.tds
+	del *.err

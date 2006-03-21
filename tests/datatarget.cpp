@@ -3,9 +3,9 @@
 *                                 Data Target Test                              *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997 by Jeroen van der Zijp.   All Rights Reserved.             *
+* Copyright (C) 1997,2006 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
-* $Id: datatarget.cpp,v 1.44 2004/10/01 07:09:31 fox Exp $                      *
+* $Id: datatarget.cpp,v 1.49 2006/02/10 03:53:48 fox Exp $                      *
 ********************************************************************************/
 #include "fx.h"
 #include <stdio.h>
@@ -158,7 +158,7 @@ DataTargetWindow::DataTargetWindow(FXApp* a):FXMainWindow(a,"Data Target Test",N
   new FXSlider(this,&int_target,FXDataTarget::ID_VALUE,SLIDER_VERTICAL|SLIDER_INSIDE_BAR|LAYOUT_SIDE_RIGHT|LAYOUT_FILL_Y|LAYOUT_FIX_WIDTH,0,0,20,0);
 
   // Arange nicely
-  matrix=new FXMatrix(this,8,MATRIX_BY_COLUMNS|LAYOUT_SIDE_TOP|LAYOUT_FILL_X|LAYOUT_FILL_Y);
+  matrix=new FXMatrix(this,9,MATRIX_BY_COLUMNS|LAYOUT_SIDE_TOP|LAYOUT_FILL_X|LAYOUT_FILL_Y);
 
   // First row
   new FXLabel(matrix,"&Integer",NULL,LAYOUT_CENTER_Y|LAYOUT_CENTER_X|JUSTIFY_RIGHT|LAYOUT_FILL_ROW);
@@ -168,6 +168,7 @@ DataTargetWindow::DataTargetWindow(FXApp* a):FXMainWindow(a,"Data Target Test",N
   new FXTextField(matrix,10,&int_target,FXDataTarget::ID_VALUE,TEXTFIELD_INTEGER|JUSTIFY_RIGHT|LAYOUT_CENTER_Y|LAYOUT_CENTER_X|FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_ROW);
   new FXSlider(matrix,&int_target,FXDataTarget::ID_VALUE,LAYOUT_CENTER_Y|LAYOUT_FILL_ROW|LAYOUT_FIX_WIDTH,0,0,100);
   new FXDial(matrix,&int_target,FXDataTarget::ID_VALUE,LAYOUT_CENTER_Y|LAYOUT_FILL_ROW|LAYOUT_FIX_WIDTH|DIAL_HORIZONTAL|DIAL_HAS_NOTCH,0,0,100);
+  new FXKnob(matrix,&int_target,FXDataTarget::ID_VALUE,KNOB_TICKS|LAYOUT_CENTER_Y|LAYOUT_CENTER_X);
   new FXSpinner(matrix,5,&int_target,FXDataTarget::ID_VALUE,SPIN_CYCLIC|FRAME_SUNKEN|FRAME_THICK|LAYOUT_CENTER_Y|LAYOUT_FILL_ROW);
   new FXProgressBar(matrix,&int_target,FXDataTarget::ID_VALUE,LAYOUT_CENTER_Y|LAYOUT_FILL_X|FRAME_SUNKEN|FRAME_THICK|PROGRESSBAR_PERCENTAGE|LAYOUT_FILL_COLUMN|LAYOUT_FILL_ROW);
   FX7Segment *seven=new FX7Segment(matrix,FXString::null,SEVENSEGMENT_SHADOW|JUSTIFY_RIGHT|LAYOUT_CENTER_Y|LAYOUT_FILL_ROW|LAYOUT_FILL_X);
@@ -185,9 +186,11 @@ DataTargetWindow::DataTargetWindow(FXApp* a):FXMainWindow(a,"Data Target Test",N
   rslider->setRange(0.0,10.0);
   new FXDial(matrix,&double_target,FXDataTarget::ID_VALUE,LAYOUT_CENTER_Y|LAYOUT_FILL_X|LAYOUT_FILL_ROW|LAYOUT_FIX_WIDTH|DIAL_HORIZONTAL|DIAL_HAS_NOTCH,0,0,100);
 
-  FXRealSpinner *rspinner=new FXRealSpinner(matrix,5,&double_target,FXDataTarget::ID_VALUE,FRAME_SUNKEN|FRAME_THICK|LAYOUT_CENTER_Y|LAYOUT_FILL_ROW);
-  rspinner->setRange(0.0,10.0);
+  FXRealSpinner *rspinner=new FXRealSpinner(matrix,8,&double_target,FXDataTarget::ID_VALUE,REALSPIN_CYCLIC|FRAME_SUNKEN|FRAME_THICK|LAYOUT_CENTER_Y|LAYOUT_FILL_ROW);
+  rspinner->setRange(-10.0,10.0);
   rspinner->setIncrement(0.01);
+  rspinner->setGranularity(0.01);
+  new FXFrame(matrix,LAYOUT_FILL_COLUMN|LAYOUT_FILL_ROW);
   new FXFrame(matrix,LAYOUT_FILL_COLUMN|LAYOUT_FILL_ROW);
   new FXFrame(matrix,LAYOUT_FILL_COLUMN|LAYOUT_FILL_ROW);
 
@@ -197,6 +200,7 @@ DataTargetWindow::DataTargetWindow(FXApp* a):FXMainWindow(a,"Data Target Test",N
   // The string variable "some_string" can be changed by these text fields
   new FXTextField(matrix,10,&string_target,FXDataTarget::ID_VALUE,LAYOUT_CENTER_Y|LAYOUT_CENTER_X|FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_ROW);
   new FXTextField(matrix,10,&string_target,FXDataTarget::ID_VALUE,LAYOUT_CENTER_Y|LAYOUT_CENTER_X|FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_ROW);
+  new FXFrame(matrix,LAYOUT_FILL_COLUMN|LAYOUT_FILL_ROW);
   new FXFrame(matrix,LAYOUT_FILL_COLUMN|LAYOUT_FILL_ROW);
   new FXFrame(matrix,LAYOUT_FILL_COLUMN|LAYOUT_FILL_ROW);
   new FXFrame(matrix,LAYOUT_FILL_COLUMN|LAYOUT_FILL_ROW);
@@ -224,6 +228,7 @@ DataTargetWindow::DataTargetWindow(FXApp* a):FXMainWindow(a,"Data Target Test",N
   options->setSelector(FXDataTarget::ID_VALUE);
 
   new FXFrame(matrix,LAYOUT_FILL_COLUMN|LAYOUT_FILL_ROW);
+  new FXFrame(matrix,LAYOUT_FILL_COLUMN|LAYOUT_FILL_ROW);
 
   // Fifth
   new FXLabel(matrix,"&Color",NULL,LAYOUT_CENTER_Y|LAYOUT_CENTER_X|JUSTIFY_RIGHT|LAYOUT_FILL_ROW);
@@ -235,9 +240,10 @@ DataTargetWindow::DataTargetWindow(FXApp* a):FXMainWindow(a,"Data Target Test",N
   new FXFrame(matrix,LAYOUT_FILL_COLUMN|LAYOUT_FILL_ROW);
   new FXFrame(matrix,LAYOUT_FILL_COLUMN|LAYOUT_FILL_ROW);
   new FXFrame(matrix,LAYOUT_FILL_COLUMN|LAYOUT_FILL_ROW);
+  new FXFrame(matrix,LAYOUT_FILL_COLUMN|LAYOUT_FILL_ROW);
 
   // Install an accelerator
-  getAccelTable()->addAccel(fxparseAccel("Ctl-Q"),getApp(),FXSEL(SEL_COMMAND,FXApp::ID_QUIT));
+  getAccelTable()->addAccel(parseAccel("Ctl-Q"),getApp(),FXSEL(SEL_COMMAND,FXApp::ID_QUIT));
 
   }
 

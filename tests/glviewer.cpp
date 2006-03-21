@@ -3,9 +3,9 @@
 *                         OpenGL Application coding sample                      *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1998,2006 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
-* $Id: glviewer.cpp,v 1.77 2005/02/04 05:50:12 fox Exp $                        *
+* $Id: glviewer.cpp,v 1.83 2006/01/22 17:59:01 fox Exp $                        *
 ********************************************************************************/
 #include "fx.h"
 #include "fx3d.h"
@@ -219,18 +219,6 @@ const unsigned char paste[]={
   0x59,0x3a,0x2b,0x57,0x6c,0xb3,0xd1,0x2b,0x8f,0x27,0x93,0x04,0x00,0x3b
   };
 
-
-// Property
-const unsigned char prop[]={
-  0x47,0x49,0x46,0x38,0x37,0x61,0x10,0x00,0x10,0x00,0xf2,0x00,0x00,0xb2,0xc0,0xdc,
-  0x00,0x00,0x00,0x00,0x00,0x80,0xc0,0xc0,0xc0,0xff,0xff,0xff,0x00,0x00,0x00,0x00,
-  0x00,0x00,0x00,0x00,0x00,0x2c,0x00,0x00,0x00,0x00,0x10,0x00,0x10,0x00,0x00,0x03,
-  0x42,0x08,0xba,0xdc,0xae,0x21,0x4a,0x20,0x84,0x0b,0x23,0xeb,0x50,0x1b,0xc6,0x5a,
-  0x56,0x49,0xd1,0xf0,0x85,0xc3,0x48,0x10,0xe7,0x99,0x71,0x42,0xc0,0x9a,0xf3,0x17,
-  0x51,0x31,0x2b,0xaf,0x1f,0xcb,0xec,0xab,0xe0,0x2e,0xf0,0x0b,0x1a,0x85,0xc5,0x88,
-  0x4e,0xe2,0x5b,0x00,0x8f,0xbc,0xa4,0x8c,0x34,0x2d,0x42,0x91,0x4e,0xaa,0xf6,0xc1,
-  0x6d,0x24,0x00,0x00,0x3b
-  };
 
 // Delete
 const unsigned char killobject[]={
@@ -466,7 +454,7 @@ GLViewWindow::GLViewWindow(FXApp* a):FXMainWindow(a,"OpenGL Test Application",NU
   statusbar=new FXStatusBar(this,LAYOUT_SIDE_BOTTOM|LAYOUT_FILL_X|STATUSBAR_WITH_DRAGCORNER);
 
   // Site where to dock
-  topdock=new FXDockSite(this,LAYOUT_SIDE_TOP|LAYOUT_FILL_X);
+  topdock=new FXDockSite(this,DOCKSITE_NO_WRAP|LAYOUT_SIDE_TOP|LAYOUT_FILL_X);
   bottomdock=new FXDockSite(this,LAYOUT_SIDE_BOTTOM|LAYOUT_FILL_X);
   leftdock=new FXDockSite(this,LAYOUT_SIDE_LEFT|LAYOUT_FILL_Y);
   rightdock=new FXDockSite(this,LAYOUT_SIDE_RIGHT|LAYOUT_FILL_Y);
@@ -688,7 +676,7 @@ GLViewWindow::GLViewWindow(FXApp* a):FXMainWindow(a,"OpenGL Test Application",NU
   new FXButton(toolbar2,"\tSmooth shading\tTurn on smooth shading.",smoothlighticon,mdiclient,FXGLShape::ID_SHADESMOOTH,BUTTON_AUTOGRAY|BUTTON_TOOLBAR|FRAME_RAISED|LAYOUT_TOP|LAYOUT_LEFT);
 
   new FXSeparator(toolbar2,SEPARATOR_GROOVE);
-  new FXToggleButton(toolbar2,"\tToggle Light\tToggle light source.",NULL,nolighticon,lighticon,NULL,0,BUTTON_TOOLBAR|FRAME_RAISED|LAYOUT_TOP|LAYOUT_LEFT);
+  new FXToggleButton(toolbar2,"\tToggle Light\tToggle light source.",FXString::null,nolighticon,lighticon,NULL,0,BUTTON_TOOLBAR|FRAME_RAISED|LAYOUT_TOP|LAYOUT_LEFT);
 
   frontviewicon=new FXGIFIcon(getApp(),frontview);
   backviewicon=new FXGIFIcon(getApp(),backview);
@@ -766,10 +754,10 @@ GLViewWindow::GLViewWindow(FXApp* a):FXMainWindow(a,"OpenGL Test Application",NU
   FXMenuSeparator* sep1=new FXMenuSeparator(windowmenu);
   sep1->setTarget(mdiclient);
   sep1->setSelector(FXMDIClient::ID_MDI_ANY);
-  new FXMenuRadio(windowmenu,NULL,mdiclient,FXMDIClient::ID_MDI_1);
-  new FXMenuRadio(windowmenu,NULL,mdiclient,FXMDIClient::ID_MDI_2);
-  new FXMenuRadio(windowmenu,NULL,mdiclient,FXMDIClient::ID_MDI_3);
-  new FXMenuRadio(windowmenu,NULL,mdiclient,FXMDIClient::ID_MDI_4);
+  new FXMenuRadio(windowmenu,FXString::null,mdiclient,FXMDIClient::ID_MDI_1);
+  new FXMenuRadio(windowmenu,FXString::null,mdiclient,FXMDIClient::ID_MDI_2);
+  new FXMenuRadio(windowmenu,FXString::null,mdiclient,FXMDIClient::ID_MDI_3);
+  new FXMenuRadio(windowmenu,FXString::null,mdiclient,FXMDIClient::ID_MDI_4);
 
   // Help menu
   helpmenu=new FXMenuPane(this);

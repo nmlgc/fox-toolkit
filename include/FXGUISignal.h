@@ -3,7 +3,7 @@
 *                        S i g n a l   G U I   T h r e a d                      *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2005 by Jeroen van der Zijp.   All Rights Reserved.             *
+* Copyright (C) 2005,2006 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXGUISignal.h,v 1.4 2005/01/28 14:05:36 fox Exp $                        *
+* $Id: FXGUISignal.h,v 1.6 2006/01/22 17:58:04 fox Exp $                        *
 ********************************************************************************/
 #ifndef FXGUISIGNAL_H
 #define FXGUISIGNAL_H
@@ -39,7 +39,7 @@ class FXApp;
 * thread from the blocking state and causes it to send the given message
 * to the GUI Signal object's target.
 */
-class FXGUISignal : public FXObject {
+class FXAPI FXGUISignal : public FXObject {
   FXDECLARE(FXGUISignal)
 private:
   FXApp     *app;       // Application

@@ -78,11 +78,8 @@ GCJ = @GCJ@
 GCJFLAGS = @GCJFLAGS@
 GL_LIBS = @GL_LIBS@
 GL_TESTS = @GL_TESTS@
-HAVE_LIB = @HAVE_LIB@
-LIB = @LIB@
 LIBTOOL = @LIBTOOL@
 LN_S = @LN_S@
-LTLIB = @LTLIB@
 LT_AGE = @LT_AGE@
 LT_CURRENT = @LT_CURRENT@
 LT_RELEASE = @LT_RELEASE@
@@ -107,7 +104,11 @@ man_MANS = reswrap.1
 
 reswrap_SOURCES = reswrap.cpp
 
-EXTRA_DIST = $(man_MANS)                   maketree                   Makefile.bc                   Makefile.wc                   Makefile.dmc
+EXTRA_DIST = $(man_MANS) \
+                  maketree \
+                  Makefile.bc \
+                  Makefile.wc \
+                  Makefile.dmc
 
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_CLEAN_FILES = 

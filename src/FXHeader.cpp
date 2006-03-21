@@ -3,7 +3,7 @@
 *                               H e a d e r   O b j e c t                       *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2006 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXHeader.cpp,v 1.94 2005/02/06 17:20:00 fox Exp $                        *
+* $Id: FXHeader.cpp,v 1.103 2006/01/22 17:58:31 fox Exp $                       *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -60,7 +60,7 @@
 
 #define FUDGE         4
 #define ICON_SPACING  4
-#define HEADER_MASK   (HEADER_BUTTON|HEADER_TRACKING|HEADER_VERTICAL)
+#define HEADER_MASK   (HEADER_BUTTON|HEADER_TRACKING|HEADER_VERTICAL|HEADER_RESIZE)
 
 using namespace FX;
 
@@ -290,14 +290,14 @@ FXint FXHeaderItem::getHeight(const FXHeader* header) const {
 
 
 // Change item's text label
-void FXHeaderItem::setText(const FXString& txt){ 
-  label=txt; 
+void FXHeaderItem::setText(const FXString& txt){
+  label=txt;
   }
 
 
 // Change item's icon
-void FXHeaderItem::setIcon(FXIcon* icn){ 
-  icon=icn; 
+void FXHeaderItem::setIcon(FXIcon* icn){
+  icon=icn;
   }
 
 
@@ -559,6 +559,34 @@ FXint FXHeader::fillItems(const FXString& strings,FXIcon *icon,FXint size,void* 
   }
 
 
+// Extract node from list
+FXHeaderItem* FXHeader::extractItem(FXint index,FXbool notify){
+  register FXHeaderItem *result;
+  register FXint i,d;
+
+  // Must be in range
+  if(index<0 || items.no()<=index){ fxerror("%s::extractItem: index out of range.\n",getClassName()); }
+
+  // Notify item will be deleted
+  if(notify && target){target->tryHandle(this,FXSEL(SEL_DELETED,message),(void*)(FXival)index);}
+
+  // Adjust remaining columns
+  for(i=index+1,d=items[index]->getSize(); i<items.no(); i++) items[i]->setPos(items[i]->getPos()-d);
+
+  // Delete item
+  result=items[index];
+
+  // Remove item from list
+  items.erase(index);
+
+  // Redo layout
+  recalc();
+
+  // Return item
+  return result;
+  }
+
+
 // Remove node from list
 void FXHeader::removeItem(FXint index,FXbool notify){
   register FXint i,d;
@@ -576,7 +604,7 @@ void FXHeader::removeItem(FXint index,FXbool notify){
   delete items[index];
 
   // Remove item from list
-  items.remove(index);
+  items.erase(index);
 
   // Redo layout
   recalc();
@@ -827,7 +855,7 @@ long FXHeader::onPaint(FXObject*,FXSelector,void* ptr){
         if(0<y){
           if(options&FRAME_THICK)
             drawDoubleRaisedRectangle(dc,0,0,width,y);
-          else
+          else if(options&FRAME_RAISED)
             drawRaisedRectangle(dc,0,0,width,y);
           }
         ilo=0;
@@ -839,7 +867,7 @@ long FXHeader::onPaint(FXObject*,FXSelector,void* ptr){
         if(y<height){
           if(options&FRAME_THICK)
             drawDoubleRaisedRectangle(dc,0,y,width,height-y);
-          else
+          else if(options&FRAME_RAISED)
             drawRaisedRectangle(dc,0,y,width,height-y);
           }
         ihi=items.no()-1;
@@ -852,13 +880,13 @@ long FXHeader::onPaint(FXObject*,FXSelector,void* ptr){
         if(items[i]->isPressed()){
           if(options&FRAME_THICK)
             drawDoubleSunkenRectangle(dc,0,y,width,h);
-          else
+          else if(options&FRAME_RAISED)
             drawSunkenRectangle(dc,0,y,width,h);
           }
         else{
           if(options&FRAME_THICK)
             drawDoubleRaisedRectangle(dc,0,y,width,h);
-          else
+          else if(options&FRAME_RAISED)
             drawRaisedRectangle(dc,0,y,width,h);
           }
         items[i]->draw(this,dc,0,y,width,h);
@@ -876,7 +904,7 @@ long FXHeader::onPaint(FXObject*,FXSelector,void* ptr){
         if(0<x){
           if(options&FRAME_THICK)
             drawDoubleRaisedRectangle(dc,0,0,x,height);
-          else
+          else if(options&FRAME_RAISED)
             drawRaisedRectangle(dc,0,0,x,height);
           }
         ilo=0;
@@ -888,7 +916,7 @@ long FXHeader::onPaint(FXObject*,FXSelector,void* ptr){
         if(x<width){
           if(options&FRAME_THICK)
             drawDoubleRaisedRectangle(dc,x,0,width-x,height);
-          else
+          else if(options&FRAME_RAISED)
             drawRaisedRectangle(dc,x,0,width-x,height);
           }
         ihi=items.no()-1;
@@ -901,13 +929,13 @@ long FXHeader::onPaint(FXObject*,FXSelector,void* ptr){
         if(items[i]->isPressed()){
           if(options&FRAME_THICK)
             drawDoubleSunkenRectangle(dc,x,0,w,height);
-          else
+          else if(options&FRAME_RAISED)
             drawSunkenRectangle(dc,x,0,w,height);
           }
         else{
           if(options&FRAME_THICK)
             drawDoubleRaisedRectangle(dc,x,0,w,height);
-          else
+          else if(options&FRAME_RAISED)
             drawRaisedRectangle(dc,x,0,w,height);
           }
         items[i]->draw(this,dc,x,0,w,height);
@@ -954,7 +982,6 @@ long FXHeader::onTipTimer(FXObject*,FXSelector,void*){
   }
 
 
-
 // Button being pressed
 long FXHeader::onLeftBtnPress(FXObject*,FXSelector,void* ptr){
   FXEvent* event=(FXEvent*)ptr;
@@ -971,14 +998,14 @@ long FXHeader::onLeftBtnPress(FXObject*,FXSelector,void* ptr){
     coord=(options&HEADER_VERTICAL)?event->win_y:event->win_x;
     active=getItemAt(coord);
     if(0<=active){
-      if(active<items.no() && pos+items[active]->getPos()+items[active]->getSize()-FUDGE<coord){
+      if((options&HEADER_RESIZE) && (active<items.no()) && (pos+items[active]->getPos()+items[active]->getSize()-FUDGE<coord)){
         activepos=pos+items[active]->getPos();
         activesize=items[active]->getSize();
         offset=coord-activepos-activesize;
         setDragCursor((options&HEADER_VERTICAL)?getApp()->getDefaultCursor(DEF_VSPLIT_CURSOR):getApp()->getDefaultCursor(DEF_HSPLIT_CURSOR));
         flags|=FLAG_PRESSED|FLAG_TRYDRAG;
         }
-      else if(0<active && coord<pos+items[active-1]->getPos()+items[active-1]->getSize()+FUDGE){
+      else if((options&HEADER_RESIZE) && (0<active) && (coord<pos+items[active-1]->getPos()+items[active-1]->getSize()+FUDGE)){
         active--;
         activepos=pos+items[active]->getPos();
         activesize=items[active]->getSize();
@@ -986,7 +1013,7 @@ long FXHeader::onLeftBtnPress(FXObject*,FXSelector,void* ptr){
         setDragCursor((options&HEADER_VERTICAL)?getApp()->getDefaultCursor(DEF_VSPLIT_CURSOR):getApp()->getDefaultCursor(DEF_HSPLIT_CURSOR));
         flags|=FLAG_PRESSED|FLAG_TRYDRAG;
         }
-      else if(active<items.no()){
+      else if((options&HEADER_BUTTON) && (active<items.no())){
         activepos=pos+items[active]->getPos();
         activesize=items[active]->getSize();
         setItemPressed(active,TRUE);
@@ -1107,22 +1134,24 @@ long FXHeader::onMotion(FXObject*,FXSelector,void* ptr){
     }
 
   // When hovering over a split, show the split cursor
-  if(options&HEADER_VERTICAL){
-    index=getItemAt(event->win_y-FUDGE);
-    if(0<=index && index<items.no() && pos+items[index]->getPos()+items[index]->getSize()-FUDGE<event->win_y){
-      setDefaultCursor(getApp()->getDefaultCursor(DEF_VSPLIT_CURSOR));
+  if(options&HEADER_RESIZE){
+    if(options&HEADER_VERTICAL){
+      index=getItemAt(event->win_y-FUDGE);
+      if(0<=index && index<items.no() && pos+items[index]->getPos()+items[index]->getSize()-FUDGE<event->win_y){
+        setDefaultCursor(getApp()->getDefaultCursor(DEF_VSPLIT_CURSOR));
+        }
+      else{
+        setDefaultCursor(getApp()->getDefaultCursor(DEF_ARROW_CURSOR));
+        }
       }
     else{
-      setDefaultCursor(getApp()->getDefaultCursor(DEF_ARROW_CURSOR));
-      }
-    }
-  else{
-    index=getItemAt(event->win_x-FUDGE);
-    if(0<=index && index<items.no() && pos+items[index]->getPos()+items[index]->getSize()-FUDGE<event->win_x){
-      setDefaultCursor(getApp()->getDefaultCursor(DEF_HSPLIT_CURSOR));
-      }
-    else{
-      setDefaultCursor(getApp()->getDefaultCursor(DEF_ARROW_CURSOR));
+      index=getItemAt(event->win_x-FUDGE);
+      if(0<=index && index<items.no() && pos+items[index]->getPos()+items[index]->getSize()-FUDGE<event->win_x){
+        setDefaultCursor(getApp()->getDefaultCursor(DEF_HSPLIT_CURSOR));
+        }
+      else{
+        setDefaultCursor(getApp()->getDefaultCursor(DEF_ARROW_CURSOR));
+        }
       }
     }
 

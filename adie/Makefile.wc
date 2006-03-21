@@ -3,9 +3,9 @@
 #		   FOX:  A Free C++ Class Library for X 		     #
 #									     #
 ##############################################################################
-# Copyright (C) 1997,2002 by Jeroen van der Zijp.   All Rights Reserved      #
+# Copyright (C) 1997,2005 by Jeroen van der Zijp.   All Rights Reserved      #
 ##############################################################################
-# $Id: Makefile.wc,v 1.6 2005/02/04 04:33:18 fox Exp $		             #
+# $Id: Makefile.wc,v 1.9 2005/09/22 11:14:47 fox Exp $		             #
 ##############################################################################
 # This library is free software; you can redistribute it and/or 	     #
 # modify it under the terms of the GNU Library General Public		     #
@@ -24,7 +24,7 @@
 
 # For use with OpenWatcom C++ v1.0 or later
 CXX	  = wpp386
-CXXFLAGS  = /w3 /zq /5r /ei /fp5 /oneatlx /zp=4
+CXXFLAGS  = /w3 /e1 /zq /5r /ei /xs /xr /fp5 /otexan /zp=4
 RM	  = del
 TOPDIR	  = ..
 DEFINES   = -DNDEBUG -DFOX_BIGENDIAN=0 -DWIN32 -D_WINDOWS
@@ -32,7 +32,7 @@ LD	  = wcl386
 LDFLAGS   = -l=nt_win
 GLLIBS	  = opengl32.lib glu32.lib
 INCDIRS   = -I$(TOPDIR)\include
-FOXLIB	  = $(TOPDIR)\src\FOX-1.4.lib $(%WATCOM)\lib386\nt\comctl32.lib $(%WATCOM)\lib386\nt\wsock32.lib
+FOXLIB	  = $(TOPDIR)\src\FOX-1.6.lib $(%WATCOM)\lib386\nt\comctl32.lib $(%WATCOM)\lib386\nt\wsock32.lib
 RESWRAP   = $(TOPDIR)\utils\reswrap.exe
 
 PROGRAMS  = adie.exe
@@ -43,6 +43,7 @@ OBJECTS += Commands.obj
 OBJECTS += HelpWindow.obj
 OBJECTS += TextWindow.obj
 OBJECTS += Preferences.obj
+OBJECTS += ParseSyntax.obj
 OBJECTS += help.obj
 OBJECTS += Hilite.obj
 OBJECTS += icons.obj
@@ -108,6 +109,6 @@ icons.cpp: $(ICONS)
 clean: .SYMBOLIC
 	$(RM) *.obj
 	$(RM) *.exe
-	$(RM) *.tds
+	$(RM) *.err
 	$(RM) icons.cpp
 	$(RM) icons.h

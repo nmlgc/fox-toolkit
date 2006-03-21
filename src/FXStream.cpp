@@ -3,7 +3,7 @@
 *       P e r s i s t e n t   S t o r a g e   S t r e a m   C l a s s e s       *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2006 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXStream.cpp,v 1.55 2005/01/16 16:06:07 fox Exp $                        *
+* $Id: FXStream.cpp,v 1.66 2006/01/22 17:58:42 fox Exp $                        *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -78,8 +78,21 @@ FXStream::FXStream(const FXObject *cont){
   dir=FXStreamDead;
   code=FXStreamOK;
   seq=0x80000000;
-  swap=FALSE;
-  owns=FALSE;
+  swap=false;
+  owns=false;
+  }
+
+
+
+// Set stream to big endian mode if true
+void FXStream::setBigEndian(bool big){
+  swap=(big^FOX_BIGENDIAN);
+  }
+
+
+// Return true if big endian mode.
+bool FXStream::isBigEndian() const {
+  return (swap^FOX_BIGENDIAN);
   }
 
 
@@ -97,7 +110,7 @@ FXStream::~FXStream(){
 // Write at least count bytes from the buffer; the default
 // implementation simply discards all data in the buffer.
 // It returns the amount of room available to be written.
-unsigned long FXStream::writeBuffer(unsigned long){
+FXuval FXStream::writeBuffer(FXuval){
   rdptr=begptr;
   wrptr=begptr;
   return endptr-wrptr;
@@ -107,7 +120,7 @@ unsigned long FXStream::writeBuffer(unsigned long){
 // Read at least count bytes into the buffer; the default
 // implementation reads an endless stream of zero's.
 // It returns the amount of data available to be read.
-unsigned long FXStream::readBuffer(unsigned long){
+FXuval FXStream::readBuffer(FXuval){
   rdptr=begptr;
   wrptr=endptr;
   return wrptr-rdptr;
@@ -121,13 +134,13 @@ void FXStream::setError(FXStreamStatus err){
 
 
 // Get available space
-unsigned long FXStream::getSpace() const {
+FXuval FXStream::getSpace() const {
   return endptr-begptr;
   }
 
 
 // Set available space
-void FXStream::setSpace(unsigned long size){
+void FXStream::setSpace(FXuval size){
   if(code==FXStreamOK){
 
     // Changed size?
@@ -154,7 +167,7 @@ void FXStream::setSpace(unsigned long size){
 
 
 // Open for save or load
-FXbool FXStream::open(FXStreamDirection save_or_load,unsigned long size,FXuchar* data){
+bool FXStream::open(FXStreamDirection save_or_load,FXuval size,FXuchar* data){
   if(save_or_load!=FXStreamSave && save_or_load!=FXStreamLoad){fxerror("FXStream::open: illegal stream direction.\n");}
   if(!dir){
 
@@ -162,21 +175,21 @@ FXbool FXStream::open(FXStreamDirection save_or_load,unsigned long size,FXuchar*
     if(data){
       begptr=data;
       if(size==ULONG_MAX)
-        endptr=((FXuchar*)NULL)-1;
+        endptr=(FXuchar*)(FXival)-1L;
       else
         endptr=begptr+size;
       wrptr=begptr;
       rdptr=begptr;
-      owns=FALSE;
+      owns=false;
       }
 
     // Use internal buffer space
     else{
-      if(!FXCALLOC(&begptr,FXuchar,size)){ code=FXStreamAlloc; return FALSE; }
+      if(!FXCALLOC(&begptr,FXuchar,size)){ code=FXStreamAlloc; return false; }
       endptr=begptr+size;
       wrptr=begptr;
       rdptr=begptr;
-      owns=TRUE;
+      owns=true;
       }
 
     // Reset variables
@@ -193,14 +206,21 @@ FXbool FXStream::open(FXStreamDirection save_or_load,unsigned long size,FXuchar*
     // So far, so good
     code=FXStreamOK;
 
-    return TRUE;
+    return true;
     }
-  return FALSE;
+  return false;
   }
 
 
-// Close store; return TRUE if no errors have been encountered
-FXbool FXStream::close(){
+// Flush buffer
+bool FXStream::flush(){
+  writeBuffer(0);
+  return code==FXStreamOK;
+  }
+
+
+// Close store; return true if no errors have been encountered
+bool FXStream::close(){
   if(dir){
     hash.clear();
     dir=FXStreamDead;
@@ -209,30 +229,23 @@ FXbool FXStream::close(){
     wrptr=NULL;
     rdptr=NULL;
     endptr=NULL;
-    owns=FALSE;
+    owns=false;
     return code==FXStreamOK;
     }
-  return FALSE;
-  }
-
-
-// Flush buffer
-FXbool FXStream::flush(){
-  writeBuffer(0);
-  return code==FXStreamOK;
+  return false;
   }
 
 
 // Move to position
-FXbool FXStream::position(FXlong offset,FXWhence whence){
+bool FXStream::position(FXlong offset,FXWhence whence){
   if(dir==FXStreamDead){fxerror("FXStream::position: stream is not open.\n");}
   if(code==FXStreamOK){
     if(whence==FXFromCurrent) offset=offset+pos;
     else if(whence==FXFromEnd) offset=offset+endptr-begptr;
     pos=offset;
-    return TRUE;
+    return true;
     }
-  return FALSE;
+  return false;
   }
 
 
@@ -341,7 +354,7 @@ FXStream& FXStream::operator<<(const FXdouble& v){
 /************************  Save Blocks of Basic Types  *************************/
 
 // Write array of bytes
-FXStream& FXStream::save(const FXuchar* p,unsigned long n){
+FXStream& FXStream::save(const FXuchar* p,FXuval n){
   if(code==FXStreamOK){
     FXASSERT(begptr<=rdptr);
     FXASSERT(rdptr<=wrptr);
@@ -362,7 +375,7 @@ FXStream& FXStream::save(const FXuchar* p,unsigned long n){
 
 
 // Write array of shorts
-FXStream& FXStream::save(const FXushort* p,unsigned long n){
+FXStream& FXStream::save(const FXushort* p,FXuval n){
   register const FXuchar *q=(const FXuchar*)p;
   if(code==FXStreamOK){
     n<<=1;
@@ -405,7 +418,7 @@ FXStream& FXStream::save(const FXushort* p,unsigned long n){
 
 
 // Write array of ints
-FXStream& FXStream::save(const FXuint* p,unsigned long n){
+FXStream& FXStream::save(const FXuint* p,FXuval n){
   register const FXuchar *q=(const FXuchar*)p;
   if(code==FXStreamOK){
     n<<=2;
@@ -452,7 +465,7 @@ FXStream& FXStream::save(const FXuint* p,unsigned long n){
 
 
 // Write array of doubles
-FXStream& FXStream::save(const FXdouble* p,unsigned long n){
+FXStream& FXStream::save(const FXdouble* p,FXuval n){
   register const FXuchar *q=(const FXuchar*)p;
   if(code==FXStreamOK){
     n<<=3;
@@ -612,7 +625,7 @@ FXStream& FXStream::operator>>(FXdouble& v){
 /************************  Load Blocks of Basic Types  *************************/
 
 // Read array of bytes
-FXStream& FXStream::load(FXuchar* p,unsigned long n){
+FXStream& FXStream::load(FXuchar* p,FXuval n){
   if(code==FXStreamOK){
     FXASSERT(begptr<=rdptr);
     FXASSERT(rdptr<=wrptr);
@@ -633,7 +646,7 @@ FXStream& FXStream::load(FXuchar* p,unsigned long n){
 
 
 // Read array of shorts
-FXStream& FXStream::load(FXushort* p,unsigned long n){
+FXStream& FXStream::load(FXushort* p,FXuval n){
   register FXuchar *q=(FXuchar*)p;
   if(code==FXStreamOK){
     n<<=1;
@@ -676,7 +689,7 @@ FXStream& FXStream::load(FXushort* p,unsigned long n){
 
 
 // Read array of ints
-FXStream& FXStream::load(FXuint* p,unsigned long n){
+FXStream& FXStream::load(FXuint* p,FXuval n){
   register FXuchar *q=(FXuchar*)p;
   if(code==FXStreamOK){
     n<<=2;
@@ -723,7 +736,7 @@ FXStream& FXStream::load(FXuint* p,unsigned long n){
 
 
 // Read array of doubles
-FXStream& FXStream::load(FXdouble* p,unsigned long n){
+FXStream& FXStream::load(FXdouble* p,FXuval n){
   register FXuchar *q=(FXuchar*)p;
   if(code==FXStreamOK){
     n<<=3;
@@ -782,17 +795,38 @@ FXStream& FXStream::load(FXdouble* p,unsigned long n){
 
 // Add object without saving or loading
 FXStream& FXStream::addObject(const FXObject* v){
-  if(dir==FXStreamSave){
-    hash.insert((void*)v,(void*)(FXuval)seq++);
+/*
+  if(!hash.find((void*)v)){
+    hash.insert((void*)v,(void*)(FXuval)seq);
+    hash.insert((void*)(FXuval)seq,(void*)v);
+    seq++;
     }
-  else if(dir==FXStreamLoad){
-    hash.insert((void*)(FXuval)seq++,(void*)v);
+*/
+  if(v){
+    if(dir==FXStreamSave){
+      hash.insert((void*)v,(void*)(FXuval)seq++);
+      }
+    else if(dir==FXStreamLoad){
+      hash.insert((void*)(FXuval)seq++,(void*)v);
+      }
     }
   return *this;
   }
 
 
 /********************************  Save Object  ********************************/
+
+
+// On Windows, the following code may be of interest:
+
+//  MEMORY_BASIC_INFORMATION mbi;
+//  VirtualQuery(functionptr,&mbi,sizeof(mbi));
+//  hmodule=(HINSTANCE)mbi.AllocationBase;
+//char handlefilename[MAX_PATH];
+//GetModuleFileNameA((HINSTANCE)display,handlefilename,sizeof(handlefilename));
+
+// We can use this to determine the DLL module in which the code is implemented.
+// How to find this on UNIX?
 
 // Save object
 FXStream& FXStream::saveObject(const FXObject* v){

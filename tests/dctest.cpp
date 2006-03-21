@@ -3,9 +3,9 @@
 *                           Device Context Tester                               *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1999,2003 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1999,2006 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
-* $Id: dctest.cpp,v 1.37 2004/12/02 14:44:24 fox Exp $                          *
+* $Id: dctest.cpp,v 1.50 2006/01/22 17:58:59 fox Exp $                          *
 ********************************************************************************/
 #include "fx.h"
 #include <string.h>
@@ -465,6 +465,7 @@ protected:
   FXImage	    *birdImage;       // Test image
   FXImage	    *textureImage;    // Texture image
   FXFont            *testFont;        // Test font
+  FXFont            *testFontAngle;   // Test font at angle
   FXBitmap          *bitmap;          // Test bitmap
   FXint              ang1;            // Arc angle 1
   FXint              ang2;            // Arc angle 2
@@ -909,7 +910,10 @@ DCTestWindow::DCTestWindow(FXApp *app):FXMainWindow(app,"Device Context Test",NU
   erasecolor=FXRGB(255,255,255);
   ang1=0;
   ang2=90;
-  testFont=new FXFont(getApp(),"helvetica",20);
+  testFont=new FXFont(getApp(),"helvetica",20,FXFont::Normal,FXFont::Straight,FONTENCODING_DEFAULT,FXFont::NonExpanded,FXFont::Scalable|FXFont::Rotatable);
+  testFontAngle=new FXFont(getApp(),"helvetica",20,FXFont::Normal,FXFont::Straight,FONTENCODING_DEFAULT,FXFont::NonExpanded,FXFont::Scalable|FXFont::Rotatable);
+  testFontAngle->setAngle(90*64);
+//  testFontAngle->setAngle(45*64);
   ang1_target.connect(ang1);
   ang1_target.setTarget(this);
   ang1_target.setSelector(ID_REDRAW);
@@ -933,6 +937,7 @@ DCTestWindow::DCTestWindow(FXApp *app):FXMainWindow(app,"Device Context Test",NU
 // Clean up
 DCTestWindow::~DCTestWindow(){
   delete testFont;
+  delete testFontAngle;
   delete birdImage;
   delete textureImage;
   delete bitmap;
@@ -960,6 +965,7 @@ void DCTestWindow::create(){
   birdImage->create();
   textureImage->create();
   testFont->create();
+  testFontAngle->create();
   bitmap->create();
   alphacursor->create();
   gifcursor->create();
@@ -974,6 +980,7 @@ void DCTestWindow::detach(){
   birdImage->detach();
   textureImage->detach();
   testFont->detach();
+  testFontAngle->detach();
   bitmap->detach();
   }
 
@@ -1097,6 +1104,7 @@ long DCTestWindow::onUpdBackColor(FXObject* sender,FXSelector,void*){
   return 1;
   }
 
+
 // Change font
 long DCTestWindow::onCmdFont(FXObject*,FXSelector,void*){
   FXFontDialog fontdlg(this,"Change Font",DECOR_BORDER|DECOR_TITLE);
@@ -1106,8 +1114,12 @@ long DCTestWindow::onCmdFont(FXObject*,FXSelector,void*){
   if(fontdlg.execute()){
     fontdlg.getFontSelection(fontdesc);
     delete testFont;
+    delete testFontAngle;
     testFont=new FXFont(getApp(),fontdesc);
     testFont->create();
+    testFontAngle=new FXFont(getApp(),fontdesc);
+    testFontAngle->setAngle(90*64);
+    testFontAngle->create();
     linesCanvas->update(0,0,linesCanvas->getWidth(),linesCanvas->getHeight());
     }
   return 1;
@@ -1323,6 +1335,11 @@ void DCTestWindow::drawPage(FXDC& dc,FXint w,FXint h){
   dc.setBackground(backcolor);
   dc.drawText(30,h-70,string.text(),string.length());
   dc.drawImageText(30,h-30,string.text(),string.length());
+
+  dc.setFont(testFontAngle);
+  dc.drawText(30,h-90,string.text(),string.length());
+  dc.drawImageText(70,h-90,string.text(),string.length());
+
 
   dc.setForeground(forecolor);
   dc.setBackground(backcolor);

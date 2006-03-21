@@ -5,11 +5,11 @@ INCLUDES = -I$(top_srcdir)/include -I$(top_builddir)/include
 RESWRAP  = $(top_builddir)/utils/reswrap
 SUFFIXES = .gif .bmp
 
-lib_LTLIBRARIES = libFOX-1.4.la
+lib_LTLIBRARIES = libFOX-1.6.la
 
-libFOX_1_4_la_LIBADD  = $(X_LIBS) $(X_BASE_LIBS) $(X_EXTRA_LIBS) $(GL_LIBS)
+libFOX_1_6_la_LIBADD  = $(X_LIBS) $(X_BASE_LIBS) $(X_EXTRA_LIBS) $(GL_LIBS)
 
-libFOX_1_4_la_LDFLAGS = \
+libFOX_1_6_la_LDFLAGS = \
         -version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)    \
 	-export-dynamic
 
@@ -129,7 +129,54 @@ winminimize.gif \
 winrestore.gif
 
 
-libFOX_1_4_la_SOURCES = \
+CODECS = \
+FX88591Codec.cpp \
+FX88592Codec.cpp \
+FX88593Codec.cpp \
+FX88594Codec.cpp \
+FX88595Codec.cpp \
+FX88596Codec.cpp \
+FX88597Codec.cpp \
+FX88598Codec.cpp \
+FX88599Codec.cpp \
+FX885910Codec.cpp \
+FX885911Codec.cpp \
+FX885913Codec.cpp \
+FX885914Codec.cpp \
+FX885915Codec.cpp \
+FX885916Codec.cpp \
+FXCP437Codec.cpp \
+FXCP850Codec.cpp \
+FXCP852Codec.cpp \
+FXCP855Codec.cpp \
+FXCP856Codec.cpp \
+FXCP857Codec.cpp \
+FXCP860Codec.cpp \
+FXCP861Codec.cpp \
+FXCP862Codec.cpp \
+FXCP863Codec.cpp \
+FXCP864Codec.cpp \
+FXCP865Codec.cpp \
+FXCP866Codec.cpp \
+FXCP869Codec.cpp \
+FXCP874Codec.cpp \
+FXCP1250Codec.cpp \
+FXCP1251Codec.cpp \
+FXCP1252Codec.cpp \
+FXCP1253Codec.cpp \
+FXCP1254Codec.cpp \
+FXCP1255Codec.cpp \
+FXCP1256Codec.cpp \
+FXCP1257Codec.cpp \
+FXCP1258Codec.cpp \
+FXKOI8RCodec.cpp \
+FXUTF8Codec.cpp \
+FXUTF16Codec.cpp \
+FXUTF32Codec.cpp
+
+
+libFOX_1_6_la_SOURCES = \
+$(CODECS) \
 FX4Splitter.cpp \
 FX7Segment.cpp \
 FXAccelTable.cpp \
@@ -141,30 +188,35 @@ FXBitmap.cpp \
 FXBitmapFrame.cpp \
 FXBitmapView.cpp \
 FXButton.cpp \
-FXBZStream.cpp \
+FXBZFileStream.cpp \
 FXCURCursor.cpp \
 FXCanvas.cpp \
 FXCheckButton.cpp \
 FXChoiceBox.cpp \
 FXColorBar.cpp \
 FXColorDialog.cpp \
+FXColorList.cpp \
 FXColorNames.cpp \
+FXColorRing.cpp \
 FXColorSelector.cpp \
 FXColorWell.cpp \
 FXColorWheel.cpp \
 FXComboBox.cpp \
+FXComposeContext.cpp \
 FXComposite.cpp \
 FXCursor.cpp \
+FXDataTarget.cpp \
+FXDate.cpp \
 FXDC.cpp \
 FXDCPrint.cpp \
 FXDCWindow.cpp \
 FXDLL.cpp \
-FXDataTarget.cpp \
 FXDebugTarget.cpp \
 FXDelegator.cpp \
 FXDial.cpp \
 FXDialogBox.cpp \
 FXDict.cpp \
+FXDir.cpp \
 FXDirBox.cpp \
 FXDirDialog.cpp \
 FXDirList.cpp \
@@ -178,6 +230,9 @@ FXDragCorner.cpp \
 FXDrawable.cpp \
 FXDriveBox.cpp \
 FXException.cpp \
+FXExpression.cpp \
+FXExtentd.cpp \
+FXExtentf.cpp \
 FXFile.cpp \
 FXFileDialog.cpp \
 FXFileDict.cpp \
@@ -206,7 +261,7 @@ FXGLVisual.cpp \
 FXGradientBar.cpp \
 FXGroupBox.cpp \
 FXGUISignal.cpp \
-FXGZStream.cpp \
+FXGZFileStream.cpp \
 FXHash.cpp \
 FXHeader.cpp \
 FXHorizontalFrame.cpp \
@@ -214,6 +269,7 @@ FXICOIcon.cpp \
 FXICOImage.cpp \
 FXIFFIcon.cpp \
 FXIFFImage.cpp \
+FXIO.cpp \
 FXIcon.cpp \
 FXIconDict.cpp \
 FXIconList.cpp \
@@ -225,6 +281,7 @@ FXImageView.cpp \
 FXInputDialog.cpp \
 FXJPGIcon.cpp \
 FXJPGImage.cpp \
+FXKnob.cpp \
 FXLabel.cpp \
 FXList.cpp \
 FXListBox.cpp \
@@ -237,8 +294,8 @@ FXMat4d.cpp \
 FXMat3f.cpp \
 FXMat4f.cpp \
 FXMatrix.cpp \
-FXMemoryStream.cpp \
 FXMemMap.cpp \
+FXMemoryStream.cpp \
 FXMenuBar.cpp \
 FXMenuButton.cpp \
 FXMenuCaption.cpp \
@@ -260,7 +317,9 @@ FXPNGImage.cpp \
 FXPPMIcon.cpp \
 FXPPMImage.cpp \
 FXPacker.cpp \
+FXPath.cpp \
 FXPicker.cpp \
+FXPipe.cpp  \
 FXPopup.cpp \
 FXPoint.cpp \
 FXPrintDialog.cpp \
@@ -285,6 +344,7 @@ FXReplaceDialog.cpp \
 FXRex.cpp \
 FXRootWindow.cpp \
 FXRuler.cpp \
+FXRulerView.cpp \
 FXScrollArea.cpp \
 FXScrollBar.cpp \
 FXScrollPane.cpp \
@@ -296,18 +356,21 @@ FXShell.cpp \
 FXShutter.cpp \
 FXSize.cpp \
 FXSlider.cpp \
+FXSocket.cpp \
 FXSpinner.cpp \
 FXSpheref.cpp \
 FXSphered.cpp \
 FXSplashWindow.cpp \
 FXSplitter.cpp \
 FXSpring.cpp \
+FXStat.cpp \
 FXStatusBar.cpp \
 FXStatusLine.cpp \
 FXStream.cpp \
 FXString.cpp \
 FXStringDict.cpp \
 FXSwitcher.cpp \
+FXSystem.cpp \
 FXTGAIcon.cpp \
 FXTGAImage.cpp \
 FXTIFIcon.cpp \
@@ -327,14 +390,12 @@ FXToolBarShell.cpp \
 FXToolBarTab.cpp \
 FXToolTip.cpp \
 FXTopWindow.cpp \
+FXTranslator.cpp \
 FXTreeList.cpp \
 FXTreeListBox.cpp \
 FXTriStateButton.cpp \
 FXUndoList.cpp \
 FXURL.cpp \
-FXUTF16Codec.cpp \
-FXUTF32Codec.cpp \
-FXUTF8Codec.cpp \
 FXVec2d.cpp \
 FXVec2f.cpp \
 FXVec3d.cpp \
@@ -349,12 +410,15 @@ FXXBMIcon.cpp \
 FXXBMImage.cpp \
 FXXPMIcon.cpp \
 FXXPMImage.cpp \
+fxascii.cpp \
 fxbmpio.cpp \
 fxfilematch.cpp \
 fxgifio.cpp \
 fxicoio.cpp \
 fxiffio.cpp \
 fxjpegio.cpp \
+fxkeyboard.cpp \
+fxkeysym.cpp \
 fxparsegeometry.cpp \
 fxpcxio.cpp \
 fxpngio.cpp \
@@ -368,8 +432,8 @@ fxrasio.cpp \
 fxrgbio.cpp \
 fxtargaio.cpp \
 fxtifio.cpp \
+fxunicode.cpp \
 fxutils.cpp \
-fxwinkbd.cpp \
 fxxbmio.cpp \
 fxxpmio.cpp \
 icons.cpp \

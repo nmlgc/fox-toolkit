@@ -5,7 +5,7 @@
 ##############################################################################
 # Contributed by: Andre Fornacon <afo@zlug.org>                              #
 ##############################################################################
-# $Id: Makefile.dmc,v 1.11 2005/02/04 04:33:19 fox Exp $                     #
+# $Id: Makefile.dmc,v 1.16 2006/03/10 04:31:45 fox Exp $                     #
 ##############################################################################
 # This library is free software; you can redistribute it and/or              #
 # modify it under the terms of the GNU Library General Public                #
@@ -23,22 +23,23 @@
 ##############################################################################
 
 # Digital Mars C++ Compiler 8.x or later
-CXX	  = sc
-CXXFLAGS  = -mn -5 -a8
+CXX	  = dmc
+CXXFLAGS  = -mn -5 -a8 -Ae -Ar
 RM        = del
 TOPDIR    = ..
-DEFINES   = -DNDEBUG -DFOX_BIGENDIAN=0 -DWIN32 -D_WINDOWS -DHAVE_GL_H -DHAVE_GLU_H #-DHAVE_PNG_H -DHAVE_JPEG_H -DHAVE_TIFF_H -DXMD_H
-LD	  = sc
-LDFLAGS	  =
-LIBS	  = advapi32.lib+shell32.lib+gdi32.lib+wsock32.lib+winspool.lib
+DEFINES   = -DFOX_BIGENDIAN=0 -DNDEBUG -D_WINDOWS -DWIN32 -DHAVE_VSSCANF -DHAVE_OPENGL #-DHAVE_PNG_H -DHAVE_JPEG_H -DHAVE_ZLIB_H -DHAVE_TIFF_H -DHAVE_BZ2LIB_H -DXMD_H
+LD	  = link
+LDFLAGS	  = /NOI /DELEXECUTABLE /PACKFUNCTIONS /EXETYPE:NT /SU:WINDOWS
+LIBS	  = gc.lib+snn.lib+kernel32.lib+user32.lib+comctl32.lib+comdlg32.lib+advapi32.lib+shell32.lib+gdi32.lib+wsock32.lib+winspool.lib
 GLLIBS    = opengl32.lib+glu32.lib
 INCDIRS   = -I$(TOPDIR)\include
-FOXLIB    = $(TOPDIR)\src\FOX-1.4.lib
+FOXLIB    = $(TOPDIR)\src\FOX-1.6.lib
 
 PROGRAMS  = \
 	ControlPanel.exe \
 	rex.exe \
 	minheritance.exe \
+	expression.exe \
 	memmap.exe \
 	mditest.exe \
 	table.exe \
@@ -73,85 +74,88 @@ PROGRAMS  = \
 all: $(PROGRAMS)
 
 ControlPanel.exe: $(FOXLIB) ControlPanel.obj
-	$(LD) $(LDFLAGS) ControlPanel.obj $(FOXLIB) $(LIBS)
+	$(LD) $(LDFLAGS) ControlPanel.obj,,,$(FOXLIB) $(LIBS)
 
 rex.exe: $(FOXLIB) rex.obj
-	$(LD) $(LDFLAGS) rex.obj $(FOXLIB) $(LIBS)
+	$(LD) $(LDFLAGS) rex.obj,,,$(FOXLIB) $(LIBS)
 
 minheritance.exe: $(FOXLIB) minheritance.obj
-	$(LD) $(LDFLAGS) minheritance.obj $(FOXLIB) $(LIBS)
+	$(LD) $(LDFLAGS) minheritance.obj,,,$(FOXLIB) $(LIBS)
+
+expression.exe: $(FOXLIB) expression.obj
+	$(LD) $(LDFLAGS) expression.obj,,,$(FOXLIB) $(LIBS)
 
 memmap.exe: $(FOXLIB) memmap.obj
-	$(LD) $(LDFLAGS) memmap.obj $(FOXLIB) $(LIBS)
+	$(LD) $(LDFLAGS) memmap.obj,,,$(FOXLIB) $(LIBS)
 
 wizard.exe: $(FOXLIB) wizard.obj
-	$(LD) $(LDFLAGS) wizard.obj $(FOXLIB) $(LIBS)
+	$(LD) $(LDFLAGS) wizard.obj,,,$(FOXLIB) $(LIBS)
 
 foursplit.exe: $(FOXLIB) foursplit.obj
-	$(LD) $(LDFLAGS) foursplit.obj $(FOXLIB) $(LIBS)
+	$(LD) $(LDFLAGS) foursplit.obj,,,$(FOXLIB) $(LIBS)
 
 tabbook.exe: $(FOXLIB) tabbook.obj
-	$(LD) $(LDFLAGS) tabbook.obj $(FOXLIB) $(LIBS)
+	$(LD) $(LDFLAGS) tabbook.obj,,,$(FOXLIB) $(LIBS)
 
 table.exe: $(FOXLIB) table.obj
-	$(LD) $(LDFLAGS) table.obj $(FOXLIB) $(LIBS)
+	$(LD) $(LDFLAGS) table.obj,,,$(FOXLIB) $(LIBS)
 
 switcher.exe: $(FOXLIB) switcher.obj
-	$(LD) $(LDFLAGS) switcher.obj $(FOXLIB) $(LIBS)
+	$(LD) $(LDFLAGS) switcher.obj,,,$(FOXLIB) $(LIBS)
 
 button.exe: $(FOXLIB) button.obj
-	$(LD) $(LDFLAGS) button.obj $(FOXLIB) $(LIBS)
+	$(LD) $(LDFLAGS) button.obj,,,$(FOXLIB) $(LIBS)
 
 mditest.exe: $(FOXLIB) mditest.obj
-	$(LD) $(LDFLAGS) mditest.obj $(FOXLIB) $(LIBS)
+	$(LD) $(LDFLAGS) mditest.obj,,,$(FOXLIB) $(LIBS)
 
 datatarget.exe: $(FOXLIB) datatarget.obj
-	$(LD) $(LDFLAGS) datatarget.obj $(FOXLIB) $(LIBS)
+	$(LD) $(LDFLAGS) datatarget.obj,,,$(FOXLIB) $(LIBS)
 
 imageviewer.exe: $(FOXLIB) imageviewer.obj
-	$(LD) $(LDFLAGS) imageviewer.obj $(FOXLIB) $(LIBS) #libpng.lib zlib.lib libjpeg.lib libtiff.lib
+	$(LD) $(LDFLAGS) imageviewer.obj,,,$(FOXLIB) $(LIBS) #libpng.lib zlib.lib libjpeg.lib libtiff.lib
 
 hello.exe: $(FOXLIB) hello.obj
-	$(LD) $(LDFLAGS) hello.obj $(FOXLIB) $(LIBS)
+	$(LD) $(LDFLAGS) hello.obj,,,$(FOXLIB) $(LIBS)
 
 hello2.exe: $(FOXLIB) hello2.obj
-	$(LD) $(LDFLAGS) hello2.obj $(FOXLIB) $(LIBS)
+	$(LD) $(LDFLAGS) hello2.obj,,,$(FOXLIB) $(LIBS)
 
 dirlist.exe: $(FOXLIB) dirlist.obj
-	$(LD) $(LDFLAGS) dirlist.obj $(FOXLIB) $(LIBS)
+	$(LD) $(LDFLAGS) dirlist.obj,,,$(FOXLIB) $(LIBS)
 
 groupbox.exe: $(FOXLIB) groupbox.obj
-	$(LD) $(LDFLAGS) groupbox.obj $(FOXLIB) $(LIBS)
+	$(LD) $(LDFLAGS) groupbox.obj,,,$(FOXLIB) $(LIBS)
 
 scribble.exe: $(FOXLIB) scribble.obj
-	$(LD) $(LDFLAGS) scribble.obj $(FOXLIB) $(LIBS)
+	$(LD) $(LDFLAGS) scribble.obj,,,$(FOXLIB) $(LIBS)
 
 splitter.exe: $(FOXLIB) splitter.obj
-	$(LD) $(LDFLAGS) splitter.obj $(FOXLIB) $(LIBS)
+	$(LD) $(LDFLAGS) splitter.obj,,,$(FOXLIB) $(LIBS)
 
 iconlist.exe: $(FOXLIB) iconlist.obj
-	$(LD) $(LDFLAGS) iconlist.obj $(FOXLIB) $(LIBS)
+	$(LD) $(LDFLAGS) iconlist.obj,,,$(FOXLIB) $(LIBS)
 
 header.exe: $(FOXLIB) header.obj
-	$(LD) $(LDFLAGS) header.obj $(FOXLIB) $(LIBS)
+	$(LD) $(LDFLAGS) header.obj,,,$(FOXLIB) $(LIBS)
 
 shutter.exe: $(FOXLIB) shutter.obj
-	$(LD) $(LDFLAGS) shutter.obj $(FOXLIB) $(LIBS)
+	$(LD) $(LDFLAGS) shutter.obj,,,$(FOXLIB) $(LIBS)
 
 image.exe: $(FOXLIB) image.obj
-	$(LD) $(LDFLAGS) image.obj $(FOXLIB) $(LIBS)
+	$(LD) $(LDFLAGS) image.obj,,,$(FOXLIB) $(LIBS)
 
 gltest.exe: $(FOXLIB) gltest.obj
-	$(LD) $(LDFLAGS) gltest.obj $(FOXLIB) $(GLLIBS) $(LIBS)
+	$(LD) $(LDFLAGS) gltest.obj,,,$(FOXLIB) $(GLLIBS) $(LIBS)
 
 glviewer.exe: $(FOXLIB) glviewer.obj
-	$(LD) $(LDFLAGS) glviewer.obj $(FOXLIB) $(GLLIBS) $(LIBS)
+	$(LD) $(LDFLAGS) glviewer.obj,,,$(FOXLIB) $(GLLIBS) $(LIBS)
 
 dialog.exe: $(FOXLIB) dialog.obj
-	$(LD) $(LDFLAGS) dialog.obj $(FOXLIB) $(LIBS)
+	$(LD) $(LDFLAGS) dialog.obj,,,$(FOXLIB) $(LIBS)
 
 dctest.exe: $(FOXLIB) dctest.obj
-	$(LD) $(LDFLAGS) dctest.obj $(FOXLIB) $(LIBS)
+	$(LD) $(LDFLAGS) dctest.obj,,,$(FOXLIB) $(LIBS)
 
 clean:
 	del *.obj

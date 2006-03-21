@@ -3,7 +3,7 @@
 *                         T r e e   L i s t   W i d g e t                       *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2006 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXTreeList.h,v 1.94 2005/02/06 17:20:00 fox Exp $                        *
+* $Id: FXTreeList.h,v 1.101 2006/01/22 17:58:11 fox Exp $                       *
 ********************************************************************************/
 #ifndef FXTREELIST_H
 #define FXTREELIST_H
@@ -68,6 +68,9 @@ protected:
   void       *data;             // Item user data pointer
   FXuint      state;            // Item state flags
   FXint       x,y;
+private:
+  FXTreeItem(const FXTreeItem&);
+  FXTreeItem& operator=(const FXTreeItem&);
 protected:
   FXTreeItem():parent(NULL),prev(NULL),next(NULL),first(NULL),last(NULL),openIcon(NULL),closedIcon(NULL),data(NULL),state(0),x(0),y(0){}
   virtual void draw(const FXTreeList* list,FXDC& dc,FXint x,FXint y,FXint w,FXint h) const;
@@ -246,6 +249,7 @@ protected:
   FXTreeItem        *currentitem;       // Current item
   FXTreeItem        *extentitem;        // Selection extent
   FXTreeItem        *cursoritem;        // Item under cursor
+  FXTreeItem        *viewableitem;      // Visible item
   FXFont            *font;              // Font
   FXTreeListSortFunc sortfunc;          // Item sort function
   FXColor            textColor;         // Text color
@@ -333,7 +337,7 @@ public:
   virtual void recalc();
 
   /// Tree list can receive focus
-  virtual FXbool canFocus() const;
+  virtual bool canFocus() const;
 
   /// Move the focus to this window
   virtual void setFocus();
@@ -383,6 +387,9 @@ public:
   /// Move item under father before other item
   FXTreeItem *moveItem(FXTreeItem* other,FXTreeItem* father,FXTreeItem* item);
 
+  /// Extract item
+  FXTreeItem* extractItem(FXTreeItem* item,FXbool notify=FALSE);
+
   /// Remove item
   void removeItem(FXTreeItem* item,FXbool notify=FALSE);
 
@@ -419,9 +426,6 @@ public:
   * in the list.  Flags may be SEARCH_FORWARD or SEARCH_BACKWARD to control
   * the search direction; this can be combined with SEARCH_NOWRAP or SEARCH_WRAP
   * to control whether the search wraps at the start or end of the list.
-  * The option SEARCH_IGNORECASE causes a case-insensitive match.  Finally,
-  * passing SEARCH_PREFIX causes searching for a prefix of the item name.
-  * Return NULL if no matching item is found.
   */
   FXTreeItem* findItemByData(const void *ptr,FXTreeItem* start=NULL,FXuint flags=SEARCH_FORWARD|SEARCH_WRAP) const;
 

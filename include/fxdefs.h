@@ -3,7 +3,7 @@
 *                     FOX Definitions, Types, and Macros                        *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2006 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: fxdefs.h,v 1.145 2005/01/16 16:06:06 fox Exp $                           *
+* $Id: fxdefs.h,v 1.178 2006/03/21 01:41:43 fox Exp $                           *
 ********************************************************************************/
 #ifndef FXDEFS_H
 #define FXDEFS_H
@@ -71,12 +71,11 @@
 #define ISPATHSEP(c) ((c)=='/')
 #endif
 
-
 // End Of Line
 #ifdef WIN32
-#define EOLSTRING "\r\n"
+#define ENDLINE "\r\n"
 #else
-#define EOLSTRING "\n"
+#define ENDLINE "\n"
 #endif
 
 
@@ -95,11 +94,19 @@
 
 // Shared library support
 #ifdef WIN32
+#define FXLOCAL
 #define FXEXPORT __declspec(dllexport)
 #define FXIMPORT __declspec(dllimport)
 #else
+#if defined(__GNUC__) && (__GNUC__ >= 4)
+#define FXLOCAL  __attribute__ ((visibility("hidden")))
+#define FXEXPORT __attribute__ ((visibility("default")))
+#define FXIMPORT
+#else
+#define FXLOCAL
 #define FXEXPORT
 #define FXIMPORT
+#endif
 #endif
 
 // Define FXAPI for DLL builds
@@ -120,6 +127,11 @@
 #endif
 #endif
 
+
+// Templates with DLL linkage
+#ifdef _MSC_VER
+#pragma warning(disable: 4251)
+#endif
 
 // Checking printf and scanf format strings
 #if defined(_CC_GNU_) || defined(__GNUG__) || defined(__GNUC__)
@@ -162,65 +174,69 @@ enum FXSelType {
   SEL_PAINT,                            /// Must repaint window
   SEL_CREATE,
   SEL_DESTROY,
-  SEL_UNMAP,
-  SEL_MAP,
-  SEL_CONFIGURE,                      // Resize
-  SEL_SELECTION_LOST,                 // Widget lost selection
-  SEL_SELECTION_GAINED,               // Widget gained selection
-  SEL_SELECTION_REQUEST,              // Inquire selection data
-  SEL_RAISED,                         // Window to top of stack
-  SEL_LOWERED,                        // Window to bottom of stack
-  SEL_CLOSE,                          // Close window
-  SEL_DELETE,                         // Delete window
-  SEL_MINIMIZE,                       // Iconified
-  SEL_RESTORE,                        // No longer iconified or maximized
-  SEL_MAXIMIZE,                       // Maximized
-  SEL_UPDATE,                         // GUI update
-  SEL_COMMAND,                        // GUI command
-  SEL_CLICKED,                        // Clicked
-  SEL_DOUBLECLICKED,                  // Double-clicked
-  SEL_TRIPLECLICKED,                  // Triple-clicked
-  SEL_MOUSEWHEEL,                     // Mouse wheel
-  SEL_CHANGED,                        // GUI has changed
-  SEL_VERIFY,                         // Verify change
-  SEL_DESELECTED,                     // Deselected
-  SEL_SELECTED,                       // Selected
-  SEL_INSERTED,                       // Inserted
-  SEL_REPLACED,                       // Replaced
-  SEL_DELETED,                        // Deleted
-  SEL_OPENED,                         // Opened
-  SEL_CLOSED,                         // Closed
-  SEL_EXPANDED,                       // Expanded
-  SEL_COLLAPSED,                      // Collapsed
-  SEL_BEGINDRAG,                      // Start a drag
-  SEL_ENDDRAG,                        // End a drag
-  SEL_DRAGGED,                        // Dragged
-  SEL_LASSOED,                        // Lassoed
-  SEL_TIMEOUT,                        // Timeout occurred
-  SEL_SIGNAL,                         // Signal received
-  SEL_CLIPBOARD_LOST,                 // Widget lost clipboard
-  SEL_CLIPBOARD_GAINED,               // Widget gained clipboard
-  SEL_CLIPBOARD_REQUEST,              // Inquire clipboard data
-  SEL_CHORE,                          // Background chore
-  SEL_FOCUS_SELF,                     // Focus on widget itself
-  SEL_FOCUS_RIGHT,                    // Focus movements
-  SEL_FOCUS_LEFT,
-  SEL_FOCUS_DOWN,
-  SEL_FOCUS_UP,
-  SEL_FOCUS_NEXT,
-  SEL_FOCUS_PREV,
-  SEL_DND_ENTER,                      // Drag action entering potential drop target
-  SEL_DND_LEAVE,                      // Drag action leaving potential drop target
-  SEL_DND_DROP,                       // Drop on drop target
-  SEL_DND_MOTION,                     // Drag position changed over potential drop target
-  SEL_DND_REQUEST,                    // Inquire drag and drop data
-  SEL_IO_READ,                        // Read activity on a pipe
-  SEL_IO_WRITE,                       // Write activity on a pipe
-  SEL_IO_EXCEPT,                      // Except activity on a pipe
-  SEL_PICKED,                         // Picked some location
-  SEL_QUERY_TIP,                      // Message inquiring about tooltip
-  SEL_QUERY_HELP,                     // Message inquiring about statusline help
-  SEL_LAST                            // Last message
+  SEL_UNMAP,                            /// Window was hidden
+  SEL_MAP,                              /// Window was shown
+  SEL_CONFIGURE,                        /// Resize
+  SEL_SELECTION_LOST,                   /// Widget lost selection
+  SEL_SELECTION_GAINED,                 /// Widget gained selection
+  SEL_SELECTION_REQUEST,                /// Inquire selection data
+  SEL_RAISED,                           /// Window to top of stack
+  SEL_LOWERED,                          /// Window to bottom of stack
+  SEL_CLOSE,                            /// Close window
+  SEL_DELETE,                           /// Delete window
+  SEL_MINIMIZE,                         /// Iconified
+  SEL_RESTORE,                          /// No longer iconified or maximized
+  SEL_MAXIMIZE,                         /// Maximized
+  SEL_UPDATE,                           /// GUI update
+  SEL_COMMAND,                          /// GUI command
+  SEL_CLICKED,                          /// Clicked
+  SEL_DOUBLECLICKED,                    /// Double-clicked
+  SEL_TRIPLECLICKED,                    /// Triple-clicked
+  SEL_MOUSEWHEEL,                       /// Mouse wheel
+  SEL_CHANGED,                          /// GUI has changed
+  SEL_VERIFY,                           /// Verify change
+  SEL_DESELECTED,                       /// Deselected
+  SEL_SELECTED,                         /// Selected
+  SEL_INSERTED,                         /// Inserted
+  SEL_REPLACED,                         /// Replaced
+  SEL_DELETED,                          /// Deleted
+  SEL_OPENED,                           /// Opened
+  SEL_CLOSED,                           /// Closed
+  SEL_EXPANDED,                         /// Expanded
+  SEL_COLLAPSED,                        /// Collapsed
+  SEL_BEGINDRAG,                        /// Start a drag
+  SEL_ENDDRAG,                          /// End a drag
+  SEL_DRAGGED,                          /// Dragged
+  SEL_LASSOED,                          /// Lassoed
+  SEL_TIMEOUT,                          /// Timeout occurred
+  SEL_SIGNAL,                           /// Signal received
+  SEL_CLIPBOARD_LOST,                   /// Widget lost clipboard
+  SEL_CLIPBOARD_GAINED,                 /// Widget gained clipboard
+  SEL_CLIPBOARD_REQUEST,                /// Inquire clipboard data
+  SEL_CHORE,                            /// Background chore
+  SEL_FOCUS_SELF,                       /// Focus on widget itself
+  SEL_FOCUS_RIGHT,                      /// Focus moved right
+  SEL_FOCUS_LEFT,                       /// Focus moved left
+  SEL_FOCUS_DOWN,                       /// Focus moved down
+  SEL_FOCUS_UP,                         /// Focus moved up
+  SEL_FOCUS_NEXT,                       /// Focus moved to next widget
+  SEL_FOCUS_PREV,                       /// Focus moved to previous widget
+  SEL_DND_ENTER,                        /// Drag action entering potential drop target
+  SEL_DND_LEAVE,                        /// Drag action leaving potential drop target
+  SEL_DND_DROP,                         /// Drop on drop target
+  SEL_DND_MOTION,                       /// Drag position changed over potential drop target
+  SEL_DND_REQUEST,                      /// Inquire drag and drop data
+  SEL_IO_READ,                          /// Read activity on a pipe
+  SEL_IO_WRITE,                         /// Write activity on a pipe
+  SEL_IO_EXCEPT,                        /// Except activity on a pipe
+  SEL_PICKED,                           /// Picked some location
+  SEL_QUERY_TIP,                        /// Message inquiring about tooltip
+  SEL_QUERY_HELP,                       /// Message inquiring about statusline help
+  SEL_DOCKED,                           /// Toolbar docked
+  SEL_FLOATED,                          /// Toolbar floated
+  SEL_SESSION_NOTIFY,                   /// Session is about to close
+  SEL_SESSION_CLOSED,                   /// Session is closed
+  SEL_LAST
   };
 
 
@@ -230,7 +246,7 @@ enum {
   CAPSLOCKMASK     = 0x002,           /// Caps Lock key is down
   CONTROLMASK      = 0x004,           /// Ctrl key is down
 #ifdef __APPLE__
-  ALTMASK          = 0x2000           /// Alt key is down
+  ALTMASK          = 0x2000,          /// Alt key is down
   METAMASK         = 0x10,            /// Meta key is down
 #else
   ALTMASK          = 0x008,           /// Alt key is down
@@ -333,11 +349,23 @@ typedef FXuchar                FXbool;
 typedef unsigned short         FXushort;
 typedef short                  FXshort;
 typedef unsigned int           FXuint;
-typedef unsigned int           FXwchar;
 typedef int                    FXint;
 typedef float                  FXfloat;
 typedef double                 FXdouble;
 typedef FXObject              *FXObjectPtr;
+#ifdef WIN32
+typedef unsigned int           FXwchar;
+#if defined(_MSC_VER) && !defined(_NATIVE_WCHAR_T_DEFINED)
+typedef unsigned short         FXnchar;
+#elif defined(__WATCOM_INT64__)
+typedef long char FXnchar;
+#else
+typedef wchar_t                FXnchar;
+#endif
+#else
+typedef wchar_t                FXwchar;
+typedef unsigned short         FXnchar;
+#endif
 #if defined(__LP64__) || defined(_LP64) || (_MIPS_SZLONG == 64) || (__WORDSIZE == 64)
 typedef unsigned long          FXulong;
 typedef long                   FXlong;
@@ -420,6 +448,12 @@ typedef tagMSG                 FXRawEvent;
 /// Return the maximum of x, y and z
 #define FXMAX3(x,y,z) ((x)>(y)?FXMAX(x,z):FXMAX(y,z))
 
+/// Return the minimum of x, y, z, and w
+#define FXMIN4(x,y,z,w) (FXMIN(FXMIN(x,y),FXMIN(z,w)))
+
+/// Return the maximum of of x, y, z, and w
+#define FXMAX4(x,y,z,w) (FXMAX(FXMAX(x,y),FXMAX(z,w)))
+
 /// Return minimum and maximum of a, b
 #define FXMINMAX(lo,hi,a,b) ((a)<(b)?((lo)=(a),(hi)=(b)):((lo)=(b),(hi)=(a)))
 
@@ -456,7 +490,9 @@ typedef tagMSG                 FXRawEvent;
 /// Reverse bits in byte
 #define FXBITREVERSE(b) (((b&0x01)<<7)|((b&0x02)<<5)|((b&0x04)<<3)|((b&0x08)<<1)|((b&0x10)>>1)|((b&0x20)>>3)|((b&0x40)>>5)|((b&0x80)>>7))
 
-// The order in memory is [R G B A] matches that in FXColor
+/// Test if character c is at the start of a utf8 sequence
+#define FXISUTF(c) (((c)&0xC0)!=0x80)
+
 
 // Definitions for big-endian machines
 #if FOX_BIGENDIAN == 1
@@ -483,6 +519,7 @@ typedef tagMSG                 FXRawEvent;
 #define FXRGBACOMPVAL(rgba,comp) ((FX::FXuchar)(((rgba)>>((3-(comp))<<3))&0xff))
 
 #endif
+
 
 // Definitions for little-endian machines
 #if FOX_BIGENDIAN == 0
@@ -594,7 +631,13 @@ typedef tagMSG                 FXRawEvent;
 * On LINUX, specify _GNU_SOURCE or _ISOC99_SOURCE to enable native implementation;
 * otherwise, these macros will be used.  Apple OS-X implements fabsf(x), ceilf(x),
 * floorf(x), and fmodf(x,y).
+* Define FLOAT_MATH_FUNCTIONS if these functions are available in some other
+* library you're linking to.
 */
+#ifdef __OpenBSD__
+#define FLOAT_MATH_FUNCTIONS
+#endif
+#ifndef FLOAT_MATH_FUNCTIONS
 #ifndef __USE_ISOC99
 #ifndef __APPLE__
 #define fabsf(x)    ((float)fabs((double)(x)))
@@ -615,6 +658,8 @@ typedef tagMSG                 FXRawEvent;
 #define logf(x)     ((float)log((double)(x)))
 #define log10f(x)   ((float)log10((double)(x)))
 #endif
+#endif
+
 
 /**********************************  Globals  **********************************/
 
@@ -655,7 +700,7 @@ extern FXAPI void fxtrace(unsigned int level,const char* format,...) FX_PRINTF(2
 extern FXAPI void fxsleep(unsigned int n);
 
 /// Match a file name with a pattern
-extern FXAPI FXint fxfilematch(const char *pattern,const char *string,FXuint flags=(FILEMATCH_NOESCAPE|FILEMATCH_FILE_NAME));
+extern FXAPI bool fxfilematch(const char *pattern,const char *string,FXuint flags=(FILEMATCH_NOESCAPE|FILEMATCH_FILE_NAME));
 
 /// Get highlight color
 extern FXAPI FXColor makeHiliteColor(FXColor clr);
@@ -666,11 +711,11 @@ extern FXAPI FXColor makeShadowColor(FXColor clr);
 /// Get process id
 extern FXAPI FXint fxgetpid();
 
-/// Convert to MSDOS
-extern FXAPI FXbool fxtoDOS(FXchar*& string,FXint& len);
+/// Convert string of length len to MSDOS; return new string and new length
+extern FXAPI bool fxtoDOS(FXchar*& string,FXint& len);
 
-/// Convert from MSDOS format
-extern FXAPI FXbool fxfromDOS(FXchar*& string,FXint& len);
+/// Convert string of length len from MSDOS; return new string and new length
+extern FXAPI bool fxfromDOS(FXchar*& string,FXint& len);
 
 /// Duplicate string
 extern FXAPI FXchar *fxstrdup(const FXchar* str);
@@ -694,45 +739,102 @@ extern FXAPI void fxhsv_to_rgb(FXfloat& r,FXfloat& g,FXfloat& b,FXfloat h,FXfloa
 extern FXAPI FXint fxieeefloatclass(FXfloat number);
 extern FXAPI FXint fxieeedoubleclass(FXdouble number);
 
+/// Convert keysym to unicode character
+extern FXAPI FXwchar fxkeysym2ucs(FXwchar sym);
+
+/// Convert unicode character to keysym
+extern FXAPI FXwchar fxucs2keysym(FXwchar ucs);
+
 /// Parse geometry, a-la X11 geometry specification
 extern FXAPI FXint fxparsegeometry(const FXchar *string,FXint& x,FXint& y,FXint& w,FXint& h);
 
 /// True if executable with given path is a console application
-extern FXbool fxisconsole(const FXchar *path);
+extern FXAPI FXbool fxisconsole(const FXchar *path);
 
 /// Version number that the library has been compiled with
 extern FXAPI const FXuchar fxversion[3];
 
-
 /// Controls tracing level
 extern FXAPI unsigned int fxTraceLevel;
 
-/**
-* Parse accelerator from string, yielding modifier and
-* key code.  For example, fxparseAccel("Ctl+Shift+X")
-* yields MKUINT(KEY_X,CONTROLMASK|SHIFTMASK).
-*/
-extern FXAPI FXHotKey fxparseAccel(const FXString& string);
+/// Return wide character from utf8 string at ptr
+extern FXAPI FXwchar wc(const FXchar *ptr);
 
-/**
-* Parse hot key from string, yielding modifier and
-* key code.  For example, fxparseHotKey(""Salt && &Pepper!"")
-* yields MKUINT(KEY_p,ALTMASK).
-*/
-extern FXAPI FXHotKey fxparseHotKey(const FXString& string);
+/// Return wide character from utf16 string at ptr
+extern FXAPI FXwchar wc(const FXnchar *ptr);
 
-/**
-* Obtain hot key offset in string, or -1 if not found.
-* For example, findHotKey("Salt && &Pepper!") yields 7.
-*/
-extern FXAPI FXint fxfindHotKey(const FXString& string);
+/// Return number of FXchar's of wide character at ptr
+extern FXAPI FXint wclen(const FXchar *ptr);
 
-/**
-* Strip hot key combination from the string.
-* For example, stripHotKey("Salt && &Pepper") should
-* yield "Salt & Pepper".
-*/
-extern FXAPI FXString fxstripHotKey(const FXString& string);
+/// Return number of FXnchar's of narrow character at ptr
+extern FXAPI FXint wclen(const FXnchar *ptr);
+
+/// Return start of utf8 character containing position
+extern FXAPI FXint wcvalidate(const FXchar* string,FXint pos);
+
+/// Return start of utf16 character containing position
+extern FXAPI FXint wcvalidate(const FXnchar *string,FXint pos);
+
+/// Advance to next utf8 character start
+extern FXAPI FXint wcinc(const FXchar* string,FXint pos);
+
+/// Advance to next utf16 character start
+extern FXAPI FXint wcinc(const FXnchar *string,FXint pos);
+
+/// Retreat to previous utf8 character start
+extern FXAPI FXint wcdec(const FXchar* string,FXint pos);
+
+/// Retreat to previous utf16 character start
+extern FXAPI FXint wcdec(const FXnchar *string,FXint pos);
+
+/// Length of utf8 representation of wide characters string str of length n
+extern FXAPI FXint utfslen(const FXwchar *str,FXint n);
+
+/// Length of utf8 representation of wide character string str
+extern FXAPI FXint utfslen(const FXwchar *str);
+
+/// Length of utf8 representation of narrow characters string str of length n
+extern FXAPI FXint utfslen(const FXnchar *str,FXint n);
+
+/// Length of utf8 representation of narrow characters string str
+extern FXAPI FXint utfslen(const FXnchar *str);
+
+/// Length of wide character representation of utf8 string str of length n
+extern FXAPI FXint wcslen(const FXchar *str,FXint n);
+
+/// Length of wide character representation of utf8 string str
+extern FXAPI FXint wcslen(const FXchar *str);
+
+/// Length of narrow character representation of utf8 string str of length n
+extern FXAPI FXint ncslen(const FXchar *str,FXint n);
+
+/// Length of narrow character representation of utf8 string str
+extern FXAPI FXint ncslen(const FXchar *str);
+
+/// Copy utf8 string of length n to wide character string dst
+extern FXAPI FXint utf2wcs(FXwchar *dst,const FXchar *src,FXint n);
+
+/// Copy utf8 string to wide character string dst
+extern FXAPI FXint utf2wcs(FXwchar *dst,const FXchar *src);
+
+/// Copy utf8 string of length n to narrow character string dst
+extern FXAPI FXint utf2ncs(FXnchar *dst,const FXchar *src,FXint n);
+
+/// Copy utf8 string to narrow character string dst
+extern FXAPI FXint utf2ncs(FXnchar *dst,const FXchar *src);
+
+/// Copy wide character substring of length n to dst
+extern FXAPI FXint wc2utfs(FXchar* dst,const FXwchar *src,FXint n);
+
+/// Copy wide character string to dst
+extern FXAPI FXint wc2utfs(FXchar* dst,const FXwchar *src);
+
+/// Copy narrow character substring of length n to dst
+extern FXAPI FXint nc2utfs(FXchar* dst,const FXnchar *src,FXint n);
+
+/// Copy narrow character string to dst
+extern FXAPI FXint nc2utfs(FXchar* dst,const FXnchar *src);
+
 
 }
 

@@ -3,7 +3,7 @@
 *                R e s o u r c e   W r a p p i n g   U t i l i t y              *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2006 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This program is free software; you can redistribute it and/or modify          *
 * it under the terms of the GNU General Public License as published by          *
@@ -19,7 +19,7 @@
 * along with this program; if not, write to the Free Software                   *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: reswrap.cpp,v 1.15 2005/02/04 04:33:19 fox Exp $                         *
+* $Id: reswrap.cpp,v 1.17 2006/01/22 17:59:02 fox Exp $                         *
 ********************************************************************************/
 #include "stdio.h"
 #include "stdlib.h"
@@ -31,7 +31,7 @@
 /*
 
   Notes:
-  - Updated to version 3.2.
+  - Updated to version 4.0.
   - Can now also generate output as a text string.
   - When ASCII option is used with text string option, it prints human
     readable C-style string, with non-ASCII characters escaped as appropriate.
@@ -52,7 +52,7 @@
 #define MODE_TEXT     2
 
 
-const char version[]="3.2.0";
+const char version[]="4.0.0";
 
 
 /* Print some help */
@@ -76,6 +76,7 @@ void printusage(){
   fprintf(stderr,"  -n namespace   Place declarations and definitions inside given namespace\n");
   fprintf(stderr,"  -c cols        Change number of columns in output to cols\n");
   fprintf(stderr,"  -u             Force unsigned char even for text mode\n");
+  fprintf(stderr,"  -z             Output size in declarations\n");
   fprintf(stderr,"\n");
   fprintf(stderr,"Each file may be preceded by the following extra option:\n");
   fprintf(stderr,"  -r name        Override resource name of following resource file\n");
@@ -143,7 +144,7 @@ void resourcename(char *name,const char* prefix,const char* filename,int keepdot
 int main(int argc,char **argv){
   char *outfilename,*resfilename;
   FILE *resfile,*outfile;
-  int i,b,first,col,append,maxcols,external,header,include,mode,colsset,ascii,msdos,keepext,hex,forceunsigned;
+  int i,b,first,col,append,maxcols,external,header,include,mode,colsset,ascii,msdos,keepext,hex,forceunsigned,declaresize,resfilesize;
   const char *thenamespace,*theprefix;
   char resname[1000];
 
@@ -163,6 +164,7 @@ int main(int argc,char **argv){
   theprefix="";
   append=0;
   forceunsigned=0;
+  declaresize=0;
 
   /* Check arguments */
   if(argc<2){
@@ -223,6 +225,11 @@ int main(int argc,char **argv){
     /* Force unsigned */
     else if(argv[i][1]=='u'){
       forceunsigned=1;
+      }
+
+    /* Declare size */
+    else if(argv[i][1]=='z'){
+      declaresize=1;
       }
 
     /* Generate as external reference */
@@ -348,6 +355,16 @@ int main(int argc,char **argv){
       exit(1);
       }
 
+    /* Get the size */
+    fseek(resfile,0,SEEK_END);
+    resfilesize=ftell(resfile);
+    fseek(resfile,0,SEEK_SET);
+
+    /* Add one if text mode, for end of string */
+    if(mode==MODE_TEXT){
+      resfilesize++;
+      }
+
     /* Output header */
     if(header){
       fprintf(outfile,"/* created by reswrap from file %s */\n",resfilename);
@@ -358,12 +375,22 @@ int main(int argc,char **argv){
 
     /* In text mode, output a 'char' declaration */
     if((mode==MODE_TEXT) && !forceunsigned){
-      fprintf(outfile,"const char %s[]",resname);
+      if(declaresize){
+        fprintf(outfile,"const char %s[%d]",resname,resfilesize);
+        }
+      else{
+        fprintf(outfile,"const char %s[]",resname);
+        }
       }
 
     /* In binary mode, output a 'unsigned char' declaration */
     else{
-      fprintf(outfile,"const unsigned char %s[]",resname);
+      if(declaresize){
+        fprintf(outfile,"const unsigned char %s[%d]",resname,resfilesize);
+        }
+      else{
+        fprintf(outfile,"const unsigned char %s[]",resname);
+        }
       }
 
     /* Generate resource array */

@@ -3,7 +3,7 @@
 *                S h u t t e r   B u g   A p p l i c a t i o n                  *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2003,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 2003,2006 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This program is free software; you can redistribute it and/or modify          *
 * it under the terms of the GNU General Public License as published by          *
@@ -19,7 +19,7 @@
 * along with this program; if not, write to the Free Software                   *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: ShutterBug.h,v 1.19 2005/01/16 16:06:06 fox Exp $                        *
+* $Id: ShutterBug.h,v 1.25 2006/01/22 17:58:15 fox Exp $                        *
 ********************************************************************************/
 #ifndef SHUTTERBUG_H
 #define SHUTTERBUG_H
@@ -33,25 +33,29 @@ class Snapper;
 class ShutterBug : public FXShell {
   FXDECLARE(ShutterBug)
 protected:
-  FXString     filename;        // Filename last used
-  FXint        fileformat;      // File format last chosen
-  FXColor     *clipbuffer;      // Clipped image buffer
-  FXint        clipwidth;       // Clipped image width
-  FXint        clipheight;      // Clipped image height
-  Snapper     *snapper[4];      // Sides of area
-  FXIcon      *bigicon;         // Big application icon
-  FXIcon      *smallicon;       // Small application icon
-  FXIcon      *weighticons[6];  // Line weight icons
-  FXRectangle  rectangle;       // Rectangle to snap
-  FXColor      color;           // Color of the snapshot lines
-  FXint        weight;          // Weight of the snapshot lines
-  FXint        size;            // Fixed size if not 0
-  FXuint       delay;           // Timer delay
-  FXbool       inside;          // Lines are inside
-  FXbool       quantize;        // Quantization mode
-  FXint        spotx;           // Grab-spot of mouse on rectangle
-  FXint        spoty;
-  FXuchar      mode;            // Dragging mode
+  FXString          filename;        // Filename last used
+  FXint             fileformat;      // File format last chosen
+  FXint             filecount;       // File count for numbered files
+  FXColor          *clipbuffer;      // Clipped image buffer
+  FXint             clipwidth;       // Clipped image width
+  FXint             clipheight;      // Clipped image height
+  Snapper          *snapper[4];      // Sides of area
+  FXIcon           *bigicon;         // Big application icon
+  FXIcon           *smallicon;       // Small application icon
+  FXIcon           *weighticons[6];  // Line weight icons
+  FXRectangle       rectangle;       // Rectangle to snap
+  FXColor           color;           // Color of the snapshot lines
+  FXint             weight;          // Weight of the snapshot lines
+  FXint             size;            // Fixed size if not 0
+  FXuint            delay;           // Timer delay in ms
+  FXuint            rate;            // Record rate in ms per frame
+  FXbool            inside;          // Lines are inside
+  FXbool            quantize;        // Quantization mode
+  FXint             spotx;           // Grab-spot of mouse on rectangle
+  FXint             spoty;
+  FXuchar           mode;            // Dragging mode
+protected:
+  static FXDragType dndTypes[7];     // DND Types
 protected:
   ShutterBug(){}
   FXuchar where(FXint x,FXint y) const;
@@ -60,9 +64,11 @@ protected:
   void hideSnapRectangle();
   FXbool snapRectangleShown() const;
   void moveSnapRectangle(const FXRectangle& r);
+  FXbool saveImage(const FXString& file,FXColor* data,FXint w,FXint h);
   FXbool snapRectangle(FXColor*& data,const FXRectangle& r);
+  FXbool grabRectangle(FXColor*& data,const FXRectangle& r);
   void readPixels(FXImage* image,const FXRectangle& rectangle);
-  virtual FXbool doesOverrideRedirect() const;
+  virtual bool doesOverrideRedirect() const;
 protected:
   enum {
     MODE_NONE        = 0,
@@ -79,22 +85,6 @@ protected:
 private:
   ShutterBug(const ShutterBug&);
   ShutterBug &operator=(const ShutterBug&);
-public:
-  static FXDragType bmpType;
-  static FXDragType gifType;
-  static FXDragType jpgType;
-  static FXDragType pngType;
-  static FXDragType tifType;
-  static FXDragType xpmType;
-  static FXDragType ppmType;
-public:
-  static const FXchar bmpTypeName[];
-  static const FXchar gifTypeName[];
-  static const FXchar jpgTypeName[];
-  static const FXchar pngTypeName[];
-  static const FXchar tifTypeName[];
-  static const FXchar xpmTypeName[];
-  static const FXchar ppmTypeName[];
 public:
   long onPaint(FXObject*,FXSelector,void*);
   long onMotion(FXObject*,FXSelector,void*);
@@ -125,11 +115,18 @@ public:
   long onClipboardRequest(FXObject*,FXSelector,void*);
   long onCmdQuantize(FXObject*,FXSelector,void*);
   long onUpdQuantize(FXObject*,FXSelector,void*);
+  long onCmdSetCount(FXObject*,FXSelector,void*);
+  long onCmdResetCount(FXObject*,FXSelector,void*);
+  long onCmdRecordRate(FXObject*,FXSelector,void*);
+  long onCmdRecordFrame(FXObject*,FXSelector,void*);
+  long onCmdRecordMovie(FXObject*,FXSelector,void*);
 public:
   enum {
     ID_SNAPSHOT=FXMainWindow::ID_LAST,
     ID_SNAPSHOT_DELAYED,
     ID_SNAPSHOT_CLIPBOARD,
+    ID_RECORD_FRAME,
+    ID_RECORD_MOVIE,
     ID_ABOUT,
     ID_TOGGLE_LASSO,
     ID_SNAPPER_0,
@@ -158,6 +155,9 @@ public:
     ID_DELAY,
     ID_INSIDE,
     ID_QUANTIZE,
+    ID_SET_COUNT,
+    ID_RESET_COUNT,
+    ID_RECORD_RATE,
     ID_QUIT,
     ID_LAST
     };

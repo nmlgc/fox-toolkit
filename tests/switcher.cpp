@@ -3,9 +3,9 @@
 *                                 Test Switcher                                 *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997 by Jeroen van der Zijp.   All Rights Reserved.             *
+* Copyright (C) 1997,2006 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
-* $Id: switcher.cpp,v 1.15 2004/12/02 14:44:24 fox Exp $                        *
+* $Id: switcher.cpp,v 1.16 2006/01/22 17:59:02 fox Exp $                        *
 ********************************************************************************/
 #include "fx.h"
 #include <stdio.h>

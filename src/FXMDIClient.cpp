@@ -3,7 +3,7 @@
 *          M u l t i p l e   D o c u m e n t   C l i e n t   W i n d o w        *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1998,2006 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXMDIClient.cpp,v 1.57 2005/01/16 16:06:07 fox Exp $                     *
+* $Id: FXMDIClient.cpp,v 1.62 2006/01/22 17:58:35 fox Exp $                     *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -461,7 +461,7 @@ FXbool FXMDIClient::setActiveChild(FXMDIChild* child,FXbool notify){
     getApp()->refresh();
 
     // Notify target
-    if(notify && target){ target->tryHandle(this,FXSEL(SEL_CHANGED,message),child); }
+    if(notify && target && message){ target->tryHandle(this,FXSEL(SEL_CHANGED,message),child); }
 
     return TRUE;
     }
@@ -587,7 +587,9 @@ long FXMDIClient::onUpdActivatePrev(FXObject* sender,FXSelector,void*){
   }
 
 
-// Delegate all other messages to active child
+// Delegate all other messages to active child; we can't block any
+// messages here as some are meant fot the FXMDIChild and some for
+// the FXMDIChild's content or target.
 long FXMDIClient::onDefault(FXObject* sender,FXSelector sel,void* ptr){
   return active && active->handle(sender,sel,ptr);
   }

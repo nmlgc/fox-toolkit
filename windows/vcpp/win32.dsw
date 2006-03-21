@@ -12,10 +12,10 @@ Package=<5>
 Package=<4>
 {{{
     Begin Project Dependency
-    Project_Dep_Name fox
+    Project_Dep_Name reswrap
     End Project Dependency
     Begin Project Dependency
-    Project_Dep_Name reswrap
+    Project_Dep_Name fox
     End Project Dependency
 }}}
 
@@ -84,21 +84,6 @@ Package=<4>
 
 ###############################################################################
 
-Project: "controlpanel"=.\controlpanel\controlpanel.dsp - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-    Begin Project Dependency
-    Project_Dep_Name fox
-    End Project Dependency
-}}}
-
-###############################################################################
-
 Project: "datatarget"=.\datatarget\datatarget.dsp - Package Owner=<4>
 
 Package=<5>
@@ -145,6 +130,21 @@ Package=<4>
 ###############################################################################
 
 Project: "dirlist"=.\dirlist\dirlist.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name fox
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "expression"=.\expression\expression.dsp - Package Owner=<4>
 
 Package=<5>
 {{{

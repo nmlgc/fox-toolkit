@@ -41,6 +41,7 @@ messages.html \
 news.html \
 news1.html \
 news2.html \
+news3.html \
 page.css \
 pathfinder.html \
 projects.html \

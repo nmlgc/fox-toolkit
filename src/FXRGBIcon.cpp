@@ -3,7 +3,7 @@
 *                      I R I S   R G B   I c o n   O b j e c t                  *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2002,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 2002,2006 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXRGBIcon.cpp,v 1.19 2005/01/16 16:06:07 fox Exp $                       *
+* $Id: FXRGBIcon.cpp,v 1.24 2006/01/22 17:58:38 fox Exp $                       *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -58,6 +58,10 @@ namespace FX {
 const FXchar FXRGBIcon::fileExt[]="rgb";
 
 
+// Suggested mime type
+const FXchar FXRGBIcon::mimeType[]="image/rgb";
+
+
 // Object implementation
 FXIMPLEMENT(FXRGBIcon,FXIcon,NULL,0)
 
@@ -74,23 +78,23 @@ FXRGBIcon::FXRGBIcon(FXApp* a,const void *pix,FXColor clr,FXuint opts,FXint w,FX
 
 
 // Save object to stream
-FXbool FXRGBIcon::savePixels(FXStream& store) const {
+bool FXRGBIcon::savePixels(FXStream& store) const {
   if(fxsaveRGB(store,data,width,height)){
-    return TRUE;
+    return true;
     }
-  return FALSE;
+  return false;
   }
 
 
 // Load object from stream
-FXbool FXRGBIcon::loadPixels(FXStream& store){
+bool FXRGBIcon::loadPixels(FXStream& store){
   FXColor *pixels; FXint w,h;
   if(fxloadRGB(store,pixels,w,h)){
     setData(pixels,IMAGE_OWNED,w,h);
     if(options&IMAGE_ALPHAGUESS) transp=guesstransp();
-    return TRUE;
+    return true;
     }
-  return FALSE;
+  return false;
   }
 
 

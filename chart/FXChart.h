@@ -3,7 +3,7 @@
 *                        C h a r t   B a s e   W i d g e t                      *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2003,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 2003,2006 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXChart.h,v 1.12 2005/01/16 16:06:06 fox Exp $                           *
+* $Id: FXChart.h,v 1.17 2006/01/22 18:01:13 fox Exp $                           *
 ********************************************************************************/
 #ifndef FXCHART_H
 #define FXCHART_H
@@ -56,7 +56,7 @@ enum {
 
 /// Tickmark definition
 struct Ticks {
-  FXuint   style;               /// Style flags
+  FXuchar  style;               /// Style flags
   FXuchar  majorlength;         /// Major tick length
   FXuchar  minorlength;         /// Minor tick length
   FXuchar  majorweight;         /// Major tick line weight
@@ -68,7 +68,7 @@ struct Ticks {
   };
 
 
-// Line styles
+/// Line styles
 enum {
   LINESTYLE_NONE,               /// No line
   LINESTYLE_SOLID,              /// Solid line
@@ -128,9 +128,31 @@ struct TextStyle {
 
 /// Tick number definition
 struct Numbers {
-  FXuint    style;              /// Number format style
+  FXuchar   style;              /// Number format style
   // ... How to format ... //
   TextStyle textstyle;          /// Text display style
+  };
+
+
+/// Marker styles
+enum {
+  MARKER_NONE          = 0,     /// Draw nothing
+  MARKER_SQUARE        = 1,     /// Draw (solid) square
+  MARKER_CIRCLE        = 2,     /// Draw (solid) circle
+  MARKER_DIAMOND       = 3,     /// Draw (solid) diamond
+  MARKER_TRIANGLE_UP   = 4,     /// Draw (solid) upward triangle
+  MARKER_TRIANGLE_DN   = 5,     /// Draw (solid) downward triangle
+  MARKER_TRIANGLE_LT   = 6,     /// Draw (solid) leftward triangle
+  MARKER_TRIANGLE_RT   = 7,     /// Draw (solid) rightward triangle
+  MARKER_SOLID         = 8      /// Fill shape
+  };
+
+
+/// Marker definition
+struct Marker {
+  FXuchar style;                /// Marker style
+  FXColor color;                /// Color of markers
+  FXint   size;                 /// How big to draw markers
   };
 
 
@@ -138,6 +160,22 @@ struct Numbers {
 struct Caption {
   FXString  caption;            /// Text string
   TextStyle textstyle;          /// Text display style
+  };
+
+
+/// Grid styles
+enum {
+  GRID_OFF   = 0,               /// No grid displayed
+  GRID_MAJOR = 1,               /// Draw grid lines at major ticks
+  GRID_MINOR = 2                /// Draw grid lines at minor ticks
+  };
+
+
+/// Grid defintion
+struct Grid {
+  FXuchar   style;              /// Grid draw style
+  LineStyle major;              /// Major grid line styles
+  LineStyle minor;              /// Minor grid line styles
   };
 
 
@@ -161,6 +199,7 @@ enum {
 struct Axis {
   FXuint      style;            /// Axis style flags
   Ticks       ticks;            /// Tick drawing style
+  Grid        grid;             /// Grid settings
   Caption     label;            /// Axis caption
   Caption     units;            /// Axis units
   Numbers     numbers;          /// Number drawing info
@@ -184,6 +223,7 @@ protected:
   FillStyle fill;       // Fill style
 protected:
   FXChart();
+  void drawMarker(FXDC& dc,FXint x,FXint y,const Marker& m) const;
 private:
   FXChart(const FXChart&);
   FXChart &operator=(const FXChart&);
@@ -200,13 +240,6 @@ public:
   static FXDragType pngType;
   static FXDragType tifType;
   static FXDragType csvType;
-public:
-  static const FXchar bmpTypeName[];
-  static const FXchar gifTypeName[];
-  static const FXchar jpgTypeName[];
-  static const FXchar pngTypeName[];
-  static const FXchar tifTypeName[];
-  static const FXchar csvTypeName[];
 public:
 
   /// Construct color well with initial color clr

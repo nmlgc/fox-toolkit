@@ -3,7 +3,7 @@
 *                     T h e   A d i e   T e x t   E d i t o r                   *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1998,2006 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This program is free software; you can redistribute it and/or modify          *
 * it under the terms of the GNU General Public License as published by          *
@@ -19,7 +19,7 @@
 * along with this program; if not, write to the Free Software                   *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: TextWindow.h,v 1.36 2005/02/03 02:47:07 fox Exp $                        *
+* $Id: TextWindow.h,v 1.38 2006/02/06 03:03:40 fox Exp $                        *
 ********************************************************************************/
 #ifndef TEXTWINDOW_H
 #define TEXTWINDOW_H
@@ -197,7 +197,7 @@ public:
   long onCmdFilter(FXObject*,FXSelector,void*);
   long onUpdOverstrike(FXObject*,FXSelector,void*);
   long onUpdReadOnly(FXObject*,FXSelector,void*);
-  long onUpdNumChars(FXObject*,FXSelector,void*);
+  long onUpdNumRows(FXObject*,FXSelector,void*);
   long onClock(FXObject*,FXSelector,void*);
   long onCmdPreferences(FXObject*,FXSelector,void*);
   long onCmdDelimiters(FXObject*,FXSelector,void*);
@@ -287,7 +287,7 @@ public:
     ID_INSERTTABS,
     ID_AUTOINDENT,
     ID_BRACEMATCH,
-    ID_NUMCHARS,
+    ID_NUM_ROWS,
     ID_INSERT_FILE,
     ID_EXTRACT_FILE,
     ID_WHEELADJUST,

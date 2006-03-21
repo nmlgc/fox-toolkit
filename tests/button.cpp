@@ -3,9 +3,9 @@
 *                                 Button Test                                   *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1998,2006 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
-* $Id: button.cpp,v 1.15 2005/01/04 07:50:58 fox Exp $                          *
+* $Id: button.cpp,v 1.22 2006/01/22 17:58:59 fox Exp $                          *
 ********************************************************************************/
 #include "fx.h"
 #include <stdio.h>
@@ -72,6 +72,8 @@ public:
 public:
   ButtonWindow(FXApp* a);
   void create();
+  virtual void save(FXStream& store) const;
+  virtual void load(FXStream& store);
   virtual ~ButtonWindow();
   };
 
@@ -170,7 +172,7 @@ ButtonWindow::ButtonWindow(FXApp* a):FXMainWindow(a,"Button Test",NULL,NULL,DECO
   // Contents
   contents=new FXHorizontalFrame(this,LAYOUT_SIDE_LEFT|FRAME_NONE|LAYOUT_FILL_X|LAYOUT_FILL_Y|PACK_UNIFORM_WIDTH,0,0,0,0,20,20,20,20);
 
-  icon=new FXGIFIcon(getApp(),bigpenguin);
+  icon=new FXGIFIcon(getApp(),bigpenguin,0,IMAGE_KEEP);
 
   // The button
   button=new FXButton(contents,
@@ -369,9 +371,47 @@ long ButtonWindow::onCmdToolbarStyle(FXObject*,FXSelector,void* ptr){
 
 // Quit the application
 long ButtonWindow::onCmdQuit(FXObject*,FXSelector,void*){
+//  FXFileStream stream;
+//  stream.open("button.gui",FXStreamSave);
+//  getApp()->writeWindow(stream,this);
+//  stream.close();
   getApp()->exit(0);
+//  getApp()->dumpWidgets();
   return 1;
   }
+
+
+// Save
+void ButtonWindow::save(FXStream& store) const {
+  FXMainWindow::save(store);
+  store << button;
+  store << controls;
+  store << statusbar;
+  store << contents;
+  store << group0;
+  store << group1;
+  store << group2;
+  store << group3;
+  store << group4;
+  store << icon;
+  }
+
+
+// Load
+void ButtonWindow::load(FXStream& store){
+  FXMainWindow::load(store);
+  store >> button;
+  store >> controls;
+  store >> statusbar;
+  store >> contents;
+  store >> group0;
+  store >> group1;
+  store >> group2;
+  store >> group3;
+  store >> group4;
+  store >> icon;
+  }
+
 
 /*******************************************************************************/
 
@@ -385,11 +425,25 @@ int main(int argc,char *argv[]){
   // Open display
   application.init(argc,argv);
 
-  // Main window
-  new ButtonWindow(&application);
+//FXWindow *buttons=NULL;
+
+//  if(argc>1){
+//    FXFileStream stream;
+//    stream.open(argv[1],FXStreamLoad);
+//    application.readWindow(stream,buttons,application.getRootWindow(),application.getRootWindow());
+//    stream.close();
+//    application.dumpWidgets();
+//    }
+
+//  else{
+    // Main window
+    new ButtonWindow(&application);
+//   }
+
 
   // Create app
   application.create();
+//if(buttons) buttons->show();
 
   // Run
   return application.run();

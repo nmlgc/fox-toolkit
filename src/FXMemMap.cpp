@@ -3,7 +3,7 @@
 *                      M e m o r y   M a p p e d   F i l e                      *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2004,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 2004,2006 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXMemMap.cpp,v 1.14 2005/01/16 16:06:07 fox Exp $                        *
+* $Id: FXMemMap.cpp,v 1.21 2006/01/22 17:58:35 fox Exp $                        *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxdefs.h"
@@ -30,7 +30,8 @@
   Notes:
   - A memory mapped region of a file, or anonymous memory map.
   - Maybe use long sz = sysconf(_SC_PAGESIZE);
-  - msync()
+  - msync().
+  - Need to bring in line with FXIO esp. with interpretation of options and so on.
 */
 
 
@@ -100,7 +101,7 @@ void *FXMemMap::mapFile(const FXString& filename,long off,long len,FXuint access
       maplength=len;
       mapoffset=off;
       mapbase=mmap(NULL,maplength,prot,flags,file,mapoffset);
-      if(mapbase != MAP_FAILED){
+      if(mapbase != (void*)MAP_FAILED){
         return mapbase;
         }
       }
@@ -121,8 +122,14 @@ void *FXMemMap::mapFile(const FXString& filename,long off,long len,FXuint access
   if(access&READ){ prot=GENERIC_READ; flags=FILE_SHARE_READ; }
   if(access&WRITE){ prot=GENERIC_WRITE|GENERIC_READ; flags=FILE_SHARE_READ|FILE_SHARE_WRITE; }
 
-  // Open file
-  file=CreateFile(filename.text(),prot,flags,NULL,OPEN_ALWAYS,FILE_ATTRIBUTE_NORMAL|FILE_FLAG_RANDOM_ACCESS,NULL);
+// Open file
+#ifdef UNICODE
+  FXnchar unifile[1024];
+  utf2ncs(unifile,filename.text(),filename.length()+1);
+  file=::CreateFileW(unifile,prot,flags,NULL,OPEN_ALWAYS,FILE_ATTRIBUTE_NORMAL|FILE_FLAG_RANDOM_ACCESS,NULL);
+#else
+  file=::CreateFileA(filename.text(),prot,flags,NULL,OPEN_ALWAYS,FILE_ATTRIBUTE_NORMAL|FILE_FLAG_RANDOM_ACCESS,NULL);
+#endif
   if(file!=INVALID_HANDLE_VALUE){
 
     prot=0;
@@ -202,7 +209,7 @@ void FXMemMap::sync(){
 #endif
 #else
   if(mapbase){
-    FlushViewOfFile(mapbase,(SIZE_T)maplength);
+    FlushViewOfFile(mapbase,(size_t)maplength);
     }
 #endif
   }

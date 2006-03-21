@@ -5,7 +5,7 @@
 ##############################################################################
 # Copyright (C) 1997,2005 by Jeroen van der Zijp.   All Rights Reserved.     #
 ##############################################################################
-# $Id: Makefile.wc,v 1.7 2005/02/04 04:33:19 fox Exp $                       #
+# $Id: Makefile.wc,v 1.9 2005/09/03 06:55:30 fox Exp $                       #
 ##############################################################################
 # This library is free software; you can redistribute it and/or              #
 # modify it under the terms of the GNU Library General Public                #
@@ -24,22 +24,22 @@
 
 # For use with OpenWatcom C++ v1.0 or later
 CXX       = wpp386
-CXXFLAGS  = /w3 /zq /5r /ei /fp5 /oneatlx /zp=4
+CXXFLAGS  = /w3 /e1 /zq /5r /ei /xs /xr /fp5 /otexan /zp=4
 RM        = del
 TOPDIR    = ..
-DEFINES   = -DNDEBUG -DFOX_BIGENDIAN=0 -DWIN32 -D_WINDOWS
+DEFINES   = -DFOX_BIGENDIAN=0 -DNDEBUG -D_WINDOWS -DWIN32 -DUNICODE -DHAVE_GL_H -DHAVE_GLU_H -DHAVE_VSSCANF #-DHAVE_PNG_H -DHAVE_JPEG_H -DHAVE_TIFF_H -DXMD_H
 LD	  = wcl386
-LDFLAGS   = -l=nt_win
+LDFLAGS   = -l=nt_win -x # -x = case sensitive
 INCDIRS   = -I$(TOPDIR)\include
-FOXLIB    = $(TOPDIR)\src\FOX-1.4.lib $(%WATCOM)\lib386\nt\comctl32.lib $(%WATCOM)\lib386\nt\wsock32.lib
+FOXLIB    = $(TOPDIR)\src\FOX-1.5.lib $(%WATCOM)\lib386\nt\comctl32.lib $(%WATCOM)\lib386\nt\wsock32.lib
 RESWRAP   = $(TOPDIR)\utils\reswrap.exe
 
 PROGRAMS  = PathFinder.exe
 
-OBJECTS   =
-OBJECTS  += PathFinder.obj
+OBJECTS   = PathFinder.obj
 OBJECTS  += PropertyDialog.obj
 OBJECTS  += Preferences.obj
+OBJECTS  += CopyDialog.obj
 OBJECTS  += icons.obj
 
 ICONS =
@@ -76,6 +76,10 @@ ICONS += setbook.gif
 ICONS += smallicons.bmp
 ICONS += unmaphost.bmp
 ICONS += work.gif
+ICONS += foxbig.gif
+ICONS += foxmini.gif
+ICONS += mimetype.gif
+ICONS += setdir.gif
 
 .cpp.obj: .AUTODEPEND
 	$(CXX) $(INCDIRS) $(CXXFLAGS) $(DEFINES) $*.cpp
@@ -96,6 +100,6 @@ icons.cpp: $(ICONS)
 clean: .SYMBOLIC
 	$(RM) *.obj
 	$(RM) *.exe
-	$(RM) *.tds
+	$(RM) *.err
 	$(RM) icons.cpp
 	$(RM) icons.h

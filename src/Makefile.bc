@@ -5,7 +5,7 @@
 ##############################################################################
 # Copyright (C) 1997,2005 by Jeroen van der Zijp.   All Rights Reserved.     #
 ##############################################################################
-# $Id: Makefile.bc,v 1.113 2005/02/05 20:53:27 fox Exp $                     #
+# $Id: Makefile.bc,v 1.132 2006/01/27 05:19:39 fox Exp $                     #
 ##############################################################################
 # This library is free software; you can redistribute it and/or              #
 # modify it under the terms of the GNU Library General Public                #
@@ -29,12 +29,12 @@ LD        = bcc32
 TOPDIR    = ..
 # Uncomment the following two lines for debug builds...
 #CXXFLAGS  = -5 -Od -w-aus -w-ccc -w-csu -w-par -w-pia -w-rch -w-inl -w-ngu
-#DEFINES   = -DFOX_BIGENDIAN=0 -DWIN32 -D_WINDOWS -DHAVE_OPENGL
+#DEFINES   = -DFOX_BIGENDIAN=0 -D_WINDOWS -DWIN32 -DHAVE_GL_H -DHAVE_GLU_H -DHAVE_VSSCANF
 # Uncomment the following two lines for release builds...
 CXXFLAGS  = -5 -O2 -w-aus -w-ccc -w-csu -w-par -w-pia -w-rch -w-inl -w-ngu
 DEFINES   = -DFOX_BIGENDIAN=0 -DNDEBUG -D_WINDOWS -DWIN32 -DHAVE_GL_H -DHAVE_GLU_H -DHAVE_VSSCANF #-DHAVE_PNG_H -DHAVE_JPEG_H -DHAVE_TIFF_H -DXMD_H
 INCDIRS   = -I$(TOPDIR)/include
-FOXLIB    = $(TOPDIR)\src\FOX-1.4.lib
+FOXLIB    = $(TOPDIR)\src\FOX-1.6.lib
 RESWRAP   = $(TOPDIR)\utils\reswrap.exe
 
 
@@ -42,6 +42,21 @@ RESWRAP   = $(TOPDIR)\utils\reswrap.exe
 
 SOURCES = FX4Splitter.cpp \
 FX7Segment.cpp \
+FX885910Codec.cpp \
+FX885911Codec.cpp \
+FX885913Codec.cpp \
+FX885914Codec.cpp \
+FX885915Codec.cpp \
+FX885916Codec.cpp \
+FX88591Codec.cpp \
+FX88592Codec.cpp \
+FX88593Codec.cpp \
+FX88594Codec.cpp \
+FX88595Codec.cpp \
+FX88596Codec.cpp \
+FX88597Codec.cpp \
+FX88598Codec.cpp \
+FX88599Codec.cpp \
 FXAccelTable.cpp \
 FXApp.cpp \
 FXArrowButton.cpp \
@@ -51,30 +66,59 @@ FXBitmap.cpp \
 FXBitmapFrame.cpp \
 FXBitmapView.cpp \
 FXButton.cpp \
-FXBZStream.cpp \
+FXBZFileStream.cpp \
 FXCURCursor.cpp \
 FXCanvas.cpp \
 FXCheckButton.cpp \
 FXChoiceBox.cpp \
 FXColorBar.cpp \
 FXColorDialog.cpp \
+FXColorList.cpp \
 FXColorNames.cpp \
+FXColorRing.cpp \
 FXColorSelector.cpp \
 FXColorWell.cpp \
 FXColorWheel.cpp \
 FXComboBox.cpp \
+FXComposeContext.cpp \
 FXComposite.cpp \
+FXCP1250Codec.cpp \
+FXCP1251Codec.cpp \
+FXCP1252Codec.cpp \
+FXCP1253Codec.cpp \
+FXCP1254Codec.cpp \
+FXCP1255Codec.cpp \
+FXCP1256Codec.cpp \
+FXCP1257Codec.cpp \
+FXCP1258Codec.cpp \
+FXCP437Codec.cpp \
+FXCP850Codec.cpp \
+FXCP852Codec.cpp \
+FXCP855Codec.cpp \
+FXCP856Codec.cpp \
+FXCP857Codec.cpp \
+FXCP860Codec.cpp \
+FXCP861Codec.cpp \
+FXCP862Codec.cpp \
+FXCP863Codec.cpp \
+FXCP864Codec.cpp \
+FXCP865Codec.cpp \
+FXCP866Codec.cpp \
+FXCP869Codec.cpp \
+FXCP874Codec.cpp \
 FXCursor.cpp \
+FXDataTarget.cpp \
+FXDate.cpp \
 FXDC.cpp \
 FXDCPrint.cpp \
 FXDCWindow.cpp \
 FXDLL.cpp \
-FXDataTarget.cpp \
 FXDebugTarget.cpp \
 FXDelegator.cpp \
 FXDial.cpp \
 FXDialogBox.cpp \
 FXDict.cpp \
+FXDir.cpp \
 FXDirBox.cpp \
 FXDirDialog.cpp \
 FXDirList.cpp \
@@ -88,6 +132,9 @@ FXDragCorner.cpp \
 FXDrawable.cpp \
 FXDriveBox.cpp \
 FXException.cpp \
+FXExpression.cpp \
+FXExtentd.cpp \
+FXExtentf.cpp \
 FXFile.cpp \
 FXFileDialog.cpp \
 FXFileDict.cpp \
@@ -116,7 +163,7 @@ FXGLVisual.cpp \
 FXGradientBar.cpp \
 FXGroupBox.cpp \
 FXGUISignal.cpp \
-FXGZStream.cpp \
+FXGZFileStream.cpp \
 FXHash.cpp \
 FXHeader.cpp \
 FXHorizontalFrame.cpp \
@@ -126,14 +173,18 @@ FXIFFIcon.cpp \
 FXIFFImage.cpp \
 FXIcon.cpp \
 FXIconList.cpp \
+FXIconDict.cpp \
 FXIconSource.cpp \
 FXId.cpp \
 FXImage.cpp \
 FXImageFrame.cpp \
 FXImageView.cpp \
 FXInputDialog.cpp \
+FXIO.cpp \
 FXJPGIcon.cpp \
 FXJPGImage.cpp \
+FXKOI8RCodec.cpp \
+FXKnob.cpp \
 FXLabel.cpp \
 FXList.cpp \
 FXListBox.cpp \
@@ -169,7 +220,9 @@ FXPNGImage.cpp \
 FXPPMIcon.cpp \
 FXPPMImage.cpp \
 FXPacker.cpp \
+FXPath.cpp \
 FXPicker.cpp \
+FXPipe.cpp \
 FXPopup.cpp \
 FXPoint.cpp \
 FXPrintDialog.cpp \
@@ -194,6 +247,7 @@ FXReplaceDialog.cpp \
 FXRex.cpp \
 FXRootWindow.cpp \
 FXRuler.cpp \
+FXRulerView.cpp \
 FXScrollArea.cpp \
 FXScrollPane.cpp \
 FXScrollWindow.cpp \
@@ -205,18 +259,21 @@ FXShell.cpp \
 FXShutter.cpp \
 FXSize.cpp \
 FXSlider.cpp \
+FXSocket.cpp \
 FXSpheref.cpp \
 FXSphered.cpp \
 FXSplashWindow.cpp \
 FXSpinner.cpp \
 FXSplitter.cpp \
 FXSpring.cpp \
+FXStat.cpp \
 FXStatusBar.cpp \
 FXStatusLine.cpp \
 FXStream.cpp \
 FXString.cpp \
 FXStringDict.cpp \
 FXSwitcher.cpp \
+FXSystem.cpp \
 FXTGAIcon.cpp \
 FXTGAImage.cpp \
 FXTIFIcon.cpp \
@@ -236,6 +293,7 @@ FXToolBarShell.cpp \
 FXToolBarTab.cpp \
 FXToolTip.cpp \
 FXTopWindow.cpp \
+FXTranslator.cpp \
 FXTreeList.cpp \
 FXTreeListBox.cpp \
 FXTriStateButton.cpp \
@@ -258,12 +316,15 @@ FXXBMIcon.cpp \
 FXXBMImage.cpp \
 FXXPMIcon.cpp \
 FXXPMImage.cpp \
+fxascii.cpp \
 fxbmpio.cpp \
 fxfilematch.cpp \
 fxgifio.cpp \
 fxicoio.cpp \
 fxiffio.cpp \
 fxjpegio.cpp \
+fxkeyboard.cpp \
+fxkeysym.cpp \
 fxparsegeometry.cpp \
 fxpcxio.cpp \
 fxpngio.cpp \
@@ -277,8 +338,8 @@ fxrasio.cpp \
 fxrgbio.cpp \
 fxtargaio.cpp \
 fxtifio.cpp \
+fxunicode.cpp \
 fxutils.cpp \
-fxwinkbd.cpp \
 fxxbmio.cpp \
 fxxpmio.cpp \
 icons.cpp \
@@ -305,4 +366,4 @@ clean:
 $(FOXLIB): $(OBJECTS) Makefile.bc.resp
         touch $(FOXLIB)
         del $(FOXLIB)
-        $(LIB) "$(FOXLIB)" /P128 @Makefile.bc.resp
+        $(LIB) "$(FOXLIB)" /P256 @Makefile.bc.resp

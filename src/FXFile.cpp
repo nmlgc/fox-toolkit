@@ -1,9 +1,9 @@
 /********************************************************************************
 *                                                                               *
-*      F i l e   I n f o r m a t i o n   a n d   M a n i p u l a t i o n        *
+*                             F i l e   C l a s s                               *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2000,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 2000,2006 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,68 +19,49 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXFile.cpp,v 1.190 2005/02/05 04:10:50 fox Exp $                         *
+* $Id: FXFile.cpp,v 1.249 2006/01/22 17:58:25 fox Exp $                         *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
 #include "fxdefs.h"
+#include "fxascii.h"
 #include "FXHash.h"
 #include "FXStream.h"
 #include "FXString.h"
+#include "FXPath.h"
+#include "FXIO.h"
+#include "FXStat.h"
 #include "FXFile.h"
-#ifdef WIN32
-#include <shellapi.h>
-#endif
+#include "FXPipe.h"
+#include "FXDir.h"
 
 
 
 /*
   Notes:
-  - Thanks to Sean Hubbell for the original impetus for these functions.
-  - Windows flavors of some of these functions are not perfect yet.
-  - Windows 95 and NT:
-      -  1 to 255 character name.
-      -  Complete path for a file or project name cannot exceed 259
-         characters, including the separators.
-      -  May not begin or end with a space.
-      -  May not begin with a $
-      -  May contain 1 or more file extensions (eg. MyFile.Ext1.Ext2.Ext3.Txt).
-      -  Legal characters in the range of 32 - 255 but not ?"/\<>*|:
-      -  Filenames may be mixed case.
-      -  Filename comparisons are case insensitive (eg. ThIs.TXT = this.txt).
-  - MS-DOS and Windows 3.1:
-      -  1 to 11 characters in the 8.3 naming convention.
-      -  Legal characters are A-Z, 0-9, Double Byte Character Set (DBCS)
-         characters (128 - 255), and _^$~!#%&-{}@'()
-      -  May not contain spaces, 0 - 31, and "/\[]:;|=,
-      -  Must not begin with $
-      -  Uppercase only filename.
-  - Perhaps use GetEnvironmentVariable instead of getenv?
-  - FXFile::search() what if some paths are quoted, like
 
-      \this\dir;"\that\dir with a ;";\some\other\dir
-
-  - Need function to contract filenames, e.g. change:
-
-      /home/jeroen/junk
-      /home/someoneelse/junk
-
-    to:
-
-      ~/junk
-      ~someoneelse/junk
-
-  - Perhaps also taking into account certain environment variables in the
-    contraction function?
-  - FXFile::copy( "C:\tmp", "c:\tmp\tmp" ) results infinite-loop.
-
+  - Implemented many functions in terms of FXFile and FXDir
+    so we won't have to worry about unicode stuff.
+  - Perhaps we should assume FXString contains string encoded in the locale
+    of the system [which in case of Windows would mean it contains UTF-16]?
+    Because it isn't between 8-bit or 16-bit, but also about utf-8 v.s. other
+    encodings..
+  - This should be in FXSystem; FXSystem needs to determine the locale, then
+    determine the codec needed for that locale, and then use this codec for
+    encoding our strings to that locale.
 */
 
-
-#ifndef TIMEFORMAT
-#define TIMEFORMAT "%m/%d/%Y %H:%M:%S"
+#ifdef WIN32
+#define BadHandle INVALID_HANDLE_VALUE
+#else
+#define BadHandle -1
 #endif
 
+#ifdef WIN32
+#ifndef INVALID_SET_FILE_POINTER
+#define INVALID_SET_FILE_POINTER ((DWORD)-1)
+#endif
+#endif
 
 using namespace FX;
 
@@ -88,2236 +69,634 @@ using namespace FX;
 
 namespace FX {
 
-#ifdef __SC__
-using namespace FXFile;
-#endif
 
 
-// Return value of environment variable name
-FXString FXFile::getEnvironment(const FXString& name){
-  return FXString(getenv(name.text()));
+// Construct file and attach existing handle h
+FXFile::FXFile(FXInputHandle handle,FXuint mode){
+  FXIO::open(handle,mode);
   }
 
 
-// Get current user name
-FXString FXFile::getCurrentUserName(){
-#ifndef WIN32
-#ifdef FOX_THREAD_SAFE
-  struct passwd pwdresult,*pwd;
-  char buffer[1024];
-  if(getpwuid_r(geteuid(),&pwdresult,buffer,sizeof(buffer),&pwd)==0 && pwd) return pwd->pw_name;
-#else
-  struct passwd *pwd=getpwuid(geteuid());
-  if(pwd) return pwd->pw_name;
-#endif
-#else
-  char buffer[1024];
-  DWORD size=sizeof(buffer);
-  if(GetUserName(buffer,&size)) return buffer;
-#endif
-  return FXString::null;
+// Construct and open a file
+FXFile::FXFile(const FXString& file,FXuint mode,FXuint perm){
+  open(file,mode,perm);
   }
 
 
-// Get current working directory
-FXString FXFile::getCurrentDirectory(){
-  FXchar buffer[MAXPATHLEN];
-#ifndef WIN32
-  if(getcwd(buffer,MAXPATHLEN)) return FXString(buffer);
-#else
-  if(GetCurrentDirectory(MAXPATHLEN,buffer)) return FXString(buffer);
-#endif
-  return FXString::null;
-  }
-
-
-// Change current directory
-FXbool FXFile::setCurrentDirectory(const FXString& path){
+// Open file
+bool FXFile::open(const FXString& file,FXuint mode,FXuint perm){
+  if(!file.empty() && !isOpen()){
 #ifdef WIN32
-  return !path.empty() && SetCurrentDirectory(path.text());
+    DWORD flags=GENERIC_READ;
+    DWORD creation=OPEN_EXISTING;
+
+    // Basic access mode
+    switch(mode&(ReadOnly|WriteOnly)){
+      case ReadOnly: flags=GENERIC_READ; break;
+      case WriteOnly: flags=GENERIC_WRITE; break;
+      case ReadWrite: flags=GENERIC_READ|GENERIC_WRITE; break;
+      }
+
+    // Creation and truncation mode
+    switch(mode&(Create|Truncate|Exclusive)){
+      case Create: creation=OPEN_ALWAYS; break;
+      case Truncate: creation=TRUNCATE_EXISTING; break;
+      case Create|Truncate: creation=CREATE_ALWAYS; break;
+      case Create|Truncate|Exclusive: creation=CREATE_NEW; break;
+      }
+
+    // Non-blocking mode
+    if(mode&NonBlocking){
+      // FIXME
+      }
+
+#ifdef UNICODE
+    FXnchar unifile[1024];
+    utf2ncs(unifile,file.text(),file.length()+1);
+    device=::CreateFileW(unifile,flags,FILE_SHARE_READ|FILE_SHARE_WRITE,NULL,creation,FILE_ATTRIBUTE_NORMAL,NULL);
 #else
-  return !path.empty() && chdir(path.text())==0;
+    device=::CreateFileA(file.text(),flags,FILE_SHARE_READ|FILE_SHARE_WRITE,NULL,creation,FILE_ATTRIBUTE_NORMAL,NULL);
 #endif
+    access=mode;
+
+    // Appending
+    if(mode&Append) ::SetFilePointer(device,0,NULL,FILE_END);
+    return (device!=BadHandle);
+#else
+    FXuint bits=perm&0777;
+    FXuint flags=0;
+
+    // Basic access mode
+    switch(mode&(ReadOnly|WriteOnly)){
+      case ReadOnly: flags=O_RDONLY; break;
+      case WriteOnly: flags=O_WRONLY; break;
+      case ReadWrite: flags=O_RDWR; break;
+      }
+// O_LARGEFILE
+
+    // Appending and truncation
+    if(mode&Append) flags|=O_APPEND;
+    if(mode&Truncate) flags|=O_TRUNC;
+
+    // Non-blocking mode
+    if(mode&NonBlocking) flags|=O_NONBLOCK;
+
+    // Creation mode
+    if(mode&Create){
+      flags|=O_CREAT;
+      if(mode&Exclusive) flags|=O_EXCL;
+      }
+
+    // Permission bits
+    if(perm&FXIO::SetUser) bits|=S_ISUID;
+    if(perm&FXIO::SetGroup) bits|=S_ISGID;
+    if(perm&FXIO::Sticky) bits|=S_ISVTX;
+
+    // Do it
+    device=::open(file.text(),flags,bits);
+    access=mode;
+    return (device!=BadHandle);
+#endif
+    }
+  return false;
   }
 
 
-// Get current drive prefix "a:", if any
-// This is the same method as used in VC++ CRT.
-FXString FXFile::getCurrentDrive(){
+// Open device with access mode and handle
+bool FXFile::open(FXInputHandle handle,FXuint mode){
+  return FXIO::open(handle,mode);
+  }
+
+
+// Get position
+FXlong FXFile::position() const {
+  if(isOpen()){
 #ifdef WIN32
-  FXchar buffer[MAXPATHLEN];
-  if(GetCurrentDirectory(MAXPATHLEN,buffer) && isalpha((FXuchar)buffer[0]) && buffer[1]==':') return FXString(buffer,2);
+    LARGE_INTEGER pos;
+    pos.QuadPart=0;
+    pos.LowPart=::SetFilePointer(device,0,&pos.HighPart,FILE_CURRENT);
+    if(pos.LowPart==INVALID_SET_FILE_POINTER && GetLastError()!=NO_ERROR) pos.QuadPart=-1;
+    return pos.QuadPart;
+#else
+    return ::lseek(device,0,SEEK_CUR);
 #endif
-  return FXString::null;
+    }
+  return -1;
   }
 
 
+// Move to position
+FXlong FXFile::position(FXlong offset,FXuint from){
+  if(isOpen()){
 #ifdef WIN32
-
-// Change current drive prefix "a:"
-// This is the same method as used in VC++ CRT.
-FXbool FXFile::setCurrentDrive(const FXString& prefix){
-  FXchar buffer[3];
-  if(!prefix.empty() && isalpha((FXuchar)prefix[0]) && prefix[1]==':'){
-    buffer[0]=prefix[0];
-    buffer[1]=':';
-    buffer[2]='\0';
-    return SetCurrentDirectory(buffer);
-    }
-  return FALSE;
-  }
-
+    LARGE_INTEGER pos;
+    pos.QuadPart=offset;
+    pos.LowPart=::SetFilePointer(device,pos.LowPart,&pos.HighPart,from);
+    if(pos.LowPart==INVALID_SET_FILE_POINTER && GetLastError()!=NO_ERROR) pos.QuadPart=-1;
+    return pos.QuadPart;
 #else
-
-// Change current drive prefix "a:"
-FXbool FXFile::setCurrentDrive(const FXString&){
-  return TRUE;
-  }
-
+    return ::lseek(device,offset,from);
 #endif
-
-
-// Get home directory for a given user
-FXString FXFile::getUserDirectory(const FXString& user){
-#ifndef WIN32
-#ifdef FOX_THREAD_SAFE
-  struct passwd pwdresult,*pwd;
-  char buffer[1024];
-  if(user.empty()){
-    register const FXchar* str;
-    if((str=getenv("HOME"))!=NULL) return str;
-    if((str=getenv("USER"))!=NULL || (str=getenv("LOGNAME"))!=NULL){
-      if(getpwnam_r(str,&pwdresult,buffer,sizeof(buffer),&pwd)==0 && pwd) return pwd->pw_dir;
-      }
-    if(getpwuid_r(getuid(),&pwdresult,buffer,sizeof(buffer),&pwd)==0 && pwd) return pwd->pw_dir;
-    return PATHSEPSTRING;
     }
-  if(getpwnam_r(user.text(),&pwdresult,buffer,sizeof(buffer),&pwd)==0 && pwd) return pwd->pw_dir;
-  return PATHSEPSTRING;
-#else
-  register struct passwd *pwd;
-  if(user.empty()){
-    register const FXchar* str;
-    if((str=getenv("HOME"))!=NULL) return str;
-    if((str=getenv("USER"))!=NULL || (str=getenv("LOGNAME"))!=NULL){
-      if((pwd=getpwnam(str))!=NULL) return pwd->pw_dir;
-      }
-    if((pwd=getpwuid(getuid()))!=NULL) return pwd->pw_dir;
-    return PATHSEPSTRING;
-    }
-  if((pwd=getpwnam(user.text()))!=NULL) return pwd->pw_dir;
-  return PATHSEPSTRING;
-#endif
-#else
-  if(user.empty()){
-    register const FXchar *str1,*str2;
-    if((str1=getenv("USERPROFILE"))!=NULL) return str1; // Daniël Hörchner <dbjh@gmx.net>
-    if((str1=getenv("HOME"))!=NULL) return str1;
-    if((str2=getenv("HOMEPATH"))!=NULL){      // This should be good for WinNT, Win2K according to MSDN
-      if((str1=getenv("HOMEDRIVE"))==NULL) str1="c:";
-      return FXString(str1,str2);
-      }
-//  FXchar buffer[MAX_PATH]
-//  if(SHGetFolderPath(NULL,CSIDL_PERSONAL|CSIDL_FLAG_CREATE,NULL,O,buffer)==S_OK){
-//    return buffer;
-//    }
-    HKEY hKey;
-    if(RegOpenKeyEx(HKEY_CURRENT_USER,"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders",0,KEY_READ,&hKey)==ERROR_SUCCESS){
-      FXchar home[MAXPATHLEN];
-      DWORD size=MAXPATHLEN;
-      LONG result=RegQueryValueEx(hKey,"Personal",NULL,NULL,(LPBYTE)home,&size);  // Change "Personal" to "Desktop" if you want...
-      RegCloseKey(hKey);
-      if(result==ERROR_SUCCESS) return home;
-      }
-    return "c:" PATHSEPSTRING;
-    }
-  return "c:" PATHSEPSTRING;
-#endif
+  return -1;
   }
 
 
-// Return the home directory for the current user.
-FXString FXFile::getHomeDirectory(){
-  return getUserDirectory(FXString::null);
-  }
-
-
-// Get executable path
-FXString FXFile::getExecPath(){
-  return FXString(getenv("PATH"));
-  }
-
-
-// Return temporary directory.
-FXString FXFile::getTempDirectory(){
-#ifndef WIN32
-  // Conform Linux File Hierarchy standard; this should be
-  // good for SUN, SGI, HP-UX, AIX, and OSF1 also.
-  return FXString("/tmp",5);
-#else
-  FXchar buffer[MAXPATHLEN];
-  FXuint len=GetTempPath(MAXPATHLEN,buffer);
-  if(1<len && ISPATHSEP(buffer[len-1]) && !ISPATHSEP(buffer[len-2])) len--;
-  return FXString(buffer,len);
-#endif
-  }
-
-
-// Return directory part of pathname, assuming full pathname.
-// Note that directory("/bla/bla/") is "/bla/bla" and NOT "/bla".
-// However, directory("/bla/bla") is "/bla" as we expect!
-FXString FXFile::directory(const FXString& file){
-  register FXint n,i;
-  if(!file.empty()){
-    i=0;
+// Read block
+FXival FXFile::readBlock(void* data,FXival count){
+  FXival nread=-1;
+  if(isOpen()){
 #ifdef WIN32
-    if(isalpha((FXuchar)file[0]) && file[1]==':') i=2;
-#endif
-    if(ISPATHSEP(file[i])) i++;
-    n=i;
-    while(file[i]){
-      if(ISPATHSEP(file[i])) n=i;
-      i++;
-      }
-    return FXString(file.text(),n);
-    }
-  return FXString::null;
-  }
-
-
-// Return name and extension part of pathname.
-// Note that name("/bla/bla/") is "" and NOT "bla".
-// However, name("/bla/bla") is "bla" as we expect!
-FXString FXFile::name(const FXString& file){
-  register FXint f,n;
-  if(!file.empty()){
-    n=0;
-#ifdef WIN32
-    if(isalpha((FXuchar)file[0]) && file[1]==':') n=2;
-#endif
-    f=n;
-    while(file[n]){
-      if(ISPATHSEP(file[n])) f=n+1;
-      n++;
-      }
-    return FXString(file.text()+f,n-f);
-    }
-  return FXString::null;
-  }
-
-
-// Return file title, i.e. document name only:
-//
-//  /path/aa        -> aa
-//  /path/aa.bb     -> aa
-//  /path/aa.bb.cc  -> aa.bb
-//  /path/.aa       -> .aa
-FXString FXFile::title(const FXString& file){
-  register FXint f,e,b,i;
-  if(!file.empty()){
-    i=0;
-#ifdef WIN32
-    if(isalpha((FXuchar)file[0]) && file[1]==':') i=2;
-#endif
-    f=i;
-    while(file[i]){
-      if(ISPATHSEP(file[i])) f=i+1;
-      i++;
-      }
-    b=f;
-    if(file[b]=='.') b++;     // Leading '.'
-    e=i;
-    while(b<i){
-      if(file[--i]=='.'){ e=i; break; }
-      }
-    return FXString(file.text()+f,e-f);
-    }
-  return FXString::null;
-  }
-
-
-// Return extension, if there is one:
-//
-//  /path/aa        -> ""
-//  /path/aa.bb     -> bb
-//  /path/aa.bb.cc  -> cc
-//  /path/.aa       -> ""
-FXString FXFile::extension(const FXString& file){
-  register FXint f,e,i,n;
-  if(!file.empty()){
-    n=0;
-#ifdef WIN32
-    if(isalpha((FXuchar)file[0]) && file[1]==':') n=2;
-#endif
-    f=n;
-    while(file[n]){
-      if(ISPATHSEP(file[n])) f=n+1;
-      n++;
-      }
-    if(file[f]=='.') f++;     // Leading '.'
-    e=i=n;
-    while(f<i){
-      if(file[--i]=='.'){ e=i+1; break; }
-      }
-    return FXString(file.text()+e,n-e);
-    }
-  return FXString::null;
-  }
-
-
-// Return file name less the extension
-//
-//  /path/aa        -> /path/aa
-//  /path/aa.bb     -> /path/aa
-//  /path/aa.bb.cc  -> /path/aa.bb
-//  /path/.aa       -> /path/.aa
-FXString FXFile::stripExtension(const FXString& file){
-  register FXint f,e,n;
-  if(!file.empty()){
-    n=0;
-#ifdef WIN32
-    if(isalpha((FXuchar)file[0]) && file[1]==':') n=2;
-#endif
-    f=n;
-    while(file[n]){
-      if(ISPATHSEP(file[n])) f=n+1;
-      n++;
-      }
-    if(file[f]=='.') f++;     // Leading '.'
-    e=n;
-    while(f<n){
-      if(file[--n]=='.'){ e=n; break; }
-      }
-    return FXString(file.text(),e);
-    }
-  return FXString::null;
-  }
-
-
-#ifdef WIN32
-
-// Return drive letter prefix "c:"
-FXString FXFile::drive(const FXString& file){
-  FXchar buffer[3];
-  if(isalpha((FXuchar)file[0]) && file[1]==':'){
-    buffer[0]=tolower((FXuchar)file[0]);
-    buffer[1]=':';
-    buffer[2]='\0';
-    return FXString(buffer,2);
-    }
-  return FXString::null;
-  }
-
+    if(0==::ReadFile(device,data,count,(DWORD*)&nread,NULL)) nread=-1;
 #else
-
-// Return drive letter prefix "c:"
-FXString FXFile::drive(const FXString&){
-  return FXString::null;
-  }
-
-#endif
-
-// Perform tilde or environment variable expansion
-FXString FXFile::expand(const FXString& file){
-#ifndef WIN32
-  if(!file.empty()){
-    register FXint b,e,n;
-    FXString result;
-
-    // Expand leading tilde of the form ~/filename or ~user/filename
-    n=0;
-    if(file[n]=='~'){
-      n++;
-      b=n;
-      while(file[n] && !ISPATHSEP(file[n])) n++;
-      e=n;
-      result.append(getUserDirectory(file.mid(b,e-b)));
-      }
-
-    // Expand environment variables of the form $HOME, ${HOME}, or $(HOME)
-    while(file[n]){
-      if(file[n]=='$'){
-        n++;
-        if(file[n]=='{' || file[n]=='(') n++;
-        b=n;
-        while(isalnum((FXuchar)file[n]) || file[n]=='_') n++;
-        e=n;
-        if(file[n]=='}' || file[n]==')') n++;
-        result.append(getEnvironment(file.mid(b,e-b)));
-        continue;
-        }
-      result.append(file[n]);
-      n++;
-      }
-    return result;
-    }
-  return FXString::null;
-#else
-  if(!file.empty()){
-    FXchar buffer[2048];
-
-    // Expand environment variables of the form %HOMEPATH%
-    if(ExpandEnvironmentStrings(file.text(),buffer,sizeof(buffer))){
-      return buffer;
-      }
-    return file;
-    }
-  return FXString::null;
-#endif
-  }
-
-
-
-// Simplify a file path; the path will remain relative if it was relative,
-// or absolute if it was absolute.  Also, a trailing "/" will be preserved
-// as this is important in other functions.
-//
-// Examples:
-//
-//  /aa/bb/../cc    -> /aa/cc
-//  /aa/bb/../cc/   -> /aa/cc/
-//  /aa/bb/../..    -> /
-//  ../../bb        -> ../../bb
-//  ../../bb/       -> ../../bb/
-//  /../            -> /
-//  ./aa/bb/../../  -> ./
-//  a/..            -> .
-//  a/../           -> ./
-//  ./a             -> ./a
-//  /////./././     -> /
-//  c:/../          -> c:/
-//  c:a/..          -> c:
-//  /.              -> /
-FXString FXFile::simplify(const FXString& file){
-  if(!file.empty()){
-    FXString result=file;
-    register FXint p,q,s;
-    p=q=0;
-#ifndef WIN32
-    if(ISPATHSEP(result[q])){
-      result[p++]=PATHSEP;
-      while(ISPATHSEP(result[q])) q++;
-      }
-#else
-    if(ISPATHSEP(result[q])){         // UNC
-      result[p++]=PATHSEP;
-      q++;
-      if(ISPATHSEP(result[q])){
-        result[p++]=PATHSEP;
-        while(ISPATHSEP(result[q])) q++;
-        }
-      }
-    else if(isalpha((FXuchar)result[q]) && result[q+1]==':'){
-      result[p++]=result[q++];
-      result[p++]=':';
-      q++;
-      if(ISPATHSEP(result[q])){
-        result[p++]=PATHSEP;
-        while(ISPATHSEP(result[q])) q++;
-        }
-      }
-#endif
-    s=p;
-    while(result[q]){
-      while(result[q] && !ISPATHSEP(result[q])){
-        result[p++]=result[q++];
-        }
-      if(2<=p && result[p-1]=='.' && ISPATHSEP(result[p-2]) && result[q]==0){
-        p-=1;
-        }
-      else if(2<=p && result[p-1]=='.' && ISPATHSEP(result[p-2]) && ISPATHSEP(result[q])){
-        p-=2;
-        }
-      else if(3<=p && result[p-1]=='.' && result[p-2]=='.' && ISPATHSEP(result[p-3]) && !(5<=p && result[p-4]=='.' && result[p-5]=='.')){
-        p-=2;
-        if(s+2<=p){
-          p-=2;
-          while(s<p && !ISPATHSEP(result[p])) p--;
-          if(p==0) result[p++]='.';
-          }
-        }
-      if(ISPATHSEP(result[q])){
-        while(ISPATHSEP(result[q])) q++;
-        if(!ISPATHSEP(result[p-1])) result[p++]=PATHSEP;
-        }
-      }
-    return result.trunc(p);
-    }
-  return FXString::null;
-  }
-
-
-// Build absolute pathname
-FXString FXFile::absolute(const FXString& file){
-  if(file.empty()) return FXFile::getCurrentDirectory();
-#ifndef WIN32
-  if(ISPATHSEP(file[0])) return FXFile::simplify(file);
-#else
-  if(ISPATHSEP(file[0])){
-    if(ISPATHSEP(file[1])) return FXFile::simplify(file);   // UNC
-    return FXFile::simplify(FXFile::getCurrentDrive()+file);
-    }
-  if(isalpha((FXuchar)file[0]) && file[1]==':'){
-    if(ISPATHSEP(file[2])) return FXFile::simplify(file);
-    return FXFile::simplify(file.mid(0,2)+PATHSEPSTRING+file.mid(2,2147483647));
-    }
-#endif
-  return FXFile::simplify(FXFile::getCurrentDirectory()+PATHSEPSTRING+file);
-  }
-
-
-// Build absolute pathname from parts
-FXString FXFile::absolute(const FXString& base,const FXString& file){
-  if(file.empty()) return FXFile::absolute(base);
-#ifndef WIN32
-  if(ISPATHSEP(file[0])) return FXFile::simplify(file);
-#else
-  if(ISPATHSEP(file[0])){
-    if(ISPATHSEP(file[1])) return FXFile::simplify(file);   // UNC
-    return FXFile::simplify(FXFile::getCurrentDrive()+file);
-    }
-  if(isalpha((FXuchar)file[0]) && file[1]==':'){
-    if(ISPATHSEP(file[2])) return FXFile::simplify(file);
-    return FXFile::simplify(file.mid(0,2)+PATHSEPSTRING+file.mid(2,2147483647));
-    }
-#endif
-  return FXFile::simplify(FXFile::absolute(base)+PATHSEPSTRING+file);
-  }
-
-
-#ifndef WIN32
-
-// Return root of given path; this is just "/" or "" if not absolute
-FXString FXFile::root(const FXString& file){
-  if(ISPATHSEP(file[0])){
-    return PATHSEPSTRING;
-    }
-  return FXString::null;
-  }
-
-#else
-
-// Return root of given path; this may be "\\" or "C:\" or "" if not absolute
-FXString FXFile::root(const FXString& file){
-  if(ISPATHSEP(file[0])){
-    if(ISPATHSEP(file[1])) return PATHSEPSTRING PATHSEPSTRING;   // UNC
-    return FXFile::getCurrentDrive()+PATHSEPSTRING;
-    }
-  if(isalpha((FXuchar)file[0]) && file[1]==':'){
-    if(ISPATHSEP(file[2])) return file.left(3);
-    return file.left(2)+PATHSEPSTRING;
-    }
-  return FXString::null;
-  }
-
-#endif
-
-
-// Return relative path of file to given base directory
-//
-// Examples:
-//
-//  Base       File         Result
-//  /a/b/c     /a/b/c/d     d
-//  /a/b/c/    /a/b/c/d     d
-//  /a/b/c/d   /a/b/c       ../
-//  ../a/b/c   ../a/b/c/d   d
-//  /a/b/c/d   /a/b/q       ../../q
-//  /a/b/c     /a/b/c       .
-//  /a/b/c/    /a/b/c/      .
-//  ./a        ./b          ../b
-//  a          b            ../b
-FXString FXFile::relative(const FXString& base,const FXString& file){
-  register FXint p,q,b;
-  FXString result;
-
-  // Find branch point
-#ifndef WIN32
-  for(p=b=0; base[p] && base[p]==file[p]; p++){
-    if(ISPATHSEP(file[p])) b=p;
-    }
-#else
-  for(p=b=0; base[p] && tolower((FXuchar)base[p])==tolower((FXuchar)file[p]); p++){
-    if(ISPATHSEP(file[p])) b=p;
-    }
-#endif
-
-  // Paths are equal
-  if((base[p]=='\0' || (ISPATHSEP(base[p]) && base[p+1]=='\0')) && (file[p]=='\0' || (ISPATHSEP(file[p]) && file[p+1]=='\0'))){
-    return ".";
-    }
-
-  // Directory base is prefix of file
-  if((base[p]=='\0' && ISPATHSEP(file[p])) || (file[p]=='\0' && ISPATHSEP(base[p]))){
-    b=p;
-    }
-
-  // Up to branch point
-  for(p=q=b; base[p]; p=q){
-    while(base[q] && !ISPATHSEP(base[q])) q++;
-    if(q>p) result.append(".." PATHSEPSTRING);
-    while(base[q] && ISPATHSEP(base[q])) q++;
-    }
-
-  // Strip leading path character off, if any
-  while(ISPATHSEP(file[b])) b++;
-
-  // Append tail end
-  result.append(&file[b]);
-
-  return result;
-  }
-
-
-// Return relative path of file to the current directory
-FXString FXFile::relative(const FXString& file){
-  return FXFile::relative(getCurrentDirectory(),file);
-  }
-
-
-// Generate unique filename of the form pathnameXXX.ext, where
-// pathname.ext is the original input file, and XXX is a number,
-// possibly empty, that makes the file unique.
-// (From: Mathew Robertson <mathew.robertson@mi-services.com>)
-FXString FXFile::unique(const FXString& file){
-  if(!exists(file)) return file;
-  FXString ext=extension(file);
-  FXString path=stripExtension(file);           // Use the new API (Jeroen)
-  FXString filename;
-  register FXint count=0;
-  if(!ext.empty()) ext.prepend('.');            // Only add period when non-empty extension
-  while(count<1000){
-    filename.format("%s%i%s",path.text(),count,ext.text());
-    if(!exists(filename)) return filename;      // Return result here (Jeroen)
-    count++;
-    }
-  return FXString::null;
-  }
-
-
-// Search pathlist for file
-FXString FXFile::search(const FXString& pathlist,const FXString& file){
-  if(!file.empty()){
-    FXString path;
-    FXint beg,end;
-#ifndef WIN32
-    if(ISPATHSEP(file[0])){
-      if(exists(file)) return file;
-      return FXString::null;
-      }
-#else
-    if(ISPATHSEP(file[0])){
-      if(ISPATHSEP(file[1])){
-        if(exists(file)) return file;   // UNC
-        return FXString::null;
-        }
-      path=FXFile::getCurrentDrive()+file;
-      if(exists(path)) return path;
-      return FXString::null;
-      }
-    if(isalpha((FXuchar)file[0]) && file[1]==':'){
-      if(exists(file)) return file;
-      return FXString::null;
-      }
-#endif
-    for(beg=0; pathlist[beg]; beg=end){
-      while(pathlist[beg]==PATHLISTSEP) beg++;
-      for(end=beg; pathlist[end] && pathlist[end]!=PATHLISTSEP; end++);
-      if(beg==end) break;
-      path=absolute(expand(pathlist.mid(beg,end-beg)),file);
-      if(exists(path)) return path;
-      }
-    }
-  return FXString::null;
-  }
-
-
-// Up one level, given absolute path
-FXString FXFile::upLevel(const FXString& file){
-  if(!file.empty()){
-    FXint beg=0;
-    FXint end=file.length();
-#ifndef WIN32
-    if(ISPATHSEP(file[0])) beg++;
-#else
-    if(ISPATHSEP(file[0])){
-      beg++;
-      if(ISPATHSEP(file[1])) beg++;     // UNC
-      }
-    else if(isalpha((FXuchar)file[0]) && file[1]==':'){
-      beg+=2;
-      if(ISPATHSEP(file[2])) beg++;
-      }
-#endif
-    if(beg<end && ISPATHSEP(file[end-1])) end--;
-    while(beg<end){ --end; if(ISPATHSEP(file[end])) break; }
-    return file.left(end);
-    }
-  return PATHSEPSTRING;
-  }
-
-
-// Check if file represents absolute pathname
-FXbool FXFile::isAbsolute(const FXString& file){
-#ifndef WIN32
-  return !file.empty() && ISPATHSEP(file[0]);
-#else
-  return !file.empty() && (ISPATHSEP(file[0]) || (isalpha((FXuchar)file[0]) && file[1]==':'));
-#endif
-  }
-
-
-// Does file represent topmost directory
-FXbool FXFile::isTopDirectory(const FXString& file){
-#ifndef WIN32
-  return !file.empty() && ISPATHSEP(file[0]) && file[1]=='\0';
-#else
-  return !file.empty() && ((ISPATHSEP(file[0]) && (file[1]=='\0' || (ISPATHSEP(file[1]) && file[2]=='\0'))) || (isalpha((FXuchar)file[0]) && file[1]==':' && (file[2]=='\0' || (ISPATHSEP(file[2]) && file[3]=='\0'))));
-#endif
-  }
-
-
-// Check if file represents a file
-FXbool FXFile::isFile(const FXString& file){
-#ifndef WIN32
-  struct stat status;
-  return !file.empty() && (::stat(file.text(),&status)==0) && S_ISREG(status.st_mode);
-#else
-  DWORD atts;
-  return !file.empty() && ((atts=GetFileAttributes(file.text()))!=0xFFFFFFFF) && !(atts&FILE_ATTRIBUTE_DIRECTORY);
-#endif
-  }
-
-
-// Check if file represents a link
-FXbool FXFile::isLink(const FXString& file){
-#ifndef WIN32
-  struct stat status;
-  return !file.empty() && (::lstat(file.text(),&status)==0) && S_ISLNK(status.st_mode);
-#else
-  return FALSE;
-#endif
-  }
-
-
-// Check if file represents a file share
-FXbool FXFile::isShare(const FXString& file){
-#ifndef WIN32
-  return FALSE;
-#else
-  return ISPATHSEP(file[0]) && ISPATHSEP(file[1]) && file.find(PATHSEP,2)<0;
-#endif
-  }
-
-
-/*
-
-
-// Return true if input path represents a file share of the form "\\" or "\\server"
-FXbool FXFile::isShare(const FXString& file){
-#ifndef WIN32
-  return FALSE;
-#else
-  if(ISPATHSEP(file[0]) && ISPATHSEP(file[1]) && file.find(PATHSEP,2)<0){
-    HANDLE hEnum;
-    NETRESOURCE host;
-    host.dwScope=RESOURCE_GLOBALNET;
-    host.dwType=RESOURCETYPE_DISK;
-    host.dwDisplayType=RESOURCEDISPLAYTYPE_GENERIC;
-    host.dwUsage=RESOURCEUSAGE_CONTAINER;
-    host.lpLocalName=NULL;
-    host.lpRemoteName=(char*)file.text();
-    host.lpComment=NULL;
-    host.lpProvider=NULL;
-
-    // This shit thows "First-chance exception in blabla.exe (KERNEL32.DLL): 0x000006BA: (no name)"
-    // when non-existing server name is passed in.  Don't know if this is dangerous...
-    if(WNetOpenEnum((file[2]?RESOURCE_GLOBALNET:RESOURCE_CONTEXT),RESOURCETYPE_DISK,0,(file[2]?&host:NULL),&hEnum)==NO_ERROR){
-      WNetCloseEnum(hEnum);
-      return TRUE;
-      }
-    }
-  return FALSE;
-#endif
-  }
-*/
-
-
-// Check if file represents a directory
-FXbool FXFile::isDirectory(const FXString& file){
-#ifndef WIN32
-  struct stat status;
-  return !file.empty() && (::stat(file.text(),&status)==0) && S_ISDIR(status.st_mode);
-#else
-  DWORD atts;
-  return !file.empty() && ((atts=GetFileAttributes(file.text()))!=0xFFFFFFFF) && (atts&FILE_ATTRIBUTE_DIRECTORY);
-#endif
-  }
-
-
-// Return true if file is readable (thanks to gehriger@linkcad.com)
-FXbool FXFile::isReadable(const FXString& file){
-  return !file.empty() && access(file.text(),R_OK)==0;
-  }
-
-
-// Return true if file is writable (thanks to gehriger@linkcad.com)
-FXbool FXFile::isWritable(const FXString& file){
-  return !file.empty() && access(file.text(),W_OK)==0;
-  }
-
-
-// Return true if file is executable (thanks to gehriger@linkcad.com)
-FXbool FXFile::isExecutable(const FXString& file){
-#ifndef WIN32
-  return !file.empty() && access(file.text(),X_OK)==0;
-#else
-  SHFILEINFO sfi;
-  return !file.empty() && SHGetFileInfo(file.text(),0,&sfi,sizeof(SHFILEINFO),SHGFI_EXETYPE)!=0;
-#endif
-  }
-
-
-// Check if owner has full permissions
-FXbool FXFile::isOwnerReadWriteExecute(const FXString& file){
-#ifndef WIN32
-  struct stat status;
-  return !file.empty() && (::stat(file.text(),&status)==0) && (status.st_mode&S_IRUSR) && (status.st_mode&S_IWUSR) && (status.st_mode&S_IXUSR);
-#else
-  return TRUE;
-#endif
-  }
-
-
-// Check if owner can read
-FXbool FXFile::isOwnerReadable(const FXString& file){
-#ifndef WIN32
-  struct stat status;
-  return !file.empty() && (::stat(file.text(),&status)==0) && (status.st_mode&S_IRUSR);
-#else
-  DWORD atts;
-  return !file.empty() && ((atts=GetFileAttributes(file.text()))!=0xFFFFFFFF);
-#endif
-  }
-
-
-// Check if owner can write
-FXbool FXFile::isOwnerWritable(const FXString& file){
-#ifndef WIN32
-  struct stat status;
-  return !file.empty() && (::stat(file.text(),&status)==0) && (status.st_mode&S_IWUSR);
-#else
-  DWORD atts;
-  return !file.empty() && ((atts=GetFileAttributes(file.text()))!=0xFFFFFFFF) && !(atts&FILE_ATTRIBUTE_READONLY);
-#endif
-  }
-
-
-// Check if owner can execute
-FXbool FXFile::isOwnerExecutable(const FXString& file){
-#ifndef WIN32
-  struct stat status;
-  return !file.empty() && (::stat(file.text(),&status)==0) && (status.st_mode&S_IXUSR);
-#else
-  SHFILEINFO sfi;
-  return !file.empty() && SHGetFileInfo(file.text(),0,&sfi,sizeof(SHFILEINFO),SHGFI_EXETYPE)!=0;
-#endif
-  }
-
-
-// Check if group has full permissions
-FXbool FXFile::isGroupReadWriteExecute(const FXString& file){
-#ifndef WIN32
-  struct stat status;
-  return !file.empty() && (::stat(file.text(),&status)==0) && (status.st_mode&S_IRGRP) && (status.st_mode&S_IWGRP) && (status.st_mode&S_IXGRP);
-#else
-  return TRUE;
-#endif
-  }
-
-
-// Check if group can read
-FXbool FXFile::isGroupReadable(const FXString& file){
-#ifndef WIN32
-  struct stat status;
-  return !file.empty() && (::stat(file.text(),&status)==0) && (status.st_mode&S_IRGRP);
-#else
-  DWORD atts;
-  return !file.empty() && ((atts=GetFileAttributes(file.text()))!=0xFFFFFFFF);
-#endif
-  }
-
-
-// Check if group can write
-FXbool FXFile::isGroupWritable(const FXString& file){
-#ifndef WIN32
-  struct stat status;
-  return !file.empty() && (::stat(file.text(),&status)==0) && (status.st_mode&S_IWGRP);
-#else
-  DWORD atts;
-  return !file.empty() && ((atts=GetFileAttributes(file.text()))!=0xFFFFFFFF) && !(atts&FILE_ATTRIBUTE_READONLY);
-#endif
-  }
-
-
-// Check if group can execute
-FXbool FXFile::isGroupExecutable(const FXString& file){
-#ifndef WIN32
-  struct stat status;
-  return !file.empty() && (::stat(file.text(),&status)==0) && (status.st_mode&S_IXGRP);
-#else
-  SHFILEINFO sfi;
-  return !file.empty() && SHGetFileInfo(file.text(),0,&sfi,sizeof(SHFILEINFO),SHGFI_EXETYPE)!=0;
-#endif
-  }
-
-
-// Check if everybody has full permissions
-FXbool FXFile::isOtherReadWriteExecute(const FXString& file){
-#ifndef WIN32
-  struct stat status;
-  return !file.empty() && (::stat(file.text(),&status)==0) && (status.st_mode&S_IROTH) && (status.st_mode&S_IWOTH) && (status.st_mode&S_IXOTH);
-#else
-  return TRUE;
-#endif
-  }
-
-
-// Check if everybody can read
-FXbool FXFile::isOtherReadable(const FXString& file){
-#ifndef WIN32
-  struct stat status;
-  return !file.empty() && (::stat(file.text(),&status)==0) && (status.st_mode&S_IROTH);
-#else
-  DWORD atts;
-  return !file.empty() && ((atts=GetFileAttributes(file.text()))!=0xFFFFFFFF);
-#endif
-  }
-
-
-// Check if everybody can write
-FXbool FXFile::isOtherWritable(const FXString& file){
-#ifndef WIN32
-  struct stat status;
-  return !file.empty() && (::stat(file.text(),&status)==0) && (status.st_mode&S_IWOTH);
-#else
-  DWORD atts;
-  return !file.empty() && ((atts=GetFileAttributes(file.text()))!=0xFFFFFFFF) && !(atts&FILE_ATTRIBUTE_READONLY);
-#endif
-  }
-
-
-// Check if everybody can execute
-FXbool FXFile::isOtherExecutable(const FXString& file){
-#ifndef WIN32
-  struct stat status;
-  return !file.empty() && (::stat(file.text(),&status)==0) && (status.st_mode&S_IXOTH);
-#else
-  SHFILEINFO sfi;
-  return !file.empty() && SHGetFileInfo(file.text(),0,&sfi,sizeof(SHFILEINFO),SHGFI_EXETYPE)!=0;
-#endif
-  }
-
-
-// These 5 functions below contributed by calvin@users.sourceforge.net
-
-
-// Test if suid bit set
-FXbool FXFile::isSetUid(const FXString& file){
-#ifndef WIN32
-  struct stat status;
-  return !file.empty() && (::stat(file.text(),&status)==0) && (status.st_mode&S_ISUID);
-#else
-  return FALSE;
-#endif
-  }
-
-
-// Test if sgid bit set
-FXbool FXFile::isSetGid(const FXString& file){
-#ifndef WIN32
-  struct stat status;
-  return !file.empty() && (::stat(file.text(),&status)==0) && (status.st_mode&S_ISGID);
-#else
-  return FALSE;
-#endif
-  }
-
-
-// Test if sticky bit set
-FXbool FXFile::isSetSticky(const FXString& file){
-#ifndef WIN32
-  struct stat status;
-  return !file.empty() && (::stat(file.text(),&status)==0) && (status.st_mode&S_ISVTX);
-#else
-  return FALSE;
-#endif
-  }
-
-
-// Return owner name from uid
-FXString FXFile::owner(FXuint uid){
-  FXchar result[64];
-#ifndef WIN32
-#ifdef FOX_THREAD_SAFE
-  struct passwd pwdresult,*pwd;
-  char buffer[1024];
-  if(getpwuid_r(uid,&pwdresult,buffer,sizeof(buffer),&pwd)==0 && pwd) return pwd->pw_name;
-#else
-  struct passwd *pwd=getpwuid(uid);
-  if(pwd) return pwd->pw_name;
-#endif
-#endif
-  sprintf(result,"%u",uid);
-  return result;
-  }
-
-
-// Return group name from gid
-FXString FXFile::group(FXuint gid){
-  FXchar result[64];
-#ifndef WIN32
-#ifdef FOX_THREAD_SAFE
-  ::group grpresult;
-  ::group *grp;
-  char buffer[1024];
-  if(getgrgid_r(gid,&grpresult,buffer,sizeof(buffer),&grp)==0 && grp) return grp->gr_name;
-#else
-  ::group *grp=getgrgid(gid);
-  if(grp) return grp->gr_name;
-#endif
-#endif
-  sprintf(result,"%u",gid);
-  return result;
-  }
-
-
-// Return owner name of file
-FXString FXFile::owner(const FXString& file){
-  struct stat status;
-  if(!file.empty() && ::stat(file.text(),&status)==0){
-    return FXFile::owner(status.st_uid);
-    }
-  return FXString::null;
-  }
-
-
-// Return group name of file
-FXString FXFile::group(const FXString& file){
-  struct stat status;
-  if(!file.empty() && ::stat(file.text(),&status)==0){
-    return FXFile::group(status.st_gid);
-    }
-  return FXString::null;
-  }
-
-
-/// Return permissions string
-FXString FXFile::permissions(FXuint mode){
-  FXchar result[11];
-#ifndef WIN32
-  result[0]=S_ISLNK(mode) ? 'l' : S_ISREG(mode) ? '-' : S_ISDIR(mode) ? 'd' : S_ISCHR(mode) ? 'c' : S_ISBLK(mode) ? 'b' : S_ISFIFO(mode) ? 'p' : S_ISSOCK(mode) ? 's' : '?';
-  result[1]=(mode&S_IRUSR) ? 'r' : '-';
-  result[2]=(mode&S_IWUSR) ? 'w' : '-';
-  result[3]=(mode&S_ISUID) ? 's' : (mode&S_IXUSR) ? 'x' : '-';
-  result[4]=(mode&S_IRGRP) ? 'r' : '-';
-  result[5]=(mode&S_IWGRP) ? 'w' : '-';
-  result[6]=(mode&S_ISGID) ? 's' : (mode&S_IXGRP) ? 'x' : '-';
-  result[7]=(mode&S_IROTH) ? 'r' : '-';
-  result[8]=(mode&S_IWOTH) ? 'w' : '-';
-  result[9]=(mode&S_ISVTX) ? 't' : (mode&S_IXOTH) ? 'x' : '-';
-  result[10]=0;
-#else
-  result[0]='-';
-#ifdef _S_IFDIR
-  if(mode&_S_IFDIR) result[0]='d';
-#endif
-#ifdef _S_IFCHR
-  if(mode&_S_IFCHR) result[0]='c';
-#endif
-#ifdef _S_IFIFO
-  if(mode&_S_IFIFO) result[0]='p';
-#endif
-  result[1]='r';
-  result[2]='w';
-  result[3]='x';
-  result[4]='r';
-  result[5]='w';
-  result[6]='x';
-  result[7]='r';
-  result[8]='w';
-  result[9]='x';
-  result[10]=0;
-#endif
-  return result;
-  }
-
-/*
-// Convert FILETIME (# 100ns since 01/01/1601) to time_t (# s since 01/01/1970)
-static time_t fxfiletime(const FILETIME& ft){
-  FXlong ll=(((FXlong)ft.dwHighDateTime)<<32) | (FXlong)ft.dwLowDateTime;
-#if defined(__CYGWIN__) || defined(__MINGW32__)
-  ll=ll-116444736000000000LL;
-#else
-  ll=ll-116444736000000000L;    // 0x19DB1DED53E8000
-#endif
-  ll=ll/10000000;
-  if(ll<0) ll=0;
-  return (time_t)ll;
-  }
-*/
-
-//    hFile=CreateFile(pathname,GENERIC_READ,0,NULL,OPEN_EXISTING,FILE_FLAG_BACKUP_SEMANTICS,NULL);
-//    if(hFile!=INVALID_HANDLE_VALUE){
-//      GetFileTime(hFile,NULL,NULL,&ftLastWriteTime);
-//      CloseHandle(hFile);
-
-//       filetime=fxfiletime(ftLastWriteTime);
-
-// Return time file was last modified
-FXTime FXFile::modified(const FXString& file){
-#ifndef WIN32
-  struct stat status;
-  return !file.empty() && (::stat(file.text(),&status)==0) ? (FXTime)status.st_mtime : 0L;
-#else
-  struct stat status;
-  return !file.empty() && (::stat(file.text(),&status)==0) ? (FXTime)status.st_mtime : 0L;
-#endif
-  }
-
-
-// Return time file was last accessed
-FXTime FXFile::accessed(const FXString& file){
-#ifndef WIN32
-  struct stat status;
-  return !file.empty() && (::stat(file.text(),&status)==0) ? (FXTime)status.st_atime : 0L;
-#else
-  struct stat status;
-  return !file.empty() && (::stat(file.text(),&status)==0) ? (FXTime)status.st_atime : 0L;
-#endif
-  }
-
-
-// Return time when created
-FXTime FXFile::created(const FXString& file){
-#ifndef WIN32
-  struct stat status;
-  return !file.empty() && (::stat(file.text(),&status)==0) ? (FXTime)status.st_ctime : 0L;
-#else
-  struct stat status;
-  return !file.empty() && (::stat(file.text(),&status)==0) ? (FXTime)status.st_ctime : 0L;
-#endif
-  }
-
-
-// Return time when "touched"
-FXTime FXFile::touched(const FXString& file){
-#ifndef WIN32
-  struct stat status;
-  return !file.empty() && (::stat(file.text(),&status)==0) ? (FXTime)FXMAX(status.st_ctime,status.st_mtime) : 0L;
-#else
-  struct stat status;
-  return !file.empty() && (::stat(file.text(),&status)==0) ? (FXTime)FXMAX(status.st_ctime,status.st_mtime) : 0L;
-#endif
-  }
-
-
-
-#ifndef WIN32                 // UNIX
-
-
-// List all the files in directory
-FXint FXFile::listFiles(FXString*& filelist,const FXString& path,const FXString& pattern,FXuint flags){
-  FXuint matchmode=FILEMATCH_FILE_NAME|FILEMATCH_NOESCAPE;
-  FXString pathname;
-  FXString name;
-  struct dirent *dp;
-  FXString *newlist;
-  FXint count=0;
-  FXint size=0;
-  DIR *dirp;
-  struct stat inf;
-
-  // Initialize to empty
-  filelist=NULL;
-/*
-  // One single root under Unix
-  if(path.empty()){
-    filelist=new FXString[2];
-    list[count++]=PATHSEPSTRING;
-    return count;
-    }
-*/
-  // Folding case
-  if(flags&LIST_CASEFOLD) matchmode|=FILEMATCH_CASEFOLD;
-
-  // Get directory stream pointer
-  dirp=opendir(path.text());
-  if(dirp){
-
-    // Loop over directory entries
-#ifdef FOX_THREAD_SAFE
-    struct fxdirent dirresult;
-    while(!readdir_r(dirp,&dirresult,&dp) && dp){
-#else
-    while((dp=readdir(dirp))!=NULL){
-#endif
-
-      // Get name
-      name=dp->d_name;
-
-      // Build full pathname
-      pathname=path;
-      if(!ISPATHSEP(pathname[pathname.length()-1])) pathname+=PATHSEPSTRING;
-      pathname+=name;
-
-      // Get info on file
-      if(!info(pathname,inf)) continue;
-
-      // Filter out files; a bit tricky...
-      if(!S_ISDIR(inf.st_mode) && ((flags&LIST_NO_FILES) || (name[0]=='.' && !(flags&LIST_HIDDEN_FILES)) || (!(flags&LIST_ALL_FILES) && !match(pattern,name,matchmode)))) continue;
-
-      // Filter out directories; even more tricky!
-      if(S_ISDIR(inf.st_mode) && ((flags&LIST_NO_DIRS) || (name[0]=='.' && (name[1]==0 || (name[1]=='.' && name[2]==0 && (flags&LIST_NO_PARENT)) || (name[1]!='.' && !(flags&LIST_HIDDEN_DIRS)))) || (!(flags&LIST_ALL_DIRS) && !match(pattern,name,matchmode)))) continue;
-
-      // Grow list
-      if(count+1>=size){
-        size=size?(size<<1):256;
-        newlist=new FXString [size];
-        for(int i=0; i<count; i++) newlist[i]=filelist[i];
-        delete [] filelist;
-        filelist=newlist;
-        }
-
-      // Add to list
-      filelist[count++]=name;
-      }
-    closedir(dirp);
-    }
-  return count;
-  }
-
-
-#else                         // WINDOWS
-
-
-// List all the files in directory
-FXint FXFile::listFiles(FXString*& filelist,const FXString& path,const FXString& pattern,FXuint flags){
-  FXuint matchmode=FILEMATCH_FILE_NAME|FILEMATCH_NOESCAPE;
-  FXString pathname;
-  FXString name;
-  FXString *newlist;
-  FXint count=0;
-  FXint size=0;
-  WIN32_FIND_DATA ffData;
-  DWORD nCount,nSize,i,j;
-  HANDLE hFindFile,hEnum;
-  FXchar server[200];
-
-  // Initialize to empty
-  filelist=NULL;
-
-/*
-  // Each drive is a root on windows
-  if(path.empty()){
-    FXchar letter[4];
-    letter[0]='a';
-    letter[1]=':';
-    letter[2]=PATHSEP;
-    letter[3]='\0';
-    filelist=new FXString[28];
-    for(DWORD mask=GetLogicalDrives(); mask; mask>>=1,letter[0]++){
-      if(mask&1) list[count++]=letter;
-      }
-    filelist[count++]=PATHSEPSTRING PATHSEPSTRING;    // UNC for file shares
-    return count;
-    }
-*/
-/*
-  // A UNC name was given of the form "\\" or "\\server"
-  if(ISPATHSEP(path[0]) && ISPATHSEP(path[1]) && path.find(PATHSEP,2)<0){
-    NETRESOURCE host;
-
-    // Fill in
-    host.dwScope=RESOURCE_GLOBALNET;
-    host.dwType=RESOURCETYPE_DISK;
-    host.dwDisplayType=RESOURCEDISPLAYTYPE_GENERIC;
-    host.dwUsage=RESOURCEUSAGE_CONTAINER;
-    host.lpLocalName=NULL;
-    host.lpRemoteName=(char*)path.text();
-    host.lpComment=NULL;
-    host.lpProvider=NULL;
-
-    // Open network enumeration
-    if(WNetOpenEnum((path[2]?RESOURCE_GLOBALNET:RESOURCE_CONTEXT),RESOURCETYPE_DISK,0,(path[2]?&host:NULL),&hEnum)==NO_ERROR){
-      NETRESOURCE resource[16384/sizeof(NETRESOURCE)];
-      FXTRACE((1,"Enumerating=%s\n",path.text()));
-      while(1){
-        nCount=-1;    // Read as many as will fit
-        nSize=sizeof(resource);
-        if(WNetEnumResource(hEnum,&nCount,resource,&nSize)!=NO_ERROR) break;
-        for(i=0; i<nCount; i++){
-
-          // Dump what we found
-          FXTRACE((1,"dwScope=%s\n",resource[i].dwScope==RESOURCE_CONNECTED?"RESOURCE_CONNECTED":resource[i].dwScope==RESOURCE_GLOBALNET?"RESOURCE_GLOBALNET":resource[i].dwScope==RESOURCE_REMEMBERED?"RESOURCE_REMEMBERED":"?"));
-          FXTRACE((1,"dwType=%s\n",resource[i].dwType==RESOURCETYPE_ANY?"RESOURCETYPE_ANY":resource[i].dwType==RESOURCETYPE_DISK?"RESOURCETYPE_DISK":resource[i].dwType==RESOURCETYPE_PRINT?"RESOURCETYPE_PRINT":"?"));
-          FXTRACE((1,"dwDisplayType=%s\n",resource[i].dwDisplayType==RESOURCEDISPLAYTYPE_DOMAIN?"RESOURCEDISPLAYTYPE_DOMAIN":resource[i].dwDisplayType==RESOURCEDISPLAYTYPE_SERVER?"RESOURCEDISPLAYTYPE_SERVER":resource[i].dwDisplayType==RESOURCEDISPLAYTYPE_SHARE?"RESOURCEDISPLAYTYPE_SHARE":resource[i].dwDisplayType==RESOURCEDISPLAYTYPE_GENERIC?"RESOURCEDISPLAYTYPE_GENERIC":resource[i].dwDisplayType==6?"RESOURCEDISPLAYTYPE_NETWORK":resource[i].dwDisplayType==7?"RESOURCEDISPLAYTYPE_ROOT":resource[i].dwDisplayType==8?"RESOURCEDISPLAYTYPE_SHAREADMIN":resource[i].dwDisplayType==9?"RESOURCEDISPLAYTYPE_DIRECTORY":resource[i].dwDisplayType==10?"RESOURCEDISPLAYTYPE_TREE":resource[i].dwDisplayType==11?"RESOURCEDISPLAYTYPE_NDSCONTAINER":"?"));
-          FXTRACE((1,"dwUsage=%s\n",resource[i].dwUsage==RESOURCEUSAGE_CONNECTABLE?"RESOURCEUSAGE_CONNECTABLE":resource[i].dwUsage==RESOURCEUSAGE_CONTAINER?"RESOURCEUSAGE_CONTAINER":"?"));
-          FXTRACE((1,"lpLocalName=%s\n",resource[i].lpLocalName));
-          FXTRACE((1,"lpRemoteName=%s\n",resource[i].lpRemoteName));
-          FXTRACE((1,"lpComment=%s\n",resource[i].lpComment));
-          FXTRACE((1,"lpProvider=%s\n\n",resource[i].lpProvider));
-
-          // Grow list
-          if(count+1>=size){
-            size=size?(size<<1):256;
-            newlist=new FXString[size];
-            for(j=0; j<count; j++) newlist[j]=list[j];
-            delete [] filelist;
-            filelist=newlist;
-            }
-
-          // Add remote name to list
-          filelist[count]=resource[i].lpRemoteName;
-          count++;
-          }
-        }
-      WNetCloseEnum(hEnum);
-      }
-    return count;
-    }
-*/
-  // Folding case
-  if(flags&LIST_CASEFOLD) matchmode|=FILEMATCH_CASEFOLD;
-
-  // Copy directory name
-  pathname=path;
-  if(!ISPATHSEP(pathname[pathname.length()-1])) pathname+=PATHSEPSTRING;
-  pathname+="*";
-
-  // Open directory
-  hFindFile=FindFirstFile(pathname.text(),&ffData);
-  if(hFindFile!=INVALID_HANDLE_VALUE){
-
-    // Loop over directory entries
     do{
-
-      // Get name
-      name=ffData.cFileName;
-
-      // Filter out files; a bit tricky...
-      if(!(ffData.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY) && ((flags&LIST_NO_FILES) || ((ffData.dwFileAttributes&FILE_ATTRIBUTE_HIDDEN) && !(flags&LIST_HIDDEN_FILES)) || (!(flags&LIST_ALL_FILES) && !match(pattern,name,matchmode)))) continue;
-
-      // Filter out directories; even more tricky!
-      if((ffData.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY) && ((flags&LIST_NO_DIRS) || ((ffData.dwFileAttributes&FILE_ATTRIBUTE_HIDDEN) && !(flags&LIST_HIDDEN_DIRS)) || (name[0]=='.' && (name[1]==0 || (name[1]=='.' && name[2]==0 && (flags&LIST_NO_PARENT)))) || (!(flags&LIST_ALL_DIRS) && !match(pattern,name,matchmode)))) continue;
-
-      // Grow list
-      if(count+1>=size){
-        size=size?(size<<1):256;
-        newlist=new FXString[size];
-        for(int f=0; f<count; f++) newlist[f]=filelist[f];
-        delete [] filelist;
-        filelist=newlist;
-        }
-
-      // Add to list
-      filelist[count++]=name;
+      nread=::read(device,data,count);
       }
-    while(FindNextFile(hFindFile,&ffData));
-    FindClose(hFindFile);
-    }
-  return count;
-  }
-
-#endif
-
-
-// Convert file time to string as per strftime format
-FXString FXFile::time(const FXchar *format,FXTime filetime){
-#ifndef WIN32
-#ifdef FOX_THREAD_SAFE
-  time_t tmp=(time_t)FXMAX(filetime,0);
-  struct tm tmresult;
-  FXchar buffer[512];
-  FXint len=strftime(buffer,sizeof(buffer),format,localtime_r(&tmp,&tmresult));
-  return FXString(buffer,len);
-#else
-  time_t tmp=(time_t)FXMAX(filetime,0);
-  FXchar buffer[512];
-  FXint len=strftime(buffer,sizeof(buffer),format,localtime(&tmp));
-  return FXString(buffer,len);
-#endif
-#else
-  time_t tmp=(time_t)FXMAX(filetime,0);
-  FXchar buffer[512];
-  FXint len=strftime(buffer,sizeof(buffer),format,localtime(&tmp));
-  return FXString(buffer,len);
-#endif
-  }
-
-
-
-// Convert file time to string
-FXString FXFile::time(FXTime filetime){
-  return FXFile::time(TIMEFORMAT,filetime);
-  }
-
-
-// Return current time
-FXTime FXFile::now(){
-  return (FXTime)::time(NULL);
-  }
-
-
-// Get file info
-FXbool FXFile::info(const FXString& file,struct stat& inf){
-#ifndef WIN32
-  return !file.empty() && (::stat(file.text(),&inf)==0);
-#else
-  return !file.empty() && (::stat(file.text(),&inf)==0);
-#endif
-  }
-
-
-// Get file info
-FXbool FXFile::linkinfo(const FXString& file,struct stat& inf){
-#ifndef WIN32
-  return !file.empty() && (::lstat(file.text(),&inf)==0);
-#else
-  return !file.empty() && (::stat(file.text(),&inf)==0);
-#endif
-  }
-
-
-// Get file size
-FXlong FXFile::size(const FXString& file){
-  if(!file.empty()){
-#ifndef WIN32
-    struct stat status;
-    if(::stat(file.text(),&status)==0) return (FXlong)status.st_size;
-#else
-    HANDLE fh=CreateFile(file.text(),GENERIC_READ,FILE_SHARE_READ,NULL,OPEN_EXISTING,0,0);
-    if(fh!=INVALID_HANDLE_VALUE){
-      DWORD lo,hi;
-      lo=GetFileSize(fh,&hi);
-      CloseHandle(fh);
-      return (((FXlong)hi)<<32)+((FXlong)lo);
-      }
+    while(nread<0 && errno==EINTR);
 #endif
     }
-  return 0L;
-  }
-
-
-FXbool FXFile::exists(const FXString& file){
-#ifndef WIN32
-  struct stat status;
-  return !file.empty() && (::stat(file.text(),&status)==0);
-#else
-  return !file.empty() && (GetFileAttributes(file.text())!=0xFFFFFFFF);
-#endif
-  }
-
-
-
-#ifndef WIN32                 // UNIX
-
-// Enquote filename to make safe for shell
-FXString FXFile::enquote(const FXString& file,FXbool forcequotes){
-  FXString result;
-  register FXint i,c;
-  for(i=0; (c=file[i])!='\0'; i++){
-    switch(c){
-      case '\'':              // Quote needs to be escaped
-        result+="\\\'";
-        break;
-      case '\\':              // Backspace needs to be escaped, of course
-        result+="\\\\";
-        break;
-      case '#':
-      case '~':
-        if(i) goto noquote;   // Only quote if at begin of filename
-      case '!':               // Special in csh
-      case '"':
-      case '$':               // Variable substitution
-      case '&':
-      case '(':
-      case ')':
-      case ';':
-      case '<':               // Redirections, pipe
-      case '>':
-      case '|':
-      case '`':               // Command substitution
-      case '^':               // Special in sh
-      case '*':               // Wildcard characters
-      case '?':
-      case '[':
-      case ']':
-      case '\t':              // White space
-      case '\n':
-      case ' ':
-        forcequotes=TRUE;
-      default:                // Normal characters just added
-noquote:result+=c;
-        break;
-      }
-    }
-  if(forcequotes) return "'"+result+"'";
-  return result;
-  }
-
-
-// Decode filename to get original again
-FXString FXFile::dequote(const FXString& file){
-  FXString result;
-  register FXint i,c;
-  i=0;
-  while((c=file[i])!='\0' && isspace((FXuchar)c)) i++;
-  if(file[i]=='\''){
-    i++;
-    while((c=file[i])!='\0' && c!='\''){
-      if(c=='\\' && file[i+1]!='\0') c=file[++i];
-      result+=c;
-      i++;
-      }
-    }
-  else{
-    while((c=file[i])!='\0' && !isspace((FXuchar)c)){
-      if(c=='\\' && file[i+1]!='\0') c=file[++i];
-      result+=c;
-      i++;
-      }
-    }
-  return result;
-  }
-
-
-
-#else                         // WINDOWS
-
-// Enquote filename to make safe for shell
-FXString FXFile::enquote(const FXString& file,FXbool forcequotes){
-  FXString result;
-  register FXint i,c;
-  for(i=0; (c=file[i])!='\0'; i++){
-    switch(c){
-      case '<':               // Redirections
-      case '>':
-      case '|':
-      case '$':
-      case ':':
-      case '*':               // Wildcards
-      case '?':
-      case ' ':               // White space
-        forcequotes=TRUE;
-      default:                // Normal characters just added
-        result+=c;
-        break;
-      }
-    }
-  if(forcequotes) return "\""+result+"\"";
-  return result;
-  }
-
-
-// Decode filename to get original again
-FXString FXFile::dequote(const FXString& file){
-  register FXint i,c;
-  FXString result;
-  i=0;
-  while((c=file[i])!='\0' && isspace((FXuchar)c)) i++;
-  if(file[i]=='"'){
-    i++;
-    while((c=file[i])!='\0' && c!='"'){
-      result+=c;
-      i++;
-      }
-    }
-  else{
-    while((c=file[i])!='\0' && !isspace((FXuchar)c)){
-      result+=c;
-      i++;
-      }
-    }
-  return result;
-  }
-
-#endif
-
-
-// Match filenames using *, ?, [^a-z], and so on
-FXbool FXFile::match(const FXString& pattern,const FXString& file,FXuint flags){
-  return fxfilematch(pattern.text(),file.text(),flags);
-  }
-
-
-// Return true if files are identical
-FXbool FXFile::identical(const FXString& file1,const FXString& file2){
-  if(file1!=file2){
-#ifndef WIN32
-    struct stat stat1,stat2;
-    return !::lstat(file1.text(),&stat1) && !::lstat(file2.text(),&stat2) && stat1.st_ino==stat2.st_ino && stat1.st_dev==stat2.st_dev;
-#else
-    FXbool same=FALSE;
-    HANDLE hFile1;
-    HANDLE hFile2;
-    hFile1=CreateFile(file1.text(),GENERIC_READ,FILE_SHARE_READ,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
-    if(hFile1!=INVALID_HANDLE_VALUE){
-      hFile2=CreateFile(file2.text(),GENERIC_READ,FILE_SHARE_READ,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
-      if(hFile2!=INVALID_HANDLE_VALUE){
-        BY_HANDLE_FILE_INFORMATION info1;
-        BY_HANDLE_FILE_INFORMATION info2;
-        if(GetFileInformationByHandle(hFile1,&info1) && GetFileInformationByHandle(hFile2,&info2)){
-          same=(info1.nFileIndexLow==info2.nFileIndexLow && info1.nFileIndexHigh==info2.nFileIndexHigh && info1.dwVolumeSerialNumber==info2.dwVolumeSerialNumber);
-          }
-        CloseHandle(hFile2);
-        }
-      CloseHandle(hFile1);
-      }
-    return same;
-#endif
-    }
-  return TRUE;
-  }
-
-
-// Return file mode flags
-FXuint FXFile::mode(const FXString& file){
-#ifndef WIN32
-  struct stat status;
-  return !file.empty() && (::stat(file.text(),&status)==0) ? status.st_mode : 0;
-#else
-  struct stat status;
-  return !file.empty() && (::stat(file.text(),&status)==0) ? status.st_mode : 0;
-#endif
-  }
-
-
-// Change the mode flags for this file
-FXbool FXFile::mode(const FXString& file,FXuint mode){
-#ifndef WIN32
-  return !file.empty() && chmod(file.text(),mode)==0;
-#else
-  return FALSE; // Unimplemented yet
-#endif
-  }
-
-
-// Create new directory
-FXbool FXFile::createDirectory(const FXString& path,FXuint mode){
-#ifndef WIN32
-  return mkdir(path.text(),mode)==0;
-#else
-  return CreateDirectory(path.text(),NULL)!=0;
-#endif
-  }
-
-
-// Create new (empty) file
-FXbool FXFile::createFile(const FXString& file,FXuint mode){
-#ifndef WIN32
-  FXint fd=open(file.text(),O_CREAT|O_WRONLY|O_TRUNC|O_EXCL,mode);
-  if(fd>=0){ close(fd); return TRUE; }
-  return FALSE;
-#else
-  HANDLE hFile=CreateFile(file.text(),GENERIC_WRITE,FILE_SHARE_READ,NULL,CREATE_NEW,FILE_ATTRIBUTE_NORMAL,NULL);
-  if(hFile!=INVALID_HANDLE_VALUE){ CloseHandle(hFile); return TRUE; }
-  return FALSE;
-#endif
-  }
-
-
-// Hack code below for testing if volume is mounted
-
-// #if defined (HKS_NT)
-//
-// static int check_nfs (const char* name)
-// {
-// char drive[8];
-//
-// char* cp = strchr (name, ':');
-// if (cp)
-// {
-// strncpy (drive, name, cp - name);
-// drive[cp - name] = '\0';
-// }
-// else
-// {
-// drive[0] = 'A' + _getdrive() - 1;
-// drive[1] = '\0';
-// }
-//
-// strcat (drive, ":\\");
-//
-// return GetDriveType(drive) == DRIVE_REMOTE;
-// }
-//
-// #elif defined(LINUX)
-//
-// static int check_nfs (int fd)
-// {
-// struct statfs statbuf;
-// if (fstatfs(fd,&statbuf) < 0)
-// {
-// RFM_RAISE_SYSTEM_ERROR("statfs");
-// return 0;
-// }
-// if (statbuf.f_type == NFS_SUPER_MAGIC)
-// return 1;
-// else
-// return 0;
-// }
-//
-// #else
-//
-// static int check_nfs (int fd)
-// {
-//
-// struct statvfs statbuf;
-//
-// if (fstatvfs (fd, &statbuf) < 0)
-// {
-// RFM_RAISE_SYSTEM_ERROR ("fstatvfs");
-// }
-// return strncmp (statbuf.f_basetype, "nfs", 3) == 0 || strncmp
-// (statbuf.f_basetype, "NFS", 3) == 0;
-// }
-// #endif
-
-
-
-
-
-
-#ifndef WIN32
-
-
-// Read bytes
-static long fullread(int fd,unsigned char *ptr,long len){
-  long nread;
-#ifdef EINTR
-  do{nread=read(fd,ptr,len);}while(nread<0 && errno==EINTR);
-#else
-  nread=read(fd,ptr,len);
-#endif
   return nread;
   }
 
 
-// Write bytes
-static long fullwrite(int fd,const unsigned char *ptr,long len){
-  long nwritten,ntotalwritten=0;
-  while(len>0){
-    nwritten=write(fd,ptr,len);
-    if(nwritten<0){
-#ifdef EINTR
-      if(errno==EINTR) continue;
-#endif
-      return -1;
-      }
-    ntotalwritten+=nwritten;
-    ptr+=nwritten;
-    len-=nwritten;
-    }
-  return ntotalwritten;
-  }
-
-
-// Concatenate srcfile1 and srcfile2 to a dstfile
-FXbool FXFile::concatenate(const FXString& srcfile1,const FXString& srcfile2,const FXString& dstfile,FXbool overwrite){
-  unsigned char buffer[4096];
-  struct stat status;
-  int src1,src2,dst;
-  long nread,nwritten;
-  FXbool ok=FALSE;
-  if(srcfile1==dstfile || srcfile2==dstfile) return FALSE;
-  if(::lstat(dstfile.text(),&status)==0){
-    if(!overwrite) return FALSE;
-    }
-  dst=open(dstfile.text(),O_CREAT|O_WRONLY|O_TRUNC,0777);
-  if(0<=dst){
-    src1=open(srcfile1.text(),O_RDONLY);
-    if(0<=src1){
-      src2=open(srcfile2.text(),O_RDONLY);
-      if(0<=src2){
-        while(1){
-          nread=fullread(src1,buffer,sizeof(buffer));
-          if(nread<0) goto err;
-          if(nread==0) break;
-          nwritten=fullwrite(dst,buffer,nread);
-          if(nwritten<0) goto err;
-          }
-        while(1){
-          nread=fullread(src2,buffer,sizeof(buffer));
-          if(nread<0) goto err;
-          if(nread==0) break;
-          nwritten=fullwrite(dst,buffer,nread);
-          if(nwritten<0) goto err;
-          }
-        ok=TRUE;
-err:    close(src2);
-        }
-      close(src1);
-      }
-    close(dst);
-    }
-  return ok;
-  }
-
-
-// Copy ordinary file
-static FXbool copyfile(const FXString& oldfile,const FXString& newfile){
-  unsigned char buffer[4096];
-  struct stat status;
-  long nread,nwritten;
-  int src,dst;
-  FXbool ok=FALSE;
-  if((src=open(oldfile.text(),O_RDONLY))>=0){
-    if(::stat(oldfile.text(),&status)==0){
-      if((dst=open(newfile.text(),O_WRONLY|O_CREAT|O_TRUNC,status.st_mode))>=0){
-        while(1){
-          nread=fullread(src,buffer,sizeof(buffer));
-          if(nread<0) goto err;
-          if(nread==0) break;
-          nwritten=fullwrite(dst,buffer,nread);
-          if(nwritten<0) goto err;
-          }
-        ok=TRUE;
-err:    close(dst);
-        }
-      }
-    close(src);
-    }
-  return ok;
-  }
-
-
-// To search visited inodes
-struct inodelist {
-  ino_t st_ino;
-  inodelist *next;
-  };
-
-
-// Forward declararion
-static FXbool copyrec(const FXString& oldfile,const FXString& newfile,FXbool overwrite,inodelist* inodes);
-
-
-// Copy directory
-static FXbool copydir(const FXString& oldfile,const FXString& newfile,FXbool overwrite,struct stat& parentstatus,inodelist* inodes){
-  FXString oldchild,newchild;
-  struct stat status;
-  inodelist *in,inode;
-  struct dirent *dp;
-  DIR *dirp;
-
-  // See if visited this inode already
-  for(in=inodes; in; in=in->next){
-    if(in->st_ino==parentstatus.st_ino) return TRUE;
-    }
-
-  // Try make directory, if none exists yet
-  if(mkdir(newfile.text(),parentstatus.st_mode|S_IWUSR)!=0 && errno!=EEXIST) return FALSE;
-
-  // Can we stat it
-  if(::lstat(newfile.text(),&status)!=0 || !S_ISDIR(status.st_mode)) return FALSE;
-
-  // Try open directory to copy
-  dirp=opendir(oldfile.text());
-  if(!dirp) return FALSE;
-
-  // Add this to the list
-  inode.st_ino=status.st_ino;
-  inode.next=inodes;
-
-  // Copy stuff
-#ifdef FOX_THREAD_SAFE
-  struct fxdirent dirresult;
-  while(!readdir_r(dirp,&dirresult,&dp) && dp){
+// Write block
+FXival FXFile::writeBlock(const void* data,FXival count){
+  FXival nwritten=-1;
+  if(isOpen()){
+#ifdef WIN32
+    if(0==::WriteFile(device,data,count,(DWORD*)&nwritten,NULL)) nwritten=-1;
 #else
-  while((dp=readdir(dirp))!=NULL){
+    do{
+      nwritten=::write(device,data,count);
+      }
+    while(nwritten<0 && errno==EINTR);
 #endif
-    if(dp->d_name[0]!='.' || (dp->d_name[1]!='\0' && (dp->d_name[1]!='.' || dp->d_name[2]!='\0'))){
-      oldchild=oldfile;
-      if(!ISPATHSEP(oldchild[oldchild.length()-1])) oldchild.append(PATHSEP);
-      oldchild.append(dp->d_name);
-      newchild=newfile;
-      if(!ISPATHSEP(newchild[newchild.length()-1])) newchild.append(PATHSEP);
-      newchild.append(dp->d_name);
-      if(!copyrec(oldchild,newchild,overwrite,&inode)){
-        closedir(dirp);
-        return FALSE;
-        }
-      }
     }
-
-  // Close directory
-  closedir(dirp);
-
-  // Success
-  return TRUE;
+  return nwritten;
   }
 
 
-
-
-// Recursive copy
-static FXbool copyrec(const FXString& oldfile,const FXString& newfile,FXbool overwrite,inodelist* inodes){
-  struct stat status1,status2;
-
-  // Old file or directory does not exist
-  if(::lstat(oldfile.text(),&status1)!=0) return FALSE;
-
-  // If target is not a directory, remove it if allowed
-  if(::lstat(newfile.text(),&status2)==0){
-    if(!S_ISDIR(status2.st_mode)){
-      if(!overwrite) return FALSE;
-      FXTRACE((100,"unlink(%s)\n",newfile.text()));
-      if(::unlink(newfile.text())!=0) return FALSE;
-      }
-    }
-
-  // Source is direcotory: copy recursively
-  if(S_ISDIR(status1.st_mode)){
-    return copydir(oldfile,newfile,overwrite,status1,inodes);
-    }
-
-  // Source is regular file: copy block by block
-  if(S_ISREG(status1.st_mode)){
-    FXTRACE((100,"copyfile(%s,%s)\n",oldfile.text(),newfile.text()));
-    return copyfile(oldfile,newfile);
-    }
-
-  // Source is fifo: make a new one
-  if(S_ISFIFO(status1.st_mode)){
-    FXTRACE((100,"mkfifo(%s)\n",newfile.text()));
-    return ::mkfifo(newfile.text(),status1.st_mode);
-    }
-
-  // Source is device: make a new one
-  if(S_ISBLK(status1.st_mode) || S_ISCHR(status1.st_mode) || S_ISSOCK(status1.st_mode)){
-    FXTRACE((100,"mknod(%s)\n",newfile.text()));
-    return ::mknod(newfile.text(),status1.st_mode,status1.st_rdev)==0;
-    }
-
-  // Source is symbolic link: make a new one
-  if(S_ISLNK(status1.st_mode)){
-    FXString lnkfile=FXFile::symlink(oldfile);
-    FXTRACE((100,"symlink(%s,%s)\n",lnkfile.text(),newfile.text()));
-    return ::symlink(lnkfile.text(),newfile.text())==0;
-    }
-
-  // This shouldn't happen
-  return FALSE;
-  }
-
-
+// Truncate file
+FXlong FXFile::truncate(FXlong size){
+  if(isOpen()){
+#ifdef WIN32
+    LARGE_INTEGER oldpos,newpos;
+    oldpos.QuadPart=0;
+    newpos.QuadPart=size;
+    oldpos.LowPart=::SetFilePointer(device,0,&oldpos.HighPart,FILE_CURRENT);
+    newpos.LowPart=::SetFilePointer(device,newpos.LowPart,&newpos.HighPart,FILE_BEGIN);
+    if((newpos.LowPart==INVALID_SET_FILE_POINTER && GetLastError()!=NO_ERROR) || ::SetEndOfFile(device)==0) newpos.QuadPart=-1;
+    ::SetFilePointer(device,oldpos.LowPart,&oldpos.HighPart,FILE_BEGIN);
+    return newpos.QuadPart;
 #else
-
-
-// Concatenate srcfile1 and srcfile2 to a dstfile
-FXbool FXFile::concatenate(const FXString& srcfile1,const FXString& srcfile2,const FXString& dstfile,FXbool overwrite){
-  unsigned char buffer[4096];
-  HANDLE src1,src2,dst;
-  DWORD nread,nwritten;
-  FXbool ok=FALSE;
-  if(srcfile1==dstfile || srcfile2==dstfile) return FALSE;
-  if(GetFileAttributes(dstfile.text())!=0xFFFFFFFF){
-    if(!overwrite) return FALSE;
-    }
-  dst=CreateFile(dstfile.text(),GENERIC_WRITE,FILE_SHARE_READ,NULL,CREATE_NEW,FILE_ATTRIBUTE_NORMAL,NULL);
-  if(dst!=INVALID_HANDLE_VALUE){
-    src1=CreateFile(srcfile1.text(),GENERIC_READ,FILE_SHARE_READ,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
-    if(src1!=INVALID_HANDLE_VALUE){
-      src2=CreateFile(srcfile2.text(),GENERIC_READ,FILE_SHARE_READ,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
-      if(src2!=INVALID_HANDLE_VALUE){
-        while(1){
-          if(!ReadFile(src1,buffer,sizeof(buffer),&nread,NULL)) goto err;
-          if(nread==0) break;
-          if(!WriteFile(dst,buffer,nread,&nwritten,NULL)) goto err;
-          }
-        while(1){
-          if(!ReadFile(src2,buffer,sizeof(buffer),&nread,NULL)) goto err;
-          if(nread==0) break;
-          if(!WriteFile(dst,buffer,nread,&nwritten,NULL)) goto err;
-          }
-        ok=TRUE;
-err:    CloseHandle(src2);
-        }
-      CloseHandle(src1);
-      }
-    CloseHandle(dst);
-    }
-  return ok;
-  }
-
-
-// Forward declararion
-static FXbool copyrec(const FXString& oldfile,const FXString& newfile,FXbool overwrite);
-
-
-// Copy directory
-static FXbool copydir(const FXString& oldfile,const FXString& newfile,FXbool overwrite){
-  FXString oldchild,newchild;
-  DWORD atts;
-  WIN32_FIND_DATA ffData;
-  HANDLE hFindFile;
-
-  // Try make directory, if none exists yet
-//  if(CreateDirectory(newfile.text(),NULL)==0 && GetLastError()!=ERROR_FILE_EXISTS) return FALSE;
-  if(CreateDirectory(newfile.text(),NULL)==0){  // patch from "Malcolm Dane" <danem@talk21.com>
-    switch(GetLastError()){
-      case ERROR_FILE_EXISTS:
-      case ERROR_ALREADY_EXISTS: break;
-      default: return FALSE;
-      }
-    }
-
-  // Can we stat it
-  if((atts=GetFileAttributes(newfile.text()))==0xffffffff || !(atts&FILE_ATTRIBUTE_DIRECTORY)) return FALSE;
-
-  // Try open directory to copy
-  hFindFile=FindFirstFile((oldfile+PATHSEPSTRING+"*").text(),&ffData);
-  if(hFindFile==INVALID_HANDLE_VALUE) return FALSE;
-
-  // Copy stuff
-  do{
-    if(ffData.cFileName[0]!='.' && (ffData.cFileName[1]!='\0' && (ffData.cFileName[1]!='.' || ffData.cFileName[2]!='\0'))){
-      oldchild=oldfile;
-      if(!ISPATHSEP(oldchild[oldchild.length()-1])) oldchild.append(PATHSEP);
-      oldchild.append(ffData.cFileName);
-      newchild=newfile;
-      if(!ISPATHSEP(newchild[newchild.length()-1])) newchild.append(PATHSEP);
-      newchild.append(ffData.cFileName);
-      if(!copyrec(oldchild,newchild,overwrite)){
-        FindClose(hFindFile);
-        return FALSE;
-        }
-      }
-    }
-  while(FindNextFile(hFindFile,&ffData));
-
-  // Close directory
-  FindClose(hFindFile);
-
-  // Success
-  return TRUE;
-  }
-
-
-// Recursive copy
-static FXbool copyrec(const FXString& oldfile,const FXString& newfile,FXbool overwrite){
-  DWORD atts1,atts2;
-
-  // Old file or directory does not exist
-  if((atts1=GetFileAttributes(oldfile.text()))==0xffffffff) return FALSE;
-
-  // If target is not a directory, remove it if allowed
-  if((atts2=GetFileAttributes(newfile.text()))!=0xffffffff){
-    if(!(atts2&FILE_ATTRIBUTE_DIRECTORY)){
-      if(!overwrite) return FALSE;
-      FXTRACE((100,"DeleteFile(%s)\n",newfile.text()));
-      if(DeleteFile(newfile.text())==0) return FALSE;
-      }
-    }
-
-  // Source is direcotory: copy recursively
-  if(atts1&FILE_ATTRIBUTE_DIRECTORY){
-    return copydir(oldfile,newfile,overwrite);
-    }
-
-  // Source is regular file: copy block by block
-  if(!(atts1&FILE_ATTRIBUTE_DIRECTORY)){
-    FXTRACE((100,"CopyFile(%s,%s)\n",oldfile.text(),newfile.text()));
-    return CopyFile(oldfile.text(),newfile.text(),!overwrite);
-    }
-
-  // This shouldn't happen
-  return FALSE;
-  }
-
-
+    if(::ftruncate(device,size)==0) return size;
 #endif
+    }
+  return -1;
+  }
 
 
-// Copy file
-FXbool FXFile::copy(const FXString& oldfile,const FXString& newfile,FXbool overwrite){
-  if(newfile!=oldfile){
-#ifndef WIN32
-    return copyrec(oldfile,newfile,overwrite,NULL);
+// Flush to disk
+bool FXFile::flush(){
+  if(isOpen()){
+#ifdef WIN32
+    return ::FlushFileBuffers(device)!=0;
 #else
-    return copyrec(oldfile,newfile,overwrite);      // No symlinks, so no need to check if directories are visited already
+    return ::fsync(device)==0;
 #endif
     }
-  return FALSE;
+  return false;
   }
 
 
-// Remove file or directory
-FXbool FXFile::remove(const FXString& file){
-#ifndef WIN32
-  struct stat status;
-  if(::lstat(file.text(),&status)==0){
-    if(S_ISDIR(status.st_mode)){
-      DIR *dirp=::opendir(file.text());
-      if(dirp){
-        FXString child;
-        struct dirent *dp;
-#ifdef FOX_THREAD_SAFE
-        struct fxdirent dirresult;
-        while(!readdir_r(dirp,&dirresult,&dp) && dp){
-#else
-        while((dp=readdir(dirp))!=NULL){
-#endif
-          if(dp->d_name[0]!='.' || (dp->d_name[1]!='\0' && (dp->d_name[1]!='.' || dp->d_name[2]!='\0'))){
-            child=file;
-            if(!ISPATHSEP(child[child.length()-1])) child.append(PATHSEP);
-            child.append(dp->d_name);
-            if(!FXFile::remove(child)){
-              ::closedir(dirp);
-              return FALSE;
-              }
-            }
-          }
-        ::closedir(dirp);
-        }
-      FXTRACE((100,"rmdir(%s)\n",file.text()));
-      return ::rmdir(file.text())==0;
-      }
-    else{
-      FXTRACE((100,"unlink(%s)\n",file.text()));
-      return ::unlink(file.text())==0;
-      }
+// Test if we're at the end
+bool FXFile::eof(){
+  if(isOpen()){
+    register FXlong pos=position();
+    return 0<=pos && size()<=pos;
     }
-  return FALSE;
-#else
-  DWORD atts;
-  if((atts=GetFileAttributes(file.text()))!=0xffffffff){
-    if(atts&FILE_ATTRIBUTE_DIRECTORY){
-      WIN32_FIND_DATA ffData;
-      HANDLE hFindFile;
-      hFindFile=FindFirstFile((file+PATHSEPSTRING+"*").text(),&ffData); // FIXME we may want to formalize the "walk over directory" in a few API's here also...
-      if(hFindFile!=INVALID_HANDLE_VALUE){
-        FXString child;
-        do{
-          if(ffData.cFileName[0]!='.' && (ffData.cFileName[1]!='\0' && (ffData.cFileName[1]!='.' || ffData.cFileName[2]!='\0'))){
-            child=file;
-            if(!ISPATHSEP(child[child.length()-1])) child.append(PATHSEP);
-            child.append(ffData.cFileName);
-            if(!FXFile::remove(child)){
-              FindClose(hFindFile);
-              return FALSE;
-              }
-            }
-          }
-        while(FindNextFile(hFindFile,&ffData));
-        FindClose(hFindFile);
-        }
-      FXTRACE((100,"RemoveDirectory(%s)\n",file.text()));
-      return RemoveDirectory(file.text())!=0;
-      }
-    else{
-      FXTRACE((100,"DeleteFile(%s)\n",file.text()));
-      return DeleteFile(file.text())!=0;
-      }
-    }
-  return FALSE;
-#endif
+  return true;
   }
 
 
-// Rename or move file, or copy and delete old if different file systems
-FXbool FXFile::move(const FXString& oldfile,const FXString& newfile,FXbool overwrite){
-  if(newfile!=oldfile){
-#ifndef WIN32
-    if(!FXFile::exists(oldfile)) return FALSE;
-    if(FXFile::exists(newfile)){
-      if(!overwrite) return FALSE;
-      if(!FXFile::remove(newfile)) return FALSE;
-      }
-    FXTRACE((100,"rename(%s,%s)\n",oldfile.text(),newfile.text()));
-    if(::rename(oldfile.text(),newfile.text())==0) return TRUE;
-    if(errno!=EXDEV) return FALSE;
-    if(FXFile::copy(oldfile,newfile)){
-      return FXFile::remove(oldfile);
-      }
+// Return file size
+FXlong FXFile::size(){
+  if(isOpen()){
+#ifdef WIN32
+    ULARGE_INTEGER result;
+    result.LowPart=::GetFileSize(device,&result.HighPart);
+    return result.QuadPart;
 #else
-    if(!FXFile::exists(oldfile)) return FALSE;
-    if(FXFile::exists(newfile)){
-      if(!overwrite) return FALSE;
-      if(!FXFile::remove(newfile)) return FALSE;
-      }
-    FXTRACE((100,"MoveFile(%s,%s)\n",oldfile.text(),newfile.text()));
-    if(::MoveFile(oldfile.text(),newfile.text())!=0) return TRUE;
-    if(GetLastError()!=ERROR_NOT_SAME_DEVICE) return FALSE;
-    if(FXFile::copy(oldfile,newfile)){
-      return FXFile::remove(oldfile);
-      }
+    struct stat data;
+    if(::fstat(device,&data)==0) return data.st_size;
 #endif
     }
-  return FALSE;
+  return -1;
   }
+
+
+// Close file
+bool FXFile::close(){
+  if(isOpen()){
+    FXInputHandle dev=device;
+    device=BadHandle;
+#ifdef WIN32
+    return ::CloseHandle(dev)!=0;
+#else
+    return ::close(dev)==0;
+#endif
+    }
+  return false;
+  }
+
+
+// Create new (empty) file
+bool FXFile::create(const FXString& file,FXuint perm){
+  if(!file.empty()){
+#ifdef WIN32
+#ifdef UNICODE
+    FXnchar buffer[1024];
+    utf2ncs(buffer,file.text(),file.length()+1);
+    FXInputHandle h=::CreateFileW(buffer,GENERIC_WRITE,FILE_SHARE_READ,NULL,CREATE_NEW,FILE_ATTRIBUTE_NORMAL,NULL);
+#else
+    FXInputHandle h=::CreateFileA(file.text(),GENERIC_WRITE,FILE_SHARE_READ,NULL,CREATE_NEW,FILE_ATTRIBUTE_NORMAL,NULL);
+#endif
+    if(h!=BadHandle){ ::CloseHandle(h); return true; }
+#else
+    FXInputHandle h=::open(file.text(),O_CREAT|O_WRONLY|O_TRUNC|O_EXCL,perm);
+    if(h!=BadHandle){ ::close(h); return true; }
+#endif
+    }
+  return false;
+  }
+
+
+// Remove a file
+bool FXFile::remove(const FXString& file){
+  if(!file.empty()){
+#ifdef WIN32
+#ifdef UNICODE
+    FXnchar buffer[1024];
+    utf2ncs(buffer,file.text(),file.length()+1);
+    return ::DeleteFileW(buffer)!=0;
+#else
+    return ::DeleteFileA(file.text())!=0;
+#endif
+#else
+    return ::unlink(file.text())==0;
+#endif
+    }
+  return false;
+  }
+
+
+// Rename file
+bool FXFile::rename(const FXString& srcfile,const FXString& dstfile){
+  if(srcfile!=dstfile){
+#ifdef WIN32
+#ifdef UNICODE
+    FXnchar oldname[1024],newname[1024];
+    utf2ncs(oldname,srcfile.text(),srcfile.length()+1);
+    utf2ncs(newname,dstfile.text(),dstfile.length()+1);
+    return ::MoveFileExW(oldname,newname,MOVEFILE_REPLACE_EXISTING)!=0;
+#else
+    return ::MoveFileExA(srcfile.text(),dstfile.text(),MOVEFILE_REPLACE_EXISTING)!=0;
+#endif
+#else
+    return ::rename(srcfile.text(),dstfile.text())==0;
+#endif
+    }
+  return false;
+  }
+
+
+#ifdef WIN32
+
+typedef BOOL (WINAPI *FunctionCreateHardLink)(const TCHAR*,const TCHAR*,LPSECURITY_ATTRIBUTES);
+
+static BOOL WINAPI HelpCreateHardLink(const TCHAR*,const TCHAR*,LPSECURITY_ATTRIBUTES);
+
+static FunctionCreateHardLink MyCreateHardLink=HelpCreateHardLink;
+
+
+// The first time its called, we're setting the function pointer, so
+// subsequent calls will experience no additional overhead whatsoever!
+static BOOL WINAPI HelpCreateHardLink(const TCHAR* newname,const TCHAR* oldname,LPSECURITY_ATTRIBUTES sa){
+#ifdef UNICODE
+  HMODULE hkernel=LoadLibraryW(L"Kernel32");
+  if(hkernel){
+    MyCreateHardLink=(FunctionCreateHardLink)::GetProcAddress(hkernel,"CreateHardLinkW");
+    ::FreeLibrary(hkernel);
+    return MyCreateHardLink(newname,oldname,sa);
+    }
+#else
+  HMODULE hkernel=LoadLibraryA("Kernel32");
+  if(hkernel){
+    MyCreateHardLink=(FunctionCreateHardLink)::GetProcAddress(hkernel,"CreateHardLinkA");
+    ::FreeLibrary(hkernel);
+    return MyCreateHardLink(newname,oldname,sa);
+    }
+#endif
+  return 0;
+  }
+
+#endif
 
 
 // Link file
-FXbool FXFile::link(const FXString& oldfile,const FXString& newfile,FXbool overwrite){
+bool FXFile::link(const FXString& oldfile,const FXString& newfile){
   if(newfile!=oldfile){
-#ifndef WIN32
-    if(!FXFile::exists(oldfile)) return FALSE;
-    if(FXFile::exists(newfile)){
-      if(!overwrite) return FALSE;
-      if(!FXFile::remove(newfile)) return FALSE;
-      }
-    FXTRACE((100,"link(%s,%s)\n",oldfile.text(),newfile.text()));
-    return ::link(oldfile.text(),newfile.text())==0;
+#ifdef WIN32
+#ifdef UNICODE
+    FXnchar oldname[1024],newname[1024];
+    utf2ncs(oldname,oldfile.text(),oldfile.length()+1);
+    utf2ncs(newname,newfile.text(),newfile.length()+1);
+    return MyCreateHardLink(newname,oldname,NULL)!=0;
 #else
-    typedef BOOL (WINAPI *PFN_CHL)(LPCTSTR,LPCTSTR,LPSECURITY_ATTRIBUTES);
-    static PFN_CHL chl=NULL;
-    if(!chl){
-      HMODULE hkernel=LoadLibraryA("Kernel32");
-      if(!hkernel) return FALSE;
-      chl=(PFN_CHL)::GetProcAddress(hkernel,"CreateHardLinkA");
-      FreeLibrary(hkernel);
-      }
-    if(!FXFile::exists(oldfile)) return FALSE;
-    if(FXFile::exists(newfile)){
-      if(!overwrite) return FALSE;
-      if(!FXFile::remove(newfile)) return FALSE;
-      }
-    FXTRACE((100,"CreateHardLink(%s,%s)\n",oldfile.text(),newfile.text()));
-    return chl && (*chl)(newfile.text(),oldfile.text(),NULL)!=0;
+    return MyCreateHardLink(newfile.text(),oldfile.text(),NULL)!=0;
+#endif
+#else
+    return ::link(oldfile.text(),newfile.text())==0;
 #endif
     }
-  return FALSE;
-  }
-
-
-// Symbolic Link file
-FXbool FXFile::symlink(const FXString& oldfile,const FXString& newfile,FXbool overwrite){
-#ifndef WIN32
-  if(newfile!=oldfile){
-    if(!FXFile::exists(oldfile)) return FALSE;
-    if(FXFile::exists(newfile)){
-      if(!overwrite) return FALSE;
-      if(!FXFile::remove(newfile)) return FALSE;
-      }
-    FXTRACE((100,"symlink(%s,%s)\n",oldfile.text(),newfile.text()));
-    return ::symlink(oldfile.text(),newfile.text())==0;
-    }
-#endif
-  return FALSE;
+  return false;
   }
 
 
 // Read symbolic link
 FXString FXFile::symlink(const FXString& file){
+  if(!file.empty()){
 #ifndef WIN32
-  FXchar lnk[MAXPATHLEN+1];
-  FXint len=::readlink(file.text(),lnk,MAXPATHLEN);
-  if(0<=len) return FXString(lnk,len);
+    FXchar lnk[MAXPATHLEN+1];
+    FXint len=::readlink(file.text(),lnk,MAXPATHLEN);
+    if(0<=len){
+      return FXString(lnk,len);
+      }
 #endif
+    }
   return FXString::null;
   }
+
+
+// Symbolic Link file
+bool FXFile::symlink(const FXString& oldfile,const FXString& newfile){
+  if(newfile!=oldfile){
+#ifndef WIN32
+    return ::symlink(oldfile.text(),newfile.text())==0;
+#endif
+    }
+  return false;
+  }
+
+
+// Return true if files are identical
+bool FXFile::identical(const FXString& file1,const FXString& file2){
+  if(file1!=file2){
+#ifdef WIN32
+    BY_HANDLE_FILE_INFORMATION info1,info2;
+    HANDLE hFile1,hFile2;
+    bool same=false;
+#ifdef UNICODE
+    FXnchar name1[1024],name2[1024];
+    utf2ncs(name1,file1.text(),file1.length()+1);
+    utf2ncs(name2,file2.text(),file2.length()+1);
+    hFile1=::CreateFile(name1,GENERIC_READ,FILE_SHARE_READ,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
+    if(hFile1!=INVALID_HANDLE_VALUE){
+      hFile2=::CreateFile(name2,GENERIC_READ,FILE_SHARE_READ,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
+      if(hFile2!=INVALID_HANDLE_VALUE){
+        if(::GetFileInformationByHandle(hFile1,&info1) && ::GetFileInformationByHandle(hFile2,&info2)){
+          same=(info1.nFileIndexLow==info2.nFileIndexLow && info1.nFileIndexHigh==info2.nFileIndexHigh && info1.dwVolumeSerialNumber==info2.dwVolumeSerialNumber);
+          }
+        ::CloseHandle(hFile2);
+        }
+      ::CloseHandle(hFile1);
+      }
+    return same;
+#else
+    hFile1=::CreateFile(file1.text(),GENERIC_READ,FILE_SHARE_READ,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
+    if(hFile1!=INVALID_HANDLE_VALUE){
+      hFile2=::CreateFile(file2.text(),GENERIC_READ,FILE_SHARE_READ,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
+      if(hFile2!=INVALID_HANDLE_VALUE){
+        if(::GetFileInformationByHandle(hFile1,&info1) && ::GetFileInformationByHandle(hFile2,&info2)){
+          same=(info1.nFileIndexLow==info2.nFileIndexLow && info1.nFileIndexHigh==info2.nFileIndexHigh && info1.dwVolumeSerialNumber==info2.dwVolumeSerialNumber);
+          }
+        ::CloseHandle(hFile2);
+        }
+      ::CloseHandle(hFile1);
+      }
+    return same;
+#endif
+#else
+    struct stat stat1,stat2;
+    return !::lstat(file1.text(),&stat1) && !::lstat(file2.text(),&stat2) && stat1.st_ino==stat2.st_ino && stat1.st_dev==stat2.st_dev;
+#endif
+    }
+  return true;
+  }
+
+
+// Copy srcfile to dstfile, overwriting dstfile if allowed
+bool FXFile::copy(const FXString& srcfile,const FXString& dstfile,bool overwrite){
+  if(srcfile!=dstfile){
+    FXuchar buffer[4096]; FXival nwritten,nread; FXStat stat;
+    FXFile src(srcfile,FXIO::Reading);
+    if(src.isOpen()){
+      if(FXStat::stat(src,stat)){
+        FXFile dst(dstfile,overwrite?FXIO::Writing:FXIO::Writing|FXIO::Exclusive,stat.mode());
+        if(dst.isOpen()){
+          while(1){
+            nread=src.readBlock(buffer,sizeof(buffer));
+            if(nread<0) return false;
+            if(nread==0) break;
+            nwritten=dst.writeBlock(buffer,nread);
+            if(nwritten<0) return false;
+            }
+          return true;
+          }
+        }
+      }
+    }
+  return false;
+  }
+
+
+// Concatenate srcfile1 and srcfile2 to dstfile, overwriting dstfile if allowed
+bool FXFile::concat(const FXString& srcfile1,const FXString& srcfile2,const FXString& dstfile,bool overwrite){
+  FXuchar buffer[4096]; FXival nwritten,nread;
+  if(srcfile1!=dstfile && srcfile2!=dstfile){
+    FXFile src1(srcfile1,FXIO::Reading);
+    if(src1.isOpen()){
+      FXFile src2(srcfile2,FXIO::Reading);
+      if(src2.isOpen()){
+        FXFile dst(dstfile,overwrite?FXIO::Writing:FXIO::Writing|FXIO::Exclusive);
+        if(dst.isOpen()){
+          while(1){
+            nread=src1.readBlock(buffer,sizeof(buffer));
+            if(nread<0) return false;
+            if(nread==0) break;
+            nwritten=dst.writeBlock(buffer,nread);
+            if(nwritten<0) return false;
+            }
+          while(1){
+            nread=src2.readBlock(buffer,sizeof(buffer));
+            if(nread<0) return false;
+            if(nread==0) break;
+            nwritten=dst.writeBlock(buffer,nread);
+            if(nwritten<0) return false;
+            }
+          return true;
+          }
+        }
+      }
+    }
+  return false;
+  }
+
+
+// Recursively copy files or directories from srcfile to dstfile, overwriting dstfile if allowed
+bool FXFile::copyFiles(const FXString& srcfile,const FXString& dstfile,bool overwrite){
+  if(srcfile!=dstfile){
+    FXString name,linkname;
+    FXStat srcstat;
+    FXStat dststat;
+    FXTRACE((1,"FXFile::copyFiles(%s,%s)\n",srcfile.text(),dstfile.text()));
+    if(FXStat::statLink(srcfile,srcstat)){
+
+      // Destination is a directory?
+      if(FXStat::statLink(dstfile,dststat)){
+        if(!dststat.isDirectory()){
+          if(!overwrite) return false;
+          FXTRACE((1,"FXFile::remove(%s)\n",dstfile.text()));
+          if(!FXFile::remove(dstfile)) return false;
+          }
+        }
+
+      // Source is a directory
+      if(srcstat.isDirectory()){
+
+        // Make destination directory if needed
+        if(!dststat.isDirectory()){
+          FXTRACE((1,"FXDir::create(%s)\n",dstfile.text()));
+
+          // Make directory
+          if(!FXDir::create(dstfile,srcstat.mode()|FXIO::OwnerWrite)) return false;
+          }
+
+        // Open source directory
+        FXDir dir(srcfile);
+
+        // Copy source directory
+        while(dir.next()){
+
+          // Next name
+          name=dir.name();
+
+          // Skip '.' and '..'
+          if(name[0]=='.' && (name[1]=='\0' || (name[1]=='.' && name[2]=='\0'))) continue;
+
+          // Recurse
+          if(!FXFile::copyFiles(srcfile+PATHSEP+name,dstfile+PATHSEP+name,overwrite)) return false;
+          }
+
+        // OK
+        return true;
+        }
+
+      // Source is a file
+      if(srcstat.isFile()){
+        FXTRACE((1,"FXFile::copyFile(%s,%s)\n",srcfile.text(),dstfile.text()));
+
+        // Simply copy
+        if(!FXFile::copy(srcfile,dstfile,overwrite)) return false;
+
+        // OK
+        return true;
+        }
+
+      // Source is symbolic link: make a new one
+      if(srcstat.isLink()){
+        linkname=FXFile::symlink(srcfile);
+        FXTRACE((100,"symlink(%s,%s)\n",srcfile.text(),dstfile.text()));
+
+        // New symlink to whatever old one referred to
+        if(!FXFile::symlink(srcfile,dstfile)) return false;
+
+        // OK
+        return true;
+        }
+
+      // Source is fifo: make a new one
+      if(srcstat.isFifo()){
+        FXTRACE((1,"FXPipe::create(%s)\n",dstfile.text()));
+
+        // Make named pipe
+        if(!FXPipe::create(dstfile,srcstat.mode())) return false;
+
+        // OK
+        return true;
+        }
+
+/*
+  // Source is device: make a new one
+  if(S_ISBLK(status1.st_mode) || S_ISCHR(status1.st_mode) || S_ISSOCK(status1.st_mode)){
+    FXTRACE((100,"mknod(%s)\n",newfile.text()));
+    return ::mknod(newfile.text(),status1.st_mode,status1.st_rdev)==0;
+    }
+*/
+
+      }
+    }
+  return false;
+  }
+
+
+
+// Recursively copy or move files or directories from srcfile to dstfile, overwriting dstfile if allowed
+bool FXFile::moveFiles(const FXString& srcfile,const FXString& dstfile,bool overwrite){
+  if(srcfile!=dstfile){
+    if(FXStat::exists(srcfile)){
+      if(FXStat::exists(dstfile)){
+        if(!overwrite) return false;
+        if(!FXFile::removeFiles(dstfile,true)) return false;
+        }
+      if(FXDir::rename(srcfile,dstfile)) return true;
+      if(FXFile::copyFiles(srcfile,dstfile,overwrite)){
+        return FXFile::removeFiles(srcfile,true);
+        }
+      }
+    }
+  return false;
+  }
+
+
+// Remove file or directory, recursively if allowed
+bool FXFile::removeFiles(const FXString& path,bool recursive){
+  FXStat stat;
+  FXTRACE((1,"removeFiles(%s)\n",path.text()));
+  if(FXStat::statLink(path,stat)){
+    if(stat.isDirectory()){
+      if(recursive){
+        FXDir dir(path);
+        FXString name;
+        while(dir.next()){
+          name=dir.name();
+          if(name[0]=='.' && (name[1]=='\0' || (name[1]=='.' && name[2]=='\0'))) continue;
+          if(!FXFile::removeFiles(path+PATHSEP+name,true)) return false;
+          }
+        }
+      return FXDir::remove(path);
+      }
+    return FXFile::remove(path);
+    }
+  return false;
+  }
+
+
+// Destroy
+FXFile::~FXFile(){
+  close();
+  }
+
 
 }
 

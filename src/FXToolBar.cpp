@@ -3,7 +3,7 @@
 *                        T o o l B a r   W i d g e t                            *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2004,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 2004,2006 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXToolBar.cpp,v 1.41 2005/02/03 04:00:59 fox Exp $                       *
+* $Id: FXToolBar.cpp,v 1.48 2006/01/22 17:58:47 fox Exp $                       *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -412,7 +412,7 @@ void FXToolBar::layout(){
         else x=left;
 
         // Determine child height
-        if(dynamic_cast<FXToolBarGrip*>(child)) h=child->getDefaultHeight();
+        if(dynamic_cast<FXSeparator*>(child) || dynamic_cast<FXToolBarGrip*>(child)) h=child->getDefaultHeight();
         else if(hints&LAYOUT_FIX_HEIGHT) h=child->getHeight();
         else if(options&PACK_UNIFORM_HEIGHT) h=mh;
         else h=child->getDefaultHeight();
@@ -482,7 +482,7 @@ void FXToolBar::layout(){
         else y=top;
 
         // Determine child width
-        if(dynamic_cast<FXToolBarGrip*>(child)) w=child->getDefaultWidth();
+        if(dynamic_cast<FXSeparator*>(child) || dynamic_cast<FXToolBarGrip*>(child)) w=child->getDefaultWidth();
         else if(hints&LAYOUT_FIX_WIDTH) w=child->getWidth();
         else if(options&PACK_UNIFORM_WIDTH) w=mw;
         else w=child->getDefaultWidth();
@@ -515,15 +515,15 @@ void FXToolBar::layout(){
 
 
 // Dock the bar before other window
-void FXToolBar::dock(FXDockSite* docksite,FXWindow* before){
-  FXDockBar::dock(docksite,before);
+void FXToolBar::dock(FXDockSite* docksite,FXWindow* before,FXbool notify){
+  FXDockBar::dock(docksite,before,notify);
   setDockingSide(getParent()->getLayoutHints());
   }
 
 
 // Dock the bar near position in dock site
-void FXToolBar::dock(FXDockSite* docksite,FXint localx,FXint localy){
-  FXDockBar::dock(docksite,localx,localy);
+void FXToolBar::dock(FXDockSite* docksite,FXint localx,FXint localy,FXbool notify){
+  FXDockBar::dock(docksite,localx,localy,notify);
   setDockingSide(getParent()->getLayoutHints());
   }
 

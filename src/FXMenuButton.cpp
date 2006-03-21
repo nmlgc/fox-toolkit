@@ -3,7 +3,7 @@
 *                       M e n u    B u t t o n    O b j e c t                   *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1998,2006 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXMenuButton.cpp,v 1.45 2005/01/16 16:06:07 fox Exp $                    *
+* $Id: FXMenuButton.cpp,v 1.50 2006/01/22 17:58:35 fox Exp $                    *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -147,7 +147,7 @@ void FXMenuButton::detach(){
 
 
 // If window can have focus
-FXbool FXMenuButton::canFocus() const { return 1; }
+bool FXMenuButton::canFocus() const { return true; }
 
 
 // Get default width
@@ -631,9 +631,9 @@ void FXMenuButton::killFocus(){
 
 
 // Logically inside pane
-FXbool FXMenuButton::contains(FXint parentx,FXint parenty) const {
-  if(pane && pane->shown() && pane->contains(parentx,parenty)) return 1;
-  return 0;
+bool FXMenuButton::contains(FXint parentx,FXint parenty) const {
+  if(pane && pane->shown() && pane->contains(parentx,parenty)) return true;
+  return false;
   }
 
 

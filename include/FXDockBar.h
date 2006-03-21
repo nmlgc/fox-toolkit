@@ -3,7 +3,7 @@
 *                        D o c k B a r   W i d g e t                            *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2004,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 2004,2006 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXDockBar.h,v 1.17 2005/02/03 17:09:24 fox Exp $                         *
+* $Id: FXDockBar.h,v 1.24 2006/01/22 17:58:00 fox Exp $                         *
 ********************************************************************************/
 #ifndef FXDOCKBAR_H
 #define FXDOCKBAR_H
@@ -36,7 +36,10 @@ class FXDockSite;
 /**
 * A dock bar widget can be docked inside a dock site widget, or floated
 * around freely.  Users can move, undock, and dock the dock bar widget
-* by means of a handle such as a tool bar grip.
+* by means of a handle such as a tool bar grip.  When docking, the dock
+* bar sends a SEL_DOCKED message to its target; when undocking, it sends
+* a SEL_FLOATED message.  In either case the dock site involved is passed
+* in the void* pointer argument of the message.
 */
 class FXAPI FXDockBar : public FXPacker {
   FXDECLARE(FXDockBar)
@@ -48,7 +51,6 @@ protected:
   FXuchar      allowed;         // Where we're allowed to dock
 protected:
   FXDockBar();
-  FXbool insideDock(FXDockSite* docksite,FXint barx,FXint bary);
 private:
   FXDockBar(const FXDockBar&);
   FXDockBar &operator=(const FXDockBar&);
@@ -109,10 +111,15 @@ public:
   * Construct a non-floatable dock bar.
   * The dock bar can not be undocked.
   */
-  FXDockBar(FXComposite* p,FXuint opts=LAYOUT_TOP|LAYOUT_LEFT|LAYOUT_FILL_X,FXint x=0,FXint y=0,FXint w=0,FXint h=0,FXint pl=2,FXint pr=3,FXint pt=3,FXint pb=2,FXint hs=DEFAULT_SPACING,FXint vs=DEFAULT_SPACING);
+  FXDockBar(FXComposite* p,FXuint opts,FXint x=0,FXint y=0,FXint w=0,FXint h=0,FXint pl=2,FXint pr=3,FXint pt=3,FXint pb=2,FXint hs=DEFAULT_SPACING,FXint vs=DEFAULT_SPACING);
 
   /// Return true if docked
   FXbool isDocked() const;
+
+  /**
+  * Check if the dock bar would dock or undock if at locaton barx, bary.
+  */
+  FXbool insideDock(FXDockSite* docksite,FXint barx,FXint bary);
 
   /**
   * Set parent when docked.
@@ -143,32 +150,32 @@ public:
   * However, if after is -1, it will be docked as the innermost bar just before
   * the work-area, while if after is 0, if will be docked as the outermost bar.
   */
-  virtual void dock(FXDockSite* docksite,FXWindow* before=NULL);
+  virtual void dock(FXDockSite* docksite,FXWindow* before=NULL,FXbool notify=FALSE);
 
   /**
   * Dock the bar against the given side, near the given position relative
   * to the toolbar dock's origin.
   */
-  virtual void dock(FXDockSite* docksite,FXint localx,FXint localy);
+  virtual void dock(FXDockSite* docksite,FXint localx,FXint localy,FXbool notify);
 
   /**
   * Undock or float the bar.
   * The initial position of the wet dock is a few pixels
   * below and to the right of the original docked position.
   */
-  virtual void undock(FXint rootx,FXint rooty);
+  virtual void undock(FXint rootx,FXint rooty,FXbool notify=FALSE);
 
   /**
-  * Change set of sides where docking is allowed.
-  * The default is to allow docking on all sides.
+  * Change set of sides (a combination of ALLOW_TOP, ALLOW_LEFT, etc.),
+  * where docking is allowed. The default is to allow docking on all sides.
   */
-  void allowedSides(FXuchar allow=ALLOW_EVERYWHERE){ allowed=allow; }
-  
+  void allowedSides(FXuchar allow){ allowed=allow; }
+
   /**
   * Return set of sides where docking is allowed
   */
   FXuchar allowedSides() const { return allowed; }
-  
+
   /// Save toolbar to a stream
   virtual void save(FXStream& store) const;
 

@@ -3,7 +3,7 @@
 *              P r i v a t e   I n t e r n a l   F u n c t i o n s              *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2000,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 2000,2006 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: fxpriv.cpp,v 1.39 2005/01/16 16:06:07 fox Exp $                          *
+* $Id: fxpriv.cpp,v 1.47 2006/03/16 04:41:36 fox Exp $                          *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -49,7 +49,10 @@
 
 using namespace FX;
 
+
 /*******************************************************************************/
+
+namespace FX {
 
 // X11
 #ifndef WIN32
@@ -60,7 +63,7 @@ static FXbool fxwaitforevent(Display *display,Window window,int type,XEvent& eve
   FXuint loops=1000;
   while(!XCheckTypedWindowEvent(display,window,type,&event)){
     if(loops==0){ fxwarning("timed out\n"); return FALSE; }
-    fxsleep(10000);     // Don't burn too much CPU here:- the other guy needs it more....
+    FXThread::sleep(10000000);  // Don't burn too much CPU here:- the other guy needs it more....
     loops--;
     }
   return TRUE;
@@ -74,7 +77,7 @@ Atom fxsendrequest(Display *display,Window window,Atom selection,Atom prop,Atom 
   XConvertSelection(display,selection,type,prop,window,time);
   while(!XCheckTypedWindowEvent(display,window,SelectionNotify,&ev)){
     if(loops==0){ fxwarning("timed out\n"); return None; }
-    fxsleep(10000);     // Don't burn too much CPU here:- the other guy needs it more....
+    FXThread::sleep(10000000);  // Don't burn too much CPU here:- the other guy needs it more....
     loops--;
     }
   return ev.xselection.property;
@@ -131,7 +134,7 @@ Atom fxsenddata(Display *display,Window window,Atom prop,Atom type,FXuchar* data
 
 
 // Read type list from property
-Atom fxrecvtypes(Display *display,Window window,Atom prop,FXDragType*& types,FXuint& numtypes){
+Atom fxrecvtypes(Display *display,Window window,Atom prop,FXDragType*& types,FXuint& numtypes,FXbool del){
   unsigned long numitems,bytesleft;
   unsigned char *ptr;
   int actualformat;
@@ -139,7 +142,7 @@ Atom fxrecvtypes(Display *display,Window window,Atom prop,FXDragType*& types,FXu
   types=NULL;
   numtypes=0;
   if(prop){
-    if(XGetWindowProperty(display,window,prop,0,1024,TRUE,XA_ATOM,&actualtype,&actualformat,&numitems,&bytesleft,&ptr)==Success){
+    if(XGetWindowProperty(display,window,prop,0,1024,del,XA_ATOM,&actualtype,&actualformat,&numitems,&bytesleft,&ptr)==Success){
       if(actualtype==XA_ATOM && actualformat==32 && numitems>0){
         if(FXMALLOC(&types,Atom,numitems)){
           memcpy(types,ptr,sizeof(Atom)*numitems);
@@ -289,7 +292,7 @@ void FXApp::selectionGetTypes(const FXWindow* window,FXDragType*& types,FXuint& 
     }
   else{
     answer=fxsendrequest((Display*)display,window->id(),XA_PRIMARY,ddeAtom,ddeTargets,event.time);
-    fxrecvtypes((Display*)display,window->id(),answer,types,numtypes);
+    fxrecvtypes((Display*)display,window->id(),answer,types,numtypes,TRUE);
     }
   }
 
@@ -340,7 +343,7 @@ void FXApp::clipboardGetTypes(const FXWindow* window,FXDragType*& types,FXuint& 
     }
   else{
     answer=fxsendrequest((Display*)display,window->id(),xcbSelection,ddeAtom,ddeTargets,event.time);
-    fxrecvtypes((Display*)display,window->id(),answer,types,numtypes);
+    fxrecvtypes((Display*)display,window->id(),answer,types,numtypes,TRUE);
     }
   }
 
@@ -400,7 +403,7 @@ HANDLE fxsenddata(HWND window,FXuchar* data,FXuint size){
   HANDLE process;
 
   if(data && size){
-    hMap=CreateFileMapping(INVALID_HANDLE_VALUE,NULL,PAGE_READWRITE,0,size+sizeof(FXuint),"_FOX_DDE");
+    hMap=CreateFileMappingA(INVALID_HANDLE_VALUE,NULL,PAGE_READWRITE,0,size+sizeof(FXuint),"_FOX_DDE");
     if(hMap){
       ptr=(FXuchar*)MapViewOfFile((HANDLE)hMap,FILE_MAP_WRITE,0,0,size+sizeof(FXuint));
       if(ptr){
@@ -447,7 +450,7 @@ HANDLE fxsendrequest(HWND window,HWND requestor,WPARAM type){
   PostMessage((HWND)window,WM_DND_REQUEST,type,(LPARAM)requestor);
   while(!PeekMessage(&msg,NULL,WM_DND_REPLY,WM_DND_REPLY,PM_REMOVE)){
     if(loops==0){ fxwarning("timed out\n"); return 0; }
-    fxsleep(10000);     // Don't burn too much CPU here:- the other guy needs it more....
+    FXThread::sleep(10000000);  // Don't burn too much CPU here:- the other guy needs it more....
     loops--;
     }
   return (HANDLE)msg.wParam;
@@ -598,3 +601,5 @@ void FXApp::dragdropGetTypes(const FXWindow*,FXDragType*& types,FXuint& numtypes
 
 
 #endif
+
+}

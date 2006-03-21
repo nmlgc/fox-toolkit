@@ -3,7 +3,7 @@
 *                       I m a g e   V i e w   W i d g e t                       *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2000,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 2000,2006 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXImageView.cpp,v 1.32 2005/01/16 16:06:07 fox Exp $                     *
+* $Id: FXImageView.cpp,v 1.38 2006/01/22 17:58:32 fox Exp $                     *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -107,7 +107,7 @@ void FXImageView::detach(){
 
 
 // Can have focus
-FXbool FXImageView::canFocus() const { return TRUE; }
+bool FXImageView::canFocus() const { return true; }
 
 
 // Determine content width of scroll area

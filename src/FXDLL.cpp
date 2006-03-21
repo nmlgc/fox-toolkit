@@ -3,7 +3,7 @@
 *             D y n a m i c   L i n k   L i b r a r y   S u p p o r t           *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2002,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 2002,2006 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXDLL.cpp,v 1.15 2005/01/16 16:06:06 fox Exp $                           *
+* $Id: FXDLL.cpp,v 1.21 2006/03/01 02:13:21 fox Exp $                           *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -28,8 +28,13 @@
 #include "FXStream.h"
 #include "FXString.h"
 #include "FXDLL.h"
+
 #ifndef WIN32
-#include <dlfcn.h>
+#ifdef HAVE_SHL_LOAD
+#include <dl.h>                 // HP-UX
+#else
+#include <dlfcn.h>              // POSIX
+#endif
 #endif
 
 /*
@@ -40,6 +45,15 @@
 
 #ifndef RTLD_GLOBAL
 #define RTLD_GLOBAL 0           // Does not exist on DEC
+#endif
+
+#ifdef HAVE_SHL_LOAD
+#ifndef	DYNAMIC_PATH            // HP-UX
+#define DYNAMIC_PATH 0
+#endif
+#ifndef	BIND_RESTRICTED
+#define BIND_RESTRICTED	0
+#endif
 #endif
 
 
@@ -54,12 +68,16 @@ namespace FX {
 void* fxdllOpen(const FXchar *dllname){
   if(dllname){
 #ifndef WIN32
+#ifdef HAVE_SHL_LOAD    // HP-UX
+    return shl_load(dllname,BIND_IMMEDIATE|BIND_NONFATAL|DYNAMIC_PATH,0L);
+#else
 #ifdef DL_LAZY		// OpenBSD
     return dlopen(dllname,DL_LAZY);
-#else			// The rest
+#else			// POSIX
     return dlopen(dllname,RTLD_NOW|RTLD_GLOBAL);
 #endif
-#else
+#endif
+#else                   // WIN32
     // Order of loading with LoadLibrary (or LoadLibraryEx with no
     // LOAD_WITH_ALTERED_SEARCH_PATH flag):
     //
@@ -83,7 +101,7 @@ void* fxdllOpen(const FXchar *dllname){
     // plucked from the same place as dllname (thanks to Rafael de
     // Pelegrini Soares" <Rafael@enq.ufrgs.br>).
     //return LoadLibrary(dllname);
-    return LoadLibraryEx(dllname,NULL,LOAD_WITH_ALTERED_SEARCH_PATH);
+    return LoadLibraryExA(dllname,NULL,LOAD_WITH_ALTERED_SEARCH_PATH);
 #endif
     }
   return NULL;
@@ -94,8 +112,12 @@ void* fxdllOpen(const FXchar *dllname){
 void fxdllClose(void* dllhandle){
   if(dllhandle){
 #ifndef WIN32
+#ifdef HAVE_SHL_LOAD    // HP-UX
+    shl_unload((shl_t)dllhandle);
+#else			// POSIX
     dlclose(dllhandle);
-#else
+#endif
+#else                   // WIN32
     FreeLibrary((HMODULE)dllhandle);
 #endif
     }
@@ -106,8 +128,13 @@ void fxdllClose(void* dllhandle){
 void* fxdllSymbol(void* dllhandle,const FXchar* dllsymbol){
   if(dllhandle && dllsymbol){
 #ifndef WIN32
+#ifdef HAVE_SHL_LOAD    // HP-UX
+    void* address=NULL;
+    if(shl_findsym((shl_t*)&dllhandle,dllsymbol,TYPE_UNDEFINED,&address)==0) return address;
+#else			// POSIX
     return dlsym(dllhandle,dllsymbol);
-#else
+#endif
+#else                   // WIN32
     return (void*)GetProcAddress((HMODULE)dllhandle,dllsymbol);
 #endif
     }
@@ -118,13 +145,17 @@ void* fxdllSymbol(void* dllhandle,const FXchar* dllsymbol){
 // Return the string error message when loading dll's.
 // Suggested by Rafael de Pelegrini Soares <rafael@enq.ufrgs.br>
 FXString fxdllError(){
-#ifdef WIN32
+#ifndef WIN32
+#ifdef HAVE_SHL_LOAD    // HP-UX
+  return FXString::null;
+#else			// POSIX
+  return dlerror();
+#endif
+#else                   // WIN32
   DWORD dw=GetLastError();
   FXchar buffer[512];
-  FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM,NULL,dw,MAKELANGID(LANG_NEUTRAL,SUBLANG_DEFAULT),(LPTSTR)&buffer,sizeof(buffer),NULL);
+  FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM,NULL,dw,MAKELANGID(LANG_NEUTRAL,SUBLANG_DEFAULT),(LPTSTR)buffer,sizeof(buffer),NULL);
   return buffer;
-#else
-  return dlerror();
 #endif
   }
 

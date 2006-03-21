@@ -3,9 +3,9 @@
 *                             Regular Expression Test                           *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1999,2003 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1999,2006 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
-* $Id: rex.cpp,v 1.17 2003/10/09 21:27:49 fox Exp $                             *
+* $Id: rex.cpp,v 1.18 2006/01/22 17:59:02 fox Exp $                             *
 ********************************************************************************/
 #include "fx.h"
 #include "FXRex.h"

@@ -3,9 +3,9 @@
 *                                 Test Wizard                                   *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2002 by Jeroen van der Zijp.   All Rights Reserved.             *
+* Copyright (C) 2002,2006 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
-* $Id: wizard.cpp,v 1.11 2003/08/22 04:32:32 fox Exp $                          *
+* $Id: wizard.cpp,v 1.13 2006/01/22 17:59:02 fox Exp $                          *
 ********************************************************************************/
 #include "fx.h"
 #include <stdio.h>
@@ -484,7 +484,7 @@ int main(int argc,char *argv[]){
   new FXLabel(pane3,"Pick a file:");
   FXVerticalFrame *filebox=new FXVerticalFrame(pane3,LAYOUT_FILL_X|LAYOUT_FILL_Y|FRAME_SUNKEN|FRAME_THICK,0,0,0,0, 0,0,0,0);
   FXFileList *filelist=new FXFileList(filebox,NULL,0,ICONLIST_MINI_ICONS|ICONLIST_AUTOSIZE|LAYOUT_FILL_X|LAYOUT_FILL_Y);
-  filelist->setDirectory(FXFile::getCurrentDirectory());
+  filelist->setDirectory(FXSystem::getCurrentDirectory());
 
   // Create app
   application.create();

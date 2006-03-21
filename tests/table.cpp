@@ -3,9 +3,9 @@
 *                                 Test Table Widget                             *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997 by Jeroen van der Zijp.   All Rights Reserved.             *
+* Copyright (C) 1997,2006 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
-* $Id: table.cpp,v 1.66 2004/10/28 14:37:23 fox Exp $                           *
+* $Id: table.cpp,v 1.69 2006/01/27 02:07:45 fox Exp $                           *
 ********************************************************************************/
 #include "fx.h"
 #include <stdio.h>
@@ -46,6 +46,7 @@ public:
   long onTableInserted(FXObject*,FXSelector,void*);
   long onTableDeleted(FXObject*,FXSelector,void*);
   long onTableChanged(FXObject*,FXSelector,void*);
+  long onTableReplaced(FXObject*,FXSelector,void*);
 
 public:
   enum{
@@ -73,6 +74,7 @@ FXDEFMAP(TableWindow) TableWindowMap[]={
   FXMAPFUNC(SEL_INSERTED,TableWindow::ID_TABLE,TableWindow::onTableInserted),
   FXMAPFUNC(SEL_DELETED,TableWindow::ID_TABLE,TableWindow::onTableDeleted),
   FXMAPFUNC(SEL_CHANGED,TableWindow::ID_TABLE,TableWindow::onTableChanged),
+  FXMAPFUNC(SEL_REPLACED,TableWindow::ID_TABLE,TableWindow::onTableReplaced),
   };
 
 
@@ -205,6 +207,8 @@ TableWindow::TableWindow(FXApp* a):FXMainWindow(a,"Table Widget Test",NULL,NULL,
 
   table->setItemStipple(3,4,STIPPLE_CROSSDIAG);
 
+  table->setItem(10,2,new FXComboTableItem("One\nTwo\nThree\nFour"));
+
   // File Menu
   filemenu=new FXMenuPane(this);
   new FXMenuCommand(filemenu,"&Quit\tCtl-Q",NULL,getApp(),FXApp::ID_QUIT);
@@ -318,6 +322,14 @@ long TableWindow::onTableDeleted(FXObject*,FXSelector,void* ptr){
 long TableWindow::onTableChanged(FXObject*,FXSelector,void* ptr){
   FXTablePos *tp=(FXTablePos*)ptr;
   FXTRACE((10,"SEL_CHANGED row=%d, col=%d\n",tp->row,tp->col));
+  return 1;
+  }
+
+
+// Replaced
+long TableWindow::onTableReplaced(FXObject*,FXSelector,void* ptr){
+  FXTableRange *tr=(FXTableRange*)ptr;
+  FXTRACE((10,"SEL_REPLACED fm.row=%d, fm.col=%d to.row=%d, to.col=%d\n",tr->fm.row,tr->fm.col,tr->to.row,tr->to.col));
   return 1;
   }
 

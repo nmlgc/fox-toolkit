@@ -119,6 +119,7 @@ ImageWindow::ImageWindow(FXApp* a):FXMainWindow(a,"Image Application",NULL,NULL,
   FXGradientBar *gb=new FXGradientBar(this,NULL,0,GRADIENTBAR_HORIZONTAL|GRADIENTBAR_CONTROLS_TOP|GRADIENTBAR_CONTROLS_BOTTOM|FRAME_SUNKEN|LAYOUT_SIDE_BOTTOM|LAYOUT_FILL_X,0,0,0,0, 15,15,15,15);
   //new FXGradientBar(this,NULL,0,GRADIENTBAR_HORIZONTAL|GRADIENTBAR_CONTROLS_TOP|GRADIENTBAR_CONTROLS_BOTTOM|FRAME_SUNKEN|LAYOUT_SIDE_BOTTOM|LAYOUT_FILL_X,0,0,0,0, 15,15,15,15);
   //new FXGradientBar(this,NULL,0,GRADIENTBAR_HORIZONTAL|FRAME_SUNKEN|LAYOUT_SIDE_BOTTOM|LAYOUT_FILL_X,0,0,0,0, 15,15,15,15);
+  
 
   new FXRadioButton(hf,"Linear blend",gb,FXGradientBar::ID_BLEND_LINEAR,LAYOUT_CENTER_Y|ICON_BEFORE_TEXT);
   new FXRadioButton(hf,"Power law blend",gb,FXGradientBar::ID_BLEND_POWER,LAYOUT_CENTER_Y|ICON_BEFORE_TEXT);
@@ -140,6 +141,8 @@ ImageWindow::ImageWindow(FXApp* a):FXMainWindow(a,"Image Application",NULL,NULL,
     // Label above the canvas
     new FXLabel(canvasFrame,"Canvas Frame",NULL,JUSTIFY_CENTER_X|LAYOUT_FILL_X);
 
+    new FXRuler(canvasFrame,NULL,0,RULER_MARKERS|RULER_NUMBERS|RULER_ARROW|RULER_TICKS_CENTER|LAYOUT_FILL_X);
+    
     // Horizontal divider line
     new FXHorizontalSeparator(canvasFrame,SEPARATOR_GROOVE|LAYOUT_FILL_X);
 
@@ -216,7 +219,7 @@ ImageWindow::ImageWindow(FXApp* a):FXMainWindow(a,"Image Application",NULL,NULL,
     }
 
   // Make font
-  font=new FXFont(getApp(),"times",36,FONTWEIGHT_BOLD);
+  font=new FXFont(getApp(),"times",36,FXFont::Bold);
 
   // Make a tip
   new FXToolTip(getApp());

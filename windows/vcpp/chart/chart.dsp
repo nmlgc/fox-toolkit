@@ -42,7 +42,7 @@ RSC=rc.exe
 # PROP Target_Dir ""
 F90=df.exe
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_MBCS" /D "_LIB" /YX /FD /c
-# ADD CPP /MT /W3 /GR /GX /Ox /Og /Oi /Os /I "..\..\..\include" /D "WIN32" /D "NDEBUG" /D "_LIB" /FD /c
+# ADD CPP /MT /W3 /GR /GX /Ox /Og /Oi /Os /I "..\..\..\include" /D "WIN32" /D "NDEBUG" /D "_LIB" /D "UNICODE" /FD /c
 # SUBTRACT CPP /nologo /YX
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
 # ADD RSC /l 0x409 /d "NDEBUG"
@@ -51,7 +51,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LIB32=link.exe -lib
 # ADD BASE LIB32 /nologo
-# ADD LIB32 /out:"..\..\..\lib\CHART-1.4.lib"
+# ADD LIB32 /out:"..\..\..\lib\CHART-1.6.lib"
 # SUBTRACT LIB32 /nologo
 
 !ELSEIF  "$(CFG)" == "chart - Win32 Debug"
@@ -68,7 +68,7 @@ LIB32=link.exe -lib
 # PROP Target_Dir ""
 F90=df.exe
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /YX /FD /GZ /c
-# ADD CPP /MTd /W3 /GR /GX /ZI /Od /I "..\..\..\include" /D "WIN32" /D "_DEBUG" /D "_LIB" /FD /GZ /c
+# ADD CPP /MTd /W3 /GR /GX /ZI /Od /I "..\..\..\include" /D "WIN32" /D "_DEBUG" /D "_LIB" /D "UNICODE" /FD /GZ /c
 # SUBTRACT CPP /nologo /YX
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
 # ADD RSC /l 0x409 /d "_DEBUG"
@@ -77,7 +77,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LIB32=link.exe -lib
 # ADD BASE LIB32 /nologo
-# ADD LIB32 /out:"..\..\..\lib\CHARTD-1.4.lib"
+# ADD LIB32 /out:"..\..\..\lib\CHARTD-1.6.lib"
 # SUBTRACT LIB32 /nologo
 
 !ENDIF 

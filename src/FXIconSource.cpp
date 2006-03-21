@@ -3,7 +3,7 @@
 *                            I c o n   S o u r c e                              *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2005 by Jeroen van der Zijp.   All Rights Reserved.             *
+* Copyright (C) 2005,2006 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXIconSource.cpp,v 1.12 2005/02/08 06:12:35 fox Exp $                    *
+* $Id: FXIconSource.cpp,v 1.20 2006/01/22 17:58:32 fox Exp $                    *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -27,13 +27,14 @@
 #include "FXHash.h"
 #include "FXThread.h"
 #include "FXStream.h"
+#include "FXFile.h"
 #include "FXFileStream.h"
 #include "FXMemoryStream.h"
 #include "FXString.h"
 #include "FXSize.h"
 #include "FXPoint.h"
 #include "FXRectangle.h"
-#include "FXFile.h"
+#include "FXPath.h"
 #include "FXSettings.h"
 #include "FXRegistry.h"
 #include "FXApp.h"
@@ -45,8 +46,10 @@
 #include "FXBMPIcon.h"
 #include "FXGIFIcon.h"
 #include "FXICOIcon.h"
+#include "FXIFFIcon.h"
 #include "FXPCXIcon.h"
 #include "FXPPMIcon.h"
+#include "FXRASIcon.h"
 #include "FXRGBIcon.h"
 #include "FXTGAIcon.h"
 #include "FXXBMIcon.h"
@@ -56,8 +59,10 @@
 #include "FXBMPImage.h"
 #include "FXGIFImage.h"
 #include "FXICOImage.h"
+#include "FXIFFImage.h"
 #include "FXPCXImage.h"
 #include "FXPPMImage.h"
+#include "FXRASImage.h"
 #include "FXRGBImage.h"
 #include "FXTGAImage.h"
 #include "FXXBMImage.h"
@@ -123,17 +128,17 @@ FXImage* FXIconSource::scaleToSize(FXImage *image,FXint size,FXint qual) const {
 
 
 // Load from file
-FXIcon *FXIconSource::loadIcon(const FXString& filename,const FXString& type) const {
+FXIcon *FXIconSource::loadIconFile(const FXString& filename,const FXString& type) const {
   FXIcon *icon=NULL;
   FXTRACE((150,"FXIconSource loadIcon(%s)\n",filename.text()));
   if(!filename.empty()){
     FXFileStream store;
     if(store.open(filename,FXStreamLoad,65536)){
       if(type.empty()){
-        icon=loadIcon(store,FXFile::extension(filename));
+        icon=loadIconStream(store,FXPath::extension(filename));
         }
       else{
-        icon=loadIcon(store,type);
+        icon=loadIconStream(store,type);
         }
       store.close();
       }
@@ -143,12 +148,12 @@ FXIcon *FXIconSource::loadIcon(const FXString& filename,const FXString& type) co
 
 
 // Load from data array
-FXIcon *FXIconSource::loadIcon(const void *pixels,const FXString& type) const {
+FXIcon *FXIconSource::loadIconData(const void *pixels,const FXString& type) const {
   FXIcon *icon=NULL;
   if(pixels){
     FXMemoryStream store;
     store.open(FXStreamLoad,(FXuchar*)pixels);
-    icon=loadIcon(store,type);
+    icon=loadIconStream(store,type);
     store.close();
     }
   return icon;
@@ -156,7 +161,7 @@ FXIcon *FXIconSource::loadIcon(const void *pixels,const FXString& type) const {
 
 
 // Load from already open stream
-FXIcon *FXIconSource::loadIcon(FXStream& store,const FXString& type) const {
+FXIcon *FXIconSource::loadIconStream(FXStream& store,const FXString& type) const {
   FXIcon *icon=NULL;
   if(comparecase(FXBMPIcon::fileExt,type)==0){
     icon=new FXBMPIcon(app);
@@ -164,14 +169,20 @@ FXIcon *FXIconSource::loadIcon(FXStream& store,const FXString& type) const {
   else if(comparecase(FXGIFIcon::fileExt,type)==0){
     icon=new FXGIFIcon(app);
     }
-  else if(comparecase(FXICOIcon::fileExt,type)==0){
+  else if(comparecase(FXICOIcon::fileExt,type)==0 || comparecase("cur",type)==0){
     icon=new FXICOIcon(app);
+    }
+  else if(comparecase(FXIFFIcon::fileExt,type)==0 || comparecase("lbm",type)==0){
+    icon=new FXIFFIcon(app);
     }
   else if(comparecase(FXPCXIcon::fileExt,type)==0){
     icon=new FXPCXIcon(app);
     }
-  else if(comparecase(FXPPMIcon::fileExt,type)==0){
+  else if(comparecase(FXPPMIcon::fileExt,type)==0 || comparecase("pbm",type)==0 || comparecase("pgm",type)==0 || comparecase("pnm",type)==0){
     icon=new FXPPMIcon(app);
+    }
+  else if(comparecase(FXRASIcon::fileExt,type)==0){
+    icon=new FXRASIcon(app);
     }
   else if(comparecase(FXRGBIcon::fileExt,type)==0){
     icon=new FXRGBIcon(app);
@@ -197,7 +208,7 @@ FXIcon *FXIconSource::loadIcon(FXStream& store,const FXString& type) const {
     }
 #endif
 #ifdef HAVE_TIFF_H
-  else if(comparecase(FXTIFIcon::fileExt,type)==0){
+  else if(comparecase(FXTIFIcon::fileExt,type)==0 || comparecase("tiff",type)==0){
     icon=new FXTIFIcon(app);
     }
 #endif
@@ -211,17 +222,17 @@ FXIcon *FXIconSource::loadIcon(FXStream& store,const FXString& type) const {
 
 
 // Load from file
-FXImage *FXIconSource::loadImage(const FXString& filename,const FXString& type) const {
+FXImage *FXIconSource::loadImageFile(const FXString& filename,const FXString& type) const {
   FXImage *image=NULL;
   FXTRACE((150,"FXIconSource loadImage(%s)\n",filename.text()));
   if(!filename.empty()){
     FXFileStream store;
     if(store.open(filename,FXStreamLoad,65536)){
       if(type.empty()){
-        image=loadImage(store,FXFile::extension(filename));
+        image=loadImageStream(store,FXPath::extension(filename));
         }
       else{
-        image=loadImage(store,type);
+        image=loadImageStream(store,type);
         }
       store.close();
       }
@@ -231,20 +242,20 @@ FXImage *FXIconSource::loadImage(const FXString& filename,const FXString& type) 
 
 
 // Load from data array
-FXIcon *FXIconSource::loadImage(const void *pixels,const FXString& type) const {
-  FXIcon *icon=NULL;
+FXImage *FXIconSource::loadImageData(const void *pixels,const FXString& type) const {
+  FXImage *image=NULL;
   if(pixels){
     FXMemoryStream store;
     store.open(FXStreamLoad,(FXuchar*)pixels);
-    icon=loadIcon(store,type);
+    image=loadImageStream(store,type);
     store.close();
     }
-  return icon;
+  return image;
   }
 
 
 // Load from already open stream
-FXImage *FXIconSource::loadImage(FXStream& store,const FXString& type) const {
+FXImage *FXIconSource::loadImageStream(FXStream& store,const FXString& type) const {
   FXImage *image=NULL;
   if(comparecase(FXBMPImage::fileExt,type)==0){
     image=new FXBMPImage(app);
@@ -252,14 +263,20 @@ FXImage *FXIconSource::loadImage(FXStream& store,const FXString& type) const {
   else if(comparecase(FXGIFImage::fileExt,type)==0){
     image=new FXGIFImage(app);
     }
-  else if(comparecase(FXICOImage::fileExt,type)==0){
+  else if(comparecase(FXICOImage::fileExt,type)==0 || comparecase("cur",type)==0){
     image=new FXICOImage(app);
+    }
+  else if(comparecase(FXIFFImage::fileExt,type)==0 || comparecase("lbm",type)==0){
+    image=new FXIFFImage(app);
     }
   else if(comparecase(FXPCXImage::fileExt,type)==0){
     image=new FXPCXImage(app);
     }
-  else if(comparecase(FXPPMImage::fileExt,type)==0){
+  else if(comparecase(FXPPMImage::fileExt,type)==0 || comparecase("pbm",type)==0 || comparecase("pgm",type)==0 || comparecase("pnm",type)==0){
     image=new FXPPMImage(app);
+    }
+  else if(comparecase(FXRASImage::fileExt,type)==0){
+    image=new FXRASImage(app);
     }
   else if(comparecase(FXRGBImage::fileExt,type)==0){
     image=new FXRGBImage(app);
@@ -285,7 +302,7 @@ FXImage *FXIconSource::loadImage(FXStream& store,const FXString& type) const {
     }
 #endif
 #ifdef HAVE_TIFF_H
-  else if(comparecase(FXTIFImage::fileExt,type)==0){
+  else if(comparecase(FXTIFImage::fileExt,type)==0 || comparecase("tiff",type)==0){
     image=new FXTIFImage(app);
     }
 #endif
@@ -299,38 +316,38 @@ FXImage *FXIconSource::loadImage(FXStream& store,const FXString& type) const {
 
 
 // Load icon and scale it such that its dimensions does not exceed given size
-FXIcon *FXIconSource::loadScaledIcon(const FXString& filename,FXint size,FXint qual,const FXString& type) const {
-  return (FXIcon*)scaleToSize(loadIcon(filename,type),size,qual);
+FXIcon *FXIconSource::loadScaledIconFile(const FXString& filename,FXint size,FXint qual,const FXString& type) const {
+  return (FXIcon*)scaleToSize(loadIconFile(filename,type),size,qual);
   }
 
 
 // Load from data array
-FXIcon *FXIconSource::loadScaledIcon(const void *pixels,FXint size,FXint qual,const FXString& type) const {
-  return (FXIcon*)scaleToSize(loadIcon(pixels,type),size,qual);
+FXIcon *FXIconSource::loadScaledIconData(const void *pixels,FXint size,FXint qual,const FXString& type) const {
+  return (FXIcon*)scaleToSize(loadIconData(pixels,type),size,qual);
   }
 
 
 // Load icon and scale it such that its dimensions does not exceed given size
-FXIcon *FXIconSource::loadScaledIcon(FXStream& store,FXint size,FXint qual,const FXString& type) const {
-  return (FXIcon*)scaleToSize(loadIcon(store,type),size,qual);
+FXIcon *FXIconSource::loadScaledIconStream(FXStream& store,FXint size,FXint qual,const FXString& type) const {
+  return (FXIcon*)scaleToSize(loadIconStream(store,type),size,qual);
   }
 
 
 // Load image and scale it such that its dimensions does not exceed given size
-FXImage *FXIconSource::loadScaledImage(const FXString& filename,FXint size,FXint qual,const FXString& type) const {
-  return scaleToSize(loadImage(filename,type),size,qual);
+FXImage *FXIconSource::loadScaledImageFile(const FXString& filename,FXint size,FXint qual,const FXString& type) const {
+  return scaleToSize(loadImageFile(filename,type),size,qual);
   }
 
 
 // Load from data array
-FXImage *FXIconSource::loadScaledImage(const void *pixels,FXint size,FXint qual,const FXString& type) const {
-  return (FXImage*)scaleToSize(loadImage(pixels,type),size,qual);
+FXImage *FXIconSource::loadScaledImageData(const void *pixels,FXint size,FXint qual,const FXString& type) const {
+  return (FXImage*)scaleToSize(loadImageData(pixels,type),size,qual);
   }
 
 
 // Load image and scale it such that its dimensions does not exceed given size
-FXImage *FXIconSource::loadScaledImage(FXStream& store,FXint size,FXint qual,const FXString& type) const {
-  return scaleToSize(loadImage(store,type),size,qual);
+FXImage *FXIconSource::loadScaledImageStream(FXStream& store,FXint size,FXint qual,const FXString& type) const {
+  return scaleToSize(loadImageStream(store,type),size,qual);
   }
 
 

@@ -3,7 +3,7 @@
 *                         M e s s a g e   B o x e s                             *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2006 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXMessageBox.h,v 1.26 2005/01/16 16:06:06 fox Exp $                      *
+* $Id: FXMessageBox.h,v 1.28 2006/01/22 17:58:06 fox Exp $                      *
 ********************************************************************************/
 #ifndef FXMESSAGEBOX_H
 #define FXMESSAGEBOX_H
@@ -40,7 +40,7 @@ enum {
   MBOX_QUIT_CANCEL          = 0x50000000, /// Message box has QUIT and CANCEL buttons
   MBOX_QUIT_SAVE_CANCEL     = 0x60000000, /// Message box has QUIT, SAVE, and CANCEL buttons
   MBOX_SKIP_SKIPALL_CANCEL  = 0x70000000, /// Message box has SKIP, SKIP ALL, and CANCEL buttons
-  MBOX_SAVE_CANCEL_DONTSAVE = 0x80000000, /// Message box has DON'T SAVE,CANCEL and SAVE buttons
+  MBOX_SAVE_CANCEL_DONTSAVE = 0x80000000  /// Message box has DON'T SAVE,CANCEL and SAVE buttons
   };
 
 

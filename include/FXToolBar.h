@@ -3,7 +3,7 @@
 *                        T o o l B a r   W i d g e t                            *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2004,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 2004,2006 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXToolBar.h,v 1.20 2005/02/03 04:00:59 fox Exp $                         *
+* $Id: FXToolBar.h,v 1.24 2006/01/22 17:58:11 fox Exp $                         *
 ********************************************************************************/
 #ifndef FXTOOLBAR_H
 #define FXTOOLBAR_H
@@ -55,7 +55,7 @@ public:
   FXToolBar(FXComposite* p,FXComposite* q,FXuint opts=LAYOUT_TOP|LAYOUT_LEFT|LAYOUT_FILL_X,FXint x=0,FXint y=0,FXint w=0,FXint h=0,FXint pl=3,FXint pr=3,FXint pt=2,FXint pb=2,FXint hs=DEFAULT_SPACING,FXint vs=DEFAULT_SPACING);
 
   /// Construct a non-floatable toolbar
-  FXToolBar(FXComposite* p,FXuint opts=LAYOUT_TOP|LAYOUT_LEFT|LAYOUT_FILL_X,FXint x=0,FXint y=0,FXint w=0,FXint h=0,FXint pl=2,FXint pr=3,FXint pt=3,FXint pb=2,FXint hs=DEFAULT_SPACING,FXint vs=DEFAULT_SPACING);
+  FXToolBar(FXComposite* p,FXuint opts,FXint x=0,FXint y=0,FXint w=0,FXint h=0,FXint pl=2,FXint pr=3,FXint pt=3,FXint pb=2,FXint hs=DEFAULT_SPACING,FXint vs=DEFAULT_SPACING);
 
   /// Perform layout
   virtual void layout();
@@ -67,10 +67,10 @@ public:
   virtual FXint getDefaultHeight();
 
   /// Dock and optionally flip orientation of toolbar
-  virtual void dock(FXDockSite* docksite,FXWindow* before=NULL);
+  virtual void dock(FXDockSite* docksite,FXWindow* before=NULL,FXbool notify=FALSE);
 
   /// Dock and optionally flip orientation of toolbar
-  virtual void dock(FXDockSite* docksite,FXint localx,FXint localy);
+  virtual void dock(FXDockSite* docksite,FXint localx,FXint localy,FXbool notify);
 
   /// Set docking side
   void setDockingSide(FXuint side=LAYOUT_SIDE_TOP);

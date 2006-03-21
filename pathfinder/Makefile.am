@@ -4,7 +4,7 @@ CXXFLAGS = @CXXFLAGS@ @X_CFLAGS@
 INCLUDES = -I$(top_srcdir)/include -I$(top_builddir)/include
 RESWRAP  = $(top_builddir)/utils/reswrap
 SUFFIXES = .gif .bmp
-LDADD	 = ../src/libFOX-1.4.la -lm
+LDADD	 = ../src/libFOX-1.6.la -lm
 
 bin_PROGRAMS	= PathFinder
 
@@ -34,6 +34,7 @@ iconpath.gif \
 linkit.gif \
 location.gif \
 maphost.bmp \
+mimetype.gif \
 moveit.gif \
 paste.bmp \
 pattern_gif.gif \
@@ -43,6 +44,7 @@ renameit.gif \
 rotateleft.gif \
 rotateright.gif \
 setbook.gif \
+setdir.gif \
 smallicons.bmp \
 unmaphost.bmp \
 work.gif

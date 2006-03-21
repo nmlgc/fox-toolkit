@@ -3,7 +3,7 @@
 *                        P r e f e r e n c e s   D i a l o g                    *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2003,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 2003,2006 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This program is free software; you can redistribute it and/or modify          *
 * it under the terms of the GNU General Public License as published by          *
@@ -19,7 +19,7 @@
 * along with this program; if not, write to the Free Software                   *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: Preferences.h,v 1.5 2005/01/16 16:06:06 fox Exp $                        *
+* $Id: Preferences.h,v 1.13 2006/01/22 17:58:15 fox Exp $                       *
 ********************************************************************************/
 #ifndef PREFERENCES_H
 #define PREFERENCES_H
@@ -39,9 +39,21 @@ protected:
   FXCheckButton   *preview;
   FXCheckButton   *blending;
   FXText          *icondirs;
+  FXList          *extensions;
+  FXComboBox      *mimetypes;
+  FXButton        *bigopen;
+  FXButton        *bigclosed;
+  FXButton        *smallopen;
+  FXButton        *smallclosed;
+  FXCheckButton   *runinterminal;
+  FXCheckButton   *changedirectory;
+  FXTextField     *description;
+  FXTextField     *command;
   FXIcon          *brw;
   FXIcon          *pat;
   FXIcon          *icp;
+  FXIcon          *mim;
+  FXIcon          *dir;
 private:
   Preferences(){}
   Preferences(const Preferences&);
@@ -49,10 +61,32 @@ private:
 public:
   long onCmdBrowseEditor(FXObject*,FXSelector,void*);
   long onCmdBrowseTerminal(FXObject*,FXSelector,void*);
+  long onCmdBrowseCommand(FXObject*,FXSelector,void*);
+  long onCmdBrowseIcon(FXObject*,FXSelector,void*);
+
+  long onCmdCommand(FXObject*,FXSelector,void*);
+  long onCmdMimeType(FXObject*,FXSelector,void*);
+  long onCmdDescription(FXObject*,FXSelector,void*);
+
+  long onCmdAppendExtension(FXObject*,FXSelector,void*);
+  long onCmdRemoveExtension(FXObject*,FXSelector,void*);
+  long onCmdSelectExtension(FXObject*,FXSelector,void*);
+  long onUpdSelectExtension(FXObject*,FXSelector,void*);
 public:
   enum{
-    ID_EDITOR=FXDialogBox::ID_LAST,
-    ID_TERMINAL
+    ID_BROWSE_EDITOR=FXDialogBox::ID_LAST,
+    ID_BROWSE_TERMINAL,
+    ID_BROWSE_COMMAND,
+    ID_COMMAND,
+    ID_MIMETYPE,
+    ID_DESCRIPTION,
+    ID_BROWSE_BIGICON,
+    ID_BROWSE_SMALLICON,
+    ID_BROWSE_BIGICONOPEN,
+    ID_BROWSE_SMALLICONOPEN,
+    ID_SELECT_EXTENSION,
+    ID_APPEND_EXTENSION,
+    ID_REMOVE_EXTENSION
     };
 public:
 
@@ -88,3 +122,4 @@ public:
   };
 
 #endif
+

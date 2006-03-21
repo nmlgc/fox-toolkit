@@ -1,10 +1,9 @@
 /********************************************************************************
 *                                                                               *
-*               W i n d o w s   K e y b o a r d   H a n d l i n g               *
+*                         K e y b o a r d   H a n d l i n g                     *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
-* Code written by Daniel Gehriger (gehriger@linkcad.com)                        *
+* Copyright (C) 1997,2006 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -20,9 +19,8 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: fxwinkbd.cpp,v 1.21 2005/01/16 16:06:07 fox Exp $                        *
+* $Id: fxkeyboard.cpp,v 1.14 2006/03/11 01:48:08 fox Exp $                      *
 ********************************************************************************/
-#ifdef WIN32
 #include "xincs.h"
 #include "fxver.h"
 #include "fxdefs.h"
@@ -43,6 +41,22 @@
 #include "FXId.h"
 #include "FXDrawable.h"
 #include "FXWindow.h"
+
+/*
+  Notes:
+
+  - Translate key cap codes to FOX key symbols on MS-Windows.
+  - Windows code first written by Daniel Gehriger <gehriger@linkcad.com.
+*/
+
+using namespace FX;
+
+/*******************************************************************************/
+
+namespace FX {
+
+
+#ifdef WIN32
 
 //-------------------------------------------------------------------------
 //
@@ -117,10 +131,6 @@
 //
 //-------------------------------------------------------------------------
 
-using namespace FX;
-
-/*******************************************************************************/
-
 // Keyboard map for control keys
 static const FXuint keymapCtl[] = {
   VK_PRIOR,     KEY_Prior,
@@ -184,7 +194,9 @@ static const FXuint keymapCtl[] = {
   VK_NUMPAD6,   KEY_KP_6,
   VK_NUMPAD7,   KEY_KP_7,
   VK_NUMPAD8,   KEY_KP_8,
-  VK_NUMPAD9,   KEY_KP_9
+  VK_NUMPAD9,   KEY_KP_9,
+  VK_LWIN,      KEY_Super_L,
+  VK_RWIN,      KEY_Super_R
   };
 
 
@@ -195,7 +207,10 @@ static const FXuint keymapCtl[] = {
 
 // True if OS does not distinguish between left & right Alt/Ctrl/Shift keys
 static FXbool bNoLR=FALSE;
-static BYTE ksRShft=0, ksRCtrl=0, ksLMenu=0, ksRMenu=0;
+static BYTE ksRShft=0;
+static BYTE ksRCtrl=0;
+static BYTE ksLMenu=0;
+static BYTE ksRMenu=0;
 
 
 // Retrieves the current input code page
@@ -205,8 +220,8 @@ UINT wkbGetCodePage(){
   HKL hkl=GetKeyboardLayout(0);
   if(hklOld!=hkl || uCPID==0){
     hklOld=hkl;
-    TCHAR lpLCData[256];
-    if(GetLocaleInfo(LANGIDFROMLCID(hkl),LOCALE_IDEFAULTANSICODEPAGE,lpLCData,sizeof(lpLCData))==0) return CP_ACP;
+    char lpLCData[256];
+    if(GetLocaleInfoA(LANGIDFROMLCID(LOWORD(hkl)),LOCALE_IDEFAULTANSICODEPAGE,lpLCData,sizeof(lpLCData))==0) return CP_ACP;
     uCPID=atoi(lpLCData);
     }
   return uCPID;
@@ -221,7 +236,7 @@ static FXbool wkbAltGrDown(PBYTE ks){
   if(hklOld!=hkl){
     hklOld=hkl;
     bHasAltGr=FALSE;
-    for(TCHAR ch=0x20; ch<=0xff && ch!=0x00; ++ch){
+    for(FXuint ch=0x20; ch<=0xff ; ++ch){
       // <MSDN>
       // For keyboard layouts that use the right-hand ALT key as a shift key
       // (for example, the French keyboard layout), the shift state is
@@ -253,19 +268,26 @@ unsigned int fxmodifierkeys(){
   if(KEYDOWN(ks,VK_LBUTTON)) state|=LEFTBUTTONMASK;
   if(KEYDOWN(ks,VK_MBUTTON)) state|=MIDDLEBUTTONMASK;
   if(KEYDOWN(ks,VK_RBUTTON)) state|=RIGHTBUTTONMASK;
+  if(KEYDOWN(ks,VK_LWIN)) state|=METAMASK;		// Added JVZ
+  if(KEYDOWN(ks,VK_RWIN)) state|=METAMASK;
   if(wkbAltGrDown(ks)){
     // Left-Ctrl + Right-Alt = AltGr is used to compose characters;
     // If AltGr is pressed, only allow Right-Control & Left-Alt
     if(ksRCtrl) state|=CONTROLMASK;
     if(ksLMenu) state|=ALTMASK;
     }
-  else {
+  else{
     if(KEYDOWN(ks,VK_CONTROL)) state|=CONTROLMASK;
     if(KEYDOWN(ks,VK_MENU)) state|=ALTMASK;
-   }
+    }
   return state;
   }
 
+//VK_LWIN (5B)
+//Left Windows key (Microsoft Natural keyboard)
+
+//VK_RWIN (5C)
+//Right Windows key (Natural keyboard)
 
 // Map Win32 virtual key codes to FOX key codes
 FXuint wkbMapKeyCode(UINT iMsg,WPARAM uVirtKey,LPARAM lParam){
@@ -276,11 +298,15 @@ FXuint wkbMapKeyCode(UINT iMsg,WPARAM uVirtKey,LPARAM lParam){
   if(GetKeyboardState(ks)!=0){
 
     // Determine left/right key states
-    BYTE ksOldRShft=ksRShft, ksOldRCtrl=ksRCtrl, ksOldRMenu=ksRMenu;
+    BYTE ksOldRShft=ksRShft;
+    BYTE ksOldRCtrl=ksRCtrl;
+    BYTE ksOldRMenu=ksRMenu;
+
     FXuint xt=HIWORD(lParam)&KF_EXTENDED;
+
     if(!bNoLR && iMsg==WM_KEYDOWN){
-      if(uVirtKey==VK_CONTROL) bNoLR|=(KEYDOWN(ks,xt?VK_RCONTROL:VK_LCONTROL)^KEYDOWN(ks,VK_CONTROL));
-      if(uVirtKey==VK_MENU) bNoLR|=(KEYDOWN(ks,xt?VK_RMENU:VK_LMENU)^KEYDOWN(ks,VK_MENU));
+      if(uVirtKey==VK_CONTROL) bNoLR|=(KEYDOWN(ks,xt ? VK_RCONTROL : VK_LCONTROL) ^ KEYDOWN(ks,VK_CONTROL));
+      if(uVirtKey==VK_MENU) bNoLR|=(KEYDOWN(ks,xt ? VK_RMENU : VK_LMENU) ^ KEYDOWN(ks,VK_MENU));
       }
 
     // OS does not save correct left/right key states (most Win95/98/Me)
@@ -314,7 +340,7 @@ FXuint wkbMapKeyCode(UINT iMsg,WPARAM uVirtKey,LPARAM lParam){
           return (ksRCtrl^ksOldRCtrl) ? KEY_Control_R : KEY_Control_L;
 
       case VK_MENU:
-        if(iMsg==WM_SYSKEYDOWN && HIWORD(lParam)&KF_REPEAT)
+        if((iMsg==WM_KEYDOWN || iMsg==WM_SYSKEYDOWN) && (HIWORD(lParam)&KF_REPEAT))     // Patch Jon Sargeant <delta17@cox.net>
           return KEY_VoidSymbol;
         else
           return (ksRMenu^ksOldRMenu) ? KEY_Alt_R : KEY_Alt_L;
@@ -348,5 +374,6 @@ FXuint wkbMapKeyCode(UINT iMsg,WPARAM uVirtKey,LPARAM lParam){
   return KEY_VoidSymbol;
   }
 
-
 #endif
+
+}

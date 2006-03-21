@@ -3,7 +3,7 @@
 *                          T I F F  I m a g e   O b j e c t                     *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2001,2005 Eric Gillet.   All Rights Reserved.                   *
+* Copyright (C) 2001,2006 Eric Gillet.   All Rights Reserved.                   *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXTIFImage.cpp,v 1.24 2005/01/16 16:06:07 fox Exp $                      *
+* $Id: FXTIFImage.cpp,v 1.29 2006/01/22 17:58:44 fox Exp $                      *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -35,7 +35,6 @@
 #include "FXRegistry.h"
 #include "FXApp.h"
 #include "FXTIFImage.h"
-
 
 
 /*
@@ -54,14 +53,18 @@ namespace FX {
 const FXchar FXTIFImage::fileExt[]="tif";
 
 
+// Suggested mime type
+const FXchar FXTIFImage::mimeType[]="image/tiff";
+
+
 // Object implementation
 FXIMPLEMENT(FXTIFImage,FXImage,NULL,0)
 
 
 #ifdef HAVE_TIFF_H
-const FXbool FXTIFImage::supported=TRUE;
+const bool FXTIFImage::supported=true;
 #else
-const FXbool FXTIFImage::supported=FALSE;
+const bool FXTIFImage::supported=false;
 #endif
 
 
@@ -77,22 +80,22 @@ FXTIFImage::FXTIFImage(FXApp* a,const void *pix,FXuint opts,FXint w,FXint h):FXI
 
 
 // Save the pixels only
-FXbool FXTIFImage::savePixels(FXStream& store) const {
+bool FXTIFImage::savePixels(FXStream& store) const {
   if(fxsaveTIF(store,data,width,height,codec)){
-    return TRUE;
+    return true;
     }
-  return FALSE;
+  return false;
   }
 
 
 // Load pixels only
-FXbool FXTIFImage::loadPixels(FXStream& store){
+bool FXTIFImage::loadPixels(FXStream& store){
   FXColor *pixels; FXint w,h;
   if(fxloadTIF(store,pixels,w,h,codec)){
     setData(pixels,IMAGE_OWNED,w,h);
-    return TRUE;
+    return true;
     }
-  return FALSE;
+  return false;
   }
 
 

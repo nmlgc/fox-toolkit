@@ -3,7 +3,7 @@
 *                            L i s t   W i d g e t                              *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2006 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXList.h,v 1.82 2005/02/06 17:20:00 fox Exp $                            *
+* $Id: FXList.h,v 1.88 2006/01/22 17:58:05 fox Exp $                            *
 ********************************************************************************/
 #ifndef FXLIST_H
 #define FXLIST_H
@@ -57,6 +57,9 @@ protected:
   void     *data;
   FXuint    state;
   FXint     x,y;
+private:
+  FXListItem(const FXListItem&);
+  FXListItem& operator=(const FXListItem&);
 protected:
   FXListItem():icon(NULL),data(NULL),state(0),x(0),y(0){}
   virtual void draw(const FXList* list,FXDC& dc,FXint x,FXint y,FXint w,FXint h);
@@ -170,6 +173,7 @@ protected:
   FXint          current;           // Current item
   FXint          extent;            // Extent item
   FXint          cursor;            // Cursor item
+  FXint          viewable;          // Viewable item
   FXFont        *font;              // Font
   FXColor        textColor;         // Text color
   FXColor        selbackColor;      // Selected back color
@@ -256,7 +260,7 @@ public:
   virtual void recalc();
 
   /// List widget can receive focus
-  virtual FXbool canFocus() const;
+  virtual bool canFocus() const;
 
   /// Move the focus to this window
   virtual void setFocus();
@@ -309,6 +313,9 @@ public:
   /// Move item from oldindex to newindex
   FXint moveItem(FXint newindex,FXint oldindex,FXbool notify=FALSE);
 
+  /// Extract item from list
+  FXListItem* extractItem(FXint index,FXbool notify=FALSE);
+
   /// Remove item from list
   void removeItem(FXint index,FXbool notify=FALSE);
 
@@ -345,9 +352,6 @@ public:
   * Flags may be SEARCH_FORWARD or SEARCH_BACKWARD to control the
   * search direction; this can be combined with SEARCH_NOWRAP or SEARCH_WRAP
   * to control whether the search wraps at the start or end of the list.
-  * The option SEARCH_IGNORECASE causes a case-insensitive match.  Finally,
-  * passing SEARCH_PREFIX causes searching for a prefix of the item name.
-  * Return -1 if no matching item is found.
   */
   FXint findItemByData(const void *ptr,FXint start=-1,FXuint flags=SEARCH_FORWARD|SEARCH_WRAP) const;
 

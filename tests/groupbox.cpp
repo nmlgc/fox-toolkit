@@ -3,9 +3,9 @@
 *                                 Test Group Box                                *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997 by Jeroen van der Zijp.   All Rights Reserved.             *
+* Copyright (C) 1997,2006 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
-* $Id: groupbox.cpp,v 1.110 2005/02/07 04:11:56 fox Exp $                       *
+* $Id: groupbox.cpp,v 1.115 2006/01/22 17:59:01 fox Exp $                       *
 ********************************************************************************/
 #include "fx.h"
 #include <stdio.h>
@@ -355,7 +355,7 @@ GroupWindow::GroupWindow(FXApp* a):FXMainWindow(a,"Group Box Test",NULL,NULL,DEC
   new FXCheckButton(vv,"Hilversum 2",NULL,0,ICON_BEFORE_TEXT|LAYOUT_SIDE_TOP);
   FXCheckButton *chk1=new FXCheckButton(vv,"One multi-line\nCheckbox Widget",NULL,0,CHECKBUTTON_PLUS|JUSTIFY_LEFT|JUSTIFY_TOP|ICON_BEFORE_TEXT|LAYOUT_SIDE_TOP);
   chk1->setCheck(MAYBE);
-  FXCheckButton *chk2=new FXCheckButton(vv,"Radio Stad Amsterdam",NULL,0,ICON_BEFORE_TEXT|LAYOUT_SIDE_TOP);
+  FXCheckButton *chk2=new FXCheckButton(vv,fromAscii("Ouvres votre fen\\u00EAtre"),NULL,0,ICON_BEFORE_TEXT|LAYOUT_SIDE_TOP);
   chk2->setCheck(MAYBE);
 
   FXSpinner *spinner=new FXSpinner(group3,20,NULL,0,SPIN_NORMAL|FRAME_SUNKEN|FRAME_THICK|LAYOUT_SIDE_TOP);
@@ -459,7 +459,7 @@ GroupWindow::~GroupWindow(){
 
 
 
-static const FXchar sourcefiles[]="All Files (*)\nC++ Source Files (*.cpp,*.cxx,*.cc)\nC Source Files (*.c)\nC++ Header Files (*.hpp,*.hxx,*.hh,*.h)\n*.o\nAny Extension (*.*)\nThree Letter (*.???)\nREADME*";
+static const FXchar sourcefiles[]="All Files (*)\nC++ Source Files (*.cpp,*.cxx,*.cc)\nC Source Files (*.c)\nC++ Header Files (*.hpp,*.hxx,*.hh,*.h)\n*.o\nAny Extension (*.*)\nThree Letter (*.\?\?\?)\nREADME*";
 
 
 // Open any file

@@ -3,7 +3,7 @@
 *                       F i l e   C o p y   D i a l o g                         *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2005 by Jeroen van der Zijp.   All Rights Reserved.             *
+* Copyright (C) 2005,2006 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This program is free software; you can redistribute it and/or modify          *
 * it under the terms of the GNU General Public License as published by          *
@@ -19,7 +19,7 @@
 * along with this program; if not, write to the Free Software                   *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: CopyDialog.h,v 1.2 2005/01/03 16:41:34 fox Exp $                         *
+* $Id: CopyDialog.h,v 1.4 2006/01/22 17:58:15 fox Exp $                         *
 ********************************************************************************/
 #ifndef COPYDIALOG_H
 #define COPYDIALOG_H
@@ -45,7 +45,7 @@ public:
 
   // Get/set new name
   void setNewName(const FXString& nm){ newname->setText(nm); }
-  FXString getNewName() const { return oldname->getText(); }
+  FXString getNewName() const { return newname->getText(); }
 
   // Destroy
   virtual ~CopyDialog();

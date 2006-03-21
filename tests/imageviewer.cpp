@@ -3,9 +3,9 @@
 *                      I m a g e   V i e w e r   D e m o                        *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2000 by Jeroen van der Zijp.   All Rights Reserved.             *
+* Copyright (C) 2000,2006 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
-* $Id: imageviewer.cpp,v 1.109 2005/02/02 03:23:11 fox Exp $                    *
+* $Id: imageviewer.cpp,v 1.114 2006/01/22 17:59:01 fox Exp $                    *
 ********************************************************************************/
 #include "fx.h"
 #ifdef HAVE_PNG_H
@@ -337,16 +337,16 @@ ImageWindow::ImageWindow(FXApp* a):FXMainWindow(a,"FOX Image Viewer: - untitled"
   FXMenuSeparator* sep1=new FXMenuSeparator(filemenu);
   sep1->setTarget(&mrufiles);
   sep1->setSelector(FXRecentFiles::ID_ANYFILES);
-  new FXMenuCommand(filemenu,NULL,NULL,&mrufiles,FXRecentFiles::ID_FILE_1);
-  new FXMenuCommand(filemenu,NULL,NULL,&mrufiles,FXRecentFiles::ID_FILE_2);
-  new FXMenuCommand(filemenu,NULL,NULL,&mrufiles,FXRecentFiles::ID_FILE_3);
-  new FXMenuCommand(filemenu,NULL,NULL,&mrufiles,FXRecentFiles::ID_FILE_4);
-  new FXMenuCommand(filemenu,NULL,NULL,&mrufiles,FXRecentFiles::ID_FILE_5);
-  new FXMenuCommand(filemenu,NULL,NULL,&mrufiles,FXRecentFiles::ID_FILE_6);
-  new FXMenuCommand(filemenu,NULL,NULL,&mrufiles,FXRecentFiles::ID_FILE_7);
-  new FXMenuCommand(filemenu,NULL,NULL,&mrufiles,FXRecentFiles::ID_FILE_8);
-  new FXMenuCommand(filemenu,NULL,NULL,&mrufiles,FXRecentFiles::ID_FILE_9);
-  new FXMenuCommand(filemenu,NULL,NULL,&mrufiles,FXRecentFiles::ID_FILE_10);
+  new FXMenuCommand(filemenu,FXString::null,NULL,&mrufiles,FXRecentFiles::ID_FILE_1);
+  new FXMenuCommand(filemenu,FXString::null,NULL,&mrufiles,FXRecentFiles::ID_FILE_2);
+  new FXMenuCommand(filemenu,FXString::null,NULL,&mrufiles,FXRecentFiles::ID_FILE_3);
+  new FXMenuCommand(filemenu,FXString::null,NULL,&mrufiles,FXRecentFiles::ID_FILE_4);
+  new FXMenuCommand(filemenu,FXString::null,NULL,&mrufiles,FXRecentFiles::ID_FILE_5);
+  new FXMenuCommand(filemenu,FXString::null,NULL,&mrufiles,FXRecentFiles::ID_FILE_6);
+  new FXMenuCommand(filemenu,FXString::null,NULL,&mrufiles,FXRecentFiles::ID_FILE_7);
+  new FXMenuCommand(filemenu,FXString::null,NULL,&mrufiles,FXRecentFiles::ID_FILE_8);
+  new FXMenuCommand(filemenu,FXString::null,NULL,&mrufiles,FXRecentFiles::ID_FILE_9);
+  new FXMenuCommand(filemenu,FXString::null,NULL,&mrufiles,FXRecentFiles::ID_FILE_10);
   new FXMenuCommand(filemenu,"&Clear Recent Files",NULL,&mrufiles,FXRecentFiles::ID_CLEAR);
   FXMenuSeparator* sep2=new FXMenuSeparator(filemenu);
   sep2->setTarget(&mrufiles);
@@ -429,7 +429,7 @@ long ImageWindow::onCmdAbout(FXObject*,FXSelector,void*){
 
 // Load file
 FXbool ImageWindow::loadimage(const FXString& file){
-  FXString ext=FXFile::extension(file);
+  FXString ext=FXPath::extension(file);
   FXImage *img=NULL;
   FXImage *old;
   if(comparecase(ext,"gif")==0){
@@ -551,7 +551,7 @@ long ImageWindow::onCmdSave(FXObject*,FXSelector,void*){
   FXFileDialog savedialog(this,"Save Image");
   savedialog.setFilename(filename);
   if(savedialog.execute()){
-    if(FXFile::exists(savedialog.getFilename())){
+    if(FXStat::exists(savedialog.getFilename())){
       if(MBOX_CLICKED_NO==FXMessageBox::question(this,MBOX_YES_NO,"Overwrite Image","Overwrite existing image?")) return 1;
       }
     filename=savedialog.getFilename();

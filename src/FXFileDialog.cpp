@@ -3,7 +3,7 @@
 *                    F i l e   S e l e c t i o n   D i a l o g                  *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1998,2006 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXFileDialog.cpp,v 1.42 2005/02/08 03:23:28 fox Exp $                    *
+* $Id: FXFileDialog.cpp,v 1.51 2006/01/23 06:03:16 fox Exp $                    *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -32,6 +32,8 @@
 #include "FXSize.h"
 #include "FXPoint.h"
 #include "FXRectangle.h"
+#include "FXPath.h"
+#include "FXStat.h"
 #include "FXFile.h"
 #include "FXSettings.h"
 #include "FXRegistry.h"
@@ -182,6 +184,12 @@ void FXFileDialog::setPatternText(FXint patno,const FXString& text){
   }
 
 
+// Return number of patterns
+FXint FXFileDialog::getNumPatterns() const {
+  return filebox->getNumPatterns();
+  }
+
+
 // Allow pattern entry
 void FXFileDialog::allowPatternEntry(FXbool allow){
   filebox->allowPatternEntry(allow);
@@ -276,7 +284,7 @@ FXint FXFileDialog::getImageSize() const {
 void FXFileDialog::setImageSize(FXint size){
   filebox->setImageSize(size);
   }
-  
+
 
 // Show readonly button
 void FXFileDialog::showReadOnly(FXbool show){
@@ -301,6 +309,18 @@ FXbool FXFileDialog::getReadOnly() const {
   return filebox->getReadOnly();
   }
 
+
+// Allow or disallow navigation
+void FXFileDialog::allowNavigation(FXbool navigable){
+  filebox->allowNavigation(navigable);
+  }
+  
+  
+// Is navigation allowed?
+FXbool FXFileDialog::allowNavigation() const{
+  return filebox->allowNavigation();
+  }
+  
 
 // Save data
 void FXFileDialog::save(FXStream& store) const {
@@ -332,7 +352,7 @@ FXString FXFileDialog::getOpenFilename(FXWindow* owner,const FXString& caption,c
   opendialog.setCurrentPattern(initial);
   if(opendialog.execute()){
     filename=opendialog.getFilename();
-    if(FXFile::isFile(filename)) return filename;
+    if(FXStat::isFile(filename)) return filename;
     }
   return FXString::null;
   }
@@ -374,7 +394,7 @@ FXString FXFileDialog::getOpenDirectory(FXWindow* owner,const FXString& caption,
   dirdialog.setFilename(path);
   if(dirdialog.execute()){
     dirname=dirdialog.getFilename();
-    if(FXFile::isDirectory(dirname)) return dirname;
+    if(FXStat::isDirectory(dirname)) return dirname;
     }
   return FXString::null;
   }

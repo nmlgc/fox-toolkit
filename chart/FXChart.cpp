@@ -3,7 +3,7 @@
 *                        C h a r t   B a s e   W i d g e t                      *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2003,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 2003,2006 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,18 +19,12 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXChart.cpp,v 1.15 2005/01/16 16:06:06 fox Exp $                         *
+* $Id: FXChart.cpp,v 1.19 2006/01/22 18:01:13 fox Exp $                         *
 ********************************************************************************/
 #include "fx.h"
-#ifdef HAVE_PNG_H
 #include "FXPNGImage.h"
-#endif
-#ifdef HAVE_JPEG_H
 #include "FXJPGImage.h"
-#endif
-#ifdef HAVE_TIFF_H
 #include "FXTIFImage.h"
-#endif
 #include "FXChart.h"
 
 /*
@@ -60,14 +54,6 @@ FXIMPLEMENT(FXChart,FXComposite,FXChartMap,ARRAYNUMBER(FXChartMap))
 
 
 /*******************************************************************************/
-
-// Drag type names
-const FXchar FXChart::bmpTypeName[]="image/x-bmp";
-const FXchar FXChart::gifTypeName[]="image/gif";
-const FXchar FXChart::jpgTypeName[]="image/jpeg";
-const FXchar FXChart::pngTypeName[]="image/png";
-const FXchar FXChart::csvTypeName[]="Csv";
-const FXchar FXChart::tifTypeName[]="image/tiff";
 
 // Drag types
 FXDragType FXChart::bmpType=0;
@@ -110,12 +96,12 @@ void FXChart::create(){
   if(fill.image) fill.image->create();
   if(!colorType) colorType=getApp()->registerDragType(colorTypeName);
   if(!textType) textType=getApp()->registerDragType(textTypeName);
-  if(!bmpType) bmpType=getApp()->registerDragType(bmpTypeName);
-  if(!gifType) gifType=getApp()->registerDragType(gifTypeName);
-  if(!jpgType) jpgType=getApp()->registerDragType(jpgTypeName);
-  if(!pngType) pngType=getApp()->registerDragType(pngTypeName);
-  if(!csvType) csvType=getApp()->registerDragType(csvTypeName);
-  if(!tifType) tifType=getApp()->registerDragType(tifTypeName);
+  if(!bmpType) bmpType=getApp()->registerDragType(FXBMPImage::mimeType);
+  if(!gifType) gifType=getApp()->registerDragType(FXGIFImage::mimeType);
+  if(!jpgType) jpgType=getApp()->registerDragType(FXJPGImage::mimeType);
+  if(!pngType) pngType=getApp()->registerDragType(FXPNGImage::mimeType);
+  if(!tifType) tifType=getApp()->registerDragType(FXTIFImage::mimeType);
+  if(!csvType) csvType=getApp()->registerDragType("Csv");
   }
 
 
@@ -131,6 +117,111 @@ void FXChart::detach(){
   pngType=0;
   csvType=0;
   tifType=0;
+  }
+
+
+// Marker size is in pixels; x,y are canvas coordinates of the center
+void FXChart::drawMarker(FXDC& dc,FXint x,FXint y,const Marker& m) const {
+  register FXint s=m.size;
+  register FXint h=s>>1;
+  FXPoint p[5];
+  dc.setForeground(m.color);
+  switch(m.style){
+    case MARKER_SQUARE:
+      dc.drawRectangle(x-h,y-h,s,s);
+      break;
+    case MARKER_SQUARE|MARKER_SOLID:
+      dc.fillRectangle(x-h,y-h,s,s);
+      break;
+    case MARKER_CIRCLE:
+      dc.drawArc(x-h,y-h,s,s,0,23040);
+      break;
+    case MARKER_CIRCLE|MARKER_SOLID:
+      dc.fillArc(x-h,y-h,s,s,0,23040);
+      break;
+    case MARKER_DIAMOND:
+      p[0].x=p[2].x=p[4].x=x;
+      p[1].x=x-h;
+      p[3].x=p[1].x+s;
+      p[0].y=p[4].y=y-h;
+      p[1].y=p[3].y=y;
+      p[2].y=p[0].y+s;
+      dc.drawLines(p,5);
+      break;
+    case MARKER_DIAMOND|MARKER_SOLID:
+      p[0].x=p[2].x=x;
+      p[1].x=x-h;
+      p[3].x=p[1].x+s;
+      p[0].y=y-h;
+      p[1].y=p[3].y=y;
+      p[2].y=p[0].y+s;
+      dc.fillPolygon(p,4);
+      break;
+    case MARKER_TRIANGLE_UP:
+      p[0].x=p[3].x=x;
+      p[1].x=x-h;
+      p[2].x=x+h;
+      p[0].y=p[3].y=y-h;
+      p[1].y=p[2].y=y+h;
+      dc.drawLines(p,4);
+      break;
+    case MARKER_TRIANGLE_UP|MARKER_SOLID:
+      p[0].x=x;
+      p[1].x=x-h;
+      p[2].x=x+h;
+      p[0].y=y-h;
+      p[1].y=p[2].y=y+h;
+      dc.fillPolygon(p,3);
+      break;
+    case MARKER_TRIANGLE_DN:
+      p[0].x=p[3].x=x-h;
+      p[1].x=x;
+      p[2].x=x+h;
+      p[0].y=p[2].y=p[3].y=y-h;
+      p[1].y=y+h;
+      dc.drawLines(p,4);
+      break;
+    case MARKER_TRIANGLE_DN|MARKER_SOLID:
+      p[0].x=x-h;
+      p[1].x=x;
+      p[2].x=x+h;
+      p[0].y=p[2].y=y-h;
+      p[1].y=y+h;
+      dc.fillPolygon(p,3);
+      break;
+    case MARKER_TRIANGLE_LT:
+      p[0].x=p[3].x=x-h;
+      p[1].x=p[2].x=x+h;
+      p[0].y=p[3].y=y;
+      p[1].y=y+h;
+      p[2].y=y-h;
+      dc.drawLines(p,4);
+      break;
+    case MARKER_TRIANGLE_LT|MARKER_SOLID:
+      p[0].x=x-h;
+      p[1].x=p[2].x=x+h;
+      p[0].y=y;
+      p[1].y=y+h;
+      p[2].y=y-h;
+      dc.fillPolygon(p,3);
+      break;
+    case MARKER_TRIANGLE_RT:
+      p[0].x=p[3].x=x+h;
+      p[1].x=p[2].x=x-h;
+      p[0].y=p[3].y=y;
+      p[1].y=y-h;
+      p[2].y=y+h;
+      dc.drawLines(p,4);
+      break;
+    case MARKER_TRIANGLE_RT|MARKER_SOLID:
+      p[0].x=x+h;
+      p[1].x=p[2].x=x-h;
+      p[0].y=y;
+      p[1].y=y-h;
+      p[2].y=y+h;
+      dc.fillPolygon(p,3);
+      break;
+    }
   }
 
 
@@ -232,6 +323,7 @@ FXTRACE((1,"fillRectangle(%d,%d,%d,%d) width=%d n=%d\n",xl,0,xr-xl,height,width,
     case FILLSTYLE_RDIAGONAL:
       break;
     }
+
   flags&=~FLAG_DIRTY;
   }
 
@@ -274,7 +366,7 @@ long FXChart::onClipboardRequest(FXObject *sender,FXSelector sel,void *ptr){
   if(FXComposite::onClipboardRequest(sender,sel,ptr)) return 1;
 
   // One of the supported image types?
-  if(event->target==bmpType || event->target==gifType || event->target==jpgType || event->target==pngType || event->target==imageType){
+  if(event->target==bmpType || event->target==gifType || event->target==jpgType || event->target==pngType){
     FXMemoryStream ms;
 
     // Read back pixels
@@ -288,18 +380,12 @@ long FXChart::onClipboardRequest(FXObject *sender,FXSelector sel,void *ptr){
       fxsaveBMP(ms,chart->getData(),chart->getWidth(),chart->getHeight());
     else if(event->target==gifType)
       fxsaveGIF(ms,chart->getData(),chart->getWidth(),chart->getHeight());
-#ifdef HAVE_JPEG_H
     else if(event->target==jpgType)
       fxsaveJPG(ms,chart->getData(),chart->getWidth(),chart->getHeight(),75);
-#endif
-#ifdef HAVE_PNG_H
     else if(event->target==pngType)
       fxsavePNG(ms,chart->getData(),chart->getWidth(),chart->getHeight());
-#endif
-#ifdef HAVE_TIFF_H
     else if(event->target==tifType)
       fxsaveTIF(ms,chart->getData(),chart->getWidth(),chart->getHeight(),0);
-#endif
 #ifdef WIN32
 //  else if(event->target==imageType)
 //    fxsaveBMP(ms,chart->getData(),chart->getWidth(),chart->getHeight());

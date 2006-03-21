@@ -5,7 +5,7 @@
 ##############################################################################
 # Copyright (C) 1997,2005 by Jeroen van der Zijp.   All Rights Reserved.     #
 ##############################################################################
-# $Id: Makefile.bc,v 1.22 2005/02/04 04:33:19 fox Exp $                      #
+# $Id: Makefile.bc,v 1.26 2006/03/10 04:31:45 fox Exp $                      #
 ##############################################################################
 # This library is free software; you can redistribute it and/or              #
 # modify it under the terms of the GNU Library General Public                #
@@ -32,12 +32,12 @@ LD	  = bcc32
 LDFLAGS	  = -laa
 GLLIBS    = -lopengl32 -lglu32
 INCDIRS   = -I$(TOPDIR)\include
-FOXLIB    = $(TOPDIR)\src\FOX-1.4.lib
+FOXLIB    = $(TOPDIR)\src\FOX-1.6.lib
 
 PROGRAMS  = \
-	ControlPanel.exe \
 	rex.exe \
 	minheritance.exe \
+	expression.exe \
 	memmap.exe \
 	mditest.exe \
 	table.exe \
@@ -68,14 +68,14 @@ PROGRAMS  = \
 
 all: $(PROGRAMS)
 
-ControlPanel.exe: $(FOXLIB) ControlPanel.obj
-	$(LD) $(LDFLAGS) ControlPanel.obj $(FOXLIB)
-
 rex.exe: $(FOXLIB) rex.obj
 	$(LD) $(LDFLAGS) rex.obj $(FOXLIB)
 
 minheritance.exe: $(FOXLIB) minheritance.obj
 	$(LD) $(LDFLAGS) minheritance.obj $(FOXLIB)
+
+expression.exe: $(FOXLIB) expression.obj
+	$(LD) $(LDFLAGS) expression.obj $(FOXLIB)
 
 memmap.exe: $(FOXLIB) memmap.obj
 	$(LD) $(LDFLAGS) memmap.obj $(FOXLIB)

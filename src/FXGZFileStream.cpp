@@ -1,9 +1,9 @@
 /********************************************************************************
 *                                                                               *
-*                        G Z S t r e a m   C l a s s e s                        *
+*                     G Z F i l e S t r e a m   C l a s s e s                   *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2002,2005 by Sander Jansen.   All Rights Reserved.              *
+* Copyright (C) 2002,2006 by Sander Jansen.   All Rights Reserved.              *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXGZStream.cpp,v 1.10 2005/01/16 16:06:07 fox Exp $                       *
+* $Id: FXGZFileStream.cpp,v 1.5 2006/01/22 17:58:30 fox Exp $                   *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -29,7 +29,8 @@
 #include "FXStream.h"
 #include "FXString.h"
 #include "FXObject.h"
-#include "FXGZStream.h"
+#include "FXFile.h"
+#include "FXGZFileStream.h"
 
 #ifdef HAVE_ZLIB_H
 #include "zlib.h"
@@ -38,93 +39,120 @@
   Notes:
   - Very basic compressed file I/O only.
   - Updated for new stream classes 2003/07/08.
+  - Updated for FXFile 2005/09/03.
 */
+
+#define BUFFERSIZE 8192
 
 /*******************************************************************************/
 
 namespace FX {
 
 
+// Used during compression
+struct ZBlock {
+  z_stream stream;
+  Bytef    buffer[BUFFERSIZE];
+  };
+
+
 // Initialize file stream
-FXGZFileStream::FXGZFileStream(const FXObject* cont):FXStream(cont){
-  file=NULL;
+FXGZFileStream::FXGZFileStream(const FXObject* cont):FXFileStream(cont),z(NULL),f(0){
   }
 
 
 // Save to a file
-unsigned long FXGZFileStream::writeBuffer(unsigned long){
-  register long m,n;
+FXuval FXGZFileStream::writeBuffer(FXuval){
+  register FXival m,n; int zerror;
   if(dir!=FXStreamSave){fxerror("FXGZFileStream::writeBuffer: wrong stream direction.\n");}
   FXASSERT(begptr<=rdptr);
   FXASSERT(rdptr<=wrptr);
   FXASSERT(wrptr<=endptr);
-  if(code==FXStreamOK){
-    m=wrptr-rdptr;
-    n=gzwrite((gzFile*)file,rdptr,m);
-    if(n<=0){
-      code=FXStreamFull;
-      return endptr-wrptr;
-      }
-    m-=n;
-    if(m){memmove(begptr,rdptr+n,m);}
-    rdptr=begptr;
-    wrptr=begptr+m;
-    return endptr-wrptr;
+  while(rdptr<wrptr){
+    z->stream.next_in=(Bytef*)rdptr;
+    z->stream.avail_in=wrptr-rdptr;
+    z->stream.next_out=z->buffer;
+    z->stream.avail_out=BUFFERSIZE;
+    zerror=deflate(&z->stream,f);
+    if(zerror!=Z_OK) break;
+    m=z->stream.next_out-z->buffer;
+    n=file.writeBlock(z->buffer,m);
+    if(n<m) break;
+    rdptr=(FXuchar*)z->stream.next_in;
     }
-  return 0;
+  if(rdptr<wrptr){memmove(begptr,rdptr,wrptr-rdptr);}
+  wrptr=begptr+(wrptr-rdptr);
+  rdptr=begptr;
+  return endptr-wrptr;
   }
 
 
 // Load from file
-unsigned long FXGZFileStream::readBuffer(unsigned long){
-  register long m,n;
+FXuval FXGZFileStream::readBuffer(FXuval){
+  register FXival n; int zerror;
   if(dir!=FXStreamLoad){fxerror("FXGZFileStream::readBuffer: wrong stream direction.\n");}
   FXASSERT(begptr<=rdptr);
   FXASSERT(rdptr<=wrptr);
   FXASSERT(wrptr<=endptr);
-  if(code==FXStreamOK){
-    m=wrptr-rdptr;
-    if(m){memmove(begptr,rdptr,m);}
-    rdptr=begptr;
-    wrptr=begptr+m;
-    n=gzread((gzFile*)file,wrptr,endptr-wrptr);
-    if(n<=0){
-      code=FXStreamEnd;
-      return wrptr-rdptr;
-      }
-    wrptr+=n;
-    return wrptr-rdptr;
+  if(rdptr<wrptr){memmove(begptr,rdptr,wrptr-rdptr);}
+  wrptr=begptr+(wrptr-rdptr);
+  rdptr=begptr;
+  while(wrptr<endptr){
+    n=file.readBlock(z->buffer,BUFFERSIZE);
+    if(n<=0) break;
+    z->stream.next_in=z->buffer;
+    z->stream.avail_in=n;
+    z->stream.next_out=(Bytef*)wrptr;
+    z->stream.avail_out=endptr-wrptr;
+    zerror=inflate(&z->stream,Z_NO_FLUSH);
+    if(zerror!=Z_OK) break;
+    wrptr=(FXuchar*)z->stream.next_out;
+    if(zerror==Z_STREAM_END) break;
     }
-  return 0;
+  return wrptr-rdptr;
   }
 
 
 // Try open file stream
-FXbool FXGZFileStream::open(const FXString& filename,FXStreamDirection save_or_load,unsigned long size){
-  if(save_or_load!=FXStreamSave && save_or_load!=FXStreamLoad){fxerror("FXGZFileStream::open: illegal stream direction.\n");}
-  if(!dir){
-    if(save_or_load==FXStreamLoad){
-      file=gzopen(filename.text(),"rb");
-      if(file==NULL){ code=FXStreamNoRead; return FALSE; }
+bool FXGZFileStream::open(const FXString& filename,FXStreamDirection save_or_load,FXuval size){
+  if(FXFileStream::open(filename,save_or_load,size)){
+    if(FXCALLOC(&z,ZBlock,1)){
+      int zerror;
+      f=Z_NO_FLUSH;
+      if(save_or_load==FXStreamLoad){
+        zerror=inflateInit(&z->stream);
+        if(zerror==Z_OK) return true;
+        code=FXStreamNoRead;
+        }
+      else{
+        zerror=deflateInit(&z->stream,Z_DEFAULT_COMPRESSION);
+        if(zerror==Z_OK) return true;
+        code=FXStreamNoWrite;
+        }
+      FXFREE(&z);
       }
-    else if(save_or_load==FXStreamSave){
-      file=gzopen(filename.text(),"wb");
-      if(file==NULL){ code=FXStreamNoWrite; return FALSE; }
-      }
-    return FXStream::open(save_or_load,size);
+    FXFileStream::close();
     }
-  return FALSE;
+  return false;
   }
 
 
 // Close file stream
-FXbool FXGZFileStream::close(){
+bool FXGZFileStream::close(){
   if(dir){
-    if(dir==FXStreamSave) flush();
-    gzclose((gzFile*)file);
-    return FXStream::close();
+    if(dir==FXStreamLoad){
+      FXFileStream::close();
+      inflateEnd(&z->stream);
+      }
+    else{
+      f=Z_FINISH;
+      FXFileStream::close();
+      deflateEnd(&z->stream);
+      }
+    FXFREE(&z);
+    return true;
     }
-  return FALSE;
+  return false;
   }
 
 

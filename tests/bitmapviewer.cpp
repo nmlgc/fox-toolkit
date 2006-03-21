@@ -3,9 +3,9 @@
 *                    B i t m a p   V i e w e r   D e m o                        *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2000,2004 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 2000,2006 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
-* $Id: bitmapviewer.cpp,v 1.10 2005/02/02 03:23:11 fox Exp $                     *
+* $Id: bitmapviewer.cpp,v 1.19 2006/01/22 17:58:58 fox Exp $                    *
 ********************************************************************************/
 #include "fx.h"
 #include <stdio.h>
@@ -335,16 +335,16 @@ BitmapWindow::BitmapWindow(FXApp* a):FXMainWindow(a,"FOX Image Viewer: - untitle
   FXMenuSeparator* sep1=new FXMenuSeparator(filemenu);
   sep1->setTarget(&mrufiles);
   sep1->setSelector(FXRecentFiles::ID_ANYFILES);
-  new FXMenuCommand(filemenu,NULL,NULL,&mrufiles,FXRecentFiles::ID_FILE_1);
-  new FXMenuCommand(filemenu,NULL,NULL,&mrufiles,FXRecentFiles::ID_FILE_2);
-  new FXMenuCommand(filemenu,NULL,NULL,&mrufiles,FXRecentFiles::ID_FILE_3);
-  new FXMenuCommand(filemenu,NULL,NULL,&mrufiles,FXRecentFiles::ID_FILE_4);
-  new FXMenuCommand(filemenu,NULL,NULL,&mrufiles,FXRecentFiles::ID_FILE_5);
-  new FXMenuCommand(filemenu,NULL,NULL,&mrufiles,FXRecentFiles::ID_FILE_6);
-  new FXMenuCommand(filemenu,NULL,NULL,&mrufiles,FXRecentFiles::ID_FILE_7);
-  new FXMenuCommand(filemenu,NULL,NULL,&mrufiles,FXRecentFiles::ID_FILE_8);
-  new FXMenuCommand(filemenu,NULL,NULL,&mrufiles,FXRecentFiles::ID_FILE_9);
-  new FXMenuCommand(filemenu,NULL,NULL,&mrufiles,FXRecentFiles::ID_FILE_10);
+  new FXMenuCommand(filemenu,FXString::null,NULL,&mrufiles,FXRecentFiles::ID_FILE_1);
+  new FXMenuCommand(filemenu,FXString::null,NULL,&mrufiles,FXRecentFiles::ID_FILE_2);
+  new FXMenuCommand(filemenu,FXString::null,NULL,&mrufiles,FXRecentFiles::ID_FILE_3);
+  new FXMenuCommand(filemenu,FXString::null,NULL,&mrufiles,FXRecentFiles::ID_FILE_4);
+  new FXMenuCommand(filemenu,FXString::null,NULL,&mrufiles,FXRecentFiles::ID_FILE_5);
+  new FXMenuCommand(filemenu,FXString::null,NULL,&mrufiles,FXRecentFiles::ID_FILE_6);
+  new FXMenuCommand(filemenu,FXString::null,NULL,&mrufiles,FXRecentFiles::ID_FILE_7);
+  new FXMenuCommand(filemenu,FXString::null,NULL,&mrufiles,FXRecentFiles::ID_FILE_8);
+  new FXMenuCommand(filemenu,FXString::null,NULL,&mrufiles,FXRecentFiles::ID_FILE_9);
+  new FXMenuCommand(filemenu,FXString::null,NULL,&mrufiles,FXRecentFiles::ID_FILE_10);
   new FXMenuCommand(filemenu,"&Clear Recent Files",NULL,&mrufiles,FXRecentFiles::ID_CLEAR);
   FXMenuSeparator* sep2=new FXMenuSeparator(filemenu);
   sep2->setTarget(&mrufiles);
@@ -432,7 +432,6 @@ FXbool BitmapWindow::loadimage(const FXString& file){
   FXBitmap *img=NULL;
   FXBitmap *old;
   TIFF *tif;
-  tdata_t buf;
   FXint width,height,size,scanline,i;
   FXshort spp, bps, order;
   FXuchar *data,*pa;
@@ -466,11 +465,11 @@ FXbool BitmapWindow::loadimage(const FXString& file){
     }
   TIFFClose(tif);
 
-  img=new FXBitmap(getApp(),data,BITMAP_KEEP|BITMAP_SHMI|BITMAP_SHMP|BITMAP_OWNED,width,height);
+  img=new FXBitmap(getApp(),data,BITMAP_KEEP|BITMAP_OWNED,width,height);
 
   // Perhaps failed
   if(img==NULL){
-    FXMessageBox::error(this,MBOX_OK,"Error Loading Bitmap","Unsupported type: %s",FXFile::extension(file).text());
+    FXMessageBox::error(this,MBOX_OK,"Error Loading Bitmap","Unsupported type: %s",FXPath::extension(file).text());
     return FALSE;
     }
 
@@ -485,6 +484,7 @@ FXbool BitmapWindow::loadimage(const FXString& file){
 
 // Save file
 FXbool BitmapWindow::saveimage(const FXString& file){
+  bitmapview->getBitmap()->restore();
 #ifdef HAVE_TIFF_H
   FXBitmap *img;
   FXint width,height,size,scanline,i;
@@ -542,7 +542,7 @@ long BitmapWindow::onCmdSave(FXObject*,FXSelector,void*){
   FXFileDialog savedialog(this,"Save Image");
   savedialog.setFilename(filename);
   if(savedialog.execute()){
-    if(FXFile::exists(savedialog.getFilename())){
+    if(FXStat::exists(savedialog.getFilename())){
       if(MBOX_CLICKED_NO==FXMessageBox::question(this,MBOX_YES_NO,"Overwrite Image","Overwrite existing image?")) return 1;
       }
     filename=savedialog.getFilename();

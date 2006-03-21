@@ -3,7 +3,7 @@
 *                           S n a p p e r   W i d g e t                         *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2003,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 2003,2006 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: Snapper.cpp,v 1.4 2005/01/16 16:06:06 fox Exp $                          *
+* $Id: Snapper.cpp,v 1.6 2006/01/22 17:58:15 fox Exp $                          *
 ********************************************************************************/
 #include "fx.h"
 #include "Snapper.h"
@@ -60,10 +60,10 @@ FXint Snapper::getDefaultHeight(){ return 1; }
 
 
 // Snapper does override-redirect
-FXbool Snapper::doesOverrideRedirect() const { return TRUE; }
+bool Snapper::doesOverrideRedirect() const { return true; }
 
 
 // Snapper does save-unders
-FXbool Snapper::doesSaveUnder() const { return FALSE; }
+bool Snapper::doesSaveUnder() const { return false; }
 
 

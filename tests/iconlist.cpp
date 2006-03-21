@@ -3,9 +3,9 @@
 *                           Test Icon List Widget                               *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998 by Jeroen van der Zijp.   All Rights Reserved.             *
+* Copyright (C) 1998,2006 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
-* $Id: iconlist.cpp,v 1.20 2004/10/30 06:19:36 fox Exp $                        *
+* $Id: iconlist.cpp,v 1.23 2006/01/22 17:59:01 fox Exp $                        *
 ********************************************************************************/
 #include "fx.h"
 #include <stdio.h>
@@ -131,22 +131,23 @@ IconListWindow::IconListWindow(FXApp* a):FXMainWindow(a,"Icon List Test",NULL,NU
 
   // Arrange menu
   arrangemenu=new FXMenuPane(this);
-  new FXMenuCommand(arrangemenu,"&Details",NULL,iconlist,FXIconList::ID_SHOW_DETAILS);
-  new FXMenuCommand(arrangemenu,"&Small Icons",NULL,iconlist,FXIconList::ID_SHOW_MINI_ICONS);
-  new FXMenuCommand(arrangemenu,"&Big Icons",NULL,iconlist,FXIconList::ID_SHOW_BIG_ICONS);
-  new FXMenuCommand(arrangemenu,"&Rows",NULL,iconlist,FXIconList::ID_ARRANGE_BY_ROWS);
-  new FXMenuCommand(arrangemenu,"&Columns",NULL,iconlist,FXIconList::ID_ARRANGE_BY_COLUMNS);
+  new FXMenuRadio(arrangemenu,"&Details",iconlist,FXIconList::ID_SHOW_DETAILS);
+  new FXMenuRadio(arrangemenu,"&Small Icons",iconlist,FXIconList::ID_SHOW_MINI_ICONS);
+  new FXMenuRadio(arrangemenu,"&Big Icons",iconlist,FXIconList::ID_SHOW_BIG_ICONS);
+  new FXMenuSeparator(arrangemenu);
+  new FXMenuRadio(arrangemenu,"&Rows",iconlist,FXIconList::ID_ARRANGE_BY_ROWS);
+  new FXMenuRadio(arrangemenu,"&Columns",iconlist,FXIconList::ID_ARRANGE_BY_COLUMNS);
   new FXMenuTitle(menubar,"&Arrange",NULL,arrangemenu);
 
   // Sort menu
   sortmenu=new FXMenuPane(this);
-  new FXMenuCommand(sortmenu,"&Name",NULL,iconlist,FXFileList::ID_SORT_BY_NAME);
-  new FXMenuCommand(sortmenu,"&Type",NULL,iconlist,FXFileList::ID_SORT_BY_TYPE);
-  new FXMenuCommand(sortmenu,"&Size",NULL,iconlist,FXFileList::ID_SORT_BY_SIZE);
-  new FXMenuCommand(sortmenu,"T&ime",NULL,iconlist,FXFileList::ID_SORT_BY_TIME);
-  new FXMenuCommand(sortmenu,"&User",NULL,iconlist,FXFileList::ID_SORT_BY_USER);
-  new FXMenuCommand(sortmenu,"&Group",NULL,iconlist,FXFileList::ID_SORT_BY_GROUP);
-  new FXMenuCommand(sortmenu,"&Reverse",NULL,iconlist,FXFileList::ID_SORT_REVERSE);
+  new FXMenuCommand(sortmenu,"&Name",NULL,NULL,0);
+  new FXMenuCommand(sortmenu,"&Type",NULL,NULL,0);
+  new FXMenuCommand(sortmenu,"&Size",NULL,NULL,0);
+  new FXMenuCommand(sortmenu,"T&ime",NULL,NULL,0);
+  new FXMenuCommand(sortmenu,"&User",NULL,NULL,0);
+  new FXMenuCommand(sortmenu,"&Group",NULL,NULL,0);
+  new FXMenuCheck(sortmenu,"&Reverse",NULL,0);
   new FXMenuCommand(sortmenu,"Hide status",NULL,status,FXWindow::ID_HIDE);
   new FXMenuCommand(sortmenu,"Show status",NULL,status,FXWindow::ID_SHOW);
   new FXMenuTitle(menubar,"&Sort",NULL,sortmenu);

@@ -3,9 +3,9 @@
 *                               Test Splitter Window                            *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997 by Jeroen van der Zijp.   All Rights Reserved.             *
+* Copyright (C) 1997,2006 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
-* $Id: splitter.cpp,v 1.33 2004/10/31 16:21:57 fox Exp $                        *
+* $Id: splitter.cpp,v 1.35 2006/01/22 17:59:02 fox Exp $                        *
 ********************************************************************************/
 #include "fx.h"
 #include <stdio.h>
@@ -227,7 +227,7 @@ SplitterWindow::SplitterWindow(FXApp* a):FXMainWindow(a,"Splitter Test",NULL,NUL
       tree->appendItem(branch,"Seventh-Third",doc,doc);
     tree->appendItem(topmost,"Eighth",doc,doc);
 
-  
+
   new FXLabel(group2,"Matrix",NULL,LAYOUT_CENTER_X);
   new FXHorizontalSeparator(group2,SEPARATOR_GROOVE|LAYOUT_FILL_X);
   FXMatrix* matrix=new FXMatrix(group2,2,MATRIX_BY_COLUMNS|LAYOUT_FILL_X);

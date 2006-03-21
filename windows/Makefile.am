@@ -19,11 +19,11 @@ vcpp/button/button.dsp \
 vcpp/calculator/calculator.dsp \
 vcpp/chart/chart.dsp \
 vcpp/chartdll/chartdll.dsp \
-vcpp/controlpanel/controlpanel.dsp \
 vcpp/datatarget/datatarget.dsp \
 vcpp/dctest/dctest.dsp \
 vcpp/dialog/dialog.dsp \
 vcpp/dirlist/dirlist.dsp \
+vcpp/expression/expression.dsp \
 vcpp/foursplit/foursplit.dsp \
 vcpp/fox/fox.dsp \
 vcpp/foxdll/foxdll.dsp \

@@ -1,7 +1,7 @@
 Begin3
 Title:          KDEVPROJECT
-Version:        0.99.177
-Entered-date:   10/18/2001
+Version:        1.6.0
+Entered-date:   9/23/2005
 Description:    FOX is a C++ based, platform independent library for GUI Development.
 Keywords:       FOX, C++, GUI, Library
 Author:         Jeroen van der Zijp <jeroen@fox-toolkit.org>
@@ -9,6 +9,6 @@ Maintained-by:  Jeroen van der Zijp <jeroen@fox-toolkit.org>
 Primary-site:   ftp://ftp.fox-toolkit.org/pub
 Home-page:      http://www.fox-toolkit.org/fox.html
 Original-site:  http://www.fox-toolkit.org/fox.html
-Platforms:      Linux and other Unix systems, Microsoft Windows 95,98,NT,2K.
+Platforms:      Linux and other Unix systems, Microsoft Windows 95,98,NT,2K,XP.
 Copying-policy: GNU Lesser Public License
 End

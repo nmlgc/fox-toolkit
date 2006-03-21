@@ -22,6 +22,29 @@ Systems Which are Supported or Known to work:
 
 
 
+Building Documentation.
+=======================
+
+You will need the "doxygen" documentation extraction tool.  You can get it
+from:
+
+        http://www.stack.nl/~dimitri/doxygen/index.html
+
+Many current linux distributions already include this tool as an optional
+package.
+
+To generate documentation, unpack the FOX tarball and go to directory "doc."
+Then issue the command:
+
+        make docs
+
+If doxygen is installed properly, it will churn for a while and then generate
+hyperlinked documentation from the header files' document comments.  You will
+find this reference documentation in the "doc/ref" directory.
+
+
+
+
 For most UNIX systems.
 ======================
 
@@ -604,9 +627,6 @@ To support only the core image formats, pass the compiler flag:
 
         -DCORE_IMAGE_FORMATS=1
 
-
-This will enable all available image formats.  This will necessitate every FOX
-application to link to the image libraries!!
 
 Another flag is the default icon search path, i.e. where the file browser will
 normally look to find and load icons bound to file extensions.

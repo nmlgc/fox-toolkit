@@ -5,7 +5,7 @@ dnl Major Library release number
 FOX_MAJOR_VERSION=1
 
 dnl Minor Library release number
-FOX_MINOR_VERSION=4
+FOX_MINOR_VERSION=6
 
 dnl Increment after every source code change
 FOX_PATCH_LEVEL=0
@@ -178,7 +178,6 @@ else
 AC_MSG_RESULT(no)
 fi
 
-
 dnl Check for Xft2 support
 AC_MSG_CHECKING(for Xft support)
 AC_ARG_WITH(xft,[  --with-xft              enable Xft support])
@@ -219,7 +218,7 @@ AC_MSG_CHECKING(for thread-safe library calls)
 AC_ARG_ENABLE(xthreads,[  --enable-threadsafe     Thread-safe library calls])
 AC_MSG_RESULT([$enable_threadsafe])
 if test "x$enable_threadsafe" != "xno" ; then
-CXXFLAGS="${CXXFLAGS} -DFOX_THREAD_SAFE=1 -D_POSIX_PTHREAD_SEMANTICS"
+CXXFLAGS="${CXXFLAGS} -DFOX_THREAD_SAFE=1 -D_POSIX_PTHREAD_SEMANTICS -D_REENTRANT"
 fi
 
 dnl Find posix thread library
@@ -304,6 +303,15 @@ AC_CHECK_HEADER(X11/extensions/Xrandr.h,CXXFLAGS="${CXXFLAGS} -DHAVE_XRANDR_H=1"
 fi
 
 
+dnl Check for Input Method support
+AC_ARG_WITH(xim,[  --with-xim              compile with XIM support])
+AC_MSG_RESULT([$with_xim])
+##if test "x$with_xim" = "xno"; then
+if test "x$with_xim" != "xyes"; then
+CXXFLAGS="${CXXFLAGS} -DNO_XIM"
+fi
+
+
 dnl Add math lib if TIFF Image support
 if test "x$enable_tiff" != "xno"; then
 LIBS="${LIBS} ${MATHLIB:=-lm}"
@@ -378,12 +386,12 @@ AC_ARG_WITH(opengl,[  --with-opengl           choices are yes, no])
 AC_MSG_RESULT([$with_opengl])
 if test "x$with_opengl" != "xno" ; then
 if test "x$CYGWIN" = "xyes" -o "x$MINGW32" = "xyes" ; then
-AC_CHECK_HEADER(GL/gl.h,CXXFLAGS="${CXXFLAGS} -DHAVE_GL_H=1"; LIBS="${LIBS} ${LIBGL:=-lopengl32}")
 AC_CHECK_HEADER(GL/glu.h,CXXFLAGS="${CXXFLAGS} -DHAVE_GLU_H=1"; LIBS="${LIBS} ${LIBGLU:=-lglu32}")
+AC_CHECK_HEADER(GL/gl.h,CXXFLAGS="${CXXFLAGS} -DHAVE_GL_H=1"; LIBS="${LIBS} ${LIBGL:=-lopengl32}")
 GL_TESTS="gltest.exe glviewer.exe"
 else
-AC_CHECK_HEADER(GL/gl.h,CXXFLAGS="${CXXFLAGS} -DHAVE_GL_H=1"; LIBS="${LIBS} ${LIBGL:=-lGL}")
 AC_CHECK_HEADER(GL/glu.h,CXXFLAGS="${CXXFLAGS} -DHAVE_GLU_H=1"; LIBS="${LIBS} ${LIBGLU:=-lGLU}")
+AC_CHECK_HEADER(GL/gl.h,CXXFLAGS="${CXXFLAGS} -DHAVE_GL_H=1"; LIBS="${LIBS} ${LIBGL:=-lGL}")
 GL_TESTS="gltest glviewer"
 fi
 fi

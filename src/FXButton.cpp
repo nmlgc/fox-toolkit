@@ -3,7 +3,7 @@
 *                           B u t t o n    O b j e c t s                        *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2006 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXButton.cpp,v 1.62 2005/01/16 16:06:06 fox Exp $                        *
+* $Id: FXButton.cpp,v 1.67 2006/01/22 17:58:18 fox Exp $                        *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -112,7 +112,7 @@ FXButton::FXButton(FXComposite* p,const FXString& text,FXIcon* ic,FXObject* tgt,
 
 
 // If window can have focus
-FXbool FXButton::canFocus() const { return 1; }
+bool FXButton::canFocus() const { return true; }
 
 
 // Set focus to this widget

@@ -3,7 +3,7 @@
 *                S h u t t e r   B u g   A p p l i c a t i o n                  *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2003,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 2003,2006 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This program is free software; you can redistribute it and/or modify          *
 * it under the terms of the GNU General Public License as published by          *
@@ -19,24 +19,16 @@
 * along with this program; if not, write to the Free Software                   *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: ShutterBug.cpp,v 1.32 2005/02/04 04:33:19 fox Exp $                      *
+* $Id: ShutterBug.cpp,v 1.49 2006/03/16 04:41:34 fox Exp $                      *
 ********************************************************************************/
 #include "fx.h"
 #include "fxkeys.h"
-#ifdef HAVE_PNG_H
 #include "FXPNGImage.h"
-#endif
-#ifdef HAVE_JPEG_H
 #include "FXJPGImage.h"
-#endif
-#ifdef HAVE_TIFF_H
 #include "FXTIFImage.h"
-#endif
 #include "FXICOImage.h"
 #include "FXTGAImage.h"
 #include "FXRGBImage.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include "icons.h"
 #include "ShutterBug.h"
 #include "Snapper.h"
@@ -52,8 +44,8 @@
 
 #define FUDGE         10        // Corner fudge for diagonal dragging
 #define MINSIZE       8         // Minimum snap size
-#define VERSION_MAJOR 2
-#define VERSION_MINOR 1
+#define VERSION_MAJOR 3
+#define VERSION_MINOR 0
 #define VERSION_PATCH 0
 
 /*******************************************************************************/
@@ -86,6 +78,11 @@ FXDEFMAP(ShutterBug) ShutterBugMap[]={
   FXMAPFUNC(SEL_COMMAND,ShutterBug::ID_INSIDE,ShutterBug::onCmdLineInside),
   FXMAPFUNC(SEL_UPDATE,ShutterBug::ID_QUANTIZE,ShutterBug::onUpdQuantize),
   FXMAPFUNC(SEL_COMMAND,ShutterBug::ID_QUANTIZE,ShutterBug::onCmdQuantize),
+  FXMAPFUNC(SEL_COMMAND,ShutterBug::ID_SET_COUNT,ShutterBug::onCmdSetCount),
+  FXMAPFUNC(SEL_COMMAND,ShutterBug::ID_RESET_COUNT,ShutterBug::onCmdResetCount),
+  FXMAPFUNC(SEL_COMMAND,ShutterBug::ID_RECORD_RATE,ShutterBug::onCmdRecordRate),
+  FXMAPFUNC(SEL_TIMEOUT,ShutterBug::ID_RECORD_FRAME,ShutterBug::onCmdRecordFrame),
+  FXMAPFUNC(SEL_COMMAND,ShutterBug::ID_RECORD_MOVIE,ShutterBug::onCmdRecordMovie),
   FXMAPFUNCS(SEL_LEFTBUTTONPRESS,ShutterBug::ID_SNAPPER_0,ShutterBug::ID_SNAPPER_3,ShutterBug::onPressSnapper),
   FXMAPFUNCS(SEL_LEFTBUTTONRELEASE,ShutterBug::ID_SNAPPER_0,ShutterBug::ID_SNAPPER_3,ShutterBug::onReleaseSnapper),
   FXMAPFUNCS(SEL_MIDDLEBUTTONPRESS,ShutterBug::ID_SNAPPER_0,ShutterBug::ID_SNAPPER_3,ShutterBug::onPressSnapper),
@@ -151,23 +148,8 @@ enum {
   };
 
 
-// Drag type names
-const FXchar ShutterBug::bmpTypeName[]="image/x-bmp";
-const FXchar ShutterBug::gifTypeName[]="image/gif";
-const FXchar ShutterBug::jpgTypeName[]="image/jpeg";
-const FXchar ShutterBug::pngTypeName[]="image/png";     // x-png?
-const FXchar ShutterBug::tifTypeName[]="image/tiff";
-const FXchar ShutterBug::xpmTypeName[]="image/xpm";
-const FXchar ShutterBug::ppmTypeName[]="image/x-portable-pixmap";
-
 // Drag types
-FXDragType ShutterBug::bmpType=0;
-FXDragType ShutterBug::gifType=0;
-FXDragType ShutterBug::jpgType=0;
-FXDragType ShutterBug::pngType=0;
-FXDragType ShutterBug::tifType=0;
-FXDragType ShutterBug::xpmType=0;
-FXDragType ShutterBug::ppmType=0;
+FXDragType ShutterBug::dndTypes[7]={0,0,0,0,0,0,0};
 
 
 /*******************************************************************************/
@@ -181,6 +163,7 @@ ShutterBug::ShutterBug(FXApp* a):FXShell(a,0,0,0,0,0){
   rectangle.h=100;
   filename="image.gif";
   fileformat=TYPE_GIF;
+  filecount=1;
   clipbuffer=NULL;
   clipwidth=0;
   clipheight=0;
@@ -199,8 +182,9 @@ ShutterBug::ShutterBug(FXApp* a):FXShell(a,0,0,0,0,0){
   weight=3;
   size=0;
   delay=3000;
+  rate=1000;
   inside=FALSE;
-  quantize=TRUE;        // Fast method
+  quantize=TRUE;
   spotx=0;
   spoty=0;
   mode=MODE_NONE;
@@ -208,19 +192,19 @@ ShutterBug::ShutterBug(FXApp* a):FXShell(a,0,0,0,0,0){
 
 
 // Snapper does override-redirect
-FXbool ShutterBug::doesOverrideRedirect() const { return TRUE; }
+bool ShutterBug::doesOverrideRedirect() const { return true; }
 
 // Create and show window
 void ShutterBug::create(){
   readRegistry();
   FXShell::create();
-  if(!bmpType) bmpType=getApp()->registerDragType(bmpTypeName);
-  if(!gifType) gifType=getApp()->registerDragType(gifTypeName);
-  if(!jpgType) jpgType=getApp()->registerDragType(jpgTypeName);
-  if(!pngType) pngType=getApp()->registerDragType(pngTypeName);
-  if(!tifType) tifType=getApp()->registerDragType(tifTypeName);
-  if(!xpmType) xpmType=getApp()->registerDragType(xpmTypeName);
-  if(!ppmType) ppmType=getApp()->registerDragType(ppmTypeName);
+  dndTypes[0]=getApp()->registerDragType(FXBMPImage::mimeType);
+  dndTypes[1]=getApp()->registerDragType(FXGIFImage::mimeType);
+  dndTypes[2]=getApp()->registerDragType(FXXPMImage::mimeType);
+  dndTypes[3]=getApp()->registerDragType(FXPPMImage::mimeType);
+  dndTypes[4]=getApp()->registerDragType(FXJPGImage::mimeType);
+  dndTypes[5]=getApp()->registerDragType(FXPNGImage::mimeType);
+  dndTypes[6]=getApp()->registerDragType(FXTIFImage::mimeType);
   snapper[0]->create();
   snapper[1]->create();
   snapper[2]->create();
@@ -239,59 +223,8 @@ void ShutterBug::create(){
   snapper[3]->setBackColor(color);
   moveSnapRectangle(rectangle);
   showSnapRectangle();
-  setShape(bigicon);            // Set window shape based on icon shape mask
+  setShape(bigicon);
   show();
-  }
-
-
-// Move snap rectangle
-void ShutterBug::moveSnapRectangle(const FXRectangle& r){
-  if(inside){
-    snapper[0]->position(r.x,r.y,weight,r.h);
-    snapper[1]->position(r.x+r.w-weight,r.y,weight,r.h);
-    snapper[2]->position(r.x,r.y,r.w,weight);
-    snapper[3]->position(r.x,r.y+r.h-weight,r.w,weight);
-    }
-  else{
-    snapper[0]->position(r.x-weight,r.y-weight,weight,r.h+weight+weight);
-    snapper[1]->position(r.x+r.w,r.y-weight,weight,r.h+weight+weight);
-    snapper[2]->position(r.x-weight,r.y-weight,r.w+weight+weight,weight);
-    snapper[3]->position(r.x-weight,r.y+r.h,r.w+weight+weight,weight);
-    }
-  snapper[0]->raise();
-  snapper[1]->raise();
-  snapper[2]->raise();
-  snapper[3]->raise();
-  }
-
-
-// Show snap rectangle
-void ShutterBug::showSnapRectangle(){
-  snapper[0]->show();
-  snapper[1]->show();
-  snapper[2]->show();
-  snapper[3]->show();
-  snapper[0]->raise();
-  snapper[1]->raise();
-  snapper[2]->raise();
-  snapper[3]->raise();
-  getApp()->flush(TRUE);
-  }
-
-
-// Hide snap rectangle
-void ShutterBug::hideSnapRectangle(){
-  snapper[0]->hide();
-  snapper[1]->hide();
-  snapper[2]->hide();
-  snapper[3]->hide();
-  getApp()->flush(TRUE);
-  }
-
-
-// Is snap rectangle shown
-FXbool ShutterBug::snapRectangleShown() const {
-  return snapper[0]->shown();
   }
 
 
@@ -319,6 +252,8 @@ void ShutterBug::readRegistry(){
   rectangle.w=getApp()->reg().readIntEntry("SETTINGS","snapw",50);
   rectangle.h=getApp()->reg().readIntEntry("SETTINGS","snaph",50);
   delay=getApp()->reg().readUnsignedEntry("SETTINGS","delay",3000);
+  rate=getApp()->reg().readUnsignedEntry("SETTINGS","rate",1000);
+  filecount=getApp()->reg().readIntEntry("SETTINGS","count",1);
   inside=getApp()->reg().readIntEntry("SETTINGS","inside",FALSE);
   color=getApp()->reg().readColorEntry("SETTINGS","color",FXRGB(255,128,128));
   size=getApp()->reg().readIntEntry("SETTINGS","size",0);
@@ -350,6 +285,8 @@ void ShutterBug::writeRegistry(){
   getApp()->reg().writeIntEntry("SETTINGS","snapw",rectangle.w);
   getApp()->reg().writeIntEntry("SETTINGS","snaph",rectangle.h);
   getApp()->reg().writeUnsignedEntry("SETTINGS","delay",delay);
+  getApp()->reg().writeUnsignedEntry("SETTINGS","rate",rate);
+  getApp()->reg().writeIntEntry("SETTINGS","count",filecount);
   getApp()->reg().writeIntEntry("SETTINGS","inside",inside);
   getApp()->reg().writeColorEntry("SETTINGS","color",color);
   getApp()->reg().writeIntEntry("SETTINGS","size",size);
@@ -447,12 +384,15 @@ long ShutterBug::onBtnRelease(FXObject*,FXSelector,void* ptr){
   FXMenuPane filemenu(this);
   new FXMenuCaption(&filemenu,"ShutterBug",smallicon);
   new FXMenuSeparator(&filemenu);
-  new FXMenuCommand(&filemenu,"Snap...",NULL,this,ID_SNAPSHOT);
-  new FXMenuCommand(&filemenu,"Snap delayed...",NULL,this,ID_SNAPSHOT_DELAYED);
-  new FXMenuCommand(&filemenu,"Snap to clipboard...",NULL,this,ID_SNAPSHOT_CLIPBOARD);
-  new FXMenuCheck(&filemenu,"Show lasso",this,ID_TOGGLE_LASSO);
+  new FXMenuCommand(&filemenu,tr("Snap..."),NULL,this,ID_SNAPSHOT);
+  new FXMenuCommand(&filemenu,tr("Snap delayed..."),NULL,this,ID_SNAPSHOT_DELAYED);
+  new FXMenuCommand(&filemenu,tr("Snap to clipboard..."),NULL,this,ID_SNAPSHOT_CLIPBOARD);
+  new FXMenuCommand(&filemenu,tr("Record movie..."),NULL,this,ID_RECORD_MOVIE);
+  new FXMenuCheck(&filemenu,tr("Show lasso"),this,ID_TOGGLE_LASSO);
+  new FXMenuCheck(&filemenu,tr("Lines inside"),this,ID_INSIDE);
+  new FXMenuCommand(&filemenu,tr("Color..."),NULL,this,ID_COLOR);
   FXMenuPane sizemenu(this);
-  new FXMenuCascade(&filemenu,"Size",NULL,&sizemenu);
+  new FXMenuCascade(&filemenu,tr("Size"),NULL,&sizemenu);
   new FXMenuRadio(&sizemenu,"8x8",this,ID_SIZE_8X8);
   new FXMenuRadio(&sizemenu,"16x16",this,ID_SIZE_16X16);
   new FXMenuRadio(&sizemenu,"24x24",this,ID_SIZE_24X24);
@@ -462,27 +402,31 @@ long ShutterBug::onBtnRelease(FXObject*,FXSelector,void* ptr){
   new FXMenuRadio(&sizemenu,"128x128",this,ID_SIZE_128X128);
   new FXMenuRadio(&sizemenu,"256x256",this,ID_SIZE_256X256);
   new FXMenuRadio(&sizemenu,"512x512",this,ID_SIZE_512X512);
-  new FXMenuRadio(&sizemenu,"Screen",this,ID_SIZE_SCREEN);
-  new FXMenuRadio(&sizemenu,"Custom",this,ID_SIZE_CUSTOM);
+  new FXMenuRadio(&sizemenu,tr("Screen"),this,ID_SIZE_SCREEN);
+  new FXMenuRadio(&sizemenu,tr("Custom"),this,ID_SIZE_CUSTOM);
   FXMenuPane weightmenu(this);
-  new FXMenuCascade(&filemenu,"Weight",NULL,&weightmenu);
+  new FXMenuCascade(&filemenu,tr("Weight"),NULL,&weightmenu);
   new FXMenuCommand(&weightmenu,FXString::null,weighticons[0],this,ID_WEIGHT_1);
   new FXMenuCommand(&weightmenu,FXString::null,weighticons[1],this,ID_WEIGHT_2);
   new FXMenuCommand(&weightmenu,FXString::null,weighticons[2],this,ID_WEIGHT_3);
   new FXMenuCommand(&weightmenu,FXString::null,weighticons[3],this,ID_WEIGHT_4);
   new FXMenuCommand(&weightmenu,FXString::null,weighticons[4],this,ID_WEIGHT_5);
   new FXMenuCommand(&weightmenu,FXString::null,weighticons[5],this,ID_WEIGHT_6);
-  new FXMenuCheck(&filemenu,"Lines inside",this,ID_INSIDE);
-  new FXMenuCommand(&filemenu,"Color...",NULL,this,ID_COLOR);
-  new FXMenuCommand(&filemenu,"Delay...",NULL,this,ID_DELAY);
-  new FXMenuCheck(&filemenu,"Fast quantization...",this,ID_QUANTIZE);
-  new FXMenuCommand(&filemenu,"About...",NULL,this,ID_ABOUT);
-  new FXMenuCommand(&filemenu,"Quit",NULL,this,ID_QUIT);
+  FXMenuPane optionsmenu(this);
+  new FXMenuCascade(&filemenu,tr("Options"),NULL,&optionsmenu);
+  new FXMenuCommand(&optionsmenu,tr("Delay..."),NULL,this,ID_DELAY);
+  new FXMenuCommand(&optionsmenu,tr("Set number..."),NULL,this,ID_SET_COUNT);
+  new FXMenuCommand(&optionsmenu,tr("Reset number..."),NULL,this,ID_RESET_COUNT);
+  new FXMenuCommand(&optionsmenu,tr("Record Rate..."),NULL,this,ID_RECORD_RATE);
+  new FXMenuCheck(&optionsmenu,tr("Fast quantization"),this,ID_QUANTIZE);
+  new FXMenuCommand(&filemenu,tr("About..."),NULL,this,ID_ABOUT);
+  new FXMenuCommand(&filemenu,tr("Quit"),NULL,this,ID_QUIT);
   filemenu.create();
   filemenu.popup(NULL,event->root_x,event->root_y);
   getApp()->runModalWhileShown(&filemenu);
   return 1;
   }
+
 
 
 // Keyboard press
@@ -511,6 +455,57 @@ long ShutterBug::onCmdQuit(FXObject*,FXSelector,void*){
   }
 
 
+// Move snap rectangle
+void ShutterBug::moveSnapRectangle(const FXRectangle& r){
+  if(inside){
+    snapper[0]->position(r.x,r.y,weight,r.h);
+    snapper[1]->position(r.x+r.w-weight,r.y,weight,r.h);
+    snapper[2]->position(r.x,r.y,r.w,weight);
+    snapper[3]->position(r.x,r.y+r.h-weight,r.w,weight);
+    }
+  else{
+    snapper[0]->position(r.x-weight,r.y-weight,weight,r.h+weight+weight);
+    snapper[1]->position(r.x+r.w,r.y-weight,weight,r.h+weight+weight);
+    snapper[2]->position(r.x-weight,r.y-weight,r.w+weight+weight,weight);
+    snapper[3]->position(r.x-weight,r.y+r.h,r.w+weight+weight,weight);
+    }
+  snapper[0]->raise();
+  snapper[1]->raise();
+  snapper[2]->raise();
+  snapper[3]->raise();
+  }
+
+
+// Show snap rectangle
+void ShutterBug::showSnapRectangle(){
+  snapper[0]->show();
+  snapper[1]->show();
+  snapper[2]->show();
+  snapper[3]->show();
+  snapper[0]->raise();
+  snapper[1]->raise();
+  snapper[2]->raise();
+  snapper[3]->raise();
+  getApp()->flush(TRUE);
+  }
+
+
+// Hide snap rectangle
+void ShutterBug::hideSnapRectangle(){
+  snapper[0]->hide();
+  snapper[1]->hide();
+  snapper[2]->hide();
+  snapper[3]->hide();
+  getApp()->flush(TRUE);
+  }
+
+
+// Is snap rectangle shown
+FXbool ShutterBug::snapRectangleShown() const {
+  return snapper[0]->shown();
+  }
+
+
 // Read pixels from root to image
 void ShutterBug::readPixels(FXImage* image,const FXRectangle& r){
   FXDCWindow dc(image);
@@ -520,42 +515,15 @@ void ShutterBug::readPixels(FXImage* image,const FXRectangle& r){
   }
 
 
-// Snapshot rectangle
-FXbool ShutterBug::snapRectangle(FXColor*& data,const FXRectangle& r){
+// Just snap a rectangle
+FXbool ShutterBug::grabRectangle(FXColor*& data,const FXRectangle& r){
   data=NULL;
   if(1<r.w && 1<r.h){
-    FXTRACE((1,"size=%dx%d\n",r.w,r.h));
-
-    // Allocate memory for pixels
     if(FXCALLOC(&data,FXColor,r.w*r.h)){
-
-      // Hide snap rectangle
-      hideSnapRectangle();
-
-      // Hide myself
-      hide();
-
-      // Give other apps a chance to repaint
-      fxsleep(10000);
-
-      // Make image
       FXImage image(getApp(),data,IMAGE_KEEP,r.w,r.h);
-
-      // Create it
       image.create();
-
-      // Blit pixels from root window
       readPixels(&image,r);
-
-      // Read back pixels
       image.restore();
-
-      // Show snap rectangle
-      showSnapRectangle();
-
-      // Restore myself
-      show();
-
       return TRUE;
       }
     }
@@ -563,55 +531,91 @@ FXbool ShutterBug::snapRectangle(FXColor*& data,const FXRectangle& r){
   }
 
 
+// Snapshot rectangle
+FXbool ShutterBug::snapRectangle(FXColor*& data,const FXRectangle& r){
+  FXbool ok;
+
+  // Hide snap rectangle
+  hideSnapRectangle();
+
+  // Hide myself
+  hide();
+
+  // Give other apps a chance to repaint
+  FXThread::sleep(10000000);
+
+  // Snapshot rectangle
+  ok=grabRectangle(data,r);
+
+  // Show snap rectangle
+  showSnapRectangle();
+
+  // Restore myself
+  show();
+
+  return ok;
+  }
+
+
 // Restore image from off-screen pixmap
 long ShutterBug::onCmdSnap(FXObject*,FXSelector,void*){
   FXColor *data=NULL;
-  FXbool ok=FALSE;
 
   // Try grab pixels
   if(snapRectangle(data,rectangle)){
 
     // Construct file dialog
-    FXFileDialog savedialog(this,"Save Image");
+    FXFileDialog savedialog(this,tr("Save Image"));
     savedialog.setPatternList(patterns);
     savedialog.setCurrentPattern(fileformat);
-    savedialog.setFilename(FXFile::absolute(filename));
+    savedialog.setFilename(FXPath::absolute(filename));
 
     // Run file dialog
     if(savedialog.execute()){
       filename=savedialog.getFilename();
       fileformat=savedialog.getCurrentPattern();
-      if(!FXFile::exists(filename) || FXMessageBox::question(this,MBOX_YES_NO,"Overwrite Document","Overwrite existing document: %s?",filename.text())==MBOX_CLICKED_YES){
-        FXFileStream outfile;
-        if(outfile.open(filename,FXStreamSave)){
-          switch(fileformat){
-            case TYPE_GIF: ok=fxsaveGIF(outfile,data,rectangle.w,rectangle.h,quantize); break;
-            case TYPE_BMP: ok=fxsaveBMP(outfile,data,rectangle.w,rectangle.h); break;
-            case TYPE_XPM: ok=fxsaveXPM(outfile,data,rectangle.w,rectangle.h,quantize); break;
-            case TYPE_PCX: ok=fxsavePCX(outfile,data,rectangle.w,rectangle.h); break;
-            case TYPE_RGB: ok=fxsaveRGB(outfile,data,rectangle.w,rectangle.h); break;
-            case TYPE_XBM: ok=fxsaveXBM(outfile,data,rectangle.w,rectangle.h); break;
-            case TYPE_TGA: ok=fxsaveTGA(outfile,data,rectangle.w,rectangle.h); break;
-            case TYPE_PPM: ok=fxsavePPM(outfile,data,rectangle.w,rectangle.h); break;
-#ifdef HAVE_PNG_H
-            case TYPE_PNG: ok=fxsavePNG(outfile,data,rectangle.w,rectangle.h); break;
-#endif
-#ifdef HAVE_JPEG_H
-            case TYPE_JPG: ok=fxsaveJPG(outfile,data,rectangle.w,rectangle.h,75); break;
-#endif
-#ifdef HAVE_TIFF_H
-            case TYPE_TIF: ok=fxsaveTIF(outfile,data,rectangle.w,rectangle.h,0); break;
-#endif
-            case TYPE_RAS: ok=fxsaveRAS(outfile,data,rectangle.w,rectangle.h); break;
-            case TYPE_PS: ok=fxsavePS(outfile,data,rectangle.w,rectangle.h); break;
-            }
-          outfile.close();
-          }
+      if(FXStat::exists(filename) && FXMessageBox::question(this,MBOX_YES_NO,tr("Overwrite File"),tr("Overwrite existing image file: %s?"),filename.text())!=MBOX_CLICKED_YES) goto x;
+      if(!saveImage(filename,data,rectangle.w,rectangle.h)){
+        FXMessageBox::error(this,MBOX_OK,tr("Error Saving Image"),tr("Unable to save image to file: %s."),filename.text());
         }
       }
-    FXFREE(&data);
+
+    // Free pixels
+x:  FXFREE(&data);
     }
   return 1;
+  }
+
+
+// Save an image
+FXbool ShutterBug::saveImage(const FXString& file,FXColor* data,FXint w,FXint h){
+  FXbool ok=FALSE;
+  FXFileStream outfile;
+  if(outfile.open(file,FXStreamSave)){
+    switch(fileformat){
+      case TYPE_GIF: ok=fxsaveGIF(outfile,data,w,h,quantize); break;
+      case TYPE_BMP: ok=fxsaveBMP(outfile,data,w,h); break;
+      case TYPE_XPM: ok=fxsaveXPM(outfile,data,w,h,quantize); break;
+      case TYPE_PCX: ok=fxsavePCX(outfile,data,w,h); break;
+      case TYPE_RGB: ok=fxsaveRGB(outfile,data,w,h); break;
+      case TYPE_XBM: ok=fxsaveXBM(outfile,data,w,h); break;
+      case TYPE_TGA: ok=fxsaveTGA(outfile,data,w,h); break;
+      case TYPE_PPM: ok=fxsavePPM(outfile,data,w,h); break;
+#ifdef HAVE_PNG_H
+      case TYPE_PNG: ok=fxsavePNG(outfile,data,w,h); break;
+#endif
+#ifdef HAVE_JPEG_H
+      case TYPE_JPG: ok=fxsaveJPG(outfile,data,w,h,75); break;
+#endif
+#ifdef HAVE_TIFF_H
+      case TYPE_TIF: ok=fxsaveTIF(outfile,data,w,h,0); break;
+#endif
+      case TYPE_RAS: ok=fxsaveRAS(outfile,data,w,h); break;
+      case TYPE_PS: ok=fxsavePS(outfile,data,w,h); break;
+      }
+    outfile.close();
+    }
+  return ok;
   }
 
 
@@ -637,50 +641,44 @@ long ShutterBug::onClipboardRequest(FXObject* sender,FXSelector sel,void* ptr){
   // Try handling it in base class first
   if(FXShell::onClipboardRequest(sender,sel,ptr)) return 1;
 
-  // One of the supported image types?
-  if(event->target==bmpType || event->target==gifType || event->target==jpgType || event->target==pngType || event->target==xpmType || event->target==ppmType || event->target==imageType){
-    if(clipbuffer){
-      FXMemoryStream ms;
+  if(clipbuffer){
 
+    // One of the supported image types?
+    if(event->target==dndTypes[0] || event->target==dndTypes[1] || event->target==dndTypes[2] || event->target==dndTypes[3] || event->target==dndTypes[4] || event->target==dndTypes[5] || event->target==dndTypes[6]){
+      FXMemoryStream ms;
 
       // Open memory stream
       ms.open(FXStreamSave,NULL);
 
       // Render image to memory stream
-      if(event->target==bmpType){
+      if(event->target==dndTypes[0]){
         FXTRACE((1,"Request for bmpType\n"));
         fxsaveBMP(ms,clipbuffer,clipwidth,clipheight);
         }
-      else if(event->target==gifType){
+      else if(event->target==dndTypes[1]){
         FXTRACE((1,"Request for gifType\n"));
         fxsaveGIF(ms,clipbuffer,clipwidth,clipheight);
         }
-      else if(event->target==xpmType){
+      else if(event->target==dndTypes[2]){
         FXTRACE((1,"Request for xpmType\n"));
         fxsaveXPM(ms,clipbuffer,clipwidth,clipheight);
         }
-      else if(event->target==ppmType){
+      else if(event->target==dndTypes[3]){
         FXTRACE((1,"Request for ppmType\n"));
         fxsavePPM(ms,clipbuffer,clipwidth,clipheight);
         }
-#ifdef HAVE_JPEG_H
-      else if(event->target==jpgType){
+      else if(event->target==dndTypes[4]){
         FXTRACE((1,"Request for jpgType\n"));
         fxsaveJPG(ms,clipbuffer,clipwidth,clipheight,75);
         }
-#endif
-#ifdef HAVE_PNG_H
-      else if(event->target==pngType){
+      else if(event->target==dndTypes[5]){
         FXTRACE((1,"Request for pngType\n"));
         fxsavePNG(ms,clipbuffer,clipwidth,clipheight);
         }
-#endif
-#ifdef HAVE_TIFF_H
-      else if(event->target==tifType){
+      else if(event->target==dndTypes[6]){
         FXTRACE((1,"Request for tifType\n"));
         fxsaveTIF(ms,clipbuffer,clipwidth,clipheight,0);
         }
-#endif
 #ifdef WIN32
   //  else if(event->target==imageType){
   //    FXTRACE((1,"Request for imageType\n"));
@@ -705,31 +703,15 @@ long ShutterBug::onClipboardRequest(FXObject* sender,FXSelector sel,void* ptr){
 
 // Snapshot to clipboard
 long ShutterBug::onCmdSnapClipboard(FXObject*,FXSelector,void*){
-  FXDragType types[7];
-
-  // Free old, if any
   FXFREE(&clipbuffer);
   clipwidth=0;
   clipheight=0;
-
-  types[0]=bmpType;
-  types[1]=gifType;
-  types[2]=jpgType;
-  types[3]=pngType;
-  types[4]=tifType;
-  types[5]=xpmType;
-  types[6]=ppmType;
-
-  // Grab clipboard
-  if(acquireClipboard(types,7)){
-
-    // Grab pixels
+  if(acquireClipboard(dndTypes,ARRAYNUMBER(dndTypes))){
     if(snapRectangle(clipbuffer,rectangle)){
       clipwidth=rectangle.w;
       clipheight=rectangle.h;
       }
     }
-
   return 1;
   }
 
@@ -741,12 +723,117 @@ long ShutterBug::onCmdSnapDelayed(FXObject*,FXSelector,void*){
   }
 
 
+// Get frame number from filename
+static FXint frameFromFilename(const FXString& file){
+  FXint head=file.rfind(PATHSEP)+1;
+  FXint tail=file.find('.',head);
+  FXint frame=0;
+  if(0<tail){
+    FXint wgt=1;
+    while(head<tail && Ascii::isDigit(file[tail-1])){
+      frame+=wgt*Ascii::digitValue(file[--tail]); wgt*=10;
+      }
+    }
+  return frame;
+  }
+
+
+// Get filename from frame number
+static FXString filenameFromFrame(const FXString& file,FXint frame){
+  FXString name=file;
+  FXint head=name.rfind(PATHSEP)+1;
+  FXint tail=name.find('.',head);
+  if(0<tail){
+    FXint start=tail;
+    while(head<start && Ascii::isDigit(name[start-1])) start--;
+    if(start<tail){
+      name.replace(start,tail-start,FXStringFormat("%0*d",tail-start,frame));
+      }
+    else{
+      name.insert(start,FXStringFormat("%04d",frame));
+      }
+    }
+  return name;
+  }
+
+
+// Start recording a movie
+long ShutterBug::onCmdRecordMovie(FXObject*,FXSelector,void*){
+  FXFileDialog savedialog(this,tr("Save Image"));
+  savedialog.setPatternList(patterns);
+  savedialog.setCurrentPattern(fileformat);
+  savedialog.setFilename(FXPath::absolute(filenameFromFrame(filename,filecount)));
+  if(savedialog.execute()){
+    filename=savedialog.getFilename();
+    fileformat=savedialog.getCurrentPattern();
+    filecount=frameFromFilename(filename);
+    FXTRACE((1,"Frame: %s %d\n",filename.text(),filecount));
+    hideSnapRectangle();
+    hide();
+    getApp()->addTimeout(this,ID_RECORD_FRAME,rate);
+    }
+  return 1;
+  }
+
+
+// Record one frame
+long ShutterBug::onCmdRecordFrame(FXObject*,FXSelector,void*){
+  FXint curx,cury; FXuint state;
+  FXColor *data=NULL;
+  FXbool ok=FALSE;
+  FXWindow *root=getRoot();
+  filename=filenameFromFrame(filename,filecount);
+  FXTRACE((1,"Snap Frame: %s\n",filename.text()));
+  if(grabRectangle(data,rectangle)){
+    ok=saveImage(filename,data,rectangle.w,rectangle.h);
+    FXFREE(&data);
+    }
+  root->getCursorPosition(curx,cury,state);
+  if(ok && root->getX()<curx && curx+1<root->getWidth() && root->getY()<cury && cury+1<root->getHeight()){
+    getApp()->addTimeout(this,ID_RECORD_FRAME,rate);
+    filecount++;
+    }
+  else{
+    showSnapRectangle();
+    show();
+    }
+  return 1;
+  }
+
+
 // Set snapshot delay
 long ShutterBug::onCmdDelay(FXObject*,FXSelector,void*){
   FXint time=(FXint)delay;
-  if(FXInputDialog::getInteger(time,this,"Snap Shot Delay","Snapshot delay in milliseconds:",NULL,100,10000)){
+  if(FXInputDialog::getInteger(time,this,tr("Snap Shot Delay"),tr("Snapshot delay in milliseconds:"),NULL,100,10000)){
     delay=(FXuint)time;
     }
+  return 1;
+  }
+
+
+// Set auto-recording rate
+long ShutterBug::onCmdRecordRate(FXObject*,FXSelector,void*){
+  FXint millisecs=(FXint)rate;
+  if(FXInputDialog::getInteger(millisecs,this,tr("Record Rate"),tr("Record one frame every milliseconds:"),NULL,10,10000)){
+    rate=(FXuint)millisecs;
+    }
+  return 1;
+  }
+
+
+// Set file count for auto-recording
+long ShutterBug::onCmdSetCount(FXObject*,FXSelector,void*){
+  FXint count=filecount;
+  if(FXInputDialog::getInteger(count,this,tr("File number"),tr("File number to record next:"),NULL,1,1000000)){
+    filecount=count;
+    }
+  return 1;
+  }
+
+
+// Reset auto-recording file count
+long ShutterBug::onCmdResetCount(FXObject*,FXSelector,void*){
+  filecount=1;
   return 1;
   }
 
@@ -859,13 +946,13 @@ long ShutterBug::onLeaveSnapper(FXObject*,FXSelector,void*){
 
 // About box
 long ShutterBug::onCmdAbout(FXObject*,FXSelector,void*){
-  FXDialogBox about(this,"About ShutterBug",DECOR_TITLE|DECOR_BORDER,0,0,0,0, 10,10,0,0, 0,0);
+  FXDialogBox about(this,tr("About ShutterBug"),DECOR_TITLE|DECOR_BORDER,0,0,0,0, 10,10,0,0, 0,0);
   new FXLabel(&about,FXString::null,bigicon,FRAME_GROOVE|LAYOUT_SIDE_LEFT|LAYOUT_CENTER_Y|JUSTIFY_CENTER_X|JUSTIFY_CENTER_Y);
   FXVerticalFrame* side=new FXVerticalFrame(&about,LAYOUT_SIDE_RIGHT|LAYOUT_FILL_X|LAYOUT_FILL_Y,0,0,0,0, 10,10,10,10, 0,0);
   new FXLabel(side,"ShutterBug",NULL,JUSTIFY_LEFT|ICON_BEFORE_TEXT|LAYOUT_FILL_X);
   new FXHorizontalSeparator(side,SEPARATOR_LINE|LAYOUT_FILL_X);
-  new FXLabel(side,FXStringFormat("\nFOX Screenshot Utility, version %d.%d.%d.\nShutterBug uses the FOX Toolkit version %d.%d.%d.\nCopyright (C) 2003,2005 Jeroen van der Zijp (jeroen@fox-toolkit.org).\n ",VERSION_MAJOR,VERSION_MINOR,VERSION_PATCH,FOX_MAJOR,FOX_MINOR,FOX_LEVEL),NULL,JUSTIFY_LEFT|LAYOUT_FILL_X|LAYOUT_FILL_Y);
-  FXButton *button=new FXButton(side,"&OK",NULL,&about,FXDialogBox::ID_ACCEPT,BUTTON_INITIAL|BUTTON_DEFAULT|FRAME_RAISED|FRAME_THICK|LAYOUT_RIGHT,0,0,0,0,32,32,2,2);
+  new FXLabel(side,FXStringFormat(tr("\nFOX Screenshot Utility, version %d.%d.%d.\nShutterBug uses the FOX Toolkit version %d.%d.%d.\nCopyright (C) 2003,2005 Jeroen van der Zijp (jeroen@fox-toolkit.org).\n "),VERSION_MAJOR,VERSION_MINOR,VERSION_PATCH,FOX_MAJOR,FOX_MINOR,FOX_LEVEL),NULL,JUSTIFY_LEFT|LAYOUT_FILL_X|LAYOUT_FILL_Y);
+  FXButton *button=new FXButton(side,tr("&OK"),NULL,&about,FXDialogBox::ID_ACCEPT,BUTTON_INITIAL|BUTTON_DEFAULT|FRAME_RAISED|FRAME_THICK|LAYOUT_RIGHT,0,0,0,0,32,32,2,2);
   button->setFocus();
   about.execute();
   return 1;
@@ -928,7 +1015,7 @@ long ShutterBug::onCmdLineWeight(FXObject*,FXSelector sel,void*){
 
 // Change line color
 long ShutterBug::onCmdLineColor(FXObject*,FXSelector,void*){
-  FXColorDialog colordialog(this,"Line Color");
+  FXColorDialog colordialog(this,tr("Line Color"));
   colordialog.setOpaqueOnly(TRUE);
   colordialog.setRGBA(color);
   if(colordialog.execute()){
@@ -973,6 +1060,7 @@ long ShutterBug::onUpdQuantize(FXObject* sender,FXSelector,void*){
 
 // Destroy main window
 ShutterBug::~ShutterBug(){
+  getApp()->removeTimeout(this,ID_RECORD_FRAME);
   getApp()->removeTimeout(this,ID_SNAPSHOT);
   FXFREE(&clipbuffer);
   delete snapper[0];

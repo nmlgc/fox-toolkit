@@ -18,13 +18,12 @@ const FXuint TIMER_INTERVAL = 100;
 
 
 // Settings dialog thanks to Sander Jansen <sander@knology.net>
-class SettingsDialog : public FXDialogBox {
-  FXDECLARE(SettingsDialog)
+class GLSettingsDialog : public FXDialogBox {
+  FXDECLARE(GLSettingsDialog)
 private:
-  SettingsDialog(){}
+  GLSettingsDialog(){}
 public:
-  SettingsDialog(FXWindow* owner,FXGLVisual * vis);
-  virtual ~SettingsDialog();
+  GLSettingsDialog(FXWindow* owner,FXGLVisual *vis);
   };
 
 
@@ -33,16 +32,33 @@ public:
 
 
 // Implementation
-FXIMPLEMENT(SettingsDialog,FXDialogBox,NULL,0)
+FXIMPLEMENT(GLSettingsDialog,FXDialogBox,NULL,0)
 
 
 // Construct a dialog box
-SettingsDialog::SettingsDialog(FXWindow* owner,FXGLVisual * vis):FXDialogBox(owner,"OpenGL Info",DECOR_TITLE|DECOR_BORDER,0,600){
-  FXVerticalFrame * master=new FXVerticalFrame(this,LAYOUT_FILL_X|LAYOUT_FILL_Y,0,0,0,0, 0,0,0,0);
+GLSettingsDialog::GLSettingsDialog(FXWindow* owner,FXGLVisual *vis):FXDialogBox(owner,"OpenGL Info",DECOR_STRETCHABLE|DECOR_TITLE|DECOR_BORDER,0,0,600){
+  FXTabBook *tabbook;
+  FXVerticalFrame *frame1;
+  FXGroupBox *driverbox, *limitsbox, *glextbox, *displaybox;
+  FXMatrix *v_matrix, *v_matrix2;
+  FXHorizontalFrame *options;
+  GLint	intval;
+  GLint	intvals[2];
+  char	*token, *text, *tmp;
 
-  //gl version information
-  FXGroupBox *versionbox=new FXGroupBox(master,"OpenGL Driver Information",GROUPBOX_NORMAL|FRAME_RIDGE|LAYOUT_FILL_X);
-  FXMatrix *v_matrix=new FXMatrix(versionbox,2,MATRIX_BY_COLUMNS,0,0,0,0,0,0,0,0);
+  FXVerticalFrame *m_master=new FXVerticalFrame(this, LAYOUT_FILL_X|LAYOUT_FILL_Y, 0,0,0,0, 0,0,0,0);
+
+  tabbook=new FXTabBook(m_master,NULL,0,PACK_UNIFORM_WIDTH|PACK_UNIFORM_HEIGHT|LAYOUT_FILL_X|LAYOUT_FILL_Y|LAYOUT_RIGHT);
+
+  //
+  // Tab 1: general info
+  //
+  new FXTabItem(tabbook, "General", NULL);
+  frame1 = new FXVerticalFrame(tabbook, LAYOUT_FILL_X|LAYOUT_FILL_Y|FRAME_THICK|FRAME_RAISED,0,0,0,0);
+
+  // Opengl version information
+  driverbox=new FXGroupBox(frame1, "Driver", GROUPBOX_NORMAL|FRAME_RIDGE|LAYOUT_FILL_X);
+  v_matrix=new FXMatrix(driverbox, 2, MATRIX_BY_COLUMNS);
 
   new FXLabel(v_matrix,"Vendor: ",NULL,LABEL_NORMAL);
   new FXLabel(v_matrix,FXStringFormat("%s",glGetString(GL_VENDOR)),NULL,LABEL_NORMAL);
@@ -56,33 +72,71 @@ SettingsDialog::SettingsDialog(FXWindow* owner,FXGLVisual * vis):FXDialogBox(own
   new FXLabel(v_matrix,"GLU Version: ",NULL,LABEL_NORMAL);
   new FXLabel(v_matrix,FXStringFormat("%s",gluGetString(GLU_VERSION)),NULL,LABEL_NORMAL);
 
-  FXHorizontalFrame *options=new FXHorizontalFrame(master,LAYOUT_SIDE_TOP|FRAME_NONE|LAYOUT_FILL_X|LAYOUT_FILL_Y,0,0,0,0,0,0,0,0);
+  // Opengl implementation-dependent stuff
+  limitsbox=new FXGroupBox(frame1, "Implementation limits", GROUPBOX_NORMAL|FRAME_RIDGE|LAYOUT_FILL_X);
+  v_matrix2=new FXMatrix(limitsbox, 2, MATRIX_BY_COLUMNS);
 
-  //Display Mode
-  FXGroupBox *dmbox=new FXGroupBox(options,"Display Mode",GROUPBOX_NORMAL|FRAME_RIDGE|LAYOUT_FILL_Y);
-  FXMatrix *mat=new FXMatrix(dmbox,2,MATRIX_BY_COLUMNS);
+  glGetIntegerv(GL_MAX_VIEWPORT_DIMS, intvals);
+  new FXLabel(v_matrix2, "Maximum viewport size: ");
+  new FXLabel(v_matrix2, FXStringFormat("%d x %d", intvals[0], intvals[1]));
 
+  glGetIntegerv(GL_MAX_TEXTURE_SIZE, &intval);
+  new FXLabel(v_matrix2, "Maximum texture size (w or h): ");
+  new FXLabel(v_matrix2, FXStringFormat("%d", intval));
 
-  new FXLabel(mat,"Accelerated",NULL,LABEL_NORMAL);
+  glGetIntegerv(GL_MAX_LIGHTS, &intval);
+  new FXLabel(v_matrix2, "Maximum number of lights: ");
+  new FXLabel(v_matrix2, FXStringFormat("%d", intval));
+
+  glGetIntegerv(GL_MAX_CLIP_PLANES, &intval);
+  new FXLabel(v_matrix2, "Maximum number of clipping planes: ");
+  new FXLabel(v_matrix2, FXStringFormat("%d", intval));
+
+  glGetIntegerv(GL_MAX_MODELVIEW_STACK_DEPTH, &intval);
+  new FXLabel(v_matrix2, "Maximum modelview-matrix stack depth: ");
+  new FXLabel(v_matrix2, FXStringFormat("%d", intval));
+
+  glGetIntegerv(GL_MAX_PROJECTION_STACK_DEPTH, &intval);
+  new FXLabel(v_matrix2, "Maximum projection-matrix stack depth: ");
+  new FXLabel(v_matrix2, FXStringFormat("%d", intval));
+
+  glGetIntegerv(GL_MAX_ATTRIB_STACK_DEPTH, &intval);
+  new FXLabel(v_matrix2, "Maximum attribute stack depth: ");
+  new FXLabel(v_matrix2, FXStringFormat("%d", intval));
+
+  options=new FXHorizontalFrame(frame1,LAYOUT_SIDE_TOP|FRAME_NONE|LAYOUT_FILL_X|LAYOUT_FILL_Y,0,0,0,0,0,0,0,0);
+
+  // Display mode info
+  displaybox=new FXGroupBox(options,"Display Mode",GROUPBOX_NORMAL|FRAME_RIDGE|LAYOUT_FILL_Y);
+  FXMatrix *mat=new FXMatrix(displaybox, 2, MATRIX_BY_COLUMNS);
+
+  new FXLabel(mat,"Hardware-accelerated",NULL,LABEL_NORMAL);
   if(vis->isAccelerated())
-    new FXLabel(mat,"enabled",NULL,LABEL_NORMAL);
+    new FXLabel(mat,"yes",NULL,LABEL_NORMAL);
   else
-    new FXLabel(mat,"disabled",NULL,LABEL_NORMAL);
+    new FXLabel(mat,"no",NULL,LABEL_NORMAL);
 
   new FXLabel(mat,"Double Buffering",NULL,LABEL_NORMAL);
   if(vis->isDoubleBuffer())
-    new FXLabel(mat,"enabled",NULL,LABEL_NORMAL);
+    new FXLabel(mat,"yes",NULL,LABEL_NORMAL);
   else
-    new FXLabel(mat,"disabled",NULL,LABEL_NORMAL);
+    new FXLabel(mat,"no",NULL,LABEL_NORMAL);
 
   new FXLabel(mat,"Stereo View",NULL,LABEL_NORMAL);
   if(vis->isStereo())
-    new FXLabel(mat,"enabled",NULL,LABEL_NORMAL);
+    new FXLabel(mat,"yes",NULL,LABEL_NORMAL);
   else
-    new FXLabel(mat,"disabled",NULL,LABEL_NORMAL);
+    new	FXLabel(mat,"no",NULL,LABEL_NORMAL);
+
+  new FXLabel(mat,"Buffer-swap by copy",NULL,LABEL_NORMAL);
+  if(vis->isBufferSwapCopy())
+    new FXLabel(mat,"yes",NULL,LABEL_NORMAL);
+  else
+    new FXLabel(mat,"no",NULL,LABEL_NORMAL);
 
   new FXLabel(mat,"Color Depth",NULL,LABEL_NORMAL);
-  new FXLabel(mat,FXStringFormat("%d",vis->getDepth()),NULL,LABEL_NORMAL);
+  new FXLabel(mat,FXStringFormat("%d",
+    vis->getActualRedSize()+vis->getActualGreenSize()+vis->getActualBlueSize()+vis->getActualAlphaSize()));
 
   new FXLabel(mat,"Depth Buffer Size",NULL,LABEL_NORMAL);
   new FXLabel(mat,FXStringFormat("%d",vis->getActualDepthSize()),NULL,LABEL_NORMAL);
@@ -96,53 +150,44 @@ SettingsDialog::SettingsDialog(FXWindow* owner,FXGLVisual * vis):FXDialogBox(own
   new FXLabel(mat,"Accum RGBA",NULL,LABEL_NORMAL);
   new FXLabel(mat,FXStringFormat("%d-%d-%d-%d",vis->getActualAccumRedSize(),vis->getActualAccumGreenSize(),vis->getActualAccumBlueSize(),vis->getActualAccumAlphaSize()),NULL,LABEL_NORMAL);
 
-  FXGroupBox *exbox= new FXGroupBox(options,"Available GL/GLU Extensions",GROUPBOX_NORMAL|FRAME_RIDGE|LAYOUT_FILL_Y|LAYOUT_FILL_X);
+  // List of extensions
+  glextbox= new FXGroupBox(options,"Available Extensions",GROUPBOX_NORMAL|FRAME_RIDGE|LAYOUT_FILL_Y|LAYOUT_FILL_X);
+  FXVerticalFrame *listframe=new FXVerticalFrame(glextbox,LAYOUT_FILL_X|LAYOUT_FILL_Y|FRAME_SUNKEN|FRAME_THICK,0,0,0,0, 0,0,0,0);
 
-  FXVerticalFrame *listframe=new FXVerticalFrame(exbox,LAYOUT_FILL_X|LAYOUT_FILL_Y|FRAME_SUNKEN|FRAME_THICK,0,0,0,0,0,0,0,0,0,0);
+  FXList *extensionList=new FXList(listframe,NULL,0,FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_FILL_Y);
 
-  FXList *pExtList=new FXList(listframe,NULL,0,FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_FILL_Y);
-
-  char *token,*text,*tmp;
-
-  // Get GL extensions
+  // Get OpenGL extensions
   tmp=(char*)glGetString(GL_EXTENSIONS);
   if(tmp){
     text=strdup(tmp);
     token=strtok(text," ");
-    while(token!=NULL){
-      pExtList->appendItem(FXStringFormat("(GL) %s",token));
+    while(token){
+      extensionList->appendItem(FXStringFormat("[GL] %s",token));
       token=strtok(NULL," ");
       }
     free(text);
     }
 
   // Get GLU extensions
-#if defined(GLU_VERSION_1_1)
+#ifdef GLU_VERSION_1_1
   tmp=(char*)gluGetString(GLU_EXTENSIONS);
   if(tmp){
     text=strdup(tmp);
     token=strtok(text," ");
     while(token!=NULL){
-      pExtList->appendItem(FXStringFormat("(GLU) %s",token));
+      extensionList->appendItem(FXStringFormat("[GLU] %s",token));
       token=strtok(NULL," ");
       }
     free(text);
     }
 #endif
 
-  new FXHorizontalSeparator(master);
+  // Button frame
+  FXHorizontalFrame *control=new FXHorizontalFrame(m_master, LAYOUT_SIDE_TOP|FRAME_NONE|LAYOUT_FILL_X);
 
-  // Contents
-  FXHorizontalFrame * control=new FXHorizontalFrame(master,LAYOUT_SIDE_TOP|FRAME_NONE|LAYOUT_FILL_X);
-
-  // Accept
   new FXButton(control,"OK",NULL,this,ID_ACCEPT,FRAME_RAISED|FRAME_THICK|LAYOUT_CENTER_X|LAYOUT_CENTER_Y,0,0,0,0, 20,20,3,3);
   }
 
-
-// Must delete the menus
-SettingsDialog::~SettingsDialog(){
-  }
 
 
 /*******************************************************************************/
@@ -209,7 +254,7 @@ public:
 
 
 
-// Message Map 
+// Message Map
 FXDEFMAP(GLTestWindow) GLTestWindowMap[]={
 
   //________Message_Type_________ID_____________________Message_Handler_______
@@ -551,7 +596,7 @@ void GLTestWindow::drawScene(){
 // Pop a dialog showing OpenGL properties
 long GLTestWindow::onCmdOpenGL(FXObject*,FXSelector,void*){
   glcanvas->makeCurrent();
-  SettingsDialog sd((FXWindow*)this,glvisual);
+  GLSettingsDialog sd((FXWindow*)this,glvisual);
   glcanvas->makeNonCurrent();
   sd.execute();
   return 1;

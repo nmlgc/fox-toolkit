@@ -5,7 +5,7 @@
 ##############################################################################
 # Copyright (C) 1997,2005 by Jeroen van der Zijp.   All Rights Reserved.     #
 ##############################################################################
-# $Id: Makefile.wc,v 1.8 2005/02/04 04:33:19 fox Exp $                       #
+# $Id: Makefile.wc,v 1.13 2006/03/10 04:31:45 fox Exp $                       #
 ##############################################################################
 # This library is free software; you can redistribute it and/or              #
 # modify it under the terms of the GNU Library General Public                #
@@ -24,118 +24,58 @@
 
 # For use with OpenWatcom C++ v1.0 or later
 CXX       = wpp386
-CXXFLAGS  = /w3 /zq /5r /ei /fp5 /oneatlx /zp=4
 RM        = del
 TOPDIR    = ..
-DEFINES   = -DNDEBUG -DFOX_BIGENDIAN=0 -DWIN32 -D_WINDOWS -DHAVE_GL_H -DHAVE_GLU_H #-DHAVE_PNG_H -DHAVE_JPEG_H -DHAVE_TIFF_H -DXMD_H
+
+CXXFLAGS  = /d3 /w3 /e1 /zq /5r /ei /xs /xr /fp5 /otexan /zp=4
+DEFINES   = -DFOX_BIGENDIAN=0 -DNDEBUG -D_WINDOWS -DWIN32 -DUNICODE -DHAVE_GL_H -DHAVE_GLU_H -DHAVE_VSSCANF #-DHAVE_PNG_H -DHAVE_JPEG_H -DHAVE_TIFF_H -DXMD_H
+
 LD	  = wcl386
-LDFLAGS   = -l=nt_win
+LDFLAGS   = -l=nt_win -d2  # Window exe
+LDCFLAGS  = -l=nt       # Console exe
+
 GLLIBS    = opengl32.lib glu32.lib
 INCDIRS   = -I$(TOPDIR)\include
-FOXLIB    = $(TOPDIR)\src\FOX-1.4.lib $(%WATCOM)\lib386\nt\comctl32.lib $(%WATCOM)\lib386\nt\wsock32.lib
+FOXLIB    = $(TOPDIR)\src\FOX-1.6.lib $(%WATCOM)\lib386\nt\comctl32.lib $(%WATCOM)\lib386\nt\wsock32.lib
 
 PROGRAMS  =
+PROGRAMS += gltest.exe
+PROGRAMS += glviewer.exe
+PROGRAMS += dctest.exe
+PROGRAMS += codecs.exe
+PROGRAMS += dialog.exe
 PROGRAMS += ControlPanel.exe
-PROGRAMS += rex.exe
-PROGRAMS += minheritance.exe
-PROGRAMS += memmap.exe
-PROGRAMS += mditest.exe
-PROGRAMS += table.exe
 PROGRAMS += groupbox.exe
-PROGRAMS += foursplit.exe
-PROGRAMS += datatarget.exe
 PROGRAMS += scribble.exe
-PROGRAMS += splitter.exe
-PROGRAMS += shutter.exe
-PROGRAMS += image.exe
+PROGRAMS += wizard.exe
+PROGRAMS += layout.exe
+PROGRAMS += rex.exe
+PROGRAMS += table.exe
+PROGRAMS += memmap.exe
+PROGRAMS += minheritance.exe
+PROGRAMS += expression.exe
+PROGRAMS += bitmapviewer.exe
+PROGRAMS += imageviewer.exe
+PROGRAMS += button.exe
+PROGRAMS += datatarget.exe
+PROGRAMS += dirlist.exe
+PROGRAMS += foursplit.exe
 PROGRAMS += header.exe
 PROGRAMS += hello.exe
 PROGRAMS += hello2.exe
-PROGRAMS += switcher.exe
 PROGRAMS += iconlist.exe
+PROGRAMS += image.exe
+PROGRAMS += mditest.exe
+PROGRAMS += shutter.exe
+PROGRAMS += splitter.exe
+PROGRAMS += switcher.exe
 PROGRAMS += tabbook.exe
-PROGRAMS += dialog.exe
-PROGRAMS += dirlist.exe
-PROGRAMS += button.exe
-PROGRAMS += dctest.exe
-PROGRAMS += glviewer.exe
-PROGRAMS += gltest.exe
-PROGRAMS += wizard.exe
-PROGRAMS += imageviewer.exe
+PROGRAMS += ratio.exe
 
 .cpp.obj: .AUTODEPEND
 	$(CXX) $(INCDIRS) $(CXXFLAGS) $(DEFINES) $*.cpp
 
 all: $(PROGRAMS)
-
-ControlPanel.exe: $(FOXLIB) ControlPanel.obj
-	$(LD) $(LDFLAGS) ControlPanel.obj $(FOXLIB)
-
-rex.exe: $(FOXLIB) rex.obj
-	$(LD) rex.obj $(FOXLIB)			# note: create console app
-
-minheritance.exe: $(FOXLIB) minheritance.obj
-	$(LD) minheritance.obj $(FOXLIB)	# note: create console app
-
-memmap.exe: $(FOXLIB) memmap.obj
-	$(LD) memmap.obj $(FOXLIB)	# note: create console app
-
-wizard.exe: $(FOXLIB) wizard.obj
-	$(LD) $(LDFLAGS) wizard.obj $(FOXLIB)
-
-foursplit.exe: $(FOXLIB) foursplit.obj
-	$(LD) $(LDFLAGS) foursplit.obj $(FOXLIB)
-
-tabbook.exe: $(FOXLIB) tabbook.obj
-	$(LD) $(LDFLAGS) tabbook.obj $(FOXLIB)
-
-table.exe: $(FOXLIB) table.obj
-	$(LD) $(LDFLAGS) table.obj $(FOXLIB)
-
-switcher.exe: $(FOXLIB) switcher.obj
-	$(LD) $(LDFLAGS) switcher.obj $(FOXLIB)
-
-button.exe: $(FOXLIB) button.obj
-	$(LD) $(LDFLAGS) button.obj $(FOXLIB)
-
-mditest.exe: $(FOXLIB) mditest.obj
-	$(LD) $(LDFLAGS) mditest.obj $(FOXLIB)
-
-datatarget.exe: $(FOXLIB) datatarget.obj
-	$(LD) $(LDFLAGS) datatarget.obj $(FOXLIB)
-
-imageviewer.exe: $(FOXLIB) imageviewer.obj
-	$(LD) $(LDFLAGS) imageviewer.obj $(FOXLIB) #libpng.lib zlib.lib libjpeg.lib libtiff.lib
-
-hello.exe: $(FOXLIB) hello.obj
-	$(LD) $(LDFLAGS) hello.obj $(FOXLIB)
-
-hello2.exe: $(FOXLIB) hello2.obj
-	$(LD) $(LDFLAGS) hello2.obj $(FOXLIB)
-
-dirlist.exe: $(FOXLIB) dirlist.obj
-	$(LD) $(LDFLAGS) dirlist.obj $(FOXLIB)
-
-groupbox.exe: $(FOXLIB) groupbox.obj
-	$(LD) $(LDFLAGS) groupbox.obj $(FOXLIB)
-
-scribble.exe: $(FOXLIB) scribble.obj
-	$(LD) $(LDFLAGS) scribble.obj $(FOXLIB)
-
-splitter.exe: $(FOXLIB) splitter.obj
-	$(LD) $(LDFLAGS) splitter.obj $(FOXLIB)
-
-iconlist.exe: $(FOXLIB) iconlist.obj
-	$(LD) $(LDFLAGS) iconlist.obj $(FOXLIB)
-
-header.exe: $(FOXLIB) header.obj
-	$(LD) $(LDFLAGS) header.obj $(FOXLIB)
-
-shutter.exe: $(FOXLIB) shutter.obj
-	$(LD) $(LDFLAGS) shutter.obj $(FOXLIB)
-
-image.exe: $(FOXLIB) image.obj
-	$(LD) $(LDFLAGS) image.obj $(FOXLIB)
 
 gltest.exe: $(FOXLIB) gltest.obj
 	$(LD) $(LDFLAGS) gltest.obj $(FOXLIB) $(GLLIBS)
@@ -143,13 +83,98 @@ gltest.exe: $(FOXLIB) gltest.obj
 glviewer.exe: $(FOXLIB) glviewer.obj
 	$(LD) $(LDFLAGS) glviewer.obj $(FOXLIB) $(GLLIBS)
 
+dctest.exe: $(FOXLIB) dctest.obj
+	$(LD) $(LDFLAGS) dctest.obj $(FOXLIB)
+
+codecs.exe: $(FOXLIB) codecs.obj
+	$(LD) $(LDFLAGS) codecs.obj $(FOXLIB)
+
 dialog.exe: $(FOXLIB) dialog.obj
 	$(LD) $(LDFLAGS) dialog.obj $(FOXLIB)
 
-dctest.exe: $(FOXLIB) dctest.obj
-	$(LD) $(LDFLAGS) dctest.obj $(FOXLIB)
+ControlPanel.exe: $(FOXLIB) ControlPanel.obj controlpanelicon.h
+	$(LD) $(LDFLAGS) ControlPanel.obj $(FOXLIB)
+
+groupbox.exe: $(FOXLIB) groupbox.obj
+	$(LD) $(LDFLAGS) groupbox.obj $(FOXLIB)
+
+scribble.exe: $(FOXLIB) scribble.obj
+	$(LD) $(LDFLAGS) scribble.obj $(FOXLIB)
+
+wizard.exe: $(FOXLIB) wizard.obj
+	$(LD) $(LDFLAGS) wizard.obj $(FOXLIB)
+
+layout.exe: $(FOXLIB) layout.obj
+	$(LD) $(LDFLAGS) layout.obj $(FOXLIB)
+
+rex.exe: $(FOXLIB) rex.obj
+	$(LD) $(LDCFLAGS) rex.obj $(FOXLIB)     # note: create console app
+
+table.exe: $(FOXLIB) table.obj
+	$(LD) $(LDFLAGS) table.obj $(FOXLIB)
+
+memmap.exe: $(FOXLIB) memmap.obj
+	$(LD) $(LDCFLAGS) memmap.obj $(FOXLIB)  # note: create console app
+
+minheritance.exe: $(FOXLIB) minheritance.obj
+	$(LD) $(LDCFLAGS) minheritance.obj $(FOXLIB)    # note: create console app
+
+expression.exe: $(FOXLIB) expression.obj
+	$(LD) $(LDCFLAGS) expression.obj $(FOXLIB)    # note: create console app
+
+bitmapviewer.exe: $(FOXLIB) bitmapviewer.obj
+	$(LD) $(LDFLAGS) bitmapviewer.obj $(FOXLIB)
+
+imageviewer.exe: $(FOXLIB) imageviewer.obj
+	$(LD) $(LDFLAGS) imageviewer.obj $(FOXLIB) #libpng.lib zlib.lib libjpeg.lib libtiff.lib
+
+button.exe: $(FOXLIB) button.obj
+	$(LD) $(LDFLAGS) button.obj $(FOXLIB)
+
+datatarget.exe: $(FOXLIB) datatarget.obj
+	$(LD) $(LDFLAGS) datatarget.obj $(FOXLIB)
+
+dirlist.exe: $(FOXLIB) dirlist.obj
+	$(LD) $(LDFLAGS) dirlist.obj $(FOXLIB)
+
+foursplit.exe: $(FOXLIB) foursplit.obj
+	$(LD) $(LDFLAGS) foursplit.obj $(FOXLIB)
+
+header.exe: $(FOXLIB) header.obj
+	$(LD) $(LDFLAGS) header.obj $(FOXLIB)
+
+hello.exe: $(FOXLIB) hello.obj
+	$(LD) $(LDFLAGS) hello.obj $(FOXLIB)
+
+hello2.exe: $(FOXLIB) hello2.obj
+	$(LD) $(LDFLAGS) hello2.obj $(FOXLIB)
+
+iconlist.exe: $(FOXLIB) iconlist.obj
+	$(LD) $(LDFLAGS) iconlist.obj $(FOXLIB)
+
+image.exe: $(FOXLIB) image.obj
+	$(LD) $(LDFLAGS) image.obj $(FOXLIB)
+
+mditest.exe: $(FOXLIB) mditest.obj
+	$(LD) $(LDFLAGS) mditest.obj $(FOXLIB)
+
+shutter.exe: $(FOXLIB) shutter.obj
+	$(LD) $(LDFLAGS) shutter.obj $(FOXLIB)
+
+splitter.exe: $(FOXLIB) splitter.obj
+	$(LD) $(LDFLAGS) splitter.obj $(FOXLIB)
+
+switcher.exe: $(FOXLIB) switcher.obj
+	$(LD) $(LDFLAGS) switcher.obj $(FOXLIB)
+
+tabbook.exe: $(FOXLIB) tabbook.obj
+	$(LD) $(LDFLAGS) tabbook.obj $(FOXLIB)
+
+ratio.exe: $(FOXLIB) ratio.obj
+	$(LD) $(LDFLAGS) ratio.obj $(FOXLIB)
+
 
 clean: .SYMBOLIC
 	del *.obj
 	del *.exe
-	del *.tds
+	del *.err

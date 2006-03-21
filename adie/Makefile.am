@@ -4,7 +4,7 @@ CXXFLAGS = @CXXFLAGS@ @X_CFLAGS@
 INCLUDES = -I$(top_srcdir)/include -I$(top_builddir)/include
 RESWRAP  = $(top_builddir)/utils/reswrap
 SUFFIXES = .gif .bmp
-LDADD = ../src/libFOX-1.4.la -lm
+LDADD = ../src/libFOX-1.6.la -lm
 
 
 bin_PROGRAMS = adie
@@ -16,10 +16,10 @@ man_MANS = adie.1
 ICONS  = \
 adie_gif.gif \
 big_gif.gif \
-bookset_gif.gif \
+bookdel_gif.gif \
 booknext_gif.gif \
 bookprev_gif.gif \
-bookdel_gif.gif \
+bookset_gif.gif \
 close_gif.gif \
 colors_gif.gif \
 copy_gif.gif \
@@ -40,16 +40,16 @@ print_gif.gif \
 quit_gif.gif \
 redo_gif.gif \
 reload_gif.gif \
-save_gif.gif \
 saveall_gif.gif \
 saveas_gif.gif \
+save_gif.gif \
 search_gif.gif \
 searchnext_gif.gif \
 searchprev_gif.gif \
 shiftleft_gif.gif \
 shiftright_gif.gif \
-styles_gif.gif \
 small_gif.gif \
+styles_gif.gif \
 syntax_gif.gif \
 undo_gif.gif
 

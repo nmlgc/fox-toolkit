@@ -3,7 +3,7 @@
 *                      T r e e   L i s t   B o x   W i d g e t                  *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1999,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1999,2006 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXTreeListBox.h,v 1.37 2005/02/06 17:20:00 fox Exp $                     *
+* $Id: FXTreeListBox.h,v 1.41 2006/01/22 17:58:11 fox Exp $                     *
 ********************************************************************************/
 #ifndef FXTREELISTBOX_H
 #define FXTREELISTBOX_H
@@ -66,6 +66,7 @@ public:
   long onFocusUp(FXObject*,FXSelector,void*);
   long onFocusDown(FXObject*,FXSelector,void*);
   long onFocusSelf(FXObject*,FXSelector,void*);
+  long onMouseWheel(FXObject*,FXSelector,void*);
   long onFieldButton(FXObject*,FXSelector,void*);
   long onTreeUpdate(FXObject*,FXSelector,void*);
   long onTreeChanged(FXObject*,FXSelector,void*);
@@ -147,6 +148,9 @@ public:
   /// Move item under father before other item
   FXTreeItem *moveItem(FXTreeItem* other,FXTreeItem* father,FXTreeItem* item);
 
+  /// Extract item
+  FXTreeItem* extractItem(FXTreeItem* item);
+
   /// Remove item
   void removeItem(FXTreeItem* item);
 
@@ -174,9 +178,6 @@ public:
   * in the list.  Flags may be SEARCH_FORWARD or SEARCH_BACKWARD to control
   * the search direction; this can be combined with SEARCH_NOWRAP or SEARCH_WRAP
   * to control whether the search wraps at the start or end of the list.
-  * The option SEARCH_IGNORECASE causes a case-insensitive match.  Finally,
-  * passing SEARCH_PREFIX causes searching for a prefix of the item name.
-  * Return NULL if no matching item is found.
   */
   FXTreeItem* findItemByData(const void *ptr,FXTreeItem* start=NULL,FXuint flags=SEARCH_FORWARD|SEARCH_WRAP) const;
 

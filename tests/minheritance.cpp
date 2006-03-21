@@ -3,9 +3,9 @@
 *                           Multiple Inheritance Test                           *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998 by Jeroen van der Zijp.   All Rights Reserved.             *
+* Copyright (C) 1998,2006 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
-* $Id: minheritance.cpp,v 1.14 2002/09/27 22:22:13 fox Exp $                    *
+* $Id: minheritance.cpp,v 1.15 2006/01/22 17:59:02 fox Exp $                    *
 ********************************************************************************/
 #include "fx.h"
 #include <stdio.h>

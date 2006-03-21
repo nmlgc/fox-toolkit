@@ -90,7 +90,7 @@ if test "$echo_cflags" = "yes" ; then
 fi
 
 if test "$echo_libs" = "yes" ; then
- libs="${X_LIBS} ${X_BASE_LIBS} ${X_EXTRA_LIBS} ${GL_LIBS} ${FOX_LIBS} ${LIBS}"
+ libs="${FOX_LIBS} ${X_LIBS} ${X_BASE_LIBS} ${X_EXTRA_LIBS} ${GL_LIBS} ${LIBS}"
  if test "${libdir}" != "/usr/lib" ; then
   echo -L${libdir} $libs
  else

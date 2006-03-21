@@ -3,7 +3,7 @@
 *                       C o m b o   B o x   W i d g e t                         *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2006 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXComboBox.h,v 1.41 2005/01/16 16:06:06 fox Exp $                        *
+* $Id: FXComboBox.h,v 1.46 2006/01/27 02:07:44 fox Exp $                        *
 ********************************************************************************/
 #ifndef FXCOMBOBOX_H
 #define FXCOMBOBOX_H
@@ -31,16 +31,16 @@
 namespace FX {
 
 
-// ComboBox styles
+/// ComboBox styles
 enum {
-  COMBOBOX_NO_REPLACE     = 0,                  // Leave the list the same
-  COMBOBOX_REPLACE        = 0x00020000,         // Replace current item with typed text
-  COMBOBOX_INSERT_BEFORE  = 0x00040000,         // Typed text inserted before current
-  COMBOBOX_INSERT_AFTER   = 0x00060000,         // Typed text inserted after current
-  COMBOBOX_INSERT_FIRST   = 0x00080000,         // Typed text inserted at begin of list
-  COMBOBOX_INSERT_LAST    = 0x00090000,         // Typed text inserted at end of list
-  COMBOBOX_STATIC         = 0x00100000,         // Unchangable text box
-  COMBOBOX_NORMAL         = 0                   // Can type text but list is not changed
+  COMBOBOX_NO_REPLACE     = 0,                  /// Leave the list the same
+  COMBOBOX_REPLACE        = 0x00020000,         /// Replace current item with typed text
+  COMBOBOX_INSERT_BEFORE  = 0x00040000,         /// Typed text inserted before current
+  COMBOBOX_INSERT_AFTER   = 0x00060000,         /// Typed text inserted after current
+  COMBOBOX_INSERT_FIRST   = 0x00080000,         /// Typed text inserted at begin of list
+  COMBOBOX_INSERT_LAST    = 0x00090000,         /// Typed text inserted at end of list
+  COMBOBOX_STATIC         = 0x00100000,         /// Unchangable text box
+  COMBOBOX_NORMAL         = 0                   /// Can type text but list is not changed
   };
 
 
@@ -81,6 +81,7 @@ public:
   long onFocusUp(FXObject*,FXSelector,void*);
   long onFocusDown(FXObject*,FXSelector,void*);
   long onFocusSelf(FXObject*,FXSelector,void*);
+  long onMouseWheel(FXObject*,FXSelector,void*);
   long onTextButton(FXObject*,FXSelector,void*);
   long onTextChanged(FXObject*,FXSelector,void*);
   long onTextCommand(FXObject*,FXSelector,void*);
@@ -140,6 +141,12 @@ public:
   /// Get the number of columns
   FXint getNumColumns() const;
 
+  /// Change text justification mode; default is JUSTIFY_LEFT
+  void setJustify(FXuint mode);
+
+  /// Return text justification mode
+  FXuint getJustify() const;
+
   /// Return the number of items in the list
   FXint getNumItems() const;
 
@@ -153,7 +160,7 @@ public:
   FXbool isItemCurrent(FXint index) const;
 
   /// Set the current item (index is zero-based)
-  void setCurrentItem(FXint index);
+  void setCurrentItem(FXint index,FXbool notify=FALSE);
 
   /// Get the current item's index
   FXint getCurrentItem() const;
@@ -206,9 +213,6 @@ public:
   * Flags may be SEARCH_FORWARD or SEARCH_BACKWARD to control the
   * search direction; this can be combined with SEARCH_NOWRAP or SEARCH_WRAP
   * to control whether the search wraps at the start or end of the list.
-  * The option SEARCH_IGNORECASE causes a case-insensitive match.  Finally,
-  * passing SEARCH_PREFIX causes searching for a prefix of the item name.
-  * Return -1 if no matching item is found.
   */
   FXint findItemByData(const void *ptr,FXint start=-1,FXuint flags=SEARCH_FORWARD|SEARCH_WRAP) const;
 

@@ -3,7 +3,7 @@
 *                        L i s t   B o x   W i d g e t                          *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2006 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXListBox.h,v 1.38 2005/02/06 17:20:00 fox Exp $                         *
+* $Id: FXListBox.h,v 1.43 2006/01/22 17:58:05 fox Exp $                         *
 ********************************************************************************/
 #ifndef FXLISTBOX_H
 #define FXLISTBOX_H
@@ -68,10 +68,11 @@ public:
   long onFocusUp(FXObject*,FXSelector,void*);
   long onFocusDown(FXObject*,FXSelector,void*);
   long onFocusSelf(FXObject*,FXSelector,void*);
+  long onMouseWheel(FXObject*,FXSelector,void*);
   long onFieldButton(FXObject*,FXSelector,void*);
   long onListUpdate(FXObject*,FXSelector,void*);
-  long onListChanged(FXObject*,FXSelector,void*);
   long onListClicked(FXObject*,FXSelector,void*);
+  long onListChanged(FXObject*,FXSelector,void*);
   long onCmdSetValue(FXObject*,FXSelector,void*);
   long onCmdGetIntValue(FXObject*,FXSelector,void*);
   long onCmdSetIntValue(FXObject*,FXSelector,void*);
@@ -123,7 +124,7 @@ public:
   FXbool isItemCurrent(FXint index) const;
 
   /// Set the current item (index is zero-based)
-  virtual void setCurrentItem(FXint index);
+  virtual void setCurrentItem(FXint index,FXbool notify=FALSE);
 
   /// Get the current item's index
   FXint getCurrentItem() const;
@@ -152,6 +153,9 @@ public:
   /// Move item from oldindex to newindex
   FXint moveItem(FXint newindex,FXint oldindex);
 
+  /// Extract item from list
+  FXListItem* extractItem(FXint index);
+
   /// Remove this item from the list
   void removeItem(FXint index);
 
@@ -176,9 +180,6 @@ public:
   * Flags may be SEARCH_FORWARD or SEARCH_BACKWARD to control the
   * search direction; this can be combined with SEARCH_NOWRAP or SEARCH_WRAP
   * to control whether the search wraps at the start or end of the list.
-  * The option SEARCH_IGNORECASE causes a case-insensitive match.  Finally,
-  * passing SEARCH_PREFIX causes searching for a prefix of the item name.
-  * Return -1 if no matching item is found.
   */
   FXint findItemByData(const void *ptr,FXint start=-1,FXuint flags=SEARCH_FORWARD|SEARCH_WRAP) const;
 

@@ -3,9 +3,9 @@
 *                                 Layout Example                             *
 *                                                                            *
 ******************************************************************************
-* Copyright (C) 2004 by Bill Baxter.   All Rights Reserved.                  *
+* Copyright (C) 2004,2006 by Bill Baxter.   All Rights Reserved.             *
 ******************************************************************************
-* $Id: layout.cpp,v 1.5 2004/03/27 17:11:47 fox Exp $                        *
+* $Id: layout.cpp,v 1.7 2006/02/09 03:42:07 fox Exp $                        *
 *****************************************************************************/
 #include "fx.h"
 #include <stdio.h>
@@ -205,6 +205,7 @@ ButtonWindow::ButtonWindow(FXApp* a):FXMainWindow(a,"Layout Test",NULL,NULL,DECO
 
   nextButtonNum=1;
   lastButton=NULL;
+  layoutHints=0;
 
   // Controls on right
   controls=new FXVerticalFrame(this,LAYOUT_SIDE_RIGHT|LAYOUT_FILL_Y);

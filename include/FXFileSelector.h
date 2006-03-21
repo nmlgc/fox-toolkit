@@ -3,7 +3,7 @@
 *                  F i l e   S e l e c t i o n   W i d g e t                    *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1998,2006 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXFileSelector.h,v 1.55 2005/02/08 06:12:35 fox Exp $                    *
+* $Id: FXFileSelector.h,v 1.61 2006/01/23 15:51:05 fox Exp $                    *
 ********************************************************************************/
 #ifndef FXFILESELECTOR_H
 #define FXFILESELECTOR_H
@@ -35,6 +35,7 @@ class FXTextField;
 class FXComboBox;
 class FXDirBox;
 class FXButton;
+class FXMenuButton;
 class FXIcon;
 class FXMenuPane;
 class FXCheckButton;
@@ -47,8 +48,8 @@ enum {
   SELECTFILE_ANY,             /// A single file, existing or not (to save to)
   SELECTFILE_EXISTING,        /// An existing file (to load)
   SELECTFILE_MULTIPLE,        /// Multiple existing files
-  SELECTFILE_MULTIPLE_ALL,    /// Multiple existing files or directories
-  SELECTFILE_DIRECTORY        /// Existing directory
+  SELECTFILE_MULTIPLE_ALL,    /// Multiple existing files or directories, but not '.' and '..'
+  SELECTFILE_DIRECTORY        /// Existing directory, including '.' or '..'
   };
 
 
@@ -84,8 +85,11 @@ protected:
   FXIcon            *linkicon;          // Link file icon
   FXRecentFiles      bookmarks;         // Bookmarked places
   FXuint             selectmode;        // Select mode
+  FXbool             navigable;         // May navigate
 protected:
   FXFileSelector(){}
+  FXString *getSelectedFiles() const;
+  FXString *getSelectedFilesOnly() const;
 private:
   FXFileSelector(const FXFileSelector&);
   FXFileSelector &operator=(const FXFileSelector&);
@@ -112,6 +116,7 @@ public:
   long onPopupMenu(FXObject*,FXSelector,void*);
   long onCmdImageSize(FXObject*,FXSelector,void*);
   long onUpdImageSize(FXObject*,FXSelector,void*);
+  long onUpdNavigable(FXObject*,FXSelector,void*);
 public:
   enum {
     ID_FILEFILTER=FXPacker::ID_LAST,
@@ -125,6 +130,7 @@ public:
     ID_HOME,
     ID_WORK,
     ID_BOOKMARK,
+    ID_BOOKMENU,
     ID_VISIT,
     ID_NEW,
     ID_DELETE,
@@ -196,6 +202,9 @@ public:
 
   /// Change pattern text for pattern number
   void setPatternText(FXint patno,const FXString& text);
+
+  /// Return number of patterns
+  FXint getNumPatterns() const;
 
   /// Allow pattern entry
   void allowPatternEntry(FXbool allow);
@@ -277,6 +286,12 @@ public:
 
   /// Get readonly state
   FXbool getReadOnly() const;
+
+  /// Allow or disallow navigation
+  void allowNavigation(FXbool flag){ navigable=flag; }
+
+  /// Is navigation allowed?
+  FXbool allowNavigation() const { return navigable; }
 
   /// Save object to a stream
   virtual void save(FXStream& store) const;

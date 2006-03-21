@@ -3,7 +3,7 @@
 *              T h e   P a t h F i n d e r   F i l e   B r o w s e r            *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1998,2006 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This program is free software; you can redistribute it and/or modify          *
 * it under the terms of the GNU General Public License as published by          *
@@ -19,7 +19,7 @@
 * along with this program; if not, write to the Free Software                   *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: PathFinder.cpp,v 1.109 2005/02/07 17:02:42 fox Exp $                     *
+* $Id: PathFinder.cpp,v 1.125 2006/01/22 17:58:15 fox Exp $                     *
 ********************************************************************************/
 #include "xincs.h"
 #include "fx.h"
@@ -172,9 +172,7 @@ FXchar* PathFinderMain::pathfindercommand;
 /*******************************************************************************/
 
 // Make some windows
-PathFinderMain::PathFinderMain(FXApp* a):
-  FXMainWindow(a,"PathFinder",NULL,NULL,DECOR_ALL,0,0,800,600,0,0),
-  bookmarkeddirs("Bookmarked Directories"){
+PathFinderMain::PathFinderMain(FXApp* a):FXMainWindow(a,"PathFinder",NULL,NULL,DECOR_ALL,0,0,800,600,0,0),bookmarkeddirs(a,"Bookmarked Directories"){
 
   // Make some icons
   foxbigicon=new FXGIFIcon(getApp(),foxbig);
@@ -272,6 +270,7 @@ PathFinderMain::PathFinderMain(FXApp* a):
   // Folder List
   dirlist=new FXDirList(group1,this,ID_DIRECTORYLIST,LAYOUT_FILL_X|LAYOUT_FILL_Y|LAYOUT_TOP|LAYOUT_RIGHT|TREELIST_SHOWS_LINES|TREELIST_SHOWS_BOXES|TREELIST_BROWSESELECT|DIRLIST_NO_OWN_ASSOC);
   dirlist->setAssociations(associations);
+  dirlist->dropEnable();
 
   // Header above files
   FXHorizontalFrame *header2=new FXHorizontalFrame(group2,LAYOUT_FILL_X|FRAME_RAISED|FRAME_THICK,0,0,0,0, 0,0,0,0, 0,0);
@@ -280,7 +279,7 @@ PathFinderMain::PathFinderMain(FXApp* a):
   fileslabel->setSelector(ID_UPDATE_FILES);
   new FXButton(header2,"\tRotate left\tRotate image leftward 90 degrees.",rotatelefticon,this,ID_IMAGE_ROTATE_LEFT,BUTTON_TOOLBAR|FRAME_RAISED,0,0,0,0,0,0,0,0);
   new FXButton(header2,"\tRotate right\tRotate image rightward 90 degrees.",rotaterighticon,this,ID_IMAGE_ROTATE_RIGHT,BUTTON_TOOLBAR|FRAME_RAISED,0,0,0,0,0,0,0,0);
-  new FXButton(header2,NULL,closeicon,this,ID_CLOSE_PREVIEW,BUTTON_TOOLBAR|FRAME_RAISED,0,0,0,0, 0,0,0,0);
+  new FXButton(header2,FXString::null,closeicon,this,ID_CLOSE_PREVIEW,BUTTON_TOOLBAR|FRAME_RAISED,0,0,0,0, 0,0,0,0);
 
   // Switcher to either image or filelist
   switcher=new FXSwitcher(group2,LAYOUT_FILL_X|LAYOUT_FILL_Y, 0,0,0,0, 0,0,0,0);
@@ -288,6 +287,7 @@ PathFinderMain::PathFinderMain(FXApp* a):
   // File List
   filelist=new FXFileList(switcher,this,ID_FILELIST,LAYOUT_FILL_X|LAYOUT_FILL_Y|ICONLIST_BIG_ICONS|ICONLIST_AUTOSIZE|FILELIST_NO_OWN_ASSOC);
   filelist->setAssociations(associations);
+  filelist->dropEnable();
 
   // Image view
   imagepreview=new FXImageView(switcher,NULL,this,ID_IMAGE_PREVIEW,LAYOUT_FILL_X|LAYOUT_FILL_Y);
@@ -337,16 +337,16 @@ PathFinderMain::PathFinderMain(FXApp* a):
   FXMenuSeparator* sep1=new FXMenuSeparator(gomenu);
   sep1->setTarget(&bookmarkeddirs);
   sep1->setSelector(FXRecentFiles::ID_ANYFILES);
-  new FXMenuCommand(gomenu,NULL,NULL,&bookmarkeddirs,FXRecentFiles::ID_FILE_1);
-  new FXMenuCommand(gomenu,NULL,NULL,&bookmarkeddirs,FXRecentFiles::ID_FILE_2);
-  new FXMenuCommand(gomenu,NULL,NULL,&bookmarkeddirs,FXRecentFiles::ID_FILE_3);
-  new FXMenuCommand(gomenu,NULL,NULL,&bookmarkeddirs,FXRecentFiles::ID_FILE_4);
-  new FXMenuCommand(gomenu,NULL,NULL,&bookmarkeddirs,FXRecentFiles::ID_FILE_5);
-  new FXMenuCommand(gomenu,NULL,NULL,&bookmarkeddirs,FXRecentFiles::ID_FILE_6);
-  new FXMenuCommand(gomenu,NULL,NULL,&bookmarkeddirs,FXRecentFiles::ID_FILE_7);
-  new FXMenuCommand(gomenu,NULL,NULL,&bookmarkeddirs,FXRecentFiles::ID_FILE_8);
-  new FXMenuCommand(gomenu,NULL,NULL,&bookmarkeddirs,FXRecentFiles::ID_FILE_9);
-  new FXMenuCommand(gomenu,NULL,NULL,&bookmarkeddirs,FXRecentFiles::ID_FILE_10);
+  new FXMenuCommand(gomenu,FXString::null,NULL,&bookmarkeddirs,FXRecentFiles::ID_FILE_1);
+  new FXMenuCommand(gomenu,FXString::null,NULL,&bookmarkeddirs,FXRecentFiles::ID_FILE_2);
+  new FXMenuCommand(gomenu,FXString::null,NULL,&bookmarkeddirs,FXRecentFiles::ID_FILE_3);
+  new FXMenuCommand(gomenu,FXString::null,NULL,&bookmarkeddirs,FXRecentFiles::ID_FILE_4);
+  new FXMenuCommand(gomenu,FXString::null,NULL,&bookmarkeddirs,FXRecentFiles::ID_FILE_5);
+  new FXMenuCommand(gomenu,FXString::null,NULL,&bookmarkeddirs,FXRecentFiles::ID_FILE_6);
+  new FXMenuCommand(gomenu,FXString::null,NULL,&bookmarkeddirs,FXRecentFiles::ID_FILE_7);
+  new FXMenuCommand(gomenu,FXString::null,NULL,&bookmarkeddirs,FXRecentFiles::ID_FILE_8);
+  new FXMenuCommand(gomenu,FXString::null,NULL,&bookmarkeddirs,FXRecentFiles::ID_FILE_9);
+  new FXMenuCommand(gomenu,FXString::null,NULL,&bookmarkeddirs,FXRecentFiles::ID_FILE_10);
 
   // Arrange menu
   arrangemenu=new FXMenuPane(this);
@@ -401,16 +401,16 @@ PathFinderMain::PathFinderMain(FXApp* a):
   FXMenuSeparator* sep2=new FXMenuSeparator(bookmarkmenu);
   sep2->setTarget(&bookmarkeddirs);
   sep2->setSelector(FXRecentFiles::ID_ANYFILES);
-  new FXMenuCommand(bookmarkmenu,NULL,NULL,&bookmarkeddirs,FXRecentFiles::ID_FILE_1);
-  new FXMenuCommand(bookmarkmenu,NULL,NULL,&bookmarkeddirs,FXRecentFiles::ID_FILE_2);
-  new FXMenuCommand(bookmarkmenu,NULL,NULL,&bookmarkeddirs,FXRecentFiles::ID_FILE_3);
-  new FXMenuCommand(bookmarkmenu,NULL,NULL,&bookmarkeddirs,FXRecentFiles::ID_FILE_4);
-  new FXMenuCommand(bookmarkmenu,NULL,NULL,&bookmarkeddirs,FXRecentFiles::ID_FILE_5);
-  new FXMenuCommand(bookmarkmenu,NULL,NULL,&bookmarkeddirs,FXRecentFiles::ID_FILE_6);
-  new FXMenuCommand(bookmarkmenu,NULL,NULL,&bookmarkeddirs,FXRecentFiles::ID_FILE_7);
-  new FXMenuCommand(bookmarkmenu,NULL,NULL,&bookmarkeddirs,FXRecentFiles::ID_FILE_8);
-  new FXMenuCommand(bookmarkmenu,NULL,NULL,&bookmarkeddirs,FXRecentFiles::ID_FILE_9);
-  new FXMenuCommand(bookmarkmenu,NULL,NULL,&bookmarkeddirs,FXRecentFiles::ID_FILE_10);
+  new FXMenuCommand(bookmarkmenu,FXString::null,NULL,&bookmarkeddirs,FXRecentFiles::ID_FILE_1);
+  new FXMenuCommand(bookmarkmenu,FXString::null,NULL,&bookmarkeddirs,FXRecentFiles::ID_FILE_2);
+  new FXMenuCommand(bookmarkmenu,FXString::null,NULL,&bookmarkeddirs,FXRecentFiles::ID_FILE_3);
+  new FXMenuCommand(bookmarkmenu,FXString::null,NULL,&bookmarkeddirs,FXRecentFiles::ID_FILE_4);
+  new FXMenuCommand(bookmarkmenu,FXString::null,NULL,&bookmarkeddirs,FXRecentFiles::ID_FILE_5);
+  new FXMenuCommand(bookmarkmenu,FXString::null,NULL,&bookmarkeddirs,FXRecentFiles::ID_FILE_6);
+  new FXMenuCommand(bookmarkmenu,FXString::null,NULL,&bookmarkeddirs,FXRecentFiles::ID_FILE_7);
+  new FXMenuCommand(bookmarkmenu,FXString::null,NULL,&bookmarkeddirs,FXRecentFiles::ID_FILE_8);
+  new FXMenuCommand(bookmarkmenu,FXString::null,NULL,&bookmarkeddirs,FXRecentFiles::ID_FILE_9);
+  new FXMenuCommand(bookmarkmenu,FXString::null,NULL,&bookmarkeddirs,FXRecentFiles::ID_FILE_10);
 
   // Spacer
   new FXFrame(toolbar,LAYOUT_TOP|LAYOUT_LEFT|LAYOUT_FIX_WIDTH,0,0,2,0);
@@ -580,7 +580,7 @@ long PathFinderMain::onCmdOpen(FXObject*,FXSelector,void*){
 
     // If executable, execute it!
     else if(filelist->isItemExecutable(index)){
-      FXString executable=FXFile::enquote(filelist->getItemPathname(index)) + " &";
+      FXString executable=FXPath::enquote(filelist->getItemPathname(index)) + " &";
       FXTRACE((100,"system(%s)\n",executable.text()));
       system(executable.text());
       }
@@ -590,7 +590,7 @@ long PathFinderMain::onCmdOpen(FXObject*,FXSelector,void*){
       FXFileAssoc *association=filelist->getItemAssoc(index);
       if(association){
         if(association->command.text()){
-          FXString command=FXStringFormat(association->command.text(),FXFile::enquote(filelist->getItemPathname(index)).text());
+          FXString command=FXStringFormat(association->command.text(),FXPath::enquote(filelist->getItemPathname(index)).text());
           FXTRACE((100,"system(%s)\n",command.text()));
           system(command.text());
           }
@@ -632,7 +632,7 @@ long PathFinderMain::onCmdFileDblClicked(FXObject*,FXSelector,void* ptr){
 
     // If executable, execute it!
     else if(filelist->isItemExecutable(index)){
-      FXString executable=FXFile::enquote(filelist->getItemPathname(index)) + " &";
+      FXString executable=FXPath::enquote(filelist->getItemPathname(index)) + " &";
       FXTRACE((100,"system(%s)\n",executable.text()));
       system(executable.text());
       }
@@ -648,7 +648,7 @@ long PathFinderMain::onCmdFileDblClicked(FXObject*,FXSelector,void* ptr){
       FXFileAssoc *association=filelist->getItemAssoc(index);
       if(association){
         if(association->command.text()){
-          FXString command=FXStringFormat(association->command.text(),FXFile::enquote(filelist->getItemPathname(index)).text());
+          FXString command=FXStringFormat(association->command.text(),FXPath::enquote(filelist->getItemPathname(index)).text());
           FXTRACE((100,"system(%s)\n",command.text()));
           system(command.text());
           }
@@ -684,12 +684,12 @@ long PathFinderMain::onCmdFileClicked(FXObject*,FXSelector,void*){
 // Goto location entered into the text field; a relative path or
 // a path containing environment variable expansions is good too.
 long PathFinderMain::onCmdGotoLocation(FXObject*,FXSelector,void*){
-  FXString path=FXFile::absolute(getDirectory(),address->getText());
+  FXString path=FXPath::absolute(getDirectory(),address->getText());
   FXString dir=path;
 
   // Go up to the lowest directory which still exists
-  while(!FXFile::isTopDirectory(dir) && !FXFile::isDirectory(dir)){
-    dir=FXFile::upLevel(dir);
+  while(!FXPath::isTopDirectory(dir) && !FXStat::isDirectory(dir)){
+    dir=FXPath::upLevel(dir);
     }
 
   // Move to this existing directory
@@ -801,7 +801,7 @@ long PathFinderMain::onCmdDirTree(FXObject*,FXSelector,void*){
 
 // Move up one directory
 long PathFinderMain::onCmdUpDirectory(FXObject*,FXSelector,void*){
-  FXString path=FXFile::upLevel(filelist->getDirectory());
+  FXString path=FXPath::upLevel(filelist->getDirectory());
   setDirectory(path);
   visitDirectory(path);
   closePreview();
@@ -811,7 +811,7 @@ long PathFinderMain::onCmdUpDirectory(FXObject*,FXSelector,void*){
 
 // Move to home directory
 long PathFinderMain::onCmdHomeDirectory(FXObject*,FXSelector,void*){
-  FXString path=FXFile::getHomeDirectory();
+  FXString path=FXSystem::getHomeDirectory();
   setDirectory(path);
   visitDirectory(path);
   closePreview();
@@ -821,7 +821,7 @@ long PathFinderMain::onCmdHomeDirectory(FXObject*,FXSelector,void*){
 
 // Move to work directory
 long PathFinderMain::onCmdWorkDirectory(FXObject*,FXSelector,void*){
-  FXString path=FXFile::getCurrentDirectory();
+  FXString path=FXSystem::getCurrentDirectory();
   setDirectory(path);
   visitDirectory(path);
   closePreview();
@@ -999,11 +999,11 @@ long PathFinderMain::onCmdNew(FXObject*,FXSelector,void*){
   text->setFocus();
   text->setSelection(0,sizeof(suggestedname));
   if(dialog.execute()){
-    FXString dirname=FXFile::absolute(filelist->getDirectory(),text->getText());
-    if(FXFile::exists(dirname)){
+    FXString dirname=FXPath::absolute(filelist->getDirectory(),text->getText());
+    if(FXStat::exists(dirname)){
       FXMessageBox::error(this,MBOX_OK,"Already Exists","File or directory %s already exists.\n",dirname.text());
       }
-    else if(!FXFile::createDirectory(dirname,0777)){
+    else if(!FXDir::create(dirname)){
       FXMessageBox::error(this,MBOX_OK,"Cannot Create","Cannot create directory %s.\n",dirname.text());
       }
     }
@@ -1014,7 +1014,7 @@ long PathFinderMain::onCmdNew(FXObject*,FXSelector,void*){
 // Update create new directory
 long PathFinderMain::onUpdNew(FXObject* sender,FXSelector,void*){
   FXString path=filelist->getDirectory();
-  if(FXFile::isWritable(path))
+  if(FXStat::isWritable(path))
     sender->handle(this,FXSEL(SEL_COMMAND,ID_ENABLE),NULL);
   else
     sender->handle(this,FXSEL(SEL_COMMAND,ID_DISABLE),NULL);
@@ -1030,10 +1030,10 @@ long PathFinderMain::onCmdCopy(FXObject*,FXSelector,void*){
     FXString newname;
     for(FXint i=0; !filenamelist[i].empty(); i++){
       copydialog.setOldName(filenamelist[i]);
-      copydialog.setNewName(FXFile::absolute(FXFile::directory(filenamelist[i]),"CopyOf"+FXFile::name(filenamelist[i])));
+      copydialog.setNewName(FXPath::absolute(FXPath::directory(filenamelist[i]),"CopyOf"+FXPath::name(filenamelist[i])));
       if(!copydialog.execute()) break;
       newname=copydialog.getNewName();
-      if(!FXFile::copy(filenamelist[i],newname,FALSE)){
+      if(!FXFile::copyFiles(filenamelist[i],newname,FALSE)){
         if(FXMessageBox::error(this,MBOX_YES_NO,"Error Copying File","Unable to copy file:\n\n%s  to:  %s\n\nContinue with operation?",filenamelist[i].text(),newname.text())==MBOX_CLICKED_NO) break;
         }
       }
@@ -1054,7 +1054,7 @@ long PathFinderMain::onCmdMove(FXObject*,FXSelector,void*){
       copydialog.setNewName(filenamelist[i]);
       if(!copydialog.execute()) break;
       newname=copydialog.getNewName();
-      if(!FXFile::move(filenamelist[i],newname,FALSE)){
+      if(!FXFile::moveFiles(filenamelist[i],newname,FALSE)){
 	if(FXMessageBox::error(this,MBOX_YES_NO,"Error Moving File","Unable to move file:\n\n%s  to:  %s\n\nContinue with operation?",filenamelist[i].text(),newname.text())==MBOX_CLICKED_NO) break;
 	}
       }
@@ -1072,10 +1072,10 @@ long PathFinderMain::onCmdLink(FXObject*,FXSelector,void*){
     FXString newname;
     for(FXint i=0; !filenamelist[i].empty(); i++){
       copydialog.setOldName(filenamelist[i]);
-      copydialog.setNewName(FXFile::absolute(FXFile::directory(filenamelist[i]),"LinkTo"+FXFile::name(filenamelist[i])));
+      copydialog.setNewName(FXPath::absolute(FXPath::directory(filenamelist[i]),"LinkTo"+FXPath::name(filenamelist[i])));
       if(!copydialog.execute()) break;
       newname=copydialog.getNewName();
-      if(!FXFile::symlink(filenamelist[i],newname,FALSE)){
+      if(!FXFile::symlink(filenamelist[i],newname)){
 	if(FXMessageBox::error(this,MBOX_YES_NO,"Error Linking File","Unable to link file:\n\n%s  to:  %s\n\nContinue with operation?",filenamelist[i].text(),newname.text())==MBOX_CLICKED_NO) break;
 	}
       }
@@ -1092,11 +1092,11 @@ long PathFinderMain::onCmdRename(FXObject*,FXSelector,void*){
     CopyDialog copydialog(this,"Rename File");
     FXString newname;
     for(FXint i=0; !filenamelist[i].empty(); i++){
-      copydialog.setOldName(FXFile::name(filenamelist[i]));
-      copydialog.setNewName(FXFile::name(filenamelist[i]));
+      copydialog.setOldName(FXPath::name(filenamelist[i]));
+      copydialog.setNewName(FXPath::name(filenamelist[i]));
       if(!copydialog.execute()) break;
       newname=copydialog.getNewName();
-      if(!FXFile::move(filenamelist[i],FXFile::absolute(FXFile::directory(filenamelist[i]),newname),FALSE)){
+      if(!FXFile::moveFiles(filenamelist[i],FXPath::absolute(FXPath::directory(filenamelist[i]),newname),FALSE)){
 	if(FXMessageBox::error(this,MBOX_YES_NO,"Error Renaming File","Unable to rename file:\n\n%s  to:  %s\n\nContinue with operation?",filenamelist[i].text(),newname.text())==MBOX_CLICKED_NO) break;
 	}
       }
@@ -1137,9 +1137,9 @@ long PathFinderMain::onCmdDelete(FXObject*,FXSelector,void*){
       if(filelist->isItemSelected(i)){
         file=filelist->getItemFilename(i);
         if(file=="..") continue;
-        filetoremove=FXFile::absolute(filelist->getDirectory(),file);
+        filetoremove=FXPath::absolute(filelist->getDirectory(),file);
         FXTRACE((100,"filetoremove=%s\n",filetoremove.text()));
-        if(!FXFile::remove(filetoremove)){
+        if(!FXFile::removeFiles(filetoremove,TRUE)){
           if(MBOX_CLICKED_NO==FXMessageBox::error(this,MBOX_YES_NO,"Error Deleting File","Unable to delete file: %s\nContinue with operation?",filetoremove.text())){
             break;
             }
@@ -1425,7 +1425,7 @@ FXbool PathFinderMain::close(FXbool notify){
 // Switch to given directory
 void PathFinderMain::setDirectory(const FXString& dir){
   FXString oldpath=getDirectory();
-  FXString newpath=FXFile::absolute(oldpath,dir);
+  FXString newpath=FXPath::absolute(oldpath,dir);
   filelist->setDirectory(newpath);
   dirbox->setDirectory(newpath);
   dirlist->setDirectory(newpath);
@@ -1522,7 +1522,7 @@ long PathFinderMain::onCmdGotoDir(FXObject*,FXSelector,void*){
 long PathFinderMain::onCmdOpenWith(FXObject*,FXSelector,void*){
   FXString cmd=getApp()->reg().readStringEntry("SETTINGS","command","adie");
   FXString filename=filelist->getCurrentFile();
-  if(FXInputDialog::getString(cmd,this,"Open File With","Open " + FXFile::name(filename) + " with:")){
+  if(FXInputDialog::getString(cmd,this,"Open File With","Open " + FXPath::name(filename) + " with:")){
     getApp()->reg().writeStringEntry("SETTINGS","command",cmd.text());
     FXString command=cmd+" "+filename+" &";
     system(command.text());
@@ -1547,7 +1547,7 @@ long PathFinderMain::onCmdOpenWith(FXObject*,FXSelector,void*){
 long PathFinderMain::onCmdOpenWithEditor(FXObject*,FXSelector,void*){
   FXString currentfile=filelist->getCurrentFile();
   if(!currentfile.empty()){
-    FXString executable=editor+" "+FXFile::enquote(currentfile)+" &";
+    FXString executable=editor+" "+FXPath::enquote(currentfile)+" &";
     FXTRACE((100,"system(%s)\n",executable.text()));
     system(executable.text());
     }
@@ -1560,7 +1560,7 @@ long PathFinderMain::onCmdRun(FXObject*,FXSelector,void*){
   FXString newprogram=program;
   if(FXInputDialog::getString(newprogram,this,"Run Program","Run Program:")){
     program=newprogram;
-    FXString executeable="cd "+FXFile::enquote(getDirectory())+"; "+program+" &";
+    FXString executeable="cd "+FXPath::enquote(getDirectory())+"; "+program+" &";
     system(executeable.text());
     }
   return 1;
@@ -1569,7 +1569,7 @@ long PathFinderMain::onCmdRun(FXObject*,FXSelector,void*){
 
 // Run terminal
 long PathFinderMain::onCmdTerminal(FXObject*,FXSelector,void*){
-  FXString executable="cd "+FXFile::enquote(getDirectory())+"; "+terminal+" &";
+  FXString executable="cd "+FXPath::enquote(getDirectory())+"; "+terminal+" &";
   system(executable.text());
   return 1;
   }
@@ -1599,24 +1599,24 @@ long PathFinderMain::onCmdPreferences(FXObject*,FXSelector,void*){
 // Change mode
 long PathFinderMain::onCmdChmod(FXObject*,FXSelector sel,void*){
   FXString filename=filelist->getCurrentFile();
-  FXuint mode=FXFile::mode(filename);
+  FXuint mode=FXStat::mode(filename);
 #ifndef WIN32
   switch(FXSELID(sel)) {
-    case ID_RUSR: mode^=S_IRUSR; break;
-    case ID_WUSR: mode^=S_IWUSR; break;
-    case ID_XUSR: mode^=S_IXUSR; break;
-    case ID_RGRP: mode^=S_IRGRP; break;
-    case ID_WGRP: mode^=S_IWGRP; break;
-    case ID_XGRP: mode^=S_IXGRP; break;
-    case ID_ROTH: mode^=S_IROTH; break;
-    case ID_WOTH: mode^=S_IWOTH; break;
-    case ID_XOTH: mode^=S_IXOTH; break;
-    case ID_SUID: mode^=S_ISUID; break;
-    case ID_SGID: mode^=S_ISGID; break;
-    case ID_SVTX: mode^=S_ISVTX; break;
+    case ID_RUSR: mode^=FXIO::OwnerRead; break;
+    case ID_WUSR: mode^=FXIO::OwnerWrite; break;
+    case ID_XUSR: mode^=FXIO::OwnerExec; break;
+    case ID_RGRP: mode^=FXIO::GroupRead; break;
+    case ID_WGRP: mode^=FXIO::GroupWrite; break;
+    case ID_XGRP: mode^=FXIO::GroupExec; break;
+    case ID_ROTH: mode^=FXIO::OtherRead; break;
+    case ID_WOTH: mode^=FXIO::OtherWrite; break;
+    case ID_XOTH: mode^=FXIO::OtherExec; break;
+    case ID_SUID: mode^=FXIO::SetUser; break;
+    case ID_SGID: mode^=FXIO::SetGroup; break;
+    case ID_SVTX: mode^=FXIO::Sticky; break;
     }
 #endif
-  if(!FXFile::mode(filename,mode)){
+  if(!FXStat::mode(filename,mode)){
     FXMessageBox::error(this,MBOX_OK,"Error Changing Permissions","Unable to change permissions on file: %s",filename.text());
     }
   return 1;
@@ -1626,20 +1626,21 @@ long PathFinderMain::onCmdChmod(FXObject*,FXSelector sel,void*){
 // Update change mode
 long PathFinderMain::onUpdChmod(FXObject* sender,FXSelector sel,void*){
   FXString filename=filelist->getCurrentFile();
+  FXuint mode=FXStat::mode(filename);
   FXuint test=0;
   switch(FXSELID(sel)) {
-    case ID_RUSR: test=FXFile::isOwnerReadable(filename); break;
-    case ID_WUSR: test=FXFile::isOwnerWritable(filename); break;
-    case ID_XUSR: test=FXFile::isOwnerExecutable(filename); break;
-    case ID_RGRP: test=FXFile::isGroupReadable(filename); break;
-    case ID_WGRP: test=FXFile::isGroupWritable(filename); break;
-    case ID_XGRP: test=FXFile::isGroupExecutable(filename); break;
-    case ID_ROTH: test=FXFile::isOtherReadable(filename); break;
-    case ID_WOTH: test=FXFile::isOtherWritable(filename); break;
-    case ID_XOTH: test=FXFile::isOtherExecutable(filename); break;
-    case ID_SUID: test=FXFile::isSetUid(filename); break;
-    case ID_SGID: test=FXFile::isSetGid(filename); break;
-    case ID_SVTX: test=FXFile::isSetSticky(filename); break;
+    case ID_RUSR: test=(mode&FXIO::OwnerRead); break;
+    case ID_WUSR: test=(mode&FXIO::OwnerWrite); break;
+    case ID_XUSR: test=(mode&FXIO::OwnerExec); break;
+    case ID_RGRP: test=(mode&FXIO::GroupRead); break;
+    case ID_WGRP: test=(mode&FXIO::GroupWrite); break;
+    case ID_XGRP: test=(mode&FXIO::GroupExec); break;
+    case ID_ROTH: test=(mode&FXIO::OtherRead); break;
+    case ID_WOTH: test=(mode&FXIO::OtherWrite); break;
+    case ID_XOTH: test=(mode&FXIO::OtherExec); break;
+    case ID_SUID: test=(mode&FXIO::SetUser); break;
+    case ID_SGID: test=(mode&FXIO::SetGroup); break;
+    case ID_SVTX: test=(mode&FXIO::Sticky); break;
     }
   sender->handle(this,test ? FXSEL(SEL_COMMAND,ID_CHECK) : FXSEL(SEL_COMMAND,ID_UNCHECK),NULL);
   return 1;
@@ -1648,7 +1649,9 @@ long PathFinderMain::onUpdChmod(FXObject* sender,FXSelector sel,void*){
 
 // Update owner
 long PathFinderMain::onUpdOwner(FXObject* sender,FXSelector,void*){
-  FXString owner=FXFile::owner(filelist->getCurrentFile());
+  FXStat info;
+  FXStat::statFile(filelist->getCurrentFile(),info);
+  FXString owner=FXSystem::userName(info.user());
   sender->handle(this,FXSEL(SEL_COMMAND,ID_SETSTRINGVALUE),(void*)&owner);
   return 1;
   }
@@ -1656,7 +1659,9 @@ long PathFinderMain::onUpdOwner(FXObject* sender,FXSelector,void*){
 
 // Update group
 long PathFinderMain::onUpdGroup(FXObject* sender,FXSelector,void*){
-  FXString group=FXFile::group(filelist->getCurrentFile());
+  FXStat info;
+  FXStat::statFile(filelist->getCurrentFile(),info);
+  FXString group=FXSystem::groupName(info.group());
   sender->handle(this,FXSEL(SEL_COMMAND,ID_SETSTRINGVALUE),(void*)&group);
   return 1;
   }
@@ -1664,7 +1669,7 @@ long PathFinderMain::onUpdGroup(FXObject* sender,FXSelector,void*){
 
 // Update create time
 long PathFinderMain::onUpdCreateTime(FXObject* sender,FXSelector,void*){
-  FXString time=FXFile::time(FXFile::created(filelist->getCurrentFile()));
+  FXString time=FXSystem::time(FXStat::created(filelist->getCurrentFile()));
   sender->handle(this,FXSEL(SEL_COMMAND,ID_SETSTRINGVALUE),(void*)&time);
   return 1;
   }
@@ -1672,7 +1677,7 @@ long PathFinderMain::onUpdCreateTime(FXObject* sender,FXSelector,void*){
 
 // Update modified time
 long PathFinderMain::onUpdModifyTime(FXObject* sender,FXSelector,void*){
-  FXString time=FXFile::time(FXFile::modified(filelist->getCurrentFile()));
+  FXString time=FXSystem::time(FXStat::modified(filelist->getCurrentFile()));
   sender->handle(this,FXSEL(SEL_COMMAND,ID_SETSTRINGVALUE),(void*)&time);
   return 1;
   }
@@ -1680,7 +1685,7 @@ long PathFinderMain::onUpdModifyTime(FXObject* sender,FXSelector,void*){
 
 // Update access time
 long PathFinderMain::onUpdAccessTime(FXObject* sender,FXSelector,void*){
-  FXString time=FXFile::time(FXFile::accessed(filelist->getCurrentFile()));
+  FXString time=FXSystem::time(FXStat::accessed(filelist->getCurrentFile()));
   sender->handle(this,FXSEL(SEL_COMMAND,ID_SETSTRINGVALUE),(void*)&time);
   return 1;
   }
@@ -1695,7 +1700,7 @@ long PathFinderMain::onUpdFileLocation(FXObject* sender,FXSelector,void*){
 
 // Update file type
 long PathFinderMain::onUpdFileSize(FXObject* sender,FXSelector,void*){
-  FXString size=FXStringVal((FXuint)FXFile::size(filelist->getCurrentFile()));
+  FXString size=FXStringVal(FXStat::size(filelist->getCurrentFile()));
   sender->handle(this,FXSEL(SEL_COMMAND,ID_SETSTRINGVALUE),(void*)&size);
   return 1;
   }
@@ -1707,11 +1712,11 @@ long PathFinderMain::onUpdFileType(FXObject* sender,FXSelector,void*){
   FXString filename=filelist->getCurrentFile();
   FXFileAssoc *fileassoc=NULL;
   FXString type;
-  if(FXFile::isDirectory(filename)){
+  if(FXStat::isDirectory(filename)){
     fileassoc=associations->findDirBinding(filename.text());
     type="Folder";
     }
-  else if(FXFile::isExecutable(filename)){
+  else if(FXStat::isExecutable(filename)){
     fileassoc=associations->findExecBinding(filename.text());
     type="Application";
     }
@@ -1730,16 +1735,16 @@ long PathFinderMain::onUpdFileDesc(FXObject* sender,FXSelector,void*){
   FXString filename=filelist->getCurrentFile();
   FXLabel *label=(FXLabel*)sender;
   FXFileAssoc *fileassoc=NULL;
-  if(FXFile::isDirectory(filename)){
+  if(FXStat::isDirectory(filename)){
     fileassoc=associations->findDirBinding(filename.text());
     }
-  else if(FXFile::isExecutable(filename)){
+  else if(FXStat::isExecutable(filename)){
     fileassoc=associations->findExecBinding(filename.text());
     }
   else{
     fileassoc=associations->findFileBinding(filename.text());
     }
-  label->setText(FXFile::name(filename));
+  label->setText(FXPath::name(filename));
   if(fileassoc){
     if(fileassoc->bigicon) fileassoc->bigicon->create();
     label->setIcon(fileassoc->bigicon);
@@ -1787,7 +1792,7 @@ long PathFinderMain::onUpdClosePreview(FXObject* sender,FXSelector,void*){
 
 // Load image for preview
 FXbool PathFinderMain::previewImage(const FXString& filename){
-  FXString ext=FXFile::extension(filename);
+  FXString ext=FXPath::extension(filename);
   FXImage *img=NULL;
   FXImage *old=NULL;
 

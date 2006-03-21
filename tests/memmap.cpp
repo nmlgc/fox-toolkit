@@ -3,9 +3,9 @@
 *                          M e m o r y   M a p   T e s t                        *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2004,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 2004,2006 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
-* $Id: memmap.cpp,v 1.4 2005/01/04 07:50:58 fox Exp $                           *
+* $Id: memmap.cpp,v 1.5 2006/01/22 17:59:02 fox Exp $                           *
 ********************************************************************************/
 #include "fx.h"
 #include <stdio.h>

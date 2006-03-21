@@ -24,8 +24,8 @@ web: distdir
 drop: dist-all
 	cp $(distdir).tar.gz /net/linky/mnt/ftp/pub
 	cp $(distdir).zip /net/linky/mnt/ftp/pub
-	cd /home/ftp/pub && ln -sf $(distdir).tar.gz fox-latest.tar.gz
-	cd /home/ftp/pub && ln -sf $(distdir).zip fox-latest.zip
+	cd /net/linky/mnt/ftp/pub && ln -sf $(distdir).tar.gz fox-latest.tar.gz
+	cd /net/linky/mnt/ftp/pub && ln -sf $(distdir).zip fox-latest.zip
 
 
 #diff: distdir

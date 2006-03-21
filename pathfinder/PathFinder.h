@@ -3,7 +3,7 @@
 *              T h e   P a t h F i n d e r   F i l e   B r o w s e r            *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1998,2006 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This program is free software; you can redistribute it and/or modify          *
 * it under the terms of the GNU General Public License as published by          *
@@ -19,7 +19,7 @@
 * along with this program; if not, write to the Free Software                   *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: PathFinder.h,v 1.38 2005/01/16 16:06:06 fox Exp $                        *
+* $Id: PathFinder.h,v 1.42 2006/01/22 17:58:15 fox Exp $                        *
 ********************************************************************************/
 #ifndef PATHFINDER_H
 #define PATHFINDER_H
@@ -241,13 +241,32 @@ public:
 public:
   static FXchar* pathfindercommand;
 public:
+
+  // Construct window
   PathFinderMain(FXApp* a);
-  virtual FXbool close(FXbool notify=FALSE);
-  void setDirectory(const FXString& dir);
-  FXString getDirectory() const;
+
+  // Create
   virtual void create();
+
+  // Closed window
+  virtual FXbool close(FXbool notify=FALSE);
+
+  // Switch current directory
+  void setDirectory(const FXString& dir);
+
+  // Return current directory
+  FXString getDirectory() const;
+
+  // Return file associations
+  FXFileDict *getAssociations() const { return associations; }
+
+  // Save settings
   void saveSettings();
+
+  // Load settings
   void loadSettings();
+
+  // Destroy
   virtual ~PathFinderMain();
   };
 

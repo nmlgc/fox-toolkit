@@ -3,7 +3,7 @@
 *                    F o l d i n g   L i s t   W i d g e t                      *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2006 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXFoldingList.h,v 1.27 2005/02/06 17:20:00 fox Exp $                     *
+* $Id: FXFoldingList.h,v 1.34 2006/01/22 17:58:02 fox Exp $                     *
 ********************************************************************************/
 #ifndef FXFOLDINGLIST_H
 #define FXFOLDINGLIST_H
@@ -68,6 +68,9 @@ protected:
   void          *data;
   FXuint         state;
   FXint          x,y;
+private:
+  FXFoldingItem(const FXFoldingItem&);
+  FXFoldingItem& operator=(const FXFoldingItem&);
 protected:
   FXFoldingItem():parent(NULL),prev(NULL),next(NULL),first(NULL),last(NULL),openIcon(NULL),closedIcon(NULL),data(NULL),state(0),x(0),y(0){}
   virtual void draw(const FXFoldingList* list,FXDC& dc,FXint x,FXint y,FXint w,FXint h) const;
@@ -248,6 +251,7 @@ protected:
   FXFoldingItem     *currentitem;       // Current item
   FXFoldingItem     *extentitem;        // Selection extent
   FXFoldingItem     *cursoritem;        // Item under cursor
+  FXFoldingItem     *viewableitem;      // Viewable item
   FXFont            *font;              // Font
   FXFoldingListSortFunc sortfunc;       // Item sort function
   FXColor            textColor;         // Text color
@@ -265,11 +269,13 @@ protected:
   FXbool             state;             // State of item
 protected:
   FXFoldingList();
-  virtual FXFoldingItem* createItem(const FXString& text,FXIcon* oi,FXIcon* ci,void* ptr);
-  virtual void moveContents(FXint x,FXint y);
-  void sort(FXFoldingItem*& f1,FXFoldingItem*& t1,FXFoldingItem*& f2,FXFoldingItem*& t2,int n);
-  void mergesort(FXFoldingItem*& list);
   void recompute();
+  void mergesort(FXFoldingItem*& list);
+  void sort(FXFoldingItem*& f1,FXFoldingItem*& t1,FXFoldingItem*& f2,FXFoldingItem*& t2,int n);
+  virtual void moveContents(FXint x,FXint y);
+  virtual FXFoldingItem* createItem(const FXString& text,FXIcon* oi,FXIcon* ci,void* ptr);
+  static FXint compareSection(const FXchar *p,const FXchar* q,FXint s);
+  static FXint compareSectionCase(const FXchar *p,const FXchar* q,FXint s);
 private:
   FXFoldingList(const FXFoldingList&);
   FXFoldingList& operator=(const FXFoldingList&);
@@ -338,7 +344,7 @@ public:
   virtual void recalc();
 
   /// Tree list can receive focus
-  virtual FXbool canFocus() const;
+  virtual bool canFocus() const;
 
   /// Move the focus to this window
   virtual void setFocus();
@@ -424,6 +430,9 @@ public:
   /// Move item under father before other item
   FXFoldingItem *moveItem(FXFoldingItem* other,FXFoldingItem* father,FXFoldingItem* item);
 
+  /// Extract item
+  FXFoldingItem* extractItem(FXFoldingItem* item,FXbool notify=FALSE);
+
   /// Remove item
   void removeItem(FXFoldingItem* item,FXbool notify=FALSE);
 
@@ -460,9 +469,6 @@ public:
   * in the list.  Flags may be SEARCH_FORWARD or SEARCH_BACKWARD to control
   * the search direction; this can be combined with SEARCH_NOWRAP or SEARCH_WRAP
   * to control whether the search wraps at the start or end of the list.
-  * The option SEARCH_IGNORECASE causes a case-insensitive match.  Finally,
-  * passing SEARCH_PREFIX causes searching for a prefix of the item name.
-  * Return NULL if no matching item is found.
   */
   FXFoldingItem* findItemByData(const void *ptr,FXFoldingItem* start=NULL,FXuint flags=SEARCH_FORWARD|SEARCH_WRAP) const;
 

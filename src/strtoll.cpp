@@ -3,7 +3,7 @@
 *             S t r t o l l  a n d   S t r t o u l l   R o u t i n e s          *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2005 by Jeroen van der Zijp.   All Rights Reserved.             *
+* Copyright (C) 2005,2006 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,11 +19,12 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: strtoll.cpp,v 1.4 2005/01/02 05:33:03 fox Exp $                          *
+* $Id: strtoll.cpp,v 1.9 2006/01/22 17:58:58 fox Exp $                          *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
 #include "fxdefs.h"
+#include "fxascii.h"
 
 
 /*
@@ -84,7 +85,7 @@ FXlong strtoll(const char *nptr,char **endptr,int base){
   if(endptr) *endptr=s;
 
   // Skip spaces
-  while((c=*s++)!='\0' && isspace(c)) s++;
+  while((c=*s++)!='\0' && Ascii::isSpace(c)) s++;
 
   // Process sign
   if(*s=='-'){
@@ -116,11 +117,11 @@ FXlong strtoll(const char *nptr,char **endptr,int base){
   while((c=*s++)!='\0'){
 
     // Digit value
-    if(isdigit(c)){
+    if(Ascii::isDigit(c)){
       c=c-'0';
       }
-    else if(isalpha(c)){
-      c=toupper(c)-'A'+10;
+    else if(Ascii::isLetter(c)){
+      c=Ascii::toUpper(c)-'A'+10;
       }
     else
       break;
@@ -181,7 +182,7 @@ FXulong strtoull(const char *nptr,char **endptr,int base){
   if(endptr) *endptr=s;
 
   // Skip spaces
-  while((c=*s++)!='\0' && isspace(c)) s++;
+  while((c=*s++)!='\0' && Ascii::isSpace(c)) s++;
 
   // Process sign
   if(*s=='-'){
@@ -213,11 +214,11 @@ FXulong strtoull(const char *nptr,char **endptr,int base){
   while((c=*s++)!='\0'){
 
     // Digit value
-    if(isdigit(c)){
+    if(Ascii::isDigit(c)){
       c=c-'0';
       }
-    else if(isalpha(c)){
-      c=toupper(c)-'A'+10;
+    else if(Ascii::isLetter(c)){
+      c=Ascii::toUpper(c)-'A'+10;
       }
     else
       break;

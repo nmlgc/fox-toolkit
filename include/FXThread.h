@@ -3,7 +3,7 @@
 *                 M u l i t h r e a d i n g   S u p p o r t                     *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2004,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 2004,2006 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXThread.h,v 1.34 2005/01/23 22:28:42 fox Exp $                          *
+* $Id: FXThread.h,v 1.40 2006/03/16 22:22:43 fox Exp $                          *
 ********************************************************************************/
 #ifndef FXTHREAD_H
 #define FXTHREAD_H
@@ -45,7 +45,7 @@ class FXCondition;
 class FXAPI FXMutex {
   friend class FXCondition;
 private:
-  FXuval data[13];
+  FXuval data[24];
 private:
   FXMutex(const FXMutex&);
   FXMutex &operator=(const FXMutex&);
@@ -114,7 +114,7 @@ public:
 * A condition allows one or more threads to synchronize
 * to an event.  When a thread calls wait, the associated
 * mutex is unlocked while the thread is blocked.  When the
-* condition becomes signalled, the associated mutex is
+* condition becomes signaled, the associated mutex is
 * locked and the thread(s) are reawakened.
 */
 class FXAPI FXCondition {
@@ -138,8 +138,10 @@ public:
   * Wait until condition becomes signalled, using given mutex,
   * which must already have been locked prior to this call.
   * Returns TRUE if successful, FALSE if timeout occurred.
+  * Note that the wait-time is specified in nanoseconds
+  * since the Epoch (Jan 1, 1970).
   */
-  FXbool wait(FXMutex& mtx,FXuint ms);
+  FXbool wait(FXMutex& mtx,FXlong nsec);
 
   /**
   * Wake or unblock a single blocked thread
@@ -174,7 +176,7 @@ public:
   /// Decrement semaphore
   void wait();
 
-  /// Non-blocking semaphore decrement
+  /// Non-blocking semaphore decrement; return true if locked
   FXbool trywait();
 
   /// Increment semaphore
@@ -205,7 +207,10 @@ private:
 #endif
 protected:
 
-  /// All threads execute by deriving the run method of FXThread
+  /**
+  * All threads execute by deriving the run method of FXThread.
+  * If an uncaught exception was thrown, this function returns -1.
+  */
   virtual FXint run() = 0;
 
 public:
@@ -271,11 +276,20 @@ public:
   static void yield();
 
   /**
-  * Make the calling thread sleep for a number of seconds
-  * and nanoseconds.
+  * Return time in nanoseconds since Epoch (Jan 1, 1970).
   */
-  static void sleep(unsigned long sec,unsigned long nsec=0);
+  static FXlong time();
 
+  /**
+  * Make the calling thread sleep for a number of nanoseconds.
+  */
+  static void sleep(FXlong nsec);
+
+  /**
+  * Wake at appointed time specified in nanoseconds since Epoch.
+  */
+  static void wakeat(FXlong nsec);
+  
   /**
   * Return pointer to the FXThread instance associated
   * with the calling thread; it returns NULL for the main

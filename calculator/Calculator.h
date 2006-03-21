@@ -3,7 +3,7 @@
 *                  F O X   D e s k t o p   C a l c u l a t o r                  *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2001,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 2001,2006 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This program is free software; you can redistribute it and/or modify          *
 * it under the terms of the GNU General Public License as published by          *
@@ -19,7 +19,7 @@
 * along with this program; if not, write to the Free Software                   *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: Calculator.h,v 1.25 2005/01/16 16:06:06 fox Exp $                        *
+* $Id: Calculator.h,v 1.27 2006/01/22 18:01:12 fox Exp $                        *
 ********************************************************************************/
 #ifndef CALCULATOR_H
 #define CALCULATOR_H
@@ -42,7 +42,7 @@ protected:
   FXButton    *clearbtn;            // Clear entry button
   FXButton    *clearallbtn;         // Clear all button
   FXButton    *inverse;             // Inverse function
-  FXButton    *hyper;               // Hyper (for trig) button
+  FXButton    *hyper2;              // Hyper (for trig) button
   FXButton    *functions[16];       // Function buttons
   FXButton    *operators[14];       // Operator buttons
   FXButton    *numbase[4];          // Numeric base

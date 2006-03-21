@@ -1,6 +1,5 @@
 ## Process this file with automake to produce Makefile.in
 
-#screenshotsdir = $(prefix)/@PACKAGE@/html/screenshots
 screenshotsdir = $(datadir)/doc/@PACKAGE@-@FOX_MAJOR_VERSION@.@FOX_MINOR_VERSION@/html/screenshots
 
 # Icons

@@ -16,10 +16,8 @@
 * along with this program; if not, write to the Free Software                  *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA    *
 *******************************************************************************/
+#include <xincs.h>
 #include <fx.h>
-#include <FXPNGIcon.h>
-#include <FXTIFIcon.h>
-#include <FXJPGIcon.h>
 #include "controlpanelicon.h"
 
 #define DEFAULT_SPACING 6
@@ -43,7 +41,7 @@ const ColorTheme ColorThemes[]={
 //|        Name        |        Base      |       Border     |       Back       |      Fore        |      Selback     |      Selfore     |      Tipback     |     Tipfore      |      Menuback    |      Menufore    |
 //|--------------------+------------------+------------------+------------------+------------------+------------------+------------------+------------------+------------------+------------------+------------------|
   {"FOX"               ,FXRGB(212,208,200),FXRGB(  0,  0,  0),FXRGB(255,255,255),FXRGB(  0,  0,  0),FXRGB( 10, 36,106),FXRGB(255,255,255),FXRGB(255,255,225),FXRGB(  0,  0,  0),FXRGB( 10, 36,106),FXRGB(255,255,255)},
-  {"Gnome"	       ,FXRGB(214,215,214),FXRGB(  0,  0,  0),FXRGB(255,255,255),FXRGB(  0,  0,  0),FXRGB(  0,  0,128),FXRGB(255,255,255),FXRGB(255,255,225),FXRGB(  0,  0,  0),FXRGB(  0,  0,128),FXRGB(255,255,255)},
+  {"Gnome"             ,FXRGB(214,215,214),FXRGB(  0,  0,  0),FXRGB(255,255,255),FXRGB(  0,  0,  0),FXRGB(  0,  0,128),FXRGB(255,255,255),FXRGB(255,255,225),FXRGB(  0,  0,  0),FXRGB(  0,  0,128),FXRGB(255,255,255)},
   {"Atlas Green"       ,FXRGB(175,180,159),FXRGB(  0,  0,  0),FXRGB(255,255,255),FXRGB(  0,  0,  0),FXRGB(111,122, 99),FXRGB(255,255,255),FXRGB(255,255,225),FXRGB(  0,  0,  0),FXRGB(111,122, 99),FXRGB(255,255,255)},
   {"BeOS"              ,FXRGB(217,217,217),FXRGB(  0,  0,  0),FXRGB(255,255,255),FXRGB(  0,  0,  0),FXRGB(168,168,168),FXRGB(  0,  0,  0),FXRGB(255,255,225),FXRGB(  0,  0,  0),FXRGB(168,168,168),FXRGB(  0,  0,  0)},
   {"Blue Slate"        ,FXRGB(239,239,239),FXRGB(  0,  0,  0),FXRGB(255,255,255),FXRGB(  0,  0,  0),FXRGB(103,141,178),FXRGB(255,255,255),FXRGB(255,255,225),FXRGB(  0,  0,  0),FXRGB(103,141,178),FXRGB(255,255,255)},
@@ -148,21 +146,14 @@ private:
   FXSeparator       *sep2;
   FXSeparator       *sep3;
 private:
-  FXColor           base;
-  FXColor           back;
-  FXColor           border;
-  FXColor           fore;
+  ColorTheme        theme_current;  // Current Settings
+  ColorTheme        theme_xdefault; // X-Server Default
+  ColorTheme        theme_user;     // Theme User may have set, which is different from the other themes
   FXColor           hilite;
   FXColor           shadow;
-  FXColor           selfore;
-  FXColor           selback;
-  FXColor           tipfore;
-  FXColor           tipback;
-  FXColor           menufore;
-  FXColor           menuback;
+private:
   FXFont           *font;
   FXbool            hascurrent;
-  ColorTheme        currenttheme;
   FXString          applicationname;
   FXString          vendorname;
   FXString          iconpath;
@@ -268,7 +259,7 @@ FXDEFMAP(FXDesktopSetup) FXDesktopSetupMap[]={
   FXMAPFUNC(SEL_CHANGED,FXDesktopSetup::ID_COLORS,FXDesktopSetup::onColorChanged),
   FXMAPFUNC(SEL_COMMAND,FXDesktopSetup::ID_COLOR_THEME,FXDesktopSetup::onColorTheme),
   FXMAPFUNC(SEL_COMMAND,FXDesktopSetup::ID_CHOOSE_FONT,FXDesktopSetup::onChooseFont),
-  FXMAPFUNC(SEL_SELECTED,FXDesktopSetup::ID_SELECT_FILEBINDING,FXDesktopSetup::onCmdFileBinding),
+  FXMAPFUNC(SEL_CHANGED,FXDesktopSetup::ID_SELECT_FILEBINDING,FXDesktopSetup::onCmdFileBinding),
   FXMAPFUNC(SEL_COMMAND,FXDesktopSetup::ID_SELECT_COMMAND,FXDesktopSetup::onCmdSelectCommand),
   FXMAPFUNC(SEL_COMMAND,FXDesktopSetup::ID_SELECT_MIMETYPE,FXDesktopSetup::onCmdMimeType),
   FXMAPFUNC(SEL_COMMAND,FXDesktopSetup::ID_CREATE_FILEBINDING,FXDesktopSetup::onCmdCreateFileBinding),
@@ -297,10 +288,10 @@ FXDesktopSetup::FXDesktopSetup(FXApp * app) : FXMainWindow(app,"FOX Desktop Setu
       }
     }
 
-  FXString desktopdir=FXFile::getHomeDirectory() + PATHSEPSTRING +".foxrc";
+  FXString desktopdir=FXSystem::getHomeDirectory() + PATHSEPSTRING +".foxrc";
   FXString desktopfile;
 
-  if (FXFile::exists(desktopdir)){
+  if(FXStat::exists(desktopdir)){
     if (applicationname.empty()){
       desktopfile = desktopdir + PATHSEPSTRING + "Desktop";
       }
@@ -310,39 +301,39 @@ FXDesktopSetup::FXDesktopSetup(FXApp * app) : FXMainWindow(app,"FOX Desktop Setu
     else {
       desktopfile = desktopdir + PATHSEPSTRING + vendorname + PATHSEPSTRING + applicationname;
       }
-    if (FXFile::exists(desktopfile)){
+    if (FXStat::exists(desktopfile)){
       desktopsettings.parseFile(desktopfile,TRUE);
       }
     }
 
   tooltip = new FXToolTip(getApp());
 
-  /// Retrieve Current Color Settings
-  base		= getApp()->getBaseColor();
-  back		= getApp()->getBackColor();
-  border	= getApp()->getBorderColor();
-  fore		= getApp()->getForeColor();
   hilite	= getApp()->getHiliteColor();
   shadow	= getApp()->getShadowColor();
-  selfore	= getApp()->getSelforeColor();
-  selback	= getApp()->getSelbackColor();
-  tipfore	= getApp()->getTipforeColor();
-  tipback	= getApp()->getTipbackColor();
-  menufore	= getApp()->getSelMenuTextColor();
-  menuback	= getApp()->getSelMenuBackColor();
 
+  /// Retrieve Current Color Settings
+  theme_current.base		= getApp()->getBaseColor();
+  theme_current.back		= getApp()->getBackColor();
+  theme_current.border	= getApp()->getBorderColor();
+  theme_current.fore		= getApp()->getForeColor();
+  theme_current.selfore	= getApp()->getSelforeColor();
+  theme_current.selback	= getApp()->getSelbackColor();
+  theme_current.tipfore	= getApp()->getTipforeColor();
+  theme_current.tipback	= getApp()->getTipbackColor();
+  theme_current.menufore= getApp()->getSelMenuTextColor();
+  theme_current.menuback= getApp()->getSelMenuBackColor();
 
-  typingSpeed=getApp()->getTypingSpeed();
-  clickSpeed=getApp()->getClickSpeed();
-  scrollSpeed=getApp()->getScrollSpeed();
-  scrollDelay=getApp()->getScrollDelay();
-  blinkSpeed=getApp()->getBlinkSpeed();
-  animSpeed=getApp()->getAnimSpeed();
-  menuPause=getApp()->getMenuPause();
+  typingSpeed =getApp()->getTypingSpeed();
+  clickSpeed  =getApp()->getClickSpeed();
+  scrollSpeed =getApp()->getScrollSpeed();
+  scrollDelay =getApp()->getScrollDelay();
+  blinkSpeed  =getApp()->getBlinkSpeed();
+  animSpeed   =getApp()->getAnimSpeed();
+  menuPause   =getApp()->getMenuPause();
   tooltipPause=getApp()->getTooltipPause();
-  tooltipTime=getApp()->getTooltipTime();
-  dragDelta=getApp()->getDragDelta();
-  wheelLines=getApp()->getWheelLines();
+  tooltipTime =getApp()->getTooltipTime();
+  dragDelta   =getApp()->getDragDelta();
+  wheelLines  =getApp()->getWheelLines();
 
   gamma=getApp()->reg().readRealEntry("SETTINGS","displaygamma",1.0);
   maxcolors=getApp()->reg().readUnsignedEntry("SETTINGS","maxcolors",125);
@@ -350,18 +341,18 @@ FXDesktopSetup::FXDesktopSetup(FXApp * app) : FXMainWindow(app,"FOX Desktop Setu
 
 
   /// Setup the Datatargets
-  target_base.connect(base);
-  target_back.connect(back);
-  target_border.connect(border);
-  target_fore.connect(fore);
+  target_base.connect(theme_current.base);
+  target_back.connect(theme_current.back);
+  target_border.connect(theme_current.border);
+  target_fore.connect(theme_current.fore);
   target_hilite.connect(hilite);
   target_shadow.connect(shadow);
-  target_selfore.connect(selfore);
-  target_selback.connect(selback);
-  target_tipfore.connect(tipfore);
-  target_tipback.connect(tipback);
-  target_menufore.connect(menufore);
-  target_menuback.connect(menuback);
+  target_selfore.connect(theme_current.selfore);
+  target_selback.connect(theme_current.selback);
+  target_tipfore.connect(theme_current.tipfore);
+  target_tipback.connect(theme_current.tipback);
+  target_menufore.connect(theme_current.menufore);
+  target_menuback.connect(theme_current.menuback);
 
 
   target_typingspeed.connect(typingSpeed);
@@ -428,7 +419,7 @@ FXDesktopSetup::~FXDesktopSetup(){
 
 void FXDesktopSetup::create(){
   FXMainWindow::create();
-  filebindinglist->setCurrentItem(0,TRUE);
+  initColors();
   }
 
 
@@ -450,7 +441,6 @@ void FXDesktopSetup::setup(){
   FXVerticalFrame   * vframe=NULL;
   FXMatrix          * matrix=NULL;
   FXLabel           * label=NULL;
-  FXColorWell       * colorwell=NULL;
   FXSpinner         * spinner=NULL;
 
   FXVerticalFrame * main = new FXVerticalFrame(this,LAYOUT_FILL_X|LAYOUT_FILL_Y,0,0,0,0,0,0,0,0,0,0);
@@ -500,41 +490,39 @@ void FXDesktopSetup::setup(){
   new FXLabel(themeframe,"Theme: ",NULL,LAYOUT_CENTER_Y);
   list = new FXListBox(themeframe,this,ID_COLOR_THEME,LAYOUT_FILL_X|FRAME_SUNKEN|FRAME_THICK);
   list->setNumVisible(9);
-  initColors();
-
 
   new FXSeparator(frame,SEPARATOR_GROOVE|LAYOUT_FILL_X);
 
   matrix = new FXMatrix(frame,2,LAYOUT_FILL_Y|MATRIX_BY_COLUMNS,0,0,0,0,DEFAULT_SPACING,DEFAULT_SPACING,DEFAULT_SPACING,DEFAULT_SPACING,1,1);
 
-  colorwell = new FXColorWell(matrix,FXRGB(0,0,255),&target_base,FXDataTarget::ID_VALUE);
+  new FXColorWell(matrix,FXRGB(0,0,255),&target_base,FXDataTarget::ID_VALUE);
   label	  = new FXLabel(matrix,"Base Color");
 
-  colorwell = new FXColorWell(matrix,FXRGB(0,0,255),&target_border,FXDataTarget::ID_VALUE);
+  new FXColorWell(matrix,FXRGB(0,0,255),&target_border,FXDataTarget::ID_VALUE);
   label	  = new FXLabel(matrix,"Border Color");
 
-  colorwell = new FXColorWell(matrix,FXRGB(0,0,255),&target_fore,FXDataTarget::ID_VALUE);
+  new FXColorWell(matrix,FXRGB(0,0,255),&target_fore,FXDataTarget::ID_VALUE);
   label	  = new FXLabel(matrix,"Text Color");
 
-  colorwell = new FXColorWell(matrix,FXRGB(0,0,255),&target_back,FXDataTarget::ID_VALUE);
+  new FXColorWell(matrix,FXRGB(0,0,255),&target_back,FXDataTarget::ID_VALUE);
   label	  = new FXLabel(matrix,"Background Color");
 
-  colorwell = new FXColorWell(matrix,FXRGB(0,0,255),&target_selfore,FXDataTarget::ID_VALUE);
+  new FXColorWell(matrix,FXRGB(0,0,255),&target_selfore,FXDataTarget::ID_VALUE);
   label	  = new FXLabel(matrix,"Selected Text Color");
 
-  colorwell = new FXColorWell(matrix,FXRGB(0,0,255),&target_selback,FXDataTarget::ID_VALUE);
+  new FXColorWell(matrix,FXRGB(0,0,255),&target_selback,FXDataTarget::ID_VALUE);
   label	  = new FXLabel(matrix,"Selected Background Color");
 
-  colorwell = new FXColorWell(matrix,FXRGB(0,0,255),&target_menufore,FXDataTarget::ID_VALUE);
+  new FXColorWell(matrix,FXRGB(0,0,255),&target_menufore,FXDataTarget::ID_VALUE);
   label	  = new FXLabel(matrix,"Selected Menu Text Color");
 
-  colorwell = new FXColorWell(matrix,FXRGB(0,0,255),&target_menuback,FXDataTarget::ID_VALUE);
+  new FXColorWell(matrix,FXRGB(0,0,255),&target_menuback,FXDataTarget::ID_VALUE);
   label	  = new FXLabel(matrix,"Selected Menu Background Color");
 
-  colorwell = new FXColorWell(matrix,FXRGB(0,0,255),&target_tipfore,FXDataTarget::ID_VALUE);
+  new FXColorWell(matrix,FXRGB(0,0,255),&target_tipfore,FXDataTarget::ID_VALUE);
   label	  = new FXLabel(matrix,"Tip Text Color");
 
-  colorwell = new FXColorWell(matrix,FXRGB(0,0,255),&target_tipback,FXDataTarget::ID_VALUE);
+   new FXColorWell(matrix,FXRGB(0,0,255),&target_tipback,FXDataTarget::ID_VALUE);
   label	  = new FXLabel(matrix,"Tip Background Color");
 
   frame = new FXVerticalFrame(hframe,LAYOUT_FILL_X|LAYOUT_FILL_Y,0,0,0,0,DEFAULT_SPACING,DEFAULT_SPACING,DEFAULT_SPACING,DEFAULT_SPACING,0,0);
@@ -655,7 +643,7 @@ void FXDesktopSetup::setup(){
   prefs = desktopsettings.find("FILETYPES");
   if(prefs){
     for(FXint e=prefs->first(); e<prefs->size(); e=prefs->next(e)){
-      filebindinglist->appendItem(prefs->key(e));
+      filebindinglist->appendItem(prefs->key(e),NULL,NULL,TRUE);
       data = prefs->data(e);
       mime = data.section(";",4);
       if (!mime.empty() && (mimetypelist->findItem(mime)==-1)){
@@ -778,162 +766,42 @@ void FXDesktopSetup::setup(){
 
 
 static FXIcon * createIconFromName(FXApp * app,const FXString & name, const FXString & iconpath){
-   FXString fullpath;
-   if(FXFile::exists(name)){
-     fullpath = name;
-     }
-   else{
-     fullpath = FXFile::search(iconpath,name);
-     if(fullpath.empty()) return NULL;
-     }
-
-   FXIcon * icon = NULL;
-   FXString ext = FXFile::extension(name);
-
-  // Determine type of image
-  if(comparecase(ext,"gif")==0){
-    icon=new FXGIFIcon(app,NULL,0,IMAGE_SHMI|IMAGE_SHMP);
+  FXIcon * icon = NULL;
+  FXIconSource iconsource(app);
+  FXString fullpath;
+  if(FXStat::exists(name)){
+    fullpath = name;
     }
-  else if(comparecase(ext,"bmp")==0){
-    icon=new FXBMPIcon(app,NULL,0,IMAGE_SHMI|IMAGE_SHMP);
+  else{
+    fullpath = FXPath::search(iconpath,name);
+    if(fullpath.empty()) return NULL;
     }
-  else if(comparecase(ext,"xpm")==0){
-    icon=new FXXPMIcon(app,NULL,0,IMAGE_SHMI|IMAGE_SHMP);
-    }
-  else if(comparecase(ext,"pcx")==0){
-    icon=new FXPCXIcon(app,NULL,0,IMAGE_SHMI|IMAGE_SHMP);
-    }
-  else if(comparecase(ext,"ico")==0 || comparecase(ext,"cur")==0){
-    icon=new FXICOIcon(app,NULL,0,IMAGE_SHMI|IMAGE_SHMP);
-    }
-  else if(comparecase(ext,"tga")==0){
-    icon=new FXTGAIcon(app,NULL,0,IMAGE_SHMI|IMAGE_SHMP);
-    }
-  else if(comparecase(ext,"rgb")==0){
-    icon=new FXRGBIcon(app,NULL,0,IMAGE_SHMI|IMAGE_SHMP);
-    }
-  else if(comparecase(ext,"pbm")==0 || comparecase(ext,"pgm")==0 || comparecase(ext,"pnm")==0 || comparecase(ext,"ppm")==0){
-    icon=new FXPPMIcon(app,NULL,0,IMAGE_SHMI|IMAGE_SHMP);
-    }
-  else if(comparecase(ext,"xbm")==0){
-    icon=new FXXBMIcon(app,NULL,NULL,0,IMAGE_SHMI|IMAGE_SHMP);
-    }
-  else if(comparecase(ext,"ppm")==0){
-    icon=new FXPPMIcon(app,NULL,0,IMAGE_SHMI|IMAGE_SHMP);
-    }
-  else if(comparecase(ext,"iff")==0 || comparecase(ext,"lbm")==0){
-    icon=new FXIFFIcon(app,NULL,0,IMAGE_SHMI|IMAGE_SHMP);
-    }
-  else if(comparecase(ext,"ras")==0){
-    icon=new FXRASIcon(app,NULL,0,IMAGE_SHMI|IMAGE_SHMP);
-    }
-#ifdef HAVE_PNG_H
-  else if(comparecase(ext,"png")==0){
-    icon=new FXPNGIcon(app,NULL,0,IMAGE_SHMI|IMAGE_SHMP);
-    }
-#endif
-#ifdef HAVE_JPEG_H
-  else if(comparecase(ext,"jpg")==0){
-    icon=new FXJPGIcon(app,NULL,0,IMAGE_SHMI|IMAGE_SHMP);
-    }
-#endif
-#ifdef HAVE_TIFF_H
-  else if(comparecase(ext,"tif")==0 || comparecase(ext,"tiff")==0){
-    icon=new FXTIFIcon(app,NULL,0,IMAGE_SHMI|IMAGE_SHMP);
-    }
-#endif
-  if (icon==NULL) {
-    return NULL;
-    }
-
-  FXFileStream str;
-  if(str.open(fullpath,FXStreamLoad)){
-    icon->loadPixels(str);
-    str.close();
+  icon = iconsource.loadIconFile(fullpath);
+  if (icon) {
     icon->blend(app->getBaseColor());
     icon->create();
     return icon;
     }
-  delete icon;
   return NULL;
   }
 
 
 static void updateIcon(FXApp*app,FXButton * button, const FXString & path){
-  FXIcon * oldicon;
-  if (button->getIcon()){
-    oldicon = button->getIcon();
-    button->setIcon(NULL);
-    delete oldicon;
-    }
-
+  FXIconSource iconsource(app);
   FXIcon * icon = NULL;
-  FXString ext = FXFile::extension(path);
 
-  // Determine type of image
-  if(comparecase(ext,"gif")==0){
-    icon=new FXGIFIcon(app,NULL,0,IMAGE_SHMI|IMAGE_SHMP);
+  if (button->getIcon()){
+    icon = button->getIcon();
+    button->setIcon(NULL);
+    delete icon;
+    icon=NULL;
     }
-  else if(comparecase(ext,"bmp")==0){
-    icon=new FXBMPIcon(app,NULL,0,IMAGE_SHMI|IMAGE_SHMP);
-    }
-  else if(comparecase(ext,"xpm")==0){
-    icon=new FXXPMIcon(app,NULL,0,IMAGE_SHMI|IMAGE_SHMP);
-    }
-  else if(comparecase(ext,"pcx")==0){
-    icon=new FXPCXIcon(app,NULL,0,IMAGE_SHMI|IMAGE_SHMP);
-    }
-  else if(comparecase(ext,"ico")==0 || comparecase(ext,"cur")==0){
-    icon=new FXICOIcon(app,NULL,0,IMAGE_SHMI|IMAGE_SHMP);
-    }
-  else if(comparecase(ext,"tga")==0){
-    icon=new FXTGAIcon(app,NULL,0,IMAGE_SHMI|IMAGE_SHMP);
-    }
-  else if(comparecase(ext,"rgb")==0){
-    icon=new FXRGBIcon(app,NULL,0,IMAGE_SHMI|IMAGE_SHMP);
-    }
-  else if(comparecase(ext,"pbm")==0 || comparecase(ext,"pgm")==0 || comparecase(ext,"pnm")==0 || comparecase(ext,"ppm")==0){
-    icon=new FXPPMIcon(app,NULL,0,IMAGE_SHMI|IMAGE_SHMP);
-    }
-  else if(comparecase(ext,"xbm")==0){
-    icon=new FXXBMIcon(app,NULL,NULL,0,IMAGE_SHMI|IMAGE_SHMP);
-    }
-  else if(comparecase(ext,"ppm")==0){
-    icon=new FXPPMIcon(app,NULL,0,IMAGE_SHMI|IMAGE_SHMP);
-    }
-  else if(comparecase(ext,"iff")==0 || comparecase(ext,"lbm")==0){
-    icon=new FXIFFIcon(app,NULL,0,IMAGE_SHMI|IMAGE_SHMP);
-    }
-  else if(comparecase(ext,"ras")==0){
-    icon=new FXRASIcon(app,NULL,0,IMAGE_SHMI|IMAGE_SHMP);
-    }
-#ifdef HAVE_PNG_H
-  else if(comparecase(ext,"png")==0){
-    icon=new FXPNGIcon(app,NULL,0,IMAGE_SHMI|IMAGE_SHMP);
-    }
-#endif
-#ifdef HAVE_JPEG_H
-  else if(comparecase(ext,"jpg")==0){
-    icon=new FXJPGIcon(app,NULL,0,IMAGE_SHMI|IMAGE_SHMP);
-    }
-#endif
-#ifdef HAVE_TIFF_H
-  else if(comparecase(ext,"tif")==0 || comparecase(ext,"tiff")==0){
-    icon=new FXTIFIcon(app,NULL,0,IMAGE_SHMI|IMAGE_SHMP);
-    }
-#endif
-  if (icon==NULL) return;
 
-  FXFileStream str;
-  if(str.open(path,FXStreamLoad)){
-    icon->loadPixels(str);
-    str.close();
+  icon = iconsource.loadIconFile(path);
+  if (icon) {
     icon->blend(app->getBaseColor());
     icon->create();
     button->setIcon(icon);
-    }
-  else {
-    delete icon;
     }
   }
 
@@ -951,6 +819,7 @@ static FXint findItemInList(FXList * list,FXListItem * item){
 
 
 void FXDesktopSetup::saveFileBinding(){
+  ///fxmessage("Saving File Binding: %s\n",filebinding.key.text());
   if (filebinding.key.empty()) return;
 
   FXString entry;
@@ -1144,15 +1013,15 @@ long FXDesktopSetup::onCmdSelectIcon(FXObject*,FXSelector sel,void*){
     case ID_SELECT_ICON_BIGNAMEOPEN: name=filebinding.bignameopen; break;
     }
 
-  if(!FXFile::exists(name)){
-    name=FXFile::search(iconpath,name);
+  if(!FXStat::exists(name)){
+    name=FXPath::search(iconpath,name);
     }
 
   if(name.empty()){
     if(!iconpath.empty())
       name=iconpath.section(PATHLISTSEP,0)+PATHSEPSTRING;
     else
-      name=FXFile::getCurrentDirectory();
+      name=FXSystem::getCurrentDirectory();
     }
 
 //  FXString selected=FXFileDialog::getOpenFilename(this,"Select Icon",name);
@@ -1160,7 +1029,6 @@ long FXDesktopSetup::onCmdSelectIcon(FXObject*,FXSelector sel,void*){
   opendialog.setSelectMode(SELECTFILE_EXISTING);
   opendialog.setFilename(name);
   opendialog.showImages(TRUE);
-  opendialog.setImageSize(64);
   if(opendialog.execute()){
     selected=opendialog.getFilename();
 //  if(!selected.empty()){
@@ -1171,7 +1039,7 @@ long FXDesktopSetup::onCmdSelectIcon(FXObject*,FXSelector sel,void*){
     FXint num_sections=iconpath.contains(PATHLISTSEP)+1;
     for(FXint i=0; i<num_sections; i++){
       path=iconpath.section(PATHLISTSEP,i);
-      relpath=FXFile::relative(path,selected);
+      relpath=FXPath::relative(path,selected);
       if(relpath.length()<length){
         iconname=relpath;
         length=relpath.length();
@@ -1202,58 +1070,31 @@ long FXDesktopSetup::onCmdSelectIcon(FXObject*,FXSelector sel,void*){
 
 
 long FXDesktopSetup::onColorChanged(FXObject*,FXSelector,void*){
-  if (hascurrent)
-    list->setCurrentItem(numThemes+1);
-  else
-    list->setCurrentItem(numThemes);
+  list->setCurrentItem(list->getNumItems()-1);
   setupColors();
   return 1;
   }
 
 
 long FXDesktopSetup::onColorTheme(FXObject*,FXSelector,void* ptr){
-  FXint theme=(FXint)ptr;
-  if(hascurrent){
-    if(theme==0){
-      base      = currenttheme.base;
-      border    = currenttheme.border;
-      back      = currenttheme.back;
-      fore      = currenttheme.fore;
-      selfore 	= currenttheme.selfore;
-      selback 	= currenttheme.selback;
-      tipfore 	= currenttheme.tipfore;
-      tipback 	= currenttheme.tipback;
-      menufore 	= currenttheme.menufore;
-      menuback 	= currenttheme.menuback;
-      }
-    else if(theme<(numThemes+1)){
-      theme-=1;
-      base      = ColorThemes[theme].base;
-      border    = ColorThemes[theme].border;
-      back      = ColorThemes[theme].back;
-      fore      = ColorThemes[theme].fore;
-      selfore 	= ColorThemes[theme].selfore;
-      selback 	= ColorThemes[theme].selback;
-      tipfore 	= ColorThemes[theme].tipfore;
-      tipback 	= ColorThemes[theme].tipback;
-      menufore 	= ColorThemes[theme].menufore;
-      menuback	= ColorThemes[theme].menuback;
-      }
+  FXint no=(FXint)(FXival)ptr;
+  ColorTheme * theme_selected = reinterpret_cast<ColorTheme*>(list->getItemData(no));
+  if (theme_selected) {
+    /// Set new colors from selected theme
+    theme_current.base     = theme_selected->base;
+    theme_current.border   = theme_selected->border;
+    theme_current.back     = theme_selected->back;
+    theme_current.fore     = theme_selected->fore;
+    theme_current.selfore  = theme_selected->selfore;
+    theme_current.selback  = theme_selected->selback;
+    theme_current.tipfore  = theme_selected->tipfore;
+    theme_current.tipback  = theme_selected->tipback;
+    theme_current.menufore = theme_selected->menufore;
+    theme_current.menuback = theme_selected->menuback;
+
+    /// Apply New Colors to Widgets
+    setupColors();
     }
-  else{
-    if(theme>=numThemes) return 1;
-    base        = ColorThemes[theme].base;
-    border      = ColorThemes[theme].border;
-    back        = ColorThemes[theme].back;
-    fore        = ColorThemes[theme].fore;
-    selfore 	= ColorThemes[theme].selfore;
-    selback 	= ColorThemes[theme].selback;
-    tipfore 	= ColorThemes[theme].tipfore;
-    tipback 	= ColorThemes[theme].tipback;
-    menufore 	= ColorThemes[theme].menufore;
-    menuback	= ColorThemes[theme].menuback;
-    }
-  setupColors();
   return 1;
   }
 
@@ -1279,15 +1120,15 @@ long FXDesktopSetup::onChooseFont(FXObject*,FXSelector,void*){
 
 long FXDesktopSetup::onCmdClose(FXObject*,FXSelector,void*){
   FXint result = FXMessageBox::question(this,MBOX_SAVE_CANCEL_DONTSAVE,"Save Changes?","Do you want to save changes to the FOX Registry\nbefore closing?\n\nIf you don't save, your changes will be lost.");
-  if (result==MBOX_CLICKED_YES){
+  if(result==MBOX_CLICKED_SAVE){
     saveFileBinding();
     writeDesktop();
     return 0;
     }
-  else if (result==MBOX_CLICKED_CANCEL){
+  else if(result==MBOX_CLICKED_CANCEL){
     return 1;
     }
-  else {
+  else{
     return 0;
     }
   return 0;
@@ -1295,15 +1136,15 @@ long FXDesktopSetup::onCmdClose(FXObject*,FXSelector,void*){
 
 static FXString weightToString(FXuint weight){
   switch(weight){
-    case FONTWEIGHT_THIN      : return "thin"; break;
-    case FONTWEIGHT_EXTRALIGHT: return "extralight"; break;
-    case FONTWEIGHT_LIGHT     : return "light"; break;
-    case FONTWEIGHT_NORMAL    : return "normal"; break;
-    case FONTWEIGHT_MEDIUM    : return "medium"; break;
-    case FONTWEIGHT_DEMIBOLD  : return "demibold"; break;
-    case FONTWEIGHT_BOLD      : return "bold"; break;
-    case FONTWEIGHT_EXTRABOLD : return "extrabold"; break;
-    case FONTWEIGHT_HEAVY     : return "heavy"; break;
+    case FXFont::Thin      : return "thin"; break;
+    case FXFont::ExtraLight: return "extralight"; break;
+    case FXFont::Light     : return "light"; break;
+    case FXFont::Normal    : return "normal"; break;
+    case FXFont::Medium    : return "medium"; break;
+    case FXFont::DemiBold  : return "demibold"; break;
+    case FXFont::Bold      : return "bold"; break;
+    case FXFont::ExtraBold : return "extrabold"; break;
+    case FXFont::Black     : return "heavy"; break;
     default: return ""; break;
     }
   return "";
@@ -1311,11 +1152,11 @@ static FXString weightToString(FXuint weight){
 
 static FXString slantToString(FXuint slant){
   switch(slant){
-    case FONTSLANT_REGULAR : return "regular"; break;
-    case FONTSLANT_ITALIC : return "italic"; break;
-    case FONTSLANT_OBLIQUE : return "oblique"; break;
-    case FONTSLANT_REVERSE_ITALIC : return "reverse italic"; break;
-    case FONTSLANT_REVERSE_OBLIQUE : return "reverse oblique"; break;
+    case FXFont::Straight       : return "regular"; break;
+    case FXFont::Italic         : return "italic"; break;
+    case FXFont::Oblique        : return "oblique"; break;
+    case FXFont::ReverseItalic  : return "reverse italic"; break;
+    case FXFont::ReverseOblique : return "reverse oblique"; break;
     default : return ""; break;
     }
   return "";
@@ -1323,10 +1164,10 @@ static FXString slantToString(FXuint slant){
 
 void FXDesktopSetup::setupFont(){
   FXString fontname = font->getActualName() +", " + FXStringVal(font->getSize()/10);
-  if(font->getWeight()!=0 && font->getWeight()!=FONTWEIGHT_NORMAL){
+  if(font->getWeight()!=0 && font->getWeight()!=FXFont::Normal){
     fontname += ", " + weightToString(font->getWeight());
     }
-  if (font->getSlant()!=0 && font->getSlant()!=FONTSLANT_REGULAR){
+  if (font->getSlant()!=0 && font->getSlant()!=FXFont::Straight){
     fontname += ", " + slantToString(font->getSlant());
     }
 
@@ -1350,253 +1191,237 @@ void FXDesktopSetup::setupFont(){
 
 
 void FXDesktopSetup::initColors(){
-  FXint scheme=-1;
-  hascurrent = FALSE;
+  FXint i,scheme=-1;
 
-  // Find the correct current scheme
-  for(FXint i=0;i<numThemes;i++){
-    if((base==ColorThemes[i].base) &&
-       (border==ColorThemes[i].border) &&
-       (back==ColorThemes[i].back) &&
-       (fore==ColorThemes[i].fore) &&
-       (selfore==ColorThemes[i].selfore) &&
-       (selback==ColorThemes[i].selback) &&
-       (menufore==ColorThemes[i].menufore) &&
-       (menuback==ColorThemes[i].menuback) &&
-       (tipfore==ColorThemes[i].tipfore) &&
-       (tipback==ColorThemes[i].tipback)){
+  /// Find the correct current scheme
+  for(i=0;i<numThemes;i++){
+    if((theme_current.base==ColorThemes[i].base) &&
+       (theme_current.border==ColorThemes[i].border) &&
+       (theme_current.back==ColorThemes[i].back) &&
+       (theme_current.fore==ColorThemes[i].fore) &&
+       (theme_current.selfore==ColorThemes[i].selfore) &&
+       (theme_current.selback==ColorThemes[i].selback) &&
+       (theme_current.menufore==ColorThemes[i].menufore) &&
+       (theme_current.menuback==ColorThemes[i].menuback) &&
+       (theme_current.tipfore==ColorThemes[i].tipfore) &&
+       (theme_current.tipback==ColorThemes[i].tipback)){
       scheme=i;
       break;
       }
     }
 
-  if(scheme==-1){
-    list->appendItem("Current");
-    currenttheme.name = "Current";
-    currenttheme.base = base;
-    currenttheme.border = border;
-    currenttheme.back = back;
-    currenttheme.fore = fore;
-    currenttheme.selfore = selfore;
-    currenttheme.selback = selback;
-    currenttheme.menufore = menufore;
-    currenttheme.menuback = menuback;
-    currenttheme.tipfore = tipfore;
-    currenttheme.tipback = tipback;
-    hascurrent=TRUE;
-    scheme=0;
+  if (scheme==-1) {
+    theme_user.base = theme_current.base;
+    theme_user.border = theme_current.border;
+    theme_user.back = theme_current.back;
+    theme_user.fore = theme_current.fore;
+    theme_user.selfore = theme_current.selfore;
+    theme_user.selback = theme_current.selback;
+    theme_user.menufore = theme_current.menufore;
+    theme_user.menuback = theme_current.menuback;
+    theme_user.tipfore = theme_current.tipfore;
+    theme_user.tipback = theme_current.tipback;
+    list->appendItem("Current",NULL,&theme_user);
     }
 
-  for(FXint i=0;i<numThemes;i++){
-    list->appendItem(ColorThemes[i].name);
+  /// Add Standard Themes to List
+  for(i=0; i<numThemes; i++){
+    list->appendItem(ColorThemes[i].name,NULL,(void*)&ColorThemes[i]);
     }
+#ifndef WIN32
+  theme_xdefault.base     = FXRGB(212,208,200);
+  theme_xdefault.border   = FXRGB(  0,  0,  0);
+  theme_xdefault.back     = FXRGB(255,255,255);
+  theme_xdefault.fore     = FXRGB(  0,  0,  0);
+  theme_xdefault.selback  = FXRGB( 10, 36,106);
+  theme_xdefault.selfore  = FXRGB(255,255,255);
+  theme_xdefault.tipback  = FXRGB(255,255,255);
+  theme_xdefault.tipfore  = FXRGB(  0,  0,  0);
+  theme_xdefault.menuback = FXRGB( 10, 36,106);
+  theme_xdefault.menufore = FXRGB(255,255,255);
 
+  theme_xdefault.base   = fxcolorfromname(XGetDefault((Display*)getApp()->getDisplay(),"fox","background"));
+  theme_xdefault.fore   = fxcolorfromname(XGetDefault((Display*)getApp()->getDisplay(),"fox","foreground"));
+  theme_xdefault.border = fxcolorfromname(XGetDefault((Display*)getApp()->getDisplay(),"fox","borderColor"));
+  list->appendItem("X11 Default",NULL,&theme_xdefault);
+#endif
   list->appendItem("User Defined");
   list->setCurrentItem(scheme);
   }
 
 
 void FXDesktopSetup::setupColors(){
-  shadow = makeShadowColor(base);
-  hilite = makeHiliteColor(base);
+  shadow = makeShadowColor(theme_current.base);
+  hilite = makeHiliteColor(theme_current.base);
 
-  tabitem->setBorderColor(border);
-  tabitem->setBaseColor(base);
-  tabitem->setBackColor(base);
-  tabitem->setTextColor(fore);
+  tabitem->setBorderColor(theme_current.border);
+  tabitem->setBaseColor(theme_current.base);
+  tabitem->setBackColor(theme_current.base);
+  tabitem->setTextColor(theme_current.fore);
   tabitem->setShadowColor(shadow);
   tabitem->setHiliteColor(hilite);
 
-  tabframe->setBorderColor(border);
-  tabframe->setBaseColor(base);
-  tabframe->setBackColor(base);
+  tabframe->setBorderColor(theme_current.border);
+  tabframe->setBaseColor(theme_current.base);
+  tabframe->setBackColor(theme_current.base);
   tabframe->setShadowColor(shadow);
   tabframe->setHiliteColor(hilite);
 
 
-  tabsubframe->setBorderColor(border);
-  tabsubframe->setBaseColor(base);
-  tabsubframe->setBackColor(base);
+  tabsubframe->setBorderColor(theme_current.border);
+  tabsubframe->setBaseColor(theme_current.base);
+  tabsubframe->setBackColor(theme_current.base);
   tabsubframe->setShadowColor(shadow);
   tabsubframe->setHiliteColor(hilite);
 
-  menuframe->setBorderColor(border);
-  menuframe->setBaseColor(base);
-  menuframe->setBackColor(base);
+  menuframe->setBorderColor(theme_current.border);
+  menuframe->setBaseColor(theme_current.base);
+  menuframe->setBackColor(theme_current.base);
   menuframe->setShadowColor(shadow);
   menuframe->setHiliteColor(hilite);
 
-  grpbox1->setBorderColor(border);
-  grpbox1->setBaseColor(base);
-  grpbox1->setBackColor(base);
+  grpbox1->setBorderColor(theme_current.border);
+  grpbox1->setBaseColor(theme_current.base);
+  grpbox1->setBackColor(theme_current.base);
   grpbox1->setShadowColor(shadow);
   grpbox1->setHiliteColor(hilite);
-  grpbox1->setTextColor(fore);
+  grpbox1->setTextColor(theme_current.fore);
 
-  grpbox2->setBorderColor(border);
-  grpbox2->setBaseColor(base);
-  grpbox2->setBackColor(base);
+  grpbox2->setBorderColor(theme_current.border);
+  grpbox2->setBaseColor(theme_current.base);
+  grpbox2->setBackColor(theme_current.base);
   grpbox2->setShadowColor(shadow);
   grpbox2->setHiliteColor(hilite);
-  grpbox2->setTextColor(fore);
+  grpbox2->setTextColor(theme_current.fore);
 
-  sep1->setBorderColor(border);
-  sep1->setBaseColor(base);
-  sep1->setBackColor(base);
+  sep1->setBorderColor(theme_current.border);
+  sep1->setBaseColor(theme_current.base);
+  sep1->setBackColor(theme_current.base);
   sep1->setShadowColor(shadow);
   sep1->setHiliteColor(hilite);
 
-  sep2->setBorderColor(border);
-  sep2->setBaseColor(base);
-  sep2->setBackColor(base);
+  sep2->setBorderColor(theme_current.border);
+  sep2->setBaseColor(theme_current.base);
+  sep2->setBackColor(theme_current.base);
   sep2->setShadowColor(shadow);
   sep2->setHiliteColor(hilite);
 
-  sep3->setBorderColor(border);
-  sep3->setBaseColor(base);
-  sep3->setBackColor(base);
+  sep3->setBorderColor(theme_current.border);
+  sep3->setBaseColor(theme_current.base);
+  sep3->setBackColor(theme_current.base);
   sep3->setShadowColor(shadow);
   sep3->setHiliteColor(hilite);
 
-  labeltextframe1->setBorderColor(border);
-  labeltextframe1->setBaseColor(base);
-  labeltextframe1->setBackColor(base);
+  labeltextframe1->setBorderColor(theme_current.border);
+  labeltextframe1->setBaseColor(theme_current.base);
+  labeltextframe1->setBackColor(theme_current.base);
   labeltextframe1->setShadowColor(shadow);
   labeltextframe1->setHiliteColor(hilite);
 
 
-  labeltextframe2->setBorderColor(border);
-  labeltextframe2->setBaseColor(base);
-  labeltextframe2->setBackColor(base);
+  labeltextframe2->setBorderColor(theme_current.border);
+  labeltextframe2->setBaseColor(theme_current.base);
+  labeltextframe2->setBackColor(theme_current.base);
   labeltextframe2->setShadowColor(shadow);
   labeltextframe2->setHiliteColor(hilite);
 
-  label1->setBorderColor(border);
-  label1->setBaseColor(base);
-  label1->setBackColor(base);
-  label1->setTextColor(fore);
+  label1->setBorderColor(theme_current.border);
+  label1->setBaseColor(theme_current.base);
+  label1->setBackColor(theme_current.base);
+  label1->setTextColor(theme_current.fore);
   label1->setShadowColor(shadow);
   label1->setHiliteColor(hilite);
 
-  label2->setBorderColor(tipfore);
-  label2->setBaseColor(tipback);
-  label2->setBackColor(tipback);
-  label2->setTextColor(tipfore);
+  label2->setBorderColor(theme_current.tipfore);
+  label2->setBaseColor(theme_current.tipback);
+  label2->setBackColor(theme_current.tipback);
+  label2->setTextColor(theme_current.tipfore);
   label2->setShadowColor(shadow);
   label2->setHiliteColor(hilite);
 
-  label3->setBorderColor(border);
-  label3->setBaseColor(base);
-  label3->setBackColor(selback);
-  label3->setTextColor(selfore);
+  label3->setBorderColor(theme_current.border);
+  label3->setBaseColor(theme_current.base);
+  label3->setBackColor(theme_current.selback);
+  label3->setTextColor(theme_current.selfore);
   label3->setShadowColor(shadow);
   label3->setHiliteColor(hilite);
 
-  label4->setBorderColor(border);
-  label4->setBaseColor(base);
-  label4->setBackColor(base);
-  label4->setTextColor(fore);
+  label4->setBorderColor(theme_current.border);
+  label4->setBaseColor(theme_current.base);
+  label4->setBackColor(theme_current.base);
+  label4->setTextColor(theme_current.fore);
   label4->setShadowColor(shadow);
   label4->setHiliteColor(hilite);
 
-  label5->setBorderColor(tipfore);
-  label5->setBaseColor(tipback);
-  label5->setBackColor(tipback);
-  label5->setTextColor(tipfore);
+  label5->setBorderColor(theme_current.tipfore);
+  label5->setBaseColor(theme_current.tipback);
+  label5->setBackColor(theme_current.tipback);
+  label5->setTextColor(theme_current.tipfore);
   label5->setShadowColor(shadow);
   label5->setHiliteColor(hilite);
 
-  menulabels[0]->setBorderColor(border);
-  menulabels[0]->setBaseColor(base);
-  menulabels[0]->setBackColor(base);
-  menulabels[0]->setTextColor(fore);
-  menulabels[0]->setShadowColor(shadow);
-  menulabels[0]->setHiliteColor(hilite);
+  for (int i=0;i<6;i++){
+    menulabels[i]->setBorderColor(theme_current.border);
+    menulabels[i]->setBaseColor(theme_current.base);
+    menulabels[i]->setBackColor(theme_current.base);
+    menulabels[i]->setTextColor(theme_current.fore);
+    menulabels[i]->setShadowColor(shadow);
+    menulabels[i]->setHiliteColor(hilite);
+    }
 
-  menulabels[1]->setBorderColor(border);
-  menulabels[1]->setBaseColor(base);
-  menulabels[1]->setBackColor(base);
-  menulabels[1]->setTextColor(fore);
-  menulabels[1]->setShadowColor(shadow);
-  menulabels[1]->setHiliteColor(hilite);
-
-  menulabels[2]->setBorderColor(border);
-  menulabels[2]->setBaseColor(base);
-  menulabels[2]->setBackColor(base);
-  menulabels[2]->setTextColor(fore);
-  menulabels[2]->setShadowColor(shadow);
-  menulabels[2]->setHiliteColor(hilite);
-
-  menulabels[3]->setBorderColor(border);
-  menulabels[3]->setBaseColor(base);
-  menulabels[3]->setBackColor(base);
-  menulabels[3]->setTextColor(fore);
-  menulabels[3]->setShadowColor(shadow);
-  menulabels[3]->setHiliteColor(hilite);
-
-  menulabels[4]->setBorderColor(border);
-  menulabels[4]->setBaseColor(menuback);
-  menulabels[4]->setBackColor(menuback);
-  menulabels[4]->setTextColor(menufore);
+  menulabels[4]->setBorderColor(theme_current.border);
+  menulabels[4]->setBaseColor(theme_current.menuback);
+  menulabels[4]->setBackColor(theme_current.menuback);
+  menulabels[4]->setTextColor(theme_current.menufore);
   menulabels[4]->setShadowColor(shadow);
   menulabels[4]->setHiliteColor(hilite);
 
-  menulabels[5]->setBorderColor(border);
-  menulabels[5]->setBaseColor(base);
-  menulabels[5]->setBackColor(base);
-  menulabels[5]->setTextColor(fore);
-  menulabels[5]->setShadowColor(shadow);
-  menulabels[5]->setHiliteColor(hilite);
-
-
-
-
-  textframe1->setBorderColor(border);
-  textframe1->setBaseColor(base);
-  textframe1->setBackColor(back);
+  textframe1->setBorderColor(theme_current.border);
+  textframe1->setBaseColor(theme_current.base);
+  textframe1->setBackColor(theme_current.back);
   textframe1->setShadowColor(shadow);
   textframe1->setHiliteColor(hilite);
 
-  textframe2->setBorderColor(border);
-  textframe2->setBaseColor(base);
-  textframe2->setBackColor(back);
+  textframe2->setBorderColor(theme_current.border);
+  textframe2->setBaseColor(theme_current.base);
+  textframe2->setBackColor(theme_current.back);
   textframe2->setShadowColor(shadow);
   textframe2->setHiliteColor(hilite);
 
-  textfield1->setBorderColor(border);
-  textfield1->setBackColor(back);
-  textfield1->setBaseColor(base);
-  textfield1->setTextColor(fore);
-  textfield1->setSelTextColor(selfore);
-  textfield1->setSelBackColor(selback);
-  textfield1->setCursorColor(fore);
+  textfield1->setBorderColor(theme_current.border);
+  textfield1->setBackColor(theme_current.back);
+  textfield1->setBaseColor(theme_current.base);
+  textfield1->setTextColor(theme_current.fore);
+  textfield1->setSelTextColor(theme_current.selfore);
+  textfield1->setSelBackColor(theme_current.selback);
+  textfield1->setCursorColor(theme_current.fore);
   textfield1->setShadowColor(shadow);
   textfield1->setHiliteColor(hilite);
 
-  tooltip->setTextColor(tipfore);
-  tooltip->setBackColor(tipback);
+  tooltip->setTextColor(theme_current.tipfore);
+  tooltip->setBackColor(theme_current.tipback);
   }
 
 
 FXString FXDesktopSetup::getOutputFile(){
-  FXString desktopfile=FXFile::getHomeDirectory() + PATHSEPSTRING +".foxrc";
+  FXString desktopfile=FXSystem::getHomeDirectory() + PATHSEPSTRING +".foxrc";
 
-  if (!FXFile::exists(desktopfile)){
-    if (!FXFile::createDirectory(desktopfile,0777)){
+  if(!FXStat::exists(desktopfile)){
+    if(!FXDir::create(desktopfile)){
       return FXString::null;
       }
     }
 
-  if (applicationname.empty()){
+  if(applicationname.empty()){
     desktopfile = desktopfile + PATHSEPSTRING + "Desktop";
     }
-  else if (vendorname.empty()){
+  else if(vendorname.empty()){
     desktopfile = desktopfile + PATHSEPSTRING + applicationname;
     }
-  else {
+  else{
     desktopfile = desktopfile + PATHSEPSTRING + vendorname;
-    if (!FXFile::exists(desktopfile)){
-      if (!FXFile::createDirectory(desktopfile,0777)){
+    if(!FXStat::exists(desktopfile)){
+      if(!FXDir::create(desktopfile)){
         return FXString::null;
         }
       }
@@ -1628,18 +1453,18 @@ FXbool FXDesktopSetup::writeDesktop(){
         FXString desktopfile=getOutputFile();
 
   // Save Colors
-  desktopsettings.writeColorEntry("SETTINGS","basecolor",base);
-  desktopsettings.writeColorEntry("SETTINGS","bordercolor",border);
-  desktopsettings.writeColorEntry("SETTINGS","backcolor",back);
-  desktopsettings.writeColorEntry("SETTINGS","forecolor",fore);
+  desktopsettings.writeColorEntry("SETTINGS","basecolor",theme_current.base);
+  desktopsettings.writeColorEntry("SETTINGS","bordercolor",theme_current.border);
+  desktopsettings.writeColorEntry("SETTINGS","backcolor",theme_current.back);
+  desktopsettings.writeColorEntry("SETTINGS","forecolor",theme_current.fore);
   desktopsettings.writeColorEntry("SETTINGS","hilitecolor",hilite);
   desktopsettings.writeColorEntry("SETTINGS","shadowcolor",shadow);
-  desktopsettings.writeColorEntry("SETTINGS","selforecolor",selfore);
-  desktopsettings.writeColorEntry("SETTINGS","selbackcolor",selback);
-  desktopsettings.writeColorEntry("SETTINGS","tipforecolor",tipfore);
-  desktopsettings.writeColorEntry("SETTINGS","tipbackcolor",tipback);
-  desktopsettings.writeColorEntry("SETTINGS","selmenutextcolor",menufore);
-  desktopsettings.writeColorEntry("SETTINGS","selmenubackcolor",menuback);
+  desktopsettings.writeColorEntry("SETTINGS","selforecolor",theme_current.selfore);
+  desktopsettings.writeColorEntry("SETTINGS","selbackcolor",theme_current.selback);
+  desktopsettings.writeColorEntry("SETTINGS","tipforecolor",theme_current.tipfore);
+  desktopsettings.writeColorEntry("SETTINGS","tipbackcolor",theme_current.tipback);
+  desktopsettings.writeColorEntry("SETTINGS","selmenutextcolor",theme_current.menufore);
+  desktopsettings.writeColorEntry("SETTINGS","selmenubackcolor",theme_current.menuback);
 
   // Save General Settings
   desktopsettings.writeUnsignedEntry("SETTINGS","typingspeed",typingSpeed);

@@ -5,7 +5,7 @@
 *********************************************************************************
 * Copyright (C) 1997 by Jeroen van der Zijp.   All Rights Reserved.             *
 *********************************************************************************
-* $Id: tabbook.cpp,v 1.19 2004/02/13 22:48:37 fox Exp $                         *
+* $Id: tabbook.cpp,v 1.23 2006/02/06 03:06:51 fox Exp $                         *
 ********************************************************************************/
 #include "fx.h"
 
@@ -24,12 +24,15 @@ protected:
   FXTabItem*         tab1;
   FXTabItem*         tab2;
   FXTabItem*         tab3;
+  FXTabItem*         tab4;
   FXHorizontalFrame* listframe;
   FXHorizontalFrame* fileframe;
   FXHorizontalFrame* dirframe;
+  FXHorizontalFrame* textframe;
   FXList*            simplelist;
   FXFileList*        filelist;
   FXDirList*         dirlist;
+  FXText*            text;
 
 protected:
 
@@ -39,6 +42,8 @@ public:
 
   // Message handlers
   long onCmdTabOrient(FXObject*,FXSelector,void*);
+  long onCmdPackUniformWidth(FXObject*,FXSelector,void*);
+  long onCmdPackNonUniformWidth(FXObject*,FXSelector,void*);
   long onCmdHideShow(FXObject*,FXSelector,void*);
   long onCmdPanel(FXObject*,FXSelector,void*);
 
@@ -51,7 +56,9 @@ public:
     ID_TABS_LEFT,
     ID_TABS_RIGHT,
     ID_HIDESHOW,
-    ID_PANEL
+    ID_PANEL,
+	ID_PACK_UNIFORM_WIDTH,
+	ID_PACK_NON_UNIFORM_WIDTH,
     };
 public:
   TabBookWindow(FXApp* a);
@@ -67,6 +74,8 @@ FXDEFMAP(TabBookWindow) TabBookWindowMap[]={
   FXMAPFUNCS(SEL_COMMAND,TabBookWindow::ID_TABS_TOP,TabBookWindow::ID_TABS_RIGHT,TabBookWindow::onCmdTabOrient),
   FXMAPFUNC(SEL_COMMAND,TabBookWindow::ID_HIDESHOW,TabBookWindow::onCmdHideShow),
   FXMAPFUNC(SEL_COMMAND,TabBookWindow::ID_PANEL,TabBookWindow::onCmdPanel),
+  FXMAPFUNC(SEL_COMMAND,TabBookWindow::ID_PACK_UNIFORM_WIDTH,TabBookWindow::onCmdPackUniformWidth),
+  FXMAPFUNC(SEL_COMMAND,TabBookWindow::ID_PACK_NON_UNIFORM_WIDTH,TabBookWindow::onCmdPackNonUniformWidth),
   };
 
 
@@ -98,6 +107,7 @@ TabBookWindow::TabBookWindow(FXApp *a):FXMainWindow(a,"Tab Book Test",NULL,NULL,
 
   // First item is a list
   tab1=new FXTabItem(tabbook,"&Simple List",NULL);
+
   listframe=new FXHorizontalFrame(tabbook,FRAME_THICK|FRAME_RAISED);
   boxframe=new FXHorizontalFrame(listframe,FRAME_THICK|FRAME_SUNKEN|LAYOUT_FILL_X|LAYOUT_FILL_Y, 0,0,0,0, 0,0,0,0);
   simplelist=new FXList(boxframe,NULL,0,LIST_EXTENDEDSELECT|LAYOUT_FILL_X|LAYOUT_FILL_Y);
@@ -118,6 +128,12 @@ TabBookWindow::TabBookWindow(FXApp *a):FXMainWindow(a,"Tab Book Test",NULL,NULL,
   boxframe=new FXHorizontalFrame(dirframe,FRAME_THICK|FRAME_SUNKEN|LAYOUT_FILL_X|LAYOUT_FILL_Y, 0,0,0,0, 0,0,0,0);
   dirlist=new FXDirList(boxframe,NULL,0,DIRLIST_SHOWFILES|TREELIST_SHOWS_LINES|TREELIST_SHOWS_BOXES|LAYOUT_FILL_X|LAYOUT_FILL_Y);
 
+  // Fourth item is text
+  tab4=new FXTabItem(tabbook,"Text",NULL);
+  textframe=new FXHorizontalFrame(tabbook,FRAME_THICK|FRAME_RAISED);
+  boxframe=new FXHorizontalFrame(textframe,FRAME_THICK|FRAME_SUNKEN|LAYOUT_FILL_X|LAYOUT_FILL_Y, 0,0,0,0, 0,0,0,0);
+  text=new FXText(boxframe,NULL,0,LAYOUT_FILL_X|LAYOUT_FILL_Y);
+
   // File Menu
   filemenu=new FXMenuPane(this);
   new FXMenuCommand(filemenu,"&Simple List",NULL,tabbook,FXTabBar::ID_OPEN_FIRST+0);
@@ -133,6 +149,8 @@ TabBookWindow::TabBookWindow(FXApp *a):FXMainWindow(a,"Tab Book Test",NULL,NULL,
   new FXMenuCommand(tabmenu,"&Bottom Tabs",NULL,this,TabBookWindow::ID_TABS_BOTTOM);
   new FXMenuCommand(tabmenu,"&Left Tabs",NULL,this,TabBookWindow::ID_TABS_LEFT);
   new FXMenuCommand(tabmenu,"&Right Tabs",NULL,this,TabBookWindow::ID_TABS_RIGHT);
+  new FXMenuCommand(tabmenu,"&Uniform Width Tabs",NULL,this,TabBookWindow::ID_PACK_UNIFORM_WIDTH);
+  new FXMenuCommand(tabmenu,"&Nonuniform Width Tabs",NULL,this,TabBookWindow::ID_PACK_NON_UNIFORM_WIDTH);
   new FXMenuTitle(menubar,"&Tab Placement",NULL,tabmenu);
 
   }
@@ -154,26 +172,48 @@ long TabBookWindow::onCmdTabOrient(FXObject*,FXSelector sel,void*){
       tab1->setTabOrientation(TAB_TOP);
       tab2->setTabOrientation(TAB_TOP);
       tab3->setTabOrientation(TAB_TOP);
+      tab4->setTabOrientation(TAB_TOP);
       break;
     case ID_TABS_BOTTOM:
       tabbook->setTabStyle(TABBOOK_BOTTOMTABS);
       tab1->setTabOrientation(TAB_BOTTOM);
       tab2->setTabOrientation(TAB_BOTTOM);
       tab3->setTabOrientation(TAB_BOTTOM);
+      tab4->setTabOrientation(TAB_BOTTOM);
       break;
     case ID_TABS_LEFT:
       tabbook->setTabStyle(TABBOOK_LEFTTABS);
       tab1->setTabOrientation(TAB_LEFT);
       tab2->setTabOrientation(TAB_LEFT);
       tab3->setTabOrientation(TAB_LEFT);
+      tab4->setTabOrientation(TAB_LEFT);
       break;
     case ID_TABS_RIGHT:
       tabbook->setTabStyle(TABBOOK_RIGHTTABS);
       tab1->setTabOrientation(TAB_RIGHT);
       tab2->setTabOrientation(TAB_RIGHT);
       tab3->setTabOrientation(TAB_RIGHT);
+      tab4->setTabOrientation(TAB_RIGHT);
       break;
     }
+ return 1;
+  }
+
+// Calculate tab header widths based on largest tab label string
+long TabBookWindow::onCmdPackUniformWidth(FXObject*,FXSelector sel,void*){
+  FXuint sid=FXSELID(sel);
+  FXuint packing_hints = tabbook->getPackingHints();
+  packing_hints |= PACK_UNIFORM_WIDTH;
+  tabbook->setPackingHints(packing_hints);
+  return 1;
+  }
+
+// Calculate tab header width individually for each tab label string
+long TabBookWindow::onCmdPackNonUniformWidth(FXObject*,FXSelector sel,void*){
+  FXuint sid=FXSELID(sel);
+  FXuint packing_hints = tabbook->getPackingHints();
+  packing_hints &= ~PACK_UNIFORM_WIDTH;
+  tabbook->setPackingHints(packing_hints);
   return 1;
   }
 

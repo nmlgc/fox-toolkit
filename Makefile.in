@@ -80,11 +80,8 @@ GCJ = @GCJ@
 GCJFLAGS = @GCJFLAGS@
 GL_LIBS = @GL_LIBS@
 GL_TESTS = @GL_TESTS@
-HAVE_LIB = @HAVE_LIB@
-LIB = @LIB@
 LIBTOOL = @LIBTOOL@
 LN_S = @LN_S@
-LTLIB = @LTLIB@
 LT_AGE = @LT_AGE@
 LT_CURRENT = @LT_CURRENT@
 LT_RELEASE = @LT_RELEASE@
@@ -174,7 +171,7 @@ uninstall-binSCRIPTS:
 all-recursive install-data-recursive install-exec-recursive \
 installdirs-recursive install-recursive uninstall-recursive  \
 check-recursive installcheck-recursive info-recursive dvi-recursive:
-	@set fnord $(MAKEFLAGS); amf=$$2; \
+	@set fnord $$MAKEFLAGS; amf=$$2; \
 	dot_seen=no; \
 	target=`echo $@ | sed s/-recursive//`; \
 	list='$(SUBDIRS)'; for subdir in $$list; do \
@@ -194,7 +191,7 @@ check-recursive installcheck-recursive info-recursive dvi-recursive:
 
 mostlyclean-recursive clean-recursive distclean-recursive \
 maintainer-clean-recursive:
-	@set fnord $(MAKEFLAGS); amf=$$2; \
+	@set fnord $$MAKEFLAGS; amf=$$2; \
 	dot_seen=no; \
 	rev=''; list='$(SUBDIRS)'; for subdir in $$list; do \
 	  rev="$$subdir $$rev"; \
@@ -399,8 +396,8 @@ web: distdir
 drop: dist-all
 	cp $(distdir).tar.gz /net/linky/mnt/ftp/pub
 	cp $(distdir).zip /net/linky/mnt/ftp/pub
-	cd /home/ftp/pub && ln -sf $(distdir).tar.gz fox-latest.tar.gz
-	cd /home/ftp/pub && ln -sf $(distdir).zip fox-latest.zip
+	cd /net/linky/mnt/ftp/pub && ln -sf $(distdir).tar.gz fox-latest.tar.gz
+	cd /net/linky/mnt/ftp/pub && ln -sf $(distdir).zip fox-latest.zip
 
 #diff: distdir
 #	-diff -P -c -r fox-1.1.8 $(distdir) > fox-patch-1.1.8-$(distdir)

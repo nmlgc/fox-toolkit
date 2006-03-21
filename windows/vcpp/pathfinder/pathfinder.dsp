@@ -44,7 +44,7 @@ RSC=rc.exe
 # PROP Target_Dir ""
 F90=df.exe
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /YX /FD /c
-# ADD CPP /MT /W3 /GR /GX /O2 /I "..\..\..\include" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /FD /c
+# ADD CPP /MT /W3 /GR /GX /O2 /I "..\..\..\include" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "UNICODE" /FD /c
 # SUBTRACT CPP /nologo /YX
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
@@ -73,7 +73,7 @@ LINK32=link.exe
 # PROP Target_Dir ""
 F90=df.exe
 # ADD BASE CPP /nologo /W3 /Gm /GX /Zi /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /YX /FD /c
-# ADD CPP /MTd /W3 /GR /GX /ZI /Od /I "..\..\..\include" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /FD /c
+# ADD CPP /MTd /W3 /GR /GX /ZI /Od /I "..\..\..\include" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "UNICODE" /FD /c
 # SUBTRACT CPP /nologo /YX
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
@@ -169,8 +169,8 @@ InputPath=.\gifs.list
 
 BuildCmds= \
 	cd ..\..\..\pathfinder \
-	$(WkspDir)\reswrap\Release\reswrap -e -o icons.cpp bigicons.bmp closepanel.gif clrbook.gif copy.bmp copyit.gif cut.bmp deleteit.bmp desktop.bmp details.bmp dirup.bmp enter.gif file_gif.gif foxbig.gif foxmini.gif goback.bmp goforw.bmp gotodir.bmp home.gif hosts.bmp iconpath.gif linkit.gif location.gif maphost.bmp moveit.gif paste.bmp pattern_gif.gif properties.bmp quit_gif.gif renameit.gif rotateleft.gif rotateright.gif setbook.gif smallicons.bmp unmaphost.bmp  work.gif \
-	$(WkspDir)\reswrap\Release\reswrap -i -o icons.h bigicons.bmp closepanel.gif clrbook.gif copy.bmp copyit.gif cut.bmp deleteit.bmp desktop.bmp details.bmp dirup.bmp enter.gif file_gif.gif foxbig.gif foxmini.gif goback.bmp goforw.bmp gotodir.bmp home.gif hosts.bmp iconpath.gif linkit.gif location.gif maphost.bmp moveit.gif paste.bmp pattern_gif.gif properties.bmp quit_gif.gif renameit.gif rotateleft.gif rotateright.gif setbook.gif smallicons.bmp unmaphost.bmp  work.gif \
+	$(WkspDir)\reswrap\Release\reswrap -e -o icons.cpp bigicons.bmp copy.bmp cut.bmp deleteit.bmp desktop.bmp details.bmp dirup.bmp goback.bmp goforw.bmp gotodir.bmp hosts.bmp maphost.bmp paste.bmp properties.bmp smallicons.bmp unmaphost.bmp closepanel.gif clrbook.gif copyit.gif enter.gif file_gif.gif foxbig.gif foxmini.gif home.gif iconpath.gif linkit.gif location.gif mimetype.gif moveit.gif pattern_gif.gif quit_gif.gif renameit.gif rotateleft.gif rotateright.gif setbook.gif setdir.gif work.gif \
+	$(WkspDir)\reswrap\Release\reswrap -i -o icons.h bigicons.bmp copy.bmp cut.bmp deleteit.bmp desktop.bmp details.bmp dirup.bmp goback.bmp goforw.bmp gotodir.bmp hosts.bmp maphost.bmp paste.bmp properties.bmp smallicons.bmp unmaphost.bmp closepanel.gif clrbook.gif copyit.gif enter.gif file_gif.gif foxbig.gif foxmini.gif home.gif iconpath.gif linkit.gif location.gif mimetype.gif moveit.gif pattern_gif.gif quit_gif.gif renameit.gif rotateleft.gif rotateright.gif setbook.gif setdir.gif work.gif \
 	
 
 "icons.h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
@@ -188,8 +188,8 @@ InputPath=.\gifs.list
 
 BuildCmds= \
 	cd ..\..\..\pathfinder \
-	$(WkspDir)\reswrap\Debug\reswrap -e -o icons.cpp bigicons.bmp closepanel.gif clrbook.gif copy.bmp copyit.gif cut.bmp deleteit.bmp desktop.bmp details.bmp dirup.bmp enter.gif file_gif.gif foxbig.gif foxmini.gif goback.bmp goforw.bmp gotodir.bmp home.gif hosts.bmp iconpath.gif linkit.gif location.gif maphost.bmp moveit.gif paste.bmp pattern_gif.gif properties.bmp quit_gif.gif renameit.gif rotateleft.gif rotateright.gif setbook.gif smallicons.bmp unmaphost.bmp  work.gif \
-	$(WkspDir)\reswrap\Debug\reswrap -i -o icons.h bigicons.bmp closepanel.gif clrbook.gif copy.bmp copyit.gif cut.bmp deleteit.bmp desktop.bmp details.bmp dirup.bmp enter.gif file_gif.gif foxbig.gif foxmini.gif goback.bmp goforw.bmp gotodir.bmp home.gif hosts.bmp iconpath.gif linkit.gif location.gif maphost.bmp moveit.gif paste.bmp pattern_gif.gif properties.bmp quit_gif.gif renameit.gif rotateleft.gif rotateright.gif setbook.gif smallicons.bmp unmaphost.bmp  work.gif \
+	$(WkspDir)\reswrap\Debug\reswrap -e -o icons.cpp bigicons.bmp copy.bmp cut.bmp deleteit.bmp desktop.bmp details.bmp dirup.bmp goback.bmp goforw.bmp gotodir.bmp hosts.bmp maphost.bmp paste.bmp properties.bmp smallicons.bmp unmaphost.bmp closepanel.gif clrbook.gif copyit.gif enter.gif file_gif.gif foxbig.gif foxmini.gif home.gif iconpath.gif linkit.gif location.gif mimetype.gif moveit.gif pattern_gif.gif quit_gif.gif renameit.gif rotateleft.gif rotateright.gif setbook.gif setdir.gif work.gif \
+	$(WkspDir)\reswrap\Debug\reswrap -i -o icons.h bigicons.bmp copy.bmp cut.bmp deleteit.bmp desktop.bmp details.bmp dirup.bmp goback.bmp goforw.bmp gotodir.bmp hosts.bmp maphost.bmp paste.bmp properties.bmp smallicons.bmp unmaphost.bmp closepanel.gif clrbook.gif copyit.gif enter.gif file_gif.gif foxbig.gif foxmini.gif home.gif iconpath.gif linkit.gif location.gif mimetype.gif moveit.gif pattern_gif.gif quit_gif.gif renameit.gif rotateleft.gif rotateright.gif setbook.gif setdir.gif work.gif \
 	
 
 "icons.h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
@@ -256,6 +256,10 @@ SOURCE=..\..\..\pathfinder\maphost.bmp
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\pathfinder\mimetype.gif
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\pathfinder\moveit.gif
 # End Source File
 # Begin Source File
@@ -313,6 +317,10 @@ SOURCE=..\..\..\pathfinder\rotateright.gif
 # Begin Source File
 
 SOURCE=..\..\..\pathfinder\setbook.gif
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\pathfinder\setdir.gif
 # End Source File
 # Begin Source File
 

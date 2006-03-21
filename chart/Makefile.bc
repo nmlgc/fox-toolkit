@@ -5,7 +5,7 @@
 ##############################################################################
 # Copyright (C) 2004 by Jeroen van der Zijp.   All Rights Reserved.          #
 ##############################################################################
-# $Id: Makefile.bc,v 1.3 2005/02/04 04:33:19 fox Exp $                       #
+# $Id: Makefile.bc,v 1.5 2005/09/22 11:14:47 fox Exp $                       #
 ##############################################################################
 # This library is free software; you can redistribute it and/or              #
 # modify it under the terms of the GNU Library General Public                #
@@ -33,8 +33,8 @@ LD        = bcc32
 LDFLAGS   = -laa
 GLLIBS    = opengl32.lib glu32.lib
 INCDIRS   = -I$(TOPDIR)\include
-FOXLIB    = $(TOPDIR)\src\FOX-1.4.lib
-CHARTLIB  = $(TOPDIR)\src\CHART-1.4.lib
+FOXLIB    = $(TOPDIR)\src\FOX-1.6.lib
+CHARTLIB  = $(TOPDIR)\src\CHART-1.6.lib
 RESWRAP   = $(TOPDIR)\utils\reswrap.exe
 
 
@@ -87,4 +87,4 @@ clean:
 $(CHARTLIB): $(OBJECTS) Makefile.bc.resp
 	touch $(CHARTLIB)
 	del $(CHARTLIB)
-	$(LIB) "$(CHARTLIB)" /P128 @Makefile.bc.resp
+	$(LIB) "$(CHARTLIB)" /P256 @Makefile.bc.resp

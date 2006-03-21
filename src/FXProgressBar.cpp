@@ -3,7 +3,7 @@
 *                      P r o g r e s s B a r   W i d g e t                      *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1998,2006 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXProgressBar.cpp,v 1.42 2005/01/16 16:06:07 fox Exp $                   *
+* $Id: FXProgressBar.cpp,v 1.47 2006/01/22 17:58:37 fox Exp $                   *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -215,9 +215,19 @@ void FXProgressBar::drawInterior(FXDCWindow& dc){
       tx=tx+d/2-tw/2;
       ty=ty+d/2+font->getFontAscent()+5;
       //dc.setForeground(textNumColor);
-      dc.setForeground(FXRGB(255,255,255));
-      dc.setFunction(BLT_SRC_XOR_DST);      // FIXME
+#ifdef HAVE_XFT_H
+      dc.setForeground(barBGColor);             // Code for XFT until XFT can use BLT_SRC_XOR_DST
+      dc.drawText(tx-1,ty,numtext,n);
+      dc.drawText(tx+1,ty,numtext,n);
+      dc.drawText(tx,ty-1,numtext,n);
+      dc.drawText(tx,ty+1,numtext,n);
+      dc.setForeground(textNumColor);
       dc.drawText(tx,ty,numtext,n);
+#else
+      dc.setForeground(FXRGB(255,255,255));     // Original code
+      dc.setFunction(BLT_SRC_XOR_DST);
+      dc.drawText(tx,ty,numtext,n);
+#endif
       }
     }
 

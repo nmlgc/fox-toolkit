@@ -3,7 +3,7 @@
 *                     T h e   A d i e   T e x t   E d i t o r                   *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1998,2006 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This program is free software; you can redistribute it and/or modify          *
 * it under the terms of the GNU General Public License as published by          *
@@ -19,7 +19,7 @@
 * along with this program; if not, write to the Free Software                   *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: TextWindow.cpp,v 1.104 2005/02/04 04:33:18 fox Exp $                      *
+* $Id: TextWindow.cpp,v 1.125 2006/02/06 03:03:38 fox Exp $                     *
 ********************************************************************************/
 #include "fx.h"
 #include "fxkeys.h"
@@ -184,7 +184,7 @@ FXDEFMAP(TextWindow) TextWindowMap[]={
   FXMAPFUNC(SEL_COMMAND,           TextWindow::ID_FILEFILTER,      TextWindow::onCmdFilter),
   FXMAPFUNC(SEL_UPDATE,            TextWindow::ID_OVERSTRIKE,      TextWindow::onUpdOverstrike),
   FXMAPFUNC(SEL_UPDATE,            TextWindow::ID_READONLY,        TextWindow::onUpdReadOnly),
-  FXMAPFUNC(SEL_UPDATE,            TextWindow::ID_NUMCHARS,        TextWindow::onUpdNumChars),
+  FXMAPFUNC(SEL_UPDATE,            TextWindow::ID_NUM_ROWS,        TextWindow::onUpdNumRows),
   FXMAPFUNC(SEL_COMMAND,           TextWindow::ID_PREFERENCES,     TextWindow::onCmdPreferences),
   FXMAPFUNC(SEL_COMMAND,           TextWindow::ID_TABCOLUMNS,      TextWindow::onCmdTabColumns),
   FXMAPFUNC(SEL_UPDATE,            TextWindow::ID_TABCOLUMNS,      TextWindow::onUpdTabColumns),
@@ -250,7 +250,7 @@ FXIMPLEMENT(TextWindow,FXMainWindow,TextWindowMap,ARRAYNUMBER(TextWindowMap))
 /*******************************************************************************/
 
 // Make some windows
-TextWindow::TextWindow(Adie* a,const FXString& file):FXMainWindow(a,"Adie",NULL,NULL,DECOR_ALL,0,0,850,600,0,0){
+TextWindow::TextWindow(Adie* a,const FXString& file):FXMainWindow(a,"Adie",NULL,NULL,DECOR_ALL,0,0,850,600,0,0),mrufiles(a){
 
   // Add to list of windows
   getApp()->windowlist.append(this);
@@ -282,39 +282,39 @@ TextWindow::TextWindow(Adie* a,const FXString& file):FXMainWindow(a,"Adie",NULL,
   new FXToolBarGrip(toolbar,toolbar,FXToolBar::ID_TOOLBARGRIP,TOOLBARGRIP_DOUBLE);
 
   // Info about the editor
-  new FXButton(statusbar,"\tAbout Adie\tAbout the Adie text editor.",getApp()->smallicon,this,ID_ABOUT,LAYOUT_FILL_Y|LAYOUT_RIGHT);
+  new FXButton(statusbar,tr("\tAbout Adie\tAbout the Adie text editor."),getApp()->smallicon,this,ID_ABOUT,LAYOUT_FILL_Y|LAYOUT_RIGHT);
 
   // File menu
   filemenu=new FXMenuPane(this);
-  new FXMenuTitle(menubar,"&File",NULL,filemenu);
+  new FXMenuTitle(menubar,tr("&File"),NULL,filemenu);
 
   // Edit Menu
   editmenu=new FXMenuPane(this);
-  new FXMenuTitle(menubar,"&Edit",NULL,editmenu);
+  new FXMenuTitle(menubar,tr("&Edit"),NULL,editmenu);
 
   // Goto Menu
   gotomenu=new FXMenuPane(this);
-  new FXMenuTitle(menubar,"&Goto",NULL,gotomenu);
+  new FXMenuTitle(menubar,tr("&Goto"),NULL,gotomenu);
 
   // Search Menu
   searchmenu=new FXMenuPane(this);
-  new FXMenuTitle(menubar,"&Search",NULL,searchmenu);
+  new FXMenuTitle(menubar,tr("&Search"),NULL,searchmenu);
 
   // Options Menu
   optionmenu=new FXMenuPane(this);
-  new FXMenuTitle(menubar,"&Options",NULL,optionmenu);
+  new FXMenuTitle(menubar,tr("&Options"),NULL,optionmenu);
 
   // View menu
   viewmenu=new FXMenuPane(this);
-  new FXMenuTitle(menubar,"&View",NULL,viewmenu);
+  new FXMenuTitle(menubar,tr("&View"),NULL,viewmenu);
 
   // Window menu
   windowmenu=new FXMenuPane(this);
-  new FXMenuTitle(menubar,"&Window",NULL,windowmenu);
+  new FXMenuTitle(menubar,tr("&Window"),NULL,windowmenu);
 
   // Help menu
   helpmenu=new FXMenuPane(this);
-  new FXMenuTitle(menubar,"&Help",NULL,helpmenu,LAYOUT_RIGHT);
+  new FXMenuTitle(menubar,tr("&Help"),NULL,helpmenu,LAYOUT_RIGHT);
 
   // Splitter
   FXSplitter* splitter=new FXSplitter(this,LAYOUT_SIDE_TOP|LAYOUT_FILL_X|LAYOUT_FILL_Y|SPLITTER_TRACKING);
@@ -327,7 +327,7 @@ TextWindow::TextWindow(Adie* a,const FXString& file):FXMainWindow(a,"Adie",NULL,
   dirlist=new FXDirList(treeframe,this,ID_OPEN_TREE,DIRLIST_SHOWFILES|DIRLIST_NO_OWN_ASSOC|TREELIST_BROWSESELECT|TREELIST_SHOWS_LINES|TREELIST_SHOWS_BOXES|LAYOUT_FILL_X|LAYOUT_FILL_Y);
   dirlist->setAssociations(getApp()->associations);
   FXHorizontalFrame* filterframe=new FXHorizontalFrame(treebox,LAYOUT_FILL_X,0,0,0,0, 4,0,0,4);
-  new FXLabel(filterframe,"Filter:",NULL,LAYOUT_CENTER_Y);
+  new FXLabel(filterframe,tr("Filter:"),NULL,LAYOUT_CENTER_Y);
   filter=new FXComboBox(filterframe,25,this,ID_FILEFILTER,COMBOBOX_STATIC|LAYOUT_FILL_X|FRAME_SUNKEN|FRAME_THICK);
   filter->setNumVisible(4);
 
@@ -345,49 +345,49 @@ TextWindow::TextWindow(Adie* a,const FXString& file):FXMainWindow(a,"Adie",NULL,
 
   // Undo/redo block
   undoredoblock=new FXHorizontalFrame(statusbar,LAYOUT_RIGHT|LAYOUT_CENTER_Y,0,0,0,0, 0,0,0,0);
-  new FXLabel(undoredoblock,"  Undo:",NULL,LAYOUT_CENTER_Y);
+  new FXLabel(undoredoblock,tr("  Undo:"),NULL,LAYOUT_CENTER_Y);
   FXTextField* undocount=new FXTextField(undoredoblock,6,&undolist,FXUndoList::ID_UNDO_COUNT,TEXTFIELD_READONLY|FRAME_SUNKEN|JUSTIFY_RIGHT|LAYOUT_CENTER_Y,0,0,0,0,2,2,1,1);
   undocount->setBackColor(statusbar->getBackColor());
-  new FXLabel(undoredoblock,"  Redo:",NULL,LAYOUT_CENTER_Y);
+  new FXLabel(undoredoblock,tr("  Redo:"),NULL,LAYOUT_CENTER_Y);
   FXTextField* redocount=new FXTextField(undoredoblock,6,&undolist,FXUndoList::ID_REDO_COUNT,TEXTFIELD_READONLY|FRAME_SUNKEN|JUSTIFY_RIGHT|LAYOUT_CENTER_Y,0,0,0,0,2,2,1,1);
   redocount->setBackColor(statusbar->getBackColor());
 
   // Show readonly state in status bar
-  FXLabel* readonly=new FXLabel(statusbar,NULL,NULL,FRAME_SUNKEN|JUSTIFY_RIGHT|LAYOUT_RIGHT|LAYOUT_CENTER_Y,0,0,0,0,2,2,1,1);
+  FXLabel* readonly=new FXLabel(statusbar,FXString::null,NULL,FRAME_SUNKEN|JUSTIFY_RIGHT|LAYOUT_RIGHT|LAYOUT_CENTER_Y,0,0,0,0,2,2,1,1);
   readonly->setTarget(this);
   readonly->setSelector(ID_READONLY);
 
   // Show insert mode in status bar
-  FXLabel* overstrike=new FXLabel(statusbar,NULL,NULL,FRAME_SUNKEN|LAYOUT_RIGHT|LAYOUT_CENTER_Y,0,0,0,0,2,2,1,1);
+  FXLabel* overstrike=new FXLabel(statusbar,FXString::null,NULL,FRAME_SUNKEN|LAYOUT_RIGHT|LAYOUT_CENTER_Y,0,0,0,0,2,2,1,1);
   overstrike->setTarget(this);
   overstrike->setSelector(ID_OVERSTRIKE);
 
   // Show size of text in status bar
-  FXTextField* numchars=new FXTextField(statusbar,7,this,ID_NUMCHARS,TEXTFIELD_READONLY|FRAME_SUNKEN|JUSTIFY_RIGHT|LAYOUT_RIGHT|LAYOUT_CENTER_Y,0,0,0,0,2,2,1,1);
+  FXTextField* numchars=new FXTextField(statusbar,7,this,ID_NUM_ROWS,TEXTFIELD_READONLY|FRAME_SUNKEN|JUSTIFY_RIGHT|LAYOUT_RIGHT|LAYOUT_CENTER_Y,0,0,0,0,2,2,1,1);
   numchars->setBackColor(statusbar->getBackColor());
 
   // Caption before number
-  new FXLabel(statusbar,"  Size:",NULL,LAYOUT_RIGHT|LAYOUT_CENTER_Y);
+  new FXLabel(statusbar,tr("  Lines:"),NULL,LAYOUT_RIGHT|LAYOUT_CENTER_Y);
 
   // Show column number in status bar
   FXTextField* columnno=new FXTextField(statusbar,7,editor,FXText::ID_CURSOR_COLUMN,FRAME_SUNKEN|JUSTIFY_RIGHT|LAYOUT_RIGHT|LAYOUT_CENTER_Y,0,0,0,0,2,2,1,1);
   columnno->setBackColor(statusbar->getBackColor());
 
   // Caption before number
-  new FXLabel(statusbar,"  Col:",NULL,LAYOUT_RIGHT|LAYOUT_CENTER_Y);
+  new FXLabel(statusbar,tr("  Col:"),NULL,LAYOUT_RIGHT|LAYOUT_CENTER_Y);
 
   // Show line number in status bar
   FXTextField* rowno=new FXTextField(statusbar,7,editor,FXText::ID_CURSOR_ROW,FRAME_SUNKEN|JUSTIFY_RIGHT|LAYOUT_RIGHT|LAYOUT_CENTER_Y,0,0,0,0,2,2,1,1);
   rowno->setBackColor(statusbar->getBackColor());
 
   // Caption before number
-  new FXLabel(statusbar,"  Line:",NULL,LAYOUT_RIGHT|LAYOUT_CENTER_Y);
+  new FXLabel(statusbar,tr("  Line:"),NULL,LAYOUT_RIGHT|LAYOUT_CENTER_Y);
 
   // Toobar buttons: File manipulation
-  new FXButton(toolbar,"\tNew\tCreate new document.",getApp()->newicon,this,ID_NEW,ICON_ABOVE_TEXT|BUTTON_TOOLBAR|FRAME_RAISED|LAYOUT_TOP|LAYOUT_LEFT);
-  new FXButton(toolbar,"\tOpen\tOpen document file.",getApp()->openicon,this,ID_OPEN,ICON_ABOVE_TEXT|BUTTON_TOOLBAR|FRAME_RAISED|LAYOUT_TOP|LAYOUT_LEFT);
-  new FXButton(toolbar,"\tSave\tSave document.",getApp()->saveicon,this,ID_SAVE,ICON_ABOVE_TEXT|BUTTON_TOOLBAR|FRAME_RAISED|LAYOUT_TOP|LAYOUT_LEFT);
-  new FXButton(toolbar,"\tSave As\tSave document to another file.",getApp()->saveasicon,this,ID_SAVEAS,ICON_ABOVE_TEXT|BUTTON_TOOLBAR|FRAME_RAISED|LAYOUT_TOP|LAYOUT_LEFT);
+  new FXButton(toolbar,tr("\tNew\tCreate new document."),getApp()->newicon,this,ID_NEW,ICON_ABOVE_TEXT|BUTTON_TOOLBAR|FRAME_RAISED|LAYOUT_TOP|LAYOUT_LEFT);
+  new FXButton(toolbar,tr("\tOpen\tOpen document file."),getApp()->openicon,this,ID_OPEN,ICON_ABOVE_TEXT|BUTTON_TOOLBAR|FRAME_RAISED|LAYOUT_TOP|LAYOUT_LEFT);
+  new FXButton(toolbar,tr("\tSave\tSave document."),getApp()->saveicon,this,ID_SAVE,ICON_ABOVE_TEXT|BUTTON_TOOLBAR|FRAME_RAISED|LAYOUT_TOP|LAYOUT_LEFT);
+  new FXButton(toolbar,tr("\tSave As\tSave document to another file."),getApp()->saveasicon,this,ID_SAVEAS,ICON_ABOVE_TEXT|BUTTON_TOOLBAR|FRAME_RAISED|LAYOUT_TOP|LAYOUT_LEFT);
 
   // Spacer
   new FXSeparator(toolbar,SEPARATOR_GROOVE);
@@ -399,193 +399,193 @@ TextWindow::TextWindow(Adie* a,const FXString& file):FXMainWindow(a,"Adie",NULL,
   new FXSeparator(toolbar,SEPARATOR_GROOVE);
 
   // Toobar buttons: Editing
-  new FXButton(toolbar,"\tCut\tCut selection to clipboard.",getApp()->cuticon,editor,FXText::ID_CUT_SEL,ICON_ABOVE_TEXT|BUTTON_TOOLBAR|FRAME_RAISED|LAYOUT_TOP|LAYOUT_LEFT);
-  new FXButton(toolbar,"\tCopy\tCopy selection to clipboard.",getApp()->copyicon,editor,FXText::ID_COPY_SEL,ICON_ABOVE_TEXT|BUTTON_TOOLBAR|FRAME_RAISED|LAYOUT_TOP|LAYOUT_LEFT);
-  new FXButton(toolbar,"\tPaste\tPaste clipboard.",getApp()->pasteicon,editor,FXText::ID_PASTE_SEL,ICON_ABOVE_TEXT|BUTTON_TOOLBAR|FRAME_RAISED|LAYOUT_TOP|LAYOUT_LEFT);
-  new FXButton(toolbar,"\tDelete\t\tDelete selection.",getApp()->deleteicon,editor,FXText::ID_DELETE_SEL,ICON_ABOVE_TEXT|BUTTON_TOOLBAR|FRAME_RAISED|LAYOUT_TOP|LAYOUT_LEFT);
+  new FXButton(toolbar,tr("\tCut\tCut selection to clipboard."),getApp()->cuticon,editor,FXText::ID_CUT_SEL,ICON_ABOVE_TEXT|BUTTON_TOOLBAR|FRAME_RAISED|LAYOUT_TOP|LAYOUT_LEFT);
+  new FXButton(toolbar,tr("\tCopy\tCopy selection to clipboard."),getApp()->copyicon,editor,FXText::ID_COPY_SEL,ICON_ABOVE_TEXT|BUTTON_TOOLBAR|FRAME_RAISED|LAYOUT_TOP|LAYOUT_LEFT);
+  new FXButton(toolbar,tr("\tPaste\tPaste clipboard."),getApp()->pasteicon,editor,FXText::ID_PASTE_SEL,ICON_ABOVE_TEXT|BUTTON_TOOLBAR|FRAME_RAISED|LAYOUT_TOP|LAYOUT_LEFT);
+  new FXButton(toolbar,tr("\tDelete\t\tDelete selection."),getApp()->deleteicon,editor,FXText::ID_DELETE_SEL,ICON_ABOVE_TEXT|BUTTON_TOOLBAR|FRAME_RAISED|LAYOUT_TOP|LAYOUT_LEFT);
 
   // Spacer
   new FXSeparator(toolbar,SEPARATOR_GROOVE);
 
   // Undo/redo
-  new FXButton(toolbar,"\tUndo\tUndo last change.",getApp()->undoicon,&undolist,FXUndoList::ID_UNDO,ICON_ABOVE_TEXT|BUTTON_TOOLBAR|FRAME_RAISED|LAYOUT_TOP|LAYOUT_LEFT);
-  new FXButton(toolbar,"\tRedo\tRedo last undo.",getApp()->redoicon,&undolist,FXUndoList::ID_REDO,ICON_ABOVE_TEXT|BUTTON_TOOLBAR|FRAME_RAISED|LAYOUT_TOP|LAYOUT_LEFT);
+  new FXButton(toolbar,tr("\tUndo\tUndo last change."),getApp()->undoicon,&undolist,FXUndoList::ID_UNDO,ICON_ABOVE_TEXT|BUTTON_TOOLBAR|FRAME_RAISED|LAYOUT_TOP|LAYOUT_LEFT);
+  new FXButton(toolbar,tr("\tRedo\tRedo last undo."),getApp()->redoicon,&undolist,FXUndoList::ID_REDO,ICON_ABOVE_TEXT|BUTTON_TOOLBAR|FRAME_RAISED|LAYOUT_TOP|LAYOUT_LEFT);
 
   // Spacer
   new FXSeparator(toolbar,SEPARATOR_GROOVE);
 
   // Search
-  new FXButton(toolbar,"\tSearch\tSearch text.",getApp()->searchicon,editor,FXText::ID_SEARCH,ICON_ABOVE_TEXT|BUTTON_TOOLBAR|FRAME_RAISED|LAYOUT_TOP|LAYOUT_LEFT);
-  new FXButton(toolbar,"\tSearch Previous Selected\tSearch previous occurrence of selected text.",getApp()->searchprevicon,editor,FXText::ID_SEARCH_BACK_SEL,ICON_ABOVE_TEXT|BUTTON_TOOLBAR|FRAME_RAISED|LAYOUT_TOP|LAYOUT_LEFT);
-  new FXButton(toolbar,"\tSearch Next Selected\tSearch next occurrence of selected text.",getApp()->searchnexticon,editor,FXText::ID_SEARCH_FORW_SEL,ICON_ABOVE_TEXT|BUTTON_TOOLBAR|FRAME_RAISED|LAYOUT_TOP|LAYOUT_LEFT);
+  new FXButton(toolbar,tr("\tSearch\tSearch text."),getApp()->searchicon,editor,FXText::ID_SEARCH,ICON_ABOVE_TEXT|BUTTON_TOOLBAR|FRAME_RAISED|LAYOUT_TOP|LAYOUT_LEFT);
+  new FXButton(toolbar,tr("\tSearch Previous Selected\tSearch previous occurrence of selected text."),getApp()->searchprevicon,editor,FXText::ID_SEARCH_BACK_SEL,ICON_ABOVE_TEXT|BUTTON_TOOLBAR|FRAME_RAISED|LAYOUT_TOP|LAYOUT_LEFT);
+  new FXButton(toolbar,tr("\tSearch Next Selected\tSearch next occurrence of selected text."),getApp()->searchnexticon,editor,FXText::ID_SEARCH_FORW_SEL,ICON_ABOVE_TEXT|BUTTON_TOOLBAR|FRAME_RAISED|LAYOUT_TOP|LAYOUT_LEFT);
 
   // Spacer
   new FXSeparator(toolbar,SEPARATOR_GROOVE);
 
   // Bookmarks
-  new FXButton(toolbar,"\tBookmark\tSet bookmark.",getApp()->bookseticon,this,ID_SET_MARK,ICON_ABOVE_TEXT|BUTTON_TOOLBAR|FRAME_RAISED|LAYOUT_TOP|LAYOUT_LEFT);
-  new FXButton(toolbar,"\tPrevious Bookmark\tGoto previous bookmark.",getApp()->bookprevicon,this,ID_PREV_MARK,ICON_ABOVE_TEXT|BUTTON_TOOLBAR|FRAME_RAISED|LAYOUT_TOP|LAYOUT_LEFT);
-  new FXButton(toolbar,"\tNext Bookmark\tGoto next bookmark.",getApp()->booknexticon,this,ID_NEXT_MARK,ICON_ABOVE_TEXT|BUTTON_TOOLBAR|FRAME_RAISED|LAYOUT_TOP|LAYOUT_LEFT);
-  new FXButton(toolbar,"\tDelete Bookmarks\tDelete all bookmarks.",getApp()->bookdelicon,this,ID_CLEAR_MARKS,ICON_ABOVE_TEXT|BUTTON_TOOLBAR|FRAME_RAISED|LAYOUT_TOP|LAYOUT_LEFT);
+  new FXButton(toolbar,tr("\tBookmark\tSet bookmark."),getApp()->bookseticon,this,ID_SET_MARK,ICON_ABOVE_TEXT|BUTTON_TOOLBAR|FRAME_RAISED|LAYOUT_TOP|LAYOUT_LEFT);
+  new FXButton(toolbar,tr("\tPrevious Bookmark\tGoto previous bookmark."),getApp()->bookprevicon,this,ID_PREV_MARK,ICON_ABOVE_TEXT|BUTTON_TOOLBAR|FRAME_RAISED|LAYOUT_TOP|LAYOUT_LEFT);
+  new FXButton(toolbar,tr("\tNext Bookmark\tGoto next bookmark."),getApp()->booknexticon,this,ID_NEXT_MARK,ICON_ABOVE_TEXT|BUTTON_TOOLBAR|FRAME_RAISED|LAYOUT_TOP|LAYOUT_LEFT);
+  new FXButton(toolbar,tr("\tDelete Bookmarks\tDelete all bookmarks."),getApp()->bookdelicon,this,ID_CLEAR_MARKS,ICON_ABOVE_TEXT|BUTTON_TOOLBAR|FRAME_RAISED|LAYOUT_TOP|LAYOUT_LEFT);
 
   // Spacer
   new FXSeparator(toolbar,SEPARATOR_GROOVE);
 
-  new FXButton(toolbar,"\tShift left\tShift text left by one.",getApp()->shiftlefticon,editor,FXText::ID_SHIFT_LEFT,ICON_ABOVE_TEXT|BUTTON_TOOLBAR|FRAME_RAISED|LAYOUT_TOP|LAYOUT_LEFT);
-  new FXButton(toolbar,"\tShift right\tShift text right by one.",getApp()->shiftrighticon,editor,FXText::ID_SHIFT_RIGHT,ICON_ABOVE_TEXT|BUTTON_TOOLBAR|FRAME_RAISED|LAYOUT_TOP|LAYOUT_LEFT);
+  new FXButton(toolbar,tr("\tShift left\tShift text left by one."),getApp()->shiftlefticon,editor,FXText::ID_SHIFT_LEFT,ICON_ABOVE_TEXT|BUTTON_TOOLBAR|FRAME_RAISED|LAYOUT_TOP|LAYOUT_LEFT);
+  new FXButton(toolbar,tr("\tShift right\tShift text right by one."),getApp()->shiftrighticon,editor,FXText::ID_SHIFT_RIGHT,ICON_ABOVE_TEXT|BUTTON_TOOLBAR|FRAME_RAISED|LAYOUT_TOP|LAYOUT_LEFT);
 
   // Spacer
   new FXSeparator(toolbar,SEPARATOR_GROOVE);
 
   // Color
-  new FXButton(toolbar,"\tFonts\tDisplay font dialog.",getApp()->fontsicon,this,ID_FONT,ICON_ABOVE_TEXT|BUTTON_TOOLBAR|FRAME_RAISED|LAYOUT_TOP|LAYOUT_LEFT);
+  new FXButton(toolbar,tr("\tFonts\tDisplay font dialog."),getApp()->fontsicon,this,ID_FONT,ICON_ABOVE_TEXT|BUTTON_TOOLBAR|FRAME_RAISED|LAYOUT_TOP|LAYOUT_LEFT);
 
   // Help
-  new FXButton(toolbar,"\tDisplay help\tDisplay online help information.",getApp()->helpicon,this,ID_HELP,ICON_ABOVE_TEXT|BUTTON_TOOLBAR|FRAME_RAISED|LAYOUT_TOP|LAYOUT_RIGHT);
+  new FXButton(toolbar,tr("\tDisplay help\tDisplay online help information."),getApp()->helpicon,this,ID_HELP,ICON_ABOVE_TEXT|BUTTON_TOOLBAR|FRAME_RAISED|LAYOUT_TOP|LAYOUT_RIGHT);
 
   // File Menu entries
-  new FXMenuCommand(filemenu,"&New...\tCtl-N\tCreate new document.",getApp()->newicon,this,ID_NEW);
-  new FXMenuCommand(filemenu,"&Open...\tCtl-O\tOpen document file.",getApp()->openicon,this,ID_OPEN);
-  new FXMenuCommand(filemenu,"Open Selected...  \tCtl-E\tOpen highlighted document file.",NULL,this,ID_OPEN_SELECTED);
-  new FXMenuCommand(filemenu,"&Reopen...\t\tReopen file.",getApp()->reloadicon,this,ID_REOPEN);
-  new FXMenuCommand(filemenu,"&Save\tCtl-S\tSave changes to file.",getApp()->saveicon,this,ID_SAVE);
-  new FXMenuCommand(filemenu,"Save &As...\t\tSave document to another file.",getApp()->saveasicon,this,ID_SAVEAS);
-  new FXMenuCommand(filemenu,"&Close\tCtl-W\tClose document.",NULL,this,ID_CLOSE);
+  new FXMenuCommand(filemenu,tr("&New...\tCtl-N\tCreate new document."),getApp()->newicon,this,ID_NEW);
+  new FXMenuCommand(filemenu,tr("&Open...\tCtl-O\tOpen document file."),getApp()->openicon,this,ID_OPEN);
+  new FXMenuCommand(filemenu,tr("Open Selected...  \tCtl-E\tOpen highlighted document file."),NULL,this,ID_OPEN_SELECTED);
+  new FXMenuCommand(filemenu,tr("&Reopen...\t\tReopen file."),getApp()->reloadicon,this,ID_REOPEN);
+  new FXMenuCommand(filemenu,tr("&Save\tCtl-S\tSave changes to file."),getApp()->saveicon,this,ID_SAVE);
+  new FXMenuCommand(filemenu,tr("Save &As...\t\tSave document to another file."),getApp()->saveasicon,this,ID_SAVEAS);
+  new FXMenuCommand(filemenu,tr("&Close\tCtl-W\tClose document."),NULL,this,ID_CLOSE);
   new FXMenuSeparator(filemenu);
-  new FXMenuCommand(filemenu,"Insert from file...\t\tInsert text from file.",NULL,this,ID_INSERT_FILE);
-  new FXMenuCommand(filemenu,"Extract to file...\t\tExtract text to file.",NULL,this,ID_EXTRACT_FILE);
-  new FXMenuCommand(filemenu,"&Print...\tCtl-P\tPrint document.",getApp()->printicon,this,ID_PRINT);
-  new FXMenuCheck(filemenu,"&Editable\t\tDocument editable.",editor,FXText::ID_TOGGLE_EDITABLE);
+  new FXMenuCommand(filemenu,tr("Insert from file...\t\tInsert text from file."),NULL,this,ID_INSERT_FILE);
+  new FXMenuCommand(filemenu,tr("Extract to file...\t\tExtract text to file."),NULL,this,ID_EXTRACT_FILE);
+  new FXMenuCommand(filemenu,tr("&Print...\tCtl-P\tPrint document."),getApp()->printicon,this,ID_PRINT);
+  new FXMenuCheck(filemenu,tr("&Editable\t\tDocument editable."),editor,FXText::ID_TOGGLE_EDITABLE);
 
   // Recent file menu; this automatically hides if there are no files
   FXMenuSeparator* sep1=new FXMenuSeparator(filemenu);
   sep1->setTarget(&mrufiles);
   sep1->setSelector(FXRecentFiles::ID_ANYFILES);
-  new FXMenuCommand(filemenu,NULL,NULL,&mrufiles,FXRecentFiles::ID_FILE_1);
-  new FXMenuCommand(filemenu,NULL,NULL,&mrufiles,FXRecentFiles::ID_FILE_2);
-  new FXMenuCommand(filemenu,NULL,NULL,&mrufiles,FXRecentFiles::ID_FILE_3);
-  new FXMenuCommand(filemenu,NULL,NULL,&mrufiles,FXRecentFiles::ID_FILE_4);
-  new FXMenuCommand(filemenu,NULL,NULL,&mrufiles,FXRecentFiles::ID_FILE_5);
-  new FXMenuCommand(filemenu,NULL,NULL,&mrufiles,FXRecentFiles::ID_FILE_6);
-  new FXMenuCommand(filemenu,NULL,NULL,&mrufiles,FXRecentFiles::ID_FILE_7);
-  new FXMenuCommand(filemenu,NULL,NULL,&mrufiles,FXRecentFiles::ID_FILE_8);
-  new FXMenuCommand(filemenu,NULL,NULL,&mrufiles,FXRecentFiles::ID_FILE_9);
-  new FXMenuCommand(filemenu,NULL,NULL,&mrufiles,FXRecentFiles::ID_FILE_10);
-  new FXMenuCommand(filemenu,"&Clear Recent Files",NULL,&mrufiles,FXRecentFiles::ID_CLEAR);
+  new FXMenuCommand(filemenu,FXString::null,NULL,&mrufiles,FXRecentFiles::ID_FILE_1);
+  new FXMenuCommand(filemenu,FXString::null,NULL,&mrufiles,FXRecentFiles::ID_FILE_2);
+  new FXMenuCommand(filemenu,FXString::null,NULL,&mrufiles,FXRecentFiles::ID_FILE_3);
+  new FXMenuCommand(filemenu,FXString::null,NULL,&mrufiles,FXRecentFiles::ID_FILE_4);
+  new FXMenuCommand(filemenu,FXString::null,NULL,&mrufiles,FXRecentFiles::ID_FILE_5);
+  new FXMenuCommand(filemenu,FXString::null,NULL,&mrufiles,FXRecentFiles::ID_FILE_6);
+  new FXMenuCommand(filemenu,FXString::null,NULL,&mrufiles,FXRecentFiles::ID_FILE_7);
+  new FXMenuCommand(filemenu,FXString::null,NULL,&mrufiles,FXRecentFiles::ID_FILE_8);
+  new FXMenuCommand(filemenu,FXString::null,NULL,&mrufiles,FXRecentFiles::ID_FILE_9);
+  new FXMenuCommand(filemenu,FXString::null,NULL,&mrufiles,FXRecentFiles::ID_FILE_10);
+  new FXMenuCommand(filemenu,tr("&Clear Recent Files"),NULL,&mrufiles,FXRecentFiles::ID_CLEAR);
   FXMenuSeparator* sep2=new FXMenuSeparator(filemenu);
   sep2->setTarget(&mrufiles);
   sep2->setSelector(FXRecentFiles::ID_ANYFILES);
-  new FXMenuCommand(filemenu,"&Quit\tCtl-Q",getApp()->quiticon,getApp(),Adie::ID_CLOSEALL);
+  new FXMenuCommand(filemenu,tr("&Quit\tCtl-Q"),getApp()->quiticon,getApp(),Adie::ID_CLOSEALL);
 
   // Edit Menu entries
-  new FXMenuCommand(editmenu,"&Undo\tCtl-Z\tUndo last change.",getApp()->undoicon,&undolist,FXUndoList::ID_UNDO);
-  new FXMenuCommand(editmenu,"&Redo\tCtl-Y\tRedo last undo.",getApp()->redoicon,&undolist,FXUndoList::ID_REDO);
-  new FXMenuCommand(editmenu,"&Undo all\t\tUndo all.",NULL,&undolist,FXUndoList::ID_UNDO_ALL);
-  new FXMenuCommand(editmenu,"&Redo all\t\tRedo all.",NULL,&undolist,FXUndoList::ID_REDO_ALL);
-  new FXMenuCommand(editmenu,"&Revert to saved\t\tRevert to saved.",NULL,&undolist,FXUndoList::ID_REVERT);
+  new FXMenuCommand(editmenu,tr("&Undo\tCtl-Z\tUndo last change."),getApp()->undoicon,&undolist,FXUndoList::ID_UNDO);
+  new FXMenuCommand(editmenu,tr("&Redo\tCtl-Y\tRedo last undo."),getApp()->redoicon,&undolist,FXUndoList::ID_REDO);
+  new FXMenuCommand(editmenu,tr("&Undo all\t\tUndo all."),NULL,&undolist,FXUndoList::ID_UNDO_ALL);
+  new FXMenuCommand(editmenu,tr("&Redo all\t\tRedo all."),NULL,&undolist,FXUndoList::ID_REDO_ALL);
+  new FXMenuCommand(editmenu,tr("&Revert to saved\t\tRevert to saved."),NULL,&undolist,FXUndoList::ID_REVERT);
   new FXMenuSeparator(editmenu);
-  new FXMenuCommand(editmenu,"&Copy\tCtl-C\tCopy selection to clipboard.",getApp()->copyicon,editor,FXText::ID_COPY_SEL);
-  new FXMenuCommand(editmenu,"Cu&t\tCtl-X\tCut selection to clipboard.",getApp()->cuticon,editor,FXText::ID_CUT_SEL);
-  new FXMenuCommand(editmenu,"&Paste\tCtl-V\tPaste from clipboard.",getApp()->pasteicon,editor,FXText::ID_PASTE_SEL);
-  new FXMenuCommand(editmenu,"&Delete\t\tDelete selection.",getApp()->deleteicon,editor,FXText::ID_DELETE_SEL);
+  new FXMenuCommand(editmenu,tr("&Copy\tCtl-C\tCopy selection to clipboard."),getApp()->copyicon,editor,FXText::ID_COPY_SEL);
+  new FXMenuCommand(editmenu,tr("Cu&t\tCtl-X\tCut selection to clipboard."),getApp()->cuticon,editor,FXText::ID_CUT_SEL);
+  new FXMenuCommand(editmenu,tr("&Paste\tCtl-V\tPaste from clipboard."),getApp()->pasteicon,editor,FXText::ID_PASTE_SEL);
+  new FXMenuCommand(editmenu,tr("&Delete\t\tDelete selection."),getApp()->deleteicon,editor,FXText::ID_DELETE_SEL);
   new FXMenuSeparator(editmenu);
-  new FXMenuCommand(editmenu,"Lo&wer-case\tCtl-U\tChange to lower case.",NULL,editor,FXText::ID_LOWER_CASE);
-  new FXMenuCommand(editmenu,"Upp&er-case\tCtl-Shift-U\tChange to upper case.",NULL,editor,FXText::ID_UPPER_CASE);
-  new FXMenuCommand(editmenu,"Clean indent\t\tClean indentation to either all tabs or all spaces.",NULL,editor,FXText::ID_CLEAN_INDENT);
-  new FXMenuCommand(editmenu,"Shift left\tCtl-[\tShift text left.",getApp()->shiftlefticon,editor,FXText::ID_SHIFT_LEFT);
-  new FXMenuCommand(editmenu,"Shift right\tCtl-]\tShift text right.",getApp()->shiftrighticon,editor,FXText::ID_SHIFT_RIGHT);
-  new FXMenuCommand(editmenu,"Shift tab left\tAlt-[\tShift text left one tab position.",getApp()->shiftlefticon,editor,FXText::ID_SHIFT_TABLEFT);
-  new FXMenuCommand(editmenu,"Shift tab right\tAlt-]\tShift text right one tab position.",getApp()->shiftrighticon,editor,FXText::ID_SHIFT_TABRIGHT);
+  new FXMenuCommand(editmenu,tr("Lo&wer-case\tCtl-U\tChange to lower case."),NULL,editor,FXText::ID_LOWER_CASE);
+  new FXMenuCommand(editmenu,tr("Upp&er-case\tCtl-Shift-U\tChange to upper case."),NULL,editor,FXText::ID_UPPER_CASE);
+  new FXMenuCommand(editmenu,tr("Clean indent\t\tClean indentation to either all tabs or all spaces."),NULL,editor,FXText::ID_CLEAN_INDENT);
+  new FXMenuCommand(editmenu,tr("Shift left\tCtl-[\tShift text left."),getApp()->shiftlefticon,editor,FXText::ID_SHIFT_LEFT);
+  new FXMenuCommand(editmenu,tr("Shift right\tCtl-]\tShift text right."),getApp()->shiftrighticon,editor,FXText::ID_SHIFT_RIGHT);
+  new FXMenuCommand(editmenu,tr("Shift tab left\tAlt-[\tShift text left one tab position."),getApp()->shiftlefticon,editor,FXText::ID_SHIFT_TABLEFT);
+  new FXMenuCommand(editmenu,tr("Shift tab right\tAlt-]\tShift text right one tab position."),getApp()->shiftrighticon,editor,FXText::ID_SHIFT_TABRIGHT);
 
   // Right mouse popup
   popupmenu=new FXMenuPane(this);
-  new FXMenuCommand(popupmenu,"Undo",getApp()->undoicon,&undolist,FXUndoList::ID_UNDO);
-  new FXMenuCommand(popupmenu,"Redo",getApp()->redoicon,&undolist,FXUndoList::ID_REDO);
+  new FXMenuCommand(popupmenu,tr("Undo"),getApp()->undoicon,&undolist,FXUndoList::ID_UNDO);
+  new FXMenuCommand(popupmenu,tr("Redo"),getApp()->redoicon,&undolist,FXUndoList::ID_REDO);
   new FXMenuSeparator(popupmenu);
-  new FXMenuCommand(popupmenu,"Cut",getApp()->cuticon,editor,FXText::ID_CUT_SEL);
-  new FXMenuCommand(popupmenu,"Copy",getApp()->copyicon,editor,FXText::ID_COPY_SEL);
-  new FXMenuCommand(popupmenu,"Paste",getApp()->pasteicon,editor,FXText::ID_PASTE_SEL);
-  new FXMenuCommand(popupmenu,"Select All",NULL,editor,FXText::ID_SELECT_ALL);
+  new FXMenuCommand(popupmenu,tr("Cut"),getApp()->cuticon,editor,FXText::ID_CUT_SEL);
+  new FXMenuCommand(popupmenu,tr("Copy"),getApp()->copyicon,editor,FXText::ID_COPY_SEL);
+  new FXMenuCommand(popupmenu,tr("Paste"),getApp()->pasteicon,editor,FXText::ID_PASTE_SEL);
+  new FXMenuCommand(popupmenu,tr("Select All"),NULL,editor,FXText::ID_SELECT_ALL);
   new FXMenuSeparator(popupmenu);
-  new FXMenuCommand(popupmenu,"Set bookmark",getApp()->bookseticon,this,ID_SET_MARK);
-  new FXMenuCommand(popupmenu,"Next bookmark",getApp()->booknexticon,this,ID_NEXT_MARK);
-  new FXMenuCommand(popupmenu,"Previous bookmark",getApp()->bookprevicon,this,ID_PREV_MARK);
-  new FXMenuCommand(popupmenu,"Clear bookmarks",getApp()->bookdelicon,this,ID_CLEAR_MARKS);
+  new FXMenuCommand(popupmenu,tr("Set bookmark"),getApp()->bookseticon,this,ID_SET_MARK);
+  new FXMenuCommand(popupmenu,tr("Next bookmark"),getApp()->booknexticon,this,ID_NEXT_MARK);
+  new FXMenuCommand(popupmenu,tr("Previous bookmark"),getApp()->bookprevicon,this,ID_PREV_MARK);
+  new FXMenuCommand(popupmenu,tr("Clear bookmarks"),getApp()->bookdelicon,this,ID_CLEAR_MARKS);
 
   // Goto Menu entries
-  new FXMenuCommand(gotomenu,"&Goto...\tCtl-G\tGoto line number.",NULL,editor,FXText::ID_GOTO_LINE);
-  new FXMenuCommand(gotomenu,"Goto selected...\tCtl-L\tGoto selected line number.",NULL,editor,FXText::ID_GOTO_SELECTED);
+  new FXMenuCommand(gotomenu,tr("&Goto...\tCtl-G\tGoto line number."),NULL,editor,FXText::ID_GOTO_LINE);
+  new FXMenuCommand(gotomenu,tr("Goto selected...\tCtl-L\tGoto selected line number."),NULL,editor,FXText::ID_GOTO_SELECTED);
   new FXMenuSeparator(gotomenu);
-  new FXMenuCommand(gotomenu,"Goto {..\tShift-Ctl-{\tGoto start of enclosing block.",NULL,editor,FXText::ID_LEFT_BRACE);
-  new FXMenuCommand(gotomenu,"Goto ..}\tShift-Ctl-}\tGoto end of enclosing block.",NULL,editor,FXText::ID_RIGHT_BRACE);
-  new FXMenuCommand(gotomenu,"Goto (..\tShift-Ctl-(\tGoto start of enclosing expression.",NULL,editor,FXText::ID_LEFT_PAREN);
-  new FXMenuCommand(gotomenu,"Goto ..)\tShift-Ctl-)\tGoto end of enclosing expression.",NULL,editor,FXText::ID_RIGHT_PAREN);
+  new FXMenuCommand(gotomenu,tr("Goto {..\tShift-Ctl-{\tGoto start of enclosing block."),NULL,editor,FXText::ID_LEFT_BRACE);
+  new FXMenuCommand(gotomenu,tr("Goto ..}\tShift-Ctl-}\tGoto end of enclosing block."),NULL,editor,FXText::ID_RIGHT_BRACE);
+  new FXMenuCommand(gotomenu,tr("Goto (..\tShift-Ctl-(\tGoto start of enclosing expression."),NULL,editor,FXText::ID_LEFT_PAREN);
+  new FXMenuCommand(gotomenu,tr("Goto ..)\tShift-Ctl-)\tGoto end of enclosing expression."),NULL,editor,FXText::ID_RIGHT_PAREN);
   new FXMenuSeparator(gotomenu);
-  new FXMenuCommand(gotomenu,"Goto matching      (..)\tCtl-M\tGoto matching brace or parenthesis.",NULL,editor,FXText::ID_GOTO_MATCHING);
+  new FXMenuCommand(gotomenu,tr("Goto matching      (..)\tCtl-M\tGoto matching brace or parenthesis."),NULL,editor,FXText::ID_GOTO_MATCHING);
   new FXMenuSeparator(gotomenu);
-  new FXMenuCommand(gotomenu,"&Set bookmark\tAlt-B",getApp()->bookseticon,this,ID_SET_MARK);
-  new FXMenuCommand(gotomenu,"&Next bookmark\tAlt-N",getApp()->booknexticon,this,ID_NEXT_MARK);
-  new FXMenuCommand(gotomenu,"&Previous bookmark\tAlt-P",getApp()->bookprevicon,this,ID_PREV_MARK);
-  new FXMenuCommand(gotomenu,"&Clear bookmarks\tAlt-C",getApp()->bookdelicon,this,ID_CLEAR_MARKS);
+  new FXMenuCommand(gotomenu,tr("&Set bookmark\tAlt-B"),getApp()->bookseticon,this,ID_SET_MARK);
+  new FXMenuCommand(gotomenu,tr("&Next bookmark\tAlt-N"),getApp()->booknexticon,this,ID_NEXT_MARK);
+  new FXMenuCommand(gotomenu,tr("&Previous bookmark\tAlt-P"),getApp()->bookprevicon,this,ID_PREV_MARK);
+  new FXMenuCommand(gotomenu,tr("&Clear bookmarks\tAlt-C"),getApp()->bookdelicon,this,ID_CLEAR_MARKS);
 
   // Search Menu entries
-  new FXMenuCommand(searchmenu,"Select matching (..)\tShift-Ctl-M\tSelect matching brace or parenthesis.",NULL,editor,FXText::ID_SELECT_MATCHING);
-  new FXMenuCommand(searchmenu,"Select block {..}\tShift-Alt-{\tSelect enclosing block.",NULL,editor,FXText::ID_SELECT_BRACE);
-  new FXMenuCommand(searchmenu,"Select block {..}\tShift-Alt-}\tSelect enclosing block.",NULL,editor,FXText::ID_SELECT_BRACE);
-  new FXMenuCommand(searchmenu,"Select expression (..)\tShift-Alt-(\tSelect enclosing parentheses.",NULL,editor,FXText::ID_SELECT_PAREN);
-  new FXMenuCommand(searchmenu,"Select expression (..)\tShift-Alt-)\tSelect enclosing parentheses.",NULL,editor,FXText::ID_SELECT_PAREN);
+  new FXMenuCommand(searchmenu,tr("Select matching (..)\tShift-Ctl-M\tSelect matching brace or parenthesis."),NULL,editor,FXText::ID_SELECT_MATCHING);
+  new FXMenuCommand(searchmenu,tr("Select block {..}\tShift-Alt-{\tSelect enclosing block."),NULL,editor,FXText::ID_SELECT_BRACE);
+  new FXMenuCommand(searchmenu,tr("Select block {..}\tShift-Alt-}\tSelect enclosing block."),NULL,editor,FXText::ID_SELECT_BRACE);
+  new FXMenuCommand(searchmenu,tr("Select expression (..)\tShift-Alt-(\tSelect enclosing parentheses."),NULL,editor,FXText::ID_SELECT_PAREN);
+  new FXMenuCommand(searchmenu,tr("Select expression (..)\tShift-Alt-)\tSelect enclosing parentheses."),NULL,editor,FXText::ID_SELECT_PAREN);
   new FXMenuSeparator(searchmenu);
-  new FXMenuCommand(searchmenu,"&Search sel. fwd\tCtl-H\tSearch for selection.",getApp()->searchnexticon,editor,FXText::ID_SEARCH_FORW_SEL);
-  new FXMenuCommand(searchmenu,"&Search sel. bck\tShift-Ctl-H\tSearch for selection.",getApp()->searchprevicon,editor,FXText::ID_SEARCH_BACK_SEL);
-  //new FXMenuCommand(searchmenu,"&Search next fwd\tCtl-G\tSearch forward for next occurrence.",getApp()->searchnexticon,editor,FXText::ID_SEARCH_FORW);
-  //new FXMenuCommand(searchmenu,"&Search next bck\tShift-Ctl-G\tSearch backward for next occurrence.",getApp()->searchprevicon,editor,FXText::ID_SEARCH_BACK);
-  new FXMenuCommand(searchmenu,"&Search...\tCtl-F\tSearch for a string.",getApp()->searchicon,editor,FXText::ID_SEARCH);
-  new FXMenuCommand(searchmenu,"R&eplace...\tCtl-R\tSearch for a string.",NULL,editor,FXText::ID_REPLACE);
+  new FXMenuCommand(searchmenu,tr("&Search sel. fwd\tCtl-H\tSearch for selection."),getApp()->searchnexticon,editor,FXText::ID_SEARCH_FORW_SEL);
+  new FXMenuCommand(searchmenu,tr("&Search sel. bck\tShift-Ctl-H\tSearch for selection."),getApp()->searchprevicon,editor,FXText::ID_SEARCH_BACK_SEL);
+  //new FXMenuCommand(searchmenu,tr("&Search next fwd\tCtl-G\tSearch forward for next occurrence."),getApp()->searchnexticon,editor,FXText::ID_SEARCH_FORW);
+  //new FXMenuCommand(searchmenu,tr("&Search next bck\tShift-Ctl-G\tSearch backward for next occurrence."),getApp()->searchprevicon,editor,FXText::ID_SEARCH_BACK);
+  new FXMenuCommand(searchmenu,tr("&Search...\tCtl-F\tSearch for a string."),getApp()->searchicon,editor,FXText::ID_SEARCH);
+  new FXMenuCommand(searchmenu,tr("R&eplace...\tCtl-R\tSearch for a string."),NULL,editor,FXText::ID_REPLACE);
 
   // Syntax menu
   syntaxmenu=new FXMenuPane(this);
-  new FXMenuRadio(syntaxmenu,"Plain",this,ID_SYNTAX_FIRST);
+  new FXMenuRadio(syntaxmenu,tr("Plain"),this,ID_SYNTAX_FIRST);
   for(int syn=0; syn<getApp()->syntaxes.no(); syn++){
     new FXMenuRadio(syntaxmenu,getApp()->syntaxes[syn]->getName(),this,ID_SYNTAX_FIRST+1+syn);
     }
 
   // Options menu
-  new FXMenuCommand(optionmenu,"Preferences...\t\tChange preferences.",NULL,this,ID_PREFERENCES);
-  new FXMenuCommand(optionmenu,"Font...\t\tChange text font.",getApp()->fontsicon,this,ID_FONT);
-  new FXMenuCheck(optionmenu,"Word wrap\tCtl-K\tToggle word wrap mode.",this,ID_TOGGLE_WRAP);
-  new FXMenuCheck(optionmenu,"Overstrike\t\tToggle overstrike mode.",editor,FXText::ID_TOGGLE_OVERSTRIKE);
-  new FXMenuCheck(optionmenu,"Syntax coloring\t\tToggle syntax coloring.",this,ID_SYNTAX);
-  new FXMenuCheck(optionmenu,"&Jump Scrolling\t\tToggle jump scrolling mode.",this,ID_JUMPSCROLL);
-  new FXMenuCommand(optionmenu,"Res&tyle\tCtl-T\tToggle syntax coloring.",NULL,this,ID_RESTYLE);
-  new FXMenuCommand(optionmenu,"Include path...\t\tDirectories to search for include files.",NULL,this,ID_INCLUDE_PATH);
-  new FXMenuCascade(optionmenu,"&Syntax",NULL,syntaxmenu);
+  new FXMenuCommand(optionmenu,tr("Preferences...\t\tChange preferences."),NULL,this,ID_PREFERENCES);
+  new FXMenuCommand(optionmenu,tr("Font...\t\tChange text font."),getApp()->fontsicon,this,ID_FONT);
+  new FXMenuCheck(optionmenu,tr("Word wrap\tCtl-K\tToggle word wrap mode."),this,ID_TOGGLE_WRAP);
+  new FXMenuCheck(optionmenu,tr("Overstrike\t\tToggle overstrike mode."),editor,FXText::ID_TOGGLE_OVERSTRIKE);
+  new FXMenuCheck(optionmenu,tr("Syntax coloring\t\tToggle syntax coloring."),this,ID_SYNTAX);
+  new FXMenuCheck(optionmenu,tr("&Jump Scrolling\t\tToggle jump scrolling mode."),this,ID_JUMPSCROLL);
+  new FXMenuCommand(optionmenu,tr("Res&tyle\tCtl-T\tToggle syntax coloring."),NULL,this,ID_RESTYLE);
+  new FXMenuCommand(optionmenu,tr("Include path...\t\tDirectories to search for include files."),NULL,this,ID_INCLUDE_PATH);
+  new FXMenuCascade(optionmenu,tr("&Syntax"),NULL,syntaxmenu);
   new FXMenuSeparator(optionmenu);
-  new FXMenuCommand(optionmenu,"Save Settings\t\tSave settings now.",NULL,this,ID_SAVE_SETTINGS);
+  new FXMenuCommand(optionmenu,tr("Save Settings\t\tSave settings now."),NULL,this,ID_SAVE_SETTINGS);
 
   // View Menu entries
-  new FXMenuCheck(viewmenu,"Hidden Files\t\tShow hidden files and directories.",dirlist,FXDirList::ID_TOGGLE_HIDDEN);
-  new FXMenuCheck(viewmenu,"File Browser\t\tDisplay file list.",treebox,FXWindow::ID_TOGGLESHOWN);
-  new FXMenuCheck(viewmenu,"Toolbar\t\tDisplay toolbar.",toolbar,FXWindow::ID_TOGGLESHOWN);
-  new FXMenuCheck(viewmenu,"Status line\t\tDisplay status line.",statusbar,FXWindow::ID_TOGGLESHOWN);
-  new FXMenuCheck(viewmenu,"Undo Counters\t\tShow undo/redo counters on status line.",undoredoblock,FXWindow::ID_TOGGLESHOWN);
-  new FXMenuCheck(viewmenu,"Clock\t\tShow clock on status line.",clock,FXWindow::ID_TOGGLESHOWN);
+  new FXMenuCheck(viewmenu,tr("Hidden Files\t\tShow hidden files and directories."),dirlist,FXDirList::ID_TOGGLE_HIDDEN);
+  new FXMenuCheck(viewmenu,tr("File Browser\t\tDisplay file list."),treebox,FXWindow::ID_TOGGLESHOWN);
+  new FXMenuCheck(viewmenu,tr("Toolbar\t\tDisplay toolbar."),toolbar,FXWindow::ID_TOGGLESHOWN);
+  new FXMenuCheck(viewmenu,tr("Status line\t\tDisplay status line."),statusbar,FXWindow::ID_TOGGLESHOWN);
+  new FXMenuCheck(viewmenu,tr("Undo Counters\t\tShow undo/redo counters on status line."),undoredoblock,FXWindow::ID_TOGGLESHOWN);
+  new FXMenuCheck(viewmenu,tr("Clock\t\tShow clock on status line."),clock,FXWindow::ID_TOGGLESHOWN);
 
   // Window menu
-  new FXMenuRadio(windowmenu,NULL,this,ID_WINDOW_1);
-  new FXMenuRadio(windowmenu,NULL,this,ID_WINDOW_2);
-  new FXMenuRadio(windowmenu,NULL,this,ID_WINDOW_3);
-  new FXMenuRadio(windowmenu,NULL,this,ID_WINDOW_4);
-  new FXMenuRadio(windowmenu,NULL,this,ID_WINDOW_5);
-  new FXMenuRadio(windowmenu,NULL,this,ID_WINDOW_6);
-  new FXMenuRadio(windowmenu,NULL,this,ID_WINDOW_7);
-  new FXMenuRadio(windowmenu,NULL,this,ID_WINDOW_8);
-  new FXMenuRadio(windowmenu,NULL,this,ID_WINDOW_9);
-  new FXMenuRadio(windowmenu,NULL,this,ID_WINDOW_10);
+  new FXMenuRadio(windowmenu,FXString::null,this,ID_WINDOW_1);
+  new FXMenuRadio(windowmenu,FXString::null,this,ID_WINDOW_2);
+  new FXMenuRadio(windowmenu,FXString::null,this,ID_WINDOW_3);
+  new FXMenuRadio(windowmenu,FXString::null,this,ID_WINDOW_4);
+  new FXMenuRadio(windowmenu,FXString::null,this,ID_WINDOW_5);
+  new FXMenuRadio(windowmenu,FXString::null,this,ID_WINDOW_6);
+  new FXMenuRadio(windowmenu,FXString::null,this,ID_WINDOW_7);
+  new FXMenuRadio(windowmenu,FXString::null,this,ID_WINDOW_8);
+  new FXMenuRadio(windowmenu,FXString::null,this,ID_WINDOW_9);
+  new FXMenuRadio(windowmenu,FXString::null,this,ID_WINDOW_10);
 
   // Help Menu entries
-  new FXMenuCommand(helpmenu,"&Help...\t\tDisplay help information.",getApp()->helpicon,this,ID_HELP,0);
+  new FXMenuCommand(helpmenu,tr("&Help...\t\tDisplay help information."),getApp()->helpicon,this,ID_HELP,0);
   new FXMenuSeparator(helpmenu);
-  new FXMenuCommand(helpmenu,"&About Adie...\t\tDisplay about panel.",getApp()->smallicon,this,ID_ABOUT,0);
+  new FXMenuCommand(helpmenu,tr("&About Adie...\t\tDisplay about panel."),getApp()->smallicon,this,ID_ABOUT,0);
 
   // Add some alternative accelerators
   if(getAccelTable()){
@@ -613,7 +613,7 @@ TextWindow::TextWindow(Adie* a,const FXString& file):FXMainWindow(a,"Adie",NULL,
 
   // Initialize other stuff
   searchpath="/usr/include";
-  setPatterns("All Files (*)");
+  setPatterns(tr("All Files (*)"));
   setCurrentPattern(0);
   currentstyle=-1;
   colorize=FALSE;
@@ -648,7 +648,7 @@ void TextWindow::create(){
   editor->setFocus();
 
   // Jump to current directory
-  dirlist->setCurrentFile(FXFile::getCurrentDirectory());
+  dirlist->setCurrentFile(FXSystem::getCurrentDirectory());
   }
 
 
@@ -707,26 +707,24 @@ FXbool TextWindow::isEditable() const {
 
 // Load file
 FXbool TextWindow::loadFile(const FXString& file){
-  FXuint size,n,i,j,k,c;
+  FXFile textfile(file,FXFile::Reading);
+  FXint size,n,i,j,k,c;
   FXchar *text;
-  FILE *fp;
 
   FXTRACE((100,"loadFile(%s)\n",file.text()));
 
-  // Open file
-  fp=fopen(file.text(),"r");
-  if(!fp){
-    FXMessageBox::error(this,MBOX_OK,"Error Loading File","Unable to open file: %s",file.text());
+  // Opened file?
+  if(!textfile.isOpen()){
+    FXMessageBox::error(this,MBOX_OK,tr("Error Loading File"),tr("Unable to open file: %s"),file.text());
     return FALSE;
     }
 
   // Get file size
-  size=FXFile::size(file);
+  size=textfile.size();
 
   // Make buffer to load file
   if(!FXMALLOC(&text,FXchar,size)){
-    FXMessageBox::error(this,MBOX_OK,"Error Loading File","File is too big: %s (%d bytes)",file.text(),size);
-    fclose(fp);
+    FXMessageBox::error(this,MBOX_OK,tr("Error Loading File"),tr("File is too big: %s (%d bytes)"),file.text(),size);
     return FALSE;
     }
 
@@ -734,10 +732,12 @@ FXbool TextWindow::loadFile(const FXString& file){
   getApp()->beginWaitCursor();
 
   // Read the file
-  n=fread(text,1,size,fp);
-
-  // Close file
-  fclose(fp);
+  n=textfile.readBlock(text,size);
+  if(n<0){
+    FXFREE(&text);
+    FXMessageBox::error(this,MBOX_OK,tr("Error Loading File"),tr("Unable to read file: %s"),file.text());
+    return FALSE;
+    }
 
   // Strip carriage returns
   if(stripcr){
@@ -758,7 +758,7 @@ FXbool TextWindow::loadFile(const FXString& file){
         i=k;
         k++;
         }
-      else if(!isspace(c)){
+      else if(!Ascii::isSpace(c)){
         k=i+1;
         }
       text[i]=c;
@@ -774,10 +774,10 @@ FXbool TextWindow::loadFile(const FXString& file){
   getApp()->endWaitCursor();
 
   // Set stuff
-  setEditable(FXFile::isWritable(file));
+  setEditable(FXStat::isWritable(file));
   dirlist->setCurrentFile(file);
   mrufiles.appendFile(file);
-  filetime=FXFile::modified(file);
+  filetime=FXStat::modified(file);
   filenameset=TRUE;
   filename=file;
 
@@ -796,7 +796,7 @@ FXbool TextWindow::loadFile(const FXString& file){
 
 // Insert file
 FXbool TextWindow::insertFile(const FXString& file){
-  FXuint size,n,i,j,k,c;
+  FXint size,n,i,j,k,c;
   FXchar *text;
   FILE *fp;
 
@@ -805,16 +805,16 @@ FXbool TextWindow::insertFile(const FXString& file){
   // Open file
   fp=fopen(file.text(),"r");
   if(!fp){
-    FXMessageBox::error(this,MBOX_OK,"Error Inserting File","Unable to open file: %s",file.text());
+    FXMessageBox::error(this,MBOX_OK,tr("Error Inserting File"),tr("Unable to open file: %s"),file.text());
     return FALSE;
     }
 
   // Get file size
-  size=FXFile::size(file);
+  size=FXStat::size(file);
 
   // Make buffer to load file
   if(!FXMALLOC(&text,FXchar,size)){
-    FXMessageBox::error(this,MBOX_OK,"Error Inserting File","File is too big: %s (%d bytes)",file.text(),size);
+    FXMessageBox::error(this,MBOX_OK,tr("Error Inserting File"),tr("File is too big: %s (%d bytes)"),file.text(),size);
     fclose(fp);
     return FALSE;
     }
@@ -869,16 +869,15 @@ FXbool TextWindow::insertFile(const FXString& file){
 
 // Save file
 FXbool TextWindow::saveFile(const FXString& file){
-  FXuint size,n;
+  FXFile textfile(file,FXFile::Writing);
+  FXint size,n;
   FXchar *text;
-  FILE *fp;
 
   FXTRACE((100,"saveFile(%s)\n",file.text()));
 
-  // Open file
-  fp=fopen(file.text(),"w");
-  if(!fp){
-    FXMessageBox::error(this,MBOX_OK,"Error Saving File","Unable to open file: %s",file.text());
+  // Opened file?
+  if(!textfile.isOpen()){
+    FXMessageBox::error(this,MBOX_OK,tr("Error Saving File"),tr("Unable to open file: %s"),file.text());
     return FALSE;
     }
 
@@ -887,8 +886,7 @@ FXbool TextWindow::saveFile(const FXString& file){
 
   // Alloc buffer
   if(!FXMALLOC(&text,FXchar,size+1)){
-    FXMessageBox::error(this,MBOX_OK,"Error Saving File","File is too big: %s",file.text());
-    fclose(fp);
+    FXMessageBox::error(this,MBOX_OK,tr("Error Saving File"),tr("File is too big: %s"),file.text());
     return FALSE;
     }
 
@@ -903,8 +901,13 @@ FXbool TextWindow::saveFile(const FXString& file){
     text[size++]='\n';
     }
 
+  // Translate newlines
+#ifdef WIN32
+  fxtoDOS(text,size);
+#endif
+
   // Write the file
-  n=fwrite(text,1,size,fp);
+  n=textfile.writeBlock(text,size);
 
   // Ditch buffer
   FXFREE(&text);
@@ -912,12 +915,9 @@ FXbool TextWindow::saveFile(const FXString& file){
   // Kill wait cursor
   getApp()->endWaitCursor();
 
-  // Close file
-  fclose(fp);
-
   // Were we able to write it all?
   if(n!=size){
-    FXMessageBox::error(this,MBOX_OK,"Error Saving File","File: %s truncated.",file.text());
+    FXMessageBox::error(this,MBOX_OK,tr("Error Saving File"),tr("File: %s truncated."),file.text());
     return FALSE;
     }
 
@@ -925,7 +925,7 @@ FXbool TextWindow::saveFile(const FXString& file){
   setEditable(TRUE);
   dirlist->setCurrentFile(file);
   mrufiles.appendFile(file);
-  filetime=FXFile::modified(file);
+  filetime=FXStat::modified(file);
   filenameset=TRUE;
   filename=file;
   undolist.mark();
@@ -935,16 +935,15 @@ FXbool TextWindow::saveFile(const FXString& file){
 
 // Extract file
 FXbool TextWindow::extractFile(const FXString& file){
-  FXuint size,n;
+  FXFile textfile(file,FXFile::Writing);
+  FXint size,n;
   FXchar *text;
-  FILE *fp;
 
   FXTRACE((100,"extractFile(%s)\n",file.text()));
 
-  // Open file
-  fp=fopen(file.text(),"w");
-  if(!fp){
-    FXMessageBox::error(this,MBOX_OK,"Error Extracting File","Unable to open file: %s",file.text());
+  // Opened file?
+  if(!textfile.isOpen()){
+    FXMessageBox::error(this,MBOX_OK,tr("Error Extracting File"),tr("Unable to open file: %s"),file.text());
     return FALSE;
     }
 
@@ -952,9 +951,8 @@ FXbool TextWindow::extractFile(const FXString& file){
   size=editor->getSelEndPos()-editor->getSelStartPos();
 
   // Alloc buffer
-  if(!FXMALLOC(&text,FXchar,size)){
-    FXMessageBox::error(this,MBOX_OK,"Error Extracting File","File is too big: %s",file.text());
-    fclose(fp);
+  if(!FXMALLOC(&text,FXchar,size+1)){
+    FXMessageBox::error(this,MBOX_OK,tr("Error Extracting File"),tr("File is too big: %s"),file.text());
     return FALSE;
     }
 
@@ -964,19 +962,23 @@ FXbool TextWindow::extractFile(const FXString& file){
   // Get text from editor
   editor->extractText(text,editor->getSelStartPos(),size);
 
+  // Translate newlines
+#ifdef WIN32
+  fxtoDOS(text,size);
+#endif
+
   // Write the file
-  n=fwrite(text,1,size,fp);
+  n=textfile.writeBlock(text,size);
+
+  // Ditch buffer
   FXFREE(&text);
 
   // Kill wait cursor
   getApp()->endWaitCursor();
 
-  // Close file
-  fclose(fp);
-
   // Were we able to write it all?
   if(n!=size){
-    FXMessageBox::error(this,MBOX_OK,"Error Extracting File","File: %s truncated.",file.text());
+    FXMessageBox::error(this,MBOX_OK,tr("Error Extracting File"),tr("File: %s truncated."),file.text());
     return FALSE;
     }
 
@@ -1030,7 +1032,7 @@ void TextWindow::setPatterns(const FXString& patterns){
   for(i=0; !(pat=patterns.section('\n',i)).empty(); i++){
     filter->appendItem(pat);
     }
-  if(!filter->getNumItems()) filter->appendItem("All Files (*)");
+  if(!filter->getNumItems()) filter->appendItem(tr("All Files (*)"));
   setCurrentPattern(0);
   }
 
@@ -1359,14 +1361,14 @@ void TextWindow::writeRegistry(){
 
 // About box
 long TextWindow::onCmdAbout(FXObject*,FXSelector,void*){
-  FXDialogBox about(this,"About Adie",DECOR_TITLE|DECOR_BORDER,0,0,0,0, 0,0,0,0, 0,0);
+  FXDialogBox about(this,tr("About Adie"),DECOR_TITLE|DECOR_BORDER,0,0,0,0, 0,0,0,0, 0,0);
   FXGIFIcon picture(getApp(),adie_gif);
   new FXLabel(&about,FXString::null,&picture,FRAME_GROOVE|LAYOUT_SIDE_LEFT|LAYOUT_CENTER_Y|JUSTIFY_CENTER_X|JUSTIFY_CENTER_Y,0,0,0,0, 0,0,0,0);
   FXVerticalFrame* side=new FXVerticalFrame(&about,LAYOUT_SIDE_RIGHT|LAYOUT_FILL_X|LAYOUT_FILL_Y,0,0,0,0, 10,10,10,10, 0,0);
   new FXLabel(side,"A . d . i . e",NULL,JUSTIFY_LEFT|ICON_BEFORE_TEXT|LAYOUT_FILL_X);
   new FXHorizontalSeparator(side,SEPARATOR_LINE|LAYOUT_FILL_X);
-  new FXLabel(side,FXStringFormat("\nThe Adie ADvanced Interactive Editor, version %d.%d.%d.\n\nAdie is a fast and convenient programming text editor and text\nfile viewer with an integrated file browser.\nAdie uses the FOX Toolkit version %d.%d.%d.\nCopyright (C) 2000,2005 Jeroen van der Zijp (jeroen@fox-toolkit.org).\n ",VERSION_MAJOR,VERSION_MINOR,VERSION_PATCH,FOX_MAJOR,FOX_MINOR,FOX_LEVEL),NULL,JUSTIFY_LEFT|LAYOUT_FILL_X|LAYOUT_FILL_Y);
-  FXButton *button=new FXButton(side,"&OK",NULL,&about,FXDialogBox::ID_ACCEPT,BUTTON_INITIAL|BUTTON_DEFAULT|FRAME_RAISED|FRAME_THICK|LAYOUT_RIGHT,0,0,0,0,32,32,2,2);
+  new FXLabel(side,FXStringFormat(tr("\nThe Adie ADvanced Interactive Editor, version %d.%d.%d.\n\nAdie is a fast and convenient programming text editor and text\nfile viewer with an integrated file browser.\nAdie uses the FOX Toolkit version %d.%d.%d.\nCopyright (C) 2000,2005 Jeroen van der Zijp (jeroen@fox-toolkit.org).\n "),VERSION_MAJOR,VERSION_MINOR,VERSION_PATCH,FOX_MAJOR,FOX_MINOR,FOX_LEVEL),NULL,JUSTIFY_LEFT|LAYOUT_FILL_X|LAYOUT_FILL_Y);
+  FXButton *button=new FXButton(side,tr("&OK"),NULL,&about,FXDialogBox::ID_ACCEPT,BUTTON_INITIAL|BUTTON_DEFAULT|FRAME_RAISED|FRAME_THICK|LAYOUT_RIGHT,0,0,0,0,32,32,2,2);
   button->setFocus();
   about.execute(PLACEMENT_OWNER);
   return 1;
@@ -1397,7 +1399,7 @@ long TextWindow::onCmdPreferences(FXObject*,FXSelector,void*){
 
 // Change font
 long TextWindow::onCmdFont(FXObject*,FXSelector,void*){
-  FXFontDialog fontdlg(this,"Change Font",DECOR_BORDER|DECOR_TITLE);
+  FXFontDialog fontdlg(this,tr("Change Font"),DECOR_BORDER|DECOR_TITLE);
   FXFontDesc fontdesc;
   editor->getFont()->getFontDesc(fontdesc);
   fontdlg.setFontSelection(fontdesc);
@@ -1419,7 +1421,7 @@ long TextWindow::onCmdFont(FXObject*,FXSelector,void*){
 // Reopen file
 long TextWindow::onCmdReopen(FXObject*,FXSelector,void*){
   if(isModified()){
-    if(FXMessageBox::question(this,MBOX_YES_NO,"Document was changed","Discard changes to this document?")==MBOX_CLICKED_NO) return 1;
+    if(FXMessageBox::question(this,MBOX_YES_NO,tr("Document was changed"),tr("Discard changes to this document?"))==MBOX_CLICKED_NO) return 1;
     }
   loadFile(filename);
   return 1;
@@ -1445,11 +1447,11 @@ long TextWindow::onCmdNew(FXObject*,FXSelector,void*){
 
 // Open
 long TextWindow::onCmdOpen(FXObject*,FXSelector,void*){
-  FXFileDialog opendialog(this,"Open Document");
+  FXFileDialog opendialog(this,tr("Open Document"));
   opendialog.setSelectMode(SELECTFILE_EXISTING);
   opendialog.setPatternList(getPatterns());
   opendialog.setCurrentPattern(getCurrentPattern());
-  opendialog.setDirectory(FXFile::directory(filename));
+  opendialog.setDirectory(FXPath::directory(filename));
   if(opendialog.execute()){
     setCurrentPattern(opendialog.getCurrentPattern());
     FXString file=opendialog.getFilename();
@@ -1483,67 +1485,75 @@ long TextWindow::onCmdOpenSelected(FXObject*,FXSelector,void*){
     // Its too big, most likely not a file name
     if(len<1024){
       FXString file=FXString::null;
-      FXString dir=FXFile::getCurrentDirectory();
+      FXString dir=FXSystem::getCurrentDirectory();
 
       // Base off currently loaded file
-      if(!filename.empty()) dir=FXFile::directory(filename);
+      if(!filename.empty()) dir=FXPath::directory(filename);
 
       // Strip leading/trailing space
       string.trim();
 
       // Extract name from #include syntax
       if(sscanf(string.text(),"#include \"%[^\"]\"",name)==1){
-        file=FXFile::absolute(dir,name);
-        if(!FXFile::exists(file)){
-          file=FXFile::search(searchpath,name);
+        file=FXPath::absolute(dir,name);
+        if(!FXStat::exists(file)){
+          file=FXPath::search(searchpath,name);
           }
         }
       else if(sscanf(string.text(),"#include <%[^>]>",name)==1){
-        file=FXFile::absolute(dir,name);
-        if(!FXFile::exists(file)){
-          file=FXFile::search(searchpath,name);
+        file=FXPath::absolute(dir,name);
+        if(!FXStat::exists(file)){
+          file=FXPath::search(searchpath,name);
           }
         }
 
       // Compiler output in the form <filename>:<number>: Error message
       else if(sscanf(string.text(),"%[^:]:%d:",name,&lineno)==2){
-        file=FXFile::absolute(dir,name);
-        if(!FXFile::exists(file)){
-          file=FXFile::absolute(dir,string);
+        file=FXPath::absolute(dir,name);
+        if(!FXStat::exists(file)){
+          file=FXPath::absolute(dir,string);
           }
         }
 
       // Compiler output in the form <filename>(<number>) : Error message
       else if(sscanf(string.text(),"%[^(](%d)",name,&lineno)==2){
-        file=FXFile::absolute(dir,name);
-        if(!FXFile::exists(file)){
-          file=FXFile::absolute(dir,string);
+        file=FXPath::absolute(dir,name);
+        if(!FXStat::exists(file)){
+          file=FXPath::absolute(dir,string);
           }
         }
 
       // Compiler output in the form "<filename>", line <number>: Error message
       else if(sscanf(string.text(),"\"%[^\"]\", line %d",name,&lineno)==2){
-        file=FXFile::absolute(dir,name);
-        if(!FXFile::exists(file)){
-          file=FXFile::absolute(dir,string);
+        file=FXPath::absolute(dir,name);
+        if(!FXStat::exists(file)){
+          file=FXPath::absolute(dir,string);
+          }
+        }
+
+      // Compiler output in the form ... File = <filename>, Line = <number>
+      else if(sscanf(string.text(),"%*[^:]: %*s File = %[^,], Line = %d",name,&lineno)==2){
+        file=FXPath::absolute(dir,name);
+        if(!FXStat::exists(file)){
+          file=FXPath::absolute(dir,string);
           }
         }
 
       // Compiler output in the form filename: Other stuff
       else if(sscanf(string.text(),"%[^:]:",name)==1){
-        file=FXFile::absolute(dir,name);
-        if(!FXFile::exists(file)){
-          file=FXFile::absolute(dir,string);
+        file=FXPath::absolute(dir,name);
+        if(!FXStat::exists(file)){
+          file=FXPath::absolute(dir,string);
           }
         }
 
       // Try whole selection
       else{
-        file=FXFile::absolute(dir,string);
+        file=FXPath::absolute(dir,string);
         }
 
       // Not a file name
-      if(FXFile::exists(file)){
+      if(FXStat::exists(file)){
 
         // File loaded already?
         TextWindow *window=findWindow(file);
@@ -1639,11 +1649,11 @@ long TextWindow::onEditDNDMotion(FXObject*,FXSelector,void*){
 // Insert file into buffer
 long TextWindow::onCmdInsertFile(FXObject*,FXSelector,void*){
   FXString file;
-  FXFileDialog opendialog(this,"Open Document");
+  FXFileDialog opendialog(this,tr("Open Document"));
   opendialog.setSelectMode(SELECTFILE_EXISTING);
   opendialog.setPatternList(getPatterns());
   opendialog.setCurrentPattern(getCurrentPattern());
-  opendialog.setDirectory(FXFile::directory(filename));
+  opendialog.setDirectory(FXPath::directory(filename));
   if(opendialog.execute()){
     setCurrentPattern(opendialog.getCurrentPattern());
     file=opendialog.getFilename();
@@ -1662,18 +1672,18 @@ long TextWindow::onUpdInsertFile(FXObject* sender,FXSelector,void*){
 
 // Extract selection to file
 long TextWindow::onCmdExtractFile(FXObject*,FXSelector,void*){
-  FXFileDialog savedialog(this,"Save Document");
+  FXFileDialog savedialog(this,tr("Save Document"));
   FXString file="untitled";
   savedialog.setSelectMode(SELECTFILE_ANY);
   savedialog.setPatternList(getPatterns());
   savedialog.setCurrentPattern(getCurrentPattern());
-  savedialog.setDirectory(FXFile::directory(filename));
+  savedialog.setDirectory(FXPath::directory(filename));
   savedialog.setFilename(file);
   if(savedialog.execute()){
     setCurrentPattern(savedialog.getCurrentPattern());
     file=savedialog.getFilename();
-    if(FXFile::exists(file)){
-      if(MBOX_CLICKED_NO==FXMessageBox::question(this,MBOX_YES_NO,"Overwrite Document","Overwrite existing document: %s?",file.text())) return 1;
+    if(FXStat::exists(file)){
+      if(MBOX_CLICKED_NO==FXMessageBox::question(this,MBOX_YES_NO,tr("Overwrite Document"),tr("Overwrite existing document: %s?"),file.text())) return 1;
       }
     extractFile(file);
     }
@@ -1695,12 +1705,12 @@ FXbool TextWindow::saveChanges(){
   writeBookmarks(filename);
   writeView(filename);
   if(isModified()){
-    answer=FXMessageBox::question(this,MBOX_YES_NO_CANCEL,"Unsaved Document","Save %s to file?",FXFile::name(filename).text());
+    answer=FXMessageBox::question(this,MBOX_YES_NO_CANCEL,tr("Unsaved Document"),tr("Save %s to file?"),FXPath::name(filename).text());
     if(answer==MBOX_CLICKED_CANCEL) return FALSE;
     if(answer==MBOX_CLICKED_YES){
       file=filename;
       if(!filenameset){
-        FXFileDialog savedialog(this,"Save Document");
+        FXFileDialog savedialog(this,tr("Save Document"));
         savedialog.setSelectMode(SELECTFILE_ANY);
         savedialog.setPatternList(getPatterns());
         savedialog.setCurrentPattern(getCurrentPattern());
@@ -1708,8 +1718,8 @@ FXbool TextWindow::saveChanges(){
         if(!savedialog.execute()) return FALSE;
         setCurrentPattern(savedialog.getCurrentPattern());
         file=savedialog.getFilename();
-        if(FXFile::exists(file)){
-          if(MBOX_CLICKED_NO==FXMessageBox::question(this,MBOX_YES_NO,"Overwrite Document","Overwrite existing document: %s?",file.text())) return FALSE;
+        if(FXStat::exists(file)){
+          if(MBOX_CLICKED_NO==FXMessageBox::question(this,MBOX_YES_NO,tr("Overwrite Document"),tr("Overwrite existing document: %s?"),file.text())) return FALSE;
           }
         }
       saveFile(file);
@@ -1736,7 +1746,7 @@ long TextWindow::onUpdSave(FXObject* sender,FXSelector,void*){
 
 // Save As
 long TextWindow::onCmdSaveAs(FXObject*,FXSelector,void*){
-  FXFileDialog savedialog(this,"Save Document");
+  FXFileDialog savedialog(this,tr("Save Document"));
   FXString file=filename;
   savedialog.setSelectMode(SELECTFILE_ANY);
   savedialog.setPatternList(getPatterns());
@@ -1745,8 +1755,8 @@ long TextWindow::onCmdSaveAs(FXObject*,FXSelector,void*){
   if(savedialog.execute()){
     setCurrentPattern(savedialog.getCurrentPattern());
     file=savedialog.getFilename();
-    if(FXFile::exists(file)){
-      if(MBOX_CLICKED_NO==FXMessageBox::question(this,MBOX_YES_NO,"Overwrite Document","Overwrite existing document: %s?",file.text())) return 1;
+    if(FXStat::exists(file)){
+      if(MBOX_CLICKED_NO==FXMessageBox::question(this,MBOX_YES_NO,tr("Overwrite Document"),tr("Overwrite existing document: %s?"),file.text())) return 1;
       }
     saveFile(file);
     }
@@ -1790,7 +1800,7 @@ long TextWindow::onUpdWindow(FXObject *sender,FXSelector sel,void*){
     else
       string.format("1&0 %s",window->getTitle().text());
     sender->handle(this,FXSEL(SEL_COMMAND,FXWindow::ID_SETSTRINGVALUE),(void*)&string);
-    if(window==getApp()->getFocusWindow())
+    if(window==getApp()->getActiveWindow())
       sender->handle(this,FXSEL(SEL_COMMAND,FXWindow::ID_CHECK),NULL);
     else
       sender->handle(this,FXSEL(SEL_COMMAND,FXWindow::ID_UNCHECK),NULL);
@@ -1806,9 +1816,9 @@ long TextWindow::onUpdWindow(FXObject *sender,FXSelector sel,void*){
 // Update title from current filename
 long TextWindow::onUpdate(FXObject* sender,FXSelector sel,void* ptr){
   FXMainWindow::onUpdate(sender,sel,ptr);
-  FXString title=FXFile::name(getFilename());
-  if(isModified()) title+=" (changed)";
-  FXString directory=FXFile::directory(getFilename());
+  FXString title=FXPath::name(getFilename());
+  if(isModified()) title+=tr(" (changed)");
+  FXString directory=FXPath::directory(getFilename());
   if(!directory.empty()) title+=" - " + directory;
   setTitle(title);
   return 1;
@@ -1817,7 +1827,7 @@ long TextWindow::onUpdate(FXObject* sender,FXSelector sel,void* ptr){
 
 // Print the text
 long TextWindow::onCmdPrint(FXObject*,FXSelector,void*){
-  FXPrintDialog dlg(this,"Print File");
+  FXPrintDialog dlg(this,tr("Print File"));
   FXPrinter printer;
   if(dlg.execute()){
     dlg.getPrinter(printer);
@@ -2081,8 +2091,8 @@ long TextWindow::onUpdReadOnly(FXObject* sender,FXSelector,void*){
 
 
 // Update box for size display
-long TextWindow::onUpdNumChars(FXObject* sender,FXSelector,void*){
-  FXuint size=editor->getLength();
+long TextWindow::onUpdNumRows(FXObject* sender,FXSelector,void*){
+  FXuint size=editor->getNumRows();
   sender->handle(this,FXSEL(SEL_COMMAND,ID_SETINTVALUE),(void*)&size);
   return 1;
   }
@@ -2090,7 +2100,7 @@ long TextWindow::onUpdNumChars(FXObject* sender,FXSelector,void*){
 
 // Set TextWindow path
 long TextWindow::onCmdIncludePaths(FXObject*,FXSelector,void*){
-  FXInputDialog::getString(searchpath,this,"Change include file search path","Specify a list of directories separated by a `" PATHLISTSEPSTRING "' where include files are to be found.\nFor example:\n\n  /usr/include" PATHLISTSEPSTRING "/usr/local/include\n\nThis list will be used to locate the selected file name.");
+  FXInputDialog::getString(searchpath,this,tr("Change include file search path"),tr("Specify a list of directories separated by a `" PATHLISTSEPSTRING "' where include files are to be found.\nFor example:\n\n  /usr/include" PATHLISTSEPSTRING "/usr/local/include\n\nThis list will be used to locate the selected file name."));
   return 1;
   }
 
@@ -2447,10 +2457,10 @@ long TextWindow::onFocusIn(FXObject* sender,FXSelector sel,void* ptr){
   register FXTime t;
   FXMainWindow::onFocusIn(sender,sel,ptr);
   if(warnchanged && filetime!=0){
-    t=FXFile::modified(filename);
+    t=FXStat::modified(filename);
     if(t && t!=filetime){
       filetime=t;
-      if(MBOX_CLICKED_OK==FXMessageBox::warning(this,MBOX_OK_CANCEL,"File Was Changed","%s\nwas changed by another program. Reload this file from disk?",filename.text())){
+      if(MBOX_CLICKED_OK==FXMessageBox::warning(this,MBOX_OK_CANCEL,tr("File Was Changed"),tr("%s\nwas changed by another program. Reload this file from disk?"),filename.text())){
         FXint top=editor->getTopLine();
         FXint pos=editor->getCursorPos();
         loadFile(filename);
@@ -2465,7 +2475,7 @@ long TextWindow::onFocusIn(FXObject* sender,FXSelector sel,void* ptr){
 
 // Update clock
 long TextWindow::onClock(FXObject*,FXSelector,void*){
-  clock->setText(FXFile::time("%H:%M:%S",FXFile::now()));
+  clock->setText(FXSystem::time("%H:%M:%S",FXSystem::now()));
   getApp()->addTimeout(this,ID_CLOCKTIME,CLOCKTIMER);
   return 1;
   }
@@ -2601,7 +2611,7 @@ void TextWindow::clearBookmarks(){
 
 // Read bookmarks associated with file
 void TextWindow::readBookmarks(const FXString& file){
-  const FXchar *marks=getApp()->reg().readStringEntry("BOOKMARKS",FXFile::name(file).text(),"0,0,0,0,0,0,0,0,0,0");
+  const FXchar *marks=getApp()->reg().readStringEntry("BOOKMARKS",FXPath::name(file).text(),"0,0,0,0,0,0,0,0,0,0");
   sscanf(marks,"%d,%d,%d,%d,%d,%d,%d,%d,%d,%d",&bookmark[0],&bookmark[1],&bookmark[2],&bookmark[3],&bookmark[4],&bookmark[5],&bookmark[6],&bookmark[7],&bookmark[8],&bookmark[9]);
   }
 
@@ -2612,10 +2622,10 @@ void TextWindow::writeBookmarks(const FXString& file){
     if(bookmark[0] || bookmark[1] || bookmark[2] || bookmark[3] || bookmark[4] || bookmark[5] || bookmark[6] || bookmark[7] || bookmark[8] || bookmark[9]){
       FXchar marks[1000];
       sprintf(marks,"%d,%d,%d,%d,%d,%d,%d,%d,%d,%d",bookmark[0],bookmark[1],bookmark[2],bookmark[3],bookmark[4],bookmark[5],bookmark[6],bookmark[7],bookmark[8],bookmark[9]);
-      getApp()->reg().writeStringEntry("BOOKMARKS",FXFile::name(file).text(),marks);
+      getApp()->reg().writeStringEntry("BOOKMARKS",FXPath::name(file).text(),marks);
       }
     else{
-      getApp()->reg().deleteEntry("BOOKMARKS",FXFile::name(file).text());
+      getApp()->reg().deleteEntry("BOOKMARKS",FXPath::name(file).text());
       }
     }
   }
@@ -2653,7 +2663,7 @@ long TextWindow::onUpdSaveViews(FXObject* sender,FXSelector,void*){
 
 // Read view of the file
 void TextWindow::readView(const FXString& file){
-  editor->setTopLine(getApp()->reg().readIntEntry("VIEW",FXFile::name(file).text(),0));
+  editor->setTopLine(getApp()->reg().readIntEntry("VIEW",FXPath::name(file).text(),0));
   }
 
 
@@ -2661,10 +2671,10 @@ void TextWindow::readView(const FXString& file){
 void TextWindow::writeView(const FXString& file){
   if(saveviews){
     if(editor->getTopLine()){
-      getApp()->reg().writeIntEntry("VIEW",FXFile::name(file).text(),editor->getTopLine());
+      getApp()->reg().writeIntEntry("VIEW",FXPath::name(file).text(),editor->getTopLine());
       }
     else{
-      getApp()->reg().deleteEntry("VIEW",FXFile::name(file).text());
+      getApp()->reg().deleteEntry("VIEW",FXPath::name(file).text());
       }
     }
   }
@@ -2679,7 +2689,7 @@ void TextWindow::determineSyntax(){
   FXTRACE((1,"Determine Language for window %s\n",filename.text()));
 
   // Get filename part of pathname
-  FXString file=FXFile::name(filename);
+  FXString file=FXPath::name(filename);
 
   // First, try match based on file extension
   for(syn=0; syn<getApp()->syntaxes.no(); syn++){
@@ -2843,7 +2853,7 @@ void TextWindow::setSyntax(FXSyntax* syn){
   syntax=syn;
   if(syntax){
     editor->setDelimiters(syntax->getDelimiters().text());
-    styles.size(syntax->getNumRules()-1);
+    styles.no(syntax->getNumRules()-1);
     for(rule=1; rule<syntax->getNumRules(); rule++){
       styles[rule-1]=readStyleForRule(syntax->getRule(rule)->getName());
       }
@@ -2871,7 +2881,7 @@ void TextWindow::restyleText(){
     style=text+len;
     editor->extractText(text,0,len);
     syntax->getRule(0)->stylize(text,style,0,len,head,tail);
-    editor->changeStyle(0,len,style);
+    editor->changeStyle(0,style,len);
     FXFREE(&text);
     }
   }
@@ -3066,7 +3076,7 @@ FXint TextWindow::restyleRange(FXint beg,FXint end,FXint& head,FXint& tail,FXint
   editor->extractText(text,beg,len);
   editor->extractStyle(oldstyle,beg,len);
   syntax->getRule(rule)->stylizeBody(text,newstyle,0,len,head,tail);
-  editor->changeStyle(beg,len,newstyle);
+  editor->changeStyle(beg,newstyle,len);
   while(0<delta && oldstyle[delta-1]==newstyle[delta-1]) --delta;
   FXFREE(&text);
   head+=beg;

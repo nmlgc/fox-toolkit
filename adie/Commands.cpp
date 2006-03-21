@@ -3,7 +3,7 @@
 *                     U n d o a b l e   C o m m a n d s                         *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1998,2006 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This program is free software; you can redistribute it and/or modify          *
 * it under the terms of the GNU General Public License as published by          *
@@ -19,7 +19,7 @@
 * along with this program; if not, write to the Free Software                   *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: Commands.cpp,v 1.17 2005/01/16 16:06:06 fox Exp $                        *
+* $Id: Commands.cpp,v 1.18 2006/01/22 18:01:10 fox Exp $                        *
 ********************************************************************************/
 #include "fx.h"
 #include "Commands.h"

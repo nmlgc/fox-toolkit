@@ -3,9 +3,9 @@
 *                          Test Header Controls                                 *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997 by Jeroen van der Zijp.   All Rights Reserved.             *
+* Copyright (C) 1997,2006 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
-* $Id: header.cpp,v 1.25 2004/02/08 17:05:35 fox Exp $                          *
+* $Id: header.cpp,v 1.27 2006/01/22 17:59:01 fox Exp $                          *
 ********************************************************************************/
 #include "fx.h"
 #include <stdio.h>
@@ -101,7 +101,7 @@ HeaderWindow::HeaderWindow(FXApp* a):FXMainWindow(a,"Header Control Test",NULL,N
   contents=new FXVerticalFrame(this,FRAME_SUNKEN|FRAME_THICK|LAYOUT_SIDE_TOP|LAYOUT_FILL_X|LAYOUT_FILL_Y,0,0,0,0, 0,0,0,0, 0,0);
 
   // Make header control
-  header1=new FXHeader(contents,this,ID_HEADER,HEADER_BUTTON|FRAME_RAISED|FRAME_THICK|LAYOUT_FILL_X);
+  header1=new FXHeader(contents,this,ID_HEADER,HEADER_BUTTON|HEADER_RESIZE|FRAME_RAISED|FRAME_THICK|LAYOUT_FILL_X);
 
   // Document icon
   doc=new FXGIFIcon(getApp(),minidoc);
@@ -153,7 +153,7 @@ HeaderWindow::HeaderWindow(FXApp* a):FXMainWindow(a,"Header Control Test",NULL,N
   list[3]->appendItem("E");
   list[3]->appendItem("F");
 
-  header2=new FXHeader(panes,NULL,0,HEADER_VERTICAL|HEADER_BUTTON|FRAME_RAISED|FRAME_THICK|LAYOUT_FILL_Y);
+  header2=new FXHeader(panes,NULL,0,HEADER_VERTICAL|HEADER_BUTTON|HEADER_RESIZE|FRAME_RAISED|FRAME_THICK|LAYOUT_FILL_Y);
   header2->appendItem("Example",NULL,30);
   header2->appendItem("Of",NULL,30);
   header2->appendItem("Vertical",NULL,30);

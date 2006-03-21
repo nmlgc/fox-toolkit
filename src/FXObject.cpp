@@ -3,7 +3,7 @@
 *                         T o p l e v el   O b j e c t                          *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1997,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1997,2006 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or                 *
 * modify it under the terms of the GNU Lesser General Public                    *
@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXObject.cpp,v 1.40 2005/02/06 17:20:00 fox Exp $                        *
+* $Id: FXObject.cpp,v 1.42 2006/01/22 17:58:36 fox Exp $                        *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -186,12 +186,12 @@ const FXMetaClass* FXMetaClass::getMetaClassFromName(const FXchar* name){
 
 
 // Test if subclass
-FXbool FXMetaClass::isSubClassOf(const FXMetaClass* metaclass) const {
+bool FXMetaClass::isSubClassOf(const FXMetaClass* metaclass) const {
   register const FXMetaClass* cls;
   for(cls=this; cls; cls=cls->baseClass){
-    if(cls==metaclass) return TRUE;
+    if(cls==metaclass) return true;
     }
-  return FALSE;
+  return false;
   }
 
 
@@ -281,12 +281,12 @@ const FXchar* FXObject::getClassName() const { return getMetaClass()->getClassNa
 
 
 // Check if object belongs to a class
-FXbool FXObject::isMemberOf(const FXMetaClass* metaclass) const {
+bool FXObject::isMemberOf(const FXMetaClass* metaclass) const {
   return getMetaClass()->isSubClassOf(metaclass);
   }
 
 
-// Try handle message safely; we catch only resource exceptions, things like 
+// Try handle message safely; we catch only resource exceptions, things like
 // running out of memory, window handles, system resources; others are ignored.
 long FXObject::tryHandle(FXObject* sender,FXSelector sel,void* ptr){
   try { return handle(sender,sel,ptr); } catch(const FXResourceException&) { return 0; }

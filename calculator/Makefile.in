@@ -78,11 +78,8 @@ GCJ = @GCJ@
 GCJFLAGS = @GCJFLAGS@
 GL_LIBS = @GL_LIBS@
 GL_TESTS = @GL_TESTS@
-HAVE_LIB = @HAVE_LIB@
-LIB = @LIB@
 LIBTOOL = @LIBTOOL@
 LN_S = @LN_S@
-LTLIB = @LTLIB@
 LT_AGE = @LT_AGE@
 LT_CURRENT = @LT_CURRENT@
 LT_RELEASE = @LT_RELEASE@
@@ -101,21 +98,42 @@ CXXFLAGS = @CXXFLAGS@ @X_CFLAGS@
 INCLUDES = -I$(top_srcdir)/include -I$(top_builddir)/include
 RESWRAP = $(top_builddir)/utils/reswrap
 SUFFIXES = .gif .bmp
-LDADD = ../src/libFOX-1.4.la -lm
+LDADD = ../src/libFOX-1.6.la -lm
 
 bin_PROGRAMS = calculator
 
 man_MANS = calculator.1
 
-ICONS =  colors.gif information.gif bigcalc.gif constmem.bmp question.gif tinycalc.gif
+ICONS = \
+colors.gif \
+information.gif \
+bigcalc.gif \
+constmem.bmp \
+question.gif \
+tinycalc.gif
 
 
-calculator_SOURCES =  icons.h icons.cpp Calculator.h Calculator.cpp HelpWindow.h HelpWindow.cpp Preferences.h Preferences.cpp help.cpp main.cpp LICENSE $(ICONS)
+calculator_SOURCES = \
+icons.h \
+icons.cpp \
+Calculator.h \
+Calculator.cpp \
+HelpWindow.h \
+HelpWindow.cpp \
+Preferences.h \
+Preferences.cpp \
+help.cpp \
+main.cpp \
+LICENSE \
+$(ICONS)
 
 
 CLEANFILES = icons.h icons.cpp
 
-EXTRA_DIST = $(man_MANS)              Makefile.bc              Makefile.wc              Makefile.dmc
+EXTRA_DIST = $(man_MANS) \
+             Makefile.bc \
+             Makefile.wc \
+             Makefile.dmc
 
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_CLEAN_FILES = 
@@ -135,7 +153,7 @@ calculator_OBJECTS =  icons.$(OBJEXT) Calculator.$(OBJEXT) \
 HelpWindow.$(OBJEXT) Preferences.$(OBJEXT) help.$(OBJEXT) \
 main.$(OBJEXT)
 calculator_LDADD = $(LDADD)
-calculator_DEPENDENCIES =  ../src/libFOX-1.4.la
+calculator_DEPENDENCIES =  ../src/libFOX-1.6.la
 calculator_LDFLAGS = 
 CXXCOMPILE = $(CXX) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
 LTCXXCOMPILE = $(LIBTOOL) --mode=compile $(CXX) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
@@ -334,110 +352,24 @@ distdir: $(DISTFILES)
 	  fi; \
 	done
 Calculator.o: Calculator.cpp ../include/fx.h ../include/fxver.h \
-	../include/fxdefs.h ../include/FXHash.h \
-	../include/FXException.h ../include/FXThread.h \
-	../include/FXStream.h ../include/FXFileStream.h \
-	../include/FXMemoryStream.h ../include/FXString.h \
-	../include/FXSize.h ../include/FXPoint.h \
-	../include/FXRectangle.h ../include/FXObject.h \
-	../include/FXDelegator.h ../include/FXDict.h \
-	../include/FXFile.h ../include/FXURL.h \
-	../include/FXStringDict.h ../include/FXSettings.h \
-	../include/FXRegistry.h ../include/FXObjectList.h \
-	../include/FXAccelTable.h ../include/FXRecentFiles.h \
-	../include/FXApp.h ../include/FXId.h ../include/FXVisual.h \
-	../include/FXFont.h ../include/FXCursor.h \
-	../include/FXCURCursor.h ../include/FXGIFCursor.h \
-	../include/FXDrawable.h ../include/FXBitmap.h \
-	../include/FXImage.h ../include/FXIcon.h \
-	../include/FXGIFImage.h ../include/FXIFFImage.h \
-	../include/FXBMPImage.h ../include/FXICOImage.h \
-	../include/FXXBMImage.h ../include/FXXPMImage.h \
-	../include/FXPCXImage.h ../include/FXTGAImage.h \
-	../include/FXRGBImage.h ../include/FXPPMImage.h \
-	../include/FXRASImage.h ../include/FXGIFIcon.h \
-	../include/FXIFFIcon.h ../include/FXBMPIcon.h \
-	../include/FXICOIcon.h ../include/FXXBMIcon.h \
-	../include/FXXPMIcon.h ../include/FXPCXIcon.h \
-	../include/FXTGAIcon.h ../include/FXRGBIcon.h \
-	../include/FXPPMIcon.h ../include/FXRASIcon.h \
-	../include/FXRegion.h ../include/FXDC.h ../include/FXDCWindow.h \
-	../include/FXDCPrint.h ../include/FXIconSource.h \
-	../include/FXIconDict.h ../include/FXFileDict.h \
-	../include/FXWindow.h ../include/FXFrame.h \
-	../include/FXSeparator.h ../include/FXLabel.h \
-	../include/FX7Segment.h ../include/FXDial.h \
-	../include/FXColorBar.h ../include/FXColorWell.h \
-	../include/FXColorWheel.h ../include/FXTextField.h \
-	../include/FXButton.h ../include/FXPicker.h \
-	../include/FXToggleButton.h ../include/FXTriStateButton.h \
-	../include/FXCheckButton.h ../include/FXRadioButton.h \
-	../include/FXArrowButton.h ../include/FXMenuButton.h \
-	../include/FXComposite.h ../include/FXPacker.h \
-	../include/FXHorizontalFrame.h ../include/FXVerticalFrame.h \
-	../include/FXSpring.h ../include/FXMatrix.h \
-	../include/FXSpinner.h ../include/FXRealSpinner.h \
-	../include/FXRootWindow.h ../include/FXCanvas.h \
-	../include/FXGroupBox.h ../include/FXShell.h \
-	../include/FXToolTip.h ../include/FXPopup.h \
-	../include/FXTopWindow.h ../include/FXDialogBox.h \
-	../include/FXMainWindow.h ../include/FXMenuPane.h \
-	../include/FXScrollPane.h ../include/FXMenuCaption.h \
-	../include/FXMenuSeparator.h ../include/FXMenuTitle.h \
-	../include/FXMenuCascade.h ../include/FXMenuCommand.h \
-	../include/FXMenuCheck.h ../include/FXMenuRadio.h \
-	../include/FXMenuBar.h ../include/FXToolBar.h \
-	../include/FXDockBar.h ../include/FXOptionMenu.h \
-	../include/FXSwitcher.h ../include/FXTabBar.h \
-	../include/FXTabBook.h ../include/FXTabItem.h \
-	../include/FXScrollBar.h ../include/FXScrollArea.h \
-	../include/FXScrollWindow.h ../include/FXList.h \
-	../include/FXComboBox.h ../include/FXListBox.h \
-	../include/FXTreeList.h ../include/FXTreeListBox.h \
-	../include/FXFoldingList.h ../include/FXBitmapView.h \
-	../include/FXBitmapFrame.h ../include/FXImageView.h \
-	../include/FXImageFrame.h ../include/FXTable.h \
-	../include/FXDragCorner.h ../include/FXStatusBar.h \
-	../include/FXStatusLine.h ../include/FXChoiceBox.h \
-	../include/FXMessageBox.h ../include/FXDirList.h \
-	../include/FXSlider.h ../include/FXRealSlider.h \
-	../include/FXSplitter.h ../include/FX4Splitter.h \
-	../include/FXHeader.h ../include/FXShutter.h \
-	../include/FXIconList.h ../include/FXFileList.h \
-	../include/FXDirBox.h ../include/FXDriveBox.h \
-	../include/FXDirSelector.h ../include/FXDirDialog.h \
-	../include/FXFileSelector.h ../include/FXFileDialog.h \
-	../include/FXColorSelector.h ../include/FXColorDialog.h \
-	../include/FXFontSelector.h ../include/FXFontDialog.h \
-	../include/FXUndoList.h ../include/FXText.h \
-	../include/FXDataTarget.h ../include/FXProgressBar.h \
-	../include/FXReplaceDialog.h ../include/FXRuler.h \
-	../include/FXSearchDialog.h ../include/FXInputDialog.h \
-	../include/FXProgressDialog.h ../include/FXWizard.h \
-	../include/FXMDIButton.h ../include/FXMDIClient.h \
-	../include/FXMDIChild.h ../include/FXDocument.h \
-	../include/FXDockSite.h ../include/FXDockHandler.h \
-	../include/FXDockTitle.h ../include/FXToolBarGrip.h \
-	../include/FXToolBarShell.h ../include/FXToolBarTab.h \
-	../include/FXPrintDialog.h ../include/FXDebugTarget.h \
-	../include/FXSplashWindow.h ../include/fxkeys.h icons.h \
-	Calculator.h Preferences.h HelpWindow.h
-help.o: help.cpp ../include/fx.h ../include/fxver.h ../include/fxdefs.h \
+	../include/fxdefs.h ../include/fxascii.h ../include/fxunicode.h \
 	../include/FXHash.h ../include/FXException.h \
-	../include/FXThread.h ../include/FXStream.h \
+	../include/FXThread.h ../include/FXStream.h ../include/FXIO.h \
+	../include/FXFile.h ../include/FXPipe.h ../include/FXSocket.h \
 	../include/FXFileStream.h ../include/FXMemoryStream.h \
 	../include/FXString.h ../include/FXSize.h ../include/FXPoint.h \
 	../include/FXRectangle.h ../include/FXObject.h \
 	../include/FXDelegator.h ../include/FXDict.h \
-	../include/FXFile.h ../include/FXURL.h \
+	../include/FXPath.h ../include/FXSystem.h ../include/FXStat.h \
+	../include/FXDir.h ../include/FXDate.h ../include/FXURL.h \
 	../include/FXStringDict.h ../include/FXSettings.h \
 	../include/FXRegistry.h ../include/FXObjectList.h \
 	../include/FXAccelTable.h ../include/FXRecentFiles.h \
 	../include/FXApp.h ../include/FXId.h ../include/FXVisual.h \
 	../include/FXFont.h ../include/FXCursor.h \
-	../include/FXCURCursor.h ../include/FXGIFCursor.h \
-	../include/FXDrawable.h ../include/FXBitmap.h \
-	../include/FXImage.h ../include/FXIcon.h \
+	../include/FXGUISignal.h ../include/FXCURCursor.h \
+	../include/FXGIFCursor.h ../include/FXDrawable.h \
+	../include/FXBitmap.h ../include/FXImage.h ../include/FXIcon.h \
 	../include/FXGIFImage.h ../include/FXIFFImage.h \
 	../include/FXBMPImage.h ../include/FXICOImage.h \
 	../include/FXXBMImage.h ../include/FXXPMImage.h \
@@ -454,78 +386,84 @@ help.o: help.cpp ../include/fx.h ../include/fxver.h ../include/fxdefs.h \
 	../include/FXIconDict.h ../include/FXFileDict.h \
 	../include/FXWindow.h ../include/FXFrame.h \
 	../include/FXSeparator.h ../include/FXLabel.h \
-	../include/FX7Segment.h ../include/FXDial.h \
-	../include/FXColorBar.h ../include/FXColorWell.h \
-	../include/FXColorWheel.h ../include/FXTextField.h \
-	../include/FXButton.h ../include/FXPicker.h \
-	../include/FXToggleButton.h ../include/FXTriStateButton.h \
-	../include/FXCheckButton.h ../include/FXRadioButton.h \
-	../include/FXArrowButton.h ../include/FXMenuButton.h \
-	../include/FXComposite.h ../include/FXPacker.h \
-	../include/FXHorizontalFrame.h ../include/FXVerticalFrame.h \
-	../include/FXSpring.h ../include/FXMatrix.h \
-	../include/FXSpinner.h ../include/FXRealSpinner.h \
-	../include/FXRootWindow.h ../include/FXCanvas.h \
-	../include/FXGroupBox.h ../include/FXShell.h \
-	../include/FXToolTip.h ../include/FXPopup.h \
-	../include/FXTopWindow.h ../include/FXDialogBox.h \
-	../include/FXMainWindow.h ../include/FXMenuPane.h \
-	../include/FXScrollPane.h ../include/FXMenuCaption.h \
-	../include/FXMenuSeparator.h ../include/FXMenuTitle.h \
-	../include/FXMenuCascade.h ../include/FXMenuCommand.h \
-	../include/FXMenuCheck.h ../include/FXMenuRadio.h \
-	../include/FXMenuBar.h ../include/FXToolBar.h \
-	../include/FXDockBar.h ../include/FXOptionMenu.h \
-	../include/FXSwitcher.h ../include/FXTabBar.h \
-	../include/FXTabBook.h ../include/FXTabItem.h \
-	../include/FXScrollBar.h ../include/FXScrollArea.h \
-	../include/FXScrollWindow.h ../include/FXList.h \
-	../include/FXComboBox.h ../include/FXListBox.h \
-	../include/FXTreeList.h ../include/FXTreeListBox.h \
-	../include/FXFoldingList.h ../include/FXBitmapView.h \
-	../include/FXBitmapFrame.h ../include/FXImageView.h \
-	../include/FXImageFrame.h ../include/FXTable.h \
-	../include/FXDragCorner.h ../include/FXStatusBar.h \
-	../include/FXStatusLine.h ../include/FXChoiceBox.h \
-	../include/FXMessageBox.h ../include/FXDirList.h \
-	../include/FXSlider.h ../include/FXRealSlider.h \
-	../include/FXSplitter.h ../include/FX4Splitter.h \
-	../include/FXHeader.h ../include/FXShutter.h \
-	../include/FXIconList.h ../include/FXFileList.h \
-	../include/FXDirBox.h ../include/FXDriveBox.h \
-	../include/FXDirSelector.h ../include/FXDirDialog.h \
-	../include/FXFileSelector.h ../include/FXFileDialog.h \
-	../include/FXColorSelector.h ../include/FXColorDialog.h \
-	../include/FXFontSelector.h ../include/FXFontDialog.h \
-	../include/FXUndoList.h ../include/FXText.h \
+	../include/FX7Segment.h ../include/FXDial.h ../include/FXKnob.h \
+	../include/FXColorBar.h ../include/FXColorRing.h \
+	../include/FXColorWell.h ../include/FXColorWheel.h \
+	../include/FXTextField.h ../include/FXButton.h \
+	../include/FXPicker.h ../include/FXToggleButton.h \
+	../include/FXTriStateButton.h ../include/FXCheckButton.h \
+	../include/FXRadioButton.h ../include/FXArrowButton.h \
+	../include/FXMenuButton.h ../include/FXComposite.h \
+	../include/FXPacker.h ../include/FXHorizontalFrame.h \
+	../include/FXVerticalFrame.h ../include/FXSpring.h \
+	../include/FXMatrix.h ../include/FXSpinner.h \
+	../include/FXRealSpinner.h ../include/FXRootWindow.h \
+	../include/FXCanvas.h ../include/FXGroupBox.h \
+	../include/FXShell.h ../include/FXToolTip.h \
+	../include/FXPopup.h ../include/FXTopWindow.h \
+	../include/FXDialogBox.h ../include/FXMainWindow.h \
+	../include/FXMenuPane.h ../include/FXScrollPane.h \
+	../include/FXMenuCaption.h ../include/FXMenuSeparator.h \
+	../include/FXMenuTitle.h ../include/FXMenuCascade.h \
+	../include/FXMenuCommand.h ../include/FXMenuCheck.h \
+	../include/FXMenuRadio.h ../include/FXMenuBar.h \
+	../include/FXToolBar.h ../include/FXDockBar.h \
+	../include/FXOptionMenu.h ../include/FXSwitcher.h \
+	../include/FXTabBar.h ../include/FXTabBook.h \
+	../include/FXTabItem.h ../include/FXScrollBar.h \
+	../include/FXScrollArea.h ../include/FXScrollWindow.h \
+	../include/FXList.h ../include/FXComboBox.h \
+	../include/FXListBox.h ../include/FXTreeList.h \
+	../include/FXTreeListBox.h ../include/FXFoldingList.h \
+	../include/FXBitmapView.h ../include/FXBitmapFrame.h \
+	../include/FXImageView.h ../include/FXImageFrame.h \
+	../include/FXTable.h ../include/FXDragCorner.h \
+	../include/FXStatusBar.h ../include/FXStatusLine.h \
+	../include/FXChoiceBox.h ../include/FXMessageBox.h \
+	../include/FXDirList.h ../include/FXSlider.h \
+	../include/FXRealSlider.h ../include/FXSplitter.h \
+	../include/FX4Splitter.h ../include/FXHeader.h \
+	../include/FXShutter.h ../include/FXIconList.h \
+	../include/FXFileList.h ../include/FXDirBox.h \
+	../include/FXDriveBox.h ../include/FXDirSelector.h \
+	../include/FXDirDialog.h ../include/FXFileSelector.h \
+	../include/FXFileDialog.h ../include/FXColorSelector.h \
+	../include/FXColorDialog.h ../include/FXFontSelector.h \
+	../include/FXFontDialog.h ../include/FXUndoList.h \
+	../include/FXRex.h ../include/FXText.h \
 	../include/FXDataTarget.h ../include/FXProgressBar.h \
 	../include/FXReplaceDialog.h ../include/FXRuler.h \
-	../include/FXSearchDialog.h ../include/FXInputDialog.h \
-	../include/FXProgressDialog.h ../include/FXWizard.h \
-	../include/FXMDIButton.h ../include/FXMDIClient.h \
-	../include/FXMDIChild.h ../include/FXDocument.h \
-	../include/FXDockSite.h ../include/FXDockHandler.h \
-	../include/FXDockTitle.h ../include/FXToolBarGrip.h \
-	../include/FXToolBarShell.h ../include/FXToolBarTab.h \
-	../include/FXPrintDialog.h ../include/FXDebugTarget.h \
-	../include/FXSplashWindow.h Calculator.h
-HelpWindow.o: HelpWindow.cpp ../include/fx.h ../include/fxver.h \
-	../include/fxdefs.h ../include/FXHash.h \
+	../include/FXRulerView.h ../include/FXSearchDialog.h \
+	../include/FXInputDialog.h ../include/FXProgressDialog.h \
+	../include/FXWizard.h ../include/FXMDIButton.h \
+	../include/FXMDIClient.h ../include/FXMDIChild.h \
+	../include/FXDocument.h ../include/FXDockSite.h \
+	../include/FXDockBar.h ../include/FXToolBar.h \
+	../include/FXDockHandler.h ../include/FXDockTitle.h \
+	../include/FXToolBarGrip.h ../include/FXToolBarShell.h \
+	../include/FXToolBarTab.h ../include/FXPrintDialog.h \
+	../include/FXDebugTarget.h ../include/FXSplashWindow.h \
+	../include/fxkeys.h icons.h Calculator.h Preferences.h \
+	HelpWindow.h
+help.o: help.cpp ../include/fx.h ../include/fxver.h ../include/fxdefs.h \
+	../include/fxascii.h ../include/fxunicode.h ../include/FXHash.h \
 	../include/FXException.h ../include/FXThread.h \
-	../include/FXStream.h ../include/FXFileStream.h \
-	../include/FXMemoryStream.h ../include/FXString.h \
-	../include/FXSize.h ../include/FXPoint.h \
+	../include/FXStream.h ../include/FXIO.h ../include/FXFile.h \
+	../include/FXPipe.h ../include/FXSocket.h \
+	../include/FXFileStream.h ../include/FXMemoryStream.h \
+	../include/FXString.h ../include/FXSize.h ../include/FXPoint.h \
 	../include/FXRectangle.h ../include/FXObject.h \
 	../include/FXDelegator.h ../include/FXDict.h \
-	../include/FXFile.h ../include/FXURL.h \
+	../include/FXPath.h ../include/FXSystem.h ../include/FXStat.h \
+	../include/FXDir.h ../include/FXDate.h ../include/FXURL.h \
 	../include/FXStringDict.h ../include/FXSettings.h \
 	../include/FXRegistry.h ../include/FXObjectList.h \
 	../include/FXAccelTable.h ../include/FXRecentFiles.h \
 	../include/FXApp.h ../include/FXId.h ../include/FXVisual.h \
 	../include/FXFont.h ../include/FXCursor.h \
-	../include/FXCURCursor.h ../include/FXGIFCursor.h \
-	../include/FXDrawable.h ../include/FXBitmap.h \
-	../include/FXImage.h ../include/FXIcon.h \
+	../include/FXGUISignal.h ../include/FXCURCursor.h \
+	../include/FXGIFCursor.h ../include/FXDrawable.h \
+	../include/FXBitmap.h ../include/FXImage.h ../include/FXIcon.h \
 	../include/FXGIFImage.h ../include/FXIFFImage.h \
 	../include/FXBMPImage.h ../include/FXICOImage.h \
 	../include/FXXBMImage.h ../include/FXXPMImage.h \
@@ -542,78 +480,177 @@ HelpWindow.o: HelpWindow.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXIconDict.h ../include/FXFileDict.h \
 	../include/FXWindow.h ../include/FXFrame.h \
 	../include/FXSeparator.h ../include/FXLabel.h \
-	../include/FX7Segment.h ../include/FXDial.h \
-	../include/FXColorBar.h ../include/FXColorWell.h \
-	../include/FXColorWheel.h ../include/FXTextField.h \
-	../include/FXButton.h ../include/FXPicker.h \
-	../include/FXToggleButton.h ../include/FXTriStateButton.h \
-	../include/FXCheckButton.h ../include/FXRadioButton.h \
-	../include/FXArrowButton.h ../include/FXMenuButton.h \
-	../include/FXComposite.h ../include/FXPacker.h \
-	../include/FXHorizontalFrame.h ../include/FXVerticalFrame.h \
-	../include/FXSpring.h ../include/FXMatrix.h \
-	../include/FXSpinner.h ../include/FXRealSpinner.h \
-	../include/FXRootWindow.h ../include/FXCanvas.h \
-	../include/FXGroupBox.h ../include/FXShell.h \
-	../include/FXToolTip.h ../include/FXPopup.h \
-	../include/FXTopWindow.h ../include/FXDialogBox.h \
-	../include/FXMainWindow.h ../include/FXMenuPane.h \
-	../include/FXScrollPane.h ../include/FXMenuCaption.h \
-	../include/FXMenuSeparator.h ../include/FXMenuTitle.h \
-	../include/FXMenuCascade.h ../include/FXMenuCommand.h \
-	../include/FXMenuCheck.h ../include/FXMenuRadio.h \
-	../include/FXMenuBar.h ../include/FXToolBar.h \
-	../include/FXDockBar.h ../include/FXOptionMenu.h \
-	../include/FXSwitcher.h ../include/FXTabBar.h \
-	../include/FXTabBook.h ../include/FXTabItem.h \
-	../include/FXScrollBar.h ../include/FXScrollArea.h \
-	../include/FXScrollWindow.h ../include/FXList.h \
-	../include/FXComboBox.h ../include/FXListBox.h \
-	../include/FXTreeList.h ../include/FXTreeListBox.h \
-	../include/FXFoldingList.h ../include/FXBitmapView.h \
-	../include/FXBitmapFrame.h ../include/FXImageView.h \
-	../include/FXImageFrame.h ../include/FXTable.h \
-	../include/FXDragCorner.h ../include/FXStatusBar.h \
-	../include/FXStatusLine.h ../include/FXChoiceBox.h \
-	../include/FXMessageBox.h ../include/FXDirList.h \
-	../include/FXSlider.h ../include/FXRealSlider.h \
-	../include/FXSplitter.h ../include/FX4Splitter.h \
-	../include/FXHeader.h ../include/FXShutter.h \
-	../include/FXIconList.h ../include/FXFileList.h \
-	../include/FXDirBox.h ../include/FXDriveBox.h \
-	../include/FXDirSelector.h ../include/FXDirDialog.h \
-	../include/FXFileSelector.h ../include/FXFileDialog.h \
-	../include/FXColorSelector.h ../include/FXColorDialog.h \
-	../include/FXFontSelector.h ../include/FXFontDialog.h \
-	../include/FXUndoList.h ../include/FXText.h \
+	../include/FX7Segment.h ../include/FXDial.h ../include/FXKnob.h \
+	../include/FXColorBar.h ../include/FXColorRing.h \
+	../include/FXColorWell.h ../include/FXColorWheel.h \
+	../include/FXTextField.h ../include/FXButton.h \
+	../include/FXPicker.h ../include/FXToggleButton.h \
+	../include/FXTriStateButton.h ../include/FXCheckButton.h \
+	../include/FXRadioButton.h ../include/FXArrowButton.h \
+	../include/FXMenuButton.h ../include/FXComposite.h \
+	../include/FXPacker.h ../include/FXHorizontalFrame.h \
+	../include/FXVerticalFrame.h ../include/FXSpring.h \
+	../include/FXMatrix.h ../include/FXSpinner.h \
+	../include/FXRealSpinner.h ../include/FXRootWindow.h \
+	../include/FXCanvas.h ../include/FXGroupBox.h \
+	../include/FXShell.h ../include/FXToolTip.h \
+	../include/FXPopup.h ../include/FXTopWindow.h \
+	../include/FXDialogBox.h ../include/FXMainWindow.h \
+	../include/FXMenuPane.h ../include/FXScrollPane.h \
+	../include/FXMenuCaption.h ../include/FXMenuSeparator.h \
+	../include/FXMenuTitle.h ../include/FXMenuCascade.h \
+	../include/FXMenuCommand.h ../include/FXMenuCheck.h \
+	../include/FXMenuRadio.h ../include/FXMenuBar.h \
+	../include/FXToolBar.h ../include/FXDockBar.h \
+	../include/FXOptionMenu.h ../include/FXSwitcher.h \
+	../include/FXTabBar.h ../include/FXTabBook.h \
+	../include/FXTabItem.h ../include/FXScrollBar.h \
+	../include/FXScrollArea.h ../include/FXScrollWindow.h \
+	../include/FXList.h ../include/FXComboBox.h \
+	../include/FXListBox.h ../include/FXTreeList.h \
+	../include/FXTreeListBox.h ../include/FXFoldingList.h \
+	../include/FXBitmapView.h ../include/FXBitmapFrame.h \
+	../include/FXImageView.h ../include/FXImageFrame.h \
+	../include/FXTable.h ../include/FXDragCorner.h \
+	../include/FXStatusBar.h ../include/FXStatusLine.h \
+	../include/FXChoiceBox.h ../include/FXMessageBox.h \
+	../include/FXDirList.h ../include/FXSlider.h \
+	../include/FXRealSlider.h ../include/FXSplitter.h \
+	../include/FX4Splitter.h ../include/FXHeader.h \
+	../include/FXShutter.h ../include/FXIconList.h \
+	../include/FXFileList.h ../include/FXDirBox.h \
+	../include/FXDriveBox.h ../include/FXDirSelector.h \
+	../include/FXDirDialog.h ../include/FXFileSelector.h \
+	../include/FXFileDialog.h ../include/FXColorSelector.h \
+	../include/FXColorDialog.h ../include/FXFontSelector.h \
+	../include/FXFontDialog.h ../include/FXUndoList.h \
+	../include/FXRex.h ../include/FXText.h \
 	../include/FXDataTarget.h ../include/FXProgressBar.h \
 	../include/FXReplaceDialog.h ../include/FXRuler.h \
-	../include/FXSearchDialog.h ../include/FXInputDialog.h \
-	../include/FXProgressDialog.h ../include/FXWizard.h \
-	../include/FXMDIButton.h ../include/FXMDIClient.h \
-	../include/FXMDIChild.h ../include/FXDocument.h \
-	../include/FXDockSite.h ../include/FXDockHandler.h \
-	../include/FXDockTitle.h ../include/FXToolBarGrip.h \
-	../include/FXToolBarShell.h ../include/FXToolBarTab.h \
-	../include/FXPrintDialog.h ../include/FXDebugTarget.h \
-	../include/FXSplashWindow.h HelpWindow.h
+	../include/FXRulerView.h ../include/FXSearchDialog.h \
+	../include/FXInputDialog.h ../include/FXProgressDialog.h \
+	../include/FXWizard.h ../include/FXMDIButton.h \
+	../include/FXMDIClient.h ../include/FXMDIChild.h \
+	../include/FXDocument.h ../include/FXDockSite.h \
+	../include/FXDockBar.h ../include/FXToolBar.h \
+	../include/FXDockHandler.h ../include/FXDockTitle.h \
+	../include/FXToolBarGrip.h ../include/FXToolBarShell.h \
+	../include/FXToolBarTab.h ../include/FXPrintDialog.h \
+	../include/FXDebugTarget.h ../include/FXSplashWindow.h \
+	Calculator.h
+HelpWindow.o: HelpWindow.cpp ../include/fx.h ../include/fxver.h \
+	../include/fxdefs.h ../include/fxascii.h ../include/fxunicode.h \
+	../include/FXHash.h ../include/FXException.h \
+	../include/FXThread.h ../include/FXStream.h ../include/FXIO.h \
+	../include/FXFile.h ../include/FXPipe.h ../include/FXSocket.h \
+	../include/FXFileStream.h ../include/FXMemoryStream.h \
+	../include/FXString.h ../include/FXSize.h ../include/FXPoint.h \
+	../include/FXRectangle.h ../include/FXObject.h \
+	../include/FXDelegator.h ../include/FXDict.h \
+	../include/FXPath.h ../include/FXSystem.h ../include/FXStat.h \
+	../include/FXDir.h ../include/FXDate.h ../include/FXURL.h \
+	../include/FXStringDict.h ../include/FXSettings.h \
+	../include/FXRegistry.h ../include/FXObjectList.h \
+	../include/FXAccelTable.h ../include/FXRecentFiles.h \
+	../include/FXApp.h ../include/FXId.h ../include/FXVisual.h \
+	../include/FXFont.h ../include/FXCursor.h \
+	../include/FXGUISignal.h ../include/FXCURCursor.h \
+	../include/FXGIFCursor.h ../include/FXDrawable.h \
+	../include/FXBitmap.h ../include/FXImage.h ../include/FXIcon.h \
+	../include/FXGIFImage.h ../include/FXIFFImage.h \
+	../include/FXBMPImage.h ../include/FXICOImage.h \
+	../include/FXXBMImage.h ../include/FXXPMImage.h \
+	../include/FXPCXImage.h ../include/FXTGAImage.h \
+	../include/FXRGBImage.h ../include/FXPPMImage.h \
+	../include/FXRASImage.h ../include/FXGIFIcon.h \
+	../include/FXIFFIcon.h ../include/FXBMPIcon.h \
+	../include/FXICOIcon.h ../include/FXXBMIcon.h \
+	../include/FXXPMIcon.h ../include/FXPCXIcon.h \
+	../include/FXTGAIcon.h ../include/FXRGBIcon.h \
+	../include/FXPPMIcon.h ../include/FXRASIcon.h \
+	../include/FXRegion.h ../include/FXDC.h ../include/FXDCWindow.h \
+	../include/FXDCPrint.h ../include/FXIconSource.h \
+	../include/FXIconDict.h ../include/FXFileDict.h \
+	../include/FXWindow.h ../include/FXFrame.h \
+	../include/FXSeparator.h ../include/FXLabel.h \
+	../include/FX7Segment.h ../include/FXDial.h ../include/FXKnob.h \
+	../include/FXColorBar.h ../include/FXColorRing.h \
+	../include/FXColorWell.h ../include/FXColorWheel.h \
+	../include/FXTextField.h ../include/FXButton.h \
+	../include/FXPicker.h ../include/FXToggleButton.h \
+	../include/FXTriStateButton.h ../include/FXCheckButton.h \
+	../include/FXRadioButton.h ../include/FXArrowButton.h \
+	../include/FXMenuButton.h ../include/FXComposite.h \
+	../include/FXPacker.h ../include/FXHorizontalFrame.h \
+	../include/FXVerticalFrame.h ../include/FXSpring.h \
+	../include/FXMatrix.h ../include/FXSpinner.h \
+	../include/FXRealSpinner.h ../include/FXRootWindow.h \
+	../include/FXCanvas.h ../include/FXGroupBox.h \
+	../include/FXShell.h ../include/FXToolTip.h \
+	../include/FXPopup.h ../include/FXTopWindow.h \
+	../include/FXDialogBox.h ../include/FXMainWindow.h \
+	../include/FXMenuPane.h ../include/FXScrollPane.h \
+	../include/FXMenuCaption.h ../include/FXMenuSeparator.h \
+	../include/FXMenuTitle.h ../include/FXMenuCascade.h \
+	../include/FXMenuCommand.h ../include/FXMenuCheck.h \
+	../include/FXMenuRadio.h ../include/FXMenuBar.h \
+	../include/FXToolBar.h ../include/FXDockBar.h \
+	../include/FXOptionMenu.h ../include/FXSwitcher.h \
+	../include/FXTabBar.h ../include/FXTabBook.h \
+	../include/FXTabItem.h ../include/FXScrollBar.h \
+	../include/FXScrollArea.h ../include/FXScrollWindow.h \
+	../include/FXList.h ../include/FXComboBox.h \
+	../include/FXListBox.h ../include/FXTreeList.h \
+	../include/FXTreeListBox.h ../include/FXFoldingList.h \
+	../include/FXBitmapView.h ../include/FXBitmapFrame.h \
+	../include/FXImageView.h ../include/FXImageFrame.h \
+	../include/FXTable.h ../include/FXDragCorner.h \
+	../include/FXStatusBar.h ../include/FXStatusLine.h \
+	../include/FXChoiceBox.h ../include/FXMessageBox.h \
+	../include/FXDirList.h ../include/FXSlider.h \
+	../include/FXRealSlider.h ../include/FXSplitter.h \
+	../include/FX4Splitter.h ../include/FXHeader.h \
+	../include/FXShutter.h ../include/FXIconList.h \
+	../include/FXFileList.h ../include/FXDirBox.h \
+	../include/FXDriveBox.h ../include/FXDirSelector.h \
+	../include/FXDirDialog.h ../include/FXFileSelector.h \
+	../include/FXFileDialog.h ../include/FXColorSelector.h \
+	../include/FXColorDialog.h ../include/FXFontSelector.h \
+	../include/FXFontDialog.h ../include/FXUndoList.h \
+	../include/FXRex.h ../include/FXText.h \
+	../include/FXDataTarget.h ../include/FXProgressBar.h \
+	../include/FXReplaceDialog.h ../include/FXRuler.h \
+	../include/FXRulerView.h ../include/FXSearchDialog.h \
+	../include/FXInputDialog.h ../include/FXProgressDialog.h \
+	../include/FXWizard.h ../include/FXMDIButton.h \
+	../include/FXMDIClient.h ../include/FXMDIChild.h \
+	../include/FXDocument.h ../include/FXDockSite.h \
+	../include/FXDockBar.h ../include/FXToolBar.h \
+	../include/FXDockHandler.h ../include/FXDockTitle.h \
+	../include/FXToolBarGrip.h ../include/FXToolBarShell.h \
+	../include/FXToolBarTab.h ../include/FXPrintDialog.h \
+	../include/FXDebugTarget.h ../include/FXSplashWindow.h \
+	HelpWindow.h
 icons.o: icons.cpp
 main.o: main.cpp ../include/fx.h ../include/fxver.h ../include/fxdefs.h \
-	../include/FXHash.h ../include/FXException.h \
-	../include/FXThread.h ../include/FXStream.h \
+	../include/fxascii.h ../include/fxunicode.h ../include/FXHash.h \
+	../include/FXException.h ../include/FXThread.h \
+	../include/FXStream.h ../include/FXIO.h ../include/FXFile.h \
+	../include/FXPipe.h ../include/FXSocket.h \
 	../include/FXFileStream.h ../include/FXMemoryStream.h \
 	../include/FXString.h ../include/FXSize.h ../include/FXPoint.h \
 	../include/FXRectangle.h ../include/FXObject.h \
 	../include/FXDelegator.h ../include/FXDict.h \
-	../include/FXFile.h ../include/FXURL.h \
+	../include/FXPath.h ../include/FXSystem.h ../include/FXStat.h \
+	../include/FXDir.h ../include/FXDate.h ../include/FXURL.h \
 	../include/FXStringDict.h ../include/FXSettings.h \
 	../include/FXRegistry.h ../include/FXObjectList.h \
 	../include/FXAccelTable.h ../include/FXRecentFiles.h \
 	../include/FXApp.h ../include/FXId.h ../include/FXVisual.h \
 	../include/FXFont.h ../include/FXCursor.h \
-	../include/FXCURCursor.h ../include/FXGIFCursor.h \
-	../include/FXDrawable.h ../include/FXBitmap.h \
-	../include/FXImage.h ../include/FXIcon.h \
+	../include/FXGUISignal.h ../include/FXCURCursor.h \
+	../include/FXGIFCursor.h ../include/FXDrawable.h \
+	../include/FXBitmap.h ../include/FXImage.h ../include/FXIcon.h \
 	../include/FXGIFImage.h ../include/FXIFFImage.h \
 	../include/FXBMPImage.h ../include/FXICOImage.h \
 	../include/FXXBMImage.h ../include/FXXPMImage.h \
@@ -630,78 +667,83 @@ main.o: main.cpp ../include/fx.h ../include/fxver.h ../include/fxdefs.h \
 	../include/FXIconDict.h ../include/FXFileDict.h \
 	../include/FXWindow.h ../include/FXFrame.h \
 	../include/FXSeparator.h ../include/FXLabel.h \
-	../include/FX7Segment.h ../include/FXDial.h \
-	../include/FXColorBar.h ../include/FXColorWell.h \
-	../include/FXColorWheel.h ../include/FXTextField.h \
-	../include/FXButton.h ../include/FXPicker.h \
-	../include/FXToggleButton.h ../include/FXTriStateButton.h \
-	../include/FXCheckButton.h ../include/FXRadioButton.h \
-	../include/FXArrowButton.h ../include/FXMenuButton.h \
-	../include/FXComposite.h ../include/FXPacker.h \
-	../include/FXHorizontalFrame.h ../include/FXVerticalFrame.h \
-	../include/FXSpring.h ../include/FXMatrix.h \
-	../include/FXSpinner.h ../include/FXRealSpinner.h \
-	../include/FXRootWindow.h ../include/FXCanvas.h \
-	../include/FXGroupBox.h ../include/FXShell.h \
-	../include/FXToolTip.h ../include/FXPopup.h \
-	../include/FXTopWindow.h ../include/FXDialogBox.h \
-	../include/FXMainWindow.h ../include/FXMenuPane.h \
-	../include/FXScrollPane.h ../include/FXMenuCaption.h \
-	../include/FXMenuSeparator.h ../include/FXMenuTitle.h \
-	../include/FXMenuCascade.h ../include/FXMenuCommand.h \
-	../include/FXMenuCheck.h ../include/FXMenuRadio.h \
-	../include/FXMenuBar.h ../include/FXToolBar.h \
-	../include/FXDockBar.h ../include/FXOptionMenu.h \
-	../include/FXSwitcher.h ../include/FXTabBar.h \
-	../include/FXTabBook.h ../include/FXTabItem.h \
-	../include/FXScrollBar.h ../include/FXScrollArea.h \
-	../include/FXScrollWindow.h ../include/FXList.h \
-	../include/FXComboBox.h ../include/FXListBox.h \
-	../include/FXTreeList.h ../include/FXTreeListBox.h \
-	../include/FXFoldingList.h ../include/FXBitmapView.h \
-	../include/FXBitmapFrame.h ../include/FXImageView.h \
-	../include/FXImageFrame.h ../include/FXTable.h \
-	../include/FXDragCorner.h ../include/FXStatusBar.h \
-	../include/FXStatusLine.h ../include/FXChoiceBox.h \
-	../include/FXMessageBox.h ../include/FXDirList.h \
-	../include/FXSlider.h ../include/FXRealSlider.h \
-	../include/FXSplitter.h ../include/FX4Splitter.h \
-	../include/FXHeader.h ../include/FXShutter.h \
-	../include/FXIconList.h ../include/FXFileList.h \
-	../include/FXDirBox.h ../include/FXDriveBox.h \
-	../include/FXDirSelector.h ../include/FXDirDialog.h \
-	../include/FXFileSelector.h ../include/FXFileDialog.h \
-	../include/FXColorSelector.h ../include/FXColorDialog.h \
-	../include/FXFontSelector.h ../include/FXFontDialog.h \
-	../include/FXUndoList.h ../include/FXText.h \
+	../include/FX7Segment.h ../include/FXDial.h ../include/FXKnob.h \
+	../include/FXColorBar.h ../include/FXColorRing.h \
+	../include/FXColorWell.h ../include/FXColorWheel.h \
+	../include/FXTextField.h ../include/FXButton.h \
+	../include/FXPicker.h ../include/FXToggleButton.h \
+	../include/FXTriStateButton.h ../include/FXCheckButton.h \
+	../include/FXRadioButton.h ../include/FXArrowButton.h \
+	../include/FXMenuButton.h ../include/FXComposite.h \
+	../include/FXPacker.h ../include/FXHorizontalFrame.h \
+	../include/FXVerticalFrame.h ../include/FXSpring.h \
+	../include/FXMatrix.h ../include/FXSpinner.h \
+	../include/FXRealSpinner.h ../include/FXRootWindow.h \
+	../include/FXCanvas.h ../include/FXGroupBox.h \
+	../include/FXShell.h ../include/FXToolTip.h \
+	../include/FXPopup.h ../include/FXTopWindow.h \
+	../include/FXDialogBox.h ../include/FXMainWindow.h \
+	../include/FXMenuPane.h ../include/FXScrollPane.h \
+	../include/FXMenuCaption.h ../include/FXMenuSeparator.h \
+	../include/FXMenuTitle.h ../include/FXMenuCascade.h \
+	../include/FXMenuCommand.h ../include/FXMenuCheck.h \
+	../include/FXMenuRadio.h ../include/FXMenuBar.h \
+	../include/FXToolBar.h ../include/FXDockBar.h \
+	../include/FXOptionMenu.h ../include/FXSwitcher.h \
+	../include/FXTabBar.h ../include/FXTabBook.h \
+	../include/FXTabItem.h ../include/FXScrollBar.h \
+	../include/FXScrollArea.h ../include/FXScrollWindow.h \
+	../include/FXList.h ../include/FXComboBox.h \
+	../include/FXListBox.h ../include/FXTreeList.h \
+	../include/FXTreeListBox.h ../include/FXFoldingList.h \
+	../include/FXBitmapView.h ../include/FXBitmapFrame.h \
+	../include/FXImageView.h ../include/FXImageFrame.h \
+	../include/FXTable.h ../include/FXDragCorner.h \
+	../include/FXStatusBar.h ../include/FXStatusLine.h \
+	../include/FXChoiceBox.h ../include/FXMessageBox.h \
+	../include/FXDirList.h ../include/FXSlider.h \
+	../include/FXRealSlider.h ../include/FXSplitter.h \
+	../include/FX4Splitter.h ../include/FXHeader.h \
+	../include/FXShutter.h ../include/FXIconList.h \
+	../include/FXFileList.h ../include/FXDirBox.h \
+	../include/FXDriveBox.h ../include/FXDirSelector.h \
+	../include/FXDirDialog.h ../include/FXFileSelector.h \
+	../include/FXFileDialog.h ../include/FXColorSelector.h \
+	../include/FXColorDialog.h ../include/FXFontSelector.h \
+	../include/FXFontDialog.h ../include/FXUndoList.h \
+	../include/FXRex.h ../include/FXText.h \
 	../include/FXDataTarget.h ../include/FXProgressBar.h \
 	../include/FXReplaceDialog.h ../include/FXRuler.h \
-	../include/FXSearchDialog.h ../include/FXInputDialog.h \
-	../include/FXProgressDialog.h ../include/FXWizard.h \
-	../include/FXMDIButton.h ../include/FXMDIClient.h \
-	../include/FXMDIChild.h ../include/FXDocument.h \
-	../include/FXDockSite.h ../include/FXDockHandler.h \
-	../include/FXDockTitle.h ../include/FXToolBarGrip.h \
-	../include/FXToolBarShell.h ../include/FXToolBarTab.h \
-	../include/FXPrintDialog.h ../include/FXDebugTarget.h \
-	../include/FXSplashWindow.h ../include/fxkeys.h Calculator.h
+	../include/FXRulerView.h ../include/FXSearchDialog.h \
+	../include/FXInputDialog.h ../include/FXProgressDialog.h \
+	../include/FXWizard.h ../include/FXMDIButton.h \
+	../include/FXMDIClient.h ../include/FXMDIChild.h \
+	../include/FXDocument.h ../include/FXDockSite.h \
+	../include/FXDockBar.h ../include/FXToolBar.h \
+	../include/FXDockHandler.h ../include/FXDockTitle.h \
+	../include/FXToolBarGrip.h ../include/FXToolBarShell.h \
+	../include/FXToolBarTab.h ../include/FXPrintDialog.h \
+	../include/FXDebugTarget.h ../include/FXSplashWindow.h \
+	../include/fxkeys.h Calculator.h
 Preferences.o: Preferences.cpp ../include/fx.h ../include/fxver.h \
-	../include/fxdefs.h ../include/FXHash.h \
-	../include/FXException.h ../include/FXThread.h \
-	../include/FXStream.h ../include/FXFileStream.h \
-	../include/FXMemoryStream.h ../include/FXString.h \
-	../include/FXSize.h ../include/FXPoint.h \
+	../include/fxdefs.h ../include/fxascii.h ../include/fxunicode.h \
+	../include/FXHash.h ../include/FXException.h \
+	../include/FXThread.h ../include/FXStream.h ../include/FXIO.h \
+	../include/FXFile.h ../include/FXPipe.h ../include/FXSocket.h \
+	../include/FXFileStream.h ../include/FXMemoryStream.h \
+	../include/FXString.h ../include/FXSize.h ../include/FXPoint.h \
 	../include/FXRectangle.h ../include/FXObject.h \
 	../include/FXDelegator.h ../include/FXDict.h \
-	../include/FXFile.h ../include/FXURL.h \
+	../include/FXPath.h ../include/FXSystem.h ../include/FXStat.h \
+	../include/FXDir.h ../include/FXDate.h ../include/FXURL.h \
 	../include/FXStringDict.h ../include/FXSettings.h \
 	../include/FXRegistry.h ../include/FXObjectList.h \
 	../include/FXAccelTable.h ../include/FXRecentFiles.h \
 	../include/FXApp.h ../include/FXId.h ../include/FXVisual.h \
 	../include/FXFont.h ../include/FXCursor.h \
-	../include/FXCURCursor.h ../include/FXGIFCursor.h \
-	../include/FXDrawable.h ../include/FXBitmap.h \
-	../include/FXImage.h ../include/FXIcon.h \
+	../include/FXGUISignal.h ../include/FXCURCursor.h \
+	../include/FXGIFCursor.h ../include/FXDrawable.h \
+	../include/FXBitmap.h ../include/FXImage.h ../include/FXIcon.h \
 	../include/FXGIFImage.h ../include/FXIFFImage.h \
 	../include/FXBMPImage.h ../include/FXICOImage.h \
 	../include/FXXBMImage.h ../include/FXXPMImage.h \
@@ -718,61 +760,64 @@ Preferences.o: Preferences.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXIconDict.h ../include/FXFileDict.h \
 	../include/FXWindow.h ../include/FXFrame.h \
 	../include/FXSeparator.h ../include/FXLabel.h \
-	../include/FX7Segment.h ../include/FXDial.h \
-	../include/FXColorBar.h ../include/FXColorWell.h \
-	../include/FXColorWheel.h ../include/FXTextField.h \
-	../include/FXButton.h ../include/FXPicker.h \
-	../include/FXToggleButton.h ../include/FXTriStateButton.h \
-	../include/FXCheckButton.h ../include/FXRadioButton.h \
-	../include/FXArrowButton.h ../include/FXMenuButton.h \
-	../include/FXComposite.h ../include/FXPacker.h \
-	../include/FXHorizontalFrame.h ../include/FXVerticalFrame.h \
-	../include/FXSpring.h ../include/FXMatrix.h \
-	../include/FXSpinner.h ../include/FXRealSpinner.h \
-	../include/FXRootWindow.h ../include/FXCanvas.h \
-	../include/FXGroupBox.h ../include/FXShell.h \
-	../include/FXToolTip.h ../include/FXPopup.h \
-	../include/FXTopWindow.h ../include/FXDialogBox.h \
-	../include/FXMainWindow.h ../include/FXMenuPane.h \
-	../include/FXScrollPane.h ../include/FXMenuCaption.h \
-	../include/FXMenuSeparator.h ../include/FXMenuTitle.h \
-	../include/FXMenuCascade.h ../include/FXMenuCommand.h \
-	../include/FXMenuCheck.h ../include/FXMenuRadio.h \
-	../include/FXMenuBar.h ../include/FXToolBar.h \
-	../include/FXDockBar.h ../include/FXOptionMenu.h \
-	../include/FXSwitcher.h ../include/FXTabBar.h \
-	../include/FXTabBook.h ../include/FXTabItem.h \
-	../include/FXScrollBar.h ../include/FXScrollArea.h \
-	../include/FXScrollWindow.h ../include/FXList.h \
-	../include/FXComboBox.h ../include/FXListBox.h \
-	../include/FXTreeList.h ../include/FXTreeListBox.h \
-	../include/FXFoldingList.h ../include/FXBitmapView.h \
-	../include/FXBitmapFrame.h ../include/FXImageView.h \
-	../include/FXImageFrame.h ../include/FXTable.h \
-	../include/FXDragCorner.h ../include/FXStatusBar.h \
-	../include/FXStatusLine.h ../include/FXChoiceBox.h \
-	../include/FXMessageBox.h ../include/FXDirList.h \
-	../include/FXSlider.h ../include/FXRealSlider.h \
-	../include/FXSplitter.h ../include/FX4Splitter.h \
-	../include/FXHeader.h ../include/FXShutter.h \
-	../include/FXIconList.h ../include/FXFileList.h \
-	../include/FXDirBox.h ../include/FXDriveBox.h \
-	../include/FXDirSelector.h ../include/FXDirDialog.h \
-	../include/FXFileSelector.h ../include/FXFileDialog.h \
-	../include/FXColorSelector.h ../include/FXColorDialog.h \
-	../include/FXFontSelector.h ../include/FXFontDialog.h \
-	../include/FXUndoList.h ../include/FXText.h \
+	../include/FX7Segment.h ../include/FXDial.h ../include/FXKnob.h \
+	../include/FXColorBar.h ../include/FXColorRing.h \
+	../include/FXColorWell.h ../include/FXColorWheel.h \
+	../include/FXTextField.h ../include/FXButton.h \
+	../include/FXPicker.h ../include/FXToggleButton.h \
+	../include/FXTriStateButton.h ../include/FXCheckButton.h \
+	../include/FXRadioButton.h ../include/FXArrowButton.h \
+	../include/FXMenuButton.h ../include/FXComposite.h \
+	../include/FXPacker.h ../include/FXHorizontalFrame.h \
+	../include/FXVerticalFrame.h ../include/FXSpring.h \
+	../include/FXMatrix.h ../include/FXSpinner.h \
+	../include/FXRealSpinner.h ../include/FXRootWindow.h \
+	../include/FXCanvas.h ../include/FXGroupBox.h \
+	../include/FXShell.h ../include/FXToolTip.h \
+	../include/FXPopup.h ../include/FXTopWindow.h \
+	../include/FXDialogBox.h ../include/FXMainWindow.h \
+	../include/FXMenuPane.h ../include/FXScrollPane.h \
+	../include/FXMenuCaption.h ../include/FXMenuSeparator.h \
+	../include/FXMenuTitle.h ../include/FXMenuCascade.h \
+	../include/FXMenuCommand.h ../include/FXMenuCheck.h \
+	../include/FXMenuRadio.h ../include/FXMenuBar.h \
+	../include/FXToolBar.h ../include/FXDockBar.h \
+	../include/FXOptionMenu.h ../include/FXSwitcher.h \
+	../include/FXTabBar.h ../include/FXTabBook.h \
+	../include/FXTabItem.h ../include/FXScrollBar.h \
+	../include/FXScrollArea.h ../include/FXScrollWindow.h \
+	../include/FXList.h ../include/FXComboBox.h \
+	../include/FXListBox.h ../include/FXTreeList.h \
+	../include/FXTreeListBox.h ../include/FXFoldingList.h \
+	../include/FXBitmapView.h ../include/FXBitmapFrame.h \
+	../include/FXImageView.h ../include/FXImageFrame.h \
+	../include/FXTable.h ../include/FXDragCorner.h \
+	../include/FXStatusBar.h ../include/FXStatusLine.h \
+	../include/FXChoiceBox.h ../include/FXMessageBox.h \
+	../include/FXDirList.h ../include/FXSlider.h \
+	../include/FXRealSlider.h ../include/FXSplitter.h \
+	../include/FX4Splitter.h ../include/FXHeader.h \
+	../include/FXShutter.h ../include/FXIconList.h \
+	../include/FXFileList.h ../include/FXDirBox.h \
+	../include/FXDriveBox.h ../include/FXDirSelector.h \
+	../include/FXDirDialog.h ../include/FXFileSelector.h \
+	../include/FXFileDialog.h ../include/FXColorSelector.h \
+	../include/FXColorDialog.h ../include/FXFontSelector.h \
+	../include/FXFontDialog.h ../include/FXUndoList.h \
+	../include/FXRex.h ../include/FXText.h \
 	../include/FXDataTarget.h ../include/FXProgressBar.h \
 	../include/FXReplaceDialog.h ../include/FXRuler.h \
-	../include/FXSearchDialog.h ../include/FXInputDialog.h \
-	../include/FXProgressDialog.h ../include/FXWizard.h \
-	../include/FXMDIButton.h ../include/FXMDIClient.h \
-	../include/FXMDIChild.h ../include/FXDocument.h \
-	../include/FXDockSite.h ../include/FXDockHandler.h \
-	../include/FXDockTitle.h ../include/FXToolBarGrip.h \
-	../include/FXToolBarShell.h ../include/FXToolBarTab.h \
-	../include/FXPrintDialog.h ../include/FXDebugTarget.h \
-	../include/FXSplashWindow.h icons.h Preferences.h Calculator.h
+	../include/FXRulerView.h ../include/FXSearchDialog.h \
+	../include/FXInputDialog.h ../include/FXProgressDialog.h \
+	../include/FXWizard.h ../include/FXMDIButton.h \
+	../include/FXMDIClient.h ../include/FXMDIChild.h \
+	../include/FXDocument.h ../include/FXDockSite.h \
+	../include/FXDockBar.h ../include/FXToolBar.h \
+	../include/FXDockHandler.h ../include/FXDockTitle.h \
+	../include/FXToolBarGrip.h ../include/FXToolBarShell.h \
+	../include/FXToolBarTab.h ../include/FXPrintDialog.h \
+	../include/FXDebugTarget.h ../include/FXSplashWindow.h icons.h \
+	Preferences.h Calculator.h
 
 info-am:
 info: info-am

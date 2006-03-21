@@ -3,7 +3,7 @@
 *                  F O X   D e s k t o p   C a l c u l a t o r                  *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 2001,2005 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 2001,2006 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This program is free software; you can redistribute it and/or modify          *
 * it under the terms of the GNU General Public License as published by          *
@@ -19,7 +19,7 @@
 * along with this program; if not, write to the Free Software                   *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: Calculator.cpp,v 1.54 2005/01/16 16:06:06 fox Exp $                      *
+* $Id: Calculator.cpp,v 1.58 2006/01/22 18:01:12 fox Exp $                      *
 ********************************************************************************/
 #include "fx.h"
 #include "fxkeys.h"
@@ -208,9 +208,9 @@ Calculator::Calculator(FXApp* a):FXMainWindow(a,"FOX Calculator",NULL,NULL,DECOR
   FXVerticalFrame *vert=new FXVerticalFrame(this,LAYOUT_FILL_X,0,0,0,0, 8,8,8,4, 1,1);
   FXHorizontalFrame *displayframe=new FXHorizontalFrame(vert,LAYOUT_FILL_X,0,0,0,0, 0,0,0,0);
   new FXButton(displayframe,"FOX Calculator",bigicon,this,ID_PREFERENCES,ICON_BEFORE_TEXT|JUSTIFY_LEFT|LAYOUT_FILL_Y,0,0,0,0, 4,4,2,2);
-  new FXButton(displayframe,NULL,quest,this,ID_QUESTION,ICON_BEFORE_TEXT|JUSTIFY_LEFT|LAYOUT_FILL_Y,0,0,0,0, 4,4,2,2);
+  new FXButton(displayframe,FXString::null,quest,this,ID_QUESTION,ICON_BEFORE_TEXT|JUSTIFY_LEFT|LAYOUT_FILL_Y,0,0,0,0, 4,4,2,2);
   display=new FXTextField(displayframe,16,this,ID_TEXT,TEXTFIELD_READONLY|FRAME_SUNKEN|FRAME_THICK|JUSTIFY_RIGHT|LAYOUT_FILL_X|LAYOUT_FILL_Y, 0,0,0,0, 4,4,1,1);
-  new FXLabel(vert,NULL,cmem,LAYOUT_RIGHT,0,0,0,0, 0,0,0,0);
+  new FXLabel(vert,FXString::null,cmem,LAYOUT_RIGHT,0,0,0,0, 0,0,0,0);
 
   FXHorizontalFrame *modeframe=new FXHorizontalFrame(this,LAYOUT_FILL_X,0,0,0,0, 8,8,0,4, 8,8);
 
@@ -246,7 +246,7 @@ Calculator::Calculator(FXApp* a):FXMainWindow(a,"FOX Calculator",NULL,NULL,DECOR
   functions[9]=new FXButton(funcblock,"nPr",NULL,this,ID_PER,BUTTON_NORMAL|LAYOUT_FILL_COLUMN|LAYOUT_FILL_ROW|LAYOUT_FILL_X|LAYOUT_FILL_Y,0,0,0,0, 8,8,1,1);
   functions[10]=new FXButton(funcblock,"nCr",NULL,this,ID_COM,BUTTON_NORMAL|LAYOUT_FILL_COLUMN|LAYOUT_FILL_ROW|LAYOUT_FILL_X|LAYOUT_FILL_Y,0,0,0,0, 8,8,1,1);
 
-  hyper=new FXButton(funcblock,"hyp",NULL,this,ID_HYP,BUTTON_NORMAL|LAYOUT_FILL_COLUMN|LAYOUT_FILL_ROW|LAYOUT_FILL_X|LAYOUT_FILL_Y,0,0,0,0, 8,8,1,1);
+  hyper2=new FXButton(funcblock,"hyp",NULL,this,ID_HYP,BUTTON_NORMAL|LAYOUT_FILL_COLUMN|LAYOUT_FILL_ROW|LAYOUT_FILL_X|LAYOUT_FILL_Y,0,0,0,0, 8,8,1,1);
   functions[11]=new FXButton(funcblock,"sin",NULL,this,ID_SIN,BUTTON_NORMAL|LAYOUT_FILL_COLUMN|LAYOUT_FILL_ROW|LAYOUT_FILL_X|LAYOUT_FILL_Y,0,0,0,0, 8,8,1,1);
   functions[12]=new FXButton(funcblock,"cos",NULL,this,ID_COS,BUTTON_NORMAL|LAYOUT_FILL_COLUMN|LAYOUT_FILL_ROW|LAYOUT_FILL_X|LAYOUT_FILL_Y,0,0,0,0, 8,8,1,1);
   functions[13]=new FXButton(funcblock,"tan",NULL,this,ID_TAN,BUTTON_NORMAL|LAYOUT_FILL_COLUMN|LAYOUT_FILL_ROW|LAYOUT_FILL_X|LAYOUT_FILL_Y,0,0,0,0, 8,8,1,1);
@@ -355,7 +355,7 @@ Calculator::Calculator(FXApp* a):FXMainWindow(a,"FOX Calculator",NULL,NULL,DECOR
   functions[8]->addHotKey(MKUINT(KEY_exclam,SHIFTMASK));
 
   inverse->addHotKey(MKUINT(KEY_i,0));
-  hyper->addHotKey(MKUINT(KEY_h,0));
+  hyper2->addHotKey(MKUINT(KEY_h,0));
 
   // Add accelerators
   getAccelTable()->addAccel(MKUINT(KEY_Q,0),this,FXSEL(SEL_COMMAND,ID_CLOSE));
@@ -513,15 +513,15 @@ FXColor Calculator::getInverseColor() const {
 
 // Set hyp color
 void Calculator::setHyperColor(FXColor clr){
-  hyper->setBackColor(clr);
-  hyper->setHiliteColor(makeHiliteColor(clr));
-  hyper->setShadowColor(makeShadowColor(clr));
+  hyper2->setBackColor(clr);
+  hyper2->setHiliteColor(makeHiliteColor(clr));
+  hyper2->setShadowColor(makeShadowColor(clr));
   }
 
 
 // Get hyp color
 FXColor Calculator::getHyperColor() const {
-  return hyper->getBackColor();
+  return hyper2->getBackColor();
   }
 
 
@@ -1441,7 +1441,7 @@ long Calculator::onCmdPlusMin(FXObject*,FXSelector,void*){
       else text.insert(pos+1,'-');
       }
     else{
-      if(text[0]=='-') text.remove(0,1);
+      if(text[0]=='-') text.erase(0);
       else if(text[0]=='+') text[0]='-';
       else if(text!="0") text.prepend('-');
       }
