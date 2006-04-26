@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXProgressDialog.h,v 1.14 2006/01/22 17:58:07 fox Exp $                  *
+* $Id: FXProgressDialog.h,v 1.16 2006/04/02 19:33:22 fox Exp $                  *
 ********************************************************************************/
 #ifndef FXPROGRESSDIALOG_H
 #define FXPROGRESSDIALOG_H
@@ -55,7 +55,7 @@ protected:
   FXLabel               *message;     // Message
   FXHorizontalSeparator *separator;   // Separator
   FXButton              *cancel;      // Cancel button
-  FXbool                 cancelled;   // User hit cancel
+  bool                   cancelled;   // User hit cancel
 protected:
   FXProgressDialog();
 private:
@@ -101,10 +101,10 @@ public:
   void increment(FXuint value);
 
   /// Has operation been cancelled?
-  FXbool isCancelled() const { return cancelled; }
+  bool isCancelled() const { return cancelled; }
 
   /// Change cancelled flag
-  void setCancelled(FXbool flg){ cancelled=flg; }
+  void setCancelled(bool flg){ cancelled=flg; }
 
   /// Destroy
   virtual ~FXProgressDialog();

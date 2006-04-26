@@ -4,7 +4,7 @@ CXXFLAGS = @CXXFLAGS@ @X_CFLAGS@
 INCLUDES = -I$(top_srcdir)/include -I$(top_builddir)/include
 RESWRAP  = $(top_builddir)/utils/reswrap
 SUFFIXES = .gif .bmp
-LDADD = ../src/libFOX-1.6.la -lm
+LDADD = ../src/libFOX-1.7.la -lm
 
 
 bin_PROGRAMS = shutterbug
@@ -50,4 +50,5 @@ icons.cpp: $(ICONS)
 CLEANFILES = icons.h icons.cpp
 
 EXTRA_DIST = $(man_MANS) \
-             Makefile.bc
+             Makefile.bc \
+             Makefile.wc

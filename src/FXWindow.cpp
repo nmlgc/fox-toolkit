@@ -19,13 +19,14 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXWindow.cpp,v 1.341 2006/03/16 04:41:36 fox Exp $                       *
+* $Id: FXWindow.cpp,v 1.345 2006/04/19 02:17:55 fox Exp $                       *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
 #include "fxdefs.h"
 #include "fxpriv.h"
 #include "FXHash.h"
+#include "FXElement.h"
 #include "FXThread.h"
 #include "FXStream.h"
 #include "FXString.h"
@@ -981,6 +982,7 @@ long FXWindow::onFocusSelf(FXObject*,FXSelector,void*){
 void FXWindow::createComposeContext(){
   if(!composeContext){
     composeContext=new FXComposeContext(getApp(),this,0);
+    composeContext->create();
     }
   }
 
@@ -1827,7 +1829,7 @@ bool FXWindow::acquireSelection(const FXDragType *types,FXuint numtypes){
   if(getApp()->selectionWindow){
     getApp()->selectionWindow->handle(getApp(),FXSEL(SEL_SELECTION_LOST,0),&getApp()->event);
     getApp()->selectionWindow=NULL;
-    FXFREE(&getApp()->xselTypeList);
+    freeElms(getApp()->xselTypeList);
     getApp()->xselNumTypes=0;
     }
   if(xid){
@@ -1839,7 +1841,7 @@ bool FXWindow::acquireSelection(const FXDragType *types,FXuint numtypes){
   if(!getApp()->selectionWindow){
     getApp()->selectionWindow=this;
     getApp()->selectionWindow->handle(getApp(),FXSEL(SEL_SELECTION_GAINED,0),&getApp()->event);
-    FXRESIZE(&getApp()->xselTypeList,FXDragType,numtypes);
+    resizeElms(getApp()->xselTypeList,numtypes);
     memcpy(getApp()->xselTypeList,types,sizeof(FXDragType)*numtypes);
     getApp()->xselNumTypes=numtypes;
     }
@@ -1852,7 +1854,7 @@ bool FXWindow::releaseSelection(){
   if(getApp()->selectionWindow==this){
     getApp()->selectionWindow->handle(getApp(),FXSEL(SEL_SELECTION_LOST,0),&getApp()->event);
     getApp()->selectionWindow=NULL;
-    FXFREE(&getApp()->xselTypeList);
+    freeElms(getApp()->xselTypeList);
     getApp()->xselNumTypes=0;
     if(xid){
 #ifndef WIN32
@@ -1905,7 +1907,7 @@ bool FXWindow::acquireClipboard(const FXDragType *types,FXuint numtypes){
     getApp()->clipboardWindow->handle(getApp(),FXSEL(SEL_CLIPBOARD_LOST,0),&getApp()->event);
     getApp()->clipboardWindow=NULL;
 #ifndef WIN32
-    FXFREE(&getApp()->xcbTypeList);
+    freeElms(getApp()->xcbTypeList);
     getApp()->xcbNumTypes=0;
 #endif
     }
@@ -1925,7 +1927,7 @@ bool FXWindow::acquireClipboard(const FXDragType *types,FXuint numtypes){
     getApp()->clipboardWindow=this;
     getApp()->clipboardWindow->handle(getApp(),FXSEL(SEL_CLIPBOARD_GAINED,0),&getApp()->event);
 #ifndef WIN32
-    FXRESIZE(&getApp()->xcbTypeList,FXDragType,numtypes);
+    resizeElms(getApp()->xcbTypeList,numtypes);
     memcpy(getApp()->xcbTypeList,types,sizeof(FXDragType)*numtypes);
     getApp()->xcbNumTypes=numtypes;
 #endif
@@ -1940,7 +1942,7 @@ bool FXWindow::releaseClipboard(){
     getApp()->clipboardWindow->handle(getApp(),FXSEL(SEL_CLIPBOARD_LOST,0),&getApp()->event);
     getApp()->clipboardWindow=NULL;
 #ifndef WIN32
-    FXFREE(&getApp()->xcbTypeList);
+    freeElms(getApp()->xcbTypeList);
     getApp()->xcbNumTypes=0;
 #endif
     if(xid){
@@ -1960,7 +1962,7 @@ bool FXWindow::releaseClipboard(){
 
 
 // Get pointer location (in window coordinates)
-FXint FXWindow::getCursorPosition(FXint& x,FXint& y,FXuint& buttons) const {
+bool FXWindow::getCursorPosition(FXint& x,FXint& y,FXuint& buttons) const {
   if(xid){
 #ifndef WIN32
     Window dum; int rx,ry;
@@ -1971,30 +1973,30 @@ FXint FXWindow::getCursorPosition(FXint& x,FXint& y,FXuint& buttons) const {
     ScreenToClient((HWND)xid,&pt);
     x=pt.x; y=pt.y;
     buttons=fxmodifierkeys();
-    return TRUE;
+    return true;
 #endif
     }
-  return FALSE;
+  return false;
   }
 
 
 // Set pointer location (in window coordinates)
 // Contributed by David Heath <dave@hipgraphics.com>
-FXint FXWindow::setCursorPosition(FXint x,FXint y){
+bool FXWindow::setCursorPosition(FXint x,FXint y){
   if(xid){
 #ifndef WIN32
     XWarpPointer(DISPLAY(getApp()),None,xid,0,0,0,0,x,y);
-    return TRUE;
+    return true;
 #else
     POINT pt;
     pt.x=x;
     pt.y=y;
     ClientToScreen((HWND)xid,&pt);
     SetCursorPos(pt.x,pt.y);
-    return TRUE;
+    return true;
 #endif
     }
-  return FALSE;
+  return false;
   }
 
 
@@ -2736,7 +2738,7 @@ bool FXWindow::getDNDData(FXDNDOrigin origin,FXDragType targettype,FXString& str
   string=FXString::null;
   if(getDNDData(origin,targettype,data,size)){
     string.assign((FXchar*)data,size);
-    FXFREE(&data);
+    freeElms(data);
     return true;
     }
   return false;
@@ -2765,7 +2767,7 @@ bool FXWindow::setDNDData(FXDNDOrigin origin,FXDragType targettype,FXuchar* data
 bool FXWindow::setDNDData(FXDNDOrigin origin,FXDragType targettype,const FXString& string) const {
   FXuchar *data; FXuint size;
   size=string.length();
-  if(FXCALLOC(&data,FXuchar,size+1)){
+  if(callocElms(data,size+1)){
     memcpy(data,string.text(),size);
 #ifndef WIN32
     setDNDData(origin,targettype,data,size);
@@ -2806,7 +2808,7 @@ bool FXWindow::offeredDNDType(FXDNDOrigin origin,FXDragType type) const {
     for(i=0; i<ntypes; i++){
       if(type==types[i]){ offered=true; break; }
       }
-    FXFREE(&types);
+    freeElms(types);
     }
   return offered;
   }
@@ -2888,7 +2890,7 @@ bool FXWindow::beginDrag(const FXDragType *types,FXuint numtypes){
       fxwarning("%s::beginDrag: failed to acquire DND selection.\n",getClassName());
       return FALSE;
       }
-    FXRESIZE(&getApp()->xdndTypeList,FXDragType,numtypes);
+    resizeElms(getApp()->xdndTypeList,numtypes);
     memcpy(getApp()->xdndTypeList,types,sizeof(FXDragType)*numtypes);
     getApp()->xdndNumTypes=numtypes;
     XChangeProperty(DISPLAY(getApp()),xid,getApp()->xdndTypes,XA_ATOM,32,PropModeReplace,(unsigned char*)getApp()->xdndTypeList,getApp()->xdndNumTypes);
@@ -2938,9 +2940,9 @@ bool FXWindow::handleDrag(FXint x,FXint y,FXDragAction action){
 
     Window proxywindow,window,child,win,proxywin,root;
     unsigned long ni,ba;
-    Window *ptr1;
-    Window *ptr2;
-    Atom   *ptr3;
+    unsigned char *ptr1;
+    unsigned char *ptr2;
+    unsigned char *ptr3;
     Atom    typ;
     int     fmt;
     Atom    version;
@@ -2958,22 +2960,22 @@ bool FXWindow::handleDrag(FXint x,FXint y,FXDragAction action){
     while(1){
       if(!XTranslateCoordinates(DISPLAY(getApp()),root,win,x,y,&dropx,&dropy,&child)) break;
       proxywin=win;
-      if(XGetWindowProperty(DISPLAY(getApp()),win,getApp()->xdndProxy,0,1,False,AnyPropertyType,&typ,&fmt,&ni,&ba,(unsigned char**)&ptr1)==Success){
+      if(XGetWindowProperty(DISPLAY(getApp()),win,getApp()->xdndProxy,0,1,False,AnyPropertyType,&typ,&fmt,&ni,&ba,&ptr1)==Success){
         if(typ==XA_WINDOW && fmt==32 && ni>0){
-          if(XGetWindowProperty(DISPLAY(getApp()),ptr1[0],getApp()->xdndProxy,0,1,False,AnyPropertyType,&typ,&fmt,&ni,&ba,(unsigned char**)&ptr2)==Success){
-            if(typ==XA_WINDOW && fmt==32 && ni>0 && ptr2[0] == ptr1[0]){
-              proxywin=ptr1[0];
+          if(XGetWindowProperty(DISPLAY(getApp()),*((Window*)ptr1),getApp()->xdndProxy,0,1,False,AnyPropertyType,&typ,&fmt,&ni,&ba,&ptr2)==Success){
+            if(typ==XA_WINDOW && fmt==32 && ni>0 && *((Window*)ptr2) == *((Window*)ptr1)){
+              proxywin=*((Window*)ptr1);
               }
             XFree(ptr2);
             }
           }
         XFree(ptr1);
         }
-      if(XGetWindowProperty(DISPLAY(getApp()),proxywin,getApp()->xdndAware,0,1,False,AnyPropertyType,&typ,&fmt,&ni,&ba,(unsigned char**)&ptr3)==Success){
-        if(typ==XA_ATOM && fmt==32 && ni>0 && ptr3[0]>=3){
+      if(XGetWindowProperty(DISPLAY(getApp()),proxywin,getApp()->xdndAware,0,1,False,AnyPropertyType,&typ,&fmt,&ni,&ba,&ptr3)==Success){
+        if(typ==XA_ATOM && fmt==32 && ni>0 && *((Atom*)ptr3)>=3){
           window=win;
           proxywindow=proxywin;
-          version=FXMIN(ptr3[0],XDND_PROTOCOL_VERSION);
+          version=FXMIN(*((Atom*)ptr3),XDND_PROTOCOL_VERSION);
           if(window!=root){XFree(ptr3);break;}
           }
         XFree(ptr3);
@@ -3269,7 +3271,7 @@ FXDragAction FXWindow::endDrag(bool drop){
     // Clean up
     XSetSelectionOwner(DISPLAY(getApp()),getApp()->xdndSelection,None,getApp()->event.time);
     XDeleteProperty(DISPLAY(getApp()),xid,getApp()->xdndTypes);
-    FXFREE(&getApp()->xdndTypeList);
+    freeElms(getApp()->xdndTypeList);
     getApp()->xdndNumTypes=0;
     getApp()->xdndTarget=0;
     getApp()->xdndProxyTarget=0;

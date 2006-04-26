@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXDockSite.cpp,v 1.76 2006/01/22 17:58:23 fox Exp $                      *
+* $Id: FXDockSite.cpp,v 1.77 2006/03/31 07:33:06 fox Exp $                      *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -82,7 +82,7 @@ FXDockSite::FXDockSite(FXComposite* p,FXuint opts,FXint x,FXint y,FXint w,FXint 
 
 
 // Change wrap option
-void FXDockSite::wrapGalleys(FXbool wrap){
+void FXDockSite::wrapGalleys(bool wrap){
   if(wrap && wrapGalleys()){
     options&=~DOCKSITE_NO_WRAP;
     recalc();
@@ -95,7 +95,7 @@ void FXDockSite::wrapGalleys(FXbool wrap){
 
 
 // Get wrap option
-FXbool FXDockSite::wrapGalleys() const {
+bool FXDockSite::wrapGalleys() const {
   return (options&DOCKSITE_NO_WRAP)==0;
   }
 

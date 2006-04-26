@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXDCPrint.h,v 1.30 2006/01/22 17:58:00 fox Exp $                         *
+* $Id: FXDCPrint.h,v 1.31 2006/03/31 07:33:01 fox Exp $                         *
 ********************************************************************************/
 #ifndef FXDCPRINT_H
 #define FXDCPRINT_H
@@ -129,18 +129,18 @@ public:
   FXDCPrint(FXApp* a);
 
   /// Generate print job prolog
-  FXbool beginPrint(FXPrinter& job);
+  bool beginPrint(FXPrinter& job);
 
   /// Generate print job epilog
-  FXbool endPrint();
+  bool endPrint();
 
   /// Generate begin of page
-  FXbool beginPage(FXuint page=1);
+  bool beginPage(FXuint page=1);
 
   /// Generate end of page
-  FXbool endPage();
+  bool endPage();
 
-  FXbool setContentRange(FXint pxmin, FXint pymin, FXint pxmax, FXint pymax);
+  bool setContentRange(FXint pxmin,FXint pymin,FXint pxmax,FXint pymax);
 
   /// Draw points
   virtual void drawPoint(FXint x,FXint y);
@@ -279,7 +279,7 @@ public:
   virtual void setFont(FXFont *fnt);
 
   /// Clip drawing by child windows
-  virtual void clipChildren(FXbool yes);
+  virtual void clipChildren(bool yes);
 
   /// Temporarily public; do not rely on this!!
   void outhex(FXuint hex);

@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXScrollArea.h,v 1.29 2006/01/22 17:58:09 fox Exp $                      *
+* $Id: FXScrollArea.h,v 1.30 2006/03/31 07:33:03 fox Exp $                      *
 ********************************************************************************/
 #ifndef FXSCROLLAREA_H
 #define FXSCROLLAREA_H
@@ -77,7 +77,7 @@ protected:
   FXint           pos_y;        // Y scroll position (pos_y<=0)
 protected:
   FXScrollArea();
-  FXbool startAutoScroll(FXEvent *event,FXbool onlywheninside=FALSE);
+  bool startAutoScroll(FXEvent *event,bool onlywheninside=false);
   void stopAutoScroll();
   FXScrollArea(FXComposite* p,FXuint opts,FXint x,FXint y,FXint w,FXint h);
   virtual void moveContents(FXint x,FXint y);
@@ -121,11 +121,11 @@ public:
   /// Return scroll style
   FXuint getScrollStyle() const;
 
-  /// Return TRUE if horizontally scrollable
-  FXbool isHorizontalScrollable() const;
+  /// Return true if horizontally scrollable
+  bool isHorizontalScrollable() const;
 
-  /// Return TRUE if vertically scrollable
-  FXbool isVerticalScrollable() const;
+  /// Return true if vertically scrollable
+  bool isVerticalScrollable() const;
 
   /// Return a pointer to the horizontal scrollbar
   FXScrollBar* horizontalScrollBar() const { return horizontal; }

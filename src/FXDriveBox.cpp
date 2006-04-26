@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXDriveBox.cpp,v 1.35 2006/01/22 17:58:25 fox Exp $                      *
+* $Id: FXDriveBox.cpp,v 1.36 2006/03/31 07:33:06 fox Exp $                      *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -273,10 +273,10 @@ long FXDriveBox::onListChanged(FXObject*,FXSelector,void* ptr){
 
 
 // Set directory
-FXbool FXDriveBox::setDrive(const FXString& drive){
+bool FXDriveBox::setDrive(const FXString& drive){
   listDrives();
   setCurrentItem(findItem(FXPath::drive(FXPath::absolute(drive))));
-  return TRUE;
+  return true;
   }
 
 

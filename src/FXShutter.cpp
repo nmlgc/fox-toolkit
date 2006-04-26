@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXShutter.cpp,v 1.43 2006/01/22 17:58:41 fox Exp $                       *
+* $Id: FXShutter.cpp,v 1.44 2006/04/02 19:58:50 fox Exp $                       *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -157,7 +157,7 @@ FXShutter::FXShutter(FXComposite* p,FXObject* tgt,FXSelector sel,FXuint opts,FXi
   message=sel;
   heightIncrement=1;
   closingHeight=0;
-  closingHadScrollbar=FALSE;
+  closingHadScrollbar=false;
   current=0;
   closing=-1;
   }

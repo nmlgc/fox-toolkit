@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXPrintDialog.cpp,v 1.54 2006/01/22 17:58:37 fox Exp $                   *
+* $Id: FXPrintDialog.cpp,v 1.57 2006/04/21 20:48:23 fox Exp $                   *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -27,6 +27,7 @@
 #include "FXHash.h"
 #include "fxascii.h"
 #include "FXThread.h"
+#include "FXElement.h"
 #include "FXStream.h"
 #include "FXString.h"
 #include "FXStat.h"
@@ -477,35 +478,33 @@ void FXPrintDialog::create(){
 
   // Determine list of printers on Windows NT
   if(osvi.dwPlatformId==VER_PLATFORM_WIN32_NT){
-    DWORD dwFlags=PRINTER_ENUM_LOCAL|PRINTER_ENUM_CONNECTIONS;
     DWORD dwBytesNeeded,dwNumPrinters;
-    EnumPrinters(dwFlags,NULL,4,NULL,0,&dwBytesNeeded,&dwNumPrinters);
-    PRINTER_INFO_4 *prtinfo;
-    if(FXMALLOC(&prtinfo,BYTE,dwBytesNeeded)){
-      if(EnumPrinters(dwFlags,NULL,4,(LPBYTE)prtinfo,dwBytesNeeded,&dwBytesNeeded,&dwNumPrinters)){
-	for(p=0; p<dwNumPrinters; p++){
+    EnumPrinters(PRINTER_ENUM_LOCAL|PRINTER_ENUM_CONNECTIONS,NULL,4,NULL,0,&dwBytesNeeded,&dwNumPrinters);
+    PRINTER_INFO_4 *prtinfo=(PRINTER_INFO_4*)malloc(dwBytesNeeded);
+    if(prtinfo){
+      if(EnumPrinters(PRINTER_ENUM_LOCAL|PRINTER_ENUM_CONNECTIONS,NULL,4,(LPBYTE)prtinfo,dwBytesNeeded,&dwBytesNeeded,&dwNumPrinters)){
+        for(p=0; p<dwNumPrinters; p++){
           printername->appendItem(prtinfo[p].pPrinterName);
           if(printer.name==prtinfo[p].pPrinterName) printername->setCurrentItem(p);
           }
-	}
-      FXFREE(&prtinfo);
+        }
+      free(prtinfo);
       }
     }
 
   // Determine list of printers on Windows 9x
   else if(osvi.dwPlatformId==VER_PLATFORM_WIN32_WINDOWS){
-    DWORD dwFlags=PRINTER_ENUM_LOCAL;
     DWORD dwBytesNeeded,dwNumPrinters;
-    EnumPrinters(dwFlags,NULL,5,NULL,0,&dwBytesNeeded,&dwNumPrinters);
-    PRINTER_INFO_5 *prtinfo;
-    if(FXMALLOC(&prtinfo,BYTE,dwBytesNeeded)){
-      if(EnumPrinters(dwFlags,NULL,5,(LPBYTE)prtinfo,dwBytesNeeded,&dwBytesNeeded,&dwNumPrinters)){
+    EnumPrinters(PRINTER_ENUM_LOCAL,NULL,5,NULL,0,&dwBytesNeeded,&dwNumPrinters);
+    PRINTER_INFO_5 *prtinfo=(PRINTER_INFO_5*)malloc(dwBytesNeeded);
+    if(prtinfo){
+      if(EnumPrinters(PRINTER_ENUM_LOCAL,NULL,5,(LPBYTE)prtinfo,dwBytesNeeded,&dwBytesNeeded,&dwNumPrinters)){
         for(p=0; p<dwNumPrinters; p++){
           printername->appendItem(prtinfo[p].pPrinterName);
           if(printer.name==prtinfo[p].pPrinterName) printername->setCurrentItem(p);
           }
-	}
-      FXFREE(&prtinfo);
+        }
+      free(prtinfo);
       }
     }
 

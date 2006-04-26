@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXDragCorner.h,v 1.15 2006/01/22 17:58:01 fox Exp $                      *
+* $Id: FXDragCorner.h,v 1.16 2006/04/02 20:20:37 fox Exp $                      *
 ********************************************************************************/
 #ifndef FXDRAGCORNER_H
 #define FXDRAGCORNER_H
@@ -44,7 +44,7 @@ protected:
   FXint   oldh;
   FXint   xoff;
   FXint   yoff;
-  FXbool  ewmh;
+  bool    ewmh;
 protected:
   FXDragCorner();
 private:

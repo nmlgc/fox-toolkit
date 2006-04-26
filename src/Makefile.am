@@ -5,11 +5,11 @@ INCLUDES = -I$(top_srcdir)/include -I$(top_builddir)/include
 RESWRAP  = $(top_builddir)/utils/reswrap
 SUFFIXES = .gif .bmp
 
-lib_LTLIBRARIES = libFOX-1.6.la
+lib_LTLIBRARIES = libFOX-1.7.la
 
-libFOX_1_6_la_LIBADD  = $(X_LIBS) $(X_BASE_LIBS) $(X_EXTRA_LIBS) $(GL_LIBS)
+libFOX_1_7_la_LIBADD  = $(X_LIBS) $(X_BASE_LIBS) $(X_EXTRA_LIBS) $(GL_LIBS)
 
-libFOX_1_6_la_LDFLAGS = \
+libFOX_1_7_la_LDFLAGS = \
         -version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)    \
 	-export-dynamic
 
@@ -175,7 +175,7 @@ FXUTF16Codec.cpp \
 FXUTF32Codec.cpp
 
 
-libFOX_1_6_la_SOURCES = \
+libFOX_1_7_la_SOURCES = \
 $(CODECS) \
 FX4Splitter.cpp \
 FX7Segment.cpp \

@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXListBox.h,v 1.43 2006/01/22 17:58:05 fox Exp $                         *
+* $Id: FXListBox.h,v 1.44 2006/03/31 07:33:02 fox Exp $                         *
 ********************************************************************************/
 #ifndef FXLISTBOX_H
 #define FXLISTBOX_H
@@ -121,10 +121,10 @@ public:
   void setNumVisible(FXint nvis);
 
   /// Return true if current item
-  FXbool isItemCurrent(FXint index) const;
+  bool isItemCurrent(FXint index) const;
 
   /// Set the current item (index is zero-based)
-  virtual void setCurrentItem(FXint index,FXbool notify=FALSE);
+  virtual void setCurrentItem(FXint index,bool notify=false);
 
   /// Get the current item's index
   FXint getCurrentItem() const;
@@ -190,7 +190,7 @@ public:
   FXString getItemText(FXint index) const;
 
   /// Change item icon, deleting old one if it was owned
-  void setItemIcon(FXint index,FXIcon* icon,FXbool owned=FALSE);
+  void setItemIcon(FXint index,FXIcon* icon,bool owned=false);
 
   /// Return icon of item at index
   FXIcon* getItemIcon(FXint index) const;
@@ -202,7 +202,7 @@ public:
   void* getItemData(FXint index) const;
 
   /// Is the pane shown
-  FXbool isPaneShown() const;
+  bool isPaneShown() const;
 
   /// Sort items using current sort function
   void sortItems();

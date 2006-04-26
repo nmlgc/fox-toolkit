@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXInputDialog.cpp,v 1.34 2006/01/22 17:58:32 fox Exp $                   *
+* $Id: FXInputDialog.cpp,v 1.35 2006/03/29 07:23:00 fox Exp $                   *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -168,78 +168,78 @@ long FXInputDialog::onCmdAccept(FXObject* sender,FXSelector sel,void* ptr){
 
 
 // Obtain a string
-FXbool FXInputDialog::getString(FXString& result,FXWindow* owner,const FXString& caption,const FXString& label,FXIcon* icon){
+bool FXInputDialog::getString(FXString& result,FXWindow* owner,const FXString& caption,const FXString& label,FXIcon* icon){
   FXInputDialog inputdialog(owner,caption,label,icon,INPUTDIALOG_STRING,0,0,0,0);
   inputdialog.setText(result);
   if(inputdialog.execute()){
     result=inputdialog.getText();
-    return TRUE;
+    return true;
     }
-  return FALSE;
+  return false;
   }
 
 
 // Obtain a string, in free floating window
-FXbool FXInputDialog::getString(FXString& result,FXApp* app,const FXString& caption,const FXString& label,FXIcon* icon){
+bool FXInputDialog::getString(FXString& result,FXApp* app,const FXString& caption,const FXString& label,FXIcon* icon){
   FXInputDialog inputdialog(app,caption,label,icon,INPUTDIALOG_STRING,0,0,0,0);
   inputdialog.setText(result);
   if(inputdialog.execute()){
     result=inputdialog.getText();
-    return TRUE;
+    return true;
     }
-  return FALSE;
+  return false;
   }
 
 
 // Obtain an integer
-FXbool FXInputDialog::getInteger(FXint& result,FXWindow* owner,const FXString& caption,const FXString& label,FXIcon* icon,FXint lo,FXint hi){
+bool FXInputDialog::getInteger(FXint& result,FXWindow* owner,const FXString& caption,const FXString& label,FXIcon* icon,FXint lo,FXint hi){
   FXInputDialog inputdialog(owner,caption,label,icon,INPUTDIALOG_INTEGER,0,0,0,0);
   inputdialog.setLimits(lo,hi);
   inputdialog.setText(FXStringVal(FXCLAMP(lo,result,hi)));
   if(inputdialog.execute()){
     result=FXIntVal(inputdialog.getText());
-    return TRUE;
+    return true;
     }
-  return FALSE;
+  return false;
   }
 
 
 // Obtain an integer, in free floating window
-FXbool FXInputDialog::getInteger(FXint& result,FXApp* app,const FXString& caption,const FXString& label,FXIcon* icon,FXint lo,FXint hi){
+bool FXInputDialog::getInteger(FXint& result,FXApp* app,const FXString& caption,const FXString& label,FXIcon* icon,FXint lo,FXint hi){
   FXInputDialog inputdialog(app,caption,label,icon,INPUTDIALOG_INTEGER,0,0,0,0);
   inputdialog.setLimits(lo,hi);
   inputdialog.setText(FXStringVal(FXCLAMP(lo,result,hi)));
   if(inputdialog.execute()){
     result=FXIntVal(inputdialog.getText());
-    return TRUE;
+    return true;
     }
-  return FALSE;
+  return false;
   }
 
 
 // Obtain a real
-FXbool FXInputDialog::getReal(FXdouble& result,FXWindow* owner,const FXString& caption,const FXString& label,FXIcon* icon,FXdouble lo,FXdouble hi){
+bool FXInputDialog::getReal(FXdouble& result,FXWindow* owner,const FXString& caption,const FXString& label,FXIcon* icon,FXdouble lo,FXdouble hi){
   FXInputDialog inputdialog(owner,caption,label,icon,INPUTDIALOG_REAL,0,0,0,0);
   inputdialog.setLimits(lo,hi);
   inputdialog.setText(FXStringVal(FXCLAMP(lo,result,hi),10));
   if(inputdialog.execute()){
     result=FXDoubleVal(inputdialog.getText());
-    return TRUE;
+    return true;
     }
-  return FALSE;
+  return false;
   }
 
 
 // Obtain a real, in free floating window
-FXbool FXInputDialog::getReal(FXdouble& result,FXApp* app,const FXString& caption,const FXString& label,FXIcon* icon,FXdouble lo,FXdouble hi){
+bool FXInputDialog::getReal(FXdouble& result,FXApp* app,const FXString& caption,const FXString& label,FXIcon* icon,FXdouble lo,FXdouble hi){
   FXInputDialog inputdialog(app,caption,label,icon,INPUTDIALOG_REAL,0,0,0,0);
   inputdialog.setLimits(lo,hi);
   inputdialog.setText(FXStringVal(FXCLAMP(lo,result,hi),10));
   if(inputdialog.execute()){
     result=FXDoubleVal(inputdialog.getText());
-    return TRUE;
+    return true;
     }
-  return FALSE;
+  return false;
   }
 
 }

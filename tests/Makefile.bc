@@ -5,7 +5,7 @@
 ##############################################################################
 # Copyright (C) 1997,2005 by Jeroen van der Zijp.   All Rights Reserved.     #
 ##############################################################################
-# $Id: Makefile.bc,v 1.26 2006/03/10 04:31:45 fox Exp $                      #
+# $Id: Makefile.bc,v 1.27 2006/03/22 03:46:48 fox Exp $                      #
 ##############################################################################
 # This library is free software; you can redistribute it and/or              #
 # modify it under the terms of the GNU Library General Public                #
@@ -32,7 +32,7 @@ LD	  = bcc32
 LDFLAGS	  = -laa
 GLLIBS    = -lopengl32 -lglu32
 INCDIRS   = -I$(TOPDIR)\include
-FOXLIB    = $(TOPDIR)\src\FOX-1.6.lib
+FOXLIB    = $(TOPDIR)\src\FOX-1.7.lib
 
 PROGRAMS  = \
 	rex.exe \

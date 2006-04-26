@@ -19,7 +19,7 @@
 * along with this program; if not, write to the Free Software                   *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: ShutterBug.cpp,v 1.49 2006/03/16 04:41:34 fox Exp $                      *
+* $Id: ShutterBug.cpp,v 1.51 2006/04/04 05:00:42 fox Exp $                      *
 ********************************************************************************/
 #include "fx.h"
 #include "fxkeys.h"
@@ -251,8 +251,8 @@ void ShutterBug::readRegistry(){
   rectangle.y=getApp()->reg().readIntEntry("SETTINGS","snapy",50);
   rectangle.w=getApp()->reg().readIntEntry("SETTINGS","snapw",50);
   rectangle.h=getApp()->reg().readIntEntry("SETTINGS","snaph",50);
-  delay=getApp()->reg().readUnsignedEntry("SETTINGS","delay",3000);
-  rate=getApp()->reg().readUnsignedEntry("SETTINGS","rate",1000);
+  delay=getApp()->reg().readUIntEntry("SETTINGS","delay",3000);
+  rate=getApp()->reg().readUIntEntry("SETTINGS","rate",1000);
   filecount=getApp()->reg().readIntEntry("SETTINGS","count",1);
   inside=getApp()->reg().readIntEntry("SETTINGS","inside",FALSE);
   color=getApp()->reg().readColorEntry("SETTINGS","color",FXRGB(255,128,128));
@@ -284,8 +284,8 @@ void ShutterBug::writeRegistry(){
   getApp()->reg().writeIntEntry("SETTINGS","snapy",rectangle.y);
   getApp()->reg().writeIntEntry("SETTINGS","snapw",rectangle.w);
   getApp()->reg().writeIntEntry("SETTINGS","snaph",rectangle.h);
-  getApp()->reg().writeUnsignedEntry("SETTINGS","delay",delay);
-  getApp()->reg().writeUnsignedEntry("SETTINGS","rate",rate);
+  getApp()->reg().writeUIntEntry("SETTINGS","delay",delay);
+  getApp()->reg().writeUIntEntry("SETTINGS","rate",rate);
   getApp()->reg().writeIntEntry("SETTINGS","count",filecount);
   getApp()->reg().writeIntEntry("SETTINGS","inside",inside);
   getApp()->reg().writeColorEntry("SETTINGS","color",color);
@@ -519,7 +519,7 @@ void ShutterBug::readPixels(FXImage* image,const FXRectangle& r){
 FXbool ShutterBug::grabRectangle(FXColor*& data,const FXRectangle& r){
   data=NULL;
   if(1<r.w && 1<r.h){
-    if(FXCALLOC(&data,FXColor,r.w*r.h)){
+    if(callocElms(data,r.w*r.h)){
       FXImage image(getApp(),data,IMAGE_KEEP,r.w,r.h);
       image.create();
       readPixels(&image,r);
@@ -581,7 +581,7 @@ long ShutterBug::onCmdSnap(FXObject*,FXSelector,void*){
       }
 
     // Free pixels
-x:  FXFREE(&data);
+x:  freeElms(data);
     }
   return 1;
   }
@@ -623,7 +623,7 @@ FXbool ShutterBug::saveImage(const FXString& file,FXColor* data,FXint w,FXint h)
 long ShutterBug::onClipboardLost(FXObject* sender,FXSelector sel,void* ptr){
   FXShell::onClipboardLost(sender,sel,ptr);
   FXTRACE((1,"%s::onClipboardLost \n",getClassName()));
-  FXFREE(&clipbuffer);
+  freeElms(clipbuffer);
   clipwidth=0;
   clipheight=0;
   return 1;
@@ -703,7 +703,7 @@ long ShutterBug::onClipboardRequest(FXObject* sender,FXSelector sel,void* ptr){
 
 // Snapshot to clipboard
 long ShutterBug::onCmdSnapClipboard(FXObject*,FXSelector,void*){
-  FXFREE(&clipbuffer);
+  freeElms(clipbuffer);
   clipwidth=0;
   clipheight=0;
   if(acquireClipboard(dndTypes,ARRAYNUMBER(dndTypes))){
@@ -786,7 +786,7 @@ long ShutterBug::onCmdRecordFrame(FXObject*,FXSelector,void*){
   FXTRACE((1,"Snap Frame: %s\n",filename.text()));
   if(grabRectangle(data,rectangle)){
     ok=saveImage(filename,data,rectangle.w,rectangle.h);
-    FXFREE(&data);
+    freeElms(data);
     }
   root->getCursorPosition(curx,cury,state);
   if(ok && root->getX()<curx && curx+1<root->getWidth() && root->getY()<cury && cury+1<root->getHeight()){
@@ -1062,7 +1062,7 @@ long ShutterBug::onUpdQuantize(FXObject* sender,FXSelector,void*){
 ShutterBug::~ShutterBug(){
   getApp()->removeTimeout(this,ID_RECORD_FRAME);
   getApp()->removeTimeout(this,ID_SNAPSHOT);
-  FXFREE(&clipbuffer);
+  freeElms(clipbuffer);
   delete snapper[0];
   delete snapper[1];
   delete snapper[2];

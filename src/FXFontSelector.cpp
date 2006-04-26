@@ -19,13 +19,14 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXFontSelector.cpp,v 1.55 2006/01/22 17:58:27 fox Exp $                  *
+* $Id: FXFontSelector.cpp,v 1.56 2006/03/25 07:24:45 fox Exp $                  *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
 #include "fxdefs.h"
 #include "FXHash.h"
 #include "FXThread.h"
+#include "FXElement.h"
 #include "FXStream.h"
 #include "FXString.h"
 #include "FXSize.h"
@@ -263,7 +264,7 @@ void FXFontSelector::listFontFaces(){
       family->setText(familylist->getItemText(selindex));
       strncpy(selected.face,familylist->getItemText(selindex).text(),sizeof(selected.face));
       }
-    FXFREE(&fonts);
+    freeElms(fonts);
     }
   }
 
@@ -312,7 +313,7 @@ void FXFontSelector::listWeights(){
       weight->setText(weightlist->getItemText(selindex));
       selected.weight=(FXuint)(FXuval)weightlist->getItemData(selindex);
       }
-    FXFREE(&fonts);
+    freeElms(fonts);
     }
   }
 
@@ -357,7 +358,7 @@ void FXFontSelector::listSlants(){
       style->setText(stylelist->getItemText(selindex));
       selected.slant=(FXuint)(FXuval)stylelist->getItemData(selindex);
       }
-    FXFREE(&fonts);
+    freeElms(fonts);
     }
   }
 
@@ -401,7 +402,7 @@ void FXFontSelector::listFontSizes(){
       size->setText(sizelist->getItemText(selindex));
       selected.size=(FXuint)(FXuval)sizelist->getItemData(selindex);
       }
-    FXFREE(&fonts);
+    freeElms(fonts);
     }
   }
 

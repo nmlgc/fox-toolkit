@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXDockBar.cpp,v 1.37 2006/01/22 17:58:23 fox Exp $                       *
+* $Id: FXDockBar.cpp,v 1.41 2006/04/05 04:27:25 fox Exp $                       *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -213,7 +213,7 @@ FXDockBar::FXDockBar(FXComposite* p,FXuint opts,FXint x,FXint y,FXint w,FXint h,
 
 
 // Return true if toolbar is docked
-FXbool FXDockBar::isDocked() const {
+bool FXDockBar::isDocked() const {
   return (getParent()!=wetdock);
   }
 
@@ -237,7 +237,7 @@ void FXDockBar::setWetDock(FXComposite* wet){
 
 
 // Dock the bar before other window
-void FXDockBar::dock(FXDockSite* docksite,FXWindow* before,FXbool notify){
+void FXDockBar::dock(FXDockSite* docksite,FXWindow* before,bool notify){
   if(docksite && getParent()!=docksite){
     setDryDock(docksite);
     reparent(docksite,before);
@@ -249,7 +249,7 @@ void FXDockBar::dock(FXDockSite* docksite,FXWindow* before,FXbool notify){
 
 
 // Dock the bar near position in dock site
-void FXDockBar::dock(FXDockSite* docksite,FXint localx,FXint localy,FXbool notify){
+void FXDockBar::dock(FXDockSite* docksite,FXint localx,FXint localy,bool notify){
   if(docksite && getParent()!=docksite){
     setDryDock(docksite);
     reparent(docksite,NULL);
@@ -261,7 +261,7 @@ void FXDockBar::dock(FXDockSite* docksite,FXint localx,FXint localy,FXbool notif
 
 
 // Undock the bar
-void FXDockBar::undock(FXint rootx,FXint rooty,FXbool notify){
+void FXDockBar::undock(FXint rootx,FXint rooty,bool notify){
   FXDockSite* docksite=dynamic_cast<FXDockSite*>(getParent());
   if(wetdock && isDocked()){
     if(docksite) docksite->undockToolBar(this);
@@ -290,7 +290,7 @@ FXDockSite* FXDockBar::findDockAtSide(FXuint side){
 
 
 // Test if bar is inside docksite
-FXbool FXDockBar::insideDock(FXDockSite* docksite,FXint barx,FXint bary){
+bool FXDockBar::insideDock(FXDockSite* docksite,FXint barx,FXint bary){
   if(docksite){
 
     // Bar size
@@ -308,10 +308,10 @@ FXbool FXDockBar::insideDock(FXDockSite* docksite,FXint barx,FXint bary){
 
         // Test if either bar or dock "sticks out" too much to dock
         if(barh>docksite->getHeight()){
-          if(bary-TOLERANCE<=docksite->getY() && docksite->getY()+docksite->getHeight()<=bary+barh+TOLERANCE) return TRUE;
+          if(bary-TOLERANCE<=docksite->getY() && docksite->getY()+docksite->getHeight()<=bary+barh+TOLERANCE) return true;
           }
         else{
-          if(docksite->getY()-TOLERANCE<=bary && bary+barh<=docksite->getY()+docksite->getHeight()+TOLERANCE) return TRUE;
+          if(docksite->getY()-TOLERANCE<=bary && bary+barh<=docksite->getY()+docksite->getHeight()+TOLERANCE) return true;
           }
         }
       }
@@ -327,15 +327,15 @@ FXbool FXDockBar::insideDock(FXDockSite* docksite,FXint barx,FXint bary){
 
         // Test if either bar or dock "sticks out" too much to dock
         if(barw>docksite->getWidth()){
-          if(barx-TOLERANCE<=docksite->getX() && docksite->getX()+docksite->getWidth()<=barx+barw+TOLERANCE) return TRUE;
+          if(barx-TOLERANCE<=docksite->getX() && docksite->getX()+docksite->getWidth()<=barx+barw+TOLERANCE) return true;
           }
         else{
-          if(docksite->getX()-TOLERANCE<=barx && barx+barw<=docksite->getX()+docksite->getWidth()+TOLERANCE) return TRUE;
+          if(docksite->getX()-TOLERANCE<=barx && barx+barw<=docksite->getX()+docksite->getWidth()+TOLERANCE) return true;
           }
         }
       }
     }
-  return FALSE;
+  return false;
   }
 
 
@@ -386,7 +386,7 @@ FXDockSite* FXDockBar::findDockNear(FXint rootx,FXint rooty){
 long FXDockBar::onCmdUndock(FXObject*,FXSelector,void*){
   FXint rootx,rooty;
   translateCoordinatesTo(rootx,rooty,getRoot(),8,8);
-  undock(rootx,rooty,TRUE);
+  undock(rootx,rooty,true);
   return 1;
   }
 
@@ -402,9 +402,9 @@ long FXDockBar::onUpdUndock(FXObject* sender,FXSelector,void*){
 long FXDockBar::onCmdDockTop(FXObject*,FXSelector,void*){
 //  FXDockSite *docksite=findDockAtSide(LAYOUT_SIDE_TOP);
 //  if(docksite){
-//    dock(docksite,0,docksite->getHeight()-20,TRUE);
+//    dock(docksite,0,docksite->getHeight()-20,true);
 //    }
-  dock(findDockAtSide(LAYOUT_SIDE_TOP),NULL,TRUE);
+  dock(findDockAtSide(LAYOUT_SIDE_TOP),NULL,true);
   return 1;
   }
 
@@ -419,7 +419,7 @@ long FXDockBar::onUpdDockTop(FXObject* sender,FXSelector,void*){
 
 // Redock on bottom
 long FXDockBar::onCmdDockBottom(FXObject*,FXSelector,void*){
-  dock(findDockAtSide(LAYOUT_SIDE_BOTTOM),NULL,TRUE);
+  dock(findDockAtSide(LAYOUT_SIDE_BOTTOM),NULL,true);
   return 1;
   }
 
@@ -434,7 +434,7 @@ long FXDockBar::onUpdDockBottom(FXObject* sender,FXSelector,void*){
 
 // Redock on left
 long FXDockBar::onCmdDockLeft(FXObject*,FXSelector,void*){
-  dock(findDockAtSide(LAYOUT_SIDE_LEFT),NULL,TRUE);
+  dock(findDockAtSide(LAYOUT_SIDE_LEFT),NULL,true);
   return 1;
   }
 
@@ -449,7 +449,7 @@ long FXDockBar::onUpdDockLeft(FXObject* sender,FXSelector,void*){
 
 // Redock on right
 long FXDockBar::onCmdDockRight(FXObject*,FXSelector,void*){
-  dock(findDockAtSide(LAYOUT_SIDE_RIGHT),NULL,TRUE);
+  dock(findDockAtSide(LAYOUT_SIDE_RIGHT),NULL,true);
   return 1;
   }
 
@@ -528,7 +528,7 @@ long FXDockBar::onEndDragGrip(FXObject*,FXSelector,void* ptr){
       toolbardock=findDockNear(rootx,rooty);
       if(toolbardock){
         translateCoordinatesTo(localx,localy,toolbardock,0,0);
-        dock(toolbardock,localx,localy,TRUE);
+        dock(toolbardock,localx,localy,true);
         }
       }
     }
@@ -541,7 +541,7 @@ long FXDockBar::onDockTimer(FXObject*,FXSelector,void* ptr){
   FXDockSite *toolbardock=static_cast<FXDockSite*>(ptr);
   FXint localx,localy;
   translateCoordinatesTo(localx,localy,toolbardock,0,0);
-  dock(toolbardock,localx,localy,TRUE);
+  dock(toolbardock,localx,localy,true);
   return 1;
   }
 
@@ -571,7 +571,7 @@ long FXDockBar::onDraggedGrip(FXObject*,FXSelector,void* ptr){
 
     // Test if we pulled too far to stay inside
     if(!insideDock(toolbardock,dockx+toolbardock->getX(),docky+toolbardock->getY())){
-      undock(rootx,rooty,TRUE);
+      undock(rootx,rooty,true);
       }
     }
 

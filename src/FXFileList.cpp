@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXFileList.cpp,v 1.211 2006/01/22 17:58:25 fox Exp $                     *
+* $Id: FXFileList.cpp,v 1.215 2006/04/06 05:43:37 fox Exp $                     *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -233,7 +233,7 @@ void FXFileList::create(){
   mini_doc->create();
   big_app->create();
   mini_app->create();
-  scan(FALSE);
+  scan(false);
   }
 
 
@@ -311,7 +311,7 @@ long FXFileList::onDNDMotion(FXObject* sender,FXSelector sel,void* ptr){
   getApp()->removeTimeout(this,ID_OPENTIMER);
 
   // Start autoscrolling
-  if(startAutoScroll(event,FALSE)) return 1;
+  if(startAutoScroll(event,false)) return 1;
 
   // Give base class a shot
   if(FXIconList::onDNDMotion(sender,sel,ptr)) return 1;
@@ -521,7 +521,7 @@ long FXFileList::onUpdToggleHidden(FXObject* sender,FXSelector,void*){
 
 // Show hidden files
 long FXFileList::onCmdShowHidden(FXObject*,FXSelector,void*){
-  showHiddenFiles(TRUE);
+  showHiddenFiles(true);
   return 1;
   }
 
@@ -535,7 +535,7 @@ long FXFileList::onUpdShowHidden(FXObject* sender,FXSelector,void*){
 
 // Hide hidden files
 long FXFileList::onCmdHideHidden(FXObject*,FXSelector,void*){
-  showHiddenFiles(FALSE);
+  showHiddenFiles(false);
   return 1;
   }
 
@@ -609,7 +609,7 @@ long FXFileList::onCmdSortByName(FXObject*,FXSelector,void*){
   else if(sortfunc==ascendingCase) sortfunc=descendingCase;
   else if(sortfunc==descending) sortfunc=ascending;
   else sortfunc=ascendingCase;
-  scan(TRUE);
+  scan(true);
   return 1;
   }
 
@@ -624,7 +624,7 @@ long FXFileList::onUpdSortByName(FXObject* sender,FXSelector,void*){
 // Sort by type
 long FXFileList::onCmdSortByType(FXObject*,FXSelector,void*){
   sortfunc=(sortfunc==ascendingType) ? descendingType : ascendingType;
-  scan(TRUE);
+  scan(true);
   return 1;
   }
 
@@ -639,7 +639,7 @@ long FXFileList::onUpdSortByType(FXObject* sender,FXSelector,void*){
 // Sort by size
 long FXFileList::onCmdSortBySize(FXObject*,FXSelector,void*){
   sortfunc=(sortfunc==ascendingSize) ? descendingSize : ascendingSize;
-  scan(TRUE);
+  scan(true);
   return 1;
   }
 
@@ -654,7 +654,7 @@ long FXFileList::onUpdSortBySize(FXObject* sender,FXSelector,void*){
 // Sort by time
 long FXFileList::onCmdSortByTime(FXObject*,FXSelector,void*){
   sortfunc=(sortfunc==ascendingTime) ? descendingTime : ascendingTime;
-  scan(TRUE);
+  scan(true);
   return 1;
   }
 
@@ -669,7 +669,7 @@ long FXFileList::onUpdSortByTime(FXObject* sender,FXSelector,void*){
 // Sort by user
 long FXFileList::onCmdSortByUser(FXObject*,FXSelector,void*){
   sortfunc=(sortfunc==ascendingUser) ? descendingUser : ascendingUser;
-  scan(TRUE);
+  scan(true);
   return 1;
   }
 
@@ -684,7 +684,7 @@ long FXFileList::onUpdSortByUser(FXObject* sender,FXSelector,void*){
 // Sort by group
 long FXFileList::onCmdSortByGroup(FXObject*,FXSelector,void*){
   sortfunc=(sortfunc==ascendingGroup) ? descendingGroup : ascendingGroup;
-  scan(TRUE);
+  scan(true);
   return 1;
   }
 
@@ -712,7 +712,7 @@ long FXFileList::onCmdSortReverse(FXObject*,FXSelector,void*){
   else if(sortfunc==descendingUser) sortfunc=ascendingUser;
   else if(sortfunc==ascendingGroup) sortfunc=descendingGroup;
   else if(sortfunc==descendingGroup) sortfunc=ascendingGroup;
-  scan(TRUE);
+  scan(true);
   return 1;
   }
 
@@ -738,7 +738,7 @@ long FXFileList::onCmdSortCase(FXObject*,FXSelector,void*){
   else if(sortfunc==ascendingCase) sortfunc=ascending;
   else if(sortfunc==descending) sortfunc=descendingCase;
   else if(sortfunc==descendingCase) sortfunc=descending;
-  scan(TRUE);
+  scan(true);
   return 1;
   }
 
@@ -760,12 +760,12 @@ long FXFileList::onCmdHeader(FXObject*,FXSelector,void* ptr){
 
 // Clicked header button
 long FXFileList::onUpdHeader(FXObject*,FXSelector,void*){
-  header->setArrowDir(0,(sortfunc==ascending || sortfunc==ascendingCase)  ? FALSE : (sortfunc==descending || sortfunc==descendingCase) ? TRUE : MAYBE);   // Name
-  header->setArrowDir(1,(sortfunc==ascendingType)  ? FALSE : (sortfunc==descendingType) ? TRUE : MAYBE);   // Type
-  header->setArrowDir(2,(sortfunc==ascendingSize)  ? FALSE : (sortfunc==descendingSize) ? TRUE : MAYBE);   // Size
-  header->setArrowDir(3,(sortfunc==ascendingTime)  ? FALSE : (sortfunc==descendingTime) ? TRUE : MAYBE);   // Date
-  header->setArrowDir(4,(sortfunc==ascendingUser)  ? FALSE : (sortfunc==descendingUser) ? TRUE : MAYBE);   // User
-  header->setArrowDir(5,(sortfunc==ascendingGroup) ? FALSE : (sortfunc==descendingGroup)? TRUE : MAYBE);   // Group
+  header->setArrowDir(0,(sortfunc==ascending || sortfunc==ascendingCase)  ? FXHeaderItem::ARROW_DOWN : (sortfunc==descending || sortfunc==descendingCase) ? FXHeaderItem::ARROW_UP : FXHeaderItem::ARROW_NONE);   // Name
+  header->setArrowDir(1,(sortfunc==ascendingType)  ? FXHeaderItem::ARROW_DOWN : (sortfunc==descendingType) ? FXHeaderItem::ARROW_UP : FXHeaderItem::ARROW_NONE);   // Type
+  header->setArrowDir(2,(sortfunc==ascendingSize)  ? FXHeaderItem::ARROW_DOWN : (sortfunc==descendingSize) ? FXHeaderItem::ARROW_UP : FXHeaderItem::ARROW_NONE);   // Size
+  header->setArrowDir(3,(sortfunc==ascendingTime)  ? FXHeaderItem::ARROW_DOWN : (sortfunc==descendingTime) ? FXHeaderItem::ARROW_UP : FXHeaderItem::ARROW_NONE);   // Date
+  header->setArrowDir(4,(sortfunc==ascendingUser)  ? FXHeaderItem::ARROW_DOWN : (sortfunc==descendingUser) ? FXHeaderItem::ARROW_UP : FXHeaderItem::ARROW_NONE);   // User
+  header->setArrowDir(5,(sortfunc==ascendingGroup) ? FXHeaderItem::ARROW_DOWN : (sortfunc==descendingGroup)? FXHeaderItem::ARROW_UP : FXHeaderItem::ARROW_NONE);   // Group
   return 1;
   }
 
@@ -910,7 +910,7 @@ FXint FXFileList::descendingGroup(const FXIconItem* a,const FXIconItem* b){
 long FXFileList::onRefreshTimer(FXObject*,FXSelector,void*){
   if(flags&FLAG_UPDATE){
     counter=(counter+1)%REFRESHFREQUENCY;
-    scan(FALSE);
+    scan(false);
     }
   getApp()->addTimeout(this,ID_REFRESHTIMER,REFRESHINTERVAL);
   return 0;
@@ -919,20 +919,20 @@ long FXFileList::onRefreshTimer(FXObject*,FXSelector,void*){
 
 // Force an immediate update of the list
 long FXFileList::onCmdRefresh(FXObject*,FXSelector,void*){
-  scan(TRUE);
+  scan(true);
   return 1;
   }
 
 
 // Scan items to see if listing is necessary
-void FXFileList::scan(FXbool force){
+void FXFileList::scan(bool force){
   FXStat info;
 
   // Stat the current directory
   if(FXStat::statFile(directory,info)){
 
     // New date of directory
-    FXTime newdate=info.touched();
+    FXTime newdate=info.modified();
 
     // Forced, date was changed, or failed to get proper date and counter expired
     if(force || (timestamp!=newdate) || (counter==0)){
@@ -955,7 +955,7 @@ void FXFileList::scan(FXbool force){
 
 
 // Set current filename
-void FXFileList::setCurrentFile(const FXString& pathname,FXbool notify){
+void FXFileList::setCurrentFile(const FXString& pathname,bool notify){
   FXTRACE((100,"%s::setCurrentFile(%s)\n",getClassName(),pathname.text()));
   if(!pathname.empty()){
     setDirectory(FXPath::directory(pathname));
@@ -990,7 +990,7 @@ void FXFileList::setDirectory(const FXString& pathname){
       clearItems();
       counter=0;
       list=NULL;
-      scan(TRUE);
+      scan(true);
       }
     }
   }
@@ -1001,7 +1001,7 @@ void FXFileList::setPattern(const FXString& ptrn){
   if(ptrn.empty()) return;
   if(pattern!=ptrn){
     pattern=ptrn;
-    scan(TRUE);
+    scan(true);
     }
   }
 
@@ -1010,39 +1010,39 @@ void FXFileList::setPattern(const FXString& ptrn){
 void FXFileList::setMatchMode(FXuint mode){
   if(matchmode!=mode){
     matchmode=mode;
-    scan(TRUE);
+    scan(true);
     }
   }
 
 
-// Return TRUE if showing hidden files
-FXbool FXFileList::showHiddenFiles() const {
+// Return true if showing hidden files
+bool FXFileList::showHiddenFiles() const {
   return (options&FILELIST_SHOWHIDDEN)!=0;
   }
 
 
 // Change show hidden files mode
-void FXFileList::showHiddenFiles(FXbool shown){
+void FXFileList::showHiddenFiles(bool shown){
   FXuint opts=shown ? (options|FILELIST_SHOWHIDDEN) : (options&~FILELIST_SHOWHIDDEN);
   if(opts!=options){
     options=opts;
-    scan(TRUE);
+    scan(true);
     }
   }
 
 
-// Return TRUE if displaying image
-FXbool FXFileList::showImages() const {
+// Return true if displaying image
+bool FXFileList::showImages() const {
   return (options&FILELIST_SHOWIMAGES)!=0;
   }
 
 
 // Change show image display mode
-void FXFileList::showImages(FXbool shown){
+void FXFileList::showImages(bool shown){
   FXuint opts=shown ? (options|FILELIST_SHOWIMAGES) : (options&~FILELIST_SHOWIMAGES);
   if(opts!=options){
     options=opts;
-    scan(TRUE);
+    scan(true);
     }
   }
 
@@ -1051,61 +1051,61 @@ void FXFileList::showImages(FXbool shown){
 void FXFileList::setImageSize(FXint size){
   if(size!=imagesize){
     imagesize=size;
-    scan(TRUE);
+    scan(true);
     }
   }
 
 
-// Return TRUE if showing directories only
-FXbool FXFileList::showOnlyDirectories() const {
+// Return true if showing directories only
+bool FXFileList::showOnlyDirectories() const {
   return (options&FILELIST_SHOWDIRS)!=0;
   }
 
 
 // Change show directories only mode
-void FXFileList::showOnlyDirectories(FXbool shown){
+void FXFileList::showOnlyDirectories(bool shown){
   FXuint opts=shown ? (options|FILELIST_SHOWDIRS) : (options&~FILELIST_SHOWDIRS);
   if(opts!=options){
     options=opts;
-    scan(TRUE);
+    scan(true);
     }
   }
 
 
-// Return TRUE if showing files only
-FXbool FXFileList::showOnlyFiles() const {
+// Return true if showing files only
+bool FXFileList::showOnlyFiles() const {
   return (options&FILELIST_SHOWFILES)!=0;
   }
 
 
 // Show files only
-void FXFileList::showOnlyFiles(FXbool shown){
+void FXFileList::showOnlyFiles(bool shown){
   FXuint opts=shown ? (options|FILELIST_SHOWFILES) : (options&~FILELIST_SHOWFILES);
   if(opts!=options){
     options=opts;
-    scan(TRUE);
+    scan(true);
     }
   }
 
 
-// Return TRUE if showing parent directories
-FXbool FXFileList::showParents() const {
+// Return true if showing parent directories
+bool FXFileList::showParents() const {
   return (options&FILELIST_NO_PARENT)==0;
   }
 
 
 // Show parent directories
-void FXFileList::showParents(FXbool shown) {
+void FXFileList::showParents(bool shown) {
   FXuint opts=shown ? (options&~FILELIST_NO_PARENT) : (options|FILELIST_NO_PARENT);
   if(opts!=options){
     options=opts;
-    scan(TRUE);
+    scan(true);
     }
   }
 
 
 // Compare till '\t' or '\0'
-static FXbool fileequal(const FXString& a,const FXString& b){
+static bool fileequal(const FXString& a,const FXString& b){
   register const FXuchar *p1=(const FXuchar *)a.text();
   register const FXuchar *p2=(const FXuchar *)b.text();
   register FXint c1,c2;
@@ -1125,7 +1125,7 @@ FXIconItem *FXFileList::createItem(const FXString& text,FXIcon *big,FXIcon* mini
 
 
 // List directory
-void FXFileList::listItems(FXbool force){
+void FXFileList::listItems(bool force){
   FXFileItem *oldlist=list;     // Old insert-order list
   FXFileItem *newlist=NULL;     // New insert-order list
   FXFileItem **po=&oldlist;     // Head of old list
@@ -1142,8 +1142,8 @@ void FXFileList::listItems(FXbool force){
   FXString atts;
   FXString mod;
   FXString linkname;
-  FXbool islink;
-  FXbool istop;
+  bool islink;
+  bool istop;
   FXStat info;
   FXDir  dir;
 
@@ -1157,7 +1157,7 @@ void FXFileList::listItems(FXbool force){
   istop=FXPath::isTopDirectory(directory);
 
   // Assume not a link
-  islink=FALSE;
+  islink=false;
 
   // Get directory stream pointer
   if(dir.open(directory)){
@@ -1249,7 +1249,7 @@ fnd:  *pn=item;
         atts=FXSystem::modeString(info.mode());
 
         // Mod time
-        mod=FXSystem::time(info.modified());
+        mod=FXSystem::localTime(info.modified());
 
         // Link
         if(islink) linkname=FXFile::symlink(pathname); else linkname=FXString::null;
@@ -1264,7 +1264,7 @@ fnd:  *pn=item;
         if(islink){item->state|=FXFileItem::SYMLINK;}else{item->state&=~FXFileItem::SYMLINK;}
 
         // We can drag items
-        item->setDraggable(TRUE);
+        item->setDraggable(true);
 
         // File size
         item->size=info.size();
@@ -1307,7 +1307,7 @@ fnd:  *pn=item;
         if(associations && (options&FILELIST_SHOWIMAGES)){
           source=associations->getIconDict()->getIconSource();
           icon=source->loadScaledIconFile(pathname,imagesize);
-          if(icon) item->setBigIcon(icon,TRUE);
+          if(icon) item->setBigIcon(icon,true);
           }
 
         // Update item information
@@ -1351,28 +1351,28 @@ fnd:  *pn=item;
 
 
 // Is directory
-FXbool FXFileList::isItemDirectory(FXint index) const {
+bool FXFileList::isItemDirectory(FXint index) const {
   if(index<0 || items.no()<=index){ fxerror("%s::isItemDirectory: index out of range.\n",getClassName()); }
   return ((FXFileItem*)items[index])->isDirectory();
   }
 
 
 // Is share
-FXbool FXFileList::isItemShare(FXint index) const {
+bool FXFileList::isItemShare(FXint index) const {
   if(index<0 || items.no()<=index){ fxerror("%s::isItemShare: index out of range.\n",getClassName()); }
   return ((FXFileItem*)items[index])->isShare();
   }
 
 
 // Is file
-FXbool FXFileList::isItemFile(FXint index) const {
+bool FXFileList::isItemFile(FXint index) const {
   if(index<0 || items.no()<=index){ fxerror("%s::isItemFile: index out of range.\n",getClassName()); }
   return ((FXFileItem*)items[index])->isFile();
   }
 
 
 // Is executable
-FXbool FXFileList::isItemExecutable(FXint index) const {
+bool FXFileList::isItemExecutable(FXint index) const {
   if(index<0 || items.no()<=index){ fxerror("%s::isItemExecutable: index out of range.\n",getClassName()); }
   return ((FXFileItem*)items[index])->isExecutable();
   }
@@ -1404,7 +1404,7 @@ FXFileAssoc* FXFileList::getItemAssoc(FXint index) const {
 void FXFileList::setAssociations(FXFileDict* assocs){
   if(associations!=assocs){
     associations=assocs;
-    scan(TRUE);
+    scan(true);
     }
   }
 

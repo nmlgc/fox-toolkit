@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXSystem.cpp,v 1.18 2006/01/22 17:58:43 fox Exp $                        *
+* $Id: FXSystem.cpp,v 1.22 2006/04/13 22:27:19 fox Exp $                        *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -52,37 +52,55 @@ using namespace FX;
 namespace FX {
 
 
-// Return current time
-FXTime FXSystem::now(){
-  return (FXTime)::time(NULL);
+// Convert file time to string
+FXString FXSystem::localTime(FXTime value){
+  return FXSystem::localTime(TIMEFORMAT,value);
   }
 
 
 // Convert file time to string
-FXString FXSystem::time(FXTime value){
-  return FXSystem::time(TIMEFORMAT,value);
+FXString FXSystem::universalTime(FXTime value){
+  return FXSystem::universalTime(TIMEFORMAT,value);
   }
 
 
 // Convert file time to string as per strftime format
-FXString FXSystem::time(const FXchar *format,FXTime filetime){
+FXString FXSystem::localTime(const FXchar *format,FXTime value){
+  const FXTime seconds=1000000000;
+  time_t tmp=(time_t)(value/seconds);
+  FXchar buffer[512];
 #ifndef WIN32
 #if defined(FOX_THREAD_SAFE) && !defined(__FreeBSD__) && !defined(__OpenBSD__)
-  time_t tmp=(time_t)FXMAX(filetime,0);
   struct tm tmresult;
-  FXchar buffer[512];
   FXint len=strftime(buffer,sizeof(buffer),format,localtime_r(&tmp,&tmresult));
   return FXString(buffer,len);
 #else
-  time_t tmp=(time_t)FXMAX(filetime,0);
-  FXchar buffer[512];
   FXint len=strftime(buffer,sizeof(buffer),format,localtime(&tmp));
   return FXString(buffer,len);
 #endif
 #else
-  time_t tmp=(time_t)FXMAX(filetime,0);
-  FXchar buffer[512];
   FXint len=strftime(buffer,sizeof(buffer),format,localtime(&tmp));
+  return FXString(buffer,len);
+#endif
+  }
+
+
+// Convert file time to string as per strftime format
+FXString FXSystem::universalTime(const FXchar *format,FXTime value){
+  const FXTime seconds=1000000000;
+  time_t tmp=(time_t)(value/seconds);
+  FXchar buffer[512];
+#ifndef WIN32
+#if defined(FOX_THREAD_SAFE) && !defined(__FreeBSD__) && !defined(__OpenBSD__)
+  struct tm tmresult;
+  FXint len=strftime(buffer,sizeof(buffer),format,gmtime_r(&tmp,&tmresult));
+  return FXString(buffer,len);
+#else
+  FXint len=strftime(buffer,sizeof(buffer),format,gmtime(&tmp));
+  return FXString(buffer,len);
+#endif
+#else
+  FXint len=strftime(buffer,sizeof(buffer),format,gmtime(&tmp));
   return FXString(buffer,len);
 #endif
   }
@@ -251,7 +269,7 @@ FXString FXSystem::getCurrentDirectory(){
 
 
 // Change current directory
-FXbool FXSystem::setCurrentDirectory(const FXString& path){
+bool FXSystem::setCurrentDirectory(const FXString& path){
   if(!path.empty()){
 #ifdef WIN32
 #ifdef UNICODE
@@ -265,7 +283,7 @@ FXbool FXSystem::setCurrentDirectory(const FXString& path){
     return chdir(path.text())==0;
 #endif
     }
-  return FALSE;
+  return false;
   }
 
 
@@ -284,7 +302,7 @@ FXString FXSystem::getCurrentDrive(){
 
 // Change current drive prefix "a:"
 // This is the same method as used in VC++ CRT.
-FXbool FXSystem::setCurrentDrive(const FXString& prefix){
+bool FXSystem::setCurrentDrive(const FXString& prefix){
   FXchar buffer[3];
   if(!prefix.empty() && Ascii::isLetter(prefix[0]) && prefix[1]==':'){
     buffer[0]=prefix[0];
@@ -292,14 +310,14 @@ FXbool FXSystem::setCurrentDrive(const FXString& prefix){
     buffer[2]='\0';
     return SetCurrentDirectoryA(buffer);
     }
-  return FALSE;
+  return false;
   }
 
 #else
 
 // Change current drive prefix "a:"
-FXbool FXSystem::setCurrentDrive(const FXString&){
-  return TRUE;
+bool FXSystem::setCurrentDrive(const FXString&){
+  return true;
   }
 
 #endif
@@ -391,6 +409,17 @@ FXString FXSystem::getTempDirectory(){
   if(1<len && ISPATHSEP(buffer[len-1]) && !ISPATHSEP(buffer[len-2])) len--;
   return FXString(buffer,len);
 #endif
+  }
+
+
+// Get process id
+FXint FXSystem::getProcessId(){
+#ifdef WIN32
+  return GetCurrentProcessId();
+#else
+  return getpid();
+#endif
+  return 0;
   }
 
 

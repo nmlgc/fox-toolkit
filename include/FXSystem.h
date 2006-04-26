@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXSystem.h,v 1.6 2006/01/22 17:58:10 fox Exp $                           *
+* $Id: FXSystem.h,v 1.11 2006/04/14 00:04:03 fox Exp $                          *
 ********************************************************************************/
 #ifndef FXSYSTEM_H
 #define FXSYSTEM_H
@@ -33,22 +33,26 @@ namespace FX {
 namespace FXSystem {
 
 
-/// Return current time
-FXTime FXAPI now();
+/// Convert time in nanoseconds since 1/1/1970 to local date string
+FXString FXAPI localTime(FXTime value);
 
-/// Convert time value to date-string
-FXString FXAPI time(FXTime value);
+/// Convert time in nanoseconds since 1/1/1970 to universal date string
+FXString FXAPI universalTime(FXTime value);
 
 /**
-* Convert time value to date-string as per strftime.
+* Convert time in nanoseconds since 1/1/1970 to local date string as per strftime.
 * Format characters supported by most systems are:
 *
 *  %a %A %b %B %c %d %H %I %j %m %M %p %S %U %w %W %x %X %y %Y %Z %%
 *
 * Some systems support additional conversions.
 */
-FXString FXAPI time(const FXchar *format,FXTime value);
+FXString FXAPI localTime(const FXchar *format,FXTime value);
 
+/**
+* Convert time in nanoseconds since 1/1/1970 to universal date string as per strftime.
+*/
+FXString FXAPI universalTime(const FXchar *format,FXTime value);
 
 
 /// Get effective user id
@@ -87,13 +91,13 @@ bool FXAPI setEnvironment(const FXString& name,const FXString& value);
 FXString FXAPI getCurrentDirectory();
 
 /// Set the current working directory
-FXbool FXAPI setCurrentDirectory(const FXString& path);
+bool FXAPI setCurrentDirectory(const FXString& path);
 
 /// Return the current drive (for Win32 systems)
 FXString FXAPI getCurrentDrive();
 
 /// Set the current drive (for Win32 systems)
-FXbool FXAPI setCurrentDrive(const FXString& prefix);
+bool FXAPI setCurrentDrive(const FXString& prefix);
 
 
 
@@ -109,6 +113,9 @@ FXString FXAPI getUserDirectory(const FXString& user);
 /// Return temporary directory
 FXString FXAPI getTempDirectory();
 
+
+/// Get process id
+FXint FXAPI getProcessId();
 
 
 /**

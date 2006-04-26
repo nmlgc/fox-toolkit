@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXToolBarGrip.cpp,v 1.29 2006/01/22 17:58:47 fox Exp $                   *
+* $Id: FXToolBarGrip.cpp,v 1.31 2006/03/31 07:33:14 fox Exp $                   *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -116,7 +116,7 @@ bool FXToolBarGrip::canFocus() const { return false; }
 
 
 // Change toolbar orientation
-void FXToolBarGrip::setDoubleBar(FXbool dbl){
+void FXToolBarGrip::setDoubleBar(bool dbl){
   FXuint opts=dbl?(options|TOOLBARGRIP_DOUBLE):(options&~TOOLBARGRIP_DOUBLE);
   if(opts!=options){
     options=opts;
@@ -126,7 +126,7 @@ void FXToolBarGrip::setDoubleBar(FXbool dbl){
 
 
 // Return TRUE if toolbar grip is displayed as a double bar
-FXbool FXToolBarGrip::isDoubleBar() const {
+bool FXToolBarGrip::isDoubleBar() const {
   return (options&TOOLBARGRIP_DOUBLE)!=0;
   }
 

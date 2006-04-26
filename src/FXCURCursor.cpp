@@ -19,13 +19,14 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXCURCursor.cpp,v 1.25 2006/01/22 17:58:18 fox Exp $                     *
+* $Id: FXCURCursor.cpp,v 1.26 2006/03/24 06:05:03 fox Exp $                     *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
 #include "fxdefs.h"
 #include "FXHash.h"
 #include "FXThread.h"
+#include "FXElement.h"
 #include "FXStream.h"
 #include "FXMemoryStream.h"
 #include "FXString.h"
@@ -84,7 +85,7 @@ bool FXCURCursor::savePixels(FXStream& store) const {
 
 // Load cursor mask and image
 bool FXCURCursor::loadPixels(FXStream & store){
-  if(options&CURSOR_OWNED){FXFREE(&data);}
+  if(options&CURSOR_OWNED){freeElms(data);}
   if(fxloadICO(store,data,width,height,hotx,hoty)){
     options|=CURSOR_OWNED;
     return true;

@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXRegion.cpp,v 1.31 2006/01/22 17:58:39 fox Exp $                        *
+* $Id: FXRegion.cpp,v 1.32 2006/04/04 04:28:07 fox Exp $                        *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -159,18 +159,15 @@ bool FXRegion::contains(FXint x,FXint y,FXint w,FXint h) const {
 
 // Return bounding box
 FXRectangle FXRegion::bounds() const {
-  FXRectangle result;
 #ifndef WIN32
-  XClipBox((Region)region,(XRectangle*)&result);
+  XRectangle rect;
+  XClipBox((Region)region,&rect);
+  return FXRectangle(rect.x,rect.y,rect.width,rect.height);
 #else
   RECT rect;
   GetRgnBox((HRGN)region,&rect);
-  result.x=(FXshort)rect.left;
-  result.y=(FXshort)rect.top;
-  result.w=(FXshort)(rect.right-rect.left);
-  result.h=(FXshort)(rect.bottom-rect.top);
+  return FXRectangle((FXshort)rect.left,(FXshort)rect.top,(FXshort)(rect.right-rect.left),(FXshort)(rect.bottom-rect.top));
 #endif
-  return result;
   }
 
 

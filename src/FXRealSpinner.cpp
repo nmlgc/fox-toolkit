@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXRealSpinner.cpp,v 1.38.2.1 2006/03/31 21:25:59 fox Exp $                   *
+* $Id: FXRealSpinner.cpp,v 1.40 2006/03/31 21:26:28 fox Exp $                   *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -385,7 +385,7 @@ long FXRealSpinner::onCmdGetRealRange(FXObject*,FXSelector,void* ptr){
 
 
 // Increment spinner
-void FXRealSpinner::increment(FXbool notify){
+void FXRealSpinner::increment(bool notify){
   incrementByAmount(incr,notify);
   }
 
@@ -398,7 +398,7 @@ double round(double x){
 
 
 // Increment spinner by certain amount
-void FXRealSpinner::incrementByAmount(FXdouble amount,FXbool notify){
+void FXRealSpinner::incrementByAmount(FXdouble amount,bool notify){
   if(range[0]<range[1] && 0.0<amount){
     FXdouble value;
     if(options&REALSPIN_LOG){
@@ -417,13 +417,13 @@ void FXRealSpinner::incrementByAmount(FXdouble amount,FXbool notify){
 
 
 // Decrement spinner
-void FXRealSpinner::decrement(FXbool notify){
+void FXRealSpinner::decrement(bool notify){
   decrementByAmount(incr,notify);
   }
 
 
 // Decrement spinner by certain amount
-void FXRealSpinner::decrementByAmount(FXdouble amount,FXbool notify){
+void FXRealSpinner::decrementByAmount(FXdouble amount,bool notify){
   if(range[0]<range[1] && 0.0<amount){
     FXdouble value;
     if(options&REALSPIN_LOG){
@@ -442,19 +442,19 @@ void FXRealSpinner::decrementByAmount(FXdouble amount,FXbool notify){
 
 
 // True if spinner is cyclic
-FXbool FXRealSpinner::isCyclic() const {
+bool FXRealSpinner::isCyclic() const {
   return (options&REALSPIN_CYCLIC)!=0;
   }
 
 
 // Set spinner cyclic mode
-void FXRealSpinner::setCyclic(FXbool cyclic){
+void FXRealSpinner::setCyclic(bool cyclic){
   if(cyclic) options|=REALSPIN_CYCLIC; else options&=~REALSPIN_CYCLIC;
   }
 
 
 // Set spinner range; this also revalidates the position,
-void FXRealSpinner::setRange(FXdouble lo,FXdouble hi,FXbool notify){
+void FXRealSpinner::setRange(FXdouble lo,FXdouble hi,bool notify){
   if(lo>hi){ fxerror("%s::setRange: trying to set negative range.\n",getClassName()); }
   if(range[0]!=lo || range[1]!=hi){
     range[0]=lo;
@@ -465,7 +465,7 @@ void FXRealSpinner::setRange(FXdouble lo,FXdouble hi,FXbool notify){
 
 
 // Set new value
-void FXRealSpinner::setValue(FXdouble value,FXbool notify){
+void FXRealSpinner::setValue(FXdouble value,bool notify){
   if(value<range[0]) value=range[0];
   if(value>range[1]) value=range[1];
   if(pos!=value){
@@ -492,13 +492,13 @@ void FXRealSpinner::setGranularity(FXdouble gr){
 
 
 // True if text supposed to be visible
-FXbool FXRealSpinner::isTextVisible() const {
+bool FXRealSpinner::isTextVisible() const {
   return textField->shown();
   }
 
 
 // Change text visibility
-void FXRealSpinner::setTextVisible(FXbool shown){
+void FXRealSpinner::setTextVisible(bool shown){
   FXuint opts=shown?(options&~REALSPIN_NOTEXT):(options|REALSPIN_NOTEXT);
   if(options!=opts){
     options=opts;
@@ -567,13 +567,13 @@ FXuint FXRealSpinner::getSpinnerStyle() const {
 
 
 // Allow editing of the text field
-void FXRealSpinner::setEditable(FXbool edit){
+void FXRealSpinner::setEditable(bool edit){
   textField->setEditable(edit);
   }
 
 
 // Return TRUE if text field is editable
-FXbool FXRealSpinner::isEditable() const {
+bool FXRealSpinner::isEditable() const {
   return textField->isEditable();
   }
 

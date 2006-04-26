@@ -19,15 +19,17 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: fxpngio.cpp,v 1.40 2006/01/22 17:58:54 fox Exp $                         *
+* $Id: fxpngio.cpp,v 1.43 2006/04/13 22:27:19 fox Exp $                         *
 ********************************************************************************/
-#include "fxver.h"
-#include "fxdefs.h"
-#include "FXHash.h"
-#include "FXStream.h"
 #ifdef HAVE_PNG_H
 #include "png.h"
 #endif
+#include "xincs.h"
+#include "fxver.h"
+#include "fxdefs.h"
+#include "FXHash.h"
+#include "FXElement.h"
+#include "FXStream.h"
 
 /*
   Notes:
@@ -165,16 +167,14 @@ bool fxloadPNG(FXStream& store,FXColor*& data,FXint& width,FXint& height){
   png_read_update_info(png_ptr,info_ptr);
 
   // Make room for data
-  FXMALLOC(&data,FXColor,hh*ww);
-  if(!data){
+  if(!allocElms(data,hh*ww)){
     png_destroy_read_struct(&png_ptr,&info_ptr,(png_infopp)NULL);
     return false;
     }
 
   // Row pointers
-  FXMALLOC(&row_pointers,png_bytep,hh);
-  if(!row_pointers){
-    FXFREE(&data);
+  if(!allocElms(row_pointers,hh)){
+    freeElms(data);
     png_destroy_read_struct(&png_ptr,&info_ptr,(png_infopp)NULL);
     return false;
     }
@@ -196,7 +196,7 @@ bool fxloadPNG(FXStream& store,FXColor*& data,FXint& width,FXint& height){
   png_destroy_read_struct(&png_ptr,&info_ptr,(png_infopp)NULL);
 
   // Get rid of it
-  FXFREE(&row_pointers);
+  freeElms(row_pointers);
 
   width=ww;
   height=hh;
@@ -244,8 +244,7 @@ bool fxsavePNG(FXStream& store,const FXColor* data,FXint width,FXint height){
   png_write_info(png_ptr,info_ptr);
 
   // Row pointers
-  FXMALLOC(&row_pointers,png_bytep,height);
-  if(!row_pointers){
+  if(!allocElms(row_pointers,height)){
     png_destroy_write_struct(&png_ptr,&info_ptr);
     return false;
     }
@@ -265,7 +264,7 @@ bool fxsavePNG(FXStream& store,const FXColor* data,FXint width,FXint height){
   png_destroy_write_struct(&png_ptr,&info_ptr);
 
   // Get rid of it
-  FXFREE(&row_pointers);
+  freeElms(row_pointers);
 
   return true;
   }
@@ -298,7 +297,7 @@ bool fxloadPNG(FXStream&,FXColor*& data,FXint& width,FXint& height){
    0x05, 0x00, 0x00, 0xa0, 0x05, 0x00, 0x00, 0xa0, 0xfd, 0xff, 0xff, 0xbf,
    0x01, 0x00, 0x00, 0x80, 0xff, 0xff, 0xff, 0xff};
   register FXint p;
-  FXMALLOC(&data,FXColor,32*32);
+  allocElms(data,32*32);
   for(p=0; p<32*32; p++){
     data[p]=(png_bits[p>>3]&(1<<(p&7))) ? FXRGB(0,0,0) : FXRGB(255,255,255);
     }

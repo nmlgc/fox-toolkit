@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXArrowButton.h,v 1.39 2006/01/22 17:57:58 fox Exp $                     *
+* $Id: FXArrowButton.h,v 1.40 2006/04/02 22:37:17 fox Exp $                     *
 ********************************************************************************/
 #ifndef FXARROWBUTTON_H
 #define FXARROWBUTTON_H
@@ -62,8 +62,8 @@ protected:
   FXint     arrowSize;      // Arrow size
   FXString  tip;            // Tooltip value
   FXString  help;           // Help value
-  FXbool    state;          // State of button
-  FXbool    fired;          // Timer has fired
+  bool      state;          // State of button
+  bool      fired;          // Timer has fired
 protected:
   FXArrowButton();
 private:
@@ -116,10 +116,10 @@ public:
   virtual bool canFocus() const;
 
   /// Set the button state (where TRUE means the button is down)
-  void setState(FXbool s);
+  void setState(bool s);
 
   /// Get the button state (where TRUE means the button is down)
-  FXbool getState() const { return state; }
+  bool getState() const { return state; }
 
   /// Set status line help text for this arrow button
   void setHelpText(const FXString& text){ help=text; }

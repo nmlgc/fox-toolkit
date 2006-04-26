@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXApp.h,v 1.230 2006/01/22 17:57:58 fox Exp $                            *
+* $Id: FXApp.h,v 1.234 2006/04/06 05:42:48 fox Exp $                            *
 ********************************************************************************/
 #ifndef FXAPP_H
 #define FXAPP_H
@@ -129,9 +129,9 @@ struct FXAPI FXEvent {
   FXuint      click_time;     /// Time of mouse button press
   FXuint      click_button;   /// Mouse button pressed
   FXint       click_count;    /// Click-count
-  FXbool      moved;          /// Moved cursor since press
+  bool        moved;          /// Moved cursor since press
   FXRectangle rect;           /// Rectangle
-  FXbool      synthetic;      /// True if synthetic expose event
+  bool        synthetic;      /// True if synthetic expose event
   FXDragType  target;         /// Target drag type being requested
   };
 
@@ -301,10 +301,10 @@ private:
   FXID             xdndSource;          // XDND drag source window
   FXID             xdndTarget;          // XDND drop target window
   FXID             xdndProxyTarget;     // XDND window to set messages to
-  FXbool           xdndStatusPending;   // XDND waiting for status feedback
-  FXbool           xdndStatusReceived;  // XDND received at least one status
-  FXbool           xdndWantUpdates;     // XDND target wants new positions while in rect
-  FXbool           xdndFinishSent;      // XDND finish sent
+  bool             xdndStatusPending;   // XDND waiting for status feedback
+  bool             xdndStatusReceived;  // XDND received at least one status
+  bool             xdndWantUpdates;     // XDND target wants new positions while in rect
+  bool             xdndFinishSent;      // XDND finish sent
   FXRectangle      xdndRect;            // XDND rectangle bounding target
   FXint            xrreventbase;        // XRR event base
   FXID             stipples[23];        // Standard stipple patterns
@@ -312,9 +312,9 @@ private:
   void            *w_fds;               // Set of file descriptors for write
   void            *e_fds;               // Set of file descriptors for exceptions
   void            *xim;                 // Input method
-  FXbool           shmi;                // Use XSHM Image possible
-  FXbool           shmp;                // Use XSHM Pixmap possible
-  FXbool           synchronize;         // Synchronized
+  bool             shmi;                // Use XSHM Image possible
+  bool             shmp;                // Use XSHM Pixmap possible
+  bool             synchronize;         // Synchronized
 
 #else
 
@@ -331,10 +331,10 @@ private:
   FXushort         xdndAware;           // XDND awareness atom
   FXID             xdndSource;          // XDND drag source window
   FXID             xdndTarget;          // XDND drop target window
-  FXbool           xdndStatusPending;   // XDND waiting for status feedback
-  FXbool           xdndFinishPending;   // XDND waiting for drop-confirmation
-  FXbool           xdndStatusReceived;  // XDND received at least one status
-  FXbool           xdndFinishSent;      // XDND finish sent
+  bool             xdndStatusPending;   // XDND waiting for status feedback
+  bool             xdndFinishPending;   // XDND waiting for drop-confirmation
+  bool             xdndStatusReceived;  // XDND received at least one status
+  bool             xdndFinishSent;      // XDND finish sent
   FXRectangle      xdndRect;            // XDND rectangle bounding target
   FXID             stipples[17];        // Standard stipple bitmaps
   void           **handles;             // Waitable object handles
@@ -360,7 +360,7 @@ private:
   void dragdropGetData(const FXWindow* window,FXDragType type,FXuchar*& data,FXuint& size);
   void dragdropGetTypes(const FXWindow* window,FXDragType*& types,FXuint& numtypes);
 #ifndef WIN32
-  void addRepaint(FXID win,FXint x,FXint y,FXint w,FXint h,FXbool synth=0);
+  void addRepaint(FXID win,FXint x,FXint y,FXint w,FXint h,bool synth=false);
   void removeRepaints(FXID win,FXint x,FXint y,FXint w,FXint h);
   void scrollRepaints(FXID win,FXint dx,FXint dy);
   static void imcreatecallback(void*,FXApp*,void*);
@@ -484,7 +484,7 @@ public:
   * handler.  If a timer with the same target and message already exists,
   * it will be rescheduled.
   */
-  void addTimeout(FXObject* tgt,FXSelector sel,FXuint ms=1000,void* ptr=NULL);
+  void addTimeout(FXObject* tgt,FXSelector sel,FXTime ms=1000,void* ptr=NULL);
 
   /**
   * Remove timeout identified by tgt and sel.
@@ -497,11 +497,11 @@ public:
   bool hasTimeout(FXObject *tgt,FXSelector sel) const;
 
   /**
-  * Return, in ms, the time remaining until the given timer fires.
+  * Return, in milliseconds, the time remaining until the given timer fires.
   * If the timer is past due, 0 is returned.  If there is no such
-  * timer, infinity (UINT_MAX) is returned.
+  * timer, infinity (LLONG_MAX) is returned.
   */
-  FXuint remainingTimeout(FXObject *tgt,FXSelector sel);
+  FXTime remainingTimeout(FXObject *tgt,FXSelector sel);
 
   /**
   * Process any timeouts due at this time.
@@ -534,7 +534,7 @@ public:
   * this should be used with extreme care as the application is interrupted
   * at an unknown point in its execution.
   */
-  void addSignal(FXint sig,FXObject* tgt,FXSelector sel,FXbool immediate=FALSE,FXuint flags=0);
+  void addSignal(FXint sig,FXObject* tgt,FXSelector sel,bool immediate=false,FXuint flags=0);
 
   /// Remove signal message for signal sig
   void removeSignal(FXint sig);
@@ -721,13 +721,13 @@ public:
   * Write a window and its children, and all resources reachable from this
   * window, into the stream store. (EXPERIMENTAL!)
   */
-  FXbool writeWindow(FXStream& store,FXWindow *window);
+  bool writeWindow(FXStream& store,FXWindow *window);
 
   /**
   * Read a window and its children from the stream store, and append
   * it under father; note it is initially not created yet. (EXPERIMENTAL!)
   */
-  FXbool readWindow(FXStream& store,FXWindow*& window,FXWindow* father,FXWindow* owner);
+  bool readWindow(FXStream& store,FXWindow*& window,FXWindow* father,FXWindow* owner);
 
   /**
   * Return a reference to the application-wide mutex.

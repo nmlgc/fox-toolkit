@@ -19,13 +19,14 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: fxxbmio.cpp,v 1.17 2006/01/22 17:58:58 fox Exp $                         *
+* $Id: fxxbmio.cpp,v 1.18 2006/03/24 05:55:40 fox Exp $                         *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
 #include "fxdefs.h"
 #include "fxascii.h"
 #include "FXHash.h"
+#include "FXElement.h"
 #include "FXStream.h"
 #include "fxpriv.h"
 
@@ -80,7 +81,7 @@ bool fxloadXBM(FXColor*& data,const FXuchar *pixels,const FXuchar *mask,FXint wi
   register FXint x,y,byt,bit,row;
   data=NULL;
   if(pixels && mask && 0<width && 0<height){
-    if(FXCALLOC(&data,FXColor,width*height)){
+    if(callocElms(data,width*height)){
       row=(width+7)>>3;
       for(y=0; y<height; y++){
         for(x=0; x<width; x++){
@@ -140,7 +141,7 @@ bool fxloadXBM(FXStream& store,FXColor*& data,FXint& width,FXint& height,FXint& 
   if(width<=0 || height<=0) return false;
 
   // Allocate image to return
-  if(!FXCALLOC(&data,FXColor,width*height)){
+  if(!allocElms(data,width*height)){
     return false;
     }
 

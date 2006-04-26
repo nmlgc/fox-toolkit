@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXHeader.cpp,v 1.103 2006/01/22 17:58:31 fox Exp $                       *
+* $Id: FXHeader.cpp,v 1.105 2006/04/05 04:27:26 fox Exp $                       *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -213,15 +213,14 @@ void FXHeaderItem::detach(){ if(icon) icon->detach(); }
 
 
 // Change sort direction
-void FXHeaderItem::setArrowDir(FXbool dir){
-  state&=~(ARROW_UP|ARROW_DOWN);
-  if(dir==TRUE) state|=ARROW_UP; else if(dir==FALSE) state|=ARROW_DOWN;
+void FXHeaderItem::setArrowDir(FXuint dir){
+  state=(state&~(ARROW_UP|ARROW_DOWN)) | (dir&(ARROW_UP|ARROW_DOWN));
   }
 
 
 // Change sort direction
-FXbool FXHeaderItem::getArrowDir() const {
-  return (state&ARROW_UP) ? TRUE : (state&ARROW_DOWN) ? FALSE : MAYBE;
+FXuint FXHeaderItem::getArrowDir() const {
+  return state&(ARROW_UP|ARROW_DOWN);
   }
 
 
@@ -230,15 +229,34 @@ void FXHeaderItem::setJustify(FXuint justify){
   state=(state&~(RIGHT|LEFT|TOP|BOTTOM)) | (justify&(RIGHT|LEFT|TOP|BOTTOM));
   }
 
+
+// Return content justification
+FXuint FXHeaderItem::getJustify() const { 
+  return state&(RIGHT|LEFT|TOP|BOTTOM); 
+  }
+
+
 // Change icon positioning
 void FXHeaderItem::setIconPosition(FXuint mode){
   state=(state&~(BEFORE|AFTER|ABOVE|BELOW)) | (mode&(BEFORE|AFTER|ABOVE|BELOW));
   }
 
 
+// Return icon position
+FXuint FXHeaderItem::getIconPosition() const { 
+  return state&(BEFORE|AFTER|ABOVE|BELOW); 
+  }
+
+
 // Set button state
-void FXHeaderItem::setPressed(FXbool pressed){
+void FXHeaderItem::setPressed(bool pressed){
   if(pressed) state|=PRESSED; else state&=~PRESSED;
+  }
+
+
+// Return pressed state
+bool FXHeaderItem::isPressed() const { 
+  return (state&PRESSED)!=0; 
   }
 
 
@@ -444,7 +462,7 @@ FXHeaderItem *FXHeader::getItem(FXint index) const {
 
 
 // Replace item with another
-FXint FXHeader::setItem(FXint index,FXHeaderItem* item,FXbool notify){
+FXint FXHeader::setItem(FXint index,FXHeaderItem* item,bool notify){
 
   // Must have item
   if(!item){ fxerror("%s::setItem: item is NULL.\n",getClassName()); }
@@ -472,13 +490,13 @@ FXint FXHeader::setItem(FXint index,FXHeaderItem* item,FXbool notify){
 
 
 // Replace item with another
-FXint FXHeader::setItem(FXint index,const FXString& text,FXIcon *icon,FXint size,void* ptr,FXbool notify){
+FXint FXHeader::setItem(FXint index,const FXString& text,FXIcon *icon,FXint size,void* ptr,bool notify){
   return setItem(index,createItem(text,icon,FXMAX(size,0),ptr),notify);
   }
 
 
 // Insert item
-FXint FXHeader::insertItem(FXint index,FXHeaderItem* item,FXbool notify){
+FXint FXHeader::insertItem(FXint index,FXHeaderItem* item,bool notify){
   register FXint i,d;
 
   // Must have item
@@ -507,36 +525,36 @@ FXint FXHeader::insertItem(FXint index,FXHeaderItem* item,FXbool notify){
 
 
 // Insert item
-FXint FXHeader::insertItem(FXint index,const FXString& text,FXIcon *icon,FXint size,void* ptr,FXbool notify){
+FXint FXHeader::insertItem(FXint index,const FXString& text,FXIcon *icon,FXint size,void* ptr,bool notify){
   return insertItem(index,createItem(text,icon,FXMAX(size,0),ptr),notify);
   }
 
 
 // Append item
-FXint FXHeader::appendItem(FXHeaderItem* item,FXbool notify){
+FXint FXHeader::appendItem(FXHeaderItem* item,bool notify){
   return insertItem(items.no(),item,notify);
   }
 
 
 // Append item
-FXint FXHeader::appendItem(const FXString& text,FXIcon *icon,FXint size,void* ptr,FXbool notify){
+FXint FXHeader::appendItem(const FXString& text,FXIcon *icon,FXint size,void* ptr,bool notify){
   return insertItem(items.no(),createItem(text,icon,FXMAX(size,0),ptr),notify);
   }
 
 
 // Prepend item
-FXint FXHeader::prependItem(FXHeaderItem* item,FXbool notify){
+FXint FXHeader::prependItem(FXHeaderItem* item,bool notify){
   return insertItem(0,item,notify);
   }
 
 // Prepend item
-FXint FXHeader::prependItem(const FXString& text,FXIcon *icon,FXint size,void* ptr,FXbool notify){
+FXint FXHeader::prependItem(const FXString& text,FXIcon *icon,FXint size,void* ptr,bool notify){
   return insertItem(0,createItem(text,icon,FXMAX(size,0),ptr),notify);
   }
 
 
 // Fill list by appending items from array of strings
-FXint FXHeader::fillItems(const FXchar** strings,FXIcon *icon,FXint size,void* ptr,FXbool notify){
+FXint FXHeader::fillItems(const FXchar** strings,FXIcon *icon,FXint size,void* ptr,bool notify){
   register FXint n=0;
   if(strings){
     while(strings[n]){
@@ -548,7 +566,7 @@ FXint FXHeader::fillItems(const FXchar** strings,FXIcon *icon,FXint size,void* p
 
 
 // Fill list by appending items from newline separated strings
-FXint FXHeader::fillItems(const FXString& strings,FXIcon *icon,FXint size,void* ptr,FXbool notify){
+FXint FXHeader::fillItems(const FXString& strings,FXIcon *icon,FXint size,void* ptr,bool notify){
   register FXint n=0;
   FXString text;
   while(!(text=strings.section('\n',n)).empty()){
@@ -560,7 +578,7 @@ FXint FXHeader::fillItems(const FXString& strings,FXIcon *icon,FXint size,void* 
 
 
 // Extract node from list
-FXHeaderItem* FXHeader::extractItem(FXint index,FXbool notify){
+FXHeaderItem* FXHeader::extractItem(FXint index,bool notify){
   register FXHeaderItem *result;
   register FXint i,d;
 
@@ -588,7 +606,7 @@ FXHeaderItem* FXHeader::extractItem(FXint index,FXbool notify){
 
 
 // Remove node from list
-void FXHeader::removeItem(FXint index,FXbool notify){
+void FXHeader::removeItem(FXint index,bool notify){
   register FXint i,d;
 
   // Must be in range
@@ -612,7 +630,7 @@ void FXHeader::removeItem(FXint index,FXbool notify){
 
 
 // Remove all items
-void FXHeader::clearItems(FXbool notify){
+void FXHeader::clearItems(bool notify){
 
   // Delete items
   for(FXint index=items.no()-1; 0<=index; index--){
@@ -725,7 +743,7 @@ void* FXHeader::getItemData(FXint index) const {
 
 
 // Change sort direction
-void FXHeader::setArrowDir(FXint index,FXbool dir){
+void FXHeader::setArrowDir(FXint index,FXuint dir){
   if(index<0 || items.no()<=index){ fxerror("%s::setArrowDir: index out of range.\n",getClassName()); }
   if(items[index]->getArrowDir()!=dir){
     items[index]->setArrowDir(dir);
@@ -735,7 +753,7 @@ void FXHeader::setArrowDir(FXint index,FXbool dir){
 
 
 // Return sort direction
-FXbool FXHeader::getArrowDir(FXint index) const {
+FXuint FXHeader::getArrowDir(FXint index) const {
   if(index<0 || items.no()<=index){ fxerror("%s::getArrowDir: index out of range.\n",getClassName()); }
   return items[index]->getArrowDir();
   }
@@ -776,7 +794,7 @@ FXuint FXHeader::getItemIconPosition(FXint index) const {
 
 
 // Changed button item's pressed state
-void FXHeader::setItemPressed(FXint index,FXbool pressed){
+void FXHeader::setItemPressed(FXint index,bool pressed){
   if(index<0 || items.no()<=index){ fxerror("%s::setItemPressed: index out of range.\n",getClassName()); }
   if(pressed!=items[index]->isPressed()){
     items[index]->setPressed(pressed);
@@ -786,7 +804,7 @@ void FXHeader::setItemPressed(FXint index,FXbool pressed){
 
 
 // Return TRUE if button item is pressed in
-FXbool FXHeader::isItemPressed(FXint index) const {
+bool FXHeader::isItemPressed(FXint index) const {
   if(index<0 || items.no()<=index){ fxerror("%s::isItemPressed: index out of range.\n",getClassName()); }
   return items[index]->isPressed();
   }

@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXStringDict.h,v 1.16 2006/01/22 17:58:10 fox Exp $                      *
+* $Id: FXStringDict.h,v 1.17 2006/03/25 18:03:43 fox Exp $                      *
 ********************************************************************************/
 #ifndef FXSTRINGDICT_H
 #define FXSTRINGDICT_H
@@ -37,7 +37,7 @@ namespace FX {
 class FXAPI FXStringDict : public FXDict {
   FXDECLARE(FXStringDict)
 protected:
-  virtual void *createData(const void*);
+  virtual void *createData(void*);
   virtual void deleteData(void*);
 public:
 
@@ -51,10 +51,10 @@ public:
   FXStringDict &operator=(const FXStringDict& orig);
 
   /// Insert a new string indexed by key, with given mark flag
-  const FXchar* insert(const FXchar* ky,const FXchar* str,bool mrk=false){ return (const FXchar*)FXDict::insert(ky,str,mrk); }
+  const FXchar* insert(const FXchar* ky,const FXchar* str,bool mrk=false){ return (const FXchar*)FXDict::insert(ky,(void*)str,mrk); }
 
   /// Replace or insert a new string indexed by key, unless given mark is lower that the existing mark
-  const FXchar* replace(const FXchar* ky,const FXchar* str,bool mrk=false){ return (const FXchar*)FXDict::replace(ky,str,mrk); }
+  const FXchar* replace(const FXchar* ky,const FXchar* str,bool mrk=false){ return (const FXchar*)FXDict::replace(ky,(void*)str,mrk); }
 
   /// Remove entry indexed by key
   const FXchar* remove(const FXchar* ky){ return (const FXchar*)FXDict::remove(ky); }

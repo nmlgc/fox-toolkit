@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXTopWindow.h,v 1.62 2006/01/22 17:58:11 fox Exp $                       *
+* $Id: FXTopWindow.h,v 1.63 2006/03/29 07:23:00 fox Exp $                       *
 ********************************************************************************/
 #ifndef FXTOPWINDOW_H
 #define FXTOPWINDOW_H
@@ -179,7 +179,7 @@ public:
   virtual FXint getDefaultHeight();
 
   /// Obtain border sizes added to our window by the window manager
-  FXbool getWMBorders(FXint& left,FXint& right,FXint& top,FXint& bottom);
+  bool getWMBorders(FXint& left,FXint& right,FXint& top,FXint& bottom);
 
   /// Raise this window to the top of the stacking order
   virtual void raise();
@@ -194,13 +194,13 @@ public:
   virtual void position(FXint x,FXint y,FXint w,FXint h);
 
   /// Maximize window, return TRUE if maximized
-  virtual FXbool maximize(FXbool notify=FALSE);
+  virtual bool maximize(bool notify=false);
 
   /// Minimize or iconify window, return TRUE if minimized
-  virtual FXbool minimize(FXbool notify=FALSE);
+  virtual bool minimize(bool notify=false);
 
   /// Restore window to normal, return TRUE if restored
-  virtual FXbool restore(FXbool notify=FALSE);
+  virtual bool restore(bool notify=false);
 
   /**
   * Close the window, return TRUE if actually closed.  If notify=TRUE, the target
@@ -209,13 +209,13 @@ public:
   * be closed, and subsequently deleted.  When the last main window has been
   * closed, the application will receive an ID_QUIT message and will be closed.
   */
-  virtual FXbool close(FXbool notify=FALSE);
+  virtual bool close(bool notify=false);
 
   /// Return TRUE if maximized
-  FXbool isMaximized() const;
+  bool isMaximized() const;
 
   /// Return TRUE if minimized
-  FXbool isMinimized() const;
+  bool isMinimized() const;
 
   /// Change window title
   void setTitle(const FXString& name);

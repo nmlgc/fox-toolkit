@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXElement.h,v 1.19 2006/01/22 17:58:01 fox Exp $                         *
+* $Id: FXElement.h,v 1.22 2006/03/23 07:10:56 fox Exp $                         *
 ********************************************************************************/
 #ifndef FXELEMENT_H
 #define FXELEMENT_H
@@ -80,44 +80,30 @@ inline void clearElms(TYPE* dst,unsigned long n){
   }
 
 
-/// Save some elements to persistent store
-template<class TYPE>
-inline void saveElms(FXStream& store,const TYPE* ptr,unsigned long n){
-  while(n--){ store << *ptr; ptr++; }
-  }
-
-
-/// Load some elements from persistent store
-template<class TYPE>
-inline void loadElms(FXStream& store,TYPE* ptr,unsigned long n){
-  while(n--){ store >> *ptr; ptr++; }
-  }
-
-
 /// Allocate array of elements, uninitialized
 template<class TYPE>
-inline FXint allocElms(TYPE*& ptr,unsigned long n){
+inline bool allocElms(TYPE*& ptr,unsigned long n){
   return fxmalloc((void**)&ptr,sizeof(TYPE)*n);
   }
 
 
 /// Allocate array of elements, initialized with zero
 template<class TYPE>
-inline FXint callocElms(TYPE*& ptr,unsigned long n){
+inline bool callocElms(TYPE*& ptr,unsigned long n){
   return fxcalloc((void**)&ptr,sizeof(TYPE)*n);
   }
 
 
 /// Allocate array of elements, initialized with bit-wise copy of src array
 template<class TYPE>
-inline FXint dupElms(TYPE*& ptr,const TYPE* src,unsigned long n){
+inline bool dupElms(TYPE*& ptr,const TYPE* src,unsigned long n){
   return fxmemdup((void**)&ptr,src,sizeof(TYPE)*n);
   }
 
 
 /// Resize array of elements, without constructor or destructor
 template<class TYPE>
-inline FXint resizeElms(TYPE*& ptr,unsigned long n){
+inline bool resizeElms(TYPE*& ptr,unsigned long n){
   return fxresize((void**)&ptr,sizeof(TYPE)*n);
   }
 
@@ -183,26 +169,6 @@ template<class TYPE> inline void moveElms(TYPE** dst,const TYPE** src,unsigned l
 // Fill byte arrays with constant
 inline void fillElms(FXuchar* dst,const FXuchar& src,unsigned long n){ memset(dst,src,n); }
 inline void fillElms(FXchar* dst,const FXchar& src,unsigned long n){ memset(dst,src,n); }
-
-// Type-safe save for basic types
-inline void saveElms(FXStream& store,const FXuchar* ptr,unsigned long n){ store.save(ptr,n); }
-inline void saveElms(FXStream& store,const FXchar* ptr,unsigned long n){ store.save(ptr,n); }
-inline void saveElms(FXStream& store,const FXushort* ptr,unsigned long n){ store.save(ptr,n); }
-inline void saveElms(FXStream& store,const FXshort* ptr,unsigned long n){ store.save(ptr,n); }
-inline void saveElms(FXStream& store,const FXuint* ptr,unsigned long n){ store.save(ptr,n); }
-inline void saveElms(FXStream& store,const FXint* ptr,unsigned long n){ store.save(ptr,n); }
-inline void saveElms(FXStream& store,const FXfloat* ptr,unsigned long n){ store.save(ptr,n); }
-inline void saveElms(FXStream& store,const FXdouble* ptr,unsigned long n){ store.save(ptr,n); }
-
-// Type-safe load for basic types
-inline void loadElms(FXStream& store,FXuchar* ptr,unsigned long n){ store.load(ptr,n); }
-inline void loadElms(FXStream& store,FXchar* ptr,unsigned long n){ store.load(ptr,n); }
-inline void loadElms(FXStream& store,FXushort* ptr,unsigned long n){ store.load(ptr,n); }
-inline void loadElms(FXStream& store,FXshort* ptr,unsigned long n){ store.load(ptr,n); }
-inline void loadElms(FXStream& store,FXuint* ptr,unsigned long n){ store.load(ptr,n); }
-inline void loadElms(FXStream& store,FXint* ptr,unsigned long n){ store.load(ptr,n); }
-inline void loadElms(FXStream& store,FXfloat* ptr,unsigned long n){ store.load(ptr,n); }
-inline void loadElms(FXStream& store,FXdouble* ptr,unsigned long n){ store.load(ptr,n); }
 
 }
 

@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXGLViewer.cpp,v 1.156 2006/01/22 17:58:28 fox Exp $                     *
+* $Id: FXGLViewer.cpp,v 1.159 2006/04/04 04:28:06 fox Exp $                     *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -27,6 +27,7 @@
 #include "fxkeys.h"
 #include "FXHash.h"
 #include "FXThread.h"
+#include "FXElement.h"
 #include "FXStream.h"
 #include "FXVec2f.h"
 #include "FXVec3f.h"
@@ -709,7 +710,7 @@ FXint FXGLViewer::selectHits(FXuint*& hits,FXint& nhits,FXint x,FXint y,FXint w,
     // Loop until room enough to fit
     do{
       nhits=0;
-      if(!FXRESIZE(&hits,FXuint,mh)) break;
+      if(!resizeElms(hits,mh)) break;
       glSelectBuffer(mh,(GLuint*)hits);
       glRenderMode(GL_SELECT);
       glInitNames();
@@ -721,7 +722,7 @@ FXint FXGLViewer::selectHits(FXuint*& hits,FXint& nhits,FXint x,FXint y,FXint w,
       }
     while(nhits<0);
     makeNonCurrent();
-    if(!nhits) FXFREE(&hits);
+    if(!nhits) freeElms(hits);
     return nhits;
     }
 #endif
@@ -756,12 +757,12 @@ FXGLObject** FXGLViewer::select(FXint x,FXint y,FXint w,FXint h){
   FXuint *hits;
   if(scene && maxhits){
     if(selectHits(hits,nhits,x,y,w,h)){     // FIXME leak
-      FXMALLOC(&objects,FXGLObject*,nhits+1);
+      resizeElms(objects,nhits+1);
       for(i=j=0; nhits>0; i+=hits[i]+3,nhits--){
         if((obj=scene->identify(&hits[4+i]))!=NULL) objects[j++]=obj;
         }
       objects[j]=NULL;
-      FXFREE(&hits);
+      freeElms(hits);
       }
     }
   return objects;
@@ -785,7 +786,7 @@ FXGLObject* FXGLViewer::pick(FXint x,FXint y){
   if(scene && maxhits){
     if(selectHits(hits,nhits,x-PICK_TOL,y-PICK_TOL,PICK_TOL*2,PICK_TOL*2)){     // FIXME leak
       obj=processHits(hits,nhits);
-      FXFREE(&hits);
+      freeElms(hits);
       }
     }
   return obj;
@@ -1016,7 +1017,7 @@ void FXGLViewer::updateTransform(){
 
 
 // Set model bounding box
-FXbool FXGLViewer::setBounds(const FXRangef& r){
+bool FXGLViewer::setBounds(const FXRangef& r){
 //   FXTRACE((100,"xlo=%g xhi=%g ylo=%g yhi=%g zlo=%g zhi=%g\n",r.lower.x,r.upper.x,r.lower.y,r.upper.y,r.lower.z,r.upper.z));
 
   // Model center
@@ -1034,12 +1035,12 @@ FXbool FXGLViewer::setBounds(const FXRangef& r){
   // Reset distance (and thus field of view)
   setDistance(1.1*diameter);
 
-  return TRUE;
+  return true;
   }
 
 
 // Fit view to new bounds
-FXbool FXGLViewer::fitToBounds(const FXRangef& box){
+bool FXGLViewer::fitToBounds(const FXRangef& box){
   FXRangef r(FLT_MAX,-FLT_MAX,FLT_MAX,-FLT_MAX,FLT_MAX,-FLT_MAX);
   FXMat4f m;
 
@@ -1054,7 +1055,7 @@ FXbool FXGLViewer::fitToBounds(const FXRangef& box){
     }
 
   setBounds(r);
-  return TRUE;
+  return true;
   }
 
 
@@ -1150,14 +1151,14 @@ FXVec3f FXGLViewer::worldVector(FXint fx,FXint fy,FXint tx,FXint ty){
 
 
 // Get a bore vector
-FXbool FXGLViewer::getBoreVector(FXint sx,FXint sy,FXVec3f& point,FXVec3f& dir){
+bool FXGLViewer::getBoreVector(FXint sx,FXint sy,FXVec3f& point,FXVec3f& dir){
   FXVec3f p=eyeToWorld(screenToEye(sx,sy,(FXfloat)(diameter-distance)));
   if(PARALLEL==projection)
     point=eyeToWorld(screenToEye(sx,sy,0.0f));
   else
     point=eyeToWorld(FXVec3f(0.0f,0.0f,0.0f));
   dir=normalize(p-point);
-  return TRUE;
+  return true;
   }
 
 
@@ -1396,7 +1397,7 @@ long FXGLViewer::onLassoed(FXObject*,FXSelector,void* ptr){
     }
 
   // Free list
-  FXFREE(&objlist);
+  freeElms(objlist);
 
   return 1;
   }
@@ -2320,14 +2321,14 @@ long FXGLViewer::onUpdRollPitchYaw(FXObject* sender,FXSelector sel,void*){
 
 // Read back pixels
 // Derived from code contributed by <sancelot@crosswinds.net>
-FXbool FXGLViewer::readPixels(FXColor*& buffer,FXint x,FXint y,FXint w,FXint h){
+bool FXGLViewer::readPixels(FXColor*& buffer,FXint x,FXint y,FXint w,FXint h){
 #ifdef HAVE_GL_H
   if(1<=w && 1<=h){
     GLint swapbytes,lsbfirst,rowlength,skiprows,skippixels,alignment,oldbuf;
     register FXColor *p,*q,*pp,*qq,t;
 
     // Try allocate buffer
-    if(FXMALLOC(&buffer,FXColor,w*h)){
+    if(allocElms(buffer,w*h)){
 
       // Make context current
       makeCurrent();
@@ -2381,11 +2382,11 @@ FXbool FXGLViewer::readPixels(FXColor*& buffer,FXint x,FXint y,FXint w,FXint h){
 
       // Make context non-current
       makeNonCurrent();
-      return TRUE;
+      return true;
       }
     }
 #endif
-  return FALSE;
+  return false;
   }
 
 
@@ -2395,7 +2396,7 @@ long FXGLViewer::onCmdPrintImage(FXObject*,FXSelector,void*){
 
   // First, ensure window is fully painted
   repaint();
-  getApp()->flush(TRUE);
+  getApp()->flush(true);
 
   // Then try grab the pixels
   if(readPixels(buffer,0,0,width,height)){
@@ -2449,7 +2450,7 @@ long FXGLViewer::onCmdPrintImage(FXObject*,FXSelector,void*){
       }
 
     // Free the pixels
-    FXFREE(&buffer);
+    freeElms(buffer);
     }
   return 1;
   }
@@ -2473,15 +2474,15 @@ FXint FXGLViewer::renderFeedback(FXfloat *buffer,FXint x,FXint y,FXint w,FXint h
 
 
 // Read feedback buffer
-FXbool FXGLViewer::readFeedback(FXfloat*& buffer,FXint& used,FXint& size,FXint x,FXint y,FXint w,FXint h){
-  FXbool ok=FALSE;
+bool FXGLViewer::readFeedback(FXfloat*& buffer,FXint& used,FXint& size,FXint x,FXint y,FXint w,FXint h){
+  bool ok=false;
   buffer=NULL;
   used=0;
   size=10000;
   while(1){
 
     // Allocate buffer
-    FXMALLOC(&buffer,FXfloat,size);
+    allocElms(buffer,size);
 
     // It got too big, give up
     if(!buffer) break;
@@ -2491,12 +2492,12 @@ FXbool FXGLViewer::readFeedback(FXfloat*& buffer,FXint& used,FXint& size,FXint x
 
     // No errors, got our stuff
     if(0<used){
-      ok=TRUE;
+      ok=true;
       break;
       }
 
     // It didn't fit, lets double the buffer and try again
-    FXFREE(&buffer);
+    freeElms(buffer);
     size*=2;
     continue;
     }
@@ -2971,7 +2972,7 @@ long FXGLViewer::onDNDMotion(FXObject* sender,FXSelector sel,void* ptr){
 
 // Handle drag-and-drop drop
 long FXGLViewer::onDNDDrop(FXObject* sender,FXSelector sel,void* ptr){
-  FXushort *clr; FXuint len;
+  FXuchar *data; FXuint len; FXVec4f color;
 
   // Try base class first
   if(FXGLCanvas::onDNDDrop(sender,sel,ptr)) return 1;
@@ -2990,9 +2991,13 @@ long FXGLViewer::onDNDDrop(FXObject* sender,FXSelector sel,void* ptr){
     }
 
   // Dropped on viewer
-  if(getDNDData(FROM_DRAGNDROP,FXGLViewer::colorType,(FXuchar*&)clr,len)){
-    setBackgroundColor(FXVec4f(clr[0]/65535.0f,clr[1]/65535.0f,clr[2]/65535.0f,1.0f));
-    FXFREE(&clr);
+  if(getDNDData(FROM_DRAGNDROP,FXGLViewer::colorType,data,len)){
+    color[0]=((FXushort*)data)[0]/65535.0f;
+    color[1]=((FXushort*)data)[1]/65535.0f;
+    color[2]=((FXushort*)data)[2]/65535.0f;
+    color[3]=((FXushort*)data)[3]/65535.0f;
+    setBackgroundColor(color);
+    freeElms(data);
     update();
     return 1;
     }
@@ -3034,8 +3039,8 @@ long FXGLViewer::onDefault(FXObject* sender,FXSelector sel,void* ptr){
 
 
 // Change turbo mode
-void FXGLViewer::setTurboMode(FXbool turbo){
-  if(!turbo) doesturbo=FALSE;
+void FXGLViewer::setTurboMode(bool turbo){
+  if(!turbo) doesturbo=false;
   turbomode=turbo;
   }
 

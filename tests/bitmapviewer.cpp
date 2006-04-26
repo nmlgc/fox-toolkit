@@ -5,7 +5,7 @@
 *********************************************************************************
 * Copyright (C) 2000,2006 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
-* $Id: bitmapviewer.cpp,v 1.19 2006/01/22 17:58:58 fox Exp $                    *
+* $Id: bitmapviewer.cpp,v 1.20 2006/04/04 05:14:48 fox Exp $                    *
 ********************************************************************************/
 #include "fx.h"
 #include <stdio.h>
@@ -454,7 +454,7 @@ FXbool BitmapWindow::loadimage(const FXString& file){
     }
   scanline=TIFFScanlineSize(tif);
   size=height*scanline;
-  FXMALLOC(&data,FXuchar,size);
+  allocElms(data,size);
   pa=data;
   for(i=0; i<height; i++){
     TIFFReadScanline(tif,pa,i,0);
@@ -497,7 +497,7 @@ FXbool BitmapWindow::saveimage(const FXString& file){
   scanline=(width+7)>>3;
   size=height*scanline;
 
-  FXMALLOC(&data,FXuchar,size);
+  allocElms(data,size);
   memcpy(data,img->getData(),size);
   for(i=0; i<size; i++){
     data[i]=FXBITREVERSE(data[i]);
@@ -516,7 +516,7 @@ FXbool BitmapWindow::saveimage(const FXString& file){
     pa+=scanline;
     }
   TIFFClose(tif);
-  FXFREE(&data);
+  freeElms(data);
 #endif
   return TRUE;
   }

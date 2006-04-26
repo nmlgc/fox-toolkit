@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXGLVisual.h,v 1.24 2006/01/22 17:58:04 fox Exp $                        *
+* $Id: FXGLVisual.h,v 1.26 2006/04/21 20:39:46 fox Exp $                        *
 ********************************************************************************/
 #ifndef FXGLVISUAL_H
 #define FXGLVISUAL_H
@@ -71,13 +71,14 @@ public:
   FXGLVisual(FXApp* a,FXuint flags);
 
   /**
-  * Test if OpenGL is possible, and what level is supported.
+  * Test if GLX is possible, and what level is supported.
   * Because of remote display capability, the display server may
-  * support a different level of OpenGL than the client; it may
-  * even support no OpenGL at all!  This function returns the lesser
+  * support a different level of GLX than the client; it may
+  * even support no GLX at all!  This function returns the lesser
   * of the client support level and the display server support level.
+  * Simply returns 1.0 on Windows if OpenGL is enabled.
   */
-  static FXbool supported(FXApp* application,int& major,int& minor);
+  static bool supported(FXApp* application,int& major,int& minor);
 
   /// Create visual
   virtual void create();
@@ -125,16 +126,16 @@ public:
   FXint getActualAccumAlphaSize() const;
 
   /// Is it double buffered?
-  FXbool isDoubleBuffer() const;
+  bool isDoubleBuffer() const;
 
   /// Is it stereo?
-  FXbool isStereo() const;
+  bool isStereo() const;
 
   /// Is it hardware-accelerated?
-  FXbool isAccelerated() const;
+  bool isAccelerated() const;
 
   /// Does it swap by copying instead of flipping buffers
-  FXbool isBufferSwapCopy() const;
+  bool isBufferSwapCopy() const;
 
   /// Save visual info to a stream
   virtual void save(FXStream& store) const;

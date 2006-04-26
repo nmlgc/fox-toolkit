@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: fx.h,v 1.104 2006/01/22 17:58:13 fox Exp $                               *
+* $Id: fx.h,v 1.105 2006/04/04 05:00:42 fox Exp $                               *
 ********************************************************************************/
 #ifndef FX_H
 #define FX_H
@@ -40,6 +40,8 @@
 // FOX classes
 #include "FXHash.h"
 #include "FXException.h"
+#include "FXElement.h"
+#include "FXArray.h"
 #include "FXThread.h"
 #include "FXStream.h"
 #include "FXIO.h"

@@ -19,12 +19,13 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: fxpcxio.cpp,v 1.31 2006/01/22 17:58:53 fox Exp $                         *
+* $Id: fxpcxio.cpp,v 1.32 2006/03/25 06:07:15 fox Exp $                         *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
 #include "fxdefs.h"
 #include "FXHash.h"
+#include "FXElement.h"
 #include "FXStream.h"
 
 
@@ -181,10 +182,10 @@ bool fxloadPCX(FXStream& store,FXColor*& data,FXint& width,FXint& height){
   FXTRACE((1,"fxloadPCX: width=%d height=%d Version=%d BitsPerPixel=%d NPlanes=%d BytesPerLine=%d Encoding=%d\n",width,height,Version,BitsPerPixel,NPlanes,BytesPerLine,Encoding));
 
   // Allocate memory
-  if(!FXCALLOC(&data,FXColor,NumPixels)) return false;
+  if(!callocElms(data,NumPixels)) return false;
 
   // Scanline buffer
-  if(!FXMALLOC(&line,FXuchar,totalBytes)){ FXFREE(&line); return false; }
+  if(!allocElms(line,totalBytes)){ freeElms(data); return false; }
 
   // Load 1 bit/pixel
   if(BitsPerPixel==1 && NPlanes==1){
@@ -259,7 +260,7 @@ bool fxloadPCX(FXStream& store,FXColor*& data,FXint& width,FXint& height){
     }
 
   // Done with that
-  FXFREE(&line);
+  freeElms(line);
 
   return true;
   }

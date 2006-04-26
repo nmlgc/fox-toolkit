@@ -5,7 +5,7 @@
 ##############################################################################
 # Copyright (C) 1997,2005 by Jeroen van der Zijp.   All Rights Reserved.     #
 ##############################################################################
-# $Id: Makefile.bc,v 1.132 2006/01/27 05:19:39 fox Exp $                     #
+# $Id: Makefile.bc,v 1.133 2006/03/22 03:46:48 fox Exp $                     #
 ##############################################################################
 # This library is free software; you can redistribute it and/or              #
 # modify it under the terms of the GNU Library General Public                #
@@ -34,7 +34,7 @@ TOPDIR    = ..
 CXXFLAGS  = -5 -O2 -w-aus -w-ccc -w-csu -w-par -w-pia -w-rch -w-inl -w-ngu
 DEFINES   = -DFOX_BIGENDIAN=0 -DNDEBUG -D_WINDOWS -DWIN32 -DHAVE_GL_H -DHAVE_GLU_H -DHAVE_VSSCANF #-DHAVE_PNG_H -DHAVE_JPEG_H -DHAVE_TIFF_H -DXMD_H
 INCDIRS   = -I$(TOPDIR)/include
-FOXLIB    = $(TOPDIR)\src\FOX-1.6.lib
+FOXLIB    = $(TOPDIR)\src\FOX-1.7.lib
 RESWRAP   = $(TOPDIR)\utils\reswrap.exe
 
 

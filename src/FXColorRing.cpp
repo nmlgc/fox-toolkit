@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXColorRing.cpp,v 1.19 2006/01/22 17:58:20 fox Exp $                     *
+* $Id: FXColorRing.cpp,v 1.20 2006/03/31 07:33:04 fox Exp $                     *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -317,7 +317,7 @@ void FXColorRing::updatering(){
 
 
 // Test if inside hue ring
-FXbool FXColorRing::inHueRing(FXint x,FXint y) const {
+bool FXColorRing::inHueRing(FXint x,FXint y) const {
   register FXint rx=x-dialx-ringouter;
   register FXint ry=y-dialy-ringouter;
   return ringinner*ringinner<=rx*rx+ry*ry;
@@ -341,7 +341,7 @@ void FXColorRing::hueToXY(FXint& x,FXint& y,FXfloat hue) const {
 
 
 // Test if inside saturation/value triangle
-FXbool FXColorRing::inTriangle(FXint x,FXint y) const {
+bool FXColorRing::inTriangle(FXint x,FXint y) const {
   register FXint rx=x-dialx-ringouter;
   register FXint ry=y-dialy-ringouter;
   return 0<=(clry-blky)*(rx-clrx)-(clrx-blkx)*(ry-clry) && 0<=(whty-clry)*(rx-whtx)-(whtx-clrx)*(ry-whty) && 0<=(blky-whty)*(rx-blkx)-(blkx-whtx)*(ry-blky);
@@ -503,7 +503,7 @@ long FXColorRing::onPaint(FXObject*,FXSelector,void* ptr){
 
 
 // Determine if special case applies
-FXbool FXColorRing::inCorner(FXint x,FXint y) const {
+bool FXColorRing::inCorner(FXint x,FXint y) const {
   register FXint rx=x-dialx-ringouter;
   register FXint ry=y-dialy-ringouter;
   return (ringouter*ringouter<=rx*rx+ry*ry) && (0.99999f<=hsv[1] && 0.99999f<=hsv[2]);

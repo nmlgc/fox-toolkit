@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXTreeListBox.cpp,v 1.60 2006/01/22 17:58:50 fox Exp $                   *
+* $Id: FXTreeListBox.cpp,v 1.61 2006/03/31 07:33:15 fox Exp $                   *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -276,7 +276,7 @@ long FXTreeListBox::onMouseWheel(FXObject*,FXSelector,void* ptr){
 
 
 // Is the pane shown
-FXbool FXTreeListBox::isPaneShown() const {
+bool FXTreeListBox::isPaneShown() const {
   return pane->shown();
   }
 
@@ -499,13 +499,13 @@ FXTreeItem* FXTreeListBox::findItemByData(const void *ptr,FXTreeItem* start,FXui
 
 
 // Is item current
-FXbool FXTreeListBox::isItemCurrent(const FXTreeItem* item) const {
+bool FXTreeListBox::isItemCurrent(const FXTreeItem* item) const {
   return tree->isItemCurrent(item);
   }
 
 
 // Is item a leaf
-FXbool FXTreeListBox::isItemLeaf(const FXTreeItem* item) const {
+bool FXTreeListBox::isItemLeaf(const FXTreeItem* item) const {
   return tree->isItemLeaf(item);
   }
 
@@ -529,7 +529,7 @@ void FXTreeListBox::sortRootItems(){
 
 
 // Change current item
-void FXTreeListBox::setCurrentItem(FXTreeItem* item,FXbool notify){
+void FXTreeListBox::setCurrentItem(FXTreeItem* item,bool notify){
   FXTreeItem* current=tree->getCurrentItem();
   if(current!=item){
     tree->setCurrentItem(item);
@@ -570,7 +570,7 @@ FXString FXTreeListBox::getItemText(const FXTreeItem* item) const {
 
 
 // Change open icon
-void FXTreeListBox::setItemOpenIcon(FXTreeItem* item,FXIcon* icon,FXbool owned){
+void FXTreeListBox::setItemOpenIcon(FXTreeItem* item,FXIcon* icon,bool owned){
   tree->setItemOpenIcon(item,icon,owned);
   }
 
@@ -582,7 +582,7 @@ FXIcon* FXTreeListBox::getItemOpenIcon(const FXTreeItem* item) const {
 
 
 // Set closed icon
-void FXTreeListBox::setItemClosedIcon(FXTreeItem* item,FXIcon* icon,FXbool owned){
+void FXTreeListBox::setItemClosedIcon(FXTreeItem* item,FXIcon* icon,bool owned){
   tree->setItemClosedIcon(item,icon,owned);
   }
 

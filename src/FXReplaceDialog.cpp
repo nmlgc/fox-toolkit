@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXReplaceDialog.cpp,v 1.49 2006/03/01 02:13:21 fox Exp $                 *
+* $Id: FXReplaceDialog.cpp,v 1.50 2006/03/29 06:48:12 fox Exp $                 *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -241,7 +241,7 @@ void FXReplaceDialog::appendHistory(const FXString& search,const FXString& repla
       }
     getApp()->reg().writeStringEntry(searchgroup,skey[0],search.text());
     getApp()->reg().writeStringEntry(searchgroup,rkey[0],replace.text());
-    getApp()->reg().writeUnsignedEntry(searchgroup,mkey[0],mode);
+    getApp()->reg().writeUIntEntry(searchgroup,mkey[0],mode);
     }
   }
 
@@ -257,7 +257,7 @@ long FXReplaceDialog::onCmdSearchHist(FXObject*,FXSelector sel,void*){
   if(current){
     setSearchText(getApp()->reg().readStringEntry(searchgroup,skey[current-1],FXString::null));
     setReplaceText(getApp()->reg().readStringEntry(searchgroup,rkey[current-1],FXString::null));
-    setSearchMode(getApp()->reg().readUnsignedEntry(searchgroup,mkey[current-1],SEARCH_EXACT|SEARCH_FORWARD));
+    setSearchMode(getApp()->reg().readUIntEntry(searchgroup,mkey[current-1],SEARCH_EXACT|SEARCH_FORWARD));
     }
   else{
     setSearchText(FXString::null);

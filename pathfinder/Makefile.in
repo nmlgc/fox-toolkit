@@ -98,7 +98,7 @@ CXXFLAGS = @CXXFLAGS@ @X_CFLAGS@
 INCLUDES = -I$(top_srcdir)/include -I$(top_builddir)/include
 RESWRAP = $(top_builddir)/utils/reswrap
 SUFFIXES = .gif .bmp
-LDADD = ../src/libFOX-1.6.la -lm
+LDADD = ../src/libFOX-1.7.la -lm
 
 bin_PROGRAMS = PathFinder
 
@@ -183,7 +183,7 @@ X_PRE_LIBS = @X_PRE_LIBS@
 PathFinder_OBJECTS =  icons.$(OBJEXT) CopyDialog.$(OBJEXT) \
 PathFinder.$(OBJEXT) Preferences.$(OBJEXT) PropertyDialog.$(OBJEXT)
 PathFinder_LDADD = $(LDADD)
-PathFinder_DEPENDENCIES =  ../src/libFOX-1.6.la
+PathFinder_DEPENDENCIES =  ../src/libFOX-1.7.la
 PathFinder_LDFLAGS = 
 CXXCOMPILE = $(CXX) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
 LTCXXCOMPILE = $(LIBTOOL) --mode=compile $(CXX) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
@@ -384,7 +384,8 @@ distdir: $(DISTFILES)
 CopyDialog.o: CopyDialog.cpp ../include/xincs.h ../include/fx.h \
 	../include/fxver.h ../include/fxdefs.h ../include/fxascii.h \
 	../include/fxunicode.h ../include/FXHash.h \
-	../include/FXException.h ../include/FXThread.h \
+	../include/FXException.h ../include/FXElement.h \
+	../include/FXArray.h ../include/FXThread.h \
 	../include/FXStream.h ../include/FXIO.h ../include/FXFile.h \
 	../include/FXPipe.h ../include/FXSocket.h \
 	../include/FXFileStream.h ../include/FXMemoryStream.h \
@@ -479,7 +480,8 @@ icons.o: icons.cpp
 PathFinder.o: PathFinder.cpp ../include/xincs.h ../include/fx.h \
 	../include/fxver.h ../include/fxdefs.h ../include/fxascii.h \
 	../include/fxunicode.h ../include/FXHash.h \
-	../include/FXException.h ../include/FXThread.h \
+	../include/FXException.h ../include/FXElement.h \
+	../include/FXArray.h ../include/FXThread.h \
 	../include/FXStream.h ../include/FXIO.h ../include/FXFile.h \
 	../include/FXPipe.h ../include/FXSocket.h \
 	../include/FXFileStream.h ../include/FXMemoryStream.h \
@@ -575,6 +577,7 @@ PathFinder.o: PathFinder.cpp ../include/xincs.h ../include/fx.h \
 Preferences.o: Preferences.cpp ../include/fx.h ../include/fxver.h \
 	../include/fxdefs.h ../include/fxascii.h ../include/fxunicode.h \
 	../include/FXHash.h ../include/FXException.h \
+	../include/FXElement.h ../include/FXArray.h \
 	../include/FXThread.h ../include/FXStream.h ../include/FXIO.h \
 	../include/FXFile.h ../include/FXPipe.h ../include/FXSocket.h \
 	../include/FXFileStream.h ../include/FXMemoryStream.h \
@@ -668,7 +671,8 @@ Preferences.o: Preferences.cpp ../include/fx.h ../include/fxver.h \
 PropertyDialog.o: PropertyDialog.cpp ../include/xincs.h ../include/fx.h \
 	../include/fxver.h ../include/fxdefs.h ../include/fxascii.h \
 	../include/fxunicode.h ../include/FXHash.h \
-	../include/FXException.h ../include/FXThread.h \
+	../include/FXException.h ../include/FXElement.h \
+	../include/FXArray.h ../include/FXThread.h \
 	../include/FXStream.h ../include/FXIO.h ../include/FXFile.h \
 	../include/FXPipe.h ../include/FXSocket.h \
 	../include/FXFileStream.h ../include/FXMemoryStream.h \

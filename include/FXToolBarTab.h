@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXToolBarTab.h,v 1.11 2006/01/22 17:58:11 fox Exp $                      *
+* $Id: FXToolBarTab.h,v 1.12 2006/03/31 07:33:04 fox Exp $                      *
 ********************************************************************************/
 #ifndef FXTOOLBARTAB_H
 #define FXTOOLBARTAB_H
@@ -107,10 +107,10 @@ public:
   virtual void disable();
 
   /// Collapse or uncollapse the toolbar
-  void collapse(FXbool fold,FXbool notify=FALSE);
+  void collapse(bool fold,bool notify=false);
 
   /// Return true if the toolbar is collapsed
-  FXbool isCollapsed() const { return collapsed; }
+  bool isCollapsed() const { return collapsed; }
 
   /// Change the tab style
   void setTabStyle(FXuint style);

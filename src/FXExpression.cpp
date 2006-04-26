@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXExpression.cpp,v 1.30 2006/03/21 01:41:43 fox Exp $                    *
+* $Id: FXExpression.cpp,v 1.31 2006/03/23 07:10:03 fox Exp $                    *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -28,6 +28,7 @@
 #include "fxunicode.h"
 #include "FXHash.h"
 #include "FXStream.h"
+#include "FXElement.h"
 #include "FXString.h"
 #include "FXExpression.h"
 
@@ -902,7 +903,7 @@ FXExpression::FXExpression():code((FXuchar*)initial){
 // Copy regex object
 FXExpression::FXExpression(const FXExpression& orig):code((FXuchar*)initial){
   if(orig.code!=initial){
-    FXMEMDUP(&code,orig.code,FXuchar,*((FXint*)orig.code));
+    dupElms(code,orig.code,*((FXint*)orig.code));
     }
   }
 
@@ -924,10 +925,10 @@ FXExpression::FXExpression(const FXString& expression,const FXString& variables,
 // Assignment
 FXExpression& FXExpression::operator=(const FXExpression& orig){
   if(code!=orig.code){
-    if(code!=initial) FXFREE(&code);
+    if(code!=initial) freeElms(code);
     code=(FXuchar*)initial;
     if(orig.code!=initial){
-      FXMEMDUP(&code,orig.code,FXuchar,*((FXint*)orig.code));
+      dupElms(code,orig.code,*((FXint*)orig.code));
       }
     }
   return *this;
@@ -941,7 +942,7 @@ FXExpressionError FXExpression::parse(const FXchar* expression,const FXchar* var
   FXCompile cs;
 
   // Free old code, if any
-  if(code!=initial) FXFREE(&code);
+  if(code!=initial) freeElms(code);
   code=(FXuchar*)initial;
 
   // If not empty, parse expression
@@ -969,7 +970,7 @@ FXExpressionError FXExpression::parse(const FXchar* expression,const FXchar* var
       // Allocate new code
       size=cs.pc-cs.code;
       code=(FXuchar*)malloc(size);
-      if(!FXMALLOC(&code,FXuchar,size)){
+      if(!allocElms(code,size)){
         code=(FXuchar*)initial;
         return EXPRERR_MEMORY;
         }
@@ -1081,7 +1082,7 @@ FXdouble FXExpression::evaluate(const FXdouble *args){
 
 // Clean up
 FXExpression::~FXExpression(){
-  if(code!=initial) FXFREE(&code);
+  if(code!=initial) freeElms(code);
   }
 
 }

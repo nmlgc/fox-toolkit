@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXDial.h,v 1.35 2006/01/22 17:58:00 fox Exp $                            *
+* $Id: FXDial.h,v 1.36 2006/03/31 07:33:01 fox Exp $                            *
 ********************************************************************************/
 #ifndef FXDIAL_H
 #define FXDIAL_H
@@ -109,13 +109,13 @@ public:
   virtual bool canFocus() const;
 
   /// Set the dial value
-  void setValue(FXint value,FXbool notify=FALSE);
+  void setValue(FXint value,bool notify=false);
 
   /// Return the dial value
   FXint getValue() const { return pos; }
 
   /// Change the dial's range
-  void setRange(FXint lo,FXint hi,FXbool notify=FALSE);
+  void setRange(FXint lo,FXint hi,bool notify=false);
 
   /// Obtain the current range of the dial
   void getRange(FXint& lo,FXint& hi) const { lo=range[0]; hi=range[1]; }

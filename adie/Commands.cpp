@@ -19,7 +19,7 @@
 * along with this program; if not, write to the Free Software                   *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: Commands.cpp,v 1.18 2006/01/22 18:01:10 fox Exp $                        *
+* $Id: Commands.cpp,v 1.19 2006/04/04 05:00:41 fox Exp $                        *
 ********************************************************************************/
 #include "fx.h"
 #include "Commands.h"
@@ -56,7 +56,7 @@ FXIMPLEMENT_ABSTRACT(FXTextInsert,FXTextCommand,NULL,0)
 
 // Insert command
 FXTextInsert::FXTextInsert(FXText* txt,FXint p,FXint ni,const FXchar* ins):FXTextCommand(txt,p,0,ni){
-  FXMALLOC(&buffer,FXchar,ni);
+  allocElms(buffer,ni);
   memcpy(buffer,ins,ni);
   }
 
@@ -81,7 +81,7 @@ FXIMPLEMENT_ABSTRACT(FXTextDelete,FXTextCommand,NULL,0)
 
 // Delete command
 FXTextDelete::FXTextDelete(FXText* txt,FXint p,FXint nd,const FXchar* del):FXTextCommand(txt,p,nd,0){
-  FXMALLOC(&buffer,FXchar,nd);
+  allocElms(buffer,nd);
   memcpy(buffer,del,nd);
   }
 
@@ -106,7 +106,7 @@ FXIMPLEMENT_ABSTRACT(FXTextReplace,FXTextCommand,NULL,0)
 
 // Replace command
 FXTextReplace::FXTextReplace(FXText* txt,FXint p,FXint nd,FXint ni,const FXchar* del,const FXchar* ins):FXTextCommand(txt,p,nd,ni){
-  FXMALLOC(&buffer,FXchar,nd+ni);
+  allocElms(buffer,nd+ni);
   memcpy(buffer,del,nd);
   memcpy(buffer+nd,ins,ni);
   }

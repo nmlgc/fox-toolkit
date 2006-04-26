@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXTextField.h,v 1.62 2006/01/22 17:58:11 fox Exp $                       *
+* $Id: FXTextField.h,v 1.63 2006/03/31 07:33:03 fox Exp $                       *
 ********************************************************************************/
 #ifndef FXTEXTFIELD_H
 #define FXTEXTFIELD_H
@@ -227,16 +227,16 @@ public:
   virtual void killFocus();
 
   /// Set editable mode
-  void setEditable(FXbool edit=TRUE);
+  void setEditable(bool edit=true);
 
-  /// Return TRUE if text field may be edited
-  FXbool isEditable() const;
+  /// Return true if text field may be edited
+  bool isEditable() const;
 
   /// Set overstrike mode
-  void setOverstrike(FXbool over=TRUE);
+  void setOverstrike(bool over=true);
 
-  /// Return TRUE if overstrike mode in effect
-  FXbool isOverstrike() const;
+  /// Return true if overstrike mode in effect
+  bool isOverstrike() const;
 
   /// Set cursor position
   void setCursorPos(FXint pos);
@@ -251,7 +251,7 @@ public:
   FXint getAnchorPos() const { return anchor; }
 
   /// Change the text and move cursor to end
-  void setText(const FXString& text,FXbool notify=FALSE);
+  void setText(const FXString& text,bool notify=false);
 
   /// Get the text for this label
   FXString getText() const { return contents; }
@@ -332,22 +332,22 @@ public:
   FXuint getTextStyle() const;
 
   /// Select all text
-  FXbool selectAll();
+  bool selectAll();
 
   /// Select len characters starting at given position pos
-  FXbool setSelection(FXint pos,FXint len);
+  bool setSelection(FXint pos,FXint len);
 
   /// Extend the selection from the anchor to the given position
-  FXbool extendSelection(FXint pos);
+  bool extendSelection(FXint pos);
 
   /// Unselect the text
-  FXbool killSelection();
+  bool killSelection();
 
-  /// Return TRUE if position pos is selected
-  FXbool isPosSelected(FXint pos) const;
+  /// Return true if position pos is selected
+  bool isPosSelected(FXint pos) const;
 
-  /// Return TRUE if position is fully visible
-  FXbool isPosVisible(FXint pos) const;
+  /// Return true if position is fully visible
+  bool isPosVisible(FXint pos) const;
 
   /// Scroll text to make the given position visible
   void makePositionVisible(FXint pos);

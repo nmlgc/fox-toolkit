@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXMDIClient.cpp,v 1.62 2006/01/22 17:58:35 fox Exp $                     *
+* $Id: FXMDIClient.cpp,v 1.63 2006/03/31 07:33:10 fox Exp $                     *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -205,7 +205,7 @@ void FXMDIClient::layout(){
 
 
 // Cascade windows
-void FXMDIClient::cascade(FXbool notify){
+void FXMDIClient::cascade(bool notify){
   register FXMDIChild* child;
   FXint childx,childy,childw,childh;
   childx=5;
@@ -233,7 +233,7 @@ void FXMDIClient::cascade(FXbool notify){
 
 
 // Layout horizontally
-void FXMDIClient::horizontal(FXbool notify){
+void FXMDIClient::horizontal(bool notify){
   register FXMDIChild* child;
   register FXint n,nr,nc,hroom,vroom,r,c;
   for(n=0,child=(FXMDIChild*)getFirst(); child; child=(FXMDIChild*)child->getNext()){
@@ -263,7 +263,7 @@ void FXMDIClient::horizontal(FXbool notify){
 
 
 // Layout vertically
-void FXMDIClient::vertical(FXbool notify){
+void FXMDIClient::vertical(bool notify){
   register FXMDIChild* child;
   register FXint n,nr,nc,hroom,vroom,r,c;
   for(n=0,child=(FXMDIChild*)getFirst(); child; child=(FXMDIChild*)child->getNext()){
@@ -424,8 +424,8 @@ long FXMDIClient::onUpdMenuClose(FXObject* sender,FXSelector sel,void* ptr){
 
 
 // Set the active child
-FXbool FXMDIClient::setActiveChild(FXMDIChild* child,FXbool notify){
-  FXbool wasmax=FALSE;
+bool FXMDIClient::setActiveChild(FXMDIChild* child,bool notify){
+  bool wasmax=false;
   if(active!=child){
 
     if(active){
@@ -463,9 +463,9 @@ FXbool FXMDIClient::setActiveChild(FXMDIChild* child,FXbool notify){
     // Notify target
     if(notify && target && message){ target->tryHandle(this,FXSEL(SEL_CHANGED,message),child); }
 
-    return TRUE;
+    return true;
     }
-  return FALSE;
+  return false;
   }
 
 

@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXMDIChild.cpp,v 1.96 2006/03/16 04:41:36 fox Exp $                      *
+* $Id: FXMDIChild.cpp,v 1.97 2006/03/31 07:33:10 fox Exp $                      *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -293,7 +293,7 @@ void FXMDIChild::layout(){
 
 
 // Maximize window
-FXbool FXMDIChild::maximize(FXbool notify){
+bool FXMDIChild::maximize(bool notify){
   if(!(options&MDI_MAXIMIZED)){
     if(options&MDI_MINIMIZED){
       iconPosX=xpos;
@@ -316,12 +316,12 @@ FXbool FXMDIChild::maximize(FXbool notify){
     recalc();
     if(notify && target && message){target->tryHandle(this,FXSEL(SEL_MAXIMIZE,message),NULL);}
     }
-  return TRUE;
+  return true;
   }
 
 
 // Minimize window
-FXbool FXMDIChild::minimize(FXbool notify){
+bool FXMDIChild::minimize(bool notify){
   if(!(options&MDI_MINIMIZED)){
     if(!(options&MDI_MAXIMIZED)){
       normalPosX=xpos;
@@ -338,12 +338,12 @@ FXbool FXMDIChild::minimize(FXbool notify){
     recalc();
     if(notify && target && message){target->tryHandle(this,FXSEL(SEL_MINIMIZE,message),NULL);}
     }
-  return TRUE;
+  return true;
   }
 
 
 // Restore window
-FXbool FXMDIChild::restore(FXbool notify){
+bool FXMDIChild::restore(bool notify){
   if(options&(MDI_MINIMIZED|MDI_MAXIMIZED)){
     if(options&MDI_MINIMIZED){
       iconPosX=xpos;
@@ -359,12 +359,12 @@ FXbool FXMDIChild::restore(FXbool notify){
     recalc();
     if(notify && target && message){target->tryHandle(this,FXSEL(SEL_RESTORE,message),NULL);}
     }
-  return TRUE;
+  return true;
   }
 
 
 // Close MDI window, return TRUE if actually closed
-FXbool FXMDIChild::close(FXbool notify){
+bool FXMDIChild::close(bool notify){
   FXMDIClient *client=(FXMDIClient*)getParent();
   FXMDIChild *alternative;
 
@@ -385,20 +385,20 @@ FXbool FXMDIChild::close(FXbool notify){
     delete this;
 
     // Was closed
-    return TRUE;
+    return true;
     }
-  return FALSE;
+  return false;
   }
 
 
 // Is it maximized?
-FXbool FXMDIChild::isMaximized() const {
+bool FXMDIChild::isMaximized() const {
   return (options&MDI_MAXIMIZED)!=0;
   }
 
 
 // Is it minimized
-FXbool FXMDIChild::isMinimized() const {
+bool FXMDIChild::isMinimized() const {
   return (options&MDI_MINIMIZED)!=0;
   }
 
@@ -1174,13 +1174,13 @@ void FXMDIChild::setFont(FXFont *fnt){
 
 
 // Set tracking instead of just outline
-void FXMDIChild::setTracking(FXbool tracking){
+void FXMDIChild::setTracking(bool tracking){
   if(tracking) options|=MDI_TRACKING; else options&=~MDI_TRACKING;
   }
 
 
 // Return true if tracking
-FXbool FXMDIChild::getTracking() const {
+bool FXMDIChild::getTracking() const {
   return (options&MDI_TRACKING)!=0;
   }
 

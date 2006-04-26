@@ -5,7 +5,7 @@
 ##############################################################################
 # Copyright (C) 1997,2005 by Jeroen van der Zijp.   All Rights Reserved.     #
 ##############################################################################
-# $Id: Makefile.bc,v 1.23 2005/09/22 11:14:48 fox Exp $                      #
+# $Id: Makefile.bc,v 1.24 2006/03/22 03:46:48 fox Exp $                      #
 ##############################################################################
 # This library is free software; you can redistribute it and/or              #
 # modify it under the terms of the GNU Library General Public                #
@@ -31,7 +31,7 @@ DEFINES   = -DNDEBUG -DFOX_BIGENDIAN=0 -DWIN32 -D_WINDOWS
 LD	  = bcc32
 LDFLAGS	  = -laa
 INCDIRS   = -I$(TOPDIR)\include
-FOXLIB    = $(TOPDIR)\src\FOX-1.6.lib
+FOXLIB    = $(TOPDIR)\src\FOX-1.7.lib
 RESWRAP   = $(TOPDIR)\utils\reswrap.exe
 
 PROGRAMS  = PathFinder.exe

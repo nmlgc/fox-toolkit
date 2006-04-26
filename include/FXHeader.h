@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXHeader.h,v 1.70 2006/01/22 17:58:04 fox Exp $                          *
+* $Id: FXHeader.h,v 1.72 2006/04/05 04:27:25 fox Exp $                          *
 ********************************************************************************/
 #ifndef FXHEADER_H
 #define FXHEADER_H
@@ -115,29 +115,29 @@ public:
   /// Obtain current position
   FXint getPos() const { return pos; }
 
-  /// Change sort direction (FALSE, TRUE, MAYBE)
-  void setArrowDir(FXbool dir=MAYBE);
+  /// Change sort direction (ARROW_NONE, ARROW_UP, ARROW_DOWN)
+  void setArrowDir(FXuint dir=ARROW_NONE);
 
-  /// Return sort direction (FALSE, TRUE, MAYBE)
-  FXbool getArrowDir() const;
+  /// Return sort direction (ARROW_NONE, ARROW_UP, ARROW_DOWN)
+  FXuint getArrowDir() const;
 
   /// Change content justification
   void setJustify(FXuint justify=LEFT|CENTER_Y);
 
   /// Return content justification
-  FXuint getJustify() const { return state&(RIGHT|LEFT|TOP|BOTTOM); }
+  FXuint getJustify() const;
 
   /// Change icon position
   void setIconPosition(FXuint mode=BEFORE);
 
   /// Return icon position
-  FXuint getIconPosition() const { return state&(BEFORE|AFTER|ABOVE|BELOW); }
+  FXuint getIconPosition() const;
 
   /// Change state to pressed
-  void setPressed(FXbool pressed);
+  void setPressed(bool pressed);
 
   /// Return pressed state
-  FXbool isPressed() const { return (state&PRESSED)!=0; }
+  bool isPressed() const;
 
   /// Return the item's content width in the header
   virtual FXint getWidth(const FXHeader* header) const;
@@ -256,43 +256,43 @@ public:
   FXHeaderItem *getItem(FXint index) const;
 
   /// Replace the item with a [possibly subclassed] item
-  FXint setItem(FXint index,FXHeaderItem* item,FXbool notify=FALSE);
+  FXint setItem(FXint index,FXHeaderItem* item,bool notify=false);
 
   /// Replace items text, icon, and user-data pointer
-  FXint setItem(FXint index,const FXString& text,FXIcon *icon=NULL,FXint size=0,void* ptr=NULL,FXbool notify=FALSE);
+  FXint setItem(FXint index,const FXString& text,FXIcon *icon=NULL,FXint size=0,void* ptr=NULL,bool notify=false);
 
   /// Fill header by appending items from array of strings
-  FXint fillItems(const FXchar** strings,FXIcon *icon=NULL,FXint size=0,void* ptr=NULL,FXbool notify=FALSE);
+  FXint fillItems(const FXchar** strings,FXIcon *icon=NULL,FXint size=0,void* ptr=NULL,bool notify=false);
 
   /// Fill header by appending items from newline separated strings
-  FXint fillItems(const FXString& strings,FXIcon *icon=NULL,FXint size=0,void* ptr=NULL,FXbool notify=FALSE);
+  FXint fillItems(const FXString& strings,FXIcon *icon=NULL,FXint size=0,void* ptr=NULL,bool notify=false);
 
   /// Insert a new [possibly subclassed] item at the give index
-  FXint insertItem(FXint index,FXHeaderItem* item,FXbool notify=FALSE);
+  FXint insertItem(FXint index,FXHeaderItem* item,bool notify=false);
 
   /// Insert item at index with given text, icon, and user-data pointer
-  FXint insertItem(FXint index,const FXString& text,FXIcon *icon=NULL,FXint size=0,void* ptr=NULL,FXbool notify=FALSE);
+  FXint insertItem(FXint index,const FXString& text,FXIcon *icon=NULL,FXint size=0,void* ptr=NULL,bool notify=false);
 
   /// Append a [possibly subclassed] item to the list
-  FXint appendItem(FXHeaderItem* item,FXbool notify=FALSE);
+  FXint appendItem(FXHeaderItem* item,bool notify=false);
 
   /// Append new item with given text and optional icon, and user-data pointer
-  FXint appendItem(const FXString& text,FXIcon *icon=NULL,FXint size=0,void* ptr=NULL,FXbool notify=FALSE);
+  FXint appendItem(const FXString& text,FXIcon *icon=NULL,FXint size=0,void* ptr=NULL,bool notify=false);
 
   /// Prepend a [possibly subclassed] item to the list
-  FXint prependItem(FXHeaderItem* item,FXbool notify=FALSE);
+  FXint prependItem(FXHeaderItem* item,bool notify=false);
 
   /// Prepend new item with given text and optional icon, and user-data pointer
-  FXint prependItem(const FXString& text,FXIcon *icon=NULL,FXint size=0,void* ptr=NULL,FXbool notify=FALSE);
+  FXint prependItem(const FXString& text,FXIcon *icon=NULL,FXint size=0,void* ptr=NULL,bool notify=false);
 
   /// Extract item from list
-  FXHeaderItem* extractItem(FXint index,FXbool notify=FALSE);
+  FXHeaderItem* extractItem(FXint index,bool notify=false);
 
   /// Remove item at index
-  void removeItem(FXint index,FXbool notify=FALSE);
+  void removeItem(FXint index,bool notify=false);
 
   /// Remove all items
-  void clearItems(FXbool notify=FALSE);
+  void clearItems(bool notify=false);
 
   /// Change text label for item at index
   void setItemText(FXint index,const FXString& text);
@@ -321,11 +321,11 @@ public:
   /// Return data of item at index
   void* getItemData(FXint index) const;
 
-  /// Change sort direction (FALSE, TRUE, MAYBE)
-  void setArrowDir(FXint index,FXbool dir=MAYBE);
+  /// Change sort direction (ARROW_NONE, ARROW_UP, ARROW_DOWN)
+  void setArrowDir(FXint index,FXuint dir=FXHeaderItem::ARROW_NONE);
 
-  /// Return sort direction (FALSE, TRUE, MAYBE)
-  FXbool getArrowDir(FXint index) const;
+  /// Return sort direction (ARROW_NONE, ARROW_UP, ARROW_DOWN)
+  FXuint getArrowDir(FXint index) const;
 
   /**
   * Change item justification.  Horizontal justification is controlled by passing
@@ -352,10 +352,10 @@ public:
   FXuint getItemIconPosition(FXint index) const;
 
   /// Changed button item's pressed state
-  void setItemPressed(FXint index,FXbool pressed=TRUE);
+  void setItemPressed(FXint index,bool pressed=true);
 
   /// Return TRUE if button item is pressed in
-  FXbool isItemPressed(FXint index) const;
+  bool isItemPressed(FXint index) const;
 
   /// Scroll to make given item visible
   void makeItemVisible(FXint index);

@@ -19,11 +19,14 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXHash.cpp,v 1.25 2006/01/22 17:58:31 fox Exp $                          *
+* $Id: FXHash.cpp,v 1.27 2006/03/22 05:38:23 fox Exp $                          *
 ********************************************************************************/
+#include "xincs.h"
 #include "fxver.h"
 #include "fxdefs.h"
 #include "FXHash.h"
+#include "FXStream.h"
+#include "FXElement.h"
 
 
 /*
@@ -55,7 +58,7 @@ namespace FX {
 
 // Make empty table
 FXHash::FXHash(){
-  FXMALLOC(&table,FXEntry,2);
+  allocElms(table,2);
   table[0].key=NULL;
   table[0].value=NULL;
   table[1].key=NULL;
@@ -71,7 +74,7 @@ void FXHash::size(FXuint m){
   register void *key,*value;
   register FXuint q,x,i;
   FXEntry *newtable;
-  FXCALLOC(&newtable,FXEntry,m);
+  callocElms(newtable,m);
   for(i=0; i<total; i++){
     key=table[i].key;
     value=table[i].value;
@@ -82,7 +85,7 @@ void FXHash::size(FXuint m){
     newtable[q].key=key;
     newtable[q].value=value;
     }
-  FXFREE(&table);
+  freeElms(table);
   table=newtable;
   total=m;
   free=m-used;
@@ -116,9 +119,10 @@ y:  return table[q].value;
   }
 
 
-// Replace key in the table
+// Replace key in the table, returning old one
 void* FXHash::replace(void* key,void* value){
   register FXuint p,q,x;
+  register void* val;
   if(key){
     if((free<<1)<=total) size(total<<1);
     p=HASH1(key,total);
@@ -136,8 +140,9 @@ void* FXHash::replace(void* key,void* value){
     free--;
 x:  used++;
     table[q].key=key;
-y:  table[q].value=value;
-    return table[q].value;
+y:  val=table[q].value;
+    table[q].value=value;
+    return val;
     }
   return NULL;
   }
@@ -183,7 +188,7 @@ x:return NULL;
 
 // Clear hash table
 void FXHash::clear(){
-  FXRESIZE(&table,FXEntry,2);
+  resizeElms(table,2);
   table[0].key=NULL;
   table[0].value=NULL;
   table[1].key=NULL;
@@ -196,7 +201,7 @@ void FXHash::clear(){
 
 // Destroy table
 FXHash::~FXHash(){
-  FXFREE(&table);
+  freeElms(table);
   table=(FXEntry*)-1L;
   }
 

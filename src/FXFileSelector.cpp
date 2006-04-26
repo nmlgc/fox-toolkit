@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXFileSelector.cpp,v 1.196 2006/01/23 15:51:05 fox Exp $                 *
+* $Id: FXFileSelector.cpp,v 1.197 2006/03/31 07:33:06 fox Exp $                 *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -271,7 +271,7 @@ FXFileSelector::FXFileSelector(FXComposite *p,FXObject* tgt,FXSelector sel,FXuin
   setDirectory(FXSystem::getCurrentDirectory());
   filebox->setFocus();
   accept->hide();
-  navigable=TRUE;
+  navigable=true;
   }
 
 
@@ -423,7 +423,7 @@ long FXFileSelector::onCmdAccept(FXObject*,FXSelector,void*){
       getApp()->beep();
       return 1;
       }
-      
+
     // Go up to the lowest directory which still exists
     while(!FXPath::isTopDirectory(dir) && !FXStat::isDirectory(dir)){
       dir=FXPath::upLevel(dir);
@@ -699,7 +699,7 @@ long FXFileSelector::onCmdImageSize(FXObject*,FXSelector sel,void*){
 
 // Update image size
 long FXFileSelector::onUpdImageSize(FXObject* sender,FXSelector sel,void*){
-  FXbool check=FALSE;
+  bool check=FALSE;
   switch(FXSELID(sel)){
     case ID_NORMAL_SIZE: check=(getImageSize()==32); break;
     case ID_MEDIUM_SIZE: check=(getImageSize()==48); break;
@@ -972,13 +972,13 @@ FXint FXFileSelector::getNumPatterns() const {
 
 
 // Allow pattern entry
-void FXFileSelector::allowPatternEntry(FXbool allow){
+void FXFileSelector::allowPatternEntry(bool allow){
   filefilter->setComboStyle(allow?COMBOBOX_NORMAL:COMBOBOX_STATIC);
   }
 
 
 // Return TRUE if pattern entry is allowed
-FXbool FXFileSelector::allowPatternEntry() const {
+bool FXFileSelector::allowPatternEntry() const {
   return (filefilter->getComboStyle()!=COMBOBOX_STATIC);
   }
 
@@ -1045,25 +1045,25 @@ FXuint FXFileSelector::getMatchMode() const {
 
 
 // Return TRUE if showing hidden files
-FXbool FXFileSelector::showHiddenFiles() const {
+bool FXFileSelector::showHiddenFiles() const {
   return filebox->showHiddenFiles();
   }
 
 
 // Show or hide hidden files
-void FXFileSelector::showHiddenFiles(FXbool showing){
+void FXFileSelector::showHiddenFiles(bool showing){
   filebox->showHiddenFiles(showing);
   }
 
 
 // Return TRUE if image preview on
-FXbool FXFileSelector::showImages() const {
+bool FXFileSelector::showImages() const {
   return filebox->showImages();
   }
 
 
 // Show or hide preview images
-void FXFileSelector::showImages(FXbool showing){
+void FXFileSelector::showImages(bool showing){
   filebox->showImages(showing);
   }
 
@@ -1081,26 +1081,26 @@ void FXFileSelector::setImageSize(FXint size){
 
 
 // Show readonly button
-void FXFileSelector::showReadOnly(FXbool show){
+void FXFileSelector::showReadOnly(bool show){
   show ? readonly->show() : readonly->hide();
   }
 
 
 // Return TRUE if readonly is shown
-FXbool FXFileSelector::shownReadOnly() const {
+bool FXFileSelector::shownReadOnly() const {
   return readonly->shown();
   }
 
 
 
 // Set initial state of readonly button
-void FXFileSelector::setReadOnly(FXbool state){
+void FXFileSelector::setReadOnly(bool state){
   readonly->setCheck(state);
   }
 
 
 // Get readonly state
-FXbool FXFileSelector::getReadOnly() const {
+bool FXFileSelector::getReadOnly() const {
   return readonly->getCheck();
   }
 

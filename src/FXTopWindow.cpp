@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXTopWindow.cpp,v 1.175 2006/01/22 17:58:48 fox Exp $                    *
+* $Id: FXTopWindow.cpp,v 1.177 2006/04/04 04:28:07 fox Exp $                    *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -755,7 +755,7 @@ void FXTopWindow::setdecorations(){
 
 
 // Obtain border sizes added to our window by the window manager
-FXbool FXTopWindow::getWMBorders(FXint& left,FXint& right,FXint& top,FXint& bottom){
+bool FXTopWindow::getWMBorders(FXint& left,FXint& right,FXint& top,FXint& bottom){
   left=right=top=bottom=0;
   if(xid){
 #ifdef WIN32
@@ -787,9 +787,9 @@ FXbool FXTopWindow::getWMBorders(FXint& left,FXint& right,FXint& top,FXint& bott
     right=(sx-msx-left);
     bottom=(sy-msy-top);
 #endif
-    return TRUE;
+    return true;
     }
-  return FALSE;
+  return false;
   }
 
 
@@ -811,7 +811,7 @@ FXuint FXTopWindow::getDecorations() const {
 
 
 // Iconify window
-FXbool FXTopWindow::maximize(FXbool notify){
+bool FXTopWindow::maximize(bool notify){
   if(!isMaximized()){
     if(xid){
 #ifndef WIN32
@@ -837,14 +837,14 @@ FXbool FXTopWindow::maximize(FXbool notify){
 #endif
       }
     if(notify && target && message){target->tryHandle(this,FXSEL(SEL_MAXIMIZE,message),NULL);}
-    return TRUE;
+    return true;
     }
-  return FALSE;
+  return false;
   }
 
 
 // Miminize or iconify window
-FXbool FXTopWindow::minimize(FXbool notify){
+bool FXTopWindow::minimize(bool notify){
   if(!isMinimized()){
     if(xid){
 #ifndef WIN32
@@ -854,14 +854,14 @@ FXbool FXTopWindow::minimize(FXbool notify){
 #endif
       }
     if(notify && target && message){target->tryHandle(this,FXSEL(SEL_MINIMIZE,message),NULL);}
-    return TRUE;
+    return true;
     }
-  return FALSE;
+  return false;
   }
 
 
 // Restore window
-FXbool FXTopWindow::restore(FXbool notify){
+bool FXTopWindow::restore(bool notify){
   if(isMinimized() || isMaximized()){
     if(xid){
 #ifndef WIN32
@@ -887,14 +887,14 @@ FXbool FXTopWindow::restore(FXbool notify){
 #endif
       }
     if(notify && target && message){target->tryHandle(this,FXSEL(SEL_RESTORE,message),NULL);}
-    return TRUE;
+    return true;
     }
-  return FALSE;
+  return false;
   }
 
 
 // Attempt to close the window, return TRUE if actually closed
-FXbool FXTopWindow::close(FXbool notify){
+bool FXTopWindow::close(bool notify){
   register FXWindow *window;
 
   // Ask target if desired
@@ -918,34 +918,30 @@ FXbool FXTopWindow::close(FXbool notify){
 x:  delete this;
 
     // Was closed
-    return TRUE;
+    return true;
     }
-  return FALSE;
+  return false;
   }
 
 
 // Return TRUE if window has been maximized
-FXbool FXTopWindow::isMaximized() const {
-  FXbool maximized=FALSE;
+bool FXTopWindow::isMaximized() const {
+  bool maximized=false;
   if(xid){
 #ifndef WIN32
-    unsigned long nitems,after,i;
-    FXID *netstate;
-    Atom actualtype;
-    int actualformat;
-
     // For Window Managers supporting the Extended Window Manager Hints
     // See http://www.freedesktop.org/ for the official documentation of EWMH
-    if(Success==XGetWindowProperty(DISPLAY(getApp()),xid,getApp()->wmNetState,0,2,FALSE,AnyPropertyType,&actualtype,&actualformat,&nitems,&after,(unsigned char**)&netstate)){
-      if(actualtype==XA_ATOM && actualformat==32){
+    unsigned long n,i; Atom type; unsigned char *prop; int format;
+    if(Success==XGetWindowProperty(DISPLAY(getApp()),xid,getApp()->wmNetState,0,2,FALSE,AnyPropertyType,&type,&format,&n,&i,&prop)){
+      if(type==XA_ATOM && format==32){
         FXTRACE((100,"got _NET_WM_STATE property\n"));
-        for(i=0; i<nitems; i++){
-          if(netstate[i]==getApp()->wmNetHMaximized) maximized=TRUE;
-          if(netstate[i]==getApp()->wmNetVMaximized) maximized=TRUE;
+        for(i=0; i<n; i++){
+          if(((FXID*)prop)[i]==getApp()->wmNetHMaximized) maximized=TRUE;
+          if(((FXID*)prop)[i]==getApp()->wmNetVMaximized) maximized=TRUE;
           }
         FXTRACE((100,"maximized=%d\n",maximized));
         }
-      XFree((char*)netstate);
+      XFree(prop);
       }
 #else
     maximized=IsZoomed((HWND)xid);
@@ -956,21 +952,17 @@ FXbool FXTopWindow::isMaximized() const {
 
 
 // Return TRUE if window has been minimized
-FXbool FXTopWindow::isMinimized() const {
-  FXbool minimized=FALSE;
+bool FXTopWindow::isMinimized() const {
+  bool minimized=FALSE;
   if(xid){
 #ifndef WIN32
-    unsigned long length,after;
-    unsigned char *prop;
-    Atom actualtype;
-    int actualformat;
-
     // This is ICCCM compliant method to ask about WM_STATE
-    if(Success==XGetWindowProperty(DISPLAY(getApp()),xid,getApp()->wmState,0,2,FALSE,AnyPropertyType,&actualtype,&actualformat,&length,&after,&prop)){
-      if(actualformat==32){
+    unsigned long n,i; unsigned char *prop; Atom type; int format;
+    if(Success==XGetWindowProperty(DISPLAY(getApp()),xid,getApp()->wmState,0,2,FALSE,AnyPropertyType,&type,&format,&n,&i,&prop)){
+      if(format==32){
         minimized=(IconicState==*((FXuint*)prop));
         }
-      XFree((char*)prop);
+      XFree(prop);
       }
 #else
     minimized=IsIconic((HWND)xid);

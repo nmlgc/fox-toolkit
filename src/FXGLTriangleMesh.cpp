@@ -21,13 +21,14 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXGLTriangleMesh.cpp,v 1.30 2006/01/22 17:58:28 fox Exp $                *
+* $Id: FXGLTriangleMesh.cpp,v 1.31 2006/03/25 07:24:45 fox Exp $                *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
 #include "fxdefs.h"
 #include "FXHash.h"
 #include "FXThread.h"
+#include "FXElement.h"
 #include "FXStream.h"
 #include "FXVec2f.h"
 #include "FXVec3f.h"
@@ -105,10 +106,10 @@ FXGLTriangleMesh::FXGLTriangleMesh(FXfloat x,FXfloat y,FXfloat z,FXint nv,FXfloa
 // Copy constructor
 FXGLTriangleMesh::FXGLTriangleMesh(const FXGLTriangleMesh& orig):FXGLShape(orig){
   FXTRACE((100,"FXGLTriangleMesh::FXGLTriangleMesh\n"));
-  FXMEMDUP(&vertexBuffer,orig.vertexBuffer,FXfloat,3*orig.vertexNumber);
-  FXMEMDUP(&colorBuffer,orig.colorBuffer,FXfloat,4*orig.vertexNumber);
-  FXMEMDUP(&normalBuffer,orig.normalBuffer,FXfloat,3*orig.vertexNumber);
-  FXMEMDUP(&textureBuffer,orig.textureBuffer,FXfloat,2*orig.vertexNumber);
+  dupElms(vertexBuffer,orig.vertexBuffer,3*orig.vertexNumber);
+  dupElms(colorBuffer,orig.colorBuffer,4*orig.vertexNumber);
+  dupElms(normalBuffer,orig.normalBuffer,3*orig.vertexNumber);
+  dupElms(textureBuffer,orig.textureBuffer,2*orig.vertexNumber);
   vertexNumber=orig.vertexNumber;
   }
 
@@ -209,7 +210,7 @@ void FXGLTriangleMesh::generatenormals(){
   FXVec3f vec,a,b,c;
   FXASSERT(vertexBuffer);
   if(!normalBuffer){
-    FXMALLOC(&normalBuffer,FXfloat,vertexNumber*3);
+    allocElms(normalBuffer,vertexNumber*3);
     }
   for(i=0; i<vertexNumber*3; i+=9){
     a.set(vertexBuffer[i+0],vertexBuffer[i+1],vertexBuffer[i+2]);
@@ -261,20 +262,20 @@ void FXGLTriangleMesh::load(FXStream& store){
   FXGLShape::load(store);
   store >> vertexNumber;
   store >> hadvertices >> hadcolors >> hadnormals >> hadtextures;
-  if(hadvertices){ FXMALLOC(&vertexBuffer,FXfloat,3*vertexNumber); store.load(vertexBuffer,3*vertexNumber); }
-  if(hadcolors){ FXMALLOC(&colorBuffer,FXfloat,4*vertexNumber); store.load(colorBuffer,4*vertexNumber); }
-  if(hadnormals){ FXMALLOC(&normalBuffer,FXfloat,3*vertexNumber); store.load(normalBuffer,3*vertexNumber); }
-  if(hadtextures){ FXMALLOC(&textureBuffer,FXfloat,2*vertexNumber); store.load(textureBuffer,2*vertexNumber); }
+  if(hadvertices){ allocElms(vertexBuffer,3*vertexNumber); store.load(vertexBuffer,3*vertexNumber); }
+  if(hadcolors){ allocElms(colorBuffer,4*vertexNumber); store.load(colorBuffer,4*vertexNumber); }
+  if(hadnormals){ allocElms(normalBuffer,3*vertexNumber); store.load(normalBuffer,3*vertexNumber); }
+  if(hadtextures){ allocElms(textureBuffer,2*vertexNumber); store.load(textureBuffer,2*vertexNumber); }
   }
 
 
 // Zap object
 FXGLTriangleMesh::~FXGLTriangleMesh(){
   FXTRACE((100,"FXGLTriangleMesh::~FXGLTriangleMesh\n"));
-  FXFREE(&vertexBuffer);
-  FXFREE(&colorBuffer);
-  FXFREE(&normalBuffer);
-  FXFREE(&textureBuffer);
+  freeElms(vertexBuffer);
+  freeElms(colorBuffer);
+  freeElms(normalBuffer);
+  freeElms(textureBuffer);
   }
 
 }

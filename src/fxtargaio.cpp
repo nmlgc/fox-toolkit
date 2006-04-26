@@ -19,12 +19,13 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: fxtargaio.cpp,v 1.30 2006/01/22 17:58:54 fox Exp $                       *
+* $Id: fxtargaio.cpp,v 1.31 2006/03/24 05:55:40 fox Exp $                       *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
 #include "fxdefs.h"
 #include "FXHash.h"
+#include "FXElement.h"
 #include "FXStream.h"
 
 /*
@@ -875,8 +876,7 @@ bool fxloadTGA(FXStream& store,FXColor*& data,FXint& width,FXint& height){
   FXTRACE((100,"fxloadTARGA: width=%d height=%d IDLength=%d ColorMapType=%d ColorMapLength=%d ColorMapEntrySize=%d ImageType=%d PixelDepth=%d ImageDescriptor=%02x\n",width,height,IDLength,ColorMapType,ColorMapLength,ColorMapEntrySize,ImageType,PixelDepth,ImageDescriptor));
 
   // Allocate memory
-  FXMALLOC(&data,FXColor,width*height);
-  if(!data) return false;
+  if(!allocElms(data,width*height)) return false;
 
   // load up the image
   if(PixelDepth==32 && (ImageType==2 || ImageType==10)){

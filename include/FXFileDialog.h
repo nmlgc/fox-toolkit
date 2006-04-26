@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXFileDialog.h,v 1.34 2006/01/23 06:03:15 fox Exp $                      *
+* $Id: FXFileDialog.h,v 1.35 2006/03/31 07:33:01 fox Exp $                      *
 ********************************************************************************/
 #ifndef FXFILEDIALOG_H
 #define FXFILEDIALOG_H
@@ -109,10 +109,10 @@ public:
   FXint getNumPatterns() const;
 
   /// Allow pattern entry
-  void allowPatternEntry(FXbool allow);
+  void allowPatternEntry(bool allow);
 
   /// Return TRUE if pattern entry is allowed
-  FXbool allowPatternEntry() const;
+  bool allowPatternEntry() const;
 
   /// Change directory
   void setDirectory(const FXString& path);
@@ -139,16 +139,16 @@ public:
   FXuint getMatchMode() const;
 
   /// Return TRUE if showing hidden files
-  FXbool showHiddenFiles() const;
+  bool showHiddenFiles() const;
 
   /// Show or hide hidden files
-  void showHiddenFiles(FXbool showing);
+  void showHiddenFiles(bool showing);
 
   /// Return TRUE if image preview on
-  FXbool showImages() const;
+  bool showImages() const;
 
   /// Show or hide preview images
-  void showImages(FXbool showing);
+  void showImages(bool showing);
 
   /// Return images preview size
   FXint getImageSize() const;
@@ -157,16 +157,16 @@ public:
   void setImageSize(FXint size);
 
   /// Show readonly button
-  void showReadOnly(FXbool show);
+  void showReadOnly(bool show);
 
   /// Return TRUE if readonly is shown
-  FXbool shownReadOnly() const;
+  bool shownReadOnly() const;
 
   /// Set initial state of readonly button
-  void setReadOnly(FXbool state);
+  void setReadOnly(bool state);
 
   /// Get readonly state
-  FXbool getReadOnly() const;
+  bool getReadOnly() const;
 
   /// Change File List style
   void setFileBoxStyle(FXuint style);
@@ -175,10 +175,10 @@ public:
   FXuint getFileBoxStyle() const;
 
   /// Allow or disallow navigation
-  void allowNavigation(FXbool navigable);
-  
+  void allowNavigation(bool navigable);
+
   /// Is navigation allowed?
-  FXbool allowNavigation() const;
+  bool allowNavigation() const;
 
   /// Open existing filename
   static FXString getOpenFilename(FXWindow* owner,const FXString& caption,const FXString& path,const FXString& patterns="*",FXint initial=0);

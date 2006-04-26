@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXStream.cpp,v 1.66 2006/01/22 17:58:42 fox Exp $                        *
+* $Id: FXStream.cpp,v 1.68 2006/03/23 06:51:53 fox Exp $                        *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -27,6 +27,7 @@
 #include "FXHash.h"
 #include "FXStream.h"
 #include "FXString.h"
+#include "FXElement.h"
 #include "FXObject.h"
 
 
@@ -98,7 +99,7 @@ bool FXStream::isBigEndian() const {
 
 // Destroy PersistentStore object
 FXStream::~FXStream(){
-  if(owns){FXFREE(&begptr);}
+  if(owns){freeElms(begptr);}
   parent=(FXObject*)-1L;
   begptr=(FXuchar*)-1L;
   endptr=(FXuchar*)-1L;
@@ -153,7 +154,7 @@ void FXStream::setSpace(FXuval size){
       if(!owns){ fxerror("FXStream::setSpace: cannot resize external data buffer.\n"); }
 
       // Resize the buffer
-      if(!FXRESIZE(&begptr,FXuchar,size)){ code=FXStreamAlloc; return; }
+      if(!resizeElms(begptr,size)){ code=FXStreamAlloc; return; }
 
       // Adjust pointers, buffer may have moved
       endptr=begptr+size;
@@ -185,7 +186,7 @@ bool FXStream::open(FXStreamDirection save_or_load,FXuval size,FXuchar* data){
 
     // Use internal buffer space
     else{
-      if(!FXCALLOC(&begptr,FXuchar,size)){ code=FXStreamAlloc; return false; }
+      if(!callocElms(begptr,size)){ code=FXStreamAlloc; return false; }
       endptr=begptr+size;
       wrptr=begptr;
       rdptr=begptr;
@@ -224,7 +225,7 @@ bool FXStream::close(){
   if(dir){
     hash.clear();
     dir=FXStreamDead;
-    if(owns){FXFREE(&begptr);}
+    if(owns){freeElms(begptr);}
     begptr=NULL;
     wrptr=NULL;
     rdptr=NULL;
@@ -795,13 +796,6 @@ FXStream& FXStream::load(FXdouble* p,FXuval n){
 
 // Add object without saving or loading
 FXStream& FXStream::addObject(const FXObject* v){
-/*
-  if(!hash.find((void*)v)){
-    hash.insert((void*)v,(void*)(FXuval)seq);
-    hash.insert((void*)(FXuval)seq,(void*)v);
-    seq++;
-    }
-*/
   if(v){
     if(dir==FXStreamSave){
       hash.insert((void*)v,(void*)(FXuval)seq++);

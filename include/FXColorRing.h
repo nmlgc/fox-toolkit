@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXColorRing.h,v 1.11 2006/01/22 17:57:59 fox Exp $                       *
+* $Id: FXColorRing.h,v 1.12 2006/03/31 07:33:01 fox Exp $                       *
 ********************************************************************************/
 #ifndef FXCOLORRING_H
 #define FXCOLORRING_H
@@ -72,9 +72,9 @@ protected:
   void hueToXY(FXint& x,FXint& y,FXfloat hue) const;
   void satValToXY(FXint& x,FXint& y,FXfloat s,FXfloat v) const;
   void satValFromXY(FXfloat& s,FXfloat& v,FXint x,FXint y) const;
-  FXbool inCorner(FXint x,FXint y) const;
-  FXbool inHueRing(FXint x,FXint y) const;
-  FXbool inTriangle(FXint x,FXint y) const;
+  bool inCorner(FXint x,FXint y) const;
+  bool inHueRing(FXint x,FXint y) const;
+  bool inTriangle(FXint x,FXint y) const;
 protected:
   enum {
     MOUSE_NONE,         // No mouse operation

@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXAccelTable.cpp,v 1.51 2006/01/22 17:58:16 fox Exp $                    *
+* $Id: FXAccelTable.cpp,v 1.52 2006/03/22 05:38:23 fox Exp $                    *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -31,6 +31,7 @@
 #include "FXThread.h"
 #include "FXStream.h"
 #include "FXString.h"
+#include "FXElement.h"
 #include "FXSize.h"
 #include "FXPoint.h"
 #include "FXRectangle.h"
@@ -76,7 +77,7 @@ FXIMPLEMENT(FXAccelTable,FXObject,FXAccelTableMap,ARRAYNUMBER(FXAccelTableMap))
 // Make empty accelerator table
 FXAccelTable::FXAccelTable(){
   FXTRACE((100,"%p->FXAccelTable::FXAccelTable\n",this));
-  FXMALLOC(&key,FXAccelKey,1);
+  allocElms(key,1);
   key[0].code=UNUSEDSLOT;
   key[0].target=NULL;
   key[0].messagedn=0;
@@ -90,7 +91,7 @@ FXAccelTable::FXAccelTable(){
 void FXAccelTable::resize(FXuint m){
   register FXuint p,i,c;
   FXAccelKey *newkey;
-  FXMALLOC(&newkey,FXAccelKey,m+1);
+  allocElms(newkey,m+1);
   for(i=0; i<=m; i++){
     newkey[i].code=UNUSEDSLOT;
     newkey[i].target=NULL;
@@ -103,7 +104,7 @@ void FXAccelTable::resize(FXuint m){
     while(newkey[p].code!=UNUSEDSLOT) p=(p+1)&m;
     newkey[p]=key[i];
     }
-  FXFREE(&key);
+  freeElms(key);
   key=newkey;
   max=m;
   }
@@ -482,6 +483,7 @@ FXHotKey parseHotKey(const FXString& string){
   return MKUINT(code,mods);
   }
 
+
 // Obtain hot key offset in string
 FXint findHotKey(const FXString& string){
   register FXint pos=0;
@@ -538,7 +540,7 @@ void FXAccelTable::load(FXStream& store){
   FXObject::load(store);
   store >> max;
   store >> num;
-  FXRESIZE(&key,FXAccelKey,max+1);
+  resizeElms(key,max+1);
   for(i=0; i<=max; i++){
     store >> key[i].code;
     store >> key[i].target;
@@ -551,7 +553,7 @@ void FXAccelTable::load(FXStream& store){
 // Destroy table
 FXAccelTable::~FXAccelTable(){
   FXTRACE((100,"%p->FXAccelTable::~FXAccelTable\n",this));
-  FXFREE(&key);
+  freeElms(key);
   key=(FXAccelKey*)-1L;
   }
 

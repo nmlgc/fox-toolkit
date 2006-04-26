@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXSphered.cpp,v 1.19.2.2 2006/04/05 15:21:08 fox Exp $                       *
+* $Id: FXSphered.cpp,v 1.21 2006/04/05 15:20:49 fox Exp $                       *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"

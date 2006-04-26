@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXVisual.h,v 1.41 2006/01/22 17:58:12 fox Exp $                          *
+* $Id: FXVisual.h,v 1.42 2006/04/02 03:00:35 fox Exp $                          *
 ********************************************************************************/
 #ifndef FXVISUAL_H
 #define FXVISUAL_H
@@ -91,7 +91,7 @@ protected:
   void         *info;                   // Opaque data
   void         *visual;                 // Application visual/pixel format
   FXID          colormap;               // Color map, if any
-  FXbool        freemap;                // We allocated the map
+  bool          freemap;                // We allocated the map
 #ifndef WIN32
 protected:
   void         *gc;                     // Drawing GC
@@ -101,7 +101,7 @@ protected:
   FXPixel       bpix[16][256];          // Mapping from blue -> pixel
   FXPixel       lut[256];               // Color lookup table
 protected:
-  void* setupgc(FXbool);
+  void* setupgc(bool);
   void setuptruecolor();
   void setupdirectcolor();
   void setuppseudocolor();

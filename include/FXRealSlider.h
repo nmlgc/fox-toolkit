@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXRealSlider.h,v 1.11 2006/01/22 17:58:08 fox Exp $                      *
+* $Id: FXRealSlider.h,v 1.12 2006/03/31 07:33:03 fox Exp $                      *
 ********************************************************************************/
 #ifndef FXREALSLIDER_H
 #define FXREALSLIDER_H
@@ -135,13 +135,13 @@ public:
   virtual void disable();
 
   /// Change slider value
-  void setValue(FXdouble value,FXbool notify=FALSE);
+  void setValue(FXdouble value,bool notify=false);
 
   /// Return slider value
   FXdouble getValue() const { return pos; }
 
   /// Change the slider's range
-  void setRange(FXdouble lo,FXdouble hi,FXbool notify=FALSE);
+  void setRange(FXdouble lo,FXdouble hi,bool notify=false);
 
   /// Get the slider's current range
   void getRange(FXdouble& lo,FXdouble& hi) const { lo=range[0]; hi=range[1]; }

@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXDate.h,v 1.10 2006/01/22 17:58:00 fox Exp $                            *
+* $Id: FXDate.h,v 1.11 2006/03/29 06:47:35 fox Exp $                            *
 ********************************************************************************/
 #ifndef FXDATE_H
 #define FXDATE_H
@@ -119,8 +119,8 @@ public:
   /// Return current local date
   static FXDate localDate();
 
-  /// Return current UTC (Zulu) date
-  static FXDate zuluDate();
+  /// Return current universal (UTC) date
+  static FXDate universalDate();
 
   /// Assignment
   FXDate& operator=(const FXDate& date){julian=date.julian;return *this;}

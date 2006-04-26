@@ -98,13 +98,13 @@ CXXFLAGS = @CXXFLAGS@ @X_CFLAGS@
 INCLUDES = -I$(top_srcdir)/include -I$(top_builddir)/include
 RESWRAP = $(top_builddir)/utils/reswrap
 SUFFIXES = .gif .bmp
-LDADD = libCHART-1.6.la ../src/libFOX-1.6.la -lm
+LDADD = libCHART-1.7.la ../src/libFOX-1.7.la -lm
 
-lib_LTLIBRARIES = libCHART-1.6.la
+lib_LTLIBRARIES = libCHART-1.7.la
 
-libCHART_1_6_la_LIBADD = $(X_LIBS) $(X_BASE_LIBS) $(X_EXTRA_LIBS)
+libCHART_1_7_la_LIBADD = $(X_LIBS) $(X_BASE_LIBS) $(X_EXTRA_LIBS)
 
-libCHART_1_6_la_LDFLAGS = \
+libCHART_1_7_la_LDFLAGS = \
         -version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)    \
 	-export-dynamic
 
@@ -115,7 +115,7 @@ chartinclude_HEADERS = \
 FXChart.h
 
 
-libCHART_1_6_la_SOURCES = \
+libCHART_1_7_la_SOURCES = \
 FXChart.cpp
 
 
@@ -141,14 +141,14 @@ X_CFLAGS = @X_CFLAGS@
 X_LIBS = @X_LIBS@
 X_EXTRA_LIBS = @X_EXTRA_LIBS@
 X_PRE_LIBS = @X_PRE_LIBS@
-libCHART_1_6_la_DEPENDENCIES = 
-libCHART_1_6_la_OBJECTS =  FXChart.lo
+libCHART_1_7_la_DEPENDENCIES = 
+libCHART_1_7_la_OBJECTS =  FXChart.lo
 noinst_PROGRAMS =  chart$(EXEEXT)
 PROGRAMS =  $(noinst_PROGRAMS)
 
 chart_OBJECTS =  chart.$(OBJEXT) icons.$(OBJEXT)
 chart_LDADD = $(LDADD)
-chart_DEPENDENCIES =  libCHART-1.6.la ../src/libFOX-1.6.la
+chart_DEPENDENCIES =  libCHART-1.7.la ../src/libFOX-1.7.la
 chart_LDFLAGS = 
 CXXCOMPILE = $(CXX) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
 LTCXXCOMPILE = $(LIBTOOL) --mode=compile $(CXX) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
@@ -168,8 +168,8 @@ DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
 
 TAR = gtar
 GZIP_ENV = --best
-SOURCES = $(libCHART_1_6_la_SOURCES) $(chart_SOURCES)
-OBJECTS = $(libCHART_1_6_la_OBJECTS) $(chart_OBJECTS)
+SOURCES = $(libCHART_1_7_la_SOURCES) $(chart_SOURCES)
+OBJECTS = $(libCHART_1_7_la_OBJECTS) $(chart_OBJECTS)
 
 all: all-redirect
 .SUFFIXES:
@@ -251,8 +251,8 @@ distclean-libtool:
 
 maintainer-clean-libtool:
 
-libCHART-1.6.la: $(libCHART_1_6_la_OBJECTS) $(libCHART_1_6_la_DEPENDENCIES)
-	$(CXXLINK) -rpath $(libdir) $(libCHART_1_6_la_LDFLAGS) $(libCHART_1_6_la_OBJECTS) $(libCHART_1_6_la_LIBADD) $(LIBS)
+libCHART-1.7.la: $(libCHART_1_7_la_OBJECTS) $(libCHART_1_7_la_DEPENDENCIES)
+	$(CXXLINK) -rpath $(libdir) $(libCHART_1_7_la_LDFLAGS) $(libCHART_1_7_la_OBJECTS) $(libCHART_1_7_la_LIBADD) $(LIBS)
 
 mostlyclean-noinstPROGRAMS:
 
@@ -335,6 +335,7 @@ distdir: $(DISTFILES)
 chart.o: chart.cpp ../include/fx.h ../include/fxver.h \
 	../include/fxdefs.h ../include/fxascii.h ../include/fxunicode.h \
 	../include/FXHash.h ../include/FXException.h \
+	../include/FXElement.h ../include/FXArray.h \
 	../include/FXThread.h ../include/FXStream.h ../include/FXIO.h \
 	../include/FXFile.h ../include/FXPipe.h ../include/FXSocket.h \
 	../include/FXFileStream.h ../include/FXMemoryStream.h \
@@ -428,6 +429,7 @@ chart.o: chart.cpp ../include/fx.h ../include/fxver.h \
 FXChart.lo FXChart.o : FXChart.cpp ../include/fx.h ../include/fxver.h \
 	../include/fxdefs.h ../include/fxascii.h ../include/fxunicode.h \
 	../include/FXHash.h ../include/FXException.h \
+	../include/FXElement.h ../include/FXArray.h \
 	../include/FXThread.h ../include/FXStream.h ../include/FXIO.h \
 	../include/FXFile.h ../include/FXPipe.h ../include/FXSocket.h \
 	../include/FXFileStream.h ../include/FXMemoryStream.h \

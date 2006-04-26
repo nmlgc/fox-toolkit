@@ -19,13 +19,14 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXCursor.cpp,v 1.62 2006/01/22 17:58:21 fox Exp $                        *
+* $Id: FXCursor.cpp,v 1.63 2006/03/25 06:34:08 fox Exp $                        *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
 #include "fxdefs.h"
 #include "FXHash.h"
 #include "FXThread.h"
+#include "FXElement.h"
 #include "FXStream.h"
 #include "FXString.h"
 #include "FXSize.h"
@@ -365,7 +366,7 @@ void FXCursor::detach(){
 void FXCursor::release(){
   if(options&CURSOR_OWNED){
     options&=~CURSOR_OWNED;
-    FXFREE(&data);
+    freeElms(data);
     }
   data=NULL;
   }
@@ -403,8 +404,8 @@ bool FXCursor::savePixels(FXStream& store) const {
 // Load pixel data only
 bool FXCursor::loadPixels(FXStream& store){
   FXuint size=width*height;
-  if(options&CURSOR_OWNED){FXFREE(&data);}
-  if(!FXMALLOC(&data,FXColor,size)) return false;
+  if(options&CURSOR_OWNED){freeElms(data);}
+  if(!allocElms(data,size)) return false;
   store.load(data,size);
   options|=CURSOR_OWNED;
   return true;
@@ -437,7 +438,7 @@ void FXCursor::load(FXStream& store){
 FXCursor::~FXCursor(){
   FXTRACE((100,"FXCursor::~FXCursor %p\n",this));
   destroy();
-  if(options&CURSOR_OWNED){FXFREE(&data);}
+  if(options&CURSOR_OWNED){freeElms(data);}
   data=(FXColor *)-1L;
   }
 

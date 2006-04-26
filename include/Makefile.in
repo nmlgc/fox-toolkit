@@ -94,7 +94,7 @@ STRIP = @STRIP@
 VERSION = @VERSION@
 X_BASE_LIBS = @X_BASE_LIBS@
 
-foxincludedir = $(includedir)/fox-1.6
+foxincludedir = $(includedir)/fox-1.7
 
 CODECS = \
 FX88591Codec.h \

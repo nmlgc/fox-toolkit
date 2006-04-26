@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXColorWheel.h,v 1.31 2006/01/22 17:57:59 fox Exp $                      *
+* $Id: FXColorWheel.h,v 1.32 2006/03/31 07:33:01 fox Exp $                      *
 ********************************************************************************/
 #ifndef FXCOLORWHEEL_H
 #define FXCOLORWHEEL_H
@@ -54,8 +54,8 @@ protected:
   FXColorWheel();
   void updatedial();
   void movespot(FXint x,FXint y);
-  FXbool hstoxy(FXint& x,FXint& y,FXfloat h,FXfloat s) const;
-  FXbool xytohs(FXfloat& h,FXfloat& s,FXint x,FXint y) const;
+  bool hstoxy(FXint& x,FXint& y,FXfloat h,FXfloat s) const;
+  bool xytohs(FXfloat& h,FXfloat& s,FXint x,FXint y) const;
 private:
   FXColorWheel(const FXColorWheel&);
   FXColorWheel &operator=(const FXColorWheel&);

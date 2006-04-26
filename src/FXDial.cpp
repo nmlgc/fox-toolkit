@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXDial.cpp,v 1.50 2006/01/22 17:58:22 fox Exp $                          *
+* $Id: FXDial.cpp,v 1.51 2006/03/31 07:33:05 fox Exp $                          *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -654,7 +654,7 @@ long FXDial::onPaint(FXObject*,FXSelector,void* ptr){
 
 
 // Set dial range
-void FXDial::setRange(FXint lo,FXint hi,FXbool notify){
+void FXDial::setRange(FXint lo,FXint hi,bool notify){
   if(lo>hi){ fxerror("%s::setRange: trying to set negative range.\n",getClassName()); }
   if(range[0]!=lo || range[1]!=hi){
     range[0]=lo;
@@ -665,7 +665,7 @@ void FXDial::setRange(FXint lo,FXint hi,FXbool notify){
 
 
 // Set dial value
-void FXDial::setValue(FXint p,FXbool notify){
+void FXDial::setValue(FXint p,bool notify){
   register FXint n;
   if(p<range[0]) p=range[0];
   if(p>range[1]) p=range[1];

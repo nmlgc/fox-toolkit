@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXDCPrint.cpp,v 1.54 2006/01/22 17:58:21 fox Exp $                       *
+* $Id: FXDCPrint.cpp,v 1.55 2006/03/31 07:33:05 fox Exp $                       *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -138,7 +138,7 @@ void FXDCPrint::bbox(FXfloat x,FXfloat y){
 
 
 // Send the range of coordinates that will be sent
-FXbool FXDCPrint::setContentRange(FXint pxminArg, FXint pyminArg, FXint pxmaxArg, FXint pymaxArg){
+bool FXDCPrint::setContentRange(FXint pxminArg, FXint pyminArg, FXint pxmaxArg, FXint pymaxArg){
   if(flags&PRINT_LANDSCAPE){
     pxmin=pyminArg;
     pymin=pxminArg;
@@ -151,7 +151,7 @@ FXbool FXDCPrint::setContentRange(FXint pxminArg, FXint pyminArg, FXint pxmaxArg
     pxmax=pxmaxArg;
     pymax=pymaxArg;
     }
-  return TRUE;    // Should we check for appropriate ranges?
+  return true;    // Should we check for appropriate ranges?
   }
 
 
@@ -204,7 +204,7 @@ void FXDCPrint::tfm(FXfloat& xo,FXfloat& yo,FXfloat xi,FXfloat yi){
 
 
 // Generate print job prolog
-FXbool FXDCPrint::beginPrint(FXPrinter& job){
+bool FXDCPrint::beginPrint(FXPrinter& job){
   int numpages;
 
   Yr=792;  //480 // This is essentially the height of the page(used so that the upper left hand corner is the origin)
@@ -213,7 +213,7 @@ FXbool FXDCPrint::beginPrint(FXPrinter& job){
   // Print to file
   if(job.flags&PRINT_DEST_FILE){
     psout=fopen(job.name.text(),"w");
-    if(!psout) return FALSE;
+    if(!psout) return false;
     }
 
   // Print to printer
@@ -234,7 +234,7 @@ FXbool FXDCPrint::beginPrint(FXPrinter& job){
 #else
     psout=popen(buffer,"w");
 #endif
-    if(!psout) return FALSE;
+    if(!psout) return false;
     }
 
   // Copy flags
@@ -450,12 +450,12 @@ FXbool FXDCPrint::beginPrint(FXPrinter& job){
   // Keep track of #pages
   pagecount=0;
 
-  return TRUE;
+  return true;
   }
 
 
 // Generate print job epilog
-FXbool FXDCPrint::endPrint(){
+bool FXDCPrint::endPrint(){
   outf("%%%%Trailer\n");
 
   // We now know the bounding box
@@ -476,12 +476,12 @@ FXbool FXDCPrint::endPrint(){
   // Done!
   outf("%%%%EOF\n");
   fclose((FILE*)psout);
-  return TRUE;
+  return true;
   }
 
 
 // Generate begin of page
-FXbool FXDCPrint::beginPage(FXuint page){
+bool FXDCPrint::beginPage(FXuint page){
 
   // Output page number
   outf("%%%%Page: %d\n",page);
@@ -515,12 +515,12 @@ FXbool FXDCPrint::beginPage(FXuint page){
     outf("90 rotate\n");
     }
 
-  return TRUE;
+  return true;
   }
 
 
 // Generate end of page
-FXbool FXDCPrint::endPage(){
+bool FXDCPrint::endPage(){
   /*
   outf("0 0 0 setcolor\n");
   outf("newpath\n");
@@ -553,7 +553,7 @@ FXbool FXDCPrint::endPage(){
   outf("showpage\n");
   outf("grestore\n");
   pagecount++;
-  return TRUE;
+  return true;
   }
 
 
@@ -1117,7 +1117,7 @@ void FXDCPrint::setFont(FXFont *fnt){
 
 
 // Change clip-against-child windows mode
-void FXDCPrint::clipChildren(FXbool){
+void FXDCPrint::clipChildren(bool){
   }
 
 

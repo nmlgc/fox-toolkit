@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXDCWindow.h,v 1.46 2006/01/22 17:58:00 fox Exp $                        *
+* $Id: FXDCWindow.h,v 1.48 2006/04/02 22:37:17 fox Exp $                        *
 ********************************************************************************/
 #ifndef FXDCWINDOW_H
 #define FXDCWINDOW_H
@@ -55,21 +55,19 @@ protected:
   FXDrawable *surface;        // Drawable surface
   FXVisual   *visual;         // Visual of drawable
   FXRectangle rect;           // Paint rectangle inside drawable
-#ifndef WIN32
-  FXuint      flags;          // GC Flags
   FXPixel     devfg;          // Device foreground pixel value
   FXPixel     devbg;          // Device background pixel value
+#ifndef WIN32
+  FXuint      flags;          // GC Flags
   void       *xftDraw;        // Hook used only for XFT support
 #else
   FXID        oldpalette;
   FXID        oldbrush;
   FXID        oldpen;
-  FXPixel     devfg;          // Device foreground pixel value
-  FXPixel     devbg;          // Device background pixel value
-  FXbool      needsNewBrush;
-  FXbool      needsNewPen;
-  FXbool      needsPath;
-  FXbool      needsClipReset;
+  bool        needsNewBrush;
+  bool        needsNewPen;
+  bool        needsPath;
+  bool        needsClipReset;
 #endif
 private:
 #ifdef WIN32
@@ -242,7 +240,7 @@ public:
   virtual void setFont(FXFont *fnt);
 
   /// Clip against child windows
-  virtual void clipChildren(FXbool yes);
+  virtual void clipChildren(bool yes);
 
   /// Destructor
   virtual ~FXDCWindow();

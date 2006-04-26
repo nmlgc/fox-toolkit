@@ -19,13 +19,14 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXMemoryStream.cpp,v 1.17 2006/01/22 17:58:35 fox Exp $                  *
+* $Id: FXMemoryStream.cpp,v 1.18 2006/03/23 06:51:53 fox Exp $                  *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
 #include "fxdefs.h"
 #include "FXHash.h"
 #include "FXStream.h"
+#include "FXElement.h"
 #include "FXString.h"
 #include "FXObject.h"
 #include "FXStream.h"
@@ -115,7 +116,7 @@ void FXMemoryStream::takeBuffer(FXuchar*& data,FXuval& size){
 // Give buffer to stream
 void FXMemoryStream::giveBuffer(FXuchar *data,FXuval size){
   if(data==NULL){ fxerror("FXMemoryStream::giveBuffer: NULL buffer argument.\n"); }
-  if(owns){FXFREE(&begptr);}
+  if(owns){freeElms(begptr);}
   begptr=data;
   endptr=data+size;
   if(dir==FXStreamSave){
@@ -133,7 +134,7 @@ void FXMemoryStream::giveBuffer(FXuchar *data,FXuval size){
 // Close the stream
 bool FXMemoryStream::close(){
   if(dir){
-    if(owns){FXFREE(&begptr);}
+    if(owns){freeElms(begptr);}
     begptr=NULL;
     wrptr=NULL;
     rdptr=NULL;

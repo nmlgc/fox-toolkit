@@ -5,7 +5,7 @@
 ##############################################################################
 # Contributed by: Andre Fornacon <afo@zlug.org>                              #
 ##############################################################################
-# $Id: Makefile.dmc,v 1.50 2006/01/27 05:19:39 fox Exp $		     #
+# $Id: Makefile.dmc,v 1.51 2006/03/22 03:46:48 fox Exp $		     #
 ##############################################################################
 # This library is free software; you can redistribute it and/or 	     #
 # modify it under the terms of the GNU Library General Public		     #
@@ -31,7 +31,7 @@ TOPDIR	  = ..
 CXXFLAGS  = -mn -WD -5 -a8 -Ae -Ar -Nc -NS -NV
 DEFINES   = -DFOX_BIGENDIAN=0 -DNDEBUG -D_WINDOWS -DWIN32 -DHAVE_VSSCANF -DHAVE_OPENGL #-DHAVE_PNG_H -DHAVE_JPEG_H -DHAVE_ZLIB_H -DHAVE_TIFF_H -DHAVE_BZ2LIB_H -DXMD_H
 INCDIRS   = -I$(TOPDIR)/include
-FOXLIB	  = $(TOPDIR)\src\FOX-1.6.lib
+FOXLIB	  = $(TOPDIR)\src\FOX-1.7.lib
 RESWRAP	  = $(TOPDIR)\utils\reswrap.exe
 SUFFIXES  = .gif .bmp
 

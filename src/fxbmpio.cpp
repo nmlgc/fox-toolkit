@@ -19,12 +19,13 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: fxbmpio.cpp,v 1.53 2006/01/22 17:58:52 fox Exp $                         *
+* $Id: fxbmpio.cpp,v 1.54 2006/03/24 02:46:12 fox Exp $                         *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
 #include "fxdefs.h"
 #include "FXHash.h"
+#include "FXElement.h"
 #include "FXStream.h"
 
 
@@ -183,7 +184,7 @@ bool fxloadBMP(FXStream& store,FXColor*& data,FXint& width,FXint& height){
   maxpixels=biWidth*biHeight;
 
   // Allocate memory
-  if(!FXMALLOC(&data,FXColor,maxpixels)) goto x;
+  if(!allocElms(data,maxpixels)) goto x;
 
   // Width and height
   width=biWidth;

@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXGLObject.cpp,v 1.37 2006/01/22 17:58:28 fox Exp $                      *
+* $Id: FXGLObject.cpp,v 1.38 2006/04/02 19:33:22 fox Exp $                      *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -94,15 +94,15 @@ FXGLObject* FXGLObject::identify(FXuint*){ return this; }
 
 
 // Return true if it can be dragged
-FXbool FXGLObject::canDrag() const { return FALSE; }
+bool FXGLObject::canDrag() const { return false; }
 
 
 // Return true if OK to delete object
-FXbool FXGLObject::canDelete() const { return FALSE; }
+bool FXGLObject::canDelete() const { return false; }
 
 
 // Drag the object
-FXbool FXGLObject::drag(FXGLViewer*,FXint,FXint,FXint,FXint){ return FALSE; }
+bool FXGLObject::drag(FXGLViewer*,FXint,FXint,FXint,FXint){ return false; }
 
 
 
@@ -166,15 +166,15 @@ FXGLObject* FXGLGroup::identify(FXuint* path){
 
 
 // Return true if it can be dragged
-FXbool FXGLGroup::canDrag() const { return TRUE; }
+bool FXGLGroup::canDrag() const { return true; }
 
 
 // Drag group object
-FXbool FXGLGroup::drag(FXGLViewer* viewer,FXint fx,FXint fy,FXint tx,FXint ty){
+bool FXGLGroup::drag(FXGLViewer* viewer,FXint fx,FXint fy,FXint tx,FXint ty){
   for(FXint i=0; i<list.no(); i++){
     list[i]->drag(viewer,fx,fy,tx,ty);
     }
-  return TRUE;
+  return true;
   }
 
 

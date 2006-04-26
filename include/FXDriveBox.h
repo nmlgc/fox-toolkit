@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXDriveBox.h,v 1.17 2006/01/22 17:58:01 fox Exp $                        *
+* $Id: FXDriveBox.h,v 1.18 2006/03/31 07:33:01 fox Exp $                        *
 ********************************************************************************/
 #ifndef FXDRIVEBOX_H
 #define FXDRIVEBOX_H
@@ -85,7 +85,7 @@ public:
   virtual void load(FXStream& store);
 
   /// Set current drive
-  FXbool setDrive(const FXString& drive);
+  bool setDrive(const FXString& drive);
 
   /// Return current drive
   FXString getDrive() const;

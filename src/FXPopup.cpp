@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXPopup.cpp,v 1.91.2.1 2006/04/05 18:56:22 fox Exp $                         *
+* $Id: FXPopup.cpp,v 1.93 2006/04/05 18:55:10 fox Exp $                         *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -834,13 +834,13 @@ void FXPopup::setOrientation(FXuint orient){
 
 
 // Return shrinkwrap mode
-FXbool FXPopup::getShrinkWrap() const {
+bool FXPopup::getShrinkWrap() const {
   return (options&POPUP_SHRINKWRAP)!=0;
   }
 
 
 // Change shrinkwrap mode
-void FXPopup::setShrinkWrap(FXbool sw){
+void FXPopup::setShrinkWrap(bool sw){
   options=sw ? (options|POPUP_SHRINKWRAP) : (options&~POPUP_SHRINKWRAP);
   }
 

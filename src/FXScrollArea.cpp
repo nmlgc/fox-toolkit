@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXScrollArea.cpp,v 1.49 2006/01/22 17:58:40 fox Exp $                    *
+* $Id: FXScrollArea.cpp,v 1.50 2006/03/31 07:33:11 fox Exp $                    *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -261,19 +261,19 @@ long FXScrollArea::onAutoScroll(FXObject*,FXSelector sel,void* ptr){
 
 
 // Start automatic scrolling
-FXbool FXScrollArea::startAutoScroll(FXEvent *event,FXbool onlywheninside){
-  register FXbool autoscrolling=FALSE;
+bool FXScrollArea::startAutoScroll(FXEvent *event,bool onlywheninside){
+  register bool autoscrolling=false;
   flags&=~FLAG_SCROLLINSIDE;
   if(onlywheninside) flags|=FLAG_SCROLLINSIDE;
   if(horizontal->getPage()<horizontal->getRange()){
-    if((event->win_x<AUTOSCROLL_FUDGE) && (0<horizontal->getPosition())) autoscrolling=TRUE;
-    else if((viewport_w-AUTOSCROLL_FUDGE<=event->win_x) && (horizontal->getPosition()<horizontal->getRange()-horizontal->getPage())) autoscrolling=TRUE;
+    if((event->win_x<AUTOSCROLL_FUDGE) && (0<horizontal->getPosition())) autoscrolling=true;
+    else if((viewport_w-AUTOSCROLL_FUDGE<=event->win_x) && (horizontal->getPosition()<horizontal->getRange()-horizontal->getPage())) autoscrolling=true;
     }
   if(vertical->getPage()<vertical->getRange()){
-    if((event->win_y<AUTOSCROLL_FUDGE) && (0<vertical->getPosition())) autoscrolling=TRUE;
-    else if((viewport_h-AUTOSCROLL_FUDGE<=event->win_y) && (vertical->getPosition()<vertical->getRange()-vertical->getPage())) autoscrolling=TRUE;
+    if((event->win_y<AUTOSCROLL_FUDGE) && (0<vertical->getPosition())) autoscrolling=true;
+    else if((viewport_h-AUTOSCROLL_FUDGE<=event->win_y) && (vertical->getPosition()<vertical->getRange()-vertical->getPage())) autoscrolling=true;
     }
-  if(onlywheninside && (event->win_x<0 || event->win_y<0 || viewport_w<=event->win_x || viewport_h<=event->win_y)) autoscrolling=FALSE;
+  if(onlywheninside && (event->win_x<0 || event->win_y<0 || viewport_w<=event->win_x || viewport_h<=event->win_y)) autoscrolling=false;
   if(autoscrolling){
     if(!getApp()->hasTimeout(this,ID_AUTOSCROLL)){
       getApp()->addTimeout(this,ID_AUTOSCROLL,getApp()->getScrollSpeed(),event);
@@ -318,13 +318,13 @@ FXuint FXScrollArea::getScrollStyle() const {
 
 
 // True if horizontally scrollable enabled
-FXbool FXScrollArea::isHorizontalScrollable() const {
+bool FXScrollArea::isHorizontalScrollable() const {
   return !((options&HSCROLLER_NEVER) && (options&HSCROLLER_ALWAYS));
   }
 
 
 // True if vertically scrollable enabled
-FXbool FXScrollArea::isVerticalScrollable() const {
+bool FXScrollArea::isVerticalScrollable() const {
   return !((options&VSCROLLER_NEVER) && (options&VSCROLLER_ALWAYS));
   }
 

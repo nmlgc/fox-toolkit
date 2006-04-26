@@ -19,12 +19,13 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: fxtifio.cpp,v 1.35 2006/01/22 17:58:56 fox Exp $                         *
+* $Id: fxtifio.cpp,v 1.36 2006/03/24 05:55:40 fox Exp $                         *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
 #include "fxdefs.h"
 #include "FXHash.h"
+#include "FXElement.h"
 #include "FXStream.h"
 #ifdef HAVE_TIFF_H
 #include <tiffio.h>
@@ -211,14 +212,14 @@ bool fxloadTIF(FXStream& store,FXColor*& data,FXint& width,FXint& height,FXushor
 
   // Make room for data
   size=img.width*img.height;
-  if(!FXMALLOC(&data,FXColor,size)){
+  if(!allocElms(data,size)){
     TIFFClose(image);
     return false;
     }
 
   // Get the pixels
   if(TIFFRGBAImageGet(&img,(uint32*)data,img.width,img.height)!=1){
-    FXFREE(&data);
+    freeElms(data);
     TIFFClose(image);
     return false;
     }
@@ -332,7 +333,7 @@ bool fxloadTIF(FXStream&,FXColor*& data,FXint& width,FXint& height,FXushort& cod
    0x05, 0x00, 0x00, 0xa0, 0x05, 0x00, 0x00, 0xa0, 0xfd, 0xff, 0xff, 0xbf,
    0x01, 0x00, 0x00, 0x80, 0xff, 0xff, 0xff, 0xff};
   register FXint p;
-  FXMALLOC(&data,FXColor,32*32);
+  allocElms(data,32*32);
   for(p=0; p<32*32; p++){
     data[p]=(tiff_bits[p>>3]&(1<<(p&7))) ? FXRGB(0,0,0) : FXRGB(255,255,255);
     }

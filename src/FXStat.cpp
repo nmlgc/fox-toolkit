@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXStat.cpp,v 1.28 2006/01/22 17:58:42 fox Exp $                          *
+* $Id: FXStat.cpp,v 1.30 2006/04/06 05:43:46 fox Exp $                          *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -45,11 +45,6 @@ using namespace FX;
 
 namespace FX {
 
-
-// Return time anything was changed
-FXTime FXStat::touched() const {
-  return FXMAX(modifyTime,createTime);
-  }
 
 // Return true if it is a hidden file (note: Windows-only attribute)
 bool FXStat::isHidden() const {
@@ -182,18 +177,17 @@ bool FXStat::isSetSticky() const {
   }
 
 
-// Convert FILETIME (# 100ns since 01/01/1601) to time_t (# s since 01/01/1970)
 #ifdef WIN32
-static inline time_t fxfiletime(const FILETIME& ft){
-  FXulong ll=(((FXulong)ft.dwHighDateTime)<<32)|((FXulong)ft.dwLowDateTime);
+
+// Convert 100ns since 01/01/1601 to ns since 01/01/1970
+static inline FXTime fxfiletime(FXTime ft){
 #if defined(__CYGWIN__) || defined(__MINGW32__) || defined(__SC__)
-  ll=ll-116444736000000000ULL;
+  return (ft-116444736000000000LL)*100LL;
 #else
-  ll=ll-116444736000000000UL;
+  return (ft-116444736000000000L)*100L;
 #endif
-  ll=ll/10000000;
-  return (time_t)ll;
   }
+
 #endif
 
 
@@ -222,9 +216,9 @@ bool FXStat::statFile(const FXString& file,FXStat& info){
       if(::SHGetFileInfoW(buffer,0,&sfi,sizeof(SHFILEINFO),SHGFI_EXETYPE)==0) info.modeFlags&=~(FXIO::OwnerExec|FXIO::GroupExec|FXIO::OtherExec);
       info.userNumber=0;
       info.groupNumber=0;
-      info.accessTime=fxfiletime(data.ftLastAccessTime);
-      info.modifyTime=fxfiletime(data.ftLastWriteTime);
-      info.createTime=fxfiletime(data.ftCreationTime);
+      info.accessTime=fxfiletime(*((FXTime*)&data.ftLastAccessTime));
+      info.modifyTime=fxfiletime(*((FXTime*)&data.ftLastWriteTime));
+      info.createTime=fxfiletime(*((FXTime*)&data.ftCreationTime));
       info.fileSize=(((FXlong)data.nFileSizeHigh)<<32)|((FXlong)data.nFileSizeLow);
       return true;
       }
@@ -240,14 +234,15 @@ bool FXStat::statFile(const FXString& file,FXStat& info){
       if(::SHGetFileInfoA(file.text(),0,&sfi,sizeof(SHFILEINFO),SHGFI_EXETYPE)==0) info.modeFlags&=~(FXIO::OwnerExec|FXIO::GroupExec|FXIO::OtherExec);
       info.userNumber=0;
       info.groupNumber=0;
-      info.accessTime=fxfiletime(data.ftLastAccessTime);
-      info.modifyTime=fxfiletime(data.ftLastWriteTime);
-      info.createTime=fxfiletime(data.ftCreationTime);
+      info.accessTime=fxfiletime(*((FXTime*)&data.ftLastAccessTime));
+      info.modifyTime=fxfiletime(*((FXTime*)&data.ftLastWriteTime));
+      info.createTime=fxfiletime(*((FXTime*)&data.ftCreationTime));
       info.fileSize=(((FXlong)data.nFileSizeHigh)<<32)|((FXlong)data.nFileSizeLow);
       return true;
       }
 #endif
 #else
+    const FXTime seconds=1000000000;
     struct stat data;
     if(::stat(file.text(),&data)==0){
       info.modeFlags=(data.st_mode&0777);
@@ -263,9 +258,9 @@ bool FXStat::statFile(const FXString& file,FXStat& info){
       if(data.st_mode&S_ISVTX) info.modeFlags|=FXIO::Sticky;
       info.userNumber=data.st_uid;
       info.groupNumber=data.st_gid;
-      info.accessTime=data.st_atime;
-      info.modifyTime=data.st_mtime;
-      info.createTime=data.st_ctime;
+      info.accessTime=data.st_atime*seconds;
+      info.modifyTime=data.st_mtime*seconds;
+      info.createTime=data.st_ctime*seconds;
       info.fileSize=data.st_size;
       return true;
       }
@@ -300,9 +295,9 @@ bool FXStat::statLink(const FXString& file,FXStat& info){
       if(::SHGetFileInfoW(buffer,0,&sfi,sizeof(SHFILEINFO),SHGFI_EXETYPE)==0) info.modeFlags&=~(FXIO::OwnerExec|FXIO::GroupExec|FXIO::OtherExec);
       info.userNumber=0;
       info.groupNumber=0;
-      info.accessTime=fxfiletime(data.ftLastAccessTime);
-      info.modifyTime=fxfiletime(data.ftLastWriteTime);
-      info.createTime=fxfiletime(data.ftCreationTime);
+      info.accessTime=fxfiletime(*((FXTime*)&data.ftLastAccessTime));
+      info.modifyTime=fxfiletime(*((FXTime*)&data.ftLastWriteTime));
+      info.createTime=fxfiletime(*((FXTime*)&data.ftCreationTime));
       info.fileSize=(((FXlong)data.nFileSizeHigh)<<32)|((FXlong)data.nFileSizeLow);
       return true;
       }
@@ -318,14 +313,15 @@ bool FXStat::statLink(const FXString& file,FXStat& info){
       if(::SHGetFileInfoA(file.text(),0,&sfi,sizeof(SHFILEINFO),SHGFI_EXETYPE)==0) info.modeFlags&=~(FXIO::OwnerExec|FXIO::GroupExec|FXIO::OtherExec);
       info.userNumber=0;
       info.groupNumber=0;
-      info.accessTime=fxfiletime(data.ftLastAccessTime);
-      info.modifyTime=fxfiletime(data.ftLastWriteTime);
-      info.createTime=fxfiletime(data.ftCreationTime);
+      info.accessTime=fxfiletime(*((FXTime*)&data.ftLastAccessTime));
+      info.modifyTime=fxfiletime(*((FXTime*)&data.ftLastWriteTime));
+      info.createTime=fxfiletime(*((FXTime*)&data.ftCreationTime));
       info.fileSize=(((FXlong)data.nFileSizeHigh)<<32)|((FXlong)data.nFileSizeLow);
       return true;
       }
 #endif
 #else
+    const FXTime seconds=1000000000;
     struct stat data;
     if(::lstat(file.text(),&data)==0){
       info.modeFlags=(data.st_mode&0777);
@@ -341,9 +337,9 @@ bool FXStat::statLink(const FXString& file,FXStat& info){
       if(data.st_mode&S_ISVTX) info.modeFlags|=FXIO::Sticky;
       info.userNumber=data.st_uid;
       info.groupNumber=data.st_gid;
-      info.accessTime=data.st_atime;
-      info.modifyTime=data.st_mtime;
-      info.createTime=data.st_ctime;
+      info.accessTime=data.st_atime*seconds;
+      info.modifyTime=data.st_mtime*seconds;
+      info.createTime=data.st_ctime*seconds;
       info.fileSize=data.st_size;
       return true;
       }
@@ -372,13 +368,14 @@ bool FXStat::stat(const FXFile& file,FXStat& info){
     if(data.dwFileAttributes&FILE_ATTRIBUTE_READONLY) info.modeFlags&=~(FXIO::OwnerWrite|FXIO::GroupWrite|FXIO::OtherWrite);
     info.userNumber=0;
     info.groupNumber=0;
-    info.accessTime=fxfiletime(data.ftLastAccessTime);
-    info.modifyTime=fxfiletime(data.ftLastWriteTime);
-    info.createTime=fxfiletime(data.ftCreationTime);
+      info.accessTime=fxfiletime(*((FXTime*)&data.ftLastAccessTime));
+      info.modifyTime=fxfiletime(*((FXTime*)&data.ftLastWriteTime));
+      info.createTime=fxfiletime(*((FXTime*)&data.ftCreationTime));
     info.fileSize=(((FXulong)data.nFileSizeHigh)<<32)|((FXulong)data.nFileSizeLow);
     return true;
     }
 #else
+  const FXTime seconds=1000000000;
   struct stat data;
   if(::fstat(file.handle(),&data)==0){
     info.modeFlags=(data.st_mode&0777);
@@ -394,9 +391,9 @@ bool FXStat::stat(const FXFile& file,FXStat& info){
     if(data.st_mode&S_ISVTX) info.modeFlags|=FXIO::Sticky;
     info.userNumber=data.st_uid;
     info.groupNumber=data.st_gid;
-    info.accessTime=data.st_atime;
-    info.modifyTime=data.st_mtime;
-    info.createTime=data.st_ctime;
+    info.accessTime=data.st_atime*seconds;
+    info.modifyTime=data.st_mtime*seconds;
+    info.createTime=data.st_ctime*seconds;
     info.fileSize=data.st_size;
     return true;
     }
@@ -476,14 +473,6 @@ FXTime FXStat::created(const FXString& file){
   FXStat data;
   statFile(file,data);
   return data.created();
-  }
-
-
-// Return time anything was changed
-FXTime FXStat::touched(const FXString& file){
-  FXStat data;
-  statFile(file,data);
-  return data.touched();
   }
 
 

@@ -98,7 +98,7 @@ CXXFLAGS = @CXXFLAGS@ @X_CFLAGS@
 INCLUDES = -I$(top_srcdir)/include -I$(top_builddir)/include
 RESWRAP = $(top_builddir)/utils/reswrap
 SUFFIXES = .gif .bmp
-LDADD = ../src/libFOX-1.6.la -lm
+LDADD = ../src/libFOX-1.7.la -lm
 
 bin_PROGRAMS = adie
 
@@ -196,7 +196,7 @@ adie_OBJECTS =  Adie.$(OBJEXT) Commands.$(OBJEXT) help.$(OBJEXT) \
 HelpWindow.$(OBJEXT) Hilite.$(OBJEXT) icons.$(OBJEXT) main.$(OBJEXT) \
 parsesyntax.$(OBJEXT) Preferences.$(OBJEXT) TextWindow.$(OBJEXT)
 adie_LDADD = $(LDADD)
-adie_DEPENDENCIES =  ../src/libFOX-1.6.la
+adie_DEPENDENCIES =  ../src/libFOX-1.7.la
 adie_LDFLAGS = 
 SCRIPTS =  $(bin_SCRIPTS)
 
@@ -417,7 +417,8 @@ distdir: $(DISTFILES)
 	done
 Adie.o: Adie.cpp ../include/fx.h ../include/fxver.h ../include/fxdefs.h \
 	../include/fxascii.h ../include/fxunicode.h ../include/FXHash.h \
-	../include/FXException.h ../include/FXThread.h \
+	../include/FXException.h ../include/FXElement.h \
+	../include/FXArray.h ../include/FXThread.h \
 	../include/FXStream.h ../include/FXIO.h ../include/FXFile.h \
 	../include/FXPipe.h ../include/FXSocket.h \
 	../include/FXFileStream.h ../include/FXMemoryStream.h \
@@ -507,12 +508,12 @@ Adie.o: Adie.cpp ../include/fx.h ../include/fxver.h ../include/fxdefs.h \
 	../include/FXToolBarGrip.h ../include/FXToolBarShell.h \
 	../include/FXToolBarTab.h ../include/FXPrintDialog.h \
 	../include/FXDebugTarget.h ../include/FXSplashWindow.h \
-	../include/fxkeys.h ../include/FXArray.h ../include/FXElement.h \
-	HelpWindow.h Preferences.h Commands.h Hilite.h TextWindow.h \
-	Adie.h icons.h
+	../include/fxkeys.h HelpWindow.h Preferences.h Commands.h \
+	Hilite.h TextWindow.h Adie.h icons.h
 Commands.o: Commands.cpp ../include/fx.h ../include/fxver.h \
 	../include/fxdefs.h ../include/fxascii.h ../include/fxunicode.h \
 	../include/FXHash.h ../include/FXException.h \
+	../include/FXElement.h ../include/FXArray.h \
 	../include/FXThread.h ../include/FXStream.h ../include/FXIO.h \
 	../include/FXFile.h ../include/FXPipe.h ../include/FXSocket.h \
 	../include/FXFileStream.h ../include/FXMemoryStream.h \
@@ -602,12 +603,12 @@ Commands.o: Commands.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXToolBarGrip.h ../include/FXToolBarShell.h \
 	../include/FXToolBarTab.h ../include/FXPrintDialog.h \
 	../include/FXDebugTarget.h ../include/FXSplashWindow.h \
-	Commands.h ../include/FXArray.h ../include/FXElement.h Hilite.h \
-	TextWindow.h Adie.h
+	Commands.h Hilite.h TextWindow.h Adie.h
 help.o: help.cpp help.h
 HelpWindow.o: HelpWindow.cpp ../include/fx.h ../include/fxver.h \
 	../include/fxdefs.h ../include/fxascii.h ../include/fxunicode.h \
 	../include/FXHash.h ../include/FXException.h \
+	../include/FXElement.h ../include/FXArray.h \
 	../include/FXThread.h ../include/FXStream.h ../include/FXIO.h \
 	../include/FXFile.h ../include/FXPipe.h ../include/FXSocket.h \
 	../include/FXFileStream.h ../include/FXMemoryStream.h \
@@ -697,12 +698,12 @@ HelpWindow.o: HelpWindow.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXToolBarGrip.h ../include/FXToolBarShell.h \
 	../include/FXToolBarTab.h ../include/FXPrintDialog.h \
 	../include/FXDebugTarget.h ../include/FXSplashWindow.h icons.h \
-	help.h Preferences.h Commands.h ../include/FXArray.h \
-	../include/FXElement.h Hilite.h TextWindow.h Adie.h \
+	help.h Preferences.h Commands.h Hilite.h TextWindow.h Adie.h \
 	HelpWindow.h
 Hilite.o: Hilite.cpp ../include/fx.h ../include/fxver.h \
 	../include/fxdefs.h ../include/fxascii.h ../include/fxunicode.h \
 	../include/FXHash.h ../include/FXException.h \
+	../include/FXElement.h ../include/FXArray.h \
 	../include/FXThread.h ../include/FXStream.h ../include/FXIO.h \
 	../include/FXFile.h ../include/FXPipe.h ../include/FXSocket.h \
 	../include/FXFileStream.h ../include/FXMemoryStream.h \
@@ -791,12 +792,12 @@ Hilite.o: Hilite.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXDockHandler.h ../include/FXDockTitle.h \
 	../include/FXToolBarGrip.h ../include/FXToolBarShell.h \
 	../include/FXToolBarTab.h ../include/FXPrintDialog.h \
-	../include/FXDebugTarget.h ../include/FXSplashWindow.h \
-	../include/FXArray.h ../include/FXElement.h Hilite.h
+	../include/FXDebugTarget.h ../include/FXSplashWindow.h Hilite.h
 icons.o: icons.cpp
 main.o: main.cpp ../include/fx.h ../include/fxver.h ../include/fxdefs.h \
 	../include/fxascii.h ../include/fxunicode.h ../include/FXHash.h \
-	../include/FXException.h ../include/FXThread.h \
+	../include/FXException.h ../include/FXElement.h \
+	../include/FXArray.h ../include/FXThread.h \
 	../include/FXStream.h ../include/FXIO.h ../include/FXFile.h \
 	../include/FXPipe.h ../include/FXSocket.h \
 	../include/FXFileStream.h ../include/FXMemoryStream.h \
@@ -885,12 +886,12 @@ main.o: main.cpp ../include/fx.h ../include/fxver.h ../include/fxdefs.h \
 	../include/FXDockHandler.h ../include/FXDockTitle.h \
 	../include/FXToolBarGrip.h ../include/FXToolBarShell.h \
 	../include/FXToolBarTab.h ../include/FXPrintDialog.h \
-	../include/FXDebugTarget.h ../include/FXSplashWindow.h \
-	../include/FXArray.h ../include/FXElement.h Hilite.h \
+	../include/FXDebugTarget.h ../include/FXSplashWindow.h Hilite.h \
 	TextWindow.h Adie.h icons.h
 parsesyntax.o: parsesyntax.cpp ../include/fx.h ../include/fxver.h \
 	../include/fxdefs.h ../include/fxascii.h ../include/fxunicode.h \
 	../include/FXHash.h ../include/FXException.h \
+	../include/FXElement.h ../include/FXArray.h \
 	../include/FXThread.h ../include/FXStream.h ../include/FXIO.h \
 	../include/FXFile.h ../include/FXPipe.h ../include/FXSocket.h \
 	../include/FXFileStream.h ../include/FXMemoryStream.h \
@@ -979,12 +980,12 @@ parsesyntax.o: parsesyntax.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXDockHandler.h ../include/FXDockTitle.h \
 	../include/FXToolBarGrip.h ../include/FXToolBarShell.h \
 	../include/FXToolBarTab.h ../include/FXPrintDialog.h \
-	../include/FXDebugTarget.h ../include/FXSplashWindow.h \
-	../include/FXArray.h ../include/FXElement.h Hilite.h Commands.h \
-	TextWindow.h Adie.h
+	../include/FXDebugTarget.h ../include/FXSplashWindow.h Hilite.h \
+	Commands.h TextWindow.h Adie.h
 Preferences.o: Preferences.cpp ../include/fx.h ../include/fxver.h \
 	../include/fxdefs.h ../include/fxascii.h ../include/fxunicode.h \
 	../include/FXHash.h ../include/FXException.h \
+	../include/FXElement.h ../include/FXArray.h \
 	../include/FXThread.h ../include/FXStream.h ../include/FXIO.h \
 	../include/FXFile.h ../include/FXPipe.h ../include/FXSocket.h \
 	../include/FXFileStream.h ../include/FXMemoryStream.h \
@@ -1074,11 +1075,11 @@ Preferences.o: Preferences.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXToolBarGrip.h ../include/FXToolBarShell.h \
 	../include/FXToolBarTab.h ../include/FXPrintDialog.h \
 	../include/FXDebugTarget.h ../include/FXSplashWindow.h icons.h \
-	help.h ../include/FXArray.h ../include/FXElement.h \
-	Preferences.h Hilite.h TextWindow.h Adie.h
+	help.h Preferences.h Hilite.h TextWindow.h Adie.h
 TextWindow.o: TextWindow.cpp ../include/fx.h ../include/fxver.h \
 	../include/fxdefs.h ../include/fxascii.h ../include/fxunicode.h \
 	../include/FXHash.h ../include/FXException.h \
+	../include/FXElement.h ../include/FXArray.h \
 	../include/FXThread.h ../include/FXStream.h ../include/FXIO.h \
 	../include/FXFile.h ../include/FXPipe.h ../include/FXSocket.h \
 	../include/FXFileStream.h ../include/FXMemoryStream.h \
@@ -1168,9 +1169,8 @@ TextWindow.o: TextWindow.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXToolBarGrip.h ../include/FXToolBarShell.h \
 	../include/FXToolBarTab.h ../include/FXPrintDialog.h \
 	../include/FXDebugTarget.h ../include/FXSplashWindow.h \
-	../include/fxkeys.h ../include/FXArray.h ../include/FXElement.h \
-	HelpWindow.h Preferences.h Commands.h Hilite.h TextWindow.h \
-	Adie.h icons.h
+	../include/fxkeys.h HelpWindow.h Preferences.h Commands.h \
+	Hilite.h TextWindow.h Adie.h icons.h
 
 info-am:
 info: info-am

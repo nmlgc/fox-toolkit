@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXToolTip.cpp,v 1.24 2006/01/22 17:58:48 fox Exp $                       *
+* $Id: FXToolTip.cpp,v 1.25 2006/03/31 07:33:14 fox Exp $                       *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -76,7 +76,7 @@ FXIMPLEMENT(FXToolTip,FXShell,FXToolTipMap,ARRAYNUMBER(FXToolTipMap))
 FXToolTip::FXToolTip(){
   font=NULL;
   textColor=0;
-  popped=FALSE;
+  popped=false;
   }
 
 
@@ -86,7 +86,7 @@ FXToolTip::FXToolTip(FXApp* a,FXuint opts,FXint x,FXint y,FXint w,FXint h):
   font=getApp()->getNormalFont();
   textColor=getApp()->getTipforeColor();
   backColor=getApp()->getTipbackColor();
-  popped=FALSE;
+  popped=false;
   }
 
 
@@ -229,7 +229,7 @@ long FXToolTip::onUpdate(FXObject* sender,FXSelector sel,void* ptr){
   // Ask the help source for a new status text first
   if(helpsource && helpsource->handle(this,FXSEL(SEL_QUERY_TIP,0),NULL)){
     if(!popped){
-      popped=TRUE;
+      popped=true;
       if(!shown()){
         getApp()->addTimeout(this,ID_TIP_SHOW,getApp()->getTooltipPause());
         return 1;
@@ -239,7 +239,7 @@ long FXToolTip::onUpdate(FXObject* sender,FXSelector sel,void* ptr){
     return 1;
     }
   getApp()->removeTimeout(this,ID_TIP_SHOW);
-  popped=FALSE;
+  popped=false;
   hide();
   return 1;
   }
@@ -288,7 +288,7 @@ void FXToolTip::setText(const FXString& text){
   if(label!=text){
     label=text;
     recalc();
-    popped=FALSE;       // If text changes, pop it up again
+    popped=false;       // If text changes, pop it up again
     update();
     }
   }

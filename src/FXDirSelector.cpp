@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXDirSelector.cpp,v 1.51 2006/01/22 17:58:23 fox Exp $                   *
+* $Id: FXDirSelector.cpp,v 1.52 2006/03/31 07:33:05 fox Exp $                   *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -175,25 +175,25 @@ FXString FXDirSelector::getDirectory() const {
 
 
 // Return TRUE if showing files as well as directories
-FXbool FXDirSelector::showFiles() const {
+bool FXDirSelector::showFiles() const {
   return dirbox->showFiles();
   }
 
 
 // Show or hide normal files
-void FXDirSelector::showFiles(FXbool showing){
+void FXDirSelector::showFiles(bool showing){
   dirbox->showFiles(showing);
   }
 
 
 // Return TRUE if showing hidden files
-FXbool FXDirSelector::showHiddenFiles() const {
+bool FXDirSelector::showHiddenFiles() const {
   return dirbox->showHiddenFiles();
   }
 
 
 // Show or hide hidden files
-void FXDirSelector::showHiddenFiles(FXbool showing){
+void FXDirSelector::showHiddenFiles(bool showing){
   dirbox->showHiddenFiles(showing);
   }
 

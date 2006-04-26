@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXRealSlider.cpp,v 1.20 2006/01/22 17:58:38 fox Exp $                    *
+* $Id: FXRealSlider.cpp,v 1.21 2006/03/31 07:33:11 fox Exp $                    *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -852,7 +852,7 @@ long FXRealSlider::onPaint(FXObject*,FXSelector,void* ptr){
 // Set slider range; this also revalidates the position,
 // and possibly moves the head [even if the position was still OK,
 // the head might still have to be moved to the exact position].
-void FXRealSlider::setRange(FXdouble lo,FXdouble hi,FXbool notify){
+void FXRealSlider::setRange(FXdouble lo,FXdouble hi,bool notify){
   if(lo>hi){ fxerror("%s::setRange: trying to set negative range.\n",getClassName()); }
   if(range[0]!=lo || range[1]!=hi){
     range[0]=lo;
@@ -867,7 +867,7 @@ void FXRealSlider::setRange(FXdouble lo,FXdouble hi,FXbool notify){
 // head positions may represent the same position!
 // Also, the minimal amount is repainted, as one sometimes as very
 // large/wide sliders.
-void FXRealSlider::setValue(FXdouble p,FXbool notify){
+void FXRealSlider::setValue(FXdouble p,bool notify){
   register FXdouble interval=range[1]-range[0];
   register FXint travel,lo,hi,h;
   if(p<range[0]) p=range[0];

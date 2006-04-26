@@ -19,7 +19,7 @@
 * along with this program; if not, write to the Free Software                   *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: Preferences.cpp,v 1.17 2006/01/22 17:58:15 fox Exp $                     *
+* $Id: Preferences.cpp,v 1.18 2006/04/04 05:14:47 fox Exp $                     *
 ********************************************************************************/
 #include "fx.h"
 #include "PathFinder.h"
@@ -211,25 +211,25 @@ long Preferences::onCmdRemoveExtension(FXObject*,FXSelector,void*){
 
 
 // Change command
-long Preferences::onCmdCommand(FXObject*,FXSelector,void* ptr){
+long Preferences::onCmdCommand(FXObject*,FXSelector,void*){
   return 1;
   }
 
 
 // Change description
-long Preferences::onCmdDescription(FXObject*,FXSelector,void* ptr){
+long Preferences::onCmdDescription(FXObject*,FXSelector,void*){
   return 1;
   }
 
 
 // Change mime type
-long Preferences::onCmdMimeType(FXObject*,FXSelector,void* ptr){
+long Preferences::onCmdMimeType(FXObject*,FXSelector,void*){
   return 1;
   }
 
 
 // Set icon path
-long Preferences::onCmdBrowseIcon(FXObject*,FXSelector sel,void*){
+long Preferences::onCmdBrowseIcon(FXObject*,FXSelector,void*){
   return 1;
   }
 

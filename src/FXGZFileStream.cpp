@@ -19,13 +19,14 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXGZFileStream.cpp,v 1.5 2006/01/22 17:58:30 fox Exp $                   *
+* $Id: FXGZFileStream.cpp,v 1.6 2006/03/25 07:24:45 fox Exp $                   *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
 #include "fxdefs.h"
 #include "FXHash.h"
 #include "FXThread.h"
+#include "FXElement.h"
 #include "FXStream.h"
 #include "FXString.h"
 #include "FXObject.h"
@@ -116,7 +117,7 @@ FXuval FXGZFileStream::readBuffer(FXuval){
 // Try open file stream
 bool FXGZFileStream::open(const FXString& filename,FXStreamDirection save_or_load,FXuval size){
   if(FXFileStream::open(filename,save_or_load,size)){
-    if(FXCALLOC(&z,ZBlock,1)){
+    if(callocElms(z,1)){
       int zerror;
       f=Z_NO_FLUSH;
       if(save_or_load==FXStreamLoad){
@@ -129,7 +130,7 @@ bool FXGZFileStream::open(const FXString& filename,FXStreamDirection save_or_loa
         if(zerror==Z_OK) return true;
         code=FXStreamNoWrite;
         }
-      FXFREE(&z);
+      freeElms(z);
       }
     FXFileStream::close();
     }
@@ -149,7 +150,7 @@ bool FXGZFileStream::close(){
       FXFileStream::close();
       deflateEnd(&z->stream);
       }
-    FXFREE(&z);
+    freeElms(z);
     return true;
     }
   return false;

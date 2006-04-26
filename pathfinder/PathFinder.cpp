@@ -19,7 +19,7 @@
 * along with this program; if not, write to the Free Software                   *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: PathFinder.cpp,v 1.125 2006/01/22 17:58:15 fox Exp $                     *
+* $Id: PathFinder.cpp,v 1.128 2006/03/31 07:33:04 fox Exp $                     *
 ********************************************************************************/
 #include "xincs.h"
 #include "fx.h"
@@ -1232,19 +1232,19 @@ void PathFinderMain::saveSettings(){
 
   // Save file list mode
   iconview=filelist->getListStyle();
-  getApp()->reg().writeUnsignedEntry("PathFinder Settings","iconview",iconview);
+  getApp()->reg().writeUIntEntry("PathFinder Settings","iconview",iconview);
 
   // Showing hidden files...
   hiddenfiles=filelist->showHiddenFiles();
-  getApp()->reg().writeUnsignedEntry("PathFinder Settings","hiddenfiles",hiddenfiles);
+  getApp()->reg().writeUIntEntry("PathFinder Settings","hiddenfiles",hiddenfiles);
 
   // Showing hidden directories...
   hiddendirs=dirlist->showHiddenFiles();
-  getApp()->reg().writeUnsignedEntry("PathFinder Settings","hiddendirs",hiddendirs);
+  getApp()->reg().writeUIntEntry("PathFinder Settings","hiddendirs",hiddendirs);
 
   // Showing thumbnails...
   thumbnails=filelist->showImages();
-  getApp()->reg().writeUnsignedEntry("PathFinder Settings","thumbnails",thumbnails);
+  getApp()->reg().writeUIntEntry("PathFinder Settings","thumbnails",thumbnails);
 
   // Write new window size back to registry
   getApp()->reg().writeIntEntry("PathFinder Settings","x",getX());
@@ -1327,19 +1327,19 @@ void PathFinderMain::loadSettings(){
   setDirectory(path);
 
   // Read icon view mode
-  iconview=getApp()->reg().readUnsignedEntry("PathFinder Settings","iconview",ICONLIST_BIG_ICONS|ICONLIST_AUTOSIZE);
+  iconview=getApp()->reg().readUIntEntry("PathFinder Settings","iconview",ICONLIST_BIG_ICONS|ICONLIST_AUTOSIZE);
   filelist->setListStyle(iconview);
 
   // Showing hidden files...
-  hiddenfiles=getApp()->reg().readUnsignedEntry("PathFinder Settings","hiddenfiles",FALSE);
+  hiddenfiles=getApp()->reg().readUIntEntry("PathFinder Settings","hiddenfiles",FALSE);
   filelist->showHiddenFiles(hiddenfiles);
 
   // Showing thumbnails...
-  thumbnails=getApp()->reg().readUnsignedEntry("PathFinder Settings","thumbnails",FALSE);
+  thumbnails=getApp()->reg().readUIntEntry("PathFinder Settings","thumbnails",FALSE);
   filelist->showImages(thumbnails);
 
   // Showing hidden directories...
-  hiddendirs=getApp()->reg().readUnsignedEntry("PathFinder Settings","hiddendirs",FALSE);
+  hiddendirs=getApp()->reg().readUIntEntry("PathFinder Settings","hiddendirs",FALSE);
   dirlist->showHiddenFiles(hiddendirs);
 
   // Get size
@@ -1416,7 +1416,7 @@ void PathFinderMain::loadSettings(){
 
 
 // Close the window, saving settings
-FXbool PathFinderMain::close(FXbool notify){
+bool PathFinderMain::close(bool notify){
   saveSettings();
   return FXMainWindow::close(notify);
   }
@@ -1669,7 +1669,7 @@ long PathFinderMain::onUpdGroup(FXObject* sender,FXSelector,void*){
 
 // Update create time
 long PathFinderMain::onUpdCreateTime(FXObject* sender,FXSelector,void*){
-  FXString time=FXSystem::time(FXStat::created(filelist->getCurrentFile()));
+  FXString time=FXSystem::localTime(FXStat::created(filelist->getCurrentFile()));
   sender->handle(this,FXSEL(SEL_COMMAND,ID_SETSTRINGVALUE),(void*)&time);
   return 1;
   }
@@ -1677,7 +1677,7 @@ long PathFinderMain::onUpdCreateTime(FXObject* sender,FXSelector,void*){
 
 // Update modified time
 long PathFinderMain::onUpdModifyTime(FXObject* sender,FXSelector,void*){
-  FXString time=FXSystem::time(FXStat::modified(filelist->getCurrentFile()));
+  FXString time=FXSystem::localTime(FXStat::modified(filelist->getCurrentFile()));
   sender->handle(this,FXSEL(SEL_COMMAND,ID_SETSTRINGVALUE),(void*)&time);
   return 1;
   }
@@ -1685,7 +1685,7 @@ long PathFinderMain::onUpdModifyTime(FXObject* sender,FXSelector,void*){
 
 // Update access time
 long PathFinderMain::onUpdAccessTime(FXObject* sender,FXSelector,void*){
-  FXString time=FXSystem::time(FXStat::accessed(filelist->getCurrentFile()));
+  FXString time=FXSystem::localTime(FXStat::accessed(filelist->getCurrentFile()));
   sender->handle(this,FXSEL(SEL_COMMAND,ID_SETSTRINGVALUE),(void*)&time);
   return 1;
   }

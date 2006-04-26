@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXThread.cpp,v 1.53.2.1 2006/03/28 12:56:24 fox Exp $                        *
+* $Id: FXThread.cpp,v 1.57 2006/04/06 05:43:52 fox Exp $                        *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -87,7 +87,7 @@ namespace FX {
 
 
 // Initialize mutex
-FXMutex::FXMutex(FXbool recursive){
+FXMutex::FXMutex(bool recursive){
   pthread_mutexattr_t mutexatt;
   // If this fails on your machine, determine what value
   // of sizeof(pthread_mutex_t) is supposed to be on your
@@ -108,7 +108,7 @@ void FXMutex::lock(){
 
 
 // Try lock the mutex
-FXbool FXMutex::trylock(){
+bool FXMutex::trylock(){
   return pthread_mutex_trylock((pthread_mutex_t*)data)==0;
   }
 
@@ -120,10 +120,10 @@ void FXMutex::unlock(){
 
 
 // Test if locked
-FXbool FXMutex::locked(){
-  if(pthread_mutex_trylock((pthread_mutex_t*)data)==EBUSY) return TRUE;
+bool FXMutex::locked(){
+  if(pthread_mutex_trylock((pthread_mutex_t*)data)==EBUSY) return true;
   pthread_mutex_unlock((pthread_mutex_t*)data);
-  return FALSE;
+  return false;
   }
 
 
@@ -157,7 +157,7 @@ void FXSemaphore::wait(){
 
 
 // Decrement semaphore but don't block
-FXbool FXSemaphore::trywait(){
+bool FXSemaphore::trywait(){
   return MPWaitOnSemaphore(*((MPSemaphoreID*)data),kDurationImmediate)==noErr;
   }
 
@@ -193,7 +193,7 @@ void FXSemaphore::wait(){
 
 
 // Decrement semaphore but don't block
-FXbool FXSemaphore::trywait(){
+bool FXSemaphore::trywait(){
   return sem_trywait((sem_t*)data)==0;
   }
 
@@ -244,7 +244,7 @@ void FXCondition::wait(FXMutex& mtx){
 
 
 // Wait for condition but fall through after timeout
-FXbool FXCondition::wait(FXMutex& mtx,FXlong nsec){
+bool FXCondition::wait(FXMutex& mtx,FXTime nsec){
   register int result;
   struct timespec ts;
   ts.tv_sec=nsec/1000000000;
@@ -296,7 +296,7 @@ FXThreadID FXThread::id() const {
 
 
 // Return TRUE if this thread is running
-FXbool FXThread::running() const {
+bool FXThread::running() const {
   return tid!=0;
   }
 
@@ -318,8 +318,8 @@ void* FXThread::execute(void* thread){
 // Start thread; make sure that stacksize >= PTHREAD_STACK_MIN.
 // We can't check for it because not all machines have this the
 // PTHREAD_STACK_MIN definition.
-FXbool FXThread::start(unsigned long stacksize){
-  register FXbool code;
+bool FXThread::start(unsigned long stacksize){
+  register bool code;
   pthread_attr_t attr;
   pthread_attr_init(&attr);
   pthread_attr_setinheritsched(&attr,PTHREAD_INHERIT_SCHED);
@@ -332,40 +332,40 @@ FXbool FXThread::start(unsigned long stacksize){
 
 
 // Suspend calling thread until thread is done
-FXbool FXThread::join(FXint& code){
+bool FXThread::join(FXint& code){
   void *trc=NULL;
   if(tid && pthread_join((pthread_t)tid,&trc)==0){
     code=(FXint)(FXival)trc;
     tid=0;
-    return TRUE;
+    return true;
     }
-  return FALSE;
+  return false;
   }
 
 
 // Suspend calling thread until thread is done
-FXbool FXThread::join(){
+bool FXThread::join(){
   if(tid && pthread_join((pthread_t)tid,NULL)==0){
     tid=0;
-    return TRUE;
+    return true;
     }
-  return FALSE;
+  return false;
   }
 
 
 // Cancel the thread
-FXbool FXThread::cancel(){
+bool FXThread::cancel(){
   if(tid && pthread_cancel((pthread_t)tid)==0){
     pthread_join((pthread_t)tid,NULL);
     tid=0;
-    return TRUE;
+    return true;
     }
-  return FALSE;
+  return false;
   }
 
 
 // Detach thread
-FXbool FXThread::detach(){
+bool FXThread::detach(){
   return tid && pthread_detach((pthread_t)tid)==0;
   }
 
@@ -384,15 +384,15 @@ void FXThread::yield(){
 
 
 // Get time in nanoseconds since Epoch
-FXlong FXThread::time(){
+FXTime FXThread::time(){
 #ifdef __USE_POSIX199309
-  const FXlong seconds=1000000000;
+  const FXTime seconds=1000000000;
   struct timespec ts;
   clock_gettime(CLOCK_REALTIME,&ts);
   return ts.tv_sec*seconds+ts.tv_nsec;
 #else
-  const FXlong seconds=1000000000;
-  const FXlong microseconds=1000;
+  const FXTime seconds=1000000000;
+  const FXTime microseconds=1000;
   struct timeval tv;
   gettimeofday(&tv,NULL);
   return tv.tv_sec*seconds+tv.tv_usec*microseconds;
@@ -401,17 +401,17 @@ FXlong FXThread::time(){
 
 
 // Sleep for some time
-void FXThread::sleep(FXlong nsec){
+void FXThread::sleep(FXTime nsec){
 #ifdef __USE_POSIX199309
-  const FXlong seconds=1000000000;
+  const FXTime seconds=1000000000;
   struct timespec value;
   value.tv_sec=nsec/seconds;
   value.tv_nsec=nsec%seconds;
   nanosleep(&value,NULL);
 #else
-  const FXlong seconds=1000000000;
-  const FXlong microseconds=1000;
-  const FXlong milliseconds=1000000;
+  const FXTime seconds=1000000000;
+  const FXTime microseconds=1000;
+  const FXTime milliseconds=1000000;
   struct timeval value;
   value.tv_usec=(nsec/microseconds)%milliseconds;
   value.tv_sec=nsec/seconds;
@@ -421,9 +421,9 @@ void FXThread::sleep(FXlong nsec){
 
 
 // Wake at appointed time
-void FXThread::wakeat(FXlong nsec){
+void FXThread::wakeat(FXTime nsec){
 #ifdef __USE_POSIX199309
-  const FXlong seconds=1000000000;
+  const FXTime seconds=1000000000;
   struct timespec value;
 #ifdef __USE_XOPEN2K
   value.tv_sec=nsec/seconds;
@@ -437,9 +437,9 @@ void FXThread::wakeat(FXlong nsec){
   nanosleep(&value,NULL);
 #endif
 #else
-  const FXlong seconds=1000000000;
-  const FXlong microseconds=1000;
-  const FXlong milliseconds=1000000;
+  const FXTime seconds=1000000000;
+  const FXTime microseconds=1000;
+  const FXTime milliseconds=1000000;
   struct timeval value;
   if(nsec<0) nsec=0;
   value.tv_usec=(nsec/microseconds)%milliseconds;
@@ -505,7 +505,7 @@ FXThread::~FXThread(){
 #else
 
 // Initialize mutex
-FXMutex::FXMutex(FXbool){
+FXMutex::FXMutex(bool){
   // If this fails on your machine, determine what value
   // of sizeof(CRITICAL_SECTION) is supposed to be on your
   // machine and mail it to: jeroen@fox-toolkit.org!!
@@ -523,11 +523,11 @@ void FXMutex::lock(){
 
 
 // Try lock the mutex
-FXbool FXMutex::trylock(){
+bool FXMutex::trylock(){
 #if(_WIN32_WINNT >= 0x0400)
   return TryEnterCriticalSection((CRITICAL_SECTION*)data)!=0;
 #else
-  return FALSE;
+  return false;
 #endif
   }
 
@@ -539,12 +539,12 @@ void FXMutex::unlock(){
 
 
 // Test if locked
-FXbool FXMutex::locked(){
+bool FXMutex::locked(){
 #if(_WIN32_WINNT >= 0x0400)
-  if(TryEnterCriticalSection((CRITICAL_SECTION*)data)==0) return FALSE;
+  if(TryEnterCriticalSection((CRITICAL_SECTION*)data)==0) return false;
   LeaveCriticalSection((CRITICAL_SECTION*)data);
 #endif
-  return TRUE;
+  return true;
   }
 
 
@@ -570,7 +570,7 @@ void FXSemaphore::wait(){
 
 
 // Non-blocking semaphore decrement
-FXbool FXSemaphore::trywait(){
+bool FXSemaphore::trywait(){
   return WaitForSingleObject((HANDLE)data[0],0)==WAIT_OBJECT_0;
   }
 
@@ -645,13 +645,13 @@ void FXCondition::wait(FXMutex& mtx){
 
 
 // Wait using single global mutex
-FXbool FXCondition::wait(FXMutex& mtx,FXlong nsec){
+bool FXCondition::wait(FXMutex& mtx,FXTime nsec){
   EnterCriticalSection((CRITICAL_SECTION*)&data[3]);
   data[2]++;
   LeaveCriticalSection((CRITICAL_SECTION*)&data[3]);
   mtx.unlock();
   nsec-=FXThread::time();
-  DWORD result=WaitForMultipleObjects(2,(HANDLE*)data,0,nsec/1000000);
+  DWORD result=WaitForMultipleObjects(2,(HANDLE*)data,0,(DWORD)(nsec/1000000));
   EnterCriticalSection((CRITICAL_SECTION*)&data[3]);
   data[2]--;
   int last_waiter=(result==WAIT_OBJECT_0+1)&&(data[2]==0);      // Unblocked by broadcast & no other blocked threads
@@ -704,7 +704,7 @@ FXThreadID FXThread::id() const {
 
 
 // Return TRUE if this thread is running
-FXbool FXThread::running() const {
+bool FXThread::running() const {
   return tid!=0;
   }
 
@@ -722,7 +722,7 @@ unsigned int CALLBACK FXThread::execute(void* thread){
 
 
 // Start thread
-FXbool FXThread::start(unsigned long stacksize){
+bool FXThread::start(unsigned long stacksize){
   DWORD thd;
   tid=(FXThreadID)CreateThread(NULL,stacksize,(LPTHREAD_START_ROUTINE)FXThread::execute,this,0,&thd);
   return tid!=NULL;
@@ -730,41 +730,41 @@ FXbool FXThread::start(unsigned long stacksize){
 
 
 // Suspend calling thread until thread is done
-FXbool FXThread::join(FXint& code){
+bool FXThread::join(FXint& code){
   if(tid && WaitForSingleObject((HANDLE)tid,INFINITE)==WAIT_OBJECT_0){
     GetExitCodeThread((HANDLE)tid,(DWORD*)&code);
     CloseHandle((HANDLE)tid);
     tid=0;
-    return TRUE;
+    return true;
     }
-  return FALSE;
+  return false;
   }
 
 
 // Suspend calling thread until thread is done
-FXbool FXThread::join(){
+bool FXThread::join(){
   if(tid && WaitForSingleObject((HANDLE)tid,INFINITE)==WAIT_OBJECT_0){
     CloseHandle((HANDLE)tid);
     tid=0;
-    return TRUE;
+    return true;
     }
-  return FALSE;
+  return false;
   }
 
 
 // Cancel the thread
-FXbool FXThread::cancel(){
+bool FXThread::cancel(){
   if(tid && TerminateThread((HANDLE)tid,0)){
     CloseHandle((HANDLE)tid);
     tid=0;
-    return TRUE;
+    return true;
     }
-  return FALSE;
+  return false;
   }
 
 
 // Detach thread
-FXbool FXThread::detach(){
+bool FXThread::detach(){
   return tid!=0;
   }
 
@@ -783,8 +783,8 @@ void FXThread::yield(){
 
 
 // Get time in nanoseconds since Epoch
-FXlong FXThread::time(){
-  FXlong now;
+FXTime FXThread::time(){
+  FXTime now;
   GetSystemTimeAsFileTime((FILETIME*)&now);
 #if defined(__CYGWIN__) || defined(__MINGW32__) || defined(__SC__)
   return (now-116444736000000000LL)*100LL;
@@ -795,16 +795,16 @@ FXlong FXThread::time(){
 
 
 // Sleep for some time
-void FXThread::sleep(FXlong nsec){
-  Sleep(nsec/1000000);
+void FXThread::sleep(FXTime nsec){
+  Sleep((DWORD)(nsec/1000000));
   }
 
 
 // Wake at appointed time
-void FXThread::wakeat(FXlong nsec){
+void FXThread::wakeat(FXTime nsec){
   nsec-=FXThread::time();
   if(nsec<0) nsec=0;
-  Sleep(nsec/1000000);
+  Sleep((DWORD)(nsec/1000000));
   }
 
 

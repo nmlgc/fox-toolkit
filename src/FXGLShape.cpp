@@ -21,13 +21,14 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXGLShape.cpp,v 1.42 2006/01/22 17:58:28 fox Exp $                       *
+* $Id: FXGLShape.cpp,v 1.45 2006/04/04 04:28:06 fox Exp $                       *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
 #include "fxdefs.h"
 #include "FXHash.h"
 #include "FXThread.h"
+#include "FXElement.h"
 #include "FXStream.h"
 #include "FXVec2f.h"
 #include "FXVec3f.h"
@@ -166,22 +167,22 @@ FXGLObject* FXGLShape::copy(){
 
 
 // Return true if it can be dragged
-FXbool FXGLShape::canDrag() const { return TRUE; }
+bool FXGLShape::canDrag() const { return true; }
 
 
 // Object may be deleted
-FXbool FXGLShape::canDelete() const { return TRUE; }
+bool FXGLShape::canDelete() const { return true; }
 
 
 // Handle drag-and-drop drop
 long FXGLShape::onDNDDrop(FXObject* sender,FXSelector,void*){
-  FXushort *clr; FXuint len; FXVec4f color;
-  if(((FXWindow*)sender)->getDNDData(FROM_DRAGNDROP,FXWindow::colorType,(FXuchar*&)clr,len)){
-    color[0]=clr[0]/65535.0f;
-    color[1]=clr[1]/65535.0f;
-    color[2]=clr[2]/65535.0f;
-    color[3]=clr[3]/65535.0f;
-    FXFREE(&clr);
+  FXuchar *data; FXuint len; FXVec4f color;
+  if(((FXWindow*)sender)->getDNDData(FROM_DRAGNDROP,FXWindow::colorType,data,len)){
+    color[0]=((FXushort*)data)[0]/65535.0f;
+    color[1]=((FXushort*)data)[1]/65535.0f;
+    color[2]=((FXushort*)data)[2]/65535.0f;
+    color[3]=((FXushort*)data)[3]/65535.0f;
+    freeElms(data);
     material[0].ambient=color;
     material[0].diffuse=color;
     material[1].ambient=color;
@@ -250,12 +251,12 @@ long FXGLShape::onUpdShadeSmooth(FXObject* sender,FXSelector,void*){
 
 
 // Drag shape around
-FXbool FXGLShape::drag(FXGLViewer* viewer,FXint fx,FXint fy,FXint tx,FXint ty){
+bool FXGLShape::drag(FXGLViewer* viewer,FXint fx,FXint fy,FXint tx,FXint ty){
   FXfloat zz=viewer->worldToEyeZ(position);
   FXVec3f wf=viewer->eyeToWorld(viewer->screenToEye(fx,fy,zz));
   FXVec3f wt=viewer->eyeToWorld(viewer->screenToEye(tx,ty,zz));
   position+=wt-wf;
-  return TRUE;
+  return true;
   }
 
 

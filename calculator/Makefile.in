@@ -98,7 +98,7 @@ CXXFLAGS = @CXXFLAGS@ @X_CFLAGS@
 INCLUDES = -I$(top_srcdir)/include -I$(top_builddir)/include
 RESWRAP = $(top_builddir)/utils/reswrap
 SUFFIXES = .gif .bmp
-LDADD = ../src/libFOX-1.6.la -lm
+LDADD = ../src/libFOX-1.7.la -lm
 
 bin_PROGRAMS = calculator
 
@@ -153,7 +153,7 @@ calculator_OBJECTS =  icons.$(OBJEXT) Calculator.$(OBJEXT) \
 HelpWindow.$(OBJEXT) Preferences.$(OBJEXT) help.$(OBJEXT) \
 main.$(OBJEXT)
 calculator_LDADD = $(LDADD)
-calculator_DEPENDENCIES =  ../src/libFOX-1.6.la
+calculator_DEPENDENCIES =  ../src/libFOX-1.7.la
 calculator_LDFLAGS = 
 CXXCOMPILE = $(CXX) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
 LTCXXCOMPILE = $(LIBTOOL) --mode=compile $(CXX) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
@@ -354,6 +354,7 @@ distdir: $(DISTFILES)
 Calculator.o: Calculator.cpp ../include/fx.h ../include/fxver.h \
 	../include/fxdefs.h ../include/fxascii.h ../include/fxunicode.h \
 	../include/FXHash.h ../include/FXException.h \
+	../include/FXElement.h ../include/FXArray.h \
 	../include/FXThread.h ../include/FXStream.h ../include/FXIO.h \
 	../include/FXFile.h ../include/FXPipe.h ../include/FXSocket.h \
 	../include/FXFileStream.h ../include/FXMemoryStream.h \
@@ -447,7 +448,8 @@ Calculator.o: Calculator.cpp ../include/fx.h ../include/fxver.h \
 	HelpWindow.h
 help.o: help.cpp ../include/fx.h ../include/fxver.h ../include/fxdefs.h \
 	../include/fxascii.h ../include/fxunicode.h ../include/FXHash.h \
-	../include/FXException.h ../include/FXThread.h \
+	../include/FXException.h ../include/FXElement.h \
+	../include/FXArray.h ../include/FXThread.h \
 	../include/FXStream.h ../include/FXIO.h ../include/FXFile.h \
 	../include/FXPipe.h ../include/FXSocket.h \
 	../include/FXFileStream.h ../include/FXMemoryStream.h \
@@ -541,6 +543,7 @@ help.o: help.cpp ../include/fx.h ../include/fxver.h ../include/fxdefs.h \
 HelpWindow.o: HelpWindow.cpp ../include/fx.h ../include/fxver.h \
 	../include/fxdefs.h ../include/fxascii.h ../include/fxunicode.h \
 	../include/FXHash.h ../include/FXException.h \
+	../include/FXElement.h ../include/FXArray.h \
 	../include/FXThread.h ../include/FXStream.h ../include/FXIO.h \
 	../include/FXFile.h ../include/FXPipe.h ../include/FXSocket.h \
 	../include/FXFileStream.h ../include/FXMemoryStream.h \
@@ -634,7 +637,8 @@ HelpWindow.o: HelpWindow.cpp ../include/fx.h ../include/fxver.h \
 icons.o: icons.cpp
 main.o: main.cpp ../include/fx.h ../include/fxver.h ../include/fxdefs.h \
 	../include/fxascii.h ../include/fxunicode.h ../include/FXHash.h \
-	../include/FXException.h ../include/FXThread.h \
+	../include/FXException.h ../include/FXElement.h \
+	../include/FXArray.h ../include/FXThread.h \
 	../include/FXStream.h ../include/FXIO.h ../include/FXFile.h \
 	../include/FXPipe.h ../include/FXSocket.h \
 	../include/FXFileStream.h ../include/FXMemoryStream.h \
@@ -728,6 +732,7 @@ main.o: main.cpp ../include/fx.h ../include/fxver.h ../include/fxdefs.h \
 Preferences.o: Preferences.cpp ../include/fx.h ../include/fxver.h \
 	../include/fxdefs.h ../include/fxascii.h ../include/fxunicode.h \
 	../include/FXHash.h ../include/FXException.h \
+	../include/FXElement.h ../include/FXArray.h \
 	../include/FXThread.h ../include/FXStream.h ../include/FXIO.h \
 	../include/FXFile.h ../include/FXPipe.h ../include/FXSocket.h \
 	../include/FXFileStream.h ../include/FXMemoryStream.h \

@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXColorDialog.h,v 1.20 2006/01/22 17:57:59 fox Exp $                     *
+* $Id: FXColorDialog.h,v 1.21 2006/03/31 07:33:00 fox Exp $                     *
 ********************************************************************************/
 #ifndef FXCOLORDIALOG_H
 #define FXCOLORDIALOG_H
@@ -72,10 +72,10 @@ public:
   FXColor getRGBA() const;
 
   /// Return true if only opaque colors allowed
-  FXbool isOpaqueOnly() const;
+  bool isOpaqueOnly() const;
 
   /// Change opaque only mode
-  void setOpaqueOnly(FXbool forceopaque);
+  void setOpaqueOnly(bool forceopaque);
 
   /// Save dialog to a stream
   virtual void save(FXStream& store) const;

@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXKnob.cpp,v 1.15 2006/01/22 17:58:32 fox Exp $                          *
+* $Id: FXKnob.cpp,v 1.16 2006/03/31 07:33:10 fox Exp $                          *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -602,7 +602,7 @@ long FXKnob::onPaint(FXObject*,FXSelector,void* ptr){
 
 
 // Set knob range
-void FXKnob::setRange(FXint lo,FXint hi,FXbool notify){
+void FXKnob::setRange(FXint lo,FXint hi,bool notify){
   if(lo>hi){ fxerror("%s::setRange: trying to set negative range.\n",getClassName()); }
   if(range[0]!=lo || range[1]!=hi){
     range[0]=lo;
@@ -613,7 +613,7 @@ void FXKnob::setRange(FXint lo,FXint hi,FXbool notify){
 
 
 // Set knob limits
-void FXKnob::setLimits(FXint start,FXint end,FXbool notify){
+void FXKnob::setLimits(FXint start,FXint end,bool notify){
   if(start>end || start<0 || end>360){ fxerror("%s::setLimits: invalid values.\n",getClassName()); }
   if(limits[0]!=start || limits[1]!=end){
     limits[0]=((FXdouble)start/PI*DTOR)-0.5;
@@ -631,7 +631,7 @@ void FXKnob::getLimits(FXint& start,FXint& end){
 
 
 // Set position
-void FXKnob::setValue(FXint p,FXbool notify){
+void FXKnob::setValue(FXint p,bool notify){
   if(p<range[0]) p=range[0];
   if(p>range[1]) p=range[1];
   if(p!=pos){

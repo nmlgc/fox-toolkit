@@ -19,13 +19,14 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXIcon.cpp,v 1.71 2006/01/22 17:58:31 fox Exp $                          *
+* $Id: FXIcon.cpp,v 1.72 2006/03/25 07:24:45 fox Exp $                          *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
 #include "fxdefs.h"
 #include "FXHash.h"
 #include "FXThread.h"
+#include "FXElement.h"
 #include "FXStream.h"
 #include "FXString.h"
 #include "FXSize.h"
@@ -250,7 +251,7 @@ void FXIcon::render(){
         if(!xim){ fxerror("%s::render: unable to render icon.\n",getClassName()); }
 
         // Try create temp pixel store
-        if(!FXMALLOC(&xim->data,char,xim->bytes_per_line*height)){ fxerror("%s::render: unable to allocate memory.\n",getClassName()); }
+        if(!allocElms(xim->data,xim->bytes_per_line*height)){ fxerror("%s::render: unable to allocate memory.\n",getClassName()); }
         }
 
       // Make GC
@@ -362,7 +363,7 @@ void FXIcon::render(){
         }
 #endif
       if(!shmi){
-        FXFREE(&xim->data);
+        freeElms(xim->data);
         XDestroyImage(xim);
         }
       XFreeGC(DISPLAY(getApp()),gc);
@@ -422,8 +423,8 @@ void FXIcon::render(){
 
       // Allocate temp bit buffer
       bytes_per_line=((width+31)&~31)>>3;
-      FXCALLOC(&maskdata,FXuchar,height*bytes_per_line);
-      FXCALLOC(&etchdata,FXuchar,height*bytes_per_line);
+      callocElms(maskdata,height*bytes_per_line);
+      callocElms(etchdata,height*bytes_per_line);
 
       msk=maskdata+height*bytes_per_line;
       ets=etchdata+height*bytes_per_line;
@@ -479,19 +480,19 @@ void FXIcon::render(){
       if(!SetDIBits(hdcmsk,(HBITMAP)etch,0,height,etchdata,(BITMAPINFO*)&bmi,DIB_RGB_COLORS)){
         fxerror("%s::render: unable to render pixels\n",getClassName());
         }
-      FXFREE(&maskdata);
-      FXFREE(&etchdata);
+      freeElms(maskdata);
+      freeElms(etchdata);
       GdiFlush();
 
       // We AND the image with the mask, then we can do faster and more
       // flicker-free icon painting later using the `black source' method
       SelectObject(hdcmsk,(HBITMAP)shape);
       HDC hdcmem=::CreateCompatibleDC(NULL);
-HGDIOBJ hbm=SelectObject(hdcmem,(HBITMAP)xid);
+      HGDIOBJ hbm=SelectObject(hdcmem,(HBITMAP)xid);
       SetBkColor(hdcmem,RGB(0,0,0));                // 1 -> black
       SetTextColor(hdcmem,RGB(255,255,255));        // 0 -> white
       BitBlt(hdcmem,0,0,width,height,hdcmsk,0,0,SRCAND);
-SelectObject(hdcmem,hbm);
+      SelectObject(hdcmem,hbm);
       ::DeleteDC(hdcmem);
       ::DeleteDC(hdcmsk);
       }
@@ -560,11 +561,11 @@ void FXIcon::resize(FXint w,FXint h){
   // Resize data array
   if(data){
     if(!(options&IMAGE_OWNED)){       // Need to own array
-      FXMALLOC(&data,FXColor,w*h);
+      allocElms(data,w*h);
       options|=IMAGE_OWNED;
       }
     else if(w*h!=width*height){
-      FXRESIZE(&data,FXColor,w*h);
+      resizeElms(data,w*h);
       }
     }
 

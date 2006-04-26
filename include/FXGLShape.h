@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXGLShape.h,v 1.25 2006/01/22 17:58:03 fox Exp $                         *
+* $Id: FXGLShape.h,v 1.26 2006/04/02 19:33:22 fox Exp $                         *
 ********************************************************************************/
 #ifndef FXGLSHAPE_H
 #define FXGLSHAPE_H
@@ -121,13 +121,13 @@ public:
   virtual FXGLObject* copy();
 
   /// Return true if this object can be dragged around
-  virtual FXbool canDrag() const;
+  virtual bool canDrag() const;
 
   /// Return true if this object can be deleted from the scene
-  virtual FXbool canDelete() const;
+  virtual bool canDelete() const;
 
   /// Drag this object from one position to another
-  virtual FXbool drag(FXGLViewer* viewer,FXint fx,FXint fy,FXint tx,FXint ty);
+  virtual bool drag(FXGLViewer* viewer,FXint fx,FXint fy,FXint tx,FXint ty);
 
   /// Set the tool tip message for this object
   void setTipText(const FXString& text){ tip=text; }

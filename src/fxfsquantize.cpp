@@ -19,12 +19,13 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: fxfsquantize.cpp,v 1.5 2006/01/22 17:58:52 fox Exp $                     *
+* $Id: fxfsquantize.cpp,v 1.6 2006/03/23 07:10:03 fox Exp $                     *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
 #include "fxdefs.h"
 #include "fxpriv.h"
+#include "FXElement.h"
 
 
 /*
@@ -70,7 +71,9 @@ FXbool fxfsquantize(FXuchar* dst,const FXColor* src,FXColor* colormap,FXint& act
     }
 
   // Temporary storage
-  if(!FXMALLOC(&begin,FXint,w*2*3)) return FALSE;
+  if(!allocElms(begin,w*2*3)) return FALSE;
+  
+  // Set up rows
   cr=begin;
   cg=cr+w;
   cb=cg+w;
@@ -142,7 +145,7 @@ FXbool fxfsquantize(FXuchar* dst,const FXColor* src,FXColor* colormap,FXint& act
         }
       }
     }
-  FXFREE(&begin);
+  freeElms(begin);
   actualcolors=256;
   return TRUE;
   }

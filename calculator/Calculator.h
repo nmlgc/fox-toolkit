@@ -19,7 +19,7 @@
 * along with this program; if not, write to the Free Software                   *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: Calculator.h,v 1.27 2006/01/22 18:01:12 fox Exp $                        *
+* $Id: Calculator.h,v 1.28 2006/03/31 07:33:00 fox Exp $                        *
 ********************************************************************************/
 #ifndef CALCULATOR_H
 #define CALCULATOR_H
@@ -321,7 +321,7 @@ public:
   Calculator(FXApp* a);
 
   // Close the window and save registry
-  virtual FXbool close(FXbool notify=FALSE);
+  virtual bool close(bool notify=false);
 
   /// Create
   virtual void create();
@@ -395,8 +395,8 @@ public:
   FXint getPrecision() const { return precision; }
 
   /// Beep on error
-  void setBeep(FXbool on){ beep=on; }
-  FXbool getBeep() const { return beep; }
+  void setBeep(bool on){ beep=on; }
+  bool getBeep() const { return beep; }
 
   /// Set display font
   void setDisplayFont(FXFont* font);

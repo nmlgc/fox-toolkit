@@ -19,12 +19,13 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: fxjpegio.cpp,v 1.53 2006/01/22 17:58:53 fox Exp $                        *
+* $Id: fxjpegio.cpp,v 1.54 2006/03/25 06:23:45 fox Exp $                        *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
 #include "fxdefs.h"
 #include "FXHash.h"
+#include "FXElement.h"
 #include "FXStream.h"
 #ifdef HAVE_JPEG_H
 #undef FAR
@@ -226,7 +227,7 @@ bool fxloadJPG(FXStream& store,FXColor*& data,FXint& width,FXint& height,FXint&)
   row_stride=srcinfo.output_width*srcinfo.output_components;
 
   // Data to receive
-  if(!FXMALLOC(&data,FXColor,srcinfo.image_height*srcinfo.image_width)){
+  if(!allocElms(data,srcinfo.image_height*srcinfo.image_width)){
     jpeg_destroy_decompress(&srcinfo);
     return false;
     }
@@ -235,8 +236,8 @@ bool fxloadJPG(FXStream& store,FXColor*& data,FXint& width,FXint& height,FXint&)
   width=srcinfo.image_width;
 
   // Sample buffer
-  if(!FXMALLOC(&buffer[0],JSAMPLE,row_stride)){
-    FXFREE(&data);
+  if(!allocElms(buffer[0],row_stride)){
+    freeElms(data);
     jpeg_destroy_decompress(&srcinfo);
     return false;
     }
@@ -257,7 +258,7 @@ bool fxloadJPG(FXStream& store,FXColor*& data,FXint& width,FXint& height,FXint&)
   // Clean up
   jpeg_finish_decompress(&srcinfo);
   jpeg_destroy_decompress(&srcinfo);
-  FXFREE(&buffer[0]);
+  freeElms(buffer[0]);
   return true;
   }
 
@@ -303,7 +304,7 @@ bool fxsaveJPG(FXStream& store,const FXColor* data,FXint width,FXint height,FXin
   if(!data || width<=0 || height<=0 || quality<=0 || 100<quality) return false;
 
   // Row buffer
-  if(!FXMALLOC(&buffer,JSAMPLE,width*3)) return false;
+  if(!allocElms(buffer[0],width*3)) return false;
 
   // Specify the error manager
   memset(&dstinfo,0,sizeof(dstinfo));
@@ -312,7 +313,7 @@ bool fxsaveJPG(FXStream& store,const FXColor* data,FXint width,FXint height,FXin
 
   // Set error handling
   if(setjmp(jerr.jmpbuf)){
-    FXFREE(&buffer[0]);
+    freeElms(buffer[0]);
     jpeg_destroy_compress(&dstinfo);
     return false;
     }
@@ -354,7 +355,7 @@ bool fxsaveJPG(FXStream& store,const FXColor* data,FXint width,FXint height,FXin
   // Clean up
   jpeg_finish_compress(&dstinfo);
   jpeg_destroy_compress(&dstinfo);
-  FXFREE(&buffer[0]);
+  freeElms(buffer[0]);
   return true;
   }
 
@@ -386,7 +387,7 @@ bool fxloadJPG(FXStream&,FXColor*& data,FXint& width,FXint& height,FXint& qualit
    0x05, 0x00, 0x00, 0xa0, 0x05, 0x00, 0x00, 0xa0, 0xfd, 0xff, 0xff, 0xbf,
    0x01, 0x00, 0x00, 0x80, 0xff, 0xff, 0xff, 0xff};
   register FXint p;
-  FXMALLOC(&data,FXColor,32*32);
+  allocElms(data,32*32);
   for(p=0; p<32*32; p++){
     data[p]=(jpeg_bits[p>>3]&(1<<(p&7))) ? FXRGB(0,0,0) : FXRGB(255,255,255);
     }

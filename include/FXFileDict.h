@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXFileDict.h,v 1.31 2006/01/22 17:58:01 fox Exp $                        *
+* $Id: FXFileDict.h,v 1.32 2006/03/25 18:03:43 fox Exp $                        *
 ********************************************************************************/
 #ifndef FXFILEDICT_H
 #define FXFILEDICT_H
@@ -89,7 +89,7 @@ private:
   FXIconDict *icons;    // Icon dictionary which keeps track of loaded icons
 protected:
   FXFileDict(){}
-  virtual void *createData(const void*);
+  virtual void *createData(void*);
   virtual void deleteData(void*);
 private:
   FXFileDict(const FXFileDict&);

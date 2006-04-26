@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXArrowButton.cpp,v 1.50 2006/01/22 17:58:17 fox Exp $                   *
+* $Id: FXArrowButton.cpp,v 1.51 2006/04/02 22:37:20 fox Exp $                   *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -93,8 +93,8 @@ FXArrowButton::FXArrowButton(){
   flags|=FLAG_ENABLED;
   arrowColor=0;
   arrowSize=9;
-  state=FALSE;
-  fired=FALSE;
+  state=false;
+  fired=false;
   }
 
 
@@ -106,8 +106,8 @@ FXArrowButton::FXArrowButton(FXComposite* p,FXObject* tgt,FXSelector sel,FXuint 
   message=sel;
   arrowColor=getApp()->getForeColor();
   arrowSize=9;
-  state=FALSE;
-  fired=FALSE;
+  state=false;
+  fired=false;
   }
 
 
@@ -141,7 +141,7 @@ void FXArrowButton::disable(){
 
 
 // Set button state
-void FXArrowButton::setState(FXbool s){
+void FXArrowButton::setState(bool s){
   if(state!=s){
     state=s;
     update();
@@ -165,10 +165,10 @@ long FXArrowButton::onUpdate(FXObject* sender,FXSelector sel,void* ptr){
 
 // Press automatically
 long FXArrowButton::onAuto(FXObject*,FXSelector,void*){
-  setState(TRUE);
+  setState(true);
   getApp()->addTimeout(this,ID_REPEAT,getApp()->getScrollSpeed());
   flags&=~FLAG_UPDATE;
-  fired=FALSE;
+  fired=false;
   return 1;
   }
 
@@ -178,7 +178,7 @@ long FXArrowButton::onEnter(FXObject* sender,FXSelector sel,void* ptr){
   FXFrame::onEnter(sender,sel,ptr);
   if(isEnabled()){
     if(flags&FLAG_PRESSED){
-      setState(TRUE);
+      setState(true);
       }
     else if(options&ARROW_AUTO){
       if(options&ARROW_REPEAT) getApp()->addTimeout(this,ID_AUTO,getApp()->getScrollDelay());
@@ -194,13 +194,13 @@ long FXArrowButton::onLeave(FXObject* sender,FXSelector sel,void* ptr){
   FXFrame::onLeave(sender,sel,ptr);
   if(isEnabled()){
     if(flags&FLAG_PRESSED){
-      setState(FALSE);
+      setState(false);
       }
     else if(options&ARROW_AUTO){
-      setState(FALSE);
+      setState(false);
       if(options&ARROW_REPEAT) getApp()->removeTimeout(this,ID_AUTO);
       flags|=FLAG_UPDATE;
-      fired=FALSE;
+      fired=false;
       }
     if(options&ARROW_TOOLBAR) update();
     }
@@ -215,12 +215,12 @@ long FXArrowButton::onLeftBtnPress(FXObject*,FXSelector,void* ptr){
   if(isEnabled() && !(flags&FLAG_PRESSED)){
     grab();
     if(target && target->tryHandle(this,FXSEL(SEL_LEFTBUTTONPRESS,message),ptr)) return 1;
-    setState(TRUE);
+    setState(true);
     getApp()->removeTimeout(this,ID_AUTO);
     if(options&ARROW_REPEAT) getApp()->addTimeout(this,ID_REPEAT,getApp()->getScrollDelay());
     flags|=FLAG_PRESSED;
     flags&=~FLAG_UPDATE;
-    fired=FALSE;
+    fired=false;
     return 1;
     }
   return 0;
@@ -229,15 +229,15 @@ long FXArrowButton::onLeftBtnPress(FXObject*,FXSelector,void* ptr){
 
 // Released mouse button
 long FXArrowButton::onLeftBtnRelease(FXObject*,FXSelector,void* ptr){
-  FXbool click=(!fired && state);
+  bool click=(!fired && state);
   if(isEnabled() && (flags&FLAG_PRESSED)){
     ungrab();
     flags|=FLAG_UPDATE;
     flags&=~FLAG_PRESSED;
-    fired=FALSE;
+    fired=false;
     getApp()->removeTimeout(this,ID_REPEAT);
     if(target && target->tryHandle(this,FXSEL(SEL_LEFTBUTTONRELEASE,message),ptr)) return 1;
-    setState(FALSE);
+    setState(false);
     if(click && target) target->tryHandle(this,FXSEL(SEL_COMMAND,message),(void*)(FXuval)1);
     return 1;
     }
@@ -248,11 +248,11 @@ long FXArrowButton::onLeftBtnRelease(FXObject*,FXSelector,void* ptr){
 // Lost the grab for some reason
 long FXArrowButton::onUngrabbed(FXObject* sender,FXSelector sel,void* ptr){
   FXFrame::onUngrabbed(sender,sel,ptr);
-  setState(FALSE);
+  setState(false);
   getApp()->removeTimeout(this,ID_REPEAT);
   flags&=~FLAG_PRESSED;
   flags|=FLAG_UPDATE;
-  fired=FALSE;
+  fired=false;
   return 1;
   }
 
@@ -261,7 +261,7 @@ long FXArrowButton::onUngrabbed(FXObject* sender,FXSelector sel,void* ptr){
 long FXArrowButton::onRepeat(FXObject*,FXSelector,void*){
   getApp()->addTimeout(this,ID_REPEAT,getApp()->getScrollSpeed());
   if(state && target) target->tryHandle(this,FXSEL(SEL_COMMAND,message),(void*)(FXuval)1);
-  fired=TRUE;
+  fired=true;
   return 1;
   }
 
@@ -273,12 +273,12 @@ long FXArrowButton::onKeyPress(FXObject*,FXSelector,void* ptr){
   if(isEnabled() && !(flags&FLAG_PRESSED)){
     if(target && target->tryHandle(this,FXSEL(SEL_KEYPRESS,message),ptr)) return 1;
     if(event->code==KEY_space || event->code==KEY_KP_Space){
-      setState(TRUE);
+      setState(true);
       getApp()->removeTimeout(this,ID_AUTO);
       if(options&ARROW_REPEAT) getApp()->addTimeout(this,ID_REPEAT,getApp()->getScrollDelay());
       flags|=FLAG_PRESSED;
       flags&=~FLAG_UPDATE;
-      fired=FALSE;
+      fired=false;
       return 1;
       }
     }
@@ -289,14 +289,14 @@ long FXArrowButton::onKeyPress(FXObject*,FXSelector,void* ptr){
 // Key Release
 long FXArrowButton::onKeyRelease(FXObject*,FXSelector,void* ptr){
   FXEvent* event=(FXEvent*)ptr;
-  FXbool click=(!fired && state);
+  bool click=(!fired && state);
   if(isEnabled() && (flags&FLAG_PRESSED)){
     if(target && target->tryHandle(this,FXSEL(SEL_KEYRELEASE,message),ptr)) return 1;
     if(event->code==KEY_space || event->code==KEY_KP_Space){
-      setState(FALSE);
+      setState(false);
       flags|=FLAG_UPDATE;
       flags&=~FLAG_PRESSED;
-      fired=FALSE;
+      fired=false;
       getApp()->removeTimeout(this,ID_REPEAT);
       if(click && target) target->tryHandle(this,FXSEL(SEL_COMMAND,message),(void*)(FXuval)1);
       return 1;
@@ -311,12 +311,12 @@ long FXArrowButton::onHotKeyPress(FXObject*,FXSelector,void* ptr){
   flags&=~FLAG_TIP;
   handle(this,FXSEL(SEL_FOCUS_SELF,0),ptr);
   if(isEnabled() && !(flags&FLAG_PRESSED)){
-    setState(TRUE);
+    setState(true);
     getApp()->removeTimeout(this,ID_AUTO);
     if(options&ARROW_REPEAT) getApp()->addTimeout(this,ID_REPEAT,getApp()->getScrollDelay());
     flags|=FLAG_PRESSED;
     flags&=~FLAG_UPDATE;
-    fired=FALSE;
+    fired=false;
     }
   return 1;
   }
@@ -324,12 +324,12 @@ long FXArrowButton::onHotKeyPress(FXObject*,FXSelector,void* ptr){
 
 // Hot key combination released
 long FXArrowButton::onHotKeyRelease(FXObject*,FXSelector,void*){
-  FXbool click=(!fired && state);
+  bool click=(!fired && state);
   if(isEnabled() && (flags&FLAG_PRESSED)){
-    setState(FALSE);
+    setState(false);
     flags|=FLAG_UPDATE;
     flags&=~FLAG_PRESSED;
-    fired=FALSE;
+    fired=false;
     getApp()->removeTimeout(this,ID_REPEAT);
     if(click && target) target->tryHandle(this,FXSEL(SEL_COMMAND,message),(void*)(FXuval)1);
     }

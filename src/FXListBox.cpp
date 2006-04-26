@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXListBox.cpp,v 1.63.2.1 2006/04/14 01:21:01 fox Exp $                       *
+* $Id: FXListBox.cpp,v 1.65 2006/04/17 05:00:13 fox Exp $                       *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -310,13 +310,13 @@ void FXListBox::setNumVisible(FXint nvis){
 
 
 // Is item current
-FXbool FXListBox::isItemCurrent(FXint index) const {
+bool FXListBox::isItemCurrent(FXint index) const {
   return list->isItemCurrent(index);
   }
 
 
 // Change current item
-void FXListBox::setCurrentItem(FXint index,FXbool notify){
+void FXListBox::setCurrentItem(FXint index,bool notify){
   FXint current=list->getCurrentItem();
   if(current!=index){
     list->setCurrentItem(index);
@@ -517,7 +517,7 @@ FXString FXListBox::getItemText(FXint index) const {
 
 
 // Set item icon
-void FXListBox::setItemIcon(FXint index,FXIcon* icon,FXbool owned){
+void FXListBox::setItemIcon(FXint index,FXIcon* icon,bool owned){
   if(isItemCurrent(index)) field->setIcon(icon);
   list->setItemIcon(index,icon,owned);
   recalc();
@@ -543,7 +543,7 @@ void* FXListBox::getItemData(FXint index) const {
 
 
 // Is the pane shown
-FXbool FXListBox::isPaneShown() const {
+bool FXListBox::isPaneShown() const {
   return pane->shown();
   }
 

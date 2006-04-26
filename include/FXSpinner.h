@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXSpinner.h,v 1.46 2006/02/06 03:03:40 fox Exp $                         *
+* $Id: FXSpinner.h,v 1.47 2006/03/31 07:33:03 fox Exp $                         *
 ********************************************************************************/
 #ifndef FXSPINNER_H
 #define FXSPINNER_H
@@ -104,37 +104,37 @@ public:
   virtual FXint getDefaultHeight();
 
   /// Increment spinner
-  void increment(FXbool notify=FALSE);
+  void increment(bool notify=false);
 
   /// Increment spinner by certain amount
-  void incrementByAmount(FXint amount,FXbool notify=FALSE);
+  void incrementByAmount(FXint amount,bool notify=false);
 
   /// Decrement spinner
-  void decrement(FXbool notify=FALSE);
+  void decrement(bool notify=false);
 
   /// Decrement spinner by certain amount
-  void decrementByAmount(FXint amount, FXbool notify=FALSE);
+  void decrementByAmount(FXint amount,bool notify=false);
 
   /// Return TRUE if in cyclic mode
-  FXbool isCyclic() const;
+  bool isCyclic() const;
 
   /// Set to cyclic mode, i.e. wrap around at maximum/minimum
-  void setCyclic(FXbool cyclic);
+  void setCyclic(bool cyclic);
 
   /// Return TRUE if text is visible
-  FXbool isTextVisible() const;
+  bool isTextVisible() const;
 
   /// Set text visible flag
-  void setTextVisible(FXbool shown);
+  void setTextVisible(bool shown);
 
   /// Change current value
-  virtual void setValue(FXint value,FXbool notify=FALSE);
+  virtual void setValue(FXint value,bool notify=false);
 
   /// Return current value
   FXint getValue() const { return pos; }
 
   /// Change the spinner's range
-  void setRange(FXint lo,FXint hi,FXbool notify=FALSE);
+  void setRange(FXint lo,FXint hi,bool notify=false);
 
   /// Get the spinner's current range
   void getRange(FXint& lo,FXint& hi) const { lo=range[0]; hi=range[1]; }
@@ -170,10 +170,10 @@ public:
   FXuint getSpinnerStyle() const;
 
   /// Allow editing of the text field
-  void setEditable(FXbool edit=TRUE);
+  void setEditable(bool edit=true);
 
   /// Return TRUE if text field is editable
-  FXbool isEditable() const;
+  bool isEditable() const;
 
   /// Change color of the up arrow
   void setUpArrowColor(FXColor clr);

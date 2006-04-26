@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: fxdefs.h,v 1.178 2006/03/21 01:41:43 fox Exp $                           *
+* $Id: fxdefs.h,v 1.182 2006/04/06 05:42:59 fox Exp $                           *
 ********************************************************************************/
 #ifndef FXDEFS_H
 #define FXDEFS_H
@@ -397,7 +397,7 @@ typedef void*                  FXID;
 #endif
 
 // Time since January 1, 1970 (UTC)
-typedef long                   FXTime;
+typedef FXlong                 FXTime;
 
 // Pixel type (could be color index)
 typedef unsigned long          FXPixel;
@@ -667,16 +667,16 @@ typedef tagMSG                 FXRawEvent;
 extern FXAPI FXuint fxrandom(FXuint& seed);
 
 /// Allocate memory
-extern FXAPI FXint fxmalloc(void** ptr,unsigned long size);
+extern FXAPI bool fxmalloc(void** ptr,unsigned long size);
 
 /// Allocate cleaned memory
-extern FXAPI FXint fxcalloc(void** ptr,unsigned long size);
+extern FXAPI bool fxcalloc(void** ptr,unsigned long size);
 
 /// Resize memory
-extern FXAPI FXint fxresize(void** ptr,unsigned long size);
+extern FXAPI bool fxresize(void** ptr,unsigned long size);
 
 /// Duplicate memory
-extern FXAPI FXint fxmemdup(void** ptr,const void* src,unsigned long size);
+extern FXAPI bool fxmemdup(void** ptr,const void* src,unsigned long size);
 
 /// Free memory, resets ptr to NULL afterward
 extern FXAPI void fxfree(void** ptr);
@@ -749,7 +749,7 @@ extern FXAPI FXwchar fxucs2keysym(FXwchar ucs);
 extern FXAPI FXint fxparsegeometry(const FXchar *string,FXint& x,FXint& y,FXint& w,FXint& h);
 
 /// True if executable with given path is a console application
-extern FXAPI FXbool fxisconsole(const FXchar *path);
+extern FXAPI bool fxisconsole(const FXchar *path);
 
 /// Version number that the library has been compiled with
 extern FXAPI const FXuchar fxversion[3];

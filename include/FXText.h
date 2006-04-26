@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXText.h,v 1.166 2006/02/06 03:03:40 fox Exp $                           *
+* $Id: FXText.h,v 1.168 2006/04/02 03:02:39 fox Exp $                           *
 ********************************************************************************/
 #ifndef FXTEXT_H
 #define FXTEXT_H
@@ -151,7 +151,7 @@ protected:
   FXint          grabx;               // Grab point x
   FXint          graby;               // Grab point y
   FXuchar        mode;                // Mode widget is in
-  FXbool         modified;            // User has modified text
+  bool           modified;            // User has modified text
 protected:
   FXText();
   void calcVisRows(FXint s,FXint e);
@@ -164,7 +164,7 @@ protected:
   virtual void drawContents(FXDCWindow& dc,FXint x,FXint y,FXint w,FXint h) const;
   virtual void drawNumbers(FXDCWindow& dc,FXint x,FXint y,FXint w,FXint h) const;
   FXint posToLine(FXint pos,FXint ln) const;
-  FXbool posVisible(FXint pos) const;
+  bool posVisible(FXint pos) const;
   void updateRange(FXint beg,FXint end) const;
   void movegap(FXint pos);
   void sizegap(FXint sz);
@@ -507,29 +507,29 @@ public:
   /// Change number of columns used for line numbers
   void setBarColumns(FXint cols);
 
-  /// Return TRUE if text was modified
-  FXbool isModified() const { return modified; }
+  /// Return true if text was modified
+  bool isModified() const { return modified; }
 
   /// Set modified flag
-  void setModified(FXbool mod=TRUE){ modified=mod; }
+  void setModified(bool mod=true){ modified=mod; }
 
   /// Set editable mode
-  void setEditable(FXbool edit=TRUE);
+  void setEditable(bool edit=true);
 
-  /// Return TRUE if text is editable
-  FXbool isEditable() const;
+  /// Return true if text is editable
+  bool isEditable() const;
 
   /// Set overstrike mode
-  void setOverstrike(FXbool over=TRUE);
+  void setOverstrike(bool over=true);
 
-  /// Return TRUE if overstrike mode in effect
-  FXbool isOverstrike() const;
+  /// Return true if overstrike mode in effect
+  bool isOverstrike() const;
 
   /// Set styled text mode
-  void setStyled(FXbool styled=TRUE);
+  void setStyled(bool styled=true);
 
-  /// Return TRUE if style buffer
-  FXbool isStyled() const { return (sbuffer!=NULL); }
+  /// Return true if style buffer
+  bool isStyled() const { return (sbuffer!=NULL); }
 
   /// Change delimiters of words
   void setDelimiters(const FXchar* delims=textDelimiters){ delimiters=delims; }
@@ -630,31 +630,31 @@ public:
   void extractStyle(FXchar *style,FXint pos,FXint n) const;
 
   /// Replace m bytes at pos by n characters
-  virtual void replaceText(FXint pos,FXint m,const FXchar *text,FXint n,FXbool notify=FALSE);
-  virtual void replaceText(FXint pos,FXint m,const FXString& text,FXbool notify=FALSE);
+  virtual void replaceText(FXint pos,FXint m,const FXchar *text,FXint n,bool notify=false);
+  virtual void replaceText(FXint pos,FXint m,const FXString& text,bool notify=false);
 
   /// Replace m bytes at pos by n characters
-  virtual void replaceStyledText(FXint pos,FXint m,const FXchar *text,FXint n,FXint style=0,FXbool notify=FALSE);
-  virtual void replaceStyledText(FXint pos,FXint m,const FXString& text,FXint style=0,FXbool notify=FALSE);
+  virtual void replaceStyledText(FXint pos,FXint m,const FXchar *text,FXint n,FXint style=0,bool notify=false);
+  virtual void replaceStyledText(FXint pos,FXint m,const FXString& text,FXint style=0,bool notify=false);
 
   /// Append n bytes of text at the end of the buffer
-  virtual void appendText(const FXchar *text,FXint n,FXbool notify=FALSE);
-  virtual void appendText(const FXString& text,FXbool notify=FALSE);
+  virtual void appendText(const FXchar *text,FXint n,bool notify=false);
+  virtual void appendText(const FXString& text,bool notify=false);
 
   /// Append n bytes of text at the end of the buffer
-  virtual void appendStyledText(const FXchar *text,FXint n,FXint style=0,FXbool notify=FALSE);
-  virtual void appendStyledText(const FXString& text,FXint style=0,FXbool notify=FALSE);
+  virtual void appendStyledText(const FXchar *text,FXint n,FXint style=0,bool notify=false);
+  virtual void appendStyledText(const FXString& text,FXint style=0,bool notify=false);
 
   /// Insert n bytes of text at position pos into the buffer
-  virtual void insertText(FXint pos,const FXchar *text,FXint n,FXbool notify=FALSE);
-  virtual void insertText(FXint pos,const FXString& text,FXbool notify=FALSE);
+  virtual void insertText(FXint pos,const FXchar *text,FXint n,bool notify=false);
+  virtual void insertText(FXint pos,const FXString& text,bool notify=false);
 
   /// Insert n bytes of text at position pos into the buffer
-  virtual void insertStyledText(FXint pos,const FXchar *text,FXint n,FXint style=0,FXbool notify=FALSE);
-  virtual void insertStyledText(FXint pos,const FXString& text,FXint style=0,FXbool notify=FALSE);
+  virtual void insertStyledText(FXint pos,const FXchar *text,FXint n,FXint style=0,bool notify=false);
+  virtual void insertStyledText(FXint pos,const FXString& text,FXint style=0,bool notify=false);
 
   /// Remove n bytes of text at position pos from the buffer
-  virtual void removeText(FXint pos,FXint n,FXbool notify=FALSE);
+  virtual void removeText(FXint pos,FXint n,bool notify=false);
 
   /// Change style of text range
   virtual void changeStyle(FXint pos,FXint n,FXint style);
@@ -664,12 +664,12 @@ public:
   virtual void changeStyle(FXint pos,const FXString& style);
 
   /// Change the text in the buffer to new text
-  virtual void setText(const FXchar* text,FXint n,FXbool notify=FALSE);
-  virtual void setText(const FXString& text,FXbool notify=FALSE);
+  virtual void setText(const FXchar* text,FXint n,bool notify=false);
+  virtual void setText(const FXString& text,bool notify=false);
 
   /// Change the text in the buffer to new text
-  virtual void setStyledText(const FXchar* text,FXint n,FXint style=0,FXbool notify=FALSE);
-  virtual void setStyledText(const FXString& text,FXint style=0,FXbool notify=FALSE);
+  virtual void setStyledText(const FXchar* text,FXint n,FXint style=0,bool notify=false);
+  virtual void setStyledText(const FXString& text,FXint style=0,bool notify=false);
 
   /// Retrieve text into buffer
   void getText(FXchar* text,FXint n) const;
@@ -683,9 +683,9 @@ public:
 
   /// Return number of rows in buffer
   FXint getNumRows() const { return nrows; }
-  
+
   /// Shift block of lines from position start up to end by given amount
-  FXint shiftText(FXint start,FXint end,FXint amount,FXbool notify=FALSE);
+  FXint shiftText(FXint start,FXint end,FXint amount,bool notify=false);
 
   /**
   * Search for string in text buffer, returning the extent of
@@ -701,13 +701,13 @@ public:
   * both are NULL, internal arrays are used.
   * [This API is still subject to change!!]
   */
-  FXbool findText(const FXString& string,FXint* beg=NULL,FXint* end=NULL,FXint start=0,FXuint flags=SEARCH_FORWARD|SEARCH_WRAP|SEARCH_EXACT,FXint npar=1);
+  bool findText(const FXString& string,FXint* beg=NULL,FXint* end=NULL,FXint start=0,FXuint flags=SEARCH_FORWARD|SEARCH_WRAP|SEARCH_EXACT,FXint npar=1);
 
-  /// Return TRUE if position pos is selected
-  FXbool isPosSelected(FXint pos) const;
+  /// Return true if position pos is selected
+  bool isPosSelected(FXint pos) const;
 
-  /// Return TRUE if position is fully visible
-  FXbool isPosVisible(FXint pos) const;
+  /// Return true if position is fully visible
+  bool isPosVisible(FXint pos) const;
 
   /// Return text position at given visible x,y coordinate
   FXint getPosAt(FXint x,FXint y) const;
@@ -788,16 +788,16 @@ public:
   FXint getAnchorPos() const { return anchorpos; }
 
   /// Set the cursor position
-  virtual void setCursorPos(FXint pos,FXbool notify=FALSE);
+  virtual void setCursorPos(FXint pos,bool notify=false);
 
   /// Set cursor row
-  void setCursorRow(FXint row,FXbool notify=FALSE);
+  void setCursorRow(FXint row,bool notify=false);
 
   /// Return cursor row
   FXint getCursorRow() const { return cursorrow; }
 
   /// Set cursor column
-  void setCursorColumn(FXint col,FXbool notify=FALSE);
+  void setCursorColumn(FXint col,bool notify=false);
 
   /// Return cursor row, i.e. indent position
   FXint getCursorColumn() const { return cursorcol; }
@@ -812,22 +812,22 @@ public:
   FXint getSelEndPos() const { return selendpos; }
 
   /// Select all text
-  FXbool selectAll(FXbool notify=FALSE);
+  bool selectAll(bool notify=false);
 
   /// Extend the selection from the anchor to the given position
-  virtual FXbool extendSelection(FXint pos,FXTextSelectionMode select=SELECT_CHARS,FXbool notify=FALSE);
+  virtual bool extendSelection(FXint pos,FXTextSelectionMode select=SELECT_CHARS,bool notify=false);
 
   /// Select len characters starting at given position pos
-  FXbool setSelection(FXint pos,FXint len,FXbool notify=FALSE);
+  bool setSelection(FXint pos,FXint len,bool notify=false);
 
   /// Unselect the text
-  virtual FXbool killSelection(FXbool notify=FALSE);
+  virtual bool killSelection(bool notify=false);
 
   /// Highlight len characters starting at given position pos
-  FXbool setHighlight(FXint start,FXint len);
+  bool setHighlight(FXint start,FXint len);
 
   /// Unhighlight the text
-  FXbool killHighlight();
+  bool killHighlight();
 
   /// Scroll text to make the given position visible
   void makePositionVisible(FXint pos);

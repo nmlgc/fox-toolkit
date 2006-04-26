@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXMDIChild.h,v 1.42 2006/01/22 17:58:05 fox Exp $                        *
+* $Id: FXMDIChild.h,v 1.43 2006/03/31 07:33:03 fox Exp $                        *
 ********************************************************************************/
 #ifndef FXMDICHILD_H
 #define FXMDICHILD_H
@@ -244,22 +244,22 @@ public:
   void setTitleBackColor(FXColor clr);
 
   /// Maximize MDI window, return TRUE if maximized
-  virtual FXbool maximize(FXbool notify=FALSE);
+  virtual bool maximize(bool notify=false);
 
   /// Minimize/iconify MDI window, return TRUE if minimized
-  virtual FXbool minimize(FXbool notify=FALSE);
+  virtual bool minimize(bool notify=false);
 
   /// Restore MDI window to normal, return TRUE if restored
-  virtual FXbool restore(FXbool notify=FALSE);
+  virtual bool restore(bool notify=false);
 
   /// Close MDI window, return TRUE if actually closed
-  virtual FXbool close(FXbool notify=FALSE);
+  virtual bool close(bool notify=false);
 
   /// Return TRUE if maximized
-  FXbool isMaximized() const;
+  bool isMaximized() const;
 
   /// Return TRUE if minimized
-  FXbool isMinimized() const;
+  bool isMinimized() const;
 
   /// Get window icon
   FXIcon *getIcon() const;
@@ -274,10 +274,10 @@ public:
   void setMenu(FXPopup* menu);
 
   /// Set tracking instead of just outline
-  void setTracking(FXbool tracking=TRUE);
+  void setTracking(bool tracking=true);
 
   /// Return true if tracking
-  FXbool getTracking() const;
+  bool getTracking() const;
 
   /// Set title font
   void setFont(FXFont *fnt);

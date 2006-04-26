@@ -19,13 +19,14 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: fxpriv.cpp,v 1.47 2006/03/16 04:41:36 fox Exp $                          *
+* $Id: fxpriv.cpp,v 1.48 2006/03/25 06:37:55 fox Exp $                          *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
 #include "fxdefs.h"
 #include "fxpriv.h"
 #include "FXHash.h"
+#include "FXElement.h"
 #include "FXThread.h"
 #include "FXStream.h"
 #include "FXString.h"
@@ -144,7 +145,7 @@ Atom fxrecvtypes(Display *display,Window window,Atom prop,FXDragType*& types,FXu
   if(prop){
     if(XGetWindowProperty(display,window,prop,0,1024,del,XA_ATOM,&actualtype,&actualformat,&numitems,&bytesleft,&ptr)==Success){
       if(actualtype==XA_ATOM && actualformat==32 && numitems>0){
-        if(FXMALLOC(&types,Atom,numitems)){
+        if(allocElms(types,numitems)){
           memcpy(types,ptr,sizeof(Atom)*numitems);
           numtypes=numitems;
           }
@@ -171,7 +172,7 @@ static FXuint fxrecvprop(Display *display,Window window,Atom prop,Atom& type,FXu
     tfrsize*=(format>>3);
 
     // Grow the array to accomodate new data
-    if(!FXRESIZE(&data,FXuchar,size+tfrsize+1)){ XFree(ptr); break; }
+    if(!resizeElms(data,size+tfrsize+1)){ XFree(ptr); break; }
 
     // Append new data at the end, plus the extra 0.
     memcpy(&data[size],ptr,tfrsize+1);
@@ -252,7 +253,7 @@ Atom fxrecvdata(Display *display,Window window,Atom prop,Atom incr,Atom& type,FX
 
 // Change PRIMARY selection data
 void FXApp::selectionSetData(const FXWindow*,FXDragType,FXuchar* data,FXuint size){
-  FXFREE(&ddeData);
+  freeElms(ddeData);
   ddeData=data;
   ddeSize=size;
   }
@@ -287,7 +288,7 @@ void FXApp::selectionGetTypes(const FXWindow* window,FXDragType*& types,FXuint& 
   types=NULL;
   numtypes=0;
   if(selectionWindow){
-    FXMEMDUP(&types,xselTypeList,FXDragType,xselNumTypes);
+    dupElms(types,xselTypeList,xselNumTypes);
     numtypes=xselNumTypes;
     }
   else{
@@ -303,7 +304,7 @@ void FXApp::selectionGetTypes(const FXWindow* window,FXDragType*& types,FXuint& 
 
 // Change CLIPBOARD selection data
 void FXApp::clipboardSetData(const FXWindow*,FXDragType,FXuchar* data,FXuint size){
-  FXFREE(&ddeData);
+  freeElms(ddeData);
   ddeData=data;
   ddeSize=size;
   }
@@ -338,7 +339,7 @@ void FXApp::clipboardGetTypes(const FXWindow* window,FXDragType*& types,FXuint& 
   types=NULL;
   numtypes=0;
   if(clipboardWindow){
-    FXMEMDUP(&types,xcbTypeList,FXDragType,xcbNumTypes);
+    dupElms(types,xcbTypeList,xcbNumTypes);
     numtypes=xcbNumTypes;
     }
   else{
@@ -353,7 +354,7 @@ void FXApp::clipboardGetTypes(const FXWindow* window,FXDragType*& types,FXuint& 
 
 // Change DND selection data
 void FXApp::dragdropSetData(const FXWindow*,FXDragType,FXuchar* data,FXuint size){
-  FXFREE(&ddeData);
+  freeElms(ddeData);
   ddeData=data;
   ddeSize=size;
   }
@@ -384,7 +385,7 @@ void FXApp::dragdropGetData(const FXWindow* window,FXDragType type,FXuchar*& dat
 
 // Retrieve DND selection types
 void FXApp::dragdropGetTypes(const FXWindow*,FXDragType*& types,FXuint& numtypes){
-  FXMEMDUP(&types,ddeTypeList,FXDragType,ddeNumTypes);
+  dupElms(types,ddeTypeList,ddeNumTypes);
   numtypes=ddeNumTypes;
   }
 
@@ -431,7 +432,7 @@ HANDLE fxrecvdata(HANDLE hMap,FXuchar*& data,FXuint& size){
     ptr=(FXuchar*)MapViewOfFile(hMap,FILE_MAP_READ,0,0,0);
     if(ptr){
       size=*((FXuint*)ptr);
-      if(FXMALLOC(&data,FXuchar,size)){
+      if(allocElms(data,size)){
         memcpy(data,ptr+sizeof(FXuint),size);
         }
       UnmapViewOfFile(ptr);
@@ -462,7 +463,7 @@ HANDLE fxsendrequest(HWND window,HWND requestor,WPARAM type){
 
 // Change PRIMARY selection data
 void FXApp::selectionSetData(const FXWindow*,FXDragType,FXuchar* data,FXuint size){
-  FXFREE(&ddeData);
+  freeElms(ddeData);
   ddeData=data;
   ddeSize=size;
   }
@@ -492,7 +493,7 @@ void FXApp::selectionGetTypes(const FXWindow*,FXDragType*& types,FXuint& numtype
   types=NULL;
   numtypes=0;
   if(selectionWindow){
-    FXMEMDUP(&types,xselTypeList,FXDragType,xselNumTypes);
+    dupElms(types,xselTypeList,xselNumTypes);
     numtypes=xselNumTypes;
     }
   }
@@ -511,7 +512,7 @@ void FXApp::clipboardSetData(const FXWindow*,FXDragType type,FXuchar* data,FXuin
     memcpy((FXchar*)pGlobalMemory,data,size);
     GlobalUnlock(hGlobalMemory);
     SetClipboardData(type,hGlobalMemory);
-    FXFREE(&data);
+    freeElms(data);
     }
   }
 
@@ -525,7 +526,7 @@ void FXApp::clipboardGetData(const FXWindow* window,FXDragType type,FXuchar*& da
       HANDLE hClipMemory=GetClipboardData(type);
       if(hClipMemory){
         size=(FXuint)GlobalSize(hClipMemory);
-        if(FXMALLOC(&data,FXuchar,size)){
+        if(allocElms(data,size)){
           void *pClipMemory=GlobalLock(hClipMemory);
           FXASSERT(pClipMemory);
           memcpy((void*)data,pClipMemory,size);
@@ -547,7 +548,7 @@ void FXApp::clipboardGetTypes(const FXWindow* window,FXDragType*& types,FXuint& 
   if(OpenClipboard((HWND)window->id())){
     count=CountClipboardFormats();
     if(count){
-      FXMALLOC(&types,FXDragType,count);
+      allocElms(types,count);
       UINT format=0;
       while(numtypes<count && (format=EnumClipboardFormats(format))!=0){
         types[numtypes++]=format;
@@ -563,7 +564,7 @@ void FXApp::clipboardGetTypes(const FXWindow* window,FXDragType*& types,FXuint& 
 
 // Change DND selection data
 void FXApp::dragdropSetData(const FXWindow*,FXDragType,FXuchar* data,FXuint size){
-  FXFREE(&ddeData);
+  freeElms(ddeData);
   ddeData=data;
   ddeSize=size;
   }
@@ -594,7 +595,7 @@ void FXApp::dragdropGetData(const FXWindow* window,FXDragType type,FXuchar*& dat
 
 // Retrieve DND selection types
 void FXApp::dragdropGetTypes(const FXWindow*,FXDragType*& types,FXuint& numtypes){
-  FXMEMDUP(&types,ddeTypeList,FXDragType,ddeNumTypes);
+  dupElms(types,ddeTypeList,ddeNumTypes);
   numtypes=ddeNumTypes;
   }
 

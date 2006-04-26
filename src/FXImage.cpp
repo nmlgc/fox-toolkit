@@ -19,13 +19,14 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXImage.cpp,v 1.148.2.1 2006/04/14 01:21:00 fox Exp $                        *
+* $Id: FXImage.cpp,v 1.152 2006/04/03 03:43:16 fox Exp $                        *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
 #include "fxdefs.h"
 #include "FXHash.h"
 #include "FXThread.h"
+#include "FXElement.h"
 #include "FXStream.h"
 #include "FXString.h"
 #include "FXSize.h"
@@ -205,7 +206,7 @@ FXImage::FXImage(FXApp* a,const FXColor *pix,FXuint opts,FXint w,FXint h):FXDraw
   data=(FXColor*)pix;
   options=opts;
   if(!data && (options&IMAGE_OWNED)){           // This is confusing use of IMAGE_OWNED
-    if(!FXCALLOC(&data,FXColor,width*height)){ throw FXMemoryException("unable to construct image"); }
+    if(!callocElms(data,width*height)){ throw FXMemoryException("unable to construct image"); }
     }
   }
 
@@ -255,7 +256,7 @@ void FXImage::create(){
 void FXImage::release(){
   if(options&IMAGE_OWNED){
     options&=~IMAGE_OWNED;
-    FXFREE(&data);
+    freeElms(data);
     }
   data=NULL;
   }
@@ -353,7 +354,7 @@ void FXImage::restore(){
     // Make array for data if needed
     if(!data){
       size=width*height;
-      if(!FXMALLOC(&data,FXColor,size)){ throw FXMemoryException("unable to restore image"); }
+      if(!allocElms(data,size)){ throw FXMemoryException("unable to restore image"); }
       options|=IMAGE_OWNED;
       }
 
@@ -530,7 +531,7 @@ void FXImage::restore(){
     // Make array for data if needed
     if(!data){
       size=width*height;
-      if(!FXMALLOC(&data,FXColor,size)){ throw FXMemoryException("unable to restore image"); }
+      if(!allocElms(data,size)){ throw FXMemoryException("unable to restore image"); }
       options|=IMAGE_OWNED;
       }
 
@@ -554,7 +555,7 @@ void FXImage::restore(){
       bmi.bmiHeader.biClrImportant=0;
 
       // DIB format pads to multiples of 4 bytes...
-//      if(!FXMALLOC(&pixels,FXuchar,bytes_per_line*height)){ throw FXImageException("unable to restore image"); }
+//      if(!allocElms(pixels,bytes_per_line*height)){ throw FXMemoryException("unable to restore image"); }
       pixels=(FXuchar*)VirtualAlloc(0,bytes_per_line*height,MEM_COMMIT,PAGE_READWRITE);
       if(!pixels){ throw FXMemoryException("unable to restore image"); }
 
@@ -576,7 +577,7 @@ void FXImage::restore(){
           }
         pix+=skip;
         }
-//      FXFREE(&pixels);
+//      freeElms(pixels);
       VirtualFree(pixels,0,MEM_RELEASE);
       ::DeleteDC(hdcmem);
       }
@@ -1277,7 +1278,7 @@ void FXImage::render(){
         if(!xim){ throw FXImageException("unable to render image"); }
 
         // Try create temp pixel store
-        if(!FXMALLOC(&xim->data,char,xim->bytes_per_line*height)){ throw FXMemoryException("unable to render image"); }
+        if(!allocElms(xim->data,xim->bytes_per_line*height)){ throw FXMemoryException("unable to render image"); }
         }
 
       // Should have succeeded
@@ -1396,7 +1397,7 @@ void FXImage::render(){
       // Transfer the image old way
       if(!shmi){
         XPutImage(DISPLAY(getApp()),xid,gc,xim,0,0,0,0,width,height);
-        FXFREE(&xim->data);
+        freeElms(xim->data);
         XDestroyImage(xim);
         }
       XFreeGC(DISPLAY(getApp()),gc);
@@ -1436,7 +1437,7 @@ void FXImage::render(){
 
       // DIB format pads to multiples of 4 bytes...
       bytes_per_line=(width*3+3)&~3;
-//      if(!FXMALLOC(&pixels,FXuchar,bytes_per_line*height)){ throw FXMemoryException("unable to render image"); }
+//      if(!allocElms(pixels,bytes_per_line*height)){ throw FXMemoryException("unable to render image"); }
       pixels=(FXuchar*)VirtualAlloc(0,bytes_per_line*height,MEM_COMMIT,PAGE_READWRITE);
       if(!pixels){ throw FXMemoryException("unable to render image"); }
       skip=-bytes_per_line-width*3;
@@ -1469,7 +1470,7 @@ void FXImage::render(){
         }
       GdiFlush();
       VirtualFree(pixels,0,MEM_RELEASE);
-//      FXFREE(&pixels);
+//      freeElms(pixels);
       ::DeleteDC(hdcmem);
       }
     }
@@ -1618,11 +1619,11 @@ void FXImage::resize(FXint w,FXint h){
   // Resize data array
   if(data){
     if(!(options&IMAGE_OWNED)){         // Need to own array
-      if(!FXMALLOC(&data,FXColor,w*h)){ throw FXMemoryException("unable to resize image"); }
+      if(!allocElms(data,w*h)){ throw FXMemoryException("unable to resize image"); }
       options|=IMAGE_OWNED;
       }
     else if(w*h!=width*height){
-      if(!FXRESIZE(&data,FXColor,w*h)){ throw FXMemoryException("unable to resize image"); }
+      if(!resizeElms(data,w*h)){ throw FXMemoryException("unable to resize image"); }
       }
     }
 
@@ -1769,7 +1770,7 @@ void FXImage::scale(FXint w,FXint h,FXint quality){
         case 0:
 
           // Copy to old buffer
-          if(!FXMEMDUP(&interim,data,FXColor,ow*oh)){ throw FXMemoryException("unable to scale image"); }
+          if(!dupElms(interim,data,ow*oh)){ throw FXMemoryException("unable to scale image"); }
 
           // Resize the pixmap and target buffer
           resize(w,h);
@@ -1778,12 +1779,12 @@ void FXImage::scale(FXint w,FXint h,FXint quality){
           scalenearest(data,interim,w,h,ow,oh);
 
           // Free old buffer
-          FXFREE(&interim);
+          freeElms(interim);
           break;
         default:
 
           // Allocate interim buffer
-          if(!FXMALLOC(&interim,FXColor,w*oh)){ throw FXMemoryException("unable to scale image"); }
+          if(!allocElms(interim,w*oh)){ throw FXMemoryException("unable to scale image"); }
 
           // Scale horizontally first, placing result into interim buffer
           if(w==ow){
@@ -1805,7 +1806,7 @@ void FXImage::scale(FXint w,FXint h,FXint quality){
             }
 
           // Free interim buffer
-          FXFREE(&interim);
+          freeElms(interim);
           break;
         }
       render();
@@ -1991,7 +1992,7 @@ void FXImage::rotate(FXint degrees){
       register FXColor *paa,*pbb,*end,*pa,*pb;
       register FXint size=width*height;
       FXColor *olddata;
-      if(!FXMEMDUP(&olddata,data,FXColor,size)){ throw FXMemoryException("unable to rotate image"); }
+      if(!dupElms(olddata,data,size)){ throw FXMemoryException("unable to rotate image"); }
       switch(degrees){
         case 90:
           resize(height,width);
@@ -2047,7 +2048,7 @@ void FXImage::rotate(FXint degrees){
           fxwarning("%s::rotate: rotation by %d degrees not implemented.\n",getClassName(),degrees);
           break;
         }
-      FXFREE(&olddata);
+      freeElms(olddata);
       render();
       }
     else{
@@ -2085,7 +2086,7 @@ void FXImage::crop(FXint x,FXint y,FXint w,FXint h,FXColor color){
     register FXint cw;
     register FXint ch;
     FXColor *olddata;
-    if(!FXMEMDUP(&olddata,data,FXColor,width*height)){ throw FXMemoryException("unable to crop image"); }
+    if(!dupElms(olddata,data,width*height)){ throw FXMemoryException("unable to crop image"); }
     resize(nw,nh);
     pnn=data;
     yyy=data+nw*nh;
@@ -2136,7 +2137,7 @@ void FXImage::crop(FXint x,FXint y,FXint w,FXint h,FXColor color){
       poo+=ow;
       }
     while(pnn<yyy);
-    FXFREE(&olddata);
+    freeElms(olddata);
     render();
     }
   else{
@@ -2152,10 +2153,10 @@ void FXImage::xshear(FXint shear,FXColor clr){
   FXTRACE((100,"%s::xshear(%d)\n",getClassName(),shear));
   if(data){
     FXColor *olddata;
-    if(!FXMEMDUP(&olddata,data,FXColor,width*height)){ throw FXMemoryException("unable to xshear image"); }
+    if(!dupElms(olddata,data,width*height)){ throw FXMemoryException("unable to xshear image"); }
     resize(neww,height);
     shearx((FXuchar*)data,(FXuchar*)olddata,neww,oldw,height,shear,clr);
-    FXFREE(&olddata);
+    freeElms(olddata);
     render();
     }
   else{
@@ -2171,10 +2172,10 @@ void FXImage::yshear(FXint shear,FXColor clr){
   FXTRACE((100,"%s::yshear(%d)\n",getClassName(),shear));
   if(data){
     FXColor *olddata;
-    if(!FXMEMDUP(&olddata,data,FXColor,width*height)){ throw FXMemoryException("unable to yshear image"); }
+    if(!dupElms(olddata,data,width*height)){ throw FXMemoryException("unable to yshear image"); }
     resize(width,newh);
     sheary((FXuchar*)data,(FXuchar*)olddata,width,newh,oldh,shear,clr);
-    FXFREE(&olddata);
+    freeElms(olddata);
     render();
     }
   else{
@@ -2428,7 +2429,7 @@ int FXImage::ReleaseDC(FXID hdc) const {
 void FXImage::setData(FXColor *pix,FXuint opts){
 
   // Free old data
-  if(options&IMAGE_OWNED){ FXFREE(&data); }
+  if(options&IMAGE_OWNED){ freeElms(data); }
 
   // Only own pixel buffer if one was passed
   if(pix && (opts&IMAGE_OWNED)){
@@ -2447,7 +2448,7 @@ void FXImage::setData(FXColor *pix,FXuint opts){
 void FXImage::setData(FXColor *pix,FXuint opts,FXint w,FXint h){
 
   // Free old data
-  if(options&IMAGE_OWNED){ FXFREE(&data); }
+  if(options&IMAGE_OWNED){ freeElms(data); }
 
   // Resize pixmap
   resize(w,h);
@@ -2482,8 +2483,8 @@ bool FXImage::savePixels(FXStream& store) const {
 // Load pixel data only
 bool FXImage::loadPixels(FXStream& store){
   FXuint size=width*height;
-  if(options&IMAGE_OWNED){FXFREE(&data);}
-  if(!FXMALLOC(&data,FXColor,size)) return false;
+  if(options&IMAGE_OWNED){freeElms(data);}
+  if(!allocElms(data,size)) return false;
   store.load(data,size);
   options|=IMAGE_OWNED;
   return true;
@@ -2514,7 +2515,7 @@ void FXImage::load(FXStream& store){
 FXImage::~FXImage(){
   FXTRACE((100,"FXImage::~FXImage %p\n",this));
   destroy();
-  if(options&IMAGE_OWNED){FXFREE(&data);}
+  if(options&IMAGE_OWNED){freeElms(data);}
   data=(FXColor*)-1L;
   }
 

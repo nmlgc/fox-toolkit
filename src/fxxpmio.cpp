@@ -19,13 +19,14 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: fxxpmio.cpp,v 1.53 2006/01/22 17:58:58 fox Exp $                         *
+* $Id: fxxpmio.cpp,v 1.54 2006/03/24 05:55:40 fox Exp $                         *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
 #include "fxdefs.h"
 #include "fxascii.h"
 #include "FXHash.h"
+#include "FXElement.h"
 #include "FXStream.h"
 #include "fxpriv.h"
 
@@ -182,7 +183,7 @@ bool fxloadXPM(const FXchar **pixels,FXColor*& data,FXint& width,FXint& height){
     }
 
   // Try allocate pixels
-  if(!FXMALLOC(&data,FXColor,width*height)){
+  if(!allocElms(data,width*height)){
     return false;
     }
 
@@ -279,7 +280,7 @@ bool fxloadXPM(FXStream& store,FXColor*& data,FXint& width,FXint& height){
     }
 
   // Try allocate pixels
-  if(!FXMALLOC(&data,FXColor,width*height)){
+  if(!allocElms(data,width*height)){
     return false;
     }
 
@@ -335,7 +336,7 @@ bool fxsaveXPM(FXStream& store,const FXColor *data,FXint width,FXint height,bool
   if(!data || width<=0 || height<=0) return false;
 
   // Allocate temp buffer for pixels
-  if(!FXMALLOC(&pixels,FXuchar,numpixels)) return false;
+  if(!allocElms(pixels,numpixels)) return false;
 
   // First, try EZ quantization, because it is exact; a previously
   // loaded XPM will be re-saved with exactly the same colors.
@@ -393,7 +394,7 @@ bool fxsaveXPM(FXStream& store,const FXColor *data,FXint width,FXint height,bool
     if(i<height-1){ store << comma; store << newline; }
     }
   store.save("};\n",3);
-  FXFREE(&pixels);
+  freeElms(pixels);
   return true;
   }
 

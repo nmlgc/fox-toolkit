@@ -19,12 +19,13 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: fxiffio.cpp,v 1.14 2006/01/22 17:58:53 fox Exp $                         *
+* $Id: fxiffio.cpp,v 1.15 2006/03/24 06:05:03 fox Exp $                         *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
 #include "fxdefs.h"
 #include "FXHash.h"
+#include "FXElement.h"
 #include "FXStream.h"
 
 
@@ -260,10 +261,10 @@ bool fxloadIFF(FXStream& store,FXColor*& data,FXint& width,FXint& height){
     }
 
   // Try allocate image
-  if(!FXMALLOC(&data,FXColor,pixels)) return false;
+  if(!allocElms(data,pixels)) return false;
 
   // Temp buffer
-  if(!FXMALLOC(&buffer,FXuchar,bytesperline*planes)){ FXFREE(&data); return false; }
+  if(!allocElms(buffer,bytesperline*planes)){ freeElms(data); return false; }
 
   dest=data;
 
@@ -350,7 +351,7 @@ bool fxloadIFF(FXStream& store,FXColor*& data,FXint& width,FXint& height){
     }
 
   // Release buffer
-  FXFREE(&buffer);
+  freeElms(buffer);
 
   return true;
   }

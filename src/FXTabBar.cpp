@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXTabBar.cpp,v 1.28 2006/01/22 17:58:45 fox Exp $                        *
+* $Id: FXTabBar.cpp,v 1.29 2006/03/31 07:33:11 fox Exp $                        *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -368,7 +368,7 @@ void FXTabBar::layout(){
 
 
 // Set current subwindow
-void FXTabBar::setCurrent(FXint panel,FXbool notify){
+void FXTabBar::setCurrent(FXint panel,bool notify){
   if(0<=panel && panel!=current){
     current=panel;
     recalc();

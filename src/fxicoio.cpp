@@ -19,12 +19,13 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: fxicoio.cpp,v 1.33 2006/01/22 17:58:52 fox Exp $                         *
+* $Id: fxicoio.cpp,v 1.34 2006/03/24 06:05:03 fox Exp $                         *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
 #include "fxdefs.h"
 #include "FXHash.h"
+#include "FXElement.h"
 #include "FXStream.h"
 
 /*
@@ -181,7 +182,7 @@ bool fxloadICO(FXStream& store,FXColor*& data,FXint& width,FXint& height,FXint& 
     }
 
   // Allocate memory
-  if(!FXMALLOC(&data,FXColor,biWidth*biHeight)) goto x;
+  if(!allocElms(data,biWidth*biHeight)) goto x;
 
   // Width and height
   width=biWidth;

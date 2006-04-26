@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXThread.h,v 1.40 2006/03/16 22:22:43 fox Exp $                          *
+* $Id: FXThread.h,v 1.42 2006/04/06 05:42:58 fox Exp $                          *
 ********************************************************************************/
 #ifndef FXTHREAD_H
 #define FXTHREAD_H
@@ -52,16 +52,16 @@ private:
 public:
 
   /// Initialize the mutex
-  FXMutex(FXbool recursive=FALSE);
+  FXMutex(bool recursive=false);
 
   /// Lock the mutex
   void lock();
 
   /// Return TRUE if succeeded locking the mutex
-  FXbool trylock();
+  bool trylock();
 
   /// Return TRUE if mutex is already locked
-  FXbool locked();
+  bool locked();
 
   /// Unlock mutex
   void unlock();
@@ -97,10 +97,10 @@ public:
   void lock(){ mtx.lock(); }
 
   /// Return TRUE if succeeded locking the mutex
-  FXbool trylock(){ return mtx.trylock(); }
+  bool trylock(){ return mtx.trylock(); }
 
   /// Return TRUE if mutex is already locked
-  FXbool locked(){ return mtx.locked(); }
+  bool locked(){ return mtx.locked(); }
 
   /// Unlock mutex
   void unlock(){ mtx.unlock(); }
@@ -141,7 +141,7 @@ public:
   * Note that the wait-time is specified in nanoseconds
   * since the Epoch (Jan 1, 1970).
   */
-  FXbool wait(FXMutex& mtx,FXlong nsec);
+  bool wait(FXMutex& mtx,FXTime nsec);
 
   /**
   * Wake or unblock a single blocked thread
@@ -177,7 +177,7 @@ public:
   void wait();
 
   /// Non-blocking semaphore decrement; return true if locked
-  FXbool trywait();
+  bool trywait();
 
   /// Increment semaphore
   void post();
@@ -228,26 +228,26 @@ public:
   /**
   * Return TRUE if this thread is running.
   */
-  FXbool running() const;
+  bool running() const;
 
   /**
   * Start thread; the thread is started as attached.
   * The thread is given stacksize for its stack; a value of
   * zero for stacksize will give it the default stack size.
   */
-  FXbool start(unsigned long stacksize=0);
+  bool start(unsigned long stacksize=0);
 
   /**
   * Suspend calling thread until thread is done.
   */
-  FXbool join();
+  bool join();
 
   /**
   * Suspend calling thread until thread is done, and set code to the
   * return value of run() or the argument passed into exit().
   * If an exception happened in the thread, return -1.
   */
-  FXbool join(FXint& code);
+  bool join(FXint& code);
 
   /**
   * Cancel the thread, stopping it immediately, running or not.
@@ -255,13 +255,13 @@ public:
   * It is probably better to wait until it is finished, in case the
   * thread currently holds mutexes.
   */
-  FXbool cancel();
+  bool cancel();
 
   /**
   * Detach thread, so that a no join() is necessary to harvest the
   * resources of this thread.
   */
-  FXbool detach();
+  bool detach();
 
   /**
   * Exit the calling thread.
@@ -278,18 +278,18 @@ public:
   /**
   * Return time in nanoseconds since Epoch (Jan 1, 1970).
   */
-  static FXlong time();
+  static FXTime time();
 
   /**
   * Make the calling thread sleep for a number of nanoseconds.
   */
-  static void sleep(FXlong nsec);
+  static void sleep(FXTime nsec);
 
   /**
   * Wake at appointed time specified in nanoseconds since Epoch.
   */
-  static void wakeat(FXlong nsec);
-  
+  static void wakeat(FXTime nsec);
+
   /**
   * Return pointer to the FXThread instance associated
   * with the calling thread; it returns NULL for the main

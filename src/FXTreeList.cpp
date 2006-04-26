@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXTreeList.cpp,v 1.167 2006/02/17 03:07:00 fox Exp $                     *
+* $Id: FXTreeList.cpp,v 1.168 2006/03/31 07:33:14 fox Exp $                     *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -150,32 +150,32 @@ FXint FXTreeItem::hitItem(const FXTreeList* list,FXint xx,FXint yy) const {
 
 
 // Set or kill focus
-void FXTreeItem::setFocus(FXbool focus){
+void FXTreeItem::setFocus(bool focus){
   if(focus) state|=FOCUS; else state&=~FOCUS;
   }
 
 // Select or deselect item
-void FXTreeItem::setSelected(FXbool selected){
+void FXTreeItem::setSelected(bool selected){
   if(selected) state|=SELECTED; else state&=~SELECTED;
   }
 
 // Set item opened
-void FXTreeItem::setOpened(FXbool opened){
+void FXTreeItem::setOpened(bool opened){
   if(opened) state|=OPENED; else state&=~OPENED;
   }
 
 // Set item expanded
-void FXTreeItem::setExpanded(FXbool expanded){
+void FXTreeItem::setExpanded(bool expanded){
   if(expanded) state|=EXPANDED; else state&=~EXPANDED;
   }
 
 // Enable or disable the item
-void FXTreeItem::setEnabled(FXbool enabled){
+void FXTreeItem::setEnabled(bool enabled){
   if(enabled) state&=~DISABLED; else state|=DISABLED;
   }
 
 // Icon is draggable
-void FXTreeItem::setDraggable(FXbool draggable){
+void FXTreeItem::setDraggable(bool draggable){
   if(draggable) state|=DRAGGABLE; else state&=~DRAGGABLE;
   }
 
@@ -187,7 +187,7 @@ void FXTreeItem::setText(const FXString& txt){
 
 
 // Change open icon
-void FXTreeItem::setOpenIcon(FXIcon* icon,FXbool owned){
+void FXTreeItem::setOpenIcon(FXIcon* icon,bool owned){
   if(openIcon && (state&OPENICONOWNED)){
     if(openIcon!=icon) delete openIcon;
     state&=~OPENICONOWNED;
@@ -200,7 +200,7 @@ void FXTreeItem::setOpenIcon(FXIcon* icon,FXbool owned){
 
 
 // Change closed icon
-void FXTreeItem::setClosedIcon(FXIcon* icon,FXbool owned){
+void FXTreeItem::setClosedIcon(FXIcon* icon,bool owned){
   if(closedIcon && (state&CLOSEDICONOWNED)){
     if(closedIcon!=icon) delete closedIcon;
     state&=~CLOSEDICONOWNED;
@@ -213,7 +213,7 @@ void FXTreeItem::setClosedIcon(FXIcon* icon,FXbool owned){
 
 
 // Change has items flag
-void FXTreeItem::setHasItems(FXbool flag){
+void FXTreeItem::setHasItems(bool flag){
   if(flag) state|=HASITEMS; else state&=~HASITEMS;
   }
 
@@ -268,18 +268,18 @@ FXTreeItem* FXTreeItem::getAbove() const {
 
 
 // Return true if child of parent item
-FXbool FXTreeItem::isChildOf(const FXTreeItem* item) const {
+bool FXTreeItem::isChildOf(const FXTreeItem* item) const {
   register const FXTreeItem* child=this;
-  while(child){ child=child->parent; if(child==item) return TRUE; }
-  return FALSE;
+  while(child){ child=child->parent; if(child==item) return true; }
+  return false;
   }
 
 
 // Return true if parent of child item
-FXbool FXTreeItem::isParentOf(const FXTreeItem* item) const {
+bool FXTreeItem::isParentOf(const FXTreeItem* item) const {
   register const FXTreeItem* child=item;
-  while(child){ child=child->parent; if(child==this) return TRUE; }
-  return FALSE;
+  while(child){ child=child->parent; if(child==this) return true; }
+  return false;
   }
 
 
@@ -409,7 +409,7 @@ FXTreeList::FXTreeList(){
   indent=DEFAULT_INDENT;
   grabx=0;
   graby=0;
-  state=FALSE;
+  state=false;
   }
 
 
@@ -438,7 +438,7 @@ FXTreeList::FXTreeList(FXComposite *p,FXObject* tgt,FXSelector sel,FXuint opts,F
   indent=DEFAULT_INDENT;
   grabx=0;
   graby=0;
-  state=FALSE;
+  state=false;
   }
 
 
@@ -620,7 +620,7 @@ FXString FXTreeList::getItemText(const FXTreeItem* item) const {
 
 
 // Set item open icon
-void FXTreeList::setItemOpenIcon(FXTreeItem* item,FXIcon* icon,FXbool owned){
+void FXTreeList::setItemOpenIcon(FXTreeItem* item,FXIcon* icon,bool owned){
   if(item==NULL){ fxerror("%s::setItemOpenIcon: NULL argument.\n",getClassName()); }
   if(item->getOpenIcon()!=icon) recalc();
   item->setOpenIcon(icon,owned);
@@ -635,7 +635,7 @@ FXIcon* FXTreeList::getItemOpenIcon(const FXTreeItem* item) const {
 
 
 // Set item closed icon
-void FXTreeList::setItemClosedIcon(FXTreeItem* item,FXIcon* icon,FXbool owned){
+void FXTreeList::setItemClosedIcon(FXTreeItem* item,FXIcon* icon,bool owned){
   if(item==NULL){ fxerror("%s::setItemClosedIcon: NULL argument.\n",getClassName()); }
   if(item->getClosedIcon()!=icon) recalc();
   item->setClosedIcon(icon,owned);
@@ -664,49 +664,49 @@ void* FXTreeList::getItemData(const FXTreeItem* item) const {
 
 
 // True if item is selected
-FXbool FXTreeList::isItemSelected(const FXTreeItem* item) const {
+bool FXTreeList::isItemSelected(const FXTreeItem* item) const {
   if(!item){ fxerror("%s::isItemSelected: NULL argument.\n",getClassName()); }
   return item->isSelected();
   }
 
 
 // True if item is current
-FXbool FXTreeList::isItemCurrent(const FXTreeItem* item) const {
+bool FXTreeList::isItemCurrent(const FXTreeItem* item) const {
   if(!item){ fxerror("%s::isItemCurrent: NULL argument.\n",getClassName()); }
   return currentitem==item;
   }
 
 
 // Check if item is expanded
-FXbool FXTreeList::isItemExpanded(const FXTreeItem* item) const {
+bool FXTreeList::isItemExpanded(const FXTreeItem* item) const {
   if(!item){ fxerror("%s::isItemExpanded: NULL argument.\n",getClassName()); }
   return (options&TREELIST_AUTOSELECT) || item->isExpanded();
   }
 
 
 // Is item a leaf item
-FXbool FXTreeList::isItemLeaf(const FXTreeItem* item) const {
+bool FXTreeList::isItemLeaf(const FXTreeItem* item) const {
   if(!item){ fxerror("%s::isItemLeaf: NULL argument.\n",getClassName()); }
   return item->first==NULL;
   }
 
 
 // Check if item is enabled
-FXbool FXTreeList::isItemEnabled(const FXTreeItem* item) const {
+bool FXTreeList::isItemEnabled(const FXTreeItem* item) const {
   if(!item){ fxerror("%s::isItemEnabled: NULL argument.\n",getClassName()); }
   return item->isEnabled();
   }
 
 
 // Check item is open
-FXbool FXTreeList::isItemOpened(const FXTreeItem* item) const {
+bool FXTreeList::isItemOpened(const FXTreeItem* item) const {
   if(!item){ fxerror("%s::isItemOpen: NULL argument.\n",getClassName()); }
   return item->isOpened();
   }
 
 
 // True if item (partially) visible
-FXbool FXTreeList::isItemVisible(const FXTreeItem* item) const {
+bool FXTreeList::isItemVisible(const FXTreeItem* item) const {
   if(!item){ fxerror("%s::isItemVisible: NULL argument.\n",getClassName()); }
   return 0<pos_y+item->y+item->getHeight(this) && pos_y+item->y<viewport_h;
   }
@@ -817,31 +817,31 @@ void FXTreeList::updateItem(FXTreeItem* item) const {
 
 
 // Enable one item
-FXbool FXTreeList::enableItem(FXTreeItem* item){
+bool FXTreeList::enableItem(FXTreeItem* item){
   if(!item){ fxerror("%s::enableItem: NULL argument.\n",getClassName()); }
   if(!item->isEnabled()){
-    item->setEnabled(TRUE);
+    item->setEnabled(true);
     updateItem(item);
-    return TRUE;
+    return true;
     }
-  return FALSE;
+  return false;
   }
 
 
 // Disable one item
-FXbool FXTreeList::disableItem(FXTreeItem* item){
+bool FXTreeList::disableItem(FXTreeItem* item){
   if(!item){ fxerror("%s::disableItem: NULL argument.\n",getClassName()); }
   if(item->isEnabled()){
-    item->setEnabled(FALSE);
+    item->setEnabled(false);
     updateItem(item);
-    return TRUE;
+    return true;
     }
-  return FALSE;
+  return false;
   }
 
 
 // Select one item
-FXbool FXTreeList::selectItem(FXTreeItem* item,FXbool notify){
+bool FXTreeList::selectItem(FXTreeItem* item,bool notify){
   if(!item){ fxerror("%s::selectItem: NULL argument.\n",getClassName()); }
   if(!item->isSelected()){
     switch(options&SELECT_MASK){
@@ -850,44 +850,44 @@ FXbool FXTreeList::selectItem(FXTreeItem* item,FXbool notify){
         killSelection(notify);
       case TREELIST_EXTENDEDSELECT:
       case TREELIST_MULTIPLESELECT:
-        item->setSelected(TRUE);
+        item->setSelected(true);
         updateItem(item);
         if(notify && target){target->tryHandle(this,FXSEL(SEL_SELECTED,message),(void*)item);}
         break;
       }
-    return TRUE;
+    return true;
     }
-  return FALSE;
+  return false;
   }
 
 
 // Deselect one item
-FXbool FXTreeList::deselectItem(FXTreeItem* item,FXbool notify){
+bool FXTreeList::deselectItem(FXTreeItem* item,bool notify){
   if(!item){ fxerror("%s::deselectItem: NULL argument.\n",getClassName()); }
   if(item->isSelected()){
     switch(options&SELECT_MASK){
       case TREELIST_EXTENDEDSELECT:
       case TREELIST_MULTIPLESELECT:
       case TREELIST_SINGLESELECT:
-        item->setSelected(FALSE);
+        item->setSelected(false);
         updateItem(item);
         if(notify && target){target->tryHandle(this,FXSEL(SEL_DESELECTED,message),(void*)item);}
         break;
       }
-    return TRUE;
+    return true;
     }
-  return FALSE;
+  return false;
   }
 
 
 // toggle one item
-FXbool FXTreeList::toggleItem(FXTreeItem* item,FXbool notify){
+bool FXTreeList::toggleItem(FXTreeItem* item,bool notify){
   if(!item){ fxerror("%s::toggleItem: NULL argument.\n",getClassName()); }
   switch(options&SELECT_MASK){
     case TREELIST_BROWSESELECT:
       if(!item->isSelected()){
         killSelection(notify);
-        item->setSelected(TRUE);
+        item->setSelected(true);
         updateItem(item);
         if(notify && target){target->tryHandle(this,FXSEL(SEL_SELECTED,message),(void*)item);}
         }
@@ -895,12 +895,12 @@ FXbool FXTreeList::toggleItem(FXTreeItem* item,FXbool notify){
     case TREELIST_SINGLESELECT:
       if(!item->isSelected()){
         killSelection(notify);
-        item->setSelected(TRUE);
+        item->setSelected(true);
         updateItem(item);
         if(notify && target){target->tryHandle(this,FXSEL(SEL_SELECTED,message),(void*)item);}
         }
       else{
-        item->setSelected(FALSE);
+        item->setSelected(false);
         updateItem(item);
         if(notify && target){target->tryHandle(this,FXSEL(SEL_DESELECTED,message),(void*)item);}
         }
@@ -908,25 +908,25 @@ FXbool FXTreeList::toggleItem(FXTreeItem* item,FXbool notify){
     case TREELIST_EXTENDEDSELECT:
     case TREELIST_MULTIPLESELECT:
       if(!item->isSelected()){
-        item->setSelected(TRUE);
+        item->setSelected(true);
         updateItem(item);
         if(notify && target){target->tryHandle(this,FXSEL(SEL_SELECTED,message),(void*)item);}
         }
       else{
-        item->setSelected(FALSE);
+        item->setSelected(false);
         updateItem(item);
         if(notify && target){target->tryHandle(this,FXSEL(SEL_DESELECTED,message),(void*)item);}
         }
       break;
     }
-  return TRUE;
+  return true;
   }
 
 
 // Extend selection
-FXbool FXTreeList::extendSelection(FXTreeItem* item,FXbool notify){
+bool FXTreeList::extendSelection(FXTreeItem* item,bool notify){
   register FXTreeItem *it,*i1,*i2,*i3;
-  register FXbool changes=FALSE;
+  register bool changes=false;
   if(item && anchoritem && extentitem){
     it=firstitem;
     i1=i2=i3=NULL;
@@ -949,9 +949,9 @@ FXbool FXTreeList::extendSelection(FXTreeItem* item,FXbool notify){
       // item = anchor - extent
       if(i1==item){
         if(!it->isSelected()){
-          it->setSelected(TRUE);
+          it->setSelected(true);
           updateItem(it);
-          changes=TRUE;
+          changes=true;
           if(notify && target){target->tryHandle(this,FXSEL(SEL_SELECTED,message),(void*)it);}
           }
         }
@@ -960,9 +960,9 @@ FXbool FXTreeList::extendSelection(FXTreeItem* item,FXbool notify){
       // extent = item   - anchor
       else if(i1==extentitem){
         if(it->isSelected()){
-          it->setSelected(FALSE);
+          it->setSelected(false);
           updateItem(it);
-          changes=TRUE;
+          changes=true;
           if(notify && target){target->tryHandle(this,FXSEL(SEL_DESELECTED,message),(void*)it);}
           }
         }
@@ -978,9 +978,9 @@ FXbool FXTreeList::extendSelection(FXTreeItem* item,FXbool notify){
       // anchor - extent = item
       if(i3==item){
         if(!it->isSelected()){
-          it->setSelected(TRUE);
+          it->setSelected(true);
           updateItem(it);
-          changes=TRUE;
+          changes=true;
           if(notify && target){target->tryHandle(this,FXSEL(SEL_SELECTED,message),(void*)it);}
           }
         }
@@ -989,9 +989,9 @@ FXbool FXTreeList::extendSelection(FXTreeItem* item,FXbool notify){
       // anchor - item   = extent
       else if(i3==extentitem){
         if(it->isSelected()){
-          it->setSelected(FALSE);
+          it->setSelected(false);
           updateItem(it);
-          changes=TRUE;
+          changes=true;
           if(notify && target){target->tryHandle(this,FXSEL(SEL_DESELECTED,message),(void*)it);}
           }
         }
@@ -1003,14 +1003,14 @@ FXbool FXTreeList::extendSelection(FXTreeItem* item,FXbool notify){
 
 
 // Kill selection
-FXbool FXTreeList::killSelection(FXbool notify){
+bool FXTreeList::killSelection(bool notify){
   register FXTreeItem *item=firstitem;
-  register FXbool changes=FALSE;
+  register bool changes=false;
   while(item){
     if(item->isSelected()){
-      item->setSelected(FALSE);
+      item->setSelected(false);
       updateItem(item);
-      changes=TRUE;
+      changes=true;
       if(notify && target){target->tryHandle(this,FXSEL(SEL_DESELECTED,message),(void*)item);}
       }
     item=item->getBelow();
@@ -1020,36 +1020,36 @@ FXbool FXTreeList::killSelection(FXbool notify){
 
 
 // Open item
-FXbool FXTreeList::openItem(FXTreeItem* item,FXbool notify){
+bool FXTreeList::openItem(FXTreeItem* item,bool notify){
   if(item==NULL){ fxerror("%s::openItem: NULL argument.\n",getClassName()); }
   if(!item->isOpened()){
-    item->setOpened(TRUE);
+    item->setOpened(true);
     updateItem(item);
     if(notify && target){target->tryHandle(this,FXSEL(SEL_OPENED,message),(void*)item);}
-    return TRUE;
+    return true;
     }
-  return FALSE;
+  return false;
   }
 
 
 // Close item
-FXbool FXTreeList::closeItem(FXTreeItem* item,FXbool notify){
+bool FXTreeList::closeItem(FXTreeItem* item,bool notify){
   if(item==NULL){ fxerror("%s::closeItem: NULL argument.\n",getClassName()); }
   if(item->isOpened()){
-    item->setOpened(FALSE);
+    item->setOpened(false);
     updateItem(item);
     if(notify && target){target->tryHandle(this,FXSEL(SEL_CLOSED,message),(void*)item);}
-    return TRUE;
+    return true;
     }
-  return FALSE;
+  return false;
   }
 
 
 // Collapse all subtrees under item
-FXbool FXTreeList::collapseTree(FXTreeItem* tree,FXbool notify){
+bool FXTreeList::collapseTree(FXTreeItem* tree,bool notify){
   if(tree==NULL){ fxerror("%s::collapseTree: NULL argument.\n",getClassName()); }
   if(tree->isExpanded()){
-    tree->setExpanded(FALSE);
+    tree->setExpanded(false);
     if(!(options&TREELIST_AUTOSELECT)){     // In autoselect, already shown as expanded!
       if(tree->first){
         recalc();
@@ -1059,17 +1059,17 @@ FXbool FXTreeList::collapseTree(FXTreeItem* tree,FXbool notify){
         }
       }
     if(notify && target){target->tryHandle(this,FXSEL(SEL_COLLAPSED,message),(void*)tree);}
-    return TRUE;
+    return true;
     }
-  return FALSE;
+  return false;
   }
 
 
 // Expand subtree under item
-FXbool FXTreeList::expandTree(FXTreeItem* tree,FXbool notify){
+bool FXTreeList::expandTree(FXTreeItem* tree,bool notify){
   if(tree==NULL){ fxerror("%s::expandTree: NULL argument.\n",getClassName()); }
   if(!tree->isExpanded()){
-    tree->setExpanded(TRUE);
+    tree->setExpanded(true);
     if(!(options&TREELIST_AUTOSELECT)){     // In autoselect, already shown as expanded!
       if(tree->first){
         recalc();
@@ -1079,9 +1079,9 @@ FXbool FXTreeList::expandTree(FXTreeItem* tree,FXbool notify){
         }
       }
     if(notify && target){target->tryHandle(this,FXSEL(SEL_EXPANDED,message),(void*)tree);}
-    return TRUE;
+    return true;
     }
-  return FALSE;
+  return false;
   }
 
 
@@ -1143,7 +1143,7 @@ long FXTreeList::onQueryHelp(FXObject* sender,FXSelector sel,void* ptr){
 long FXTreeList::onFocusIn(FXObject* sender,FXSelector sel,void* ptr){
   FXScrollArea::onFocusIn(sender,sel,ptr);
   if(currentitem){
-    currentitem->setFocus(TRUE);
+    currentitem->setFocus(true);
     updateItem(currentitem);
     }
   return 1;
@@ -1154,7 +1154,7 @@ long FXTreeList::onFocusIn(FXObject* sender,FXSelector sel,void* ptr){
 long FXTreeList::onFocusOut(FXObject* sender,FXSelector sel,void* ptr){
   FXScrollArea::onFocusOut(sender,sel,ptr);
   if(currentitem){
-    currentitem->setFocus(FALSE);
+    currentitem->setFocus(false);
     updateItem(currentitem);
     }
   return 1;
@@ -1329,7 +1329,7 @@ long FXTreeList::onKeyPress(FXObject*,FXSelector,void* ptr){
     case KEY_KP_Right:
       if(item){
         if(!(options&TREELIST_AUTOSELECT) && !item->isExpanded() && (item->hasItems() || item->getFirst())){
-          expandTree(item,TRUE);
+          expandTree(item,true);
           }
         else if(item->first){
           item=item->first;
@@ -1344,7 +1344,7 @@ long FXTreeList::onKeyPress(FXObject*,FXSelector,void* ptr){
     case KEY_KP_Left:
       if(item){
         if(!(options&TREELIST_AUTOSELECT) && item->isExpanded() && (item->hasItems() || item->getFirst())){
-          collapseTree(item,TRUE);
+          collapseTree(item,true);
           }
         else if(item->parent){
           item=item->parent;
@@ -1374,23 +1374,23 @@ long FXTreeList::onKeyPress(FXObject*,FXSelector,void* ptr){
         }
 hop:  lookup=FXString::null;
       if(item){
-        setCurrentItem(item,TRUE);
+        setCurrentItem(item,true);
         makeItemVisible(item);
         if((options&SELECT_MASK)==TREELIST_EXTENDEDSELECT){
           if(item->isEnabled()){
             if(event->state&SHIFTMASK){
               if(anchoritem){
-                selectItem(anchoritem,TRUE);
-                extendSelection(item,TRUE);
+                selectItem(anchoritem,true);
+                extendSelection(item,true);
                 }
               else{
-                selectItem(item,TRUE);
+                selectItem(item,true);
                 setAnchorItem(item);
                 }
               }
             else if(!(event->state&CONTROLMASK)){
-              killSelection(TRUE);
-              selectItem(item,TRUE);
+              killSelection(true);
+              selectItem(item,true);
               setAnchorItem(item);
               }
             }
@@ -1409,24 +1409,24 @@ hop:  lookup=FXString::null;
           case TREELIST_EXTENDEDSELECT:
             if(event->state&SHIFTMASK){
               if(anchoritem){
-                selectItem(anchoritem,TRUE);
-                extendSelection(item,TRUE);
+                selectItem(anchoritem,true);
+                extendSelection(item,true);
                 }
               else{
-                selectItem(item,TRUE);
+                selectItem(item,true);
                 }
               }
             else if(event->state&CONTROLMASK){
-              toggleItem(item,TRUE);
+              toggleItem(item,true);
               }
             else{
-              killSelection(TRUE);
-              selectItem(item,TRUE);
+              killSelection(true);
+              selectItem(item,true);
               }
             break;
           case TREELIST_MULTIPLESELECT:
           case TREELIST_SINGLESELECT:
-            toggleItem(item,TRUE);
+            toggleItem(item,true);
             break;
           }
         setAnchorItem(item);
@@ -1452,12 +1452,12 @@ hop:  lookup=FXString::null;
       getApp()->addTimeout(this,ID_LOOKUPTIMER,getApp()->getTypingSpeed());
       item=findItem(lookup,currentitem,SEARCH_FORWARD|SEARCH_WRAP|SEARCH_PREFIX);
       if(item){
-	setCurrentItem(item,TRUE);
+	setCurrentItem(item,true);
 	makeItemVisible(item);
 	if((options&SELECT_MASK)==TREELIST_EXTENDEDSELECT){
 	  if(item->isEnabled()){
-	    killSelection(TRUE);
-	    selectItem(item,TRUE);
+	    killSelection(true);
+	    selectItem(item,true);
 	    }
 	  }
 	setAnchorItem(item);
@@ -1520,12 +1520,12 @@ long FXTreeList::onAutoScroll(FXObject* sender,FXSelector sel,void* ptr){
     if(item && item!=currentitem){
 
       // Make it the current item
-      setCurrentItem(item,TRUE);
+      setCurrentItem(item,true);
 
       // Extend the selection
       if((options&SELECT_MASK)==TREELIST_EXTENDEDSELECT){
-        state=FALSE;
-        extendSelection(item,TRUE);
+        state=false;
+        extendSelection(item,true);
         }
       }
     return 1;
@@ -1555,7 +1555,7 @@ long FXTreeList::onMotion(FXObject*,FXSelector,void* ptr){
 
   // Drag and drop mode
   if(flags&FLAG_DODRAG){
-    if(startAutoScroll(event,TRUE)) return 1;
+    if(startAutoScroll(event,true)) return 1;
     handle(this,FXSEL(SEL_DRAGGED,0),ptr);
     return 1;
     }
@@ -1573,7 +1573,7 @@ long FXTreeList::onMotion(FXObject*,FXSelector,void* ptr){
   if((flags&FLAG_PRESSED) || (options&TREELIST_AUTOSELECT)){
 
     // Start auto scrolling?
-    if(startAutoScroll(event,FALSE)) return 1;
+    if(startAutoScroll(event,false)) return 1;
 
     // Find item
     item=getItemAt(event->win_x,event->win_y);
@@ -1582,12 +1582,12 @@ long FXTreeList::onMotion(FXObject*,FXSelector,void* ptr){
     if(item && item!=currentitem){
 
       // Make it the current item
-      setCurrentItem(item,TRUE);
+      setCurrentItem(item,true);
 
       // Extend the selection
       if((options&SELECT_MASK)==TREELIST_EXTENDEDSELECT){
-        state=FALSE;
-        extendSelection(item,TRUE);
+        state=false;
+        extendSelection(item,true);
         }
       }
     return 1;
@@ -1628,7 +1628,7 @@ long FXTreeList::onLeftBtnPress(FXObject*,FXSelector,void* ptr){
     if(item==NULL){
       if((options&SELECT_MASK)==TREELIST_EXTENDEDSELECT){
         if(!(event->state&(SHIFTMASK|CONTROLMASK))){
-          killSelection(TRUE);
+          killSelection(true);
           }
         }
       return 1;
@@ -1640,14 +1640,14 @@ long FXTreeList::onLeftBtnPress(FXObject*,FXSelector,void* ptr){
     // Maybe clicked on box
     if(code==3){
       if(isItemExpanded(item))
-        collapseTree(item,TRUE);
+        collapseTree(item,true);
       else
-        expandTree(item,TRUE);
+        expandTree(item,true);
       return 1;
       }
 
     // Change current item
-    setCurrentItem(item,TRUE);
+    setCurrentItem(item,true);
 
     // Change item selection
     state=item->isSelected();
@@ -1655,26 +1655,26 @@ long FXTreeList::onLeftBtnPress(FXObject*,FXSelector,void* ptr){
       case TREELIST_EXTENDEDSELECT:
         if(event->state&SHIFTMASK){
           if(anchoritem){
-            if(anchoritem->isEnabled()) selectItem(anchoritem,TRUE);
-            extendSelection(item,TRUE);
+            if(anchoritem->isEnabled()) selectItem(anchoritem,true);
+            extendSelection(item,true);
             }
           else{
-            if(item->isEnabled()) selectItem(item,TRUE);
+            if(item->isEnabled()) selectItem(item,true);
             setAnchorItem(item);
             }
           }
         else if(event->state&CONTROLMASK){
-          if(item->isEnabled() && !state) selectItem(item,TRUE);
+          if(item->isEnabled() && !state) selectItem(item,true);
           setAnchorItem(item);
           }
         else{
-          if(item->isEnabled() && !state){ killSelection(TRUE); selectItem(item,TRUE); }
+          if(item->isEnabled() && !state){ killSelection(true); selectItem(item,true); }
           setAnchorItem(item);
           }
         break;
       case TREELIST_MULTIPLESELECT:
       case TREELIST_SINGLESELECT:
-        if(item->isEnabled() && !state) selectItem(item,TRUE);
+        if(item->isEnabled() && !state) selectItem(item,true);
         break;
       }
 
@@ -1717,17 +1717,17 @@ long FXTreeList::onLeftBtnRelease(FXObject*,FXSelector,void* ptr){
       case TREELIST_EXTENDEDSELECT:
         if(currentitem && currentitem->isEnabled()){
           if(event->state&CONTROLMASK){
-            if(state) deselectItem(currentitem,TRUE);
+            if(state) deselectItem(currentitem,true);
             }
           else if(!(event->state&SHIFTMASK)){
-            if(state){ killSelection(TRUE); selectItem(currentitem,TRUE); }
+            if(state){ killSelection(true); selectItem(currentitem,true); }
             }
           }
         break;
       case TREELIST_MULTIPLESELECT:
       case TREELIST_SINGLESELECT:
         if(currentitem && currentitem->isEnabled()){
-          if(state) deselectItem(currentitem,TRUE);
+          if(state) deselectItem(currentitem,true);
           }
         break;
       }
@@ -1822,9 +1822,9 @@ long FXTreeList::onDoubleClicked(FXObject*,FXSelector,void* ptr){
   // Double click on an item
   if(ptr){
     if(isItemExpanded((FXTreeItem*)ptr))
-      collapseTree((FXTreeItem*)ptr,TRUE);
+      collapseTree((FXTreeItem*)ptr,true);
     else
-      expandTree((FXTreeItem*)ptr,TRUE);
+      expandTree((FXTreeItem*)ptr,true);
     }
   return 0;
   }
@@ -1975,7 +1975,7 @@ void FXTreeList::sortItems(){
 
 
 // Set current item
-void FXTreeList::setCurrentItem(FXTreeItem* item,FXbool notify){
+void FXTreeList::setCurrentItem(FXTreeItem* item,bool notify){
   if(item!=currentitem){
 
     // Deactivate old item
@@ -1983,7 +1983,7 @@ void FXTreeList::setCurrentItem(FXTreeItem* item,FXbool notify){
 
       // No visible change if it doen't have the focus
       if(hasFocus()){
-        currentitem->setFocus(FALSE);
+        currentitem->setFocus(false);
         updateItem(currentitem);
         }
 
@@ -1998,7 +1998,7 @@ void FXTreeList::setCurrentItem(FXTreeItem* item,FXbool notify){
 
       // No visible change if it doen't have the focus
       if(hasFocus()){
-        currentitem->setFocus(TRUE);
+        currentitem->setFocus(true);
         updateItem(currentitem);
         }
 
@@ -2032,7 +2032,7 @@ FXTreeItem* FXTreeList::createItem(const FXString& text,FXIcon* oi,FXIcon* ci,vo
 
 
 // Insert item under father before other item
-FXTreeItem* FXTreeList::insertItem(FXTreeItem* other,FXTreeItem* father,FXTreeItem* item,FXbool notify){
+FXTreeItem* FXTreeList::insertItem(FXTreeItem* other,FXTreeItem* father,FXTreeItem* item,bool notify){
   register FXTreeItem* olditem=currentitem;
 
   // Verify correctness of arguments
@@ -2088,7 +2088,7 @@ FXTreeItem* FXTreeList::insertItem(FXTreeItem* other,FXTreeItem* father,FXTreeIt
   // Was new item
   if(currentitem==item){
     if(hasFocus()){
-      currentitem->setFocus(TRUE);
+      currentitem->setFocus(true);
       }
     if((options&SELECT_MASK)==TREELIST_BROWSESELECT && currentitem->isEnabled()){
       selectItem(currentitem,notify);
@@ -2102,36 +2102,36 @@ FXTreeItem* FXTreeList::insertItem(FXTreeItem* other,FXTreeItem* father,FXTreeIt
 
 
 // Insert item under father before other item
-FXTreeItem* FXTreeList::insertItem(FXTreeItem* other,FXTreeItem* father,const FXString& text,FXIcon* oi,FXIcon* ci,void* ptr,FXbool notify){
+FXTreeItem* FXTreeList::insertItem(FXTreeItem* other,FXTreeItem* father,const FXString& text,FXIcon* oi,FXIcon* ci,void* ptr,bool notify){
   return insertItem(other,father,createItem(text,oi,ci,ptr),notify);
   }
 
 
 // Append item under father
-FXTreeItem* FXTreeList::appendItem(FXTreeItem* father,FXTreeItem* item,FXbool notify){
+FXTreeItem* FXTreeList::appendItem(FXTreeItem* father,FXTreeItem* item,bool notify){
   return insertItem(NULL,father,item,notify);
   }
 
 
 // Append item under father
-FXTreeItem* FXTreeList::appendItem(FXTreeItem* father,const FXString& text,FXIcon* oi,FXIcon* ci,void* ptr,FXbool notify){
+FXTreeItem* FXTreeList::appendItem(FXTreeItem* father,const FXString& text,FXIcon* oi,FXIcon* ci,void* ptr,bool notify){
   return insertItem(NULL,father,createItem(text,oi,ci,ptr),notify);
   }
 
 
 // Prepend item under father
-FXTreeItem* FXTreeList::prependItem(FXTreeItem* father,FXTreeItem* item,FXbool notify){
+FXTreeItem* FXTreeList::prependItem(FXTreeItem* father,FXTreeItem* item,bool notify){
   return insertItem(father?father->first:firstitem,father,item,notify);
   }
 
 // Prepend item under father
-FXTreeItem* FXTreeList::prependItem(FXTreeItem* father,const FXString& text,FXIcon* oi,FXIcon* ci,void* ptr,FXbool notify){
+FXTreeItem* FXTreeList::prependItem(FXTreeItem* father,const FXString& text,FXIcon* oi,FXIcon* ci,void* ptr,bool notify){
   return insertItem(father?father->first:firstitem,father,createItem(text,oi,ci,ptr),notify);
   }
 
 
 // Fill list by appending items from array of strings
-FXint FXTreeList::fillItems(FXTreeItem* father,const FXchar** strings,FXIcon* oi,FXIcon* ci,void* ptr,FXbool notify){
+FXint FXTreeList::fillItems(FXTreeItem* father,const FXchar** strings,FXIcon* oi,FXIcon* ci,void* ptr,bool notify){
   register FXint n=0;
   if(strings){
     while(strings[n]){
@@ -2143,7 +2143,7 @@ FXint FXTreeList::fillItems(FXTreeItem* father,const FXchar** strings,FXIcon* oi
 
 
 // Fill list by appending items from newline separated strings
-FXint FXTreeList::fillItems(FXTreeItem* father,const FXString& strings,FXIcon* oi,FXIcon* ci,void* ptr,FXbool notify){
+FXint FXTreeList::fillItems(FXTreeItem* father,const FXString& strings,FXIcon* oi,FXIcon* ci,void* ptr,bool notify){
   register FXint n=0;
   FXString text;
   while(!(text=strings.section('\n',n)).empty()){
@@ -2207,7 +2207,7 @@ FXTreeItem *FXTreeList::moveItem(FXTreeItem* other,FXTreeItem* father,FXTreeItem
 
 
 // Extract node from list
-FXTreeItem* FXTreeList::extractItem(FXTreeItem* item,FXbool notify){
+FXTreeItem* FXTreeList::extractItem(FXTreeItem* item,bool notify){
   register FXTreeItem *olditem=currentitem;
   register FXTreeItem *result=item;
   register FXTreeItem *prv;
@@ -2261,7 +2261,7 @@ FXTreeItem* FXTreeList::extractItem(FXTreeItem* item,FXbool notify){
     // Extracted current item
     if(currentitem && currentitem!=olditem){
       if(hasFocus()){
-        currentitem->setFocus(TRUE);
+        currentitem->setFocus(true);
         }
       if((options&SELECT_MASK)==TREELIST_BROWSESELECT && currentitem->isEnabled()){
         selectItem(currentitem,notify);
@@ -2276,7 +2276,7 @@ FXTreeItem* FXTreeList::extractItem(FXTreeItem* item,FXbool notify){
 
 
 // Remove all siblings from [fm,to]
-void FXTreeList::removeItems(FXTreeItem* fm,FXTreeItem* to,FXbool notify){
+void FXTreeList::removeItems(FXTreeItem* fm,FXTreeItem* to,bool notify){
   register FXTreeItem *olditem=currentitem;
   register FXTreeItem *prv;
   register FXTreeItem *nxt;
@@ -2329,7 +2329,7 @@ x:  if(olditem!=currentitem){
     // Deleted current item
     if(currentitem && currentitem!=olditem){
       if(hasFocus()){
-        currentitem->setFocus(TRUE);
+        currentitem->setFocus(true);
         }
       if((options&SELECT_MASK)==TREELIST_BROWSESELECT && currentitem->isEnabled()){
         selectItem(currentitem,notify);
@@ -2343,18 +2343,18 @@ x:  if(olditem!=currentitem){
 
 
 // Remove node from list
-void FXTreeList::removeItem(FXTreeItem* item,FXbool notify){
+void FXTreeList::removeItem(FXTreeItem* item,bool notify){
   removeItems(item,item,notify);
   }
 
 
 // Remove all items
-void FXTreeList::clearItems(FXbool notify){
+void FXTreeList::clearItems(bool notify){
   removeItems(firstitem,lastitem,notify);
   }
 
 
-typedef FXint (*FXCompareFunc)(const FXString&,const FXString &,FXint);
+typedef FXint (*FXCompareFunc)(const FXString&,const FXString&,FXint);
 
 
 // Get item by name
@@ -2555,7 +2555,7 @@ void FXTreeList::load(FXStream& store){
 FXTreeList::~FXTreeList(){
   getApp()->removeTimeout(this,ID_TIPTIMER);
   getApp()->removeTimeout(this,ID_LOOKUPTIMER);
-  clearItems(FALSE);
+  clearItems(false);
   firstitem=(FXTreeItem*)-1L;
   lastitem=(FXTreeItem*)-1L;
   anchoritem=(FXTreeItem*)-1L;

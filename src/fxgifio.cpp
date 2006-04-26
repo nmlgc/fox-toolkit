@@ -19,12 +19,13 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: fxgifio.cpp,v 1.79 2006/01/22 17:58:52 fox Exp $                         *
+* $Id: fxgifio.cpp,v 1.80 2006/03/25 05:59:34 fox Exp $                         *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
 #include "fxdefs.h"
 #include "FXHash.h"
+#include "FXElement.h"
 #include "FXStream.h"
 #include "fxpriv.h"
 
@@ -231,7 +232,7 @@ bool fxloadGIF(FXStream& store,FXColor*& data,FXint& width,FXint& height){
       maxpixels=imwidth*imheight;
 
       // Allocate memory
-      if(!FXMALLOC(&data,FXColor,maxpixels)) return false;
+      if(!allocElms(data,maxpixels)) return false;
 
       // Set up pointers; we're using the first 3/4 of the
       // data array for the compressed data, and the latter 1/4 for
@@ -261,7 +262,7 @@ bool fxloadGIF(FXStream& store,FXColor*& data,FXint& width,FXint& height){
       ReadMask=MaxCode-1;
 
       // Maximum code should not exceed 4096
-      if(MaxCode>=4096){ FXFREE(&data); return false; }
+      if(MaxCode>=4096){ freeElms(data); return false; }
 
       // Read all blocks of compressed data into one single buffer.
       // We have an extra test to make sure we don't write past 3/4
@@ -269,7 +270,7 @@ bool fxloadGIF(FXStream& store,FXColor*& data,FXint& width,FXint& height){
       ptr=buf;
       do{
         store >> sbsize;
-        if(ptr+sbsize>pix){ FXFREE(&data); return false; }
+        if(ptr+sbsize>pix){ freeElms(data); return false; }
         store.load(ptr,sbsize);
         ptr+=sbsize;
         }
@@ -342,14 +343,14 @@ bool fxloadGIF(FXStream& store,FXColor*& data,FXint& width,FXint& height){
         else{
 
           // If we're at maxcode and didn't get a clear, stop loading
-          if(FreeCode>=4096){ FXFREE(&data); return false; }
+          if(FreeCode>=4096){ freeElms(data); return false; }
 
           CurCode=InCode=Code;
 
           // If greater or equal to FreeCode, not in the hash table yet; repeat the last character decoded
           if(CurCode>=FreeCode){
             CurCode=OldCode;
-            if(OutCount>4096){ FXFREE(&data); return false; }
+            if(OutCount>4096){ freeElms(data); return false; }
             OutCode[OutCount++]=FinChar;
             }
 
@@ -357,12 +358,12 @@ bool fxloadGIF(FXStream& store,FXColor*& data,FXint& width,FXint& height){
           // through the hash table to its end; each code in the chain puts its
           // associated output code on the output queue.
           while(CurCode>=ClearCode){
-            if(OutCount>4096 || CurCode>=FreeCode){ FXFREE(&data); return false; }
+            if(OutCount>4096 || CurCode>=FreeCode){ freeElms(data); return false; }
             OutCode[OutCount++]=Suffix[CurCode];
             CurCode=Prefix[CurCode];
             }
 
-          if(OutCount>4096){ FXFREE(&data); return false; }
+          if(OutCount>4096){ freeElms(data); return false; }
 
           // The last code in the chain is treated as raw data
           FinChar=CurCode&BitMask;
@@ -468,7 +469,7 @@ bool fxsaveGIF(FXStream& store,const FXColor *data,FXint width,FXint height,bool
   maxpixels=width*height;
 
   // Allocate temp buffer for pixels
-  if(!FXMALLOC(&output,FXuchar,(maxpixels<<1))) return false;
+  if(!allocElms(output,(maxpixels<<1))) return false;
   pixels=output+maxpixels;
 
   // First, try EZ quantization, because it is exact; a previously
@@ -662,7 +663,7 @@ nxt:continue;
   store << TAG_ENDFILE;         // File terminator
 
   // Free storage
-  FXFREE(&output);
+  freeElms(output);
   return true;
   }
 

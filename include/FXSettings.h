@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXSettings.h,v 1.33 2006/01/22 17:58:09 fox Exp $                        *
+* $Id: FXSettings.h,v 1.37 2006/03/29 07:23:00 fox Exp $                        *
 ********************************************************************************/
 #ifndef FXSETTINGS_H
 #define FXSETTINGS_H
@@ -46,7 +46,7 @@ class FXAPI FXSettings : public FXDict {
 protected:
   bool modified;
 protected:
-  virtual void *createData(const void*);
+  virtual void *createData(void*);
   virtual void deleteData(void*);
   FXchar* dequote(FXchar* text) const;
   FXchar* enquote(FXchar* result,const FXchar* text);
@@ -86,7 +86,13 @@ public:
   FXint readIntEntry(const FXchar *section,const FXchar *key,FXint def=0);
 
   /// Read a unsigned integer registry entry; if no value is found, the default value def is returned
-  FXuint readUnsignedEntry(const FXchar *section,const FXchar *key,FXuint def=0);
+  FXuint readUIntEntry(const FXchar *section,const FXchar *key,FXuint def=0);
+
+  /// Read a 64-bit long integer registry entry; if no value is found, the default value def is returned
+  FXlong readLongEntry(const FXchar *section,const FXchar *key,FXlong def=0);
+
+  /// Read a 64-bit unsigned long integer registry entry; if no value is found, the default value def is returned
+  FXulong readULongEntry(const FXchar *section,const FXchar *key,FXulong def=0);
 
   /// Read a double-precision floating point registry entry; if no value is found, the default value def is returned
   FXdouble readRealEntry(const FXchar *section,const FXchar *key,FXdouble def=0.0);
@@ -95,7 +101,7 @@ public:
   FXColor readColorEntry(const FXchar *section,const FXchar *key,FXColor def=0);
 
   /// Read a boolean registry entry
-  FXbool readBoolEntry(const FXchar *section,const FXchar *key,FXbool def=FALSE);
+  bool readBoolEntry(const FXchar *section,const FXchar *key,bool def=false);
 
   /// Write a formatted registry entry, using printf-style format
   FXint writeFormatEntry(const FXchar *section,const FXchar *key,const FXchar *fmt,...) FX_PRINTF(4,5) ;
@@ -107,7 +113,13 @@ public:
   bool writeIntEntry(const FXchar *section,const FXchar *key,FXint val);
 
   /// Write a unsigned integer registry entry
-  bool writeUnsignedEntry(const FXchar *section,const FXchar *key,FXuint val);
+  bool writeUIntEntry(const FXchar *section,const FXchar *key,FXuint val);
+
+  /// Write a 64-bit long integer registry entry
+  bool writeLongEntry(const FXchar *section,const FXchar *key,FXlong val);
+
+  /// Write a 64-bit unsigned long integer registry entry
+  bool writeULongEntry(const FXchar *section,const FXchar *key,FXulong val);
 
   /// Write a double-precision floating point registry entry
   bool writeRealEntry(const FXchar *section,const FXchar *key,FXdouble val);
@@ -116,7 +128,7 @@ public:
   bool writeColorEntry(const FXchar *section,const FXchar *key,FXColor val);
 
   /// Write a boolean value entry
-  bool writeBoolEntry(const FXchar *section,const FXchar *key,FXbool val);
+  bool writeBoolEntry(const FXchar *section,const FXchar *key,bool val);
 
   /// Delete a registry entry
   bool deleteEntry(const FXchar *section,const FXchar *key);

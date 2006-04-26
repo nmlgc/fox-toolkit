@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXIconDict.cpp,v 1.12 2006/01/22 17:58:31 fox Exp $                      *
+* $Id: FXIconDict.cpp,v 1.13 2006/03/25 18:03:44 fox Exp $                      *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -81,7 +81,7 @@ FXIconDict::FXIconDict(FXApp* app,const FXString& p):path(p){
 
 
 // Search for the icon name along the search path, and try to load it
-void *FXIconDict::createData(const void* ptr){
+void *FXIconDict::createData(void* ptr){
   return source->loadIconFile(FXPath::search(path,(const char*)ptr));
   }
 

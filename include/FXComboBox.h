@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXComboBox.h,v 1.46 2006/01/27 02:07:44 fox Exp $                        *
+* $Id: FXComboBox.h,v 1.47 2006/03/31 07:33:01 fox Exp $                        *
 ********************************************************************************/
 #ifndef FXCOMBOBOX_H
 #define FXCOMBOBOX_H
@@ -124,10 +124,10 @@ public:
   virtual void layout();
 
   /// Return true if combobox is editable
-  FXbool isEditable() const;
+  bool isEditable() const;
 
   /// Set editable state
-  void setEditable(FXbool edit=TRUE);
+  void setEditable(bool edit=true);
 
   /// Set the text
   void setText(const FXString& text);
@@ -157,10 +157,10 @@ public:
   void setNumVisible(FXint nvis);
 
   /// Return true if current item
-  FXbool isItemCurrent(FXint index) const;
+  bool isItemCurrent(FXint index) const;
 
   /// Set the current item (index is zero-based)
-  void setCurrentItem(FXint index,FXbool notify=FALSE);
+  void setCurrentItem(FXint index,bool notify=false);
 
   /// Get the current item's index
   FXint getCurrentItem() const;
@@ -229,7 +229,7 @@ public:
   void* getItemData(FXint index) const;
 
   /// Is the pane shown
-  FXbool isPaneShown() const;
+  bool isPaneShown() const;
 
   /// Sort items using current sort function
   void sortItems();

@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXTable.h,v 1.166 2006/02/16 04:08:11 fox Exp $                          *
+* $Id: FXTable.h,v 1.167 2006/03/31 07:33:03 fox Exp $                          *
 ********************************************************************************/
 #ifndef FXTABLE_H
 #define FXTABLE_H
@@ -126,7 +126,7 @@ public:
   virtual FXString getText() const { return label; }
 
   /// Change item's icon, deleting the old icon if it was owned
-  virtual void setIcon(FXIcon* icn,FXbool owned=FALSE);
+  virtual void setIcon(FXIcon* icn,bool owned=false);
 
   /// Return item's icon
   virtual FXIcon* getIcon() const { return icon; }
@@ -138,28 +138,28 @@ public:
   void* getData() const { return data; }
 
   /// Make item draw as focused
-  virtual void setFocus(FXbool focus);
+  virtual void setFocus(bool focus);
 
   /// Return true if item has focus
-  FXbool hasFocus() const { return (state&FOCUS)!=0; }
+  bool hasFocus() const { return (state&FOCUS)!=0; }
 
   /// Select item
-  virtual void setSelected(FXbool selected);
+  virtual void setSelected(bool selected);
 
   /// Return true if this item is selected
-  FXbool isSelected() const { return (state&SELECTED)!=0; }
+  bool isSelected() const { return (state&SELECTED)!=0; }
 
   /// Enable or disable item
-  virtual void setEnabled(FXbool enabled);
+  virtual void setEnabled(bool enabled);
 
   /// Return true if this item is enabled
-  FXbool isEnabled() const { return (state&DISABLED)==0; }
+  bool isEnabled() const { return (state&DISABLED)==0; }
 
   /// Make item draggable
-  virtual void setDraggable(FXbool draggable);
+  virtual void setDraggable(bool draggable);
 
   /// Return true if this item is draggable
-  FXbool isDraggable() const { return (state&DRAGGABLE)!=0; }
+  bool isDraggable() const { return (state&DRAGGABLE)!=0; }
 
   /// Change item content justification
   virtual void setJustify(FXuint justify=RIGHT|CENTER_Y);
@@ -512,23 +512,23 @@ public:
   /// Return number of visible columns
   FXint getVisibleColumns() const { return visiblecols; }
 
-  /// Return TRUE if table is editable
-  FXbool isEditable() const;
+  /// Return true if table is editable
+  bool isEditable() const;
 
   /// Set editable flag
-  void setEditable(FXbool edit=TRUE);
+  void setEditable(bool edit=true);
 
   /// Show or hide horizontal grid
-  void showHorzGrid(FXbool on=TRUE);
+  void showHorzGrid(bool on=true);
 
   /// Is horizontal grid shown
-  FXbool isHorzGridShown() const { return hgrid; }
+  bool isHorzGridShown() const { return hgrid; }
 
   /// Show or hide vertical grid
-  void showVertGrid(FXbool on=TRUE);
+  void showVertGrid(bool on=true);
 
   /// Is vertical grid shown
-  FXbool isVertGridShown() const { return vgrid; }
+  bool isVertGridShown() const { return vgrid; }
 
   /// Get number of rows
   FXint getNumRows() const { return nrows; }
@@ -579,12 +579,12 @@ public:
   /**
   * End input mode and accept the new value from the control.
   * The item in the cell will be set to the value from the control,
-  * and the control will be deleted.  If TRUE is passed, a SEL_REPLACED
+  * and the control will be deleted.  If true is passed, a SEL_REPLACED
   * callback will be generated to signify to the target that this call
   * has a new value.  You can also accept the input by sending the table
   * an ID_ACCEPT_INPUT message.
   */
-  virtual void acceptInput(FXbool notify=FALSE);
+  virtual void acceptInput(bool notify=false);
 
   /**
   * Determine column containing x.
@@ -604,40 +604,40 @@ public:
   FXTableItem *getItem(FXint row,FXint col) const;
 
   /// Replace the item with a [possibly subclassed] item
-  void setItem(FXint row,FXint col,FXTableItem* item,FXbool notify=FALSE);
+  void setItem(FXint row,FXint col,FXTableItem* item,bool notify=false);
 
   /// Set the table size to nr rows and nc columns; all existing items will be removed
-  virtual void setTableSize(FXint nr,FXint nc,FXbool notify=FALSE);
+  virtual void setTableSize(FXint nr,FXint nc,bool notify=false);
 
   /// Insert new row
-  virtual void insertRows(FXint row,FXint nr=1,FXbool notify=FALSE);
+  virtual void insertRows(FXint row,FXint nr=1,bool notify=false);
 
   /// Insert new column
-  virtual void insertColumns(FXint col,FXint nc=1,FXbool notify=FALSE);
+  virtual void insertColumns(FXint col,FXint nc=1,bool notify=false);
 
   /// Remove rows of cells
-  virtual void removeRows(FXint row,FXint nr=1,FXbool notify=FALSE);
+  virtual void removeRows(FXint row,FXint nr=1,bool notify=false);
 
   /// Remove column of cells
-  virtual void removeColumns(FXint col,FXint nc=1,FXbool notify=FALSE);
+  virtual void removeColumns(FXint col,FXint nc=1,bool notify=false);
 
   /// Extract item from table
-  virtual FXTableItem* extractItem(FXint row,FXint col,FXbool notify=FALSE);
+  virtual FXTableItem* extractItem(FXint row,FXint col,bool notify=false);
 
   /// Clear single cell
-  virtual void removeItem(FXint row,FXint col,FXbool notify=FALSE);
+  virtual void removeItem(FXint row,FXint col,bool notify=false);
 
   /// Clear all cells in the given range
-  virtual void removeRange(FXint startrow,FXint endrow,FXint startcol,FXint endcol,FXbool notify=FALSE);
+  virtual void removeRange(FXint startrow,FXint endrow,FXint startcol,FXint endcol,bool notify=false);
 
   /// Remove all items from table
-  virtual void clearItems(FXbool notify=FALSE);
+  virtual void clearItems(bool notify=false);
 
   /// Scroll to make cell at r,c fully visible
   virtual void makePositionVisible(FXint r,FXint c);
 
-  /// Return TRUE if item partially visible
-  FXbool isItemVisible(FXint r,FXint c) const;
+  /// Return true if item partially visible
+  bool isItemVisible(FXint r,FXint c) const;
 
   /**
   * Change column header height mode to fixed or variable.
@@ -776,13 +776,13 @@ public:
   FXuint getRowJustify(FXint index) const;
 
   /// Modify cell text
-  void setItemText(FXint r,FXint c,const FXString& text,FXbool notify=FALSE);
+  void setItemText(FXint r,FXint c,const FXString& text,bool notify=false);
 
   /// Return cell text
   FXString getItemText(FXint r,FXint c) const;
 
   /// Modify cell icon, deleting the old icon if it was owned
-  void setItemIcon(FXint r,FXint c,FXIcon* icon,FXbool owned=FALSE,FXbool notify=FALSE);
+  void setItemIcon(FXint r,FXint c,FXIcon* icon,bool owned=false,bool notify=false);
 
   /// Return cell icon
   FXIcon* getItemIcon(FXint r,FXint c) const;
@@ -804,8 +804,8 @@ public:
   * a number of rows separated by a character from the set rs.
   * Cells outside the given cell range are unaffected.
   */
-  void overlayText(FXint startrow,FXint endrow,FXint startcol,FXint endcol,const FXchar* text,FXint size,const FXchar* cs="\t,",const FXchar* rs="\n",FXbool notify=FALSE);
-  void overlayText(FXint startrow,FXint endrow,FXint startcol,FXint endcol,const FXString& text,const FXchar* cs="\t,",const FXchar* rs="\n",FXbool notify=FALSE);
+  void overlayText(FXint startrow,FXint endrow,FXint startcol,FXint endcol,const FXchar* text,FXint size,const FXchar* cs="\t,",const FXchar* rs="\n",bool notify=false);
+  void overlayText(FXint startrow,FXint endrow,FXint startcol,FXint endcol,const FXString& text,const FXchar* cs="\t,",const FXchar* rs="\n",bool notify=false);
 
   /**
   * Determine the number of rows and columns in a block of text
@@ -815,8 +815,8 @@ public:
   void countText(FXint& nr,FXint& nc,const FXchar* text,FXint size,const FXchar* cs="\t,",const FXchar* rs="\n") const;
   void countText(FXint& nr,FXint& nc,const FXString& text,const FXchar* cs="\t,",const FXchar* rs="\n") const;
 
-  /// Return TRUE if its a spanning cell
-  FXbool isItemSpanning(FXint r,FXint c) const;
+  /// Return true if its a spanning cell
+  bool isItemSpanning(FXint r,FXint c) const;
 
   /// Repaint cells between grid lines sr,er and grid lines sc,ec
   void updateRange(FXint sr,FXint er,FXint sc,FXint ec) const;
@@ -825,13 +825,13 @@ public:
   void updateItem(FXint r,FXint c) const;
 
   /// Enable item
-  virtual FXbool enableItem(FXint r,FXint c);
+  virtual bool enableItem(FXint r,FXint c);
 
   /// Disable item
-  virtual FXbool disableItem(FXint r,FXint c);
+  virtual bool disableItem(FXint r,FXint c);
 
   /// Is item enabled
-  FXbool isItemEnabled(FXint r,FXint c) const;
+  bool isItemEnabled(FXint r,FXint c) const;
 
   /**
   * Change item justification.  Horizontal justification is controlled by passing
@@ -874,7 +874,7 @@ public:
   FXStipplePattern getItemStipple(FXint r,FXint c) const;
 
   /// Change current item
-  virtual void setCurrentItem(FXint r,FXint c,FXbool notify=FALSE);
+  virtual void setCurrentItem(FXint r,FXint c,bool notify=false);
 
   /// Get row number of current item
   FXint getCurrentRow() const { return current.row; }
@@ -883,7 +883,7 @@ public:
   FXint getCurrentColumn() const { return current.col; }
 
   /// Is item current
-  FXbool isItemCurrent(FXint r,FXint c) const;
+  bool isItemCurrent(FXint r,FXint c) const;
 
   /// Change anchor item
   void setAnchorItem(FXint r,FXint c);
@@ -907,31 +907,31 @@ public:
   FXint getSelEndColumn() const { return selection.to.col; }
 
   /// Is cell selected
-  FXbool isItemSelected(FXint r,FXint c) const;
+  bool isItemSelected(FXint r,FXint c) const;
 
   /// Is row of cells selected
-  FXbool isRowSelected(FXint r) const;
+  bool isRowSelected(FXint r) const;
 
   /// Is column selected
-  FXbool isColumnSelected(FXint c) const;
+  bool isColumnSelected(FXint c) const;
 
   /// Is anything selected
-  FXbool isAnythingSelected() const;
+  bool isAnythingSelected() const;
 
   /// Select a row
-  virtual FXbool selectRow(FXint row,FXbool notify=FALSE);
+  virtual bool selectRow(FXint row,bool notify=false);
 
   /// Select a column
-  virtual FXbool selectColumn(FXint col,FXbool notify=FALSE);
+  virtual bool selectColumn(FXint col,bool notify=false);
 
   /// Select range
-  virtual FXbool selectRange(FXint startrow,FXint endrow,FXint startcol,FXint endcol,FXbool notify=FALSE);
+  virtual bool selectRange(FXint startrow,FXint endrow,FXint startcol,FXint endcol,bool notify=false);
 
   /// Extend selection
-  virtual FXbool extendSelection(FXint r,FXint c,FXbool notify=FALSE);
+  virtual bool extendSelection(FXint r,FXint c,bool notify=false);
 
   /// Kill selection
-  virtual FXbool killSelection(FXbool notify=FALSE);
+  virtual bool killSelection(bool notify=false);
 
   /// Change font
   void setFont(FXFont* fnt);
@@ -982,16 +982,16 @@ public:
   FXuint getTableStyle() const;
 
   /// Set column renumbering
-  void setColumnRenumbering(FXbool flag);
+  void setColumnRenumbering(bool flag);
 
   /// Get column renumbering
-  FXbool getColumnRenumbering() const;
+  bool getColumnRenumbering() const;
 
   /// Set row renumbering
-  void setRowRenumbering(FXbool flag);
+  void setRowRenumbering(bool flag);
 
   /// Get row renumbering
-  FXbool getRowRenumbering() const;
+  bool getRowRenumbering() const;
 
   /// Change help text
   void setHelpText(const FXString& text){ help=text; }

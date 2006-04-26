@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXDocument.h,v 1.16 2006/01/22 17:58:01 fox Exp $                        *
+* $Id: FXDocument.h,v 1.17 2006/04/02 19:33:22 fox Exp $                        *
 ********************************************************************************/
 #ifndef FXDOCUMENT_H
 #define FXDOCUMENT_H
@@ -41,7 +41,7 @@ class FXAPI FXDocument : public FXObject {
 private:
   FXString     title;             // Title to appear above windows
   FXString     filename;          // File name to save to
-  FXbool       modified;          // Document has been modified
+  bool         modified;          // Document has been modified
 public:
   long onUpdTitle(FXObject*,FXSelector,void*);
   long onUpdFilename(FXObject*,FXSelector,void*);
@@ -57,10 +57,10 @@ public:
   FXDocument();
 
   /// Return true if document is modified
-  FXbool isModified() const { return modified; }
+  bool isModified() const { return modified; }
 
   /// Set its modified state
-  void setModified(FXbool mdfy=TRUE){ modified=mdfy; }
+  void setModified(bool mdfy=true){ modified=mdfy; }
 
   /// Set document title
   void setTitle(const FXString& name);

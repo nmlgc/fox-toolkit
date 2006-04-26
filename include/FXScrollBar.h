@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXScrollBar.h,v 1.15 2006/01/22 17:58:09 fox Exp $                       *
+* $Id: FXScrollBar.h,v 1.16 2006/03/31 07:33:03 fox Exp $                       *
 ********************************************************************************/
 #ifndef FXSCROLLBAR_H
 #define FXSCROLLBAR_H
@@ -79,11 +79,11 @@ protected:
   FXuchar    mode;            // Current mode of control
 protected:
   FXScrollBar();
-  void drawButton(FXDCWindow& dc,FXint x,FXint y,FXint w,FXint h,FXbool down);
-  void drawLeftArrow(FXDCWindow& dc,FXint x,FXint y,FXint w,FXint h,FXbool down);
-  void drawRightArrow(FXDCWindow& dc,FXint x,FXint y,FXint w,FXint h,FXbool down);
-  void drawUpArrow(FXDCWindow& dc,FXint x,FXint y,FXint w,FXint h,FXbool down);
-  void drawDownArrow(FXDCWindow& dc,FXint x,FXint y,FXint w,FXint h,FXbool down);
+  void drawButton(FXDCWindow& dc,FXint x,FXint y,FXint w,FXint h,bool down);
+  void drawLeftArrow(FXDCWindow& dc,FXint x,FXint y,FXint w,FXint h,bool down);
+  void drawRightArrow(FXDCWindow& dc,FXint x,FXint y,FXint w,FXint h,bool down);
+  void drawUpArrow(FXDCWindow& dc,FXint x,FXint y,FXint w,FXint h,bool down);
+  void drawDownArrow(FXDCWindow& dc,FXint x,FXint y,FXint w,FXint h,bool down);
 protected:
   enum {
     MODE_NONE,

@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXColorWell.h,v 1.35 2006/01/22 17:57:59 fox Exp $                       *
+* $Id: FXColorWell.h,v 1.36 2006/03/31 07:33:01 fox Exp $                       *
 ********************************************************************************/
 #ifndef FXCOLORWELL_H
 #define FXCOLORWELL_H
@@ -134,7 +134,7 @@ public:
   virtual void killFocus();
 
   /// Set color
-  void setRGBA(FXColor clr,FXbool notify=FALSE);
+  void setRGBA(FXColor clr,bool notify=false);
 
   /// Get color
   FXColor getRGBA() const { return rgba; }
@@ -152,10 +152,10 @@ public:
   const FXString& getTipText() const { return tip; }
 
   /// Return true if only opaque colors allowed
-  FXbool isOpaqueOnly() const;
+  bool isOpaqueOnly() const;
 
   /// Change opaque only mode
-  void setOpaqueOnly(FXbool opaque);
+  void setOpaqueOnly(bool opaque);
 
   /// Save color well to a stream
   virtual void save(FXStream& store) const;

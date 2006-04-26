@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXStatusBar.cpp,v 1.16 2006/01/22 17:58:42 fox Exp $                     *
+* $Id: FXStatusBar.cpp,v 1.17 2006/03/31 07:33:11 fox Exp $                     *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -245,7 +245,7 @@ void FXStatusBar::layout(){
 
 
 // Show or hide the drag corner
-void FXStatusBar::setCornerStyle(FXbool withcorner){
+void FXStatusBar::setCornerStyle(bool withcorner){
   FXuint opts=withcorner ? (options|STATUSBAR_WITH_DRAGCORNER) : (options&~STATUSBAR_WITH_DRAGCORNER);
   if(options!=opts){
     options=opts;
@@ -255,8 +255,8 @@ void FXStatusBar::setCornerStyle(FXbool withcorner){
   }
 
 
-// Return TRUE if drag corner shown
-FXbool FXStatusBar::getCornerStyle() const {
+// Return true if drag corner shown
+bool FXStatusBar::getCornerStyle() const {
   return (options&STATUSBAR_WITH_DRAGCORNER)!=0;
   }
 

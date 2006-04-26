@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXDirDialog.cpp,v 1.27 2006/01/22 17:58:22 fox Exp $                     *
+* $Id: FXDirDialog.cpp,v 1.28 2006/03/31 07:33:05 fox Exp $                     *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -118,25 +118,25 @@ FXString FXDirDialog::getDirectory() const {
 
 
 // Return TRUE if showing files as well as directories
-FXbool FXDirDialog::showFiles() const {
+bool FXDirDialog::showFiles() const {
   return dirbox->showFiles();
   }
 
 
 // Show or hide normal files
-void FXDirDialog::showFiles(FXbool showing){
+void FXDirDialog::showFiles(bool showing){
   dirbox->showFiles(showing);
   }
 
 
 // Return TRUE if showing hidden files
-FXbool FXDirDialog::showHiddenFiles() const {
+bool FXDirDialog::showHiddenFiles() const {
   return dirbox->showHiddenFiles();
   }
 
 
 // Show or hide hidden files
-void FXDirDialog::showHiddenFiles(FXbool showing){
+void FXDirDialog::showHiddenFiles(bool showing){
   dirbox->showHiddenFiles(showing);
   }
 

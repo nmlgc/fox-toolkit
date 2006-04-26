@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXRectangle.h,v 1.19 2006/01/22 17:58:08 fox Exp $                       *
+* $Id: FXRectangle.h,v 1.22 2006/04/23 18:00:36 fox Exp $                       *
 ********************************************************************************/
 #ifndef FXRECTANGLE_H
 #define FXRECTANGLE_H
@@ -102,6 +102,9 @@ public:
 
   /// Set value from components
   FXRectangle& set(FXshort xx,FXshort yy,FXshort ww,FXshort hh){ x=xx; y=yy; w=ww; h=hh; return *this; }
+
+  /// Pieces of this rectangle after taking a bite out of it
+  void bite(FXRectangle pieces[],const FXRectangle& b) const;
 
   /// Union and intersection with rectangle
   FXRectangle& operator+=(const FXRectangle &r);

@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXVisual.cpp,v 1.79 2006/01/22 17:58:51 fox Exp $                        *
+* $Id: FXVisual.cpp,v 1.82 2006/04/21 20:39:46 fox Exp $                        *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -28,6 +28,7 @@
 #include "FXThread.h"
 #include "FXStream.h"
 #include "FXString.h"
+#include "FXElement.h"
 #include "FXSize.h"
 #include "FXPoint.h"
 #include "FXRectangle.h"
@@ -124,7 +125,7 @@ FXVisual::FXVisual(){
   info=NULL;
   visual=NULL;
   colormap=0;
-  freemap=FALSE;
+  freemap=false;
 #ifndef WIN32
   gc=0;
   scrollgc=0;
@@ -147,7 +148,7 @@ FXVisual::FXVisual(FXApp* a,FXuint flgs,FXuint d):FXId(a){
   info=NULL;
   visual=NULL;
   colormap=0;
-  freemap=FALSE;
+  freemap=false;
 #ifndef WIN32
   visual=NULL;
   gc=0;
@@ -255,17 +256,19 @@ void FXVisual::setupdirectcolor(){
   register FXPixel redmask,greenmask,bluemask;
   register FXPixel redmax,greenmax,bluemax;
   register FXuint  mapsize,maxcols,i,j,r,g,b,emax,rr,gg,bb,d;
-  register FXuint  bestmatchr,bestmatchg,bestmatchb;
+  register FXuint  bestmatchr,bestmatchg,bestmatchb,gottable,allocedcolor;
   register FXdouble mindist,dist,gamma;
-  register FXbool gottable,allocedcolor;
-  XColor *table,color;
-  FXPixel *alloced;
+  XColor  table[MAX_MAPSIZE],color;
+  FXPixel alloced[MAX_MAPSIZE];
 
   // Get gamma
   gamma=getApp()->reg().readRealEntry("SETTINGS","displaygamma",1.0);
 
   // Get map size
   mapsize=((Visual*)visual)->map_entries;
+
+  // Just in case you're on a high-end system
+  FXASSERT(mapsize<=MAX_MAPSIZE);
 
   // Arrangement of pixels
   redmask=((Visual*)visual)->red_mask;
@@ -293,10 +296,6 @@ void FXVisual::setupdirectcolor(){
   emax=FXMAX3(redmax,greenmax,bluemax);
 
   gottable=0;
-
-  // Allocate color table
-  FXMALLOC(&table,XColor,mapsize);
-  FXMALLOC(&alloced,FXPixel,mapsize);
 
   // Allocate ramp
   for(i=r=g=b=0; i<=emax; i++){
@@ -380,10 +379,6 @@ void FXVisual::setupdirectcolor(){
       }
     }
 
-  // Free table
-  FXFREE(&table);
-  FXFREE(&alloced);
-
   // What did we get
   FXTRACE((150,"Direct color:\n"));
   FXTRACE((150,"  visual id    = 0x%02lx\n",((Visual*)visual)->visualid));
@@ -402,10 +397,9 @@ void FXVisual::setupdirectcolor(){
 
 // Setup for pseudo color
 void FXVisual::setuppseudocolor(){
-  register FXuint r,g,b,mapsize,bestmatch,maxcols,i,d;
+  register FXuint r,g,b,mapsize,bestmatch,maxcols,gottable,allocedcolor,i,d;
   register FXdouble mindist,dist,gamma,dr,dg,db;
   register FXPixel redmax,greenmax,bluemax;
-  register FXbool gottable,allocedcolor;
   XColor table[256],color;
 
   // Get gamma
@@ -537,7 +531,7 @@ void FXVisual::setupstaticcolor(){
   register FXuint mapsize,bestmatch,i,nr,ng,nb,r,g,b,j,d;
   register FXdouble mindist,dist,gamma,dr,dg,db;
   register FXPixel redmax,greenmax,bluemax;
-  FXbool rcnt[256],gcnt[256],bcnt[256];
+  FXuchar rcnt[256],gcnt[256],bcnt[256];
   XColor table[256],color;
 
   // Get gamma
@@ -640,9 +634,8 @@ void FXVisual::setupstaticcolor(){
 
 // Setup for gray scale
 void FXVisual::setupgrayscale(){
-  register FXuint g,bestmatch,mapsize,maxcols,graymax,i,d;
+  register FXuint g,bestmatch,mapsize,maxcols,graymax,gottable,allocedcolor,i,d;
   register FXdouble mindist,dist,gamma,dr,dg,db;
-  register FXbool gottable,allocedcolor;
   XColor table[256],color;
   FXPixel alloced[256];
 
@@ -853,7 +846,7 @@ void FXVisual::setupcolormap(){
     if((flags&VISUAL_OWNCOLORMAP) || (visual!=DefaultVisual(DISPLAY(getApp()),DefaultScreen(DISPLAY(getApp()))))){
       colormap=XCreateColormap(DISPLAY(getApp()),RootWindow(DISPLAY(getApp()),DefaultScreen(DISPLAY(getApp()))),((Visual*)visual),AllocNone);
       FXTRACE((150,"%s::create: allocate colormap\n",getClassName()));
-      freemap=TRUE;
+      freemap=true;
       }
     else{
       //getstdcolormap(DISPLAY(getApp()),((Visual*)visual)->visualid,stdmap);
@@ -873,7 +866,7 @@ void FXVisual::setupcolormap(){
 
 
 // Make GC for given visual and depth; graphics exposures optional
-void* FXVisual::setupgc(FXbool gex){
+void* FXVisual::setupgc(bool gex){
   XGCValues gval;
   FXID drawable;
   GC gg;
@@ -949,7 +942,6 @@ static HPALETTE createAllPurposePalette(){
         }
       }
     }
-
 
   // Fill in the rest
   palette.palVersion=0x300;
@@ -1073,8 +1065,8 @@ void FXVisual::create(){
       setupcolormap();
 
       // Make GC's for this visual
-      gc=setupgc(FALSE);
-      scrollgc=setupgc(TRUE);
+      gc=setupgc(false);
+      scrollgc=setupgc(true);
 
       xid=1;
 #else
@@ -1096,7 +1088,7 @@ void FXVisual::create(){
         numblue=6;
         numcolors=256;
         type=VISUALTYPE_INDEX;
-        freemap=TRUE;
+        freemap=true;
         }
 
       // True color mode; find out how deep
@@ -1154,7 +1146,7 @@ void FXVisual::detach(){
   if(xid){
     FXTRACE((100,"%s::detach %p\n",getClassName(),this));
     colormap=0;
-    freemap=FALSE;
+    freemap=false;
     xid=0;
     }
   }
@@ -1173,7 +1165,7 @@ void FXVisual::destroy(){
       if(freemap){DeleteObject((HPALETTE)colormap);}
 #endif
       colormap=0;
-      freemap=FALSE;
+      freemap=false;
       }
     xid=0;
     }

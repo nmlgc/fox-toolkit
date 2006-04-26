@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXRectangle.cpp,v 1.16 2006/01/22 17:58:39 fox Exp $                     *
+* $Id: FXRectangle.cpp,v 1.21 2006/04/23 18:00:36 fox Exp $                     *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -137,6 +137,34 @@ FXRectangle FXRectangle::operator*(const FXRectangle& r) const {
   return FXRectangle(xx,yy,ww,hh);
   }
 
+
+// Pieces of this rectangle after taking a bite out of it
+void FXRectangle::bite(FXRectangle pieces[],const FXRectangle& b) const {
+  pieces[0].x=pieces[1].x=x;
+  pieces[0].y=pieces[3].y=y;
+  pieces[2].w=pieces[3].w=x+w;
+  pieces[1].h=pieces[2].h=y+h;
+  pieces[1].w=pieces[2].x=b.x;
+  pieces[0].h=pieces[1].y=b.y;
+  pieces[0].w=pieces[3].x=b.x+b.w;
+  pieces[2].y=pieces[3].h=b.y+b.h;
+  if(pieces[1].w<pieces[1].x) pieces[1].w=pieces[2].x=pieces[1].x;
+  if(pieces[0].h<pieces[0].y) pieces[0].h=pieces[1].y=pieces[0].y;
+  if(pieces[3].x>pieces[3].w) pieces[3].x=pieces[0].w=pieces[3].w;
+  if(pieces[2].y>pieces[2].h) pieces[2].y=pieces[3].h=pieces[2].h;
+  if(pieces[1].w>pieces[3].x) pieces[1].w=pieces[2].x=pieces[3].x;
+  if(pieces[0].h>pieces[2].y) pieces[0].h=pieces[1].y=pieces[2].y;
+  if(pieces[3].x<pieces[1].w) pieces[3].x=pieces[0].w=pieces[1].w;
+  if(pieces[2].y<pieces[0].h) pieces[2].y=pieces[3].h=pieces[0].h;
+  pieces[0].w-=pieces[0].x;
+  pieces[0].h-=pieces[0].y;
+  pieces[1].w-=pieces[1].x;
+  pieces[1].h-=pieces[1].y;
+  pieces[2].w-=pieces[2].x;
+  pieces[2].h-=pieces[2].y;
+  pieces[3].w-=pieces[3].x;
+  pieces[3].h-=pieces[3].y;
+  }
 
 
 // Save object to a stream

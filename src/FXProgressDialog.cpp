@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXProgressDialog.cpp,v 1.26 2006/01/22 17:58:37 fox Exp $                *
+* $Id: FXProgressDialog.cpp,v 1.27 2006/03/31 07:33:11 fox Exp $                *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -78,7 +78,7 @@ FXIMPLEMENT(FXProgressDialog,FXDialogBox,FXProgressDialogMap,ARRAYNUMBER(FXProgr
 
 // Serialization
 FXProgressDialog::FXProgressDialog(){
-  cancelled=FALSE;
+  cancelled=false;
   }
 
 
@@ -95,14 +95,14 @@ FXProgressDialog::FXProgressDialog(FXWindow* owner,const FXString& caption,const
     cancel->hide();
     separator->hide();
     }
-  cancelled=FALSE;
+  cancelled=false;
   }
 
 
 // Close dialog, cancelling operation in progress
 long FXProgressDialog::onCmdCancel(FXObject* sender,FXSelector sel,void* ptr){
   FXDialogBox::onCmdCancel(sender,sel,ptr);
-  setCancelled(TRUE);
+  setCancelled(true);
   return 1;
   }
 

@@ -98,7 +98,7 @@ CXXFLAGS = @CXXFLAGS@ @X_CFLAGS@
 INCLUDES = -I$(top_srcdir)/include -I$(top_builddir)/include
 RESWRAP = $(top_builddir)/utils/reswrap
 SUFFIXES = .gif .bmp
-LDADD = ../src/libFOX-1.6.la -lm
+LDADD = ../src/libFOX-1.7.la -lm
 
 bin_PROGRAMS = shutterbug
 
@@ -132,7 +132,8 @@ $(ICONS)
 CLEANFILES = icons.h icons.cpp
 
 EXTRA_DIST = $(man_MANS) \
-             Makefile.bc
+             Makefile.bc \
+             Makefile.wc
 
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_CLEAN_FILES = 
@@ -151,7 +152,7 @@ X_PRE_LIBS = @X_PRE_LIBS@
 shutterbug_OBJECTS =  icons.$(OBJEXT) ShutterBug.$(OBJEXT) \
 Snapper.$(OBJEXT)
 shutterbug_LDADD = $(LDADD)
-shutterbug_DEPENDENCIES =  ../src/libFOX-1.6.la
+shutterbug_DEPENDENCIES =  ../src/libFOX-1.7.la
 shutterbug_LDFLAGS = 
 CXXCOMPILE = $(CXX) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
 LTCXXCOMPILE = $(LIBTOOL) --mode=compile $(CXX) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
@@ -353,6 +354,7 @@ icons.o: icons.cpp
 ShutterBug.o: ShutterBug.cpp ../include/fx.h ../include/fxver.h \
 	../include/fxdefs.h ../include/fxascii.h ../include/fxunicode.h \
 	../include/FXHash.h ../include/FXException.h \
+	../include/FXElement.h ../include/FXArray.h \
 	../include/FXThread.h ../include/FXStream.h ../include/FXIO.h \
 	../include/FXFile.h ../include/FXPipe.h ../include/FXSocket.h \
 	../include/FXFileStream.h ../include/FXMemoryStream.h \
@@ -448,6 +450,7 @@ ShutterBug.o: ShutterBug.cpp ../include/fx.h ../include/fxver.h \
 Snapper.o: Snapper.cpp ../include/fx.h ../include/fxver.h \
 	../include/fxdefs.h ../include/fxascii.h ../include/fxunicode.h \
 	../include/FXHash.h ../include/FXException.h \
+	../include/FXElement.h ../include/FXArray.h \
 	../include/FXThread.h ../include/FXStream.h ../include/FXIO.h \
 	../include/FXFile.h ../include/FXPipe.h ../include/FXSocket.h \
 	../include/FXFileStream.h ../include/FXMemoryStream.h \

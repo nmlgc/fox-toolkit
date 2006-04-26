@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXPopup.h,v 1.35 2006/01/22 17:58:07 fox Exp $                           *
+* $Id: FXPopup.h,v 1.36 2006/03/31 07:33:03 fox Exp $                           *
 ********************************************************************************/
 #ifndef FXPOPUP_H
 #define FXPOPUP_H
@@ -181,10 +181,10 @@ public:
   void setOrientation(FXuint orient);
 
   /// Return shrinkwrap mode
-  FXbool getShrinkWrap() const;
+  bool getShrinkWrap() const;
 
   /// Change shrinkwrap mode
-  void setShrinkWrap(FXbool sw);
+  void setShrinkWrap(bool sw);
 
   virtual bool doesSaveUnder() const;
 

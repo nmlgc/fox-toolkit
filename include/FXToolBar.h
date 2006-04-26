@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXToolBar.h,v 1.24 2006/01/22 17:58:11 fox Exp $                         *
+* $Id: FXToolBar.h,v 1.27 2006/04/05 04:27:25 fox Exp $                         *
 ********************************************************************************/
 #ifndef FXTOOLBAR_H
 #define FXTOOLBAR_H
@@ -67,10 +67,10 @@ public:
   virtual FXint getDefaultHeight();
 
   /// Dock and optionally flip orientation of toolbar
-  virtual void dock(FXDockSite* docksite,FXWindow* before=NULL,FXbool notify=FALSE);
+  virtual void dock(FXDockSite* docksite,FXWindow* before=NULL,bool notify=false);
 
   /// Dock and optionally flip orientation of toolbar
-  virtual void dock(FXDockSite* docksite,FXint localx,FXint localy,FXbool notify);
+  virtual void dock(FXDockSite* docksite,FXint localx,FXint localy,bool notify=false);
 
   /// Set docking side
   void setDockingSide(FXuint side=LAYOUT_SIDE_TOP);

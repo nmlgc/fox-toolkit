@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXFileDialog.cpp,v 1.51 2006/01/23 06:03:16 fox Exp $                    *
+* $Id: FXFileDialog.cpp,v 1.53 2006/03/31 07:33:06 fox Exp $                    *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -94,8 +94,8 @@ void FXFileDialog::initdialog(){
   filebox->cancelButton()->setSelector(FXDialogBox::ID_CANCEL);
   setWidth(getApp()->reg().readIntEntry("File Dialog","width",getWidth()));
   setHeight(getApp()->reg().readIntEntry("File Dialog","height",getHeight()));
-  setFileBoxStyle(getApp()->reg().readUnsignedEntry("File Dialog","style",getFileBoxStyle()));
-  showHiddenFiles(getApp()->reg().readUnsignedEntry("File Dialog","showhidden",showHiddenFiles()));
+  setFileBoxStyle(getApp()->reg().readUIntEntry("File Dialog","style",getFileBoxStyle()));
+  showHiddenFiles(getApp()->reg().readUIntEntry("File Dialog","showhidden",showHiddenFiles()));
   }
 
 
@@ -104,8 +104,8 @@ void FXFileDialog::hide(){
   FXDialogBox::hide();
   getApp()->reg().writeIntEntry("File Dialog","width",getWidth());
   getApp()->reg().writeIntEntry("File Dialog","height",getHeight());
-  getApp()->reg().writeUnsignedEntry("File Dialog","style",getFileBoxStyle());
-  getApp()->reg().writeUnsignedEntry("File Dialog","showhidden",showHiddenFiles());
+  getApp()->reg().writeUIntEntry("File Dialog","style",getFileBoxStyle());
+  getApp()->reg().writeUIntEntry("File Dialog","showhidden",showHiddenFiles());
   }
 
 
@@ -191,13 +191,13 @@ FXint FXFileDialog::getNumPatterns() const {
 
 
 // Allow pattern entry
-void FXFileDialog::allowPatternEntry(FXbool allow){
+void FXFileDialog::allowPatternEntry(bool allow){
   filebox->allowPatternEntry(allow);
   }
 
 
 // Return TRUE if pattern entry is allowed
-FXbool FXFileDialog::allowPatternEntry() const {
+bool FXFileDialog::allowPatternEntry() const {
   return filebox->allowPatternEntry();
   }
 
@@ -251,25 +251,25 @@ FXuint FXFileDialog::getMatchMode() const {
 
 
 // Return TRUE if showing hidden files
-FXbool FXFileDialog::showHiddenFiles() const {
+bool FXFileDialog::showHiddenFiles() const {
   return filebox->showHiddenFiles();
   }
 
 
 // Show or hide hidden files
-void FXFileDialog::showHiddenFiles(FXbool showing){
+void FXFileDialog::showHiddenFiles(bool showing){
   filebox->showHiddenFiles(showing);
   }
 
 
 // Return TRUE if image preview on
-FXbool FXFileDialog::showImages() const {
+bool FXFileDialog::showImages() const {
   return filebox->showImages();
   }
 
 
 // Show or hide preview images
-void FXFileDialog::showImages(FXbool showing){
+void FXFileDialog::showImages(bool showing){
   filebox->showImages(showing);
   }
 
@@ -287,40 +287,40 @@ void FXFileDialog::setImageSize(FXint size){
 
 
 // Show readonly button
-void FXFileDialog::showReadOnly(FXbool show){
+void FXFileDialog::showReadOnly(bool show){
   filebox->showReadOnly(show);
   }
 
 
 // Return TRUE if readonly is shown
-FXbool FXFileDialog::shownReadOnly() const {
+bool FXFileDialog::shownReadOnly() const {
   return filebox->shownReadOnly();
   }
 
 
 // Set initial state of readonly button
-void FXFileDialog::setReadOnly(FXbool state){
+void FXFileDialog::setReadOnly(bool state){
   filebox->setReadOnly(state);
   }
 
 
 // Get readonly state
-FXbool FXFileDialog::getReadOnly() const {
+bool FXFileDialog::getReadOnly() const {
   return filebox->getReadOnly();
   }
 
 
 // Allow or disallow navigation
-void FXFileDialog::allowNavigation(FXbool navigable){
+void FXFileDialog::allowNavigation(bool navigable){
   filebox->allowNavigation(navigable);
   }
-  
-  
+
+
 // Is navigation allowed?
-FXbool FXFileDialog::allowNavigation() const{
+bool FXFileDialog::allowNavigation() const{
   return filebox->allowNavigation();
   }
-  
+
 
 // Save data
 void FXFileDialog::save(FXStream& store) const {

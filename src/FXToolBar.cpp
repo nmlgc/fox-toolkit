@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXToolBar.cpp,v 1.48 2006/01/22 17:58:47 fox Exp $                       *
+* $Id: FXToolBar.cpp,v 1.51 2006/04/05 04:27:26 fox Exp $                       *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -515,14 +515,14 @@ void FXToolBar::layout(){
 
 
 // Dock the bar before other window
-void FXToolBar::dock(FXDockSite* docksite,FXWindow* before,FXbool notify){
+void FXToolBar::dock(FXDockSite* docksite,FXWindow* before,bool notify){
   FXDockBar::dock(docksite,before,notify);
   setDockingSide(getParent()->getLayoutHints());
   }
 
 
 // Dock the bar near position in dock site
-void FXToolBar::dock(FXDockSite* docksite,FXint localx,FXint localy,FXbool notify){
+void FXToolBar::dock(FXDockSite* docksite,FXint localx,FXint localy,bool notify){
   FXDockBar::dock(docksite,localx,localy,notify);
   setDockingSide(getParent()->getLayoutHints());
   }

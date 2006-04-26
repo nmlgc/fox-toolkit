@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXTextField.cpp,v 1.171 2006/01/22 17:58:47 fox Exp $                    *
+* $Id: FXTextField.cpp,v 1.172 2006/03/31 07:33:14 fox Exp $                    *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -1044,18 +1044,18 @@ FXint FXTextField::coord(FXint i) const {
   }
 
 
-// Return TRUE if position is visible
-FXbool FXTextField::isPosVisible(FXint pos) const {
+// Return true if position is visible
+bool FXTextField::isPosVisible(FXint pos) const {
   if(0<=pos && pos<=contents.length()){
     register FXint x=coord(contents.validate(pos));
     return border+padleft<=x && x<=width-border-padright;
     }
-  return FALSE;
+  return false;
   }
 
 
-// Return TRUE if position pos is selected
-FXbool FXTextField::isPosSelected(FXint pos) const {
+// Return true if position pos is selected
+bool FXTextField::isPosSelected(FXint pos) const {
   return hasSelection() && FXMIN(anchor,cursor)<=pos && pos<=FXMAX(anchor,cursor);
   }
 
@@ -1333,7 +1333,7 @@ long FXTextField::onCmdCursorLeft(FXObject*,FXSelector,void*){
 
 
 // Check if w is delimiter
-static FXbool isdelimiter(const FXchar *delimiters,FXwchar w){
+static bool isdelimiter(const FXchar *delimiters,FXwchar w){
   return w<256 && strchr(delimiters,w); // FIXME for w>256
   }
 
@@ -1968,36 +1968,36 @@ long FXTextField::onKeyRelease(FXObject*,FXSelector,void* ptr){
 
 
 // Kill the selection
-FXbool FXTextField::killSelection(){
+bool FXTextField::killSelection(){
   if(hasSelection()){
     releaseSelection();
     update(border,border,width-(border<<1),height-(border<<1));
-    return TRUE;
+    return true;
     }
-  return FALSE;
+  return false;
   }
 
 
 // Select all text
-FXbool FXTextField::selectAll(){
+bool FXTextField::selectAll(){
   setAnchorPos(0);
   setCursorPos(contents.length());
   extendSelection(cursor);
-  return TRUE;
+  return true;
   }
 
 
 // Set selection
-FXbool FXTextField::setSelection(FXint pos,FXint len){
+bool FXTextField::setSelection(FXint pos,FXint len){
   setAnchorPos(pos);
   setCursorPos(pos+len);
   extendSelection(cursor);
-  return TRUE;
+  return true;
   }
 
 
 // Extend selection
-FXbool FXTextField::extendSelection(FXint pos){
+bool FXTextField::extendSelection(FXint pos){
   FXDragType types[4];
 
   // Validate position to start of character
@@ -2020,12 +2020,12 @@ FXbool FXTextField::extendSelection(FXint pos){
     }
 
   update(border,border,width-(border<<1),height-(border<<1));
-  return TRUE;
+  return true;
   }
 
 
 // Change the text and move cursor to end
-void FXTextField::setText(const FXString& text,FXbool notify){
+void FXTextField::setText(const FXString& text,bool notify){
   killSelection();
   if(contents!=text){
     contents=text;
@@ -2087,25 +2087,25 @@ void FXTextField::setNumColumns(FXint ncols){
 
 
 // Return true if editable
-FXbool FXTextField::isEditable() const {
+bool FXTextField::isEditable() const {
   return (options&TEXTFIELD_READONLY)==0;
   }
 
 
 // Set editable mode
-void FXTextField::setEditable(FXbool edit){
+void FXTextField::setEditable(bool edit){
   if(edit) options&=~TEXTFIELD_READONLY; else options|=TEXTFIELD_READONLY;
   }
 
 
-// Return TRUE if overstrike mode in effect
-FXbool FXTextField::isOverstrike() const {
+// Return true if overstrike mode in effect
+bool FXTextField::isOverstrike() const {
   return (options&TEXTFIELD_OVERSTRIKE)!=0;
   }
 
 
 // Set overstrike mode
-void FXTextField::setOverstrike(FXbool over){
+void FXTextField::setOverstrike(bool over){
   if(over) options|=TEXTFIELD_OVERSTRIKE; else options&=~TEXTFIELD_OVERSTRIKE;
   }
 

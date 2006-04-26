@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXDragCorner.cpp,v 1.34 2006/01/22 17:58:24 fox Exp $                    *
+* $Id: FXDragCorner.cpp,v 1.36 2006/04/04 04:28:06 fox Exp $                    *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -82,7 +82,7 @@ FXDragCorner::FXDragCorner(){
   oldh=0;
   xoff=0;
   yoff=0;
-  ewmh=0;
+  ewmh=false;
   }
 
 
@@ -99,7 +99,7 @@ FXDragCorner::FXDragCorner(FXComposite* p):
   oldh=0;
   xoff=0;
   yoff=0;
-  ewmh=0;
+  ewmh=false;
   }
 
 
@@ -119,12 +119,12 @@ FXint FXDragCorner::getDefaultHeight(){
 void FXDragCorner::create(){
   FXWindow::create();
 #ifndef WIN32
-  unsigned long n,i; Atom type,*list; int format;
-  if(XGetWindowProperty(DISPLAY(getApp()),XDefaultRootWindow(DISPLAY(getApp())),getApp()->wmNetSupported,0,2048,False,XA_ATOM,&type,&format,&n,&i,(unsigned char**)&list)==Success && list){
+  unsigned long n,i; Atom type; unsigned char *prop; int format;
+  if(Success==XGetWindowProperty(DISPLAY(getApp()),XDefaultRootWindow(DISPLAY(getApp())),getApp()->wmNetSupported,0,2048,False,XA_ATOM,&type,&format,&n,&i,&prop)){
     for(i=0; i<n; i++){
-      if(list[i]==getApp()->wmNetMoveResize){ ewmh=1; break; }
+      if(((Atom*)prop)[i]==getApp()->wmNetMoveResize){ ewmh=true; break; }
       }
-    XFree(list);
+    XFree(prop);
     }
 #endif
   }

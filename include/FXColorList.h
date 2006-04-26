@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXColorList.h,v 1.4 2006/01/22 17:57:59 fox Exp $                        *
+* $Id: FXColorList.h,v 1.5 2006/03/31 07:33:00 fox Exp $                        *
 ********************************************************************************/
 #ifndef FXCOLORLIST_H
 #define FXCOLORLIST_H
@@ -78,16 +78,16 @@ public:
   FXColorList(FXComposite *p,FXObject* tgt=NULL,FXSelector sel=0,FXuint opts=LIST_BROWSESELECT,FXint x=0,FXint y=0,FXint w=0,FXint h=0);
 
   /// Fill list by appending color items from array of strings and array of colors
-  FXint fillItems(const FXchar** strings,FXColor *colors=NULL,void* ptr=NULL,FXbool notify=FALSE);
+  FXint fillItems(const FXchar** strings,FXColor *colors=NULL,void* ptr=NULL,bool notify=false);
 
   /// Insert item at index with given text, color, and user-data pointer
-  FXint insertItem(FXint index,const FXString& text,FXColor color=0,void* ptr=NULL,FXbool notify=FALSE);
+  FXint insertItem(FXint index,const FXString& text,FXColor color=0,void* ptr=NULL,bool notify=false);
 
   /// Append new item with given text, color, and user-data pointer
-  FXint appendItem(const FXString& text,FXColor color=0,void* ptr=NULL,FXbool notify=FALSE);
+  FXint appendItem(const FXString& text,FXColor color=0,void* ptr=NULL,bool notify=false);
 
   /// Prepend new item with given text, color, and user-data pointer
-  FXint prependItem(const FXString& text,FXColor color=0,void* ptr=NULL,FXbool notify=FALSE);
+  FXint prependItem(const FXString& text,FXColor color=0,void* ptr=NULL,bool notify=false);
 
   /// Change item color
   void setItemColor(FXint index,FXColor color);

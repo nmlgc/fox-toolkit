@@ -19,12 +19,13 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: fxrgbio.cpp,v 1.28 2006/03/18 04:57:03 fox Exp $                         *
+* $Id: fxrgbio.cpp,v 1.29 2006/03/24 05:55:40 fox Exp $                         *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
 #include "fxdefs.h"
 #include "FXHash.h"
+#include "FXElement.h"
 #include "FXStream.h"
 
 
@@ -115,7 +116,7 @@ bool fxloadRGB(FXStream& store,FXColor*& data,FXint& width,FXint& height){
   if(magic==474 && nchannels==3 && bpc==1 && w>0 && h>0){
 
     // Make room for image
-    if(FXMALLOC(&data,FXColor,w*h)){
+    if(allocElms(data,w*h)){
 
       // Clear
       memset(data,0xff,sizeof(FXColor)*w*h);
@@ -128,7 +129,7 @@ bool fxloadRGB(FXStream& store,FXColor*& data,FXint& width,FXint& height){
         tablen=h*3;
 
         // Allocate line tables
-        if(FXMALLOC(&starttab,FXuint,tablen*2)){
+        if(allocElms(starttab,tablen*2)){
           lengthtab=&starttab[tablen];
 
           // Read line tables
@@ -153,7 +154,7 @@ bool fxloadRGB(FXStream& store,FXColor*& data,FXint& width,FXint& height){
             }
 
           // Make room for the compressed lines
-          if(FXMALLOC(&array,FXuchar,total)){
+          if(allocElms(array,total)){
 
             // Load all RLE chunks
             store.load(array,total);
@@ -164,11 +165,11 @@ bool fxloadRGB(FXStream& store,FXColor*& data,FXint& width,FXint& height){
               }
 
             // Free RLE chunks
-            FXFREE(&array);
+            freeElms(array);
             }
 
           // Free line tables
-          FXFREE(&starttab);
+          freeElms(starttab);
           }
         }
 

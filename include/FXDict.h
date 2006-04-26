@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXDict.h,v 1.26 2006/01/22 17:58:00 fox Exp $                            *
+* $Id: FXDict.h,v 1.27 2006/03/25 18:03:43 fox Exp $                            *
 ********************************************************************************/
 #ifndef FXDICT_H
 #define FXDICT_H
@@ -60,7 +60,7 @@ protected:
   * data pointer given an input pointer; the default implementation
   * just returns the input pointer.
   */
-  virtual void *createData(const void*);
+  virtual void *createData(void*);
 
   /**
   * Overload this function in a derived class to delete the pointer
@@ -101,14 +101,14 @@ public:
   * If there is already an entry with that key, leave it unchanged,
   * otherwise insert the new entry.
   */
-  void* insert(const FXchar* ky,const void* ptr,bool mrk=false);
+  void* insert(const FXchar* ky,void* ptr,bool mrk=false);
 
   /**
   * Replace data at key, if the entry's mark is less than
   * or equal to the given mark.  If there was no existing entry,
   * a new entry is inserted with the given mark.
   */
-  void* replace(const FXchar* ky,const void* ptr,bool mrk=false);
+  void* replace(const FXchar* ky,void* ptr,bool mrk=false);
 
   /**
   * Remove data given key.

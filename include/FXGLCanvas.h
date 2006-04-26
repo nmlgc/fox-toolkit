@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXGLCanvas.h,v 1.33 2006/01/22 17:58:02 fox Exp $                        *
+* $Id: FXGLCanvas.h,v 1.34 2006/03/31 07:33:01 fox Exp $                        *
 ********************************************************************************/
 #ifndef FXGLCANVAS_H
 #define FXGLCANVAS_H
@@ -66,7 +66,7 @@ public:
   FXGLCanvas(FXComposite* p,FXGLVisual *vis,FXGLCanvas* sharegroup,FXObject* tgt=NULL,FXSelector sel=0,FXuint opts=0,FXint x=0,FXint y=0,FXint w=0,FXint h=0);
 
   /// Return TRUE if it is sharing display lists
-  FXbool isShared() const;
+  bool isShared() const;
 
   /// Create all of the server-side resources for this window
   virtual void create();
@@ -78,13 +78,13 @@ public:
   virtual void destroy();
 
   /// Make OpenGL context current prior to performing OpenGL commands
-  virtual FXbool makeCurrent();
+  virtual bool makeCurrent();
 
   /// Make OpenGL context non current
-  virtual FXbool makeNonCurrent();
+  virtual bool makeNonCurrent();
 
   /// Return TRUE if this window's context is current
-  virtual FXbool isCurrent() const;
+  virtual bool isCurrent() const;
 
   /// Return current context, if any
   static void* getCurrentContext();

@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXGradientBar.cpp,v 1.71 2006/01/22 17:58:30 fox Exp $                   *
+* $Id: FXGradientBar.cpp,v 1.74 2006/04/04 04:28:07 fox Exp $                   *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -27,6 +27,7 @@
 #include "fxkeys.h"
 #include "FXHash.h"
 #include "FXThread.h"
+#include "FXElement.h"
 #include "FXStream.h"
 #include "FXString.h"
 #include "FXSize.h"
@@ -169,7 +170,7 @@ FXGradientBar::FXGradientBar(FXComposite* p,FXObject* tgt,FXSelector sel,FXuint 
   selectColor=FXRGB((92*FXREDVAL(backColor))/100,(92*FXGREENVAL(backColor))/100,(92*FXBLUEVAL(backColor))/100);
   bar=new FXImage(getApp(),NULL,IMAGE_DITHER|IMAGE_KEEP|IMAGE_OWNED|IMAGE_SHMI|IMAGE_SHMP,2,2);
   nsegs=3;
-  FXMALLOC(&seg,FXGradient,nsegs);
+  allocElms(seg,nsegs);
   seg[0].lower=0.0;
   seg[0].middle=0.2;
   seg[0].upper=0.4;
@@ -373,7 +374,7 @@ void FXGradientBar::updatebar(){
   if(options&GRADIENTBAR_VERTICAL){
 
     // Allocate ramp
-    FXMALLOC(&ramp,FXColor,barh);
+    allocElms(ramp,barh);
 
     // Fill with gradient
     gradient(ramp,barh);
@@ -399,7 +400,7 @@ void FXGradientBar::updatebar(){
   else{
 
     // Allocate ramp
-    FXMALLOC(&ramp,FXColor,barw);
+    allocElms(ramp,barw);
 
     // Fill with gradient
     gradient(ramp,barw);
@@ -422,7 +423,7 @@ void FXGradientBar::updatebar(){
     }
 
   // Free ramp
-  FXFREE(&ramp);
+  freeElms(ramp);
   }
 
 
@@ -639,7 +640,7 @@ long FXGradientBar::onPaint(FXObject*,FXSelector,void* ptr){
 void FXGradientBar::setGradients(const FXGradient *segments,FXint nsegments){
   if(!segments || nsegments<1){ fxerror("FXGradientBar::setGradients: bad argument."); }
   if(nsegments!=nsegs){
-    FXRESIZE(&seg,FXGradient,nsegments);
+    resizeElms(seg,nsegments);
     nsegs=nsegments;
     if(selupper>=nsegs) selupper=nsegs-1;
     if(sellower>=nsegs) sellower=nsegs-1;
@@ -654,7 +655,7 @@ void FXGradientBar::setGradients(const FXGradient *segments,FXint nsegments){
 // Return the gradient segments
 void FXGradientBar::getGradients(FXGradient*& segments,FXint& nsegments) const {
   nsegments=0;
-  if(FXMALLOC(&segments,FXGradient,nsegs)){
+  if(allocElms(segments,nsegs)){
     memcpy(segments,seg,sizeof(FXGradient)*nsegs);
     nsegments=nsegs;
     }
@@ -662,40 +663,40 @@ void FXGradientBar::getGradients(FXGradient*& segments,FXint& nsegments) const {
 
 
 // Select segment
-FXbool FXGradientBar::selectSegments(FXint fm,FXint to,FXbool notify){
+bool FXGradientBar::selectSegments(FXint fm,FXint to,bool notify){
   if(fm>to || fm<0 || to>=nsegs){ fxerror("FXGradientBar::selectSegments: argument out of range."); }
   if(sellower!=fm || selupper!=to){
     sellower=fm;
     selupper=to;
     update();
     if(notify && target){target->tryHandle(this,FXSEL(SEL_SELECTED,message),NULL);}
-    return TRUE;
+    return true;
     }
-  return FALSE;
+  return false;
   }
 
 
 // Deselect all segments
-FXbool FXGradientBar::deselectSegments(FXbool notify){
+bool FXGradientBar::deselectSegments(bool notify){
   if(0<=sellower && 0<=selupper){
     sellower=selupper=-1;
     update();
     if(notify && target){target->tryHandle(this,FXSEL(SEL_DESELECTED,message),NULL);}
-    return TRUE;
+    return true;
     }
-  return FALSE;
+  return false;
   }
 
 
 // Is segment selected
-FXbool FXGradientBar::isSegmentSelected(FXint s) const {
+bool FXGradientBar::isSegmentSelected(FXint s) const {
   if(s<0 || s>=nsegs){ fxerror("FXGradientBar::isSegmentSelected: argument out of range."); }
   return sellower<=s && s<=selupper;
   }
 
 
 // Set current item
-void FXGradientBar::setCurrentSegment(FXint index,FXbool notify){
+void FXGradientBar::setCurrentSegment(FXint index,bool notify){
   if(index<-1 || nsegs<=index){ fxerror("%s::setCurrentSegment: index out of range.\n",getClassName()); }
   if(index!=current){
     current=index;
@@ -712,7 +713,7 @@ void FXGradientBar::setAnchorSegment(FXint index){
 
 
 // Move lower point of segment
-void FXGradientBar::moveSegmentLower(FXint sg,FXdouble val,FXbool notify){
+void FXGradientBar::moveSegmentLower(FXint sg,FXdouble val,bool notify){
   if(0<sg && sg<nsegs){
     if(val<seg[sg-1].middle) val=seg[sg-1].middle;
     if(seg[sg].middle<val) val=seg[sg].middle;
@@ -726,7 +727,7 @@ void FXGradientBar::moveSegmentLower(FXint sg,FXdouble val,FXbool notify){
 
 
 // Move middle point of segment
-void FXGradientBar::moveSegmentMiddle(FXint sg,FXdouble val,FXbool notify){
+void FXGradientBar::moveSegmentMiddle(FXint sg,FXdouble val,bool notify){
   if(0<=sg && sg<nsegs){
     if(val<seg[sg].lower) val=seg[sg].lower;
     if(seg[sg].upper<val) val=seg[sg].upper;
@@ -740,7 +741,7 @@ void FXGradientBar::moveSegmentMiddle(FXint sg,FXdouble val,FXbool notify){
 
 
 // Move upper point of segment
-void FXGradientBar::moveSegmentUpper(FXint sg,FXdouble val,FXbool notify){
+void FXGradientBar::moveSegmentUpper(FXint sg,FXdouble val,bool notify){
   if(0<=sg && sg<nsegs-1){
     if(val<seg[sg].middle) val=seg[sg].middle;
     if(seg[sg+1].middle<val) val=seg[sg+1].middle;
@@ -754,7 +755,7 @@ void FXGradientBar::moveSegmentUpper(FXint sg,FXdouble val,FXbool notify){
 
 
 // Move segments
-void FXGradientBar::moveSegments(FXint sglo,FXint sghi,FXdouble val,FXbool notify){
+void FXGradientBar::moveSegments(FXint sglo,FXint sghi,FXdouble val,bool notify){
   register FXdouble delta, below,above,room;
   register FXint i;
   if(0<=sglo && sghi<nsegs && sglo<=sghi){
@@ -795,11 +796,11 @@ void FXGradientBar::moveSegments(FXint sglo,FXint sghi,FXdouble val,FXbool notif
 
 
 // Split segment at the midpoint
-void FXGradientBar::splitSegments(FXint sglo,FXint sghi,FXbool notify){
+void FXGradientBar::splitSegments(FXint sglo,FXint sghi,bool notify){
   register FXint n=sghi-sglo+1;
   register FXint i,j;
   if(0<=sglo && sghi<nsegs && 0<n){
-    FXRESIZE(&seg,FXGradient,nsegs+n);
+    resizeElms(seg,nsegs+n);
     memmove(&seg[sghi+n],&seg[sghi],sizeof(FXGradient)*(nsegs-sghi));
     for(i=sghi,j=sghi+n-1; sglo<=i; i-=1,j-=2){
       seg[j+1].upper=seg[i].upper;
@@ -823,14 +824,14 @@ void FXGradientBar::splitSegments(FXint sglo,FXint sghi,FXbool notify){
 
 
 // Merge segments
-void FXGradientBar::mergeSegments(FXint sglo,FXint sghi,FXbool notify){
+void FXGradientBar::mergeSegments(FXint sglo,FXint sghi,bool notify){
   register FXint n=sghi-sglo;
   if(0<=sglo && sghi<nsegs && 0<n){
     seg[sglo].middle=(n&1)?seg[(sghi+sglo)/2].upper:seg[(sghi+sglo)/2].middle;
     seg[sglo].upper=seg[sghi].upper;
     seg[sglo].upperColor=seg[sghi].upperColor;
     memmove(&seg[sglo+1],&seg[sghi+1],sizeof(FXGradient)*(nsegs-sghi-1));
-    FXRESIZE(&seg,FXGradient,nsegs-n);
+    resizeElms(seg,nsegs-n);
     nsegs-=n;
     if(selupper>=nsegs) selupper=nsegs-1;
     if(sellower>=nsegs) sellower=nsegs-1;
@@ -843,7 +844,7 @@ void FXGradientBar::mergeSegments(FXint sglo,FXint sghi,FXbool notify){
 
 
 // Make segments uniformly distributed
-void FXGradientBar::uniformSegments(FXint sglo,FXint sghi,FXbool notify){
+void FXGradientBar::uniformSegments(FXint sglo,FXint sghi,bool notify){
   register FXdouble m,d,a;
   register FXint s;
   if(0<=sglo && sghi<nsegs && sglo<=sghi){
@@ -862,7 +863,7 @@ void FXGradientBar::uniformSegments(FXint sglo,FXint sghi,FXbool notify){
 
 
 // Change blend curve of segment
-void FXGradientBar::blendSegments(FXint sglo,FXint sghi,FXuint blend,FXbool notify){
+void FXGradientBar::blendSegments(FXint sglo,FXint sghi,FXuint blend,bool notify){
   register FXint s;
   if(0<=sglo && sghi<nsegs && sglo<=sghi){
     for(s=sglo; s<=sghi; s++){
@@ -1162,16 +1163,16 @@ long FXGradientBar::onDNDMotion(FXObject* sender,FXSelector sel,void* ptr){
 
 // Handle drag-and-drop drop
 long FXGradientBar::onDNDDrop(FXObject* sender,FXSelector sel,void* ptr){
-  FXushort *clr; FXuint len; FXColor color;
+  FXuchar *data; FXuint len; FXColor color;
 
   // Try handling it in base class first
   if(FXFrame::onDNDDrop(sender,sel,ptr)) return 1;
 
   // Try handle here
   if(0<=dropped){
-    if(getDNDData(FROM_DRAGNDROP,colorType,(FXuchar*&)clr,len)){
-      color=FXRGBA((clr[0]+128)/257,(clr[1]+128)/257,(clr[2]+128)/257,(clr[3]+128)/257);
-      FXFREE(&clr);
+    if(getDNDData(FROM_DRAGNDROP,colorType,data,len)){
+      color=FXRGBA((((FXushort*)data)[0]+128)/257,(((FXushort*)data)[1]+128)/257,(((FXushort*)data)[2]+128)/257,(((FXushort*)data)[3]+128)/257);
+      freeElms(data);
       if(where!=GRIP_NONE){
         if(where<=GRIP_SEG_LOWER){
           setSegmentLowerColor(dropped,color,TRUE);
@@ -1373,7 +1374,7 @@ FXuint FXGradientBar::getSegmentBlend(FXint s) const {
 
 
 // Set colors of a segment
-void FXGradientBar::setSegmentLowerColor(FXint s,FXColor clr,FXbool notify){
+void FXGradientBar::setSegmentLowerColor(FXint s,FXColor clr,bool notify){
   if(s<0 || s>=nsegs){ fxerror("FXGradientBar::setSegmentLowerColor: argument out of range."); }
   if(seg[s].lowerColor!=clr){
     seg[s].lowerColor=clr;
@@ -1384,7 +1385,7 @@ void FXGradientBar::setSegmentLowerColor(FXint s,FXColor clr,FXbool notify){
 
 
 // Set colors of a segment
-void FXGradientBar::setSegmentUpperColor(FXint s,FXColor clr,FXbool notify){
+void FXGradientBar::setSegmentUpperColor(FXint s,FXColor clr,bool notify){
   if(s<0 || s>=nsegs){ fxerror("FXGradientBar::setSegmentUpperColor: argument out of range."); }
   if(seg[s].upperColor!=clr){
     seg[s].upperColor=clr;
@@ -1478,7 +1479,7 @@ void FXGradientBar::load(FXStream& store){
 // Zap it
 FXGradientBar::~FXGradientBar(){
   delete bar;
-  FXFREE(&seg);
+  freeElms(seg);
   bar=(FXImage*)-1L;
   seg=(FXGradient*)-1L;
   }

@@ -19,7 +19,7 @@
 * along with this program; if not, write to the Free Software                   *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: Calculator.cpp,v 1.58 2006/01/22 18:01:12 fox Exp $                      *
+* $Id: Calculator.cpp,v 1.60 2006/04/05 04:49:00 fox Exp $                      *
 ********************************************************************************/
 #include "fx.h"
 #include "fxkeys.h"
@@ -162,7 +162,7 @@ static const FXuint   nanny[2]={0xffffffff,0x7fffffff};
 #endif
 
 // Double precision nan
-static const FXdouble& dblnan=*((FXdouble*)nanny);
+static const FXdouble& dblnan=*((FXdouble*)(void*)nanny);
 
 
 // Operator priorities
@@ -1187,7 +1187,7 @@ void Calculator::rparen(){
 /*******************************************************************************/
 
 // Close the window and save registry
-FXbool Calculator::close(FXbool notify){
+bool Calculator::close(bool notify){
   writeRegistry();
   return FXMainWindow::close(notify);
   }

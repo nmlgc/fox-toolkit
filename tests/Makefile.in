@@ -98,7 +98,7 @@ CXXFLAGS = @CXXFLAGS@ @X_CFLAGS@
 INCLUDES = -I$(top_srcdir)/include -I$(top_builddir)/include
 RESWRAP = $(top_builddir)/utils/reswrap
 SUFFIXES = .gif .bmp
-LDADD = ../src/libFOX-1.6.la -lm
+LDADD = ../src/libFOX-1.7.la -lm
 
 EXTRA_PROGRAMS = \
 gltest \
@@ -200,131 +200,131 @@ X_EXTRA_LIBS = @X_EXTRA_LIBS@
 X_PRE_LIBS = @X_PRE_LIBS@
 gltest_OBJECTS =  gltest.$(OBJEXT)
 gltest_LDADD = $(LDADD)
-gltest_DEPENDENCIES =  ../src/libFOX-1.6.la
+gltest_DEPENDENCIES =  ../src/libFOX-1.7.la
 gltest_LDFLAGS = 
 glviewer_OBJECTS =  glviewer.$(OBJEXT)
 glviewer_LDADD = $(LDADD)
-glviewer_DEPENDENCIES =  ../src/libFOX-1.6.la
+glviewer_DEPENDENCIES =  ../src/libFOX-1.7.la
 glviewer_LDFLAGS = 
 expression_OBJECTS =  expression.$(OBJEXT)
 expression_LDADD = $(LDADD)
-expression_DEPENDENCIES =  ../src/libFOX-1.6.la
+expression_DEPENDENCIES =  ../src/libFOX-1.7.la
 expression_LDFLAGS = 
 dctest_OBJECTS =  dctest.$(OBJEXT)
 dctest_LDADD = $(LDADD)
-dctest_DEPENDENCIES =  ../src/libFOX-1.6.la
+dctest_DEPENDENCIES =  ../src/libFOX-1.7.la
 dctest_LDFLAGS = 
 codecs_OBJECTS =  codecs.$(OBJEXT)
 codecs_LDADD = $(LDADD)
-codecs_DEPENDENCIES =  ../src/libFOX-1.6.la
+codecs_DEPENDENCIES =  ../src/libFOX-1.7.la
 codecs_LDFLAGS = 
 dialog_OBJECTS =  dialog.$(OBJEXT)
 dialog_LDADD = $(LDADD)
-dialog_DEPENDENCIES =  ../src/libFOX-1.6.la
+dialog_DEPENDENCIES =  ../src/libFOX-1.7.la
 dialog_LDFLAGS = 
 ControlPanel_OBJECTS =  ControlPanel.$(OBJEXT)
 ControlPanel_LDADD = $(LDADD)
-ControlPanel_DEPENDENCIES =  ../src/libFOX-1.6.la
+ControlPanel_DEPENDENCIES =  ../src/libFOX-1.7.la
 ControlPanel_LDFLAGS = 
 groupbox_OBJECTS =  groupbox.$(OBJEXT)
 groupbox_LDADD = $(LDADD)
-groupbox_DEPENDENCIES =  ../src/libFOX-1.6.la
+groupbox_DEPENDENCIES =  ../src/libFOX-1.7.la
 groupbox_LDFLAGS = 
 scribble_OBJECTS =  scribble.$(OBJEXT)
 scribble_LDADD = $(LDADD)
-scribble_DEPENDENCIES =  ../src/libFOX-1.6.la
+scribble_DEPENDENCIES =  ../src/libFOX-1.7.la
 scribble_LDFLAGS = 
 wizard_OBJECTS =  wizard.$(OBJEXT)
 wizard_LDADD = $(LDADD)
-wizard_DEPENDENCIES =  ../src/libFOX-1.6.la
+wizard_DEPENDENCIES =  ../src/libFOX-1.7.la
 wizard_LDFLAGS = 
 layout_OBJECTS =  layout.$(OBJEXT)
 layout_LDADD = $(LDADD)
-layout_DEPENDENCIES =  ../src/libFOX-1.6.la
+layout_DEPENDENCIES =  ../src/libFOX-1.7.la
 layout_LDFLAGS = 
 rex_OBJECTS =  rex.$(OBJEXT)
 rex_LDADD = $(LDADD)
-rex_DEPENDENCIES =  ../src/libFOX-1.6.la
+rex_DEPENDENCIES =  ../src/libFOX-1.7.la
 rex_LDFLAGS = 
 table_OBJECTS =  table.$(OBJEXT)
 table_LDADD = $(LDADD)
-table_DEPENDENCIES =  ../src/libFOX-1.6.la
+table_DEPENDENCIES =  ../src/libFOX-1.7.la
 table_LDFLAGS = 
 memmap_OBJECTS =  memmap.$(OBJEXT)
 memmap_LDADD = $(LDADD)
-memmap_DEPENDENCIES =  ../src/libFOX-1.6.la
+memmap_DEPENDENCIES =  ../src/libFOX-1.7.la
 memmap_LDFLAGS = 
 minheritance_OBJECTS =  minheritance.$(OBJEXT)
 minheritance_LDADD = $(LDADD)
-minheritance_DEPENDENCIES =  ../src/libFOX-1.6.la
+minheritance_DEPENDENCIES =  ../src/libFOX-1.7.la
 minheritance_LDFLAGS = 
 bitmapviewer_OBJECTS =  bitmapviewer.$(OBJEXT)
 bitmapviewer_LDADD = $(LDADD)
-bitmapviewer_DEPENDENCIES =  ../src/libFOX-1.6.la
+bitmapviewer_DEPENDENCIES =  ../src/libFOX-1.7.la
 bitmapviewer_LDFLAGS = 
 imageviewer_OBJECTS =  imageviewer.$(OBJEXT)
 imageviewer_LDADD = $(LDADD)
-imageviewer_DEPENDENCIES =  ../src/libFOX-1.6.la
+imageviewer_DEPENDENCIES =  ../src/libFOX-1.7.la
 imageviewer_LDFLAGS = 
 button_OBJECTS =  button.$(OBJEXT)
 button_LDADD = $(LDADD)
-button_DEPENDENCIES =  ../src/libFOX-1.6.la
+button_DEPENDENCIES =  ../src/libFOX-1.7.la
 button_LDFLAGS = 
 datatarget_OBJECTS =  datatarget.$(OBJEXT)
 datatarget_LDADD = $(LDADD)
-datatarget_DEPENDENCIES =  ../src/libFOX-1.6.la
+datatarget_DEPENDENCIES =  ../src/libFOX-1.7.la
 datatarget_LDFLAGS = 
 dirlist_OBJECTS =  dirlist.$(OBJEXT)
 dirlist_LDADD = $(LDADD)
-dirlist_DEPENDENCIES =  ../src/libFOX-1.6.la
+dirlist_DEPENDENCIES =  ../src/libFOX-1.7.la
 dirlist_LDFLAGS = 
 foursplit_OBJECTS =  foursplit.$(OBJEXT)
 foursplit_LDADD = $(LDADD)
-foursplit_DEPENDENCIES =  ../src/libFOX-1.6.la
+foursplit_DEPENDENCIES =  ../src/libFOX-1.7.la
 foursplit_LDFLAGS = 
 header_OBJECTS =  header.$(OBJEXT)
 header_LDADD = $(LDADD)
-header_DEPENDENCIES =  ../src/libFOX-1.6.la
+header_DEPENDENCIES =  ../src/libFOX-1.7.la
 header_LDFLAGS = 
 hello_OBJECTS =  hello.$(OBJEXT)
 hello_LDADD = $(LDADD)
-hello_DEPENDENCIES =  ../src/libFOX-1.6.la
+hello_DEPENDENCIES =  ../src/libFOX-1.7.la
 hello_LDFLAGS = 
 hello2_OBJECTS =  hello2.$(OBJEXT)
 hello2_LDADD = $(LDADD)
-hello2_DEPENDENCIES =  ../src/libFOX-1.6.la
+hello2_DEPENDENCIES =  ../src/libFOX-1.7.la
 hello2_LDFLAGS = 
 iconlist_OBJECTS =  iconlist.$(OBJEXT)
 iconlist_LDADD = $(LDADD)
-iconlist_DEPENDENCIES =  ../src/libFOX-1.6.la
+iconlist_DEPENDENCIES =  ../src/libFOX-1.7.la
 iconlist_LDFLAGS = 
 image_OBJECTS =  image.$(OBJEXT)
 image_LDADD = $(LDADD)
-image_DEPENDENCIES =  ../src/libFOX-1.6.la
+image_DEPENDENCIES =  ../src/libFOX-1.7.la
 image_LDFLAGS = 
 mditest_OBJECTS =  mditest.$(OBJEXT)
 mditest_LDADD = $(LDADD)
-mditest_DEPENDENCIES =  ../src/libFOX-1.6.la
+mditest_DEPENDENCIES =  ../src/libFOX-1.7.la
 mditest_LDFLAGS = 
 shutter_OBJECTS =  shutter.$(OBJEXT)
 shutter_LDADD = $(LDADD)
-shutter_DEPENDENCIES =  ../src/libFOX-1.6.la
+shutter_DEPENDENCIES =  ../src/libFOX-1.7.la
 shutter_LDFLAGS = 
 splitter_OBJECTS =  splitter.$(OBJEXT)
 splitter_LDADD = $(LDADD)
-splitter_DEPENDENCIES =  ../src/libFOX-1.6.la
+splitter_DEPENDENCIES =  ../src/libFOX-1.7.la
 splitter_LDFLAGS = 
 switcher_OBJECTS =  switcher.$(OBJEXT)
 switcher_LDADD = $(LDADD)
-switcher_DEPENDENCIES =  ../src/libFOX-1.6.la
+switcher_DEPENDENCIES =  ../src/libFOX-1.7.la
 switcher_LDFLAGS = 
 tabbook_OBJECTS =  tabbook.$(OBJEXT)
 tabbook_LDADD = $(LDADD)
-tabbook_DEPENDENCIES =  ../src/libFOX-1.6.la
+tabbook_DEPENDENCIES =  ../src/libFOX-1.7.la
 tabbook_LDFLAGS = 
 ratio_OBJECTS =  ratio.$(OBJEXT)
 ratio_LDADD = $(LDADD)
-ratio_DEPENDENCIES =  ../src/libFOX-1.6.la
+ratio_DEPENDENCIES =  ../src/libFOX-1.7.la
 ratio_LDFLAGS = 
 CXXCOMPILE = $(CXX) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
 LTCXXCOMPILE = $(LIBTOOL) --mode=compile $(CXX) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
@@ -590,6 +590,7 @@ distdir: $(DISTFILES)
 bitmapviewer.o: bitmapviewer.cpp ../include/fx.h ../include/fxver.h \
 	../include/fxdefs.h ../include/fxascii.h ../include/fxunicode.h \
 	../include/FXHash.h ../include/FXException.h \
+	../include/FXElement.h ../include/FXArray.h \
 	../include/FXThread.h ../include/FXStream.h ../include/FXIO.h \
 	../include/FXFile.h ../include/FXPipe.h ../include/FXSocket.h \
 	../include/FXFileStream.h ../include/FXMemoryStream.h \
@@ -682,6 +683,7 @@ bitmapviewer.o: bitmapviewer.cpp ../include/fx.h ../include/fxver.h \
 button.o: button.cpp ../include/fx.h ../include/fxver.h \
 	../include/fxdefs.h ../include/fxascii.h ../include/fxunicode.h \
 	../include/FXHash.h ../include/FXException.h \
+	../include/FXElement.h ../include/FXArray.h \
 	../include/FXThread.h ../include/FXStream.h ../include/FXIO.h \
 	../include/FXFile.h ../include/FXPipe.h ../include/FXSocket.h \
 	../include/FXFileStream.h ../include/FXMemoryStream.h \
@@ -774,6 +776,7 @@ button.o: button.cpp ../include/fx.h ../include/fxver.h \
 codecs.o: codecs.cpp ../include/fx.h ../include/fxver.h \
 	../include/fxdefs.h ../include/fxascii.h ../include/fxunicode.h \
 	../include/FXHash.h ../include/FXException.h \
+	../include/FXElement.h ../include/FXArray.h \
 	../include/FXThread.h ../include/FXStream.h ../include/FXIO.h \
 	../include/FXFile.h ../include/FXPipe.h ../include/FXSocket.h \
 	../include/FXFileStream.h ../include/FXMemoryStream.h \
@@ -869,7 +872,8 @@ codecs.o: codecs.cpp ../include/fx.h ../include/fxver.h \
 ControlPanel.o: ControlPanel.cpp ../include/xincs.h ../include/fx.h \
 	../include/fxver.h ../include/fxdefs.h ../include/fxascii.h \
 	../include/fxunicode.h ../include/FXHash.h \
-	../include/FXException.h ../include/FXThread.h \
+	../include/FXException.h ../include/FXElement.h \
+	../include/FXArray.h ../include/FXThread.h \
 	../include/FXStream.h ../include/FXIO.h ../include/FXFile.h \
 	../include/FXPipe.h ../include/FXSocket.h \
 	../include/FXFileStream.h ../include/FXMemoryStream.h \
@@ -963,6 +967,7 @@ ControlPanel.o: ControlPanel.cpp ../include/xincs.h ../include/fx.h \
 datatarget.o: datatarget.cpp ../include/fx.h ../include/fxver.h \
 	../include/fxdefs.h ../include/fxascii.h ../include/fxunicode.h \
 	../include/FXHash.h ../include/FXException.h \
+	../include/FXElement.h ../include/FXArray.h \
 	../include/FXThread.h ../include/FXStream.h ../include/FXIO.h \
 	../include/FXFile.h ../include/FXPipe.h ../include/FXSocket.h \
 	../include/FXFileStream.h ../include/FXMemoryStream.h \
@@ -1055,6 +1060,7 @@ datatarget.o: datatarget.cpp ../include/fx.h ../include/fxver.h \
 dctest.o: dctest.cpp ../include/fx.h ../include/fxver.h \
 	../include/fxdefs.h ../include/fxascii.h ../include/fxunicode.h \
 	../include/FXHash.h ../include/FXException.h \
+	../include/FXElement.h ../include/FXArray.h \
 	../include/FXThread.h ../include/FXStream.h ../include/FXIO.h \
 	../include/FXFile.h ../include/FXPipe.h ../include/FXSocket.h \
 	../include/FXFileStream.h ../include/FXMemoryStream.h \
@@ -1147,6 +1153,7 @@ dctest.o: dctest.cpp ../include/fx.h ../include/fxver.h \
 dialog.o: dialog.cpp ../include/fx.h ../include/fxver.h \
 	../include/fxdefs.h ../include/fxascii.h ../include/fxunicode.h \
 	../include/FXHash.h ../include/FXException.h \
+	../include/FXElement.h ../include/FXArray.h \
 	../include/FXThread.h ../include/FXStream.h ../include/FXIO.h \
 	../include/FXFile.h ../include/FXPipe.h ../include/FXSocket.h \
 	../include/FXFileStream.h ../include/FXMemoryStream.h \
@@ -1239,6 +1246,7 @@ dialog.o: dialog.cpp ../include/fx.h ../include/fxver.h \
 dirlist.o: dirlist.cpp ../include/fx.h ../include/fxver.h \
 	../include/fxdefs.h ../include/fxascii.h ../include/fxunicode.h \
 	../include/FXHash.h ../include/FXException.h \
+	../include/FXElement.h ../include/FXArray.h \
 	../include/FXThread.h ../include/FXStream.h ../include/FXIO.h \
 	../include/FXFile.h ../include/FXPipe.h ../include/FXSocket.h \
 	../include/FXFileStream.h ../include/FXMemoryStream.h \
@@ -1331,6 +1339,7 @@ dirlist.o: dirlist.cpp ../include/fx.h ../include/fxver.h \
 expression.o: expression.cpp ../include/fx.h ../include/fxver.h \
 	../include/fxdefs.h ../include/fxascii.h ../include/fxunicode.h \
 	../include/FXHash.h ../include/FXException.h \
+	../include/FXElement.h ../include/FXArray.h \
 	../include/FXThread.h ../include/FXStream.h ../include/FXIO.h \
 	../include/FXFile.h ../include/FXPipe.h ../include/FXSocket.h \
 	../include/FXFileStream.h ../include/FXMemoryStream.h \
@@ -1424,6 +1433,7 @@ expression.o: expression.cpp ../include/fx.h ../include/fxver.h \
 foursplit.o: foursplit.cpp ../include/fx.h ../include/fxver.h \
 	../include/fxdefs.h ../include/fxascii.h ../include/fxunicode.h \
 	../include/FXHash.h ../include/FXException.h \
+	../include/FXElement.h ../include/FXArray.h \
 	../include/FXThread.h ../include/FXStream.h ../include/FXIO.h \
 	../include/FXFile.h ../include/FXPipe.h ../include/FXSocket.h \
 	../include/FXFileStream.h ../include/FXMemoryStream.h \
@@ -1516,6 +1526,7 @@ foursplit.o: foursplit.cpp ../include/fx.h ../include/fxver.h \
 gltest.o: gltest.cpp ../include/fx.h ../include/fxver.h \
 	../include/fxdefs.h ../include/fxascii.h ../include/fxunicode.h \
 	../include/FXHash.h ../include/FXException.h \
+	../include/FXElement.h ../include/FXArray.h \
 	../include/FXThread.h ../include/FXStream.h ../include/FXIO.h \
 	../include/FXFile.h ../include/FXPipe.h ../include/FXSocket.h \
 	../include/FXFileStream.h ../include/FXMemoryStream.h \
@@ -1621,6 +1632,7 @@ gltest.o: gltest.cpp ../include/fx.h ../include/fxver.h \
 glviewer.o: glviewer.cpp ../include/fx.h ../include/fxver.h \
 	../include/fxdefs.h ../include/fxascii.h ../include/fxunicode.h \
 	../include/FXHash.h ../include/FXException.h \
+	../include/FXElement.h ../include/FXArray.h \
 	../include/FXThread.h ../include/FXStream.h ../include/FXIO.h \
 	../include/FXFile.h ../include/FXPipe.h ../include/FXSocket.h \
 	../include/FXFileStream.h ../include/FXMemoryStream.h \
@@ -1726,6 +1738,7 @@ glviewer.o: glviewer.cpp ../include/fx.h ../include/fxver.h \
 groupbox.o: groupbox.cpp ../include/fx.h ../include/fxver.h \
 	../include/fxdefs.h ../include/fxascii.h ../include/fxunicode.h \
 	../include/FXHash.h ../include/FXException.h \
+	../include/FXElement.h ../include/FXArray.h \
 	../include/FXThread.h ../include/FXStream.h ../include/FXIO.h \
 	../include/FXFile.h ../include/FXPipe.h ../include/FXSocket.h \
 	../include/FXFileStream.h ../include/FXMemoryStream.h \
@@ -1819,6 +1832,7 @@ groupbox.o: groupbox.cpp ../include/fx.h ../include/fxver.h \
 header.o: header.cpp ../include/fx.h ../include/fxver.h \
 	../include/fxdefs.h ../include/fxascii.h ../include/fxunicode.h \
 	../include/FXHash.h ../include/FXException.h \
+	../include/FXElement.h ../include/FXArray.h \
 	../include/FXThread.h ../include/FXStream.h ../include/FXIO.h \
 	../include/FXFile.h ../include/FXPipe.h ../include/FXSocket.h \
 	../include/FXFileStream.h ../include/FXMemoryStream.h \
@@ -1911,6 +1925,7 @@ header.o: header.cpp ../include/fx.h ../include/fxver.h \
 hello.o: hello.cpp ../include/fx.h ../include/fxver.h \
 	../include/fxdefs.h ../include/fxascii.h ../include/fxunicode.h \
 	../include/FXHash.h ../include/FXException.h \
+	../include/FXElement.h ../include/FXArray.h \
 	../include/FXThread.h ../include/FXStream.h ../include/FXIO.h \
 	../include/FXFile.h ../include/FXPipe.h ../include/FXSocket.h \
 	../include/FXFileStream.h ../include/FXMemoryStream.h \
@@ -2004,6 +2019,7 @@ hello.o: hello.cpp ../include/fx.h ../include/fxver.h \
 hello2.o: hello2.cpp ../include/fx.h ../include/fxver.h \
 	../include/fxdefs.h ../include/fxascii.h ../include/fxunicode.h \
 	../include/FXHash.h ../include/FXException.h \
+	../include/FXElement.h ../include/FXArray.h \
 	../include/FXThread.h ../include/FXStream.h ../include/FXIO.h \
 	../include/FXFile.h ../include/FXPipe.h ../include/FXSocket.h \
 	../include/FXFileStream.h ../include/FXMemoryStream.h \
@@ -2096,6 +2112,7 @@ hello2.o: hello2.cpp ../include/fx.h ../include/fxver.h \
 iconlist.o: iconlist.cpp ../include/fx.h ../include/fxver.h \
 	../include/fxdefs.h ../include/fxascii.h ../include/fxunicode.h \
 	../include/FXHash.h ../include/FXException.h \
+	../include/FXElement.h ../include/FXArray.h \
 	../include/FXThread.h ../include/FXStream.h ../include/FXIO.h \
 	../include/FXFile.h ../include/FXPipe.h ../include/FXSocket.h \
 	../include/FXFileStream.h ../include/FXMemoryStream.h \
@@ -2188,6 +2205,7 @@ iconlist.o: iconlist.cpp ../include/fx.h ../include/fxver.h \
 image.o: image.cpp ../include/fx.h ../include/fxver.h \
 	../include/fxdefs.h ../include/fxascii.h ../include/fxunicode.h \
 	../include/FXHash.h ../include/FXException.h \
+	../include/FXElement.h ../include/FXArray.h \
 	../include/FXThread.h ../include/FXStream.h ../include/FXIO.h \
 	../include/FXFile.h ../include/FXPipe.h ../include/FXSocket.h \
 	../include/FXFileStream.h ../include/FXMemoryStream.h \
@@ -2282,6 +2300,7 @@ image.o: image.cpp ../include/fx.h ../include/fxver.h \
 imageviewer.o: imageviewer.cpp ../include/fx.h ../include/fxver.h \
 	../include/fxdefs.h ../include/fxascii.h ../include/fxunicode.h \
 	../include/FXHash.h ../include/FXException.h \
+	../include/FXElement.h ../include/FXArray.h \
 	../include/FXThread.h ../include/FXStream.h ../include/FXIO.h \
 	../include/FXFile.h ../include/FXPipe.h ../include/FXSocket.h \
 	../include/FXFileStream.h ../include/FXMemoryStream.h \
@@ -2376,6 +2395,7 @@ imageviewer.o: imageviewer.cpp ../include/fx.h ../include/fxver.h \
 layout.o: layout.cpp ../include/fx.h ../include/fxver.h \
 	../include/fxdefs.h ../include/fxascii.h ../include/fxunicode.h \
 	../include/FXHash.h ../include/FXException.h \
+	../include/FXElement.h ../include/FXArray.h \
 	../include/FXThread.h ../include/FXStream.h ../include/FXIO.h \
 	../include/FXFile.h ../include/FXPipe.h ../include/FXSocket.h \
 	../include/FXFileStream.h ../include/FXMemoryStream.h \
@@ -2468,6 +2488,7 @@ layout.o: layout.cpp ../include/fx.h ../include/fxver.h \
 mditest.o: mditest.cpp ../include/fx.h ../include/fxver.h \
 	../include/fxdefs.h ../include/fxascii.h ../include/fxunicode.h \
 	../include/FXHash.h ../include/FXException.h \
+	../include/FXElement.h ../include/FXArray.h \
 	../include/FXThread.h ../include/FXStream.h ../include/FXIO.h \
 	../include/FXFile.h ../include/FXPipe.h ../include/FXSocket.h \
 	../include/FXFileStream.h ../include/FXMemoryStream.h \
@@ -2560,6 +2581,7 @@ mditest.o: mditest.cpp ../include/fx.h ../include/fxver.h \
 memmap.o: memmap.cpp ../include/fx.h ../include/fxver.h \
 	../include/fxdefs.h ../include/fxascii.h ../include/fxunicode.h \
 	../include/FXHash.h ../include/FXException.h \
+	../include/FXElement.h ../include/FXArray.h \
 	../include/FXThread.h ../include/FXStream.h ../include/FXIO.h \
 	../include/FXFile.h ../include/FXPipe.h ../include/FXSocket.h \
 	../include/FXFileStream.h ../include/FXMemoryStream.h \
@@ -2653,6 +2675,7 @@ memmap.o: memmap.cpp ../include/fx.h ../include/fxver.h \
 minheritance.o: minheritance.cpp ../include/fx.h ../include/fxver.h \
 	../include/fxdefs.h ../include/fxascii.h ../include/fxunicode.h \
 	../include/FXHash.h ../include/FXException.h \
+	../include/FXElement.h ../include/FXArray.h \
 	../include/FXThread.h ../include/FXStream.h ../include/FXIO.h \
 	../include/FXFile.h ../include/FXPipe.h ../include/FXSocket.h \
 	../include/FXFileStream.h ../include/FXMemoryStream.h \
@@ -2745,6 +2768,7 @@ minheritance.o: minheritance.cpp ../include/fx.h ../include/fxver.h \
 ratio.o: ratio.cpp ../include/fx.h ../include/fxver.h \
 	../include/fxdefs.h ../include/fxascii.h ../include/fxunicode.h \
 	../include/FXHash.h ../include/FXException.h \
+	../include/FXElement.h ../include/FXArray.h \
 	../include/FXThread.h ../include/FXStream.h ../include/FXIO.h \
 	../include/FXFile.h ../include/FXPipe.h ../include/FXSocket.h \
 	../include/FXFileStream.h ../include/FXMemoryStream.h \
@@ -2836,7 +2860,8 @@ ratio.o: ratio.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXDebugTarget.h ../include/FXSplashWindow.h
 rex.o: rex.cpp ../include/fx.h ../include/fxver.h ../include/fxdefs.h \
 	../include/fxascii.h ../include/fxunicode.h ../include/FXHash.h \
-	../include/FXException.h ../include/FXThread.h \
+	../include/FXException.h ../include/FXElement.h \
+	../include/FXArray.h ../include/FXThread.h \
 	../include/FXStream.h ../include/FXIO.h ../include/FXFile.h \
 	../include/FXPipe.h ../include/FXSocket.h \
 	../include/FXFileStream.h ../include/FXMemoryStream.h \
@@ -2929,6 +2954,7 @@ rex.o: rex.cpp ../include/fx.h ../include/fxver.h ../include/fxdefs.h \
 scribble.o: scribble.cpp ../include/fx.h ../include/fxver.h \
 	../include/fxdefs.h ../include/fxascii.h ../include/fxunicode.h \
 	../include/FXHash.h ../include/FXException.h \
+	../include/FXElement.h ../include/FXArray.h \
 	../include/FXThread.h ../include/FXStream.h ../include/FXIO.h \
 	../include/FXFile.h ../include/FXPipe.h ../include/FXSocket.h \
 	../include/FXFileStream.h ../include/FXMemoryStream.h \
@@ -3021,6 +3047,7 @@ scribble.o: scribble.cpp ../include/fx.h ../include/fxver.h \
 shutter.o: shutter.cpp ../include/fx.h ../include/fxver.h \
 	../include/fxdefs.h ../include/fxascii.h ../include/fxunicode.h \
 	../include/FXHash.h ../include/FXException.h \
+	../include/FXElement.h ../include/FXArray.h \
 	../include/FXThread.h ../include/FXStream.h ../include/FXIO.h \
 	../include/FXFile.h ../include/FXPipe.h ../include/FXSocket.h \
 	../include/FXFileStream.h ../include/FXMemoryStream.h \
@@ -3113,6 +3140,7 @@ shutter.o: shutter.cpp ../include/fx.h ../include/fxver.h \
 splitter.o: splitter.cpp ../include/fx.h ../include/fxver.h \
 	../include/fxdefs.h ../include/fxascii.h ../include/fxunicode.h \
 	../include/FXHash.h ../include/FXException.h \
+	../include/FXElement.h ../include/FXArray.h \
 	../include/FXThread.h ../include/FXStream.h ../include/FXIO.h \
 	../include/FXFile.h ../include/FXPipe.h ../include/FXSocket.h \
 	../include/FXFileStream.h ../include/FXMemoryStream.h \
@@ -3205,6 +3233,7 @@ splitter.o: splitter.cpp ../include/fx.h ../include/fxver.h \
 switcher.o: switcher.cpp ../include/fx.h ../include/fxver.h \
 	../include/fxdefs.h ../include/fxascii.h ../include/fxunicode.h \
 	../include/FXHash.h ../include/FXException.h \
+	../include/FXElement.h ../include/FXArray.h \
 	../include/FXThread.h ../include/FXStream.h ../include/FXIO.h \
 	../include/FXFile.h ../include/FXPipe.h ../include/FXSocket.h \
 	../include/FXFileStream.h ../include/FXMemoryStream.h \
@@ -3297,6 +3326,7 @@ switcher.o: switcher.cpp ../include/fx.h ../include/fxver.h \
 tabbook.o: tabbook.cpp ../include/fx.h ../include/fxver.h \
 	../include/fxdefs.h ../include/fxascii.h ../include/fxunicode.h \
 	../include/FXHash.h ../include/FXException.h \
+	../include/FXElement.h ../include/FXArray.h \
 	../include/FXThread.h ../include/FXStream.h ../include/FXIO.h \
 	../include/FXFile.h ../include/FXPipe.h ../include/FXSocket.h \
 	../include/FXFileStream.h ../include/FXMemoryStream.h \
@@ -3389,6 +3419,7 @@ tabbook.o: tabbook.cpp ../include/fx.h ../include/fxver.h \
 table.o: table.cpp ../include/fx.h ../include/fxver.h \
 	../include/fxdefs.h ../include/fxascii.h ../include/fxunicode.h \
 	../include/FXHash.h ../include/FXException.h \
+	../include/FXElement.h ../include/FXArray.h \
 	../include/FXThread.h ../include/FXStream.h ../include/FXIO.h \
 	../include/FXFile.h ../include/FXPipe.h ../include/FXSocket.h \
 	../include/FXFileStream.h ../include/FXMemoryStream.h \
@@ -3481,6 +3512,7 @@ table.o: table.cpp ../include/fx.h ../include/fxver.h \
 wizard.o: wizard.cpp ../include/fx.h ../include/fxver.h \
 	../include/fxdefs.h ../include/fxascii.h ../include/fxunicode.h \
 	../include/FXHash.h ../include/FXException.h \
+	../include/FXElement.h ../include/FXArray.h \
 	../include/FXThread.h ../include/FXStream.h ../include/FXIO.h \
 	../include/FXFile.h ../include/FXPipe.h ../include/FXSocket.h \
 	../include/FXFileStream.h ../include/FXMemoryStream.h \

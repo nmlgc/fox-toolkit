@@ -50,7 +50,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LIB32=link.exe -lib
 # ADD BASE LIB32 /nologo
-# ADD LIB32 /out:"..\..\..\lib\FOX-1.6.lib"
+# ADD LIB32 /out:"..\..\..\lib\FOX-1.7.lib"
 
 !ELSEIF  "$(CFG)" == "fox - Win32 Debug"
 
@@ -74,7 +74,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LIB32=link.exe -lib
 # ADD BASE LIB32 /nologo
-# ADD LIB32 /out:"..\..\..\lib\FOXD-1.6.lib"
+# ADD LIB32 /out:"..\..\..\lib\FOXD-1.7.lib"
 
 !ENDIF 
 

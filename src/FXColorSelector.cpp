@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXColorSelector.cpp,v 1.74 2006/01/22 17:58:20 fox Exp $                 *
+* $Id: FXColorSelector.cpp,v 1.75 2006/03/31 07:33:04 fox Exp $                 *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -754,13 +754,13 @@ FXColor FXColorSelector::getRGBA() const {
 
 
 // Return true if only opaque colors allowed
-FXbool FXColorSelector::isOpaqueOnly() const {
+bool FXColorSelector::isOpaqueOnly() const {
   return well->isOpaqueOnly();
   }
 
 
 // Change opaque only mode
-void FXColorSelector::setOpaqueOnly(FXbool opaque){
+void FXColorSelector::setOpaqueOnly(bool opaque){
   if(opaque){
     well->setOpaqueOnly(TRUE);
     setRGBA(well->getRGBA() | FXRGBA(0,0,0,255));

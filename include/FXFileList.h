@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXFileList.h,v 1.57 2006/01/22 17:58:01 fox Exp $                        *
+* $Id: FXFileList.h,v 1.60 2006/04/06 05:42:55 fox Exp $                        *
 ********************************************************************************/
 #ifndef FXFILELIST_H
 #define FXFILELIST_H
@@ -55,10 +55,10 @@ class FXAPI FXFileItem : public FXIconItem {
   FXDECLARE(FXFileItem)
   friend class FXFileList;
 protected:
-  FXFileAssoc  *assoc;                  // File association record
-  FXFileItem   *link;                   // Link to next item
-  FXlong        size;                   // File size
-  FXTime        date;                   // File time
+  FXFileAssoc *assoc;           // File association record
+  FXFileItem  *link;            // Link to next item
+  FXlong       size;            // File size
+  FXTime       date;            // File time
 private:
   FXFileItem(const FXFileItem&);
   FXFileItem& operator=(const FXFileItem&);
@@ -66,45 +66,46 @@ protected:
   FXFileItem():assoc(NULL),link(NULL),size(0),date(0){}
 protected:
   enum{
-    FOLDER     = 64,                    // Directory item
-    EXECUTABLE = 128,                   // Executable item
-    SYMLINK    = 256,                   // Symbolic linked item
-    CHARDEV    = 512,                   // Character special item
-    BLOCKDEV   = 1024,                  // Block special item
-    FIFO       = 2048,                  // FIFO item
-    SOCK       = 4096,                  // Socket item
-    SHARE      = 8192                   // Share
+    FOLDER     = 64,            /// Directory item
+    EXECUTABLE = 128,           /// Executable item
+    SYMLINK    = 256,           /// Symbolic linked item
+    CHARDEV    = 512,           /// Character special item
+    BLOCKDEV   = 1024,          /// Block special item
+    FIFO       = 2048,          /// FIFO item
+    SOCK       = 4096,          /// Socket item
+    SHARE      = 8192           /// Share
     };
 public:
+
   /// Constructor
   FXFileItem(const FXString& text,FXIcon* bi=NULL,FXIcon* mi=NULL,void* ptr=NULL):FXIconItem(text,bi,mi,ptr),assoc(NULL),link(NULL),size(0L),date(0){}
 
   /// Return true if this is a file item
-  FXbool isFile() const { return (state&(FOLDER|BLOCKDEV|CHARDEV|FIFO|SOCK|SHARE))==0; }
+  bool isFile() const { return (state&(FOLDER|BLOCKDEV|CHARDEV|FIFO|SOCK|SHARE))==0; }
 
   /// Return true if this is a directory item
-  FXbool isDirectory() const { return (state&FOLDER)!=0; }
+  bool isDirectory() const { return (state&FOLDER)!=0; }
 
   /// Return true if this is a share item
-  FXbool isShare() const { return (state&SHARE)!=0; }
+  bool isShare() const { return (state&SHARE)!=0; }
 
   /// Return true if this is an executable item
-  FXbool isExecutable() const { return (state&EXECUTABLE)!=0; }
+  bool isExecutable() const { return (state&EXECUTABLE)!=0; }
 
   /// Return true if this is a symbolic link item
-  FXbool isSymlink() const { return (state&SYMLINK)!=0; }
+  bool isSymlink() const { return (state&SYMLINK)!=0; }
 
   /// Return true if this is a character device item
-  FXbool isChardev() const { return (state&CHARDEV)!=0; }
+  bool isChardev() const { return (state&CHARDEV)!=0; }
 
   /// Return true if this is a block device item
-  FXbool isBlockdev() const { return (state&BLOCKDEV)!=0; }
+  bool isBlockdev() const { return (state&BLOCKDEV)!=0; }
 
   /// Return true if this is an FIFO item
-  FXbool isFifo() const { return (state&FIFO)!=0; }
+  bool isFifo() const { return (state&FIFO)!=0; }
 
   /// Return true if this is a socket
-  FXbool isSocket() const { return (state&SOCK)!=0; }
+  bool isSocket() const { return (state&SOCK)!=0; }
 
   /// Return the file-association object for this item
   FXFileAssoc* getAssoc() const { return assoc; }
@@ -112,7 +113,7 @@ public:
   /// Return the file size for this item
   FXlong getSize() const { return size; }
 
-  /// Return the date for this item
+  /// Return the date for this item, in nanoseconds
   FXTime getDate() const { return date; }
   };
 
@@ -151,7 +152,7 @@ protected:
 protected:
   FXFileList();
   virtual FXIconItem *createItem(const FXString& text,FXIcon *big,FXIcon* mini,void* ptr);
-  void listItems(FXbool force);
+  void listItems(bool force);
 private:
   FXFileList(const FXFileList&);
   FXFileList &operator=(const FXFileList&);
@@ -253,11 +254,11 @@ public:
   /// Destroy server-side resources
   virtual void destroy();
 
-  /// Scan the current directory and update the items if needed, or if force is TRUE
-  void scan(FXbool force=TRUE);
+  /// Scan the current directory and update the items if needed, or if force is true
+  void scan(bool force=true);
 
   /// Set current file
-  void setCurrentFile(const FXString& file,FXbool notify=FALSE);
+  void setCurrentFile(const FXString& file,bool notify=false);
 
   /// Return current file
   FXString getCurrentFile() const;
@@ -275,16 +276,16 @@ public:
   FXString getPattern() const { return pattern; }
 
   /// Return TRUE if item is a directory
-  FXbool isItemDirectory(FXint index) const;
+  bool isItemDirectory(FXint index) const;
 
   /// Return TRUE if item is a directory
-  FXbool isItemShare(FXint index) const;
+  bool isItemShare(FXint index) const;
 
   /// Return TRUE if item is a file
-  FXbool isItemFile(FXint index) const;
+  bool isItemFile(FXint index) const;
 
   /// Return TRUE if item is executable
-  FXbool isItemExecutable(FXint index) const;
+  bool isItemExecutable(FXint index) const;
 
   /// Return name of item at index
   FXString getItemFilename(FXint index) const;
@@ -302,28 +303,28 @@ public:
   void setMatchMode(FXuint mode);
 
   /// Return TRUE if showing hidden files
-  FXbool showHiddenFiles() const;
+  bool showHiddenFiles() const;
 
   /// Show or hide hidden files
-  void showHiddenFiles(FXbool showing);
+  void showHiddenFiles(bool showing);
 
   /// Return TRUE if showing directories only
-  FXbool showOnlyDirectories() const;
+  bool showOnlyDirectories() const;
 
   /// Show directories only
-  void showOnlyDirectories(FXbool shown);
+  void showOnlyDirectories(bool shown);
 
   /// Return TRUE if showing files only
-  FXbool showOnlyFiles() const;
+  bool showOnlyFiles() const;
 
   /// Show files only
-  void showOnlyFiles(FXbool shown);
+  void showOnlyFiles(bool shown);
 
   /// Return TRUE if image preview on
-  FXbool showImages() const;
+  bool showImages() const;
 
   /// Show or hide preview images
-  void showImages(FXbool showing);
+  void showImages(bool showing);
 
   /// Return images preview size
   FXint getImageSize() const { return imagesize; }
@@ -332,10 +333,10 @@ public:
   void setImageSize(FXint size);
 
   /// Return TRUE if showing parent directories
-  FXbool showParents() const;
+  bool showParents() const;
 
   /// Show parent directories
-  void showParents(FXbool shown);
+  void showParents(bool shown);
 
   /// Change file associations
   void setAssociations(FXFileDict* assoc);

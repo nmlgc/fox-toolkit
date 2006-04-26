@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXGLContext.cpp,v 1.38 2006/01/22 17:58:28 fox Exp $                     *
+* $Id: FXGLContext.cpp,v 1.40 2006/04/24 18:19:13 fox Exp $                     *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -35,6 +35,7 @@
 #include "FXRegistry.h"
 #include "FXAccelTable.h"
 #include "FXApp.h"
+#include "FXException.h"
 #include "FXVisual.h"
 #include "FXGLVisual.h"
 #include "FXDrawable.h"
@@ -76,16 +77,14 @@ FXIMPLEMENT(FXGLContext,FXId,NULL,0)
 
 
 // Make a GL context
-FXGLContext::FXGLContext(FXApp* a,FXGLVisual *vis):
-  FXId(a),visual(vis),surface(NULL),ctx(NULL){
+FXGLContext::FXGLContext(FXApp* a,FXGLVisual *vis):FXId(a),visual(vis),surface(NULL),ctx(NULL){
   FXTRACE((100,"FXGLContext::FXGLContext %p\n",this));
   sgnext=sgprev=this;
   }
 
 
 // Make a GL context sharing a display list with another
-FXGLContext::FXGLContext(FXApp* a,FXGLVisual *vis,FXGLContext *shared):
-  FXId(a),visual(vis),surface(NULL),ctx(NULL){
+FXGLContext::FXGLContext(FXApp* a,FXGLVisual *vis,FXGLContext *shared):FXId(a),visual(vis),surface(NULL),ctx(NULL){
   FXTRACE((100,"FXGLContext::FXGLContext %p\n",this));
   sgnext=shared;
   sgprev=shared->sgprev;
@@ -95,25 +94,27 @@ FXGLContext::FXGLContext(FXApp* a,FXGLVisual *vis,FXGLContext *shared):
 
 
 // Return TRUE if it is sharing display lists
-FXbool FXGLContext::isShared() const { return sgnext!=this; }
+bool FXGLContext::isShared() const { return sgnext!=this; }
 
 
 // Create GL context
 void FXGLContext::create(){
   ///visual->create();    // Should we call this here?
 #ifdef HAVE_GL_H
-  register FXGLContext *context;
-  register void *sharedctx=NULL;
   if(!xid){
     if(getApp()->isInitialized()){
+      void *sharedctx=NULL;
+      
       FXTRACE((100,"FXGLContext::create %p\n",this));
 
-      // The visual should be OpenGL capable
-      if(!visual->getInfo()){ fxerror("FXGLContext::create(): visual unsuitable for OpenGL.\n"); }
+      // Must have GL info available
+      if(!visual->getInfo()){
+        throw FXWindowException("unable to create GL window.");
+        }
 
-      // Find another member of the group which is already created, and get its context
+      // Sharing display lists with other context
       if(sgnext!=this){
-        context=sgnext;
+        FXGLContext *context=sgnext;
         while(context!=this){
           sharedctx=context->ctx;
           if(sharedctx) break;
@@ -125,7 +126,9 @@ void FXGLContext::create(){
 
       // Make context
       ctx=glXCreateContext((Display*)getApp()->getDisplay(),(XVisualInfo*)visual->getInfo(),(GLXContext)sharedctx,TRUE);
-      if(!ctx){ fxerror("FXGLContext::create(): glXCreateContext() failed.\n"); }
+      if(!ctx){
+        throw FXWindowException("unable to create GL window.");
+        }
 
       xid=1;
 #else
@@ -136,29 +139,35 @@ void FXGLContext::create(){
       // afterwards, the window is no longer needed and will be deleted.
       // Yes, I'm painfully aware that this sucks, but we intend to keep the
       // logical model clean come hell or high water....
-      HWND wnd=CreateWindow(TEXT("FXPopup"),NULL,WS_CHILD|WS_VISIBLE|WS_CLIPSIBLINGS|WS_CLIPCHILDREN|WS_POPUP,0,0,2,2,GetDesktopWindow(),0,(HINSTANCE)(getApp()->display),this);
-      if(!wnd){ fxerror("FXGLContext::create(): CreateWindow() failed.\n"); }
+      HWND wnd=CreateWindowA("FXPopup",NULL,WS_CHILD|WS_VISIBLE|WS_CLIPSIBLINGS|WS_CLIPCHILDREN|WS_POPUP,0,0,2,2,GetDesktopWindow(),0,(HINSTANCE)(getApp()->display),this);
+      if(!wnd){ 
+        throw FXWindowException("unable to create GL window.");
+        }
 
       // Get the window's device context
       HDC hdc=GetDC((HWND)wnd);
 
       // Set the pixel format
       if(!SetPixelFormat(hdc,(FXint)(FXival)visual->getVisual(),(PIXELFORMATDESCRIPTOR*)visual->getInfo())){
-        fxerror("FXGLContext::create(): SetPixelFormat() failed.\n");
+        throw FXWindowException("unable to create GL window.");
         }
 
       // Make the GL context
       ctx=(void*)wglCreateContext(hdc);
-      if(!ctx){ fxerror("FXGLContext::create(): wglCreateContext() failed.\n"); }
+      if(!ctx){
+        throw FXWindowException("unable to create GL window.");
+        }
 
       // I hope I didn't get this backward; the new context obviously has no
       // display lists yet, but the old one may have, as it has already been around
       // for a while.  If you see this fail and can't explain why, then that might
       // be what's going on.  Report this to jeroen@fox-toolkit.org
-      if(sharedctx && !wglShareLists((HGLRC)sharedctx,(HGLRC)ctx)){ fxerror("FXGLContext::create(): wglShareLists() failed.\n"); }
+      if(sharedctx && !wglShareLists((HGLRC)sharedctx,(HGLRC)ctx)){ 
+        throw FXWindowException("unable to create GL window.");
+        }
 
       // Release window's device context
-      ReleaseDC(wnd,hdc);
+      ::ReleaseDC(wnd,hdc);
 
       // Destroy the temporary window
       DestroyWindow(wnd);
@@ -203,7 +212,7 @@ void FXGLContext::destroy(){
 
 
 //  Make the rendering context of drawable current
-FXbool FXGLContext::begin(FXDrawable *drawable){
+bool FXGLContext::begin(FXDrawable *drawable){
 #ifdef HAVE_GL_H
   if(!drawable){ fxerror("FXGLContext::begin: NULL drawable.\n"); }
   if(!drawable->id()){ fxerror("FXGLContext::begin: drawable not created yet.\n"); }
@@ -212,46 +221,40 @@ FXbool FXGLContext::begin(FXDrawable *drawable){
 #ifndef WIN32
     if(glXMakeCurrent((Display*)getApp()->getDisplay(),drawable->id(),(GLXContext)ctx)){
       surface=drawable;
-      return TRUE;
+      return true;
       }
 #else
-    //HDC hdc=drawable->GetDC();  // Obtain DC in a way appropriate for the drawable!
-    HDC hdc=::GetDC((HWND)drawable->id());  // FIXME:- it should probably be the line above, but need to check about ReleaseDC first!
+    HDC hdc=::GetDC((HWND)drawable->id());
     if(visual->colormap){
       SelectPalette(hdc,(HPALETTE)visual->colormap,FALSE);
       RealizePalette(hdc);
       }
     if(wglMakeCurrent(hdc,(HGLRC)ctx)){
       surface=drawable;
-      return TRUE;
+      return true;
       }
 #endif
     }
 #endif
-  return FALSE;
+  return false;
   }
 
 
 // Make the rendering context of drawable non-current
-FXbool FXGLContext::end(){
-  FXbool bRet=FALSE;
+bool FXGLContext::end(){
 #ifdef HAVE_GL_H
   if(xid){
 #ifndef WIN32
-    bRet=glXMakeCurrent((Display*)getApp()->getDisplay(),None,(GLXContext)NULL);
-#else
-    if(surface){
-      // According to "Steve Granja" <sjgranja@hks.com>,
-      // ::ReleaseDC is still necessary even for owned DC's.
-      // So release it here to prevent resource leak.
-      ::ReleaseDC((HWND)surface->id(),wglGetCurrentDC());
-      }
-    bRet=wglMakeCurrent(NULL,NULL);
-#endif
     surface=NULL;
+    return glXMakeCurrent((Display*)getApp()->getDisplay(),None,(GLXContext)NULL);
+#else
+    if(surface){ ::ReleaseDC((HWND)surface->id(),wglGetCurrentDC()); }
+    surface=NULL;
+    return wglMakeCurrent(NULL,NULL)!=0;
+#endif
     }
 #endif
-  return bRet;
+  return false;
   }
 
 
@@ -262,34 +265,12 @@ void FXGLContext::swapBuffers(){
 #ifndef WIN32
   glXSwapBuffers((Display*)getApp()->getDisplay(),surface->id());
 #else
-  // SwapBuffers(wglGetCurrentDC());
-  // wglSwapLayerBuffers(wglGetCurrentDC(),WGL_SWAP_MAIN_PLANE);
   HDC hdc=wglGetCurrentDC();
   if(wglSwapLayerBuffers(hdc,WGL_SWAP_MAIN_PLANE)==FALSE){
     SwapBuffers(hdc);
     }
 #endif
 #endif
-  }
-
-
-// This function only available on Mesa
-void FXGLContext::swapSubBuffers(FXint,FXint,FXint,FXint){
-
-// FIXME: Put the swap hack back!!
-// FIXME: bool bUseSwapHack = ! strncmp("Mesa", glGetString(GL_RENDERER), 4);
-
-// FIXME: how to get proc address by name, since we don't know which shared lib we're going to get!
-
-// #ifdef HAVE_GL_H
-// #ifdef HAVE_MESA
-// #ifdef GLX_MESA_copy_sub_buffer
-//   glXCopySubBufferMESA(getApp()->display,xid,x,height-y-h-1,w,h);
-// #else
-//   glXSwapBuffers(getApp()->display,xid);
-// #endif
-// #endif
-// #endif
   }
 
 

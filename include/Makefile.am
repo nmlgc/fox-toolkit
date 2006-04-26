@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 
 
-foxincludedir=$(includedir)/fox-1.6
+foxincludedir=$(includedir)/fox-1.7
 
 CODECS = \
 FX88591Codec.h \

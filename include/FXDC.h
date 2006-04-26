@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXDC.h,v 1.37 2006/01/22 17:58:00 fox Exp $                              *
+* $Id: FXDC.h,v 1.38 2006/03/31 07:33:01 fox Exp $                              *
 ********************************************************************************/
 #ifndef FXDC_H
 #define FXDC_H
@@ -418,7 +418,7 @@ public:
   FXFont* getFont() const { return font; }
 
   /// Clip against child windows
-  virtual void clipChildren(FXbool yes);
+  virtual void clipChildren(bool yes);
 
   /// Destructor
   virtual ~FXDC();

@@ -19,13 +19,14 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXDict.cpp,v 1.33 2006/01/22 17:58:22 fox Exp $                          *
+* $Id: FXDict.cpp,v 1.35 2006/03/25 18:03:43 fox Exp $                          *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
 #include "fxdefs.h"
 #include "FXHash.h"
 #include "FXStream.h"
+#include "FXElement.h"
 #include "FXDict.h"
 
 
@@ -80,7 +81,7 @@ FXIMPLEMENT(FXDict,FXObject,NULL,0)
 // Construct empty dictionary
 FXDict::FXDict(){
   register FXint i;
-  FXMALLOC(&dict,FXDictEntry,DEF_HASH_SIZE);
+  allocElms(dict,DEF_HASH_SIZE);
   for(i=0; i<DEF_HASH_SIZE; i++){
     dict[i].key=NULL;
     dict[i].data=NULL;
@@ -95,7 +96,7 @@ FXDict::FXDict(){
 // Copy constructor
 FXDict::FXDict(const FXDict& orig):FXObject(orig){
   register FXint i;
-  FXMALLOC(&dict,FXDictEntry,orig.total);
+  allocElms(dict,orig.total);
   for(i=0; i<orig.total; i++){
     if(0<=orig.dict[i].hash){
       dict[i].key=strdup(orig.dict[i].key);
@@ -119,7 +120,7 @@ FXDict& FXDict::operator=(const FXDict& orig){
   register FXint i;
   if(&orig!=this){
     clear();
-    FXRESIZE(&dict,FXDictEntry,orig.total);
+    resizeElms(dict,orig.total);
     for(i=0; i<orig.total; i++){
       if(0<=orig.dict[i].hash){
         dict[i].key=strdup(orig.dict[i].key);
@@ -141,7 +142,7 @@ FXDict& FXDict::operator=(const FXDict& orig){
 
 
 // Defaul implementation
-void *FXDict::createData(const void* ptr){ return (void*)ptr; }
+void *FXDict::createData(void* ptr){ return ptr; }
 
 
 // Defaul implementation
@@ -162,7 +163,7 @@ void FXDict::size(FXint m){
   if(n!=total){
     FXTRACE((200,"FXDict::size: %p: resizing from %d to %d\n",this,total,n));
     FXASSERT(m<=n);
-    FXCALLOC(&k,FXDictEntry,n);
+    callocElms(k,n);
     for(i=0; i<n; i++) k[i].hash=-1;
     for(i=0; i<total; i++){
       h=dict[i].hash;
@@ -176,7 +177,7 @@ void FXDict::size(FXint m){
         k[p]=dict[i];
         }
       }
-    FXFREE(&dict);
+    freeElms(dict);
     dict=k;
     total=n;
     }
@@ -184,7 +185,7 @@ void FXDict::size(FXint m){
 
 
 // Insert a new entry, leave it alone if already existing
-void* FXDict::insert(const FXchar* ky,const void* pdata,bool mrk){
+void* FXDict::insert(const FXchar* ky,void* pdata,bool mrk){
   register FXint p,i,x,h,n;
   register void *ptr;
   if(!ky){ fxerror("FXDict::insert: NULL key argument.\n"); }
@@ -222,7 +223,7 @@ void* FXDict::insert(const FXchar* ky,const void* pdata,bool mrk){
 
 
 // Add or replace entry
-void* FXDict::replace(const FXchar* ky,const void* pdata,bool mrk){
+void* FXDict::replace(const FXchar* ky,void* pdata,bool mrk){
   register FXint p,i,x,h,n;
   register void *ptr;
   if(!ky){ fxerror("FXDict::replace: NULL key argument.\n"); }
@@ -378,7 +379,7 @@ void FXDict::clear(){
 // Destroy table
 FXDict::~FXDict(){
   clear();
-  FXFREE(&dict);
+  freeElms(dict);
   dict=(FXDictEntry*)-1L;
   }
 

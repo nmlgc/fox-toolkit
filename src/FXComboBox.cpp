@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXComboBox.cpp,v 1.66 2006/01/27 02:07:44 fox Exp $                      *
+* $Id: FXComboBox.cpp,v 1.68 2006/04/25 16:59:21 fox Exp $                      *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -115,7 +115,7 @@ FXComboBox::FXComboBox(FXComposite *p,FXint cols,FXObject* tgt,FXSelector sel,FX
   flags|=FLAG_ENABLED;
   target=tgt;
   message=sel;
-  field=new FXTextField(this,cols,this,FXComboBox::ID_TEXT,0, 0,0,0,0, pl,pr,pt,pb);
+  field=new FXTextField(this,cols,this,FXComboBox::ID_TEXT,0,0,0,0,0,pl,pr,pt,pb);
   if(options&COMBOBOX_STATIC) field->setEditable(FALSE);
   pane=new FXPopup(this,FRAME_LINE);
   list=new FXList(pane,this,FXComboBox::ID_LIST,LIST_BROWSESELECT|LIST_AUTOSELECT|LAYOUT_FILL_X|LAYOUT_FILL_Y|SCROLLERS_TRACK|HSCROLLER_NEVER);
@@ -324,13 +324,13 @@ long FXComboBox::onMouseWheel(FXObject*,FXSelector,void* ptr){
 
 
 // Return true if editable
-FXbool FXComboBox::isEditable() const {
+bool FXComboBox::isEditable() const {
   return field->isEditable();
   }
 
 
 // Set widget is editable or not
-void FXComboBox::setEditable(FXbool edit){
+void FXComboBox::setEditable(bool edit){
   field->setEditable(edit);
   }
 
@@ -378,13 +378,13 @@ void FXComboBox::setNumVisible(FXint nvis){
 
 
 // Is item current
-FXbool FXComboBox::isItemCurrent(FXint index) const {
+bool FXComboBox::isItemCurrent(FXint index) const {
   return list->isItemCurrent(index);
   }
 
 
 // Change current item
-void FXComboBox::setCurrentItem(FXint index,FXbool notify){
+void FXComboBox::setCurrentItem(FXint index,bool notify){
   FXint current=list->getCurrentItem();
   if(current!=index){
     list->setCurrentItem(index);
@@ -565,7 +565,7 @@ void* FXComboBox::getItemData(FXint index) const {
 
 
 // Is the pane shown
-FXbool FXComboBox::isPaneShown() const {
+bool FXComboBox::isPaneShown() const {
   return pane->shown();
   }
 

@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXGLCanvas.cpp,v 1.61 2006/01/22 17:58:27 fox Exp $                      *
+* $Id: FXGLCanvas.cpp,v 1.63 2006/04/03 03:43:16 fox Exp $                      *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -109,7 +109,7 @@ const char* FXGLCanvas::GetClass() const { return "FXGLCanvas"; }
 
 
 // Return TRUE if it is sharing display lists
-FXbool FXGLCanvas::isShared() const { return sgnext!=this; }
+bool FXGLCanvas::isShared() const { return sgnext!=this; }
 
 
 // Create X window (GL CANVAS)
@@ -207,7 +207,7 @@ void FXGLCanvas::destroy(){
 
 
 //  Make the rendering context of GL Canvas current
-FXbool FXGLCanvas::makeCurrent(){
+bool FXGLCanvas::makeCurrent(){
 #ifdef HAVE_GL_H
   if(ctx){
 #ifndef WIN32
@@ -218,17 +218,16 @@ FXbool FXGLCanvas::makeCurrent(){
       SelectPalette(hdc,(HPALETTE)visual->colormap,FALSE);
       RealizePalette(hdc);
       }
-    BOOL bStatus=wglMakeCurrent(hdc,(HGLRC)ctx);
-    return bStatus;
+    return wglMakeCurrent(hdc,(HGLRC)ctx)!=0;
 #endif
     }
 #endif
-  return FALSE;
+  return false;
   }
 
 
 //  Make the rendering context of GL Canvas current
-FXbool FXGLCanvas::makeNonCurrent(){
+bool FXGLCanvas::makeNonCurrent(){
 #ifdef HAVE_GL_H
   if(ctx){
 #ifndef WIN32
@@ -238,12 +237,11 @@ FXbool FXGLCanvas::makeNonCurrent(){
     // ::ReleaseDC is still necessary even for owned DC's.
     // So release it here to prevent resource leak.
     ::ReleaseDC((HWND)xid,wglGetCurrentDC());
-    BOOL bStatus=wglMakeCurrent(NULL,NULL);
-    return bStatus;
+    return wglMakeCurrent(NULL,NULL)!=0;
 #endif
     }
 #endif
-  return FALSE;
+  return false;
   }
 
 
@@ -262,7 +260,7 @@ void* FXGLCanvas::getCurrentContext(){
 
 
 //  Return TRUE if this window's context is current
-FXbool FXGLCanvas::isCurrent() const {
+bool FXGLCanvas::isCurrent() const {
 #ifdef HAVE_GL_H
   if(ctx){
 #ifndef WIN32
@@ -272,7 +270,7 @@ FXbool FXGLCanvas::isCurrent() const {
 #endif
     }
 #endif
-  return FALSE;
+  return false;
   }
 
 

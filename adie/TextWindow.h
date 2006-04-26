@@ -19,7 +19,7 @@
 * along with this program; if not, write to the Free Software                   *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: TextWindow.h,v 1.38 2006/02/06 03:03:40 fox Exp $                        *
+* $Id: TextWindow.h,v 1.40 2006/03/31 07:33:00 fox Exp $                        *
 ********************************************************************************/
 #ifndef TEXTWINDOW_H
 #define TEXTWINDOW_H
@@ -70,7 +70,7 @@ protected:
   FXUndoList           undolist;                // Undo list
   FXRecentFiles        mrufiles;                // Recent files list
   FXString             filename;                // File being edited
-  FXTime               filetime;                // Original modtime of file
+  FXlong               filetime;                // Original modtime of file
   FXbool               filenameset;             // Filename is set
   FXString             delimiters;              // Text delimiters
   FXString             searchpath;              // To search for files
@@ -339,7 +339,7 @@ public:
   virtual void detach();
 
   // Close the window, return TRUE if actually closed
-  virtual FXbool close(FXbool notify=FALSE);
+  virtual bool close(bool notify=false);
 
   // Return Adie application
   Adie* getApp() const { return (Adie*)FXMainWindow::getApp(); }
@@ -351,31 +351,31 @@ public:
   void setFilename(const FXString& file){ filename=file; }
 
   // Has a filename been set or is it a new window
-  FXbool isFilenameSet() const { return filenameset; }
+  bool isFilenameSet() const { return filenameset; }
 
   // Is it modified
-  FXbool isModified() const;
+  bool isModified() const;
 
   // Set editable flag
-  void setEditable(FXbool edit=TRUE);
+  void setEditable(bool edit=true);
 
   // Is it editable
-  FXbool isEditable() const;
+  bool isEditable() const;
 
   // Load text from file
-  FXbool loadFile(const FXString& file);
+  bool loadFile(const FXString& file);
 
   // Save text to file
-  FXbool saveFile(const FXString& file);
+  bool saveFile(const FXString& file);
 
   // Insert file at cursor
-  FXbool insertFile(const FXString& file);
+  bool insertFile(const FXString& file);
 
   // Extract selection to file
-  FXbool extractFile(const FXString& file);
+  bool extractFile(const FXString& file);
 
   // Return TRUE if changes have been saved
-  FXbool saveChanges();
+  bool saveChanges();
 
   // Change pattern list
   void setPatterns(const FXString& patterns);
@@ -422,7 +422,7 @@ public:
   void determineSyntax();
 
   // Set syntax by name
-  FXbool forceSyntax(const FXString& language);
+  bool forceSyntax(const FXString& language);
 
   // Change style colors
   void setStyleColors(FXint index,const FXHiliteStyle& style);

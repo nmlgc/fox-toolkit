@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXDirList.h,v 1.70 2006/01/22 17:58:00 fox Exp $                         *
+* $Id: FXDirList.h,v 1.74 2006/04/21 18:55:34 fox Exp $                         *
 ********************************************************************************/
 #ifndef FXDIRLIST_H
 #define FXDIRLIST_H
@@ -50,11 +50,11 @@ class FXAPI FXDirItem : public FXTreeItem {
   FXDECLARE(FXDirItem)
   friend class FXDirList;
 protected:
-  FXFileAssoc  *assoc;                // File association
-  FXDirItem    *link;                 // Link to next item
-  FXDirItem    *list;                 // List of child items
-  FXlong        size;                 // File size (if a file)
-  FXTime        date;                 // Time of item
+  FXFileAssoc *assoc;           // File association
+  FXDirItem   *link;            // Link to next item
+  FXDirItem   *list;            // List of child items
+  FXlong       size;            // File size (if a file)
+  FXTime       date;            // Time of item
 private:
   FXDirItem(const FXDirItem&);
   FXDirItem& operator=(const FXDirItem&);
@@ -76,28 +76,28 @@ public:
   FXDirItem(const FXString& text,FXIcon* oi=NULL,FXIcon* ci=NULL,void* ptr=NULL):FXTreeItem(text,oi,ci,ptr),assoc(NULL),link(NULL),list(NULL),size(0),date(0){state=HASITEMS;}
 
   /// Return true if this is a file item
-  FXbool isFile() const { return (state&(FOLDER|BLOCKDEV|CHARDEV|FIFO|SOCK))==0; }
+  bool isFile() const { return (state&(FOLDER|BLOCKDEV|CHARDEV|FIFO|SOCK))==0; }
 
   /// Return true if this is a directory item
-  FXbool isDirectory() const { return (state&FOLDER)!=0; }
+  bool isDirectory() const { return (state&FOLDER)!=0; }
 
   /// Return true if this is an executable item
-  FXbool isExecutable() const { return (state&EXECUTABLE)!=0; }
+  bool isExecutable() const { return (state&EXECUTABLE)!=0; }
 
   /// Return true if this is a symbolic link item
-  FXbool isSymlink() const { return (state&SYMLINK)!=0; }
+  bool isSymlink() const { return (state&SYMLINK)!=0; }
 
   /// Return true if this is a character device item
-  FXbool isChardev() const { return (state&CHARDEV)!=0; }
+  bool isChardev() const { return (state&CHARDEV)!=0; }
 
   /// Return true if this is a block device item
-  FXbool isBlockdev() const { return (state&BLOCKDEV)!=0; }
+  bool isBlockdev() const { return (state&BLOCKDEV)!=0; }
 
   /// Return true if this is an FIFO item
-  FXbool isFifo() const { return (state&FIFO)!=0; }
+  bool isFifo() const { return (state&FIFO)!=0; }
 
   /// Return true if this is a socket
-  FXbool isSocket() const { return (state&SOCK)!=0; }
+  bool isSocket() const { return (state&SOCK)!=0; }
 
   /// Return the file-association object for this item
   FXFileAssoc* getAssoc() const { return assoc; }
@@ -105,7 +105,7 @@ public:
   /// Return the file size for this item
   FXlong getSize() const { return size; }
 
-  /// Return the date for this item
+  /// Return the date for this item, in nanoseconds
   FXTime getDate() const { return date; }
   };
 
@@ -130,10 +130,10 @@ protected:
   FXString      pattern;              // Pattern of file names
   FXuint        matchmode;            // File wildcard match mode
   FXuint        counter;              // Refresh counter
-  FXIcon       *open_folder;          // Open folder icon
-  FXIcon       *closed_folder;        // Closed folder icon
-  FXIcon       *mini_doc;             // Document icon
-  FXIcon       *mini_app;             // Application icon
+  FXIcon       *opendiricon;          // Open folder icon
+  FXIcon       *closeddiricon;        // Closed folder icon
+  FXIcon       *documenticon;         // Document icon
+  FXIcon       *applicationicon;      // Application icon
   FXIcon       *cdromicon;
   FXIcon       *harddiskicon;
   FXIcon       *networkicon;
@@ -213,32 +213,32 @@ public:
   /// Destroy server-side resources
   virtual void destroy();
 
-  /// Scan the directories and update the items if needed, or if force is TRUE
-  void scan(FXbool force=TRUE);
+  /// Scan the directories and update the items if needed, or if force is true
+  void scan(bool force=true);
 
-  /// Return TRUE if item is a directory
-  FXbool isItemDirectory(const FXTreeItem* item) const;
+  /// Return true if item is a directory
+  bool isItemDirectory(const FXTreeItem* item) const;
 
-  /// Return TRUE if item is a file
-  FXbool isItemFile(const FXTreeItem* item) const;
+  /// Return true if item is a file
+  bool isItemFile(const FXTreeItem* item) const;
 
-  /// Return TRUE if item is executable
-  FXbool isItemExecutable(const FXTreeItem* item) const;
+  /// Return true if item is executable
+  bool isItemExecutable(const FXTreeItem* item) const;
 
   /// Collapse tree
-  virtual FXbool collapseTree(FXTreeItem* tree,FXbool notify=FALSE);
+  virtual bool collapseTree(FXTreeItem* tree,bool notify=false);
 
   /// Expand tree
-  virtual FXbool expandTree(FXTreeItem* tree,FXbool notify=FALSE);
+  virtual bool expandTree(FXTreeItem* tree,bool notify=false);
 
   /// Set current file
-  void setCurrentFile(const FXString& file,FXbool notify=FALSE);
+  void setCurrentFile(const FXString& file,bool notify=false);
 
   /// Return current file
   FXString getCurrentFile() const;
 
   /// Set current directory
-  void setDirectory(const FXString& path,FXbool notify=FALSE);
+  void setDirectory(const FXString& path,bool notify=false);
 
   /// Return current directory
   FXString getDirectory() const;
@@ -261,17 +261,17 @@ public:
   /// Change wildcard matching mode
   void setMatchMode(FXuint mode);
 
-  /// Return TRUE if showing files as well as directories
-  FXbool showFiles() const;
+  /// Return true if showing files as well as directories
+  bool showFiles() const;
 
   /// Show or hide normal files
-  void showFiles(FXbool showing);
+  void showFiles(bool showing);
 
-  /// Return TRUE if showing hidden files and directories
-  FXbool showHiddenFiles() const;
+  /// Return true if showing hidden files and directories
+  bool showHiddenFiles() const;
 
   /// Show or hide hidden files and directories
-  void showHiddenFiles(FXbool showing);
+  void showHiddenFiles(bool showing);
 
   /// Change file associations
   void setAssociations(FXFileDict* assoc);

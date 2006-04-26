@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXRuler.h,v 1.36 2006/01/28 20:30:21 fox Exp $                           *
+* $Id: FXRuler.h,v 1.37 2006/03/29 07:23:00 fox Exp $                           *
 ********************************************************************************/
 #ifndef FXRULER_H
 #define FXRULER_H
@@ -162,13 +162,13 @@ public:
   virtual FXint getDefaultHeight();
 
   /// Set the current position
-  void setPosition(FXint pos,FXbool notify=FALSE);
+  void setPosition(FXint pos,bool notify=false);
 
   /// Return the current position
   FXint getPosition() const { return pos; }
 
   /// Change/return content size
-  void setContentSize(FXint size,FXbool notify=FALSE);
+  void setContentSize(FXint size,bool notify=false);
   FXint getContentSize() const;
 
   /// Get lower edge of document
@@ -178,55 +178,55 @@ public:
   FXint getDocumentUpper() const;
 
   /// Change/return document size
-  void setDocumentSize(FXint size,FXbool notify=FALSE);
+  void setDocumentSize(FXint size,bool notify=false);
   FXint getDocumentSize() const { return documentSize; }
 
   /// Change/return document edge spacing
-  void setEdgeSpacing(FXint space,FXbool notify=FALSE);
+  void setEdgeSpacing(FXint space,bool notify=false);
   FXint getEdgeSpacing() const { return edgeSpacing; }
 
   /// Change/return lower document margin
-  void setMarginLower(FXint mgn,FXbool notify=FALSE);
+  void setMarginLower(FXint mgn,bool notify=false);
   FXint getMarginLower() const { return marginLower; }
 
   /// Change/return upper document margin
-  void setMarginUpper(FXint mgn,FXbool notify=FALSE);
+  void setMarginUpper(FXint mgn,bool notify=false);
   FXint getMarginUpper() const { return marginUpper; }
 
   /// Change/return first line indent
-  void setIndentFirst(FXint ind,FXbool notify=FALSE);
+  void setIndentFirst(FXint ind,bool notify=false);
   FXint getIndentFirst() const { return indentFirst; }
 
   /// Change/return lower indent
-  void setIndentLower(FXint ind,FXbool notify=FALSE);
+  void setIndentLower(FXint ind,bool notify=false);
   FXint getIndentLower() const { return indentLower; }
 
   /// Change/return upper indent
-  void setIndentUpper(FXint ind,FXbool notify=FALSE);
+  void setIndentUpper(FXint ind,bool notify=false);
   FXint getIndentUpper() const { return indentUpper; }
 
   /// Change/return document number placement
-  void setNumberTicks(FXint ticks,FXbool notify=FALSE);
+  void setNumberTicks(FXint ticks,bool notify=false);
   FXint getNumberTicks() const { return numberTicks; }
 
   /// Change/return document major ticks
-  void setMajorTicks(FXint ticks,FXbool notify=FALSE);
+  void setMajorTicks(FXint ticks,bool notify=false);
   FXint getMajorTicks() const { return majorTicks; }
 
   /// Change/return document medium ticks
-  void setMediumTicks(FXint ticks,FXbool notify=FALSE);
+  void setMediumTicks(FXint ticks,bool notify=false);
   FXint getMediumTicks() const { return mediumTicks; }
 
   /// Change/return document tiny ticks
-  void setTinyTicks(FXint ticks,FXbool notify=FALSE);
+  void setTinyTicks(FXint ticks,bool notify=false);
   FXint getTinyTicks() const { return tinyTicks; }
 
   /// Change/return pixel per tick spacing
-  void setPixelPerTick(FXdouble space,FXbool notify=FALSE);
+  void setPixelPerTick(FXdouble space,bool notify=false);
   FXdouble getPixelPerTick() const { return pixelPerTick; }
 
   /// Set the text font
-  void setFont(FXFont *fnt,FXbool notify=FALSE);
+  void setFont(FXFont *fnt,bool notify=false);
 
   /// Get the text font
   FXFont* getFont() const { return font; }
@@ -244,7 +244,7 @@ public:
   FXuint getRulerStyle() const;
 
   /// Set ruler alignment
-  void setRulerAlignment(FXuint alignment,FXbool notify=FALSE);
+  void setRulerAlignment(FXuint alignment,bool notify=false);
 
   /// Get ruler alignment
   FXuint getRulerAlignment() const;

@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXToolBarTab.cpp,v 1.22 2006/01/22 17:58:48 fox Exp $                    *
+* $Id: FXToolBarTab.cpp,v 1.23 2006/03/31 07:33:14 fox Exp $                    *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -86,8 +86,8 @@ FXIMPLEMENT(FXToolBarTab,FXFrame,FXToolBarTabMap,ARRAYNUMBER(FXToolBarTabMap))
 FXToolBarTab::FXToolBarTab(){
   flags|=FLAG_ENABLED;
   activeColor=FXRGB(150,156,224);
-  collapsed=FALSE;
-  down=FALSE;
+  collapsed=false;
+  down=false;
   }
 
 
@@ -98,8 +98,8 @@ FXToolBarTab::FXToolBarTab(FXComposite* p,FXObject* tgt,FXSelector sel,FXuint op
   activeColor=FXRGB(150,156,224);
   target=tgt;
   message=sel;
-  collapsed=FALSE;
-  down=FALSE;
+  collapsed=false;
+  down=false;
   }
 
 
@@ -178,7 +178,7 @@ FXint FXToolBarTab::getDefaultHeight(){
 
 
 // Collapse or uncollapse
-void FXToolBarTab::collapse(FXbool fold,FXbool notify){
+void FXToolBarTab::collapse(bool fold,bool notify){
   FXWindow *sibling;
   if(fold!=collapsed){
     sibling=getNext() ? getNext() : getPrev();
@@ -204,12 +204,12 @@ long FXToolBarTab::onUpdate(FXObject* sender,FXSelector sel,void* ptr){
   FXFrame::onUpdate(sender,sel,ptr);
   if(sibling){
     if(sibling->shown() && collapsed){
-      collapsed=FALSE;
+      collapsed=false;
       update();
       recalc();
       }
     else if(!sibling->shown() && !collapsed){
-      collapsed=TRUE;
+      collapsed=true;
       update();
       recalc();
       }
@@ -222,7 +222,7 @@ long FXToolBarTab::onUpdate(FXObject* sender,FXSelector sel,void* ptr){
 long FXToolBarTab::onEnter(FXObject* sender,FXSelector sel,void* ptr){
   FXFrame::onEnter(sender,sel,ptr);
   if(isEnabled()){
-    if(flags&FLAG_PRESSED) down=TRUE;
+    if(flags&FLAG_PRESSED) down=true;
     update();
     }
   return 1;
@@ -233,7 +233,7 @@ long FXToolBarTab::onEnter(FXObject* sender,FXSelector sel,void* ptr){
 long FXToolBarTab::onLeave(FXObject* sender,FXSelector sel,void* ptr){
   FXFrame::onLeave(sender,sel,ptr);
   if(isEnabled()){
-    if(flags&FLAG_PRESSED) down=FALSE;
+    if(flags&FLAG_PRESSED) down=false;
     update();
     }
   return 1;
@@ -246,7 +246,7 @@ long FXToolBarTab::onLeftBtnPress(FXObject* sender,FXSelector sel,void* ptr){
     if(isEnabled() && !(flags&FLAG_PRESSED)){
       flags|=FLAG_PRESSED;
       flags&=~FLAG_UPDATE;
-      down=TRUE;
+      down=true;
       update();
       return 1;
       }
@@ -257,14 +257,14 @@ long FXToolBarTab::onLeftBtnPress(FXObject* sender,FXSelector sel,void* ptr){
 
 // Released mouse button
 long FXToolBarTab::onLeftBtnRelease(FXObject* sender,FXSelector sel,void* ptr){
-  FXbool click=down;
+  bool click=down;
   if(!FXFrame::onLeftBtnRelease(sender,sel,ptr)){
     if(isEnabled() && (flags&FLAG_PRESSED)){
       flags|=FLAG_UPDATE;
       flags&=~FLAG_PRESSED;
-      down=FALSE;
+      down=false;
       update();
-      if(click) collapse(!collapsed,TRUE);
+      if(click) collapse(!collapsed,true);
       return 1;
       }
     }
@@ -277,7 +277,7 @@ long FXToolBarTab::onUngrabbed(FXObject* sender,FXSelector sel,void* ptr){
   FXFrame::onUngrabbed(sender,sel,ptr);
   flags&=~FLAG_PRESSED;
   flags|=FLAG_UPDATE;
-  down=FALSE;
+  down=false;
   update();
   return 1;
   }
@@ -290,7 +290,7 @@ long FXToolBarTab::onKeyPress(FXObject*,FXSelector,void* ptr){
   if(isEnabled() && !(flags&FLAG_PRESSED)){
     if(target && target->tryHandle(this,FXSEL(SEL_KEYPRESS,message),ptr)) return 1;
     if(event->code==KEY_space || event->code==KEY_KP_Space){
-      down=TRUE;
+      down=true;
       update();
       flags|=FLAG_PRESSED;
       flags&=~FLAG_UPDATE;
@@ -307,11 +307,11 @@ long FXToolBarTab::onKeyRelease(FXObject*,FXSelector,void* ptr){
   if(isEnabled() && (flags&FLAG_PRESSED)){
     if(target && target->tryHandle(this,FXSEL(SEL_KEYRELEASE,message),ptr)) return 1;
     if(event->code==KEY_space || event->code==KEY_KP_Space){
-      down=FALSE;
+      down=false;
       update();
       flags|=FLAG_UPDATE;
       flags&=~FLAG_PRESSED;
-      collapse(!collapsed,TRUE);
+      collapse(!collapsed,true);
       return 1;
       }
     }
@@ -321,7 +321,7 @@ long FXToolBarTab::onKeyRelease(FXObject*,FXSelector,void* ptr){
 
 // Collapse
 long FXToolBarTab::onCmdCollapse(FXObject*,FXSelector,void*){
-  collapse(TRUE,TRUE);
+  collapse(true,true);
   return 1;
   }
 
@@ -338,7 +338,7 @@ long FXToolBarTab::onUpdCollapse(FXObject* sender,FXSelector,void*){
 
 // Uncollapse
 long FXToolBarTab::onCmdUncollapse(FXObject*,FXSelector,void*){
-  collapse(FALSE,TRUE);
+  collapse(false,true);
   return 1;
   }
 

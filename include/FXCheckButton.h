@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXCheckButton.h,v 1.32 2006/01/22 17:57:59 fox Exp $                     *
+* $Id: FXCheckButton.h,v 1.33 2006/04/05 04:33:09 fox Exp $                     *
 ********************************************************************************/
 #ifndef FXCHECKBUTTON_H
 #define FXCHECKBUTTON_H
@@ -101,7 +101,7 @@ public:
   virtual FXint getDefaultHeight();
 
   /// Set check button state (TRUE, FALSE or MAYBE)
-  void setCheck(FXbool state=TRUE,FXbool notify=FALSE);
+  void setCheck(FXbool state=TRUE,bool notify=false);
 
   /// Get check button state (TRUE, FALSE or MAYBE)
   FXbool getCheck() const { return check; }

@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXGLViewer.h,v 1.74 2006/01/22 17:58:04 fox Exp $                        *
+* $Id: FXGLViewer.h,v 1.75 2006/04/01 15:33:16 fox Exp $                        *
 ********************************************************************************/
 #ifndef FXGLVIEWER_H
 #define FXGLVIEWER_H
@@ -82,7 +82,7 @@ struct FXAPI FXMaterial {
 
 
 // Feedback buffer sort routine
-typedef FXbool (*FXZSortFunc)(FXfloat*& buffer,FXint& used,FXint& size);
+typedef bool (*FXZSortFunc)(FXfloat*& buffer,FXint& used,FXint& size);
 
 
 /********************************  Viewer  Class  ******************************/
@@ -358,10 +358,10 @@ public:
   virtual FXGLObject* pick(FXint x,FXint y);
 
   /// Change the model bounding box; this adjusts the viewer
-  virtual FXbool setBounds(const FXRangef& box);
+  virtual bool setBounds(const FXRangef& box);
 
   /// Fit viewer to the given bounding box
-  FXbool fitToBounds(const FXRangef& box);
+  bool fitToBounds(const FXRangef& box);
 
   /// Return the viewer's viewport
   void getViewport(FXViewport& v) const;
@@ -433,7 +433,7 @@ public:
   void translate(FXVec3f vec);
 
   /// Return boresight vector
-  FXbool getBoreVector(FXint sx,FXint sy,FXVec3f& point,FXVec3f& dir);
+  bool getBoreVector(FXint sx,FXint sy,FXVec3f& point,FXVec3f& dir);
 
   /// Return eyesight vector
   FXVec3f getEyeVector() const;
@@ -494,13 +494,13 @@ public:
   * this array can be directly passed to fxsaveBMP and other image
   * output routines.
   */
-  FXbool readPixels(FXColor*& buffer,FXint x,FXint y,FXint w,FXint h);
+  bool readPixels(FXColor*& buffer,FXint x,FXint y,FXint w,FXint h);
 
   /**
   * Read the feedback buffer containing the current scene, returning used
   * and allocated size.
   */
-  FXbool readFeedback(FXfloat*& buffer,FXint& used,FXint& size,FXint x,FXint y,FXint w,FXint h);
+  bool readFeedback(FXfloat*& buffer,FXint& used,FXint& size,FXint x,FXint y,FXint w,FXint h);
 
   /**
   * Change hidden-surface feedback buffer sorting algorithm.
@@ -526,13 +526,13 @@ public:
   * interactively manipulating; another update will be done later when
   * the full complexity drawing can be performed again.
   */
-  FXbool doesTurbo() const { return doesturbo; }
+  bool doesTurbo() const { return doesturbo; }
 
   /// Return turbo mode setting
-  FXbool getTurboMode() const { return turbomode; }
+  bool getTurboMode() const { return turbomode; }
 
   /// Set turbo mode
-  void setTurboMode(FXbool turbo=TRUE);
+  void setTurboMode(bool turbo=true);
 
   /// Return light source settings
   void getLight(FXLight& lite) const;

@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXFont.h,v 1.66 2006/01/22 17:58:02 fox Exp $                            *
+* $Id: FXFont.h,v 1.67 2006/03/31 07:33:01 fox Exp $                            *
 ********************************************************************************/
 #ifndef FXFONT_H
 #define FXFONT_H
@@ -331,10 +331,10 @@ public:
   virtual void setFont(const FXString& string);
 
   /// Find out if the font is monotype or proportional
-  virtual FXbool isFontMono() const;
+  virtual bool isFontMono() const;
 
   /// See if font has glyph for ch
-  virtual FXbool hasChar(FXwchar ch) const;
+  virtual bool hasChar(FXwchar ch) const;
 
   /// Get first character glyph in font
   virtual FXwchar getMinChar() const;
@@ -386,7 +386,7 @@ public:
   * fonts points to a newly-allocated array of length numfonts. It
   * is the caller's responsibility to free this array using FXFREE().
   */
-  static FXbool listFonts(FXFontDesc*& fonts,FXuint& numfonts,const FXString& face,FXuint wt=0,FXuint sl=0,FXuint sw=0,FXuint en=0,FXuint h=0);
+  static bool listFonts(FXFontDesc*& fonts,FXuint& numfonts,const FXString& face,FXuint wt=0,FXuint sl=0,FXuint sw=0,FXuint en=0,FXuint h=0);
 
   /// Save font data into stream
   virtual void save(FXStream& store) const;

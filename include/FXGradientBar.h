@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXGradientBar.h,v 1.52 2006/01/22 17:58:04 fox Exp $                     *
+* $Id: FXGradientBar.h,v 1.53 2006/03/31 07:33:01 fox Exp $                     *
 ********************************************************************************/
 #ifndef FXGRADIENTBAR_H
 #define FXGRADIENTBAR_H
@@ -212,7 +212,7 @@ public:
   void getGradients(FXGradient*& segments,FXint& nsegments) const;
 
   /// Change current segment
-  void setCurrentSegment(FXint index,FXbool notify=FALSE);
+  void setCurrentSegment(FXint index,bool notify=false);
 
   /// Return current segment, or -1 if there is no current segment
   FXint getCurrentSegment() const { return current; }
@@ -224,19 +224,19 @@ public:
   FXint getAnchorSegment() const { return anchor; }
 
   /// Select segment(s)
-  FXbool selectSegments(FXint fm,FXint to,FXbool notify=FALSE);
+  bool selectSegments(FXint fm,FXint to,bool notify=false);
 
   /// Deselect all segments
-  FXbool deselectSegments(FXbool notify);
+  bool deselectSegments(bool notify=false);
 
   /// Returns TRUE if the specified segment is selected
-  FXbool isSegmentSelected(FXint s) const;
+  bool isSegmentSelected(FXint s) const;
 
   /// Set lower color of a segment
-  void setSegmentLowerColor(FXint s,FXColor clr,FXbool notify=FALSE);
+  void setSegmentLowerColor(FXint s,FXColor clr,bool notify=false);
 
   /// Set upper color of a segment
-  void setSegmentUpperColor(FXint s,FXColor clr,FXbool notify=FALSE);
+  void setSegmentUpperColor(FXint s,FXColor clr,bool notify=false);
 
   /// Get lower color of a segment
   FXColor getSegmentLowerColor(FXint s) const;
@@ -245,16 +245,16 @@ public:
   FXColor getSegmentUpperColor(FXint s) const;
 
   /// Move lower point of segment sg
-  void moveSegmentLower(FXint sg,FXdouble val,FXbool notify=FALSE);
+  void moveSegmentLower(FXint sg,FXdouble val,bool notify=false);
 
   /// Move middle point of segment sg
-  void moveSegmentMiddle(FXint sg,FXdouble val,FXbool notify=FALSE);
+  void moveSegmentMiddle(FXint sg,FXdouble val,bool notify=false);
 
   /// Move upper point of segment sg
-  void moveSegmentUpper(FXint sg,FXdouble val,FXbool notify=FALSE);
+  void moveSegmentUpper(FXint sg,FXdouble val,bool notify=false);
 
   /// Move segments sglo to sghi to new position val
-  void moveSegments(FXint sglo,FXint sghi,FXdouble val,FXbool notify=FALSE);
+  void moveSegments(FXint sglo,FXint sghi,FXdouble val,bool notify=false);
 
   /// Get lower value of segment sg
   FXdouble getSegmentLower(FXint sg) const;
@@ -280,16 +280,16 @@ public:
   FXuint getSegmentBlend(FXint s) const;
 
   /// Split segment at the midpoint
-  void splitSegments(FXint sglo,FXint sghi,FXbool notify=FALSE);
+  void splitSegments(FXint sglo,FXint sghi,bool notify=false);
 
   /// Merge segments
-  void mergeSegments(FXint sglo,FXint sghi,FXbool notify=FALSE);
+  void mergeSegments(FXint sglo,FXint sghi,bool notify=false);
 
   /// Make segments uniformly distributed
-  void uniformSegments(FXint sglo,FXint sghi,FXbool notify=FALSE);
+  void uniformSegments(FXint sglo,FXint sghi,bool notify=false);
 
   /// Change blend mode of segment
-  void blendSegments(FXint sglo,FXint sghi,FXuint blend=GRADIENT_BLEND_LINEAR,FXbool notify=FALSE);
+  void blendSegments(FXint sglo,FXint sghi,FXuint blend=GRADIENT_BLEND_LINEAR,bool notify=false);
 
   /// Get the gradient bar style
   FXuint getBarStyle() const;

@@ -19,7 +19,7 @@
 * along with this program; if not, write to the Free Software                   *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: PathFinder.h,v 1.42 2006/01/22 17:58:15 fox Exp $                        *
+* $Id: PathFinder.h,v 1.43 2006/03/31 07:33:04 fox Exp $                        *
 ********************************************************************************/
 #ifndef PATHFINDER_H
 #define PATHFINDER_H
@@ -249,7 +249,7 @@ public:
   virtual void create();
 
   // Closed window
-  virtual FXbool close(FXbool notify=FALSE);
+  virtual bool close(bool notify=false);
 
   // Switch current directory
   void setDirectory(const FXString& dir);

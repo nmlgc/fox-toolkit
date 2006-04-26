@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXFileSelector.h,v 1.61 2006/01/23 15:51:05 fox Exp $                    *
+* $Id: FXFileSelector.h,v 1.62 2006/03/31 07:33:01 fox Exp $                    *
 ********************************************************************************/
 #ifndef FXFILESELECTOR_H
 #define FXFILESELECTOR_H
@@ -207,10 +207,10 @@ public:
   FXint getNumPatterns() const;
 
   /// Allow pattern entry
-  void allowPatternEntry(FXbool allow);
+  void allowPatternEntry(bool allow);
 
   /// Return TRUE if pattern entry is allowed
-  FXbool allowPatternEntry() const;
+  bool allowPatternEntry() const;
 
   /**
   * Given filename pattern of the form "GIF Format (*.gif)",
@@ -258,16 +258,16 @@ public:
   FXuint getMatchMode() const;
 
   /// Return TRUE if showing hidden files
-  FXbool showHiddenFiles() const;
+  bool showHiddenFiles() const;
 
   /// Show or hide hidden files
-  void showHiddenFiles(FXbool showing);
+  void showHiddenFiles(bool showing);
 
   /// Return TRUE if image preview on
-  FXbool showImages() const;
+  bool showImages() const;
 
   /// Show or hide preview images
-  void showImages(FXbool showing);
+  void showImages(bool showing);
 
   /// Return images preview size
   FXint getImageSize() const;
@@ -276,22 +276,22 @@ public:
   void setImageSize(FXint size);
 
   /// Show readonly button
-  void showReadOnly(FXbool show);
+  void showReadOnly(bool show);
 
   /// Return TRUE if readonly is shown
-  FXbool shownReadOnly() const;
+  bool shownReadOnly() const;
 
   /// Set initial state of readonly button
-  void setReadOnly(FXbool state);
+  void setReadOnly(bool state);
 
   /// Get readonly state
-  FXbool getReadOnly() const;
+  bool getReadOnly() const;
 
   /// Allow or disallow navigation
-  void allowNavigation(FXbool flag){ navigable=flag; }
+  void allowNavigation(bool flag){ navigable=flag; }
 
   /// Is navigation allowed?
-  FXbool allowNavigation() const { return navigable; }
+  bool allowNavigation() const { return navigable; }
 
   /// Save object to a stream
   virtual void save(FXStream& store) const;

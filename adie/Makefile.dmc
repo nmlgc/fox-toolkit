@@ -5,7 +5,7 @@
 ##############################################################################
 # Contributed by: Andre Fornacon <afo@zlug.org>                              #
 ##############################################################################
-# $Id: Makefile.dmc,v 1.14 2005/09/22 11:14:47 fox Exp $		             #
+# $Id: Makefile.dmc,v 1.15 2006/03/22 03:46:47 fox Exp $		             #
 ##############################################################################
 # This library is free software; you can redistribute it and/or 	     #
 # modify it under the terms of the GNU Library General Public		     #
@@ -33,7 +33,7 @@ LDFLAGS   =
 LIBS	  = advapi32.lib+shell32.lib+gdi32.lib+wsock32.lib+winspool.lib
 GLLIBS	  = opengl32.lib glu32.lib
 INCDIRS   = -I$(TOPDIR)\include
-FOXLIB	  = $(TOPDIR)\src\FOX-1.6.lib
+FOXLIB	  = $(TOPDIR)\src\FOX-1.7.lib
 RESWRAP	  = $(TOPDIR)\utils\reswrap.exe
 
 PROGRAMS  = adie.exe

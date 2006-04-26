@@ -5,7 +5,7 @@
 *********************************************************************************
 * Copyright (C) 1997 by Jeroen van der Zijp.   All Rights Reserved.             *
 *********************************************************************************
-* $Id: tabbook.cpp,v 1.23 2006/02/06 03:06:51 fox Exp $                         *
+* $Id: tabbook.cpp,v 1.24 2006/04/03 04:06:39 fox Exp $                         *
 ********************************************************************************/
 #include "fx.h"
 
@@ -200,19 +200,17 @@ long TabBookWindow::onCmdTabOrient(FXObject*,FXSelector sel,void*){
   }
 
 // Calculate tab header widths based on largest tab label string
-long TabBookWindow::onCmdPackUniformWidth(FXObject*,FXSelector sel,void*){
-  FXuint sid=FXSELID(sel);
-  FXuint packing_hints = tabbook->getPackingHints();
-  packing_hints |= PACK_UNIFORM_WIDTH;
+long TabBookWindow::onCmdPackUniformWidth(FXObject*,FXSelector,void*){
+  FXuint packing_hints=tabbook->getPackingHints();
+  packing_hints|=PACK_UNIFORM_WIDTH;
   tabbook->setPackingHints(packing_hints);
   return 1;
   }
 
 // Calculate tab header width individually for each tab label string
-long TabBookWindow::onCmdPackNonUniformWidth(FXObject*,FXSelector sel,void*){
-  FXuint sid=FXSELID(sel);
-  FXuint packing_hints = tabbook->getPackingHints();
-  packing_hints &= ~PACK_UNIFORM_WIDTH;
+long TabBookWindow::onCmdPackNonUniformWidth(FXObject*,FXSelector,void*){
+  FXuint packing_hints=tabbook->getPackingHints();
+  packing_hints&=~PACK_UNIFORM_WIDTH;
   tabbook->setPackingHints(packing_hints);
   return 1;
   }
@@ -236,7 +234,7 @@ long TabBookWindow::onCmdHideShow(FXObject*,FXSelector,void*){
 
 // Active panel switched
 long TabBookWindow::onCmdPanel(FXObject*,FXSelector,void* ptr){
-  FXTRACE((1,"Panel = %d\n",(FXint)(long)ptr));
+  FXTRACE((1,"Panel = %d\n",(FXint)(FXival)ptr));
   return 1;
   }
 

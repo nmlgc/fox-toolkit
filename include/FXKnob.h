@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXKnob.h,v 1.7 2006/01/22 17:58:05 fox Exp $                             *
+* $Id: FXKnob.h,v 1.8 2006/03/31 07:33:01 fox Exp $                             *
 ********************************************************************************/
 #ifndef FXKNOB_H
 #define FXKNOB_H
@@ -123,13 +123,13 @@ public:
   virtual void disable();
 
   /// Change knob value
-  void setValue(FXint value,FXbool notify=FALSE);
+  void setValue(FXint value,bool notify=false);
 
   /// Return knob value
   FXint getValue() const { return pos; }
 
   /// Change the knob's range
-  void setRange(FXint lo,FXint hi,FXbool notify=FALSE);
+  void setRange(FXint lo,FXint hi,bool notify=false);
 
   /// Get the knob's current range
   void getRange(FXint& lo,FXint& hi) const { lo=range[0]; hi=range[1]; }
@@ -138,7 +138,7 @@ public:
   * Change the knob's movement limits (start and ending angles)
   * accept values in degrees from 0 (south) to 360.
   */
-  void setLimits(FXint start,FXint end,FXbool notify=FALSE);
+  void setLimits(FXint start,FXint end,bool notify=false);
 
   /// Get the knob's current limits
   void getLimits(FXint& start,FXint& end);

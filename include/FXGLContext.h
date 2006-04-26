@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXGLContext.h,v 1.14 2006/01/22 17:58:02 fox Exp $                       *
+* $Id: FXGLContext.h,v 1.16 2006/04/24 18:19:13 fox Exp $                       *
 ********************************************************************************/
 #ifndef FXGLCONTEXT_H
 #define FXGLCONTEXT_H
@@ -70,7 +70,7 @@ public:
   FXGLContext(FXApp* a,FXGLVisual *vis,FXGLContext *shared);
 
   /// Return TRUE if it is sharing display lists
-  FXbool isShared() const;
+  bool isShared() const;
 
   /// Get the visual
   FXGLVisual* getVisual() const { return visual; }
@@ -85,16 +85,13 @@ public:
   virtual void destroy();
 
   /// Make OpenGL context current prior to performing OpenGL commands
-  FXbool begin(FXDrawable *drawable);
+  bool begin(FXDrawable *drawable);
 
   /// Make OpenGL context non current
-  FXbool end();
+  bool end();
 
   /// Swap front and back buffer
   void swapBuffers();
-
-  /// Copy part of backbuffer to front buffer [Mesa]
-  void swapSubBuffers(FXint x,FXint y,FXint w,FXint h);
 
   /// Save object to stream
   virtual void save(FXStream& store) const;

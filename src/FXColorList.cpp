@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXColorList.cpp,v 1.4 2006/01/22 17:58:20 fox Exp $                      *
+* $Id: FXColorList.cpp,v 1.5 2006/03/31 07:33:04 fox Exp $                      *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -162,7 +162,7 @@ FXListItem *FXColorList::createItem(const FXString& text,FXIcon*,void* ptr){
 
 
 // Fill list by appending color items from array of strings and array of colors
-FXint FXColorList::fillItems(const FXchar** strings,FXColor *colors,void* ptr,FXbool notify){
+FXint FXColorList::fillItems(const FXchar** strings,FXColor *colors,void* ptr,bool notify){
   register FXint n=0;
   if(strings){
     while(strings[n]){
@@ -175,7 +175,7 @@ FXint FXColorList::fillItems(const FXchar** strings,FXColor *colors,void* ptr,FX
 
 
 // Insert item at index with given text, color, and user-data pointer
-FXint FXColorList::insertItem(FXint index,const FXString& text,FXColor color,void* ptr,FXbool notify){
+FXint FXColorList::insertItem(FXint index,const FXString& text,FXColor color,void* ptr,bool notify){
   FXint pos=FXList::insertItem(index,text,NULL,ptr,notify);
   setItemColor(pos,color);
   return pos;
@@ -183,14 +183,14 @@ FXint FXColorList::insertItem(FXint index,const FXString& text,FXColor color,voi
 
 
 // Append new item with given text, color, and user-data pointer
-FXint FXColorList::appendItem(const FXString& text,FXColor color,void* ptr,FXbool notify){
+FXint FXColorList::appendItem(const FXString& text,FXColor color,void* ptr,bool notify){
   FXint pos=FXList::appendItem(text,NULL,ptr,notify);
   setItemColor(pos,color);
   return pos;
   }
 
 // Prepend new item with given text, color, and user-data pointer
-FXint FXColorList::prependItem(const FXString& text,FXColor color,void* ptr,FXbool notify){
+FXint FXColorList::prependItem(const FXString& text,FXColor color,void* ptr,bool notify){
   FXint pos=FXList::prependItem(text,NULL,ptr,notify);
   setItemColor(pos,color);
   return pos;

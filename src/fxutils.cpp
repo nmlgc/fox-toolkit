@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: fxutils.cpp,v 1.129.2.2 2006/04/02 00:59:57 fox Exp $                        *
+* $Id: fxutils.cpp,v 1.134 2006/04/05 03:22:52 fox Exp $                        *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -29,6 +29,7 @@
 #include "FXHash.h"
 #include "FXStream.h"
 #include "FXString.h"
+#include "FXElement.h"
 
 
 /*
@@ -71,7 +72,7 @@ FXuint fxrandom(FXuint& seed){
 #ifdef WIN32
 
 // Return TRUE if console application
-FXbool fxisconsole(const FXchar *path){
+bool fxisconsole(const FXchar *path){
   IMAGE_OPTIONAL_HEADER optional_header;
   IMAGE_FILE_HEADER     file_header;
   IMAGE_DOS_HEADER      dos_header;
@@ -81,7 +82,7 @@ FXbool fxisconsole(const FXchar *path){
   ULONG                 ulNTSignature;
   HANDLE                hImage;
   DWORD                 dwBytes;
-  FXbool                flag=MAYBE;
+  bool                  flag=false;     // Assume false on Windows is safest!
 
   // Open the application file.
   hImage=CreateFileA(path,GENERIC_READ,FILE_SHARE_READ,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
@@ -131,17 +132,18 @@ FXbool fxisconsole(const FXchar *path){
     switch(optional_header.Subsystem){
       case IMAGE_SUBSYSTEM_WINDOWS_GUI:     // Windows GUI (2)
       case IMAGE_SUBSYSTEM_WINDOWS_CE_GUI:  // Windows CE GUI (9)
-        flag=FALSE;
+        flag=false;
         break;
       case IMAGE_SUBSYSTEM_WINDOWS_CUI:     // Windows Console (3)
       case IMAGE_SUBSYSTEM_OS2_CUI:         // OS/2 Console (5)
       case IMAGE_SUBSYSTEM_POSIX_CUI:       // Posix Console (7)
-        flag=TRUE;
+        flag=true;
         break;
       case IMAGE_SUBSYSTEM_NATIVE:          // Native (1)
       case IMAGE_SUBSYSTEM_NATIVE_WINDOWS:  // Native Win9x (8)
       case IMAGE_SUBSYSTEM_UNKNOWN:         // Unknown (0)
       default:
+        flag=false;
         break;
       }
 x:  CloseHandle(hImage);
@@ -153,8 +155,8 @@ x:  CloseHandle(hImage);
 #else
 
 // Return TRUE if console application
-FXbool fxisconsole(const FXchar*){
-  return TRUE;
+bool fxisconsole(const FXchar*){
+  return true;
   }
 
 #endif
@@ -359,7 +361,7 @@ bool fxtoDOS(FXchar*& string,FXint& len){
     if(string[f++]=='\n') t++; t++;
     }
   len=t;
-  if(!FXRESIZE(&string,FXchar,len+1)) return false;
+  if(!resizeElms(string,len+1)) return false;
   while(0<t){
     if((string[--t]=string[--f])=='\n') string[--t]='\r';
     }
@@ -375,7 +377,7 @@ bool fxfromDOS(FXchar*& string,FXint& len){
     if((c=string[f++])!='\r') string[t++]=c;
     }
   len=t;
-  if(!FXRESIZE(&string,FXchar,len+1)) return false;
+  if(!resizeElms(string,len+1)) return false;
   string[len]='\0';
   return true;
   }
@@ -463,7 +465,7 @@ FXuint fxstrhash(const FXchar* str){
 /*******************************************************************************/
 
 
-// Classify IEEE 754 floating point number
+// Classify IEEE 754 single-precision floating point number
 //
 //            31 30           23 22             0
 // +------------+---------------+---------------+
@@ -471,25 +473,27 @@ FXuint fxstrhash(const FXchar* str){
 // +------------+---------------+---------------+
 //
 FXint fxieeefloatclass(FXfloat number){
-  FXfloat num=number;
-  FXASSERT(sizeof(FXfloat)==sizeof(FXuint));
-  FXuint s=(*((FXuint*)&num)&0x80000000);        // Sign
-  FXuint e=(*((FXuint*)&num)&0x7f800000);        // Exponent
-  FXuint m=(*((FXuint*)&num)&0x007fffff);        // Mantissa
+#if FOX_BIGENDIAN
+  union { FXfloat f; struct { FXuint s:1; FXuint e:8; FXuint m:23; } n; } num;
+#else
+  union { FXfloat f; struct { FXuint m:23; FXuint e:8; FXuint s:1; } n; } num;
+#endif  
+  num.f=number;
   FXint result=0;
-  if(e==0x7f800000){
-    if(m==0)
+//  fprintf(stderr,"num=%16.10g: sgn=%d man=%d (%06x) exp=%d\n",number,num.n.s,num.n.m,num.n.m,num.n.e);
+  if(num.n.e==255){
+    if(num.n.m==0)
       result=1;     // Inf
     else
       result=2;     // NaN
-    if(s)
+    if(num.n.s)
       result=-result;
     }
   return result;
   }
 
 
-// Classify IEEE 754 floating point number
+// Classify IEEE 754 double-precision floating point number
 //
 //            63 62            52 51            32 31             0
 // +------------+----------------+----------------+---------------+
@@ -497,26 +501,20 @@ FXint fxieeefloatclass(FXfloat number){
 // +------------+----------------+----------------+---------------+
 //
 FXint fxieeedoubleclass(FXdouble number){
-  FXdouble num=number;
-  FXASSERT(sizeof(FXdouble)==2*sizeof(FXuint));
 #if FOX_BIGENDIAN
-  FXuint s=(((FXuint*)&num)[0]&0x80000000);     // Sign
-  FXuint e=(((FXuint*)&num)[0]&0x7ff00000);     // Exponent
-  FXuint h=(((FXuint*)&num)[0]&0x000fffff);     // Mantissa high
-  FXuint l=(((FXuint*)&num)[1]);                // Mantissa low
+  union { FXdouble d; struct { FXuint s:1; FXuint e:11; FXuint h:20; FXuint l:32; } n; } num;
 #else
-  FXuint s=(((FXuint*)&num)[1]&0x80000000);     // Sign
-  FXuint e=(((FXuint*)&num)[1]&0x7ff00000);     // Exponent
-  FXuint h=(((FXuint*)&num)[1]&0x000fffff);     // Mantissa high
-  FXuint l=(((FXuint*)&num)[0]);                // Mantissa low
-#endif
+  union { FXdouble d; struct { FXuint l:32; FXuint h:20; FXuint e:11; FXuint s:1; } n; } num;
+#endif  
+  num.d=number;
+//  fprintf(stderr,"num=%16.10g: sgn=%d hi=%d (%06x) lo=%d (%08x) exp=%d\n",number,num.n.s,num.n.h,num.n.h,num.n.l,num.n.l,num.n.e);
   FXint result=0;
-  if(e==0x7ff00000){
-    if(h==0 && l==0)
+  if(num.n.e==2047){
+    if(num.n.h==0 && num.n.l==0)
       result=1;     // Inf
     else
       result=2;     // NaN
-    if(s)
+    if(num.n.s)
       result=-result;
     }
   return result;
@@ -675,7 +673,7 @@ FXlong fxgetticks(){
 /*
 * Return clock ticks from performance counter [GCC PPC version].
 */
-#if defined(__GNUC__) && ( defined(__powerpc__) || defined(__ppc__) )
+#if defined(__GNUC__) && (defined(__powerpc__) || defined(__ppc__))
 extern FXAPI FXlong fxgetticks();
 FXlong fxgetticks(){
   unsigned int tbl, tbu0, tbu1;

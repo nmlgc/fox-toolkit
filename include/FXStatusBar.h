@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXStatusBar.h,v 1.7 2006/01/22 17:58:10 fox Exp $                        *
+* $Id: FXStatusBar.h,v 1.8 2006/03/31 07:33:03 fox Exp $                        *
 ********************************************************************************/
 #ifndef FXSTATUSBAR_H
 #define FXSTATUSBAR_H
@@ -67,10 +67,10 @@ public:
   virtual void layout();
 
   /// Show or hide the drag corner
-  void setCornerStyle(FXbool withcorner=TRUE);
+  void setCornerStyle(bool withcorner=true);
 
   /// Return TRUE if drag corner shown
-  FXbool getCornerStyle() const;
+  bool getCornerStyle() const;
 
   /// Acess the status line widget
   FXStatusLine *getStatusLine() const { return status; }

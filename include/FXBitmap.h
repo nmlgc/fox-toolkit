@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXBitmap.h,v 1.37 2006/01/22 17:57:59 fox Exp $                          *
+* $Id: FXBitmap.h,v 1.39 2006/04/02 22:46:25 fox Exp $                          *
 ********************************************************************************/
 #ifndef FXBITMAP_H
 #define FXBITMAP_H
@@ -111,10 +111,10 @@ public:
   FXuchar* getData() const { return data; }
 
   /// Get pixel at x,y
-  FXbool getPixel(FXint x,FXint y) const { return (FXbool)((data[y*bytewidth+(x>>3)]>>(x&7))&1); }
+  bool getPixel(FXint x,FXint y) const { return (bool)((data[y*bytewidth+(x>>3)]>>(x&7))&1); }
 
   /// Change pixel at x,y
-  void setPixel(FXint x,FXint y,FXbool color){ color ? data[y*bytewidth+(x>>3)]|=(1<<(x&7)) : data[y*bytewidth+(x>>3)]&=~(1<<(x&7)); }
+  void setPixel(FXint x,FXint y,bool color){ color ? data[y*bytewidth+(x>>3)]|=(1<<(x&7)) : data[y*bytewidth+(x>>3)]&=~(1<<(x&7)); }
 
   /**
   * Create the server side pixmap, then call render() to fill it with the
@@ -168,7 +168,7 @@ public:
   virtual void scale(FXint w,FXint h);
 
   /// Mirror bitmap horizontally and/or vertically
-  virtual void mirror(FXbool horizontal,FXbool vertical);
+  virtual void mirror(bool horizontal,bool vertical);
 
   /// Rotate bitmap by degrees ccw
   virtual void rotate(FXint degrees);
@@ -179,10 +179,10 @@ public:
   * than the old one; blank areas are filled with color. There must be at
   * least one pixel of overlap between the old and the new bitmap.
   */
-  virtual void crop(FXint x,FXint y,FXint w,FXint h,FXbool color=0);
+  virtual void crop(FXint x,FXint y,FXint w,FXint h,bool color=false);
 
   /// Fill bitmap with uniform value
-  virtual void fill(FXbool color);
+  virtual void fill(bool color);
 
   /// Save object to stream
   virtual void save(FXStream& store) const;

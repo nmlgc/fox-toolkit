@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXColorSelector.h,v 1.30 2006/01/22 17:57:59 fox Exp $                   *
+* $Id: FXColorSelector.h,v 1.31 2006/03/31 07:33:01 fox Exp $                   *
 ********************************************************************************/
 #ifndef FXCOLORSELECTOR_H
 #define FXCOLORSELECTOR_H
@@ -159,10 +159,10 @@ public:
   FXColor getRGBA() const;
 
   /// Return true if only opaque colors allowed
-  FXbool isOpaqueOnly() const;
+  bool isOpaqueOnly() const;
 
   /// Change opaque only mode
-  void setOpaqueOnly(FXbool opaque);
+  void setOpaqueOnly(bool opaque);
 
   /// Save to a stream
   virtual void save(FXStream& store) const;

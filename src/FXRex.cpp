@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXRex.cpp,v 1.98 2006/03/18 01:05:58 fox Exp $                           *
+* $Id: FXRex.cpp,v 1.99 2006/03/22 06:31:37 fox Exp $                           *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -29,6 +29,7 @@
 #include "FXHash.h"
 #include "FXStream.h"
 #include "FXString.h"
+#include "FXElement.h"
 #include "FXRex.h"
 
 
@@ -2562,7 +2563,7 @@ const FXint FXRex::fallback[]={2,OP_FAIL};
 FXRex::FXRex(const FXRex& orig){
   code=(FXint*)fallback;
   if(orig.code!=fallback){
-    FXMEMDUP(&code,orig.code,FXint,orig.code[0]);
+    dupElms(code,orig.code,orig.code[0]);
     }
   }
 
@@ -2584,10 +2585,10 @@ FXRex::FXRex(const FXString& pattern,FXint mode,FXRexError* error):code((FXint*)
 // Assignment
 FXRex& FXRex::operator=(const FXRex& orig){
   if(code!=orig.code){
-    if(code!=fallback) FXFREE(&code);
+    if(code!=fallback) freeElms(code);
     code=(FXint*)fallback;
     if(orig.code!=fallback){
-      FXMEMDUP(&code,orig.code,FXint,orig.code[0]);
+      dupElms(code,orig.code,orig.code[0]);
       }
     }
   return *this;
@@ -2601,7 +2602,7 @@ FXRexError FXRex::parse(const FXchar* pattern,FXint mode){
   FXint flags,size;
 
   // Free old code, if any
-  if(code!=fallback) FXFREE(&code);
+  if(code!=fallback) freeElms(code);
   code=(FXint*)fallback;
 
   // Check
@@ -2627,7 +2628,7 @@ FXRexError FXRex::parse(const FXchar* pattern,FXint mode){
 
         // Allocate new code
         size=cs.pc-((FXint*)NULL);
-        if(!FXMALLOC(&code,FXint,size)){
+        if(!allocElms(code,size)){
           code=(FXint*)fallback;
           return REGERR_MEMORY;
           }
@@ -2749,7 +2750,7 @@ FXStream& operator<<(FXStream& store,const FXRex& s){
 FXStream& operator>>(FXStream& store,FXRex& s){
   FXint size;
   store >> size;
-  FXMALLOC(&s.code,FXint,size);
+  allocElms(s.code,size);
   store.load(s.code+1,size-1);
   return store;
   }
@@ -2757,7 +2758,7 @@ FXStream& operator>>(FXStream& store,FXRex& s){
 
 // Clean up
 FXRex::~FXRex(){
-  if(code!=fallback) FXFREE(&code);
+  if(code!=fallback) freeElms(code);
   }
 
 }

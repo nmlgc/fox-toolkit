@@ -19,13 +19,14 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXGIFCursor.cpp,v 1.33 2006/01/22 17:58:27 fox Exp $                     *
+* $Id: FXGIFCursor.cpp,v 1.34 2006/03/24 06:05:03 fox Exp $                     *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
 #include "fxdefs.h"
 #include "FXHash.h"
 #include "FXThread.h"
+#include "FXElement.h"
 #include "FXStream.h"
 #include "FXMemoryStream.h"
 #include "FXString.h"
@@ -88,7 +89,7 @@ bool FXGIFCursor::savePixels(FXStream& store) const {
 
 // Load object from stream
 bool FXGIFCursor::loadPixels(FXStream& store){
-  if(options&CURSOR_OWNED){FXFREE(&data);}
+  if(options&CURSOR_OWNED){freeElms(data);}
   if(fxloadGIF(store,data,width,height)){
     options|=CURSOR_OWNED;
     return true;

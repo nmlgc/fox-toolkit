@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXScrollBar.cpp,v 1.27 2006/01/22 17:58:41 fox Exp $                     *
+* $Id: FXScrollBar.cpp,v 1.28 2006/03/31 07:33:11 fox Exp $                     *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -651,7 +651,7 @@ long FXScrollBar::onAutoScroll(FXObject*,FXSelector,void* ptr){
 
 
 // Draw button in scrollbar; this is slightly different from a raised rectangle
-void FXScrollBar::drawButton(FXDCWindow& dc,FXint x,FXint y,FXint w,FXint h,FXbool down){
+void FXScrollBar::drawButton(FXDCWindow& dc,FXint x,FXint y,FXint w,FXint h,bool down){
   dc.setForeground(backColor);
   dc.fillRectangle(x+2,y+2,w-4,h-4);
   if(!down){
@@ -686,7 +686,7 @@ void FXScrollBar::drawButton(FXDCWindow& dc,FXint x,FXint y,FXint w,FXint h,FXbo
 
 
 // Draw left arrow
-void FXScrollBar::drawLeftArrow(FXDCWindow& dc,FXint x,FXint y,FXint w,FXint h,FXbool down){
+void FXScrollBar::drawLeftArrow(FXDCWindow& dc,FXint x,FXint y,FXint w,FXint h,bool down){
   FXPoint points[3];
   FXint ah,ab;
   ab=(h-7)|1;
@@ -706,7 +706,7 @@ void FXScrollBar::drawLeftArrow(FXDCWindow& dc,FXint x,FXint y,FXint w,FXint h,F
 
 
 // Draw right arrow
-void FXScrollBar::drawRightArrow(FXDCWindow& dc,FXint x,FXint y,FXint w,FXint h,FXbool down){
+void FXScrollBar::drawRightArrow(FXDCWindow& dc,FXint x,FXint y,FXint w,FXint h,bool down){
   FXPoint points[3];
   FXint ah,ab;
   ab=(h-7)|1;
@@ -726,7 +726,7 @@ void FXScrollBar::drawRightArrow(FXDCWindow& dc,FXint x,FXint y,FXint w,FXint h,
 
 
 // Draw up arrow
-void FXScrollBar::drawUpArrow(FXDCWindow& dc,FXint x,FXint y,FXint w,FXint h,FXbool down){
+void FXScrollBar::drawUpArrow(FXDCWindow& dc,FXint x,FXint y,FXint w,FXint h,bool down){
   FXPoint points[3];
   FXint ah,ab;
   ab=(w-7)|1;
@@ -746,7 +746,7 @@ void FXScrollBar::drawUpArrow(FXDCWindow& dc,FXint x,FXint y,FXint w,FXint h,FXb
 
 
 // Draw down arrow
-void FXScrollBar::drawDownArrow(FXDCWindow& dc,FXint x,FXint y,FXint w,FXint h,FXbool down){
+void FXScrollBar::drawDownArrow(FXDCWindow& dc,FXint x,FXint y,FXint w,FXint h,bool down){
   FXPoint points[3];
   FXint ah,ab;
   ab=(w-7)|1;

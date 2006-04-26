@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXDockSite.h,v 1.30 2006/01/22 17:58:01 fox Exp $                        *
+* $Id: FXDockSite.h,v 1.31 2006/03/31 07:33:01 fox Exp $                        *
 ********************************************************************************/
 #ifndef FXDOCKSITE_H
 #define FXDOCKSITE_H
@@ -146,10 +146,10 @@ public:
   virtual void undockToolBar(FXDockBar* bar);
 
   /// Change wrap option
-  void wrapGalleys(FXbool wrap);
+  void wrapGalleys(bool wrap);
 
   /// Get wrap option
-  FXbool wrapGalleys() const;
+  bool wrapGalleys() const;
   };
 
 }

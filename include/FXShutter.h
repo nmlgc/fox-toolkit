@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXShutter.h,v 1.26 2006/01/22 17:58:09 fox Exp $                         *
+* $Id: FXShutter.h,v 1.27 2006/04/02 19:58:49 fox Exp $                         *
 ********************************************************************************/
 #ifndef FXSHUTTER_H
 #define FXSHUTTER_H
@@ -104,7 +104,7 @@ protected:
   FXint          closing;               // Item closing down
   FXint          heightIncrement;       // Height delta
   FXint          closingHeight;         // Closing items current height
-  FXbool         closingHadScrollbar;   // Closing item had a scroll bar
+  bool           closingHadScrollbar;   // Closing item had a scroll bar
 protected:
   FXShutter(){}
 private:

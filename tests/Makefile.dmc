@@ -5,7 +5,7 @@
 ##############################################################################
 # Contributed by: Andre Fornacon <afo@zlug.org>                              #
 ##############################################################################
-# $Id: Makefile.dmc,v 1.16 2006/03/10 04:31:45 fox Exp $                     #
+# $Id: Makefile.dmc,v 1.17 2006/03/22 03:46:48 fox Exp $                     #
 ##############################################################################
 # This library is free software; you can redistribute it and/or              #
 # modify it under the terms of the GNU Library General Public                #
@@ -33,7 +33,7 @@ LDFLAGS	  = /NOI /DELEXECUTABLE /PACKFUNCTIONS /EXETYPE:NT /SU:WINDOWS
 LIBS	  = gc.lib+snn.lib+kernel32.lib+user32.lib+comctl32.lib+comdlg32.lib+advapi32.lib+shell32.lib+gdi32.lib+wsock32.lib+winspool.lib
 GLLIBS    = opengl32.lib+glu32.lib
 INCDIRS   = -I$(TOPDIR)\include
-FOXLIB    = $(TOPDIR)\src\FOX-1.6.lib
+FOXLIB    = $(TOPDIR)\src\FOX-1.7.lib
 
 PROGRAMS  = \
 	ControlPanel.exe \

@@ -336,7 +336,7 @@ FXDesktopSetup::FXDesktopSetup(FXApp * app) : FXMainWindow(app,"FOX Desktop Setu
   wheelLines  =getApp()->getWheelLines();
 
   gamma=getApp()->reg().readRealEntry("SETTINGS","displaygamma",1.0);
-  maxcolors=getApp()->reg().readUnsignedEntry("SETTINGS","maxcolors",125);
+  maxcolors=getApp()->reg().readUIntEntry("SETTINGS","maxcolors",125);
   iconpath = getApp()->reg().readStringEntry("SETTINGS","iconpath");
 
 
@@ -1467,16 +1467,16 @@ FXbool FXDesktopSetup::writeDesktop(){
   desktopsettings.writeColorEntry("SETTINGS","selmenubackcolor",theme_current.menuback);
 
   // Save General Settings
-  desktopsettings.writeUnsignedEntry("SETTINGS","typingspeed",typingSpeed);
-  desktopsettings.writeUnsignedEntry("SETTINGS","clickspeed",clickSpeed);
-  desktopsettings.writeUnsignedEntry("SETTINGS","scrollspeed",scrollSpeed);
-  desktopsettings.writeUnsignedEntry("SETTINGS","scrolldelay",scrollDelay);
-  desktopsettings.writeUnsignedEntry("SETTINGS","blinkspeed",blinkSpeed);
-  desktopsettings.writeUnsignedEntry("SETTINGS","animspeed",animSpeed);
-  desktopsettings.writeUnsignedEntry("SETTINGS","menupause",menuPause);
-  desktopsettings.writeUnsignedEntry("SETTINGS","tippause",tooltipPause);
-  desktopsettings.writeUnsignedEntry("SETTINGS","tiptime",tooltipTime);
-  desktopsettings.writeUnsignedEntry("SETTINGS","maxcolors",maxcolors);
+  desktopsettings.writeUIntEntry("SETTINGS","typingspeed",typingSpeed);
+  desktopsettings.writeUIntEntry("SETTINGS","clickspeed",clickSpeed);
+  desktopsettings.writeUIntEntry("SETTINGS","scrollspeed",scrollSpeed);
+  desktopsettings.writeUIntEntry("SETTINGS","scrolldelay",scrollDelay);
+  desktopsettings.writeUIntEntry("SETTINGS","blinkspeed",blinkSpeed);
+  desktopsettings.writeUIntEntry("SETTINGS","animspeed",animSpeed);
+  desktopsettings.writeUIntEntry("SETTINGS","menupause",menuPause);
+  desktopsettings.writeUIntEntry("SETTINGS","tippause",tooltipPause);
+  desktopsettings.writeUIntEntry("SETTINGS","tiptime",tooltipTime);
+  desktopsettings.writeUIntEntry("SETTINGS","maxcolors",maxcolors);
 
   desktopsettings.writeIntEntry("SETTINGS","dragdelta",dragDelta);
   desktopsettings.writeIntEntry("SETTINGS","wheellines",wheelLines);
@@ -1495,22 +1495,17 @@ FXbool FXDesktopSetup::writeDesktop(){
   }
 
 
-
+// Start the program
 int main(int argc,char **argv){
-
-  if (argc>1 && ( (compare(argv[1],"-h")==0) || (compare(argv[1],"--help")==0))) {
+  if(argc>1 && ((compare(argv[1],"-h")==0) || (compare(argv[1],"--help")==0))){
     fprintf(stderr,"Usage: ControlPanel [applicationname] [vendorname]\n");
     fprintf(stderr,"Setup desktop appearance for FOX applications. Saves settings to ~/.foxrc/Desktop unless applicationname and optionally vendorname are given.\n");
     return 0;
     }
-
   FXApp application("FOX Desktop Setup","FOX-DESKTOP");
   application.init(argc,argv);
-
-  FXDesktopSetup * setup = new FXDesktopSetup(&application);
+  FXDesktopSetup *setup=new FXDesktopSetup(&application);
   application.create();
-
   setup->show(PLACEMENT_SCREEN);
-
   return application.run();
   }

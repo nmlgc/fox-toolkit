@@ -14,10 +14,67 @@ News  <A href='news.html' target="_top" align=left><font  size=-2>[Remove Frame]
 <p>
 <!--- TOPIC TITLE WITH LOGO --->
 
+
 <!--- TOPIC TITLE -->
 <p>
 <table width=100% cellpadding=0 cellspacing=2><tr><td width=100% valign=bottom id=HEADLINE><b>
-March 20 - FOX STABLE 1.6.0
+April 17 - FOX STABLE 1.6.4
+<br><img src='art/line.gif' width=100% height=1></b></td></tr></table>
+<p>
+<!--- TOPIC TITLE -->
+<ul>
+<li>Fixed two bugs in FXTable setItemText() and setItemIcon().</li>
+<li>Double-free in Xft mode fixed:- freetype now frees its memory!</li>
+<li>Patch for fxkeyboard.cpp for other compilers.</li>
+<li>Callbacks from FXListBox SEL_CHANGED message weren't passing item-index.</li>
+<li>Bounding box in fxpsio.cpp was wrong.</li>
+<li>VirtualAlloc() instead of FXMALLOC() in FXImage circumvents apparent driver
+bugs on Windows-Xp.</li>
+</ul>
+
+<!--- TOPIC TITLE -->
+<p>
+<table width=100% cellpadding=0 cellspacing=2><tr><td width=100% valign=bottom id=HEADLINE><b>
+April 5 - FOX STABLE 1.6.3
+<br><img src='art/line.gif' width=100% height=1></b></td></tr></table>
+<p>
+<!--- TOPIC TITLE -->
+<ul>
+<li>Fixed issue with multi-head on Windows-XP.</li>
+<li>Fixed issue with FXSphered/FXSpheref.</li>
+</ul>
+
+<!--- TOPIC TITLE -->
+<p>
+<table width=100% cellpadding=0 cellspacing=2><tr><td width=100% valign=bottom id=HEADLINE><b>
+April 3 - FOX STABLE 1.6.2
+<br><img src='art/line.gif' width=100% height=1></b></td></tr></table>
+<p>
+<!--- TOPIC TITLE -->
+<ul>
+<li>Fixed fxkeyboard.cpp build problem on Windows.</li>
+<li>Fixed sporadic core-dump due to SetDIBits() reacting poorly to malloc()-allocated
+memory; now using VirtualAlloc() instead of malloc() which gives whole pages.</li>
+</ul>
+
+<!--- TOPIC TITLE -->
+<p>
+<table width=100% cellpadding=0 cellspacing=2><tr><td width=100% valign=bottom id=HEADLINE><b>
+April 1 - FOX STABLE 1.6.1
+<br><img src='art/line.gif' width=100% height=1></b></td></tr></table>
+<p>
+<!--- TOPIC TITLE -->
+<ul>
+<li>Fixed fxgetticks() issue for AIX/PowerPC.</li>
+<li>Fixed round() API in FXExpression for other platforms.</li>
+<li>Incorporated Daniel Gehriger's keyboard path for Windows 9x/ME.</li>
+<li>Fixed FXThread::time() issue for non-POSIX199309 UNIX platforms.</li>
+</ul>
+
+<!--- TOPIC TITLE -->
+<p>
+<table width=100% cellpadding=0 cellspacing=2><tr><td width=100% valign=bottom id=HEADLINE><b>
+March 21 - FOX STABLE 1.6.0
 <br><img src='art/line.gif' width=100% height=1></b></td></tr></table>
 <p>
 <!--- TOPIC TITLE -->
@@ -41,6 +98,17 @@ reached.  The time is expressed as a 64-bit long counting nanoseconds since Jan.
 <li>Warning in FXWindow fixed.</li>
 <li>Added sample program for expression class.</li>
 <li>fxsleep() is now deprecated.  Please stop using it!</li>
+</ul>
+
+<!--- TOPIC TITLE -->
+<p>
+<table width=100% cellpadding=0 cellspacing=2><tr><td width=100% valign=bottom id=HEADLINE><b>
+March 21 - FOX STABLE 1.4.32
+<br><img src='art/line.gif' width=100% height=1></b></td></tr></table>
+<p>
+<!--- TOPIC TITLE -->
+<ul>
+<li>Back-ported fixes for GCC 4.1 C++ Language Changes [Friend Injection].</li>
 </ul>
 
 <!--- TOPIC TITLE -->

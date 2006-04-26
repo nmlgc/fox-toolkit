@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXMDIClient.h,v 1.32 2006/01/22 17:58:05 fox Exp $                       *
+* $Id: FXMDIClient.h,v 1.33 2006/03/31 07:33:03 fox Exp $                       *
 ********************************************************************************/
 #ifndef FXMDICLIENT_H
 #define FXMDICLIENT_H
@@ -146,19 +146,19 @@ public:
   long forallDocWindows(FXObject* document,FXObject* sender,FXSelector sel,void* ptr);
 
   /// Set active MDI Child
-  virtual FXbool setActiveChild(FXMDIChild* child=NULL,FXbool notify=TRUE);
+  virtual bool setActiveChild(FXMDIChild* child=NULL,bool notify=true);
 
   /// Get current active child; may be NULL!
   FXMDIChild* getActiveChild() const { return active; }
 
   /// Cascade windows
-  virtual void cascade(FXbool notify=FALSE);
+  virtual void cascade(bool notify=false);
 
   /// Layout horizontally
-  virtual void horizontal(FXbool notify=FALSE);
+  virtual void horizontal(bool notify=false);
 
   /// Layout vertically
-  virtual void vertical(FXbool notify=FALSE);
+  virtual void vertical(bool notify=false);
 
   /// Change cascade offset X
   void setCascadeX(FXint off){ cascadex=off; }

@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXTreeListBox.h,v 1.41 2006/01/22 17:58:11 fox Exp $                     *
+* $Id: FXTreeListBox.h,v 1.42 2006/03/31 07:33:04 fox Exp $                     *
 ********************************************************************************/
 #ifndef FXTREELISTBOX_H
 #define FXTREELISTBOX_H
@@ -182,10 +182,10 @@ public:
   FXTreeItem* findItemByData(const void *ptr,FXTreeItem* start=NULL,FXuint flags=SEARCH_FORWARD|SEARCH_WRAP) const;
 
   /// Return TRUE if item is the current item
-  FXbool isItemCurrent(const FXTreeItem* item) const;
+  bool isItemCurrent(const FXTreeItem* item) const;
 
   /// Return TRUE if item is leaf-item, i.e. has no children
-  FXbool isItemLeaf(const FXTreeItem* item) const;
+  bool isItemLeaf(const FXTreeItem* item) const;
 
   /// Sort the toplevel items with the sort function
   void sortRootItems();
@@ -197,7 +197,7 @@ public:
   void sortChildItems(FXTreeItem* item);
 
   /// Change current item
-  virtual void setCurrentItem(FXTreeItem* item,FXbool notify=FALSE);
+  virtual void setCurrentItem(FXTreeItem* item,bool notify=false);
 
   /// Return current item
   FXTreeItem* getCurrentItem() const;
@@ -209,13 +209,13 @@ public:
   FXString getItemText(const FXTreeItem* item) const;
 
   /// Change item's open icon, delete old one if it was owned
-  void setItemOpenIcon(FXTreeItem* item,FXIcon* icon,FXbool owned=FALSE);
+  void setItemOpenIcon(FXTreeItem* item,FXIcon* icon,bool owned=false);
 
   /// Return item's open icon
   FXIcon* getItemOpenIcon(const FXTreeItem* item) const;
 
   /// Change item's closed icon, delete old one if it was owned
-  void setItemClosedIcon(FXTreeItem* item,FXIcon* icon,FXbool owned=FALSE);
+  void setItemClosedIcon(FXTreeItem* item,FXIcon* icon,bool owned=false);
 
   /// Return item's closed icon
   FXIcon* getItemClosedIcon(const FXTreeItem* item) const;
@@ -233,7 +233,7 @@ public:
   void setSortFunc(FXTreeListSortFunc func);
 
   /// Is the pane shown
-  FXbool isPaneShown() const;
+  bool isPaneShown() const;
 
   /// Change font
   void setFont(FXFont* fnt);

@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXDockBar.h,v 1.24 2006/01/22 17:58:00 fox Exp $                         *
+* $Id: FXDockBar.h,v 1.28 2006/04/05 04:49:00 fox Exp $                         *
 ********************************************************************************/
 #ifndef FXDOCKBAR_H
 #define FXDOCKBAR_H
@@ -114,12 +114,12 @@ public:
   FXDockBar(FXComposite* p,FXuint opts,FXint x=0,FXint y=0,FXint w=0,FXint h=0,FXint pl=2,FXint pr=3,FXint pt=3,FXint pb=2,FXint hs=DEFAULT_SPACING,FXint vs=DEFAULT_SPACING);
 
   /// Return true if docked
-  FXbool isDocked() const;
+  bool isDocked() const;
 
   /**
   * Check if the dock bar would dock or undock if at locaton barx, bary.
   */
-  FXbool insideDock(FXDockSite* docksite,FXint barx,FXint bary);
+  bool insideDock(FXDockSite* docksite,FXint barx,FXint bary);
 
   /**
   * Set parent when docked.
@@ -150,20 +150,20 @@ public:
   * However, if after is -1, it will be docked as the innermost bar just before
   * the work-area, while if after is 0, if will be docked as the outermost bar.
   */
-  virtual void dock(FXDockSite* docksite,FXWindow* before=NULL,FXbool notify=FALSE);
+  virtual void dock(FXDockSite* docksite,FXWindow* before=NULL,bool notify=false);
 
   /**
   * Dock the bar against the given side, near the given position relative
   * to the toolbar dock's origin.
   */
-  virtual void dock(FXDockSite* docksite,FXint localx,FXint localy,FXbool notify);
+  virtual void dock(FXDockSite* docksite,FXint localx,FXint localy,bool notify);
 
   /**
   * Undock or float the bar.
   * The initial position of the wet dock is a few pixels
   * below and to the right of the original docked position.
   */
-  virtual void undock(FXint rootx,FXint rooty,FXbool notify=FALSE);
+  virtual void undock(FXint rootx,FXint rooty,bool notify=false);
 
   /**
   * Change set of sides (a combination of ALLOW_TOP, ALLOW_LEFT, etc.),

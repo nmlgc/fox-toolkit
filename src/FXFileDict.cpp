@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXFileDict.cpp,v 1.67 2006/01/22 17:58:25 fox Exp $                      *
+* $Id: FXFileDict.cpp,v 1.69 2006/03/31 07:33:06 fox Exp $                      *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -181,7 +181,7 @@ FXFileDict::FXFileDict(FXApp* app,FXSettings* db):settings(db){
 
 
 // Create new association from extension
-void *FXFileDict::createData(const void* ptr){
+void *FXFileDict::createData(void* ptr){
   register const FXchar *p=(const FXchar*)ptr;
   register FXchar *q;
   FXchar command[COMMANDLEN];
@@ -192,7 +192,7 @@ void *FXFileDict::createData(const void* ptr){
   FXchar mininame[ICONNAMELEN];
   FXchar mininameopen[ICONNAMELEN];
   const FXchar *extra;
-  FXuint flags;
+  FXuint flags=0;
   FXFileAssoc *fileassoc;
 
   FXTRACE((300,"FXFileDict: adding association: %s\n",(FXchar*)ptr));
@@ -302,7 +302,7 @@ const FXString& FXFileDict::getIconPath() const {
 FXFileAssoc* FXFileDict::replace(const FXchar* ext,const FXchar* str){
   if(ext && ext[0]){
     getSettings()->writeStringEntry("FILETYPES",ext,str);
-    return (FXFileAssoc*)FXDict::replace(ext,str);
+    return (FXFileAssoc*)FXDict::replace(ext,(void*)str);
     }
   return NULL;
   }
@@ -328,7 +328,7 @@ FXFileAssoc* FXFileDict::find(const FXchar* ext){
     if(!record){
       binding=getSettings()->readStringEntry("FILETYPES",ext,NULL);
       if(binding){
-        record=(FXFileAssoc*)FXDict::insert(ext,binding);
+        record=(FXFileAssoc*)FXDict::insert(ext,(void*)binding);
         }
       }
     }

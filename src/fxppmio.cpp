@@ -19,12 +19,13 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: fxppmio.cpp,v 1.13 2006/01/22 17:58:54 fox Exp $                         *
+* $Id: fxppmio.cpp,v 1.14 2006/03/24 06:05:03 fox Exp $                         *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
 #include "fxdefs.h"
 #include "FXHash.h"
+#include "FXElement.h"
 #include "FXStream.h"
 
 
@@ -116,7 +117,7 @@ bool fxloadPPM(FXStream& store,FXColor*& data,FXint& width,FXint& height){
   FXTRACE((1,"fxloadPPM: width=%d height=%d type=%c \n",width,height,format));
 
   // Allocate buffer
-  if(!FXCALLOC(&data,FXColor,npixels)) return false;
+  if(!callocElms(data,npixels)) return false;
 
   // Read it
   pp=(FXuchar*)data;

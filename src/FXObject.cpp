@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXObject.cpp,v 1.42 2006/01/22 17:58:36 fox Exp $                        *
+* $Id: FXObject.cpp,v 1.44 2006/03/22 06:31:37 fox Exp $                        *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -27,6 +27,7 @@
 #include "FXHash.h"
 #include "FXStream.h"
 #include "FXObject.h"
+#include "FXElement.h"
 #include "FXException.h"
 
 
@@ -52,47 +53,47 @@ using namespace FX;
 namespace FX {
 
 // Allocate memory
-FXint fxmalloc(void** ptr,unsigned long size){
+bool fxmalloc(void** ptr,unsigned long size){
   *ptr=NULL;
   if(size!=0){
-    if((*ptr=malloc(size))==NULL) return FALSE;
+    if((*ptr=malloc(size))==NULL) return false;
     }
-  return TRUE;
+  return true;
   }
 
 
 // Allocate cleaned memory
-FXint fxcalloc(void** ptr,unsigned long size){
+bool fxcalloc(void** ptr,unsigned long size){
   *ptr=NULL;
   if(size!=0){
-    if((*ptr=calloc(size,1))==NULL) return FALSE;
+    if((*ptr=calloc(size,1))==NULL) return false;
     }
-  return TRUE;
+  return true;
   }
 
 
 // Resize memory
-FXint fxresize(void** ptr,unsigned long size){
+bool fxresize(void** ptr,unsigned long size){
   register void *p=NULL;
   if(size!=0){
-    if((p=realloc(*ptr,size))==NULL) return FALSE;
+    if((p=realloc(*ptr,size))==NULL) return false;
     }
   else{
     if(*ptr) free(*ptr);
     }
   *ptr=p;
-  return TRUE;
+  return true;
   }
 
 
 // Allocate and initialize memory
-FXint fxmemdup(void** ptr,const void* src,unsigned long size){
+bool fxmemdup(void** ptr,const void* src,unsigned long size){
   *ptr=NULL;
   if(size!=0 && src!=NULL){
-    if((*ptr=malloc(size))==NULL) return FALSE;
+    if((*ptr=malloc(size))==NULL) return false;
     memcpy(*ptr,src,size);
     }
-  return TRUE;
+  return true;
   }
 
 
@@ -246,7 +247,7 @@ FXMetaClass::~FXMetaClass(){
 void FXMetaClass::resize(FXuint n){
   const FXMetaClass **newtable,*ptr;
   register FXuint p,x,i,m;
-  FXCALLOC(&newtable,FXMetaClass*,n);
+  callocElms(newtable,n);
   for(i=0; i<nmetaClassTable; i++){
     ptr=metaClassTable[i];
     if(ptr && ptr!=EMPTYSLOT){
@@ -260,7 +261,7 @@ void FXMetaClass::resize(FXuint n){
       newtable[p]=ptr;
       }
     }
-  FXFREE(&metaClassTable);
+  freeElms(metaClassTable);
   metaClassTable=newtable;
   nmetaClassTable=n;
   }

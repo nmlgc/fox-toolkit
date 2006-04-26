@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXGLObject.h,v 1.28 2006/01/22 17:58:03 fox Exp $                        *
+* $Id: FXGLObject.h,v 1.29 2006/04/02 19:33:22 fox Exp $                        *
 ********************************************************************************/
 #ifndef FXGLOBJECT_H
 #define FXGLOBJECT_H
@@ -69,13 +69,13 @@ public:
   virtual FXGLObject* identify(FXuint* path);
 
   /// Return true if this object can be dragged around
-  virtual FXbool canDrag() const;
+  virtual bool canDrag() const;
 
   /// Return true if this object can be deleted from the scene
-  virtual FXbool canDelete() const;
+  virtual bool canDelete() const;
 
   /// Drag this object from one position to another
-  virtual FXbool drag(FXGLViewer* viewer,FXint fx,FXint fy,FXint tx,FXint ty);
+  virtual bool drag(FXGLViewer* viewer,FXint fx,FXint fy,FXint tx,FXint ty);
 
   /// Destructor
   virtual ~FXGLObject(){}
@@ -123,10 +123,10 @@ public:
   virtual FXGLObject* identify(FXuint* path);
 
   /// Return TRUE if group can be dragged
-  virtual FXbool canDrag() const;
+  virtual bool canDrag() const;
 
   /// Drag group object
-  virtual FXbool drag(FXGLViewer* viewer,FXint fx,FXint fy,FXint tx,FXint ty);
+  virtual bool drag(FXGLViewer* viewer,FXint fx,FXint fy,FXint tx,FXint ty);
 
   /// Return number of children
   FXint no() const { return list.no(); }

@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXColorWheel.cpp,v 1.49 2006/01/22 17:58:20 fox Exp $                    *
+* $Id: FXColorWheel.cpp,v 1.50 2006/03/31 07:33:05 fox Exp $                    *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -149,17 +149,17 @@ void FXColorWheel::layout(){
 
 
 // Compute x,y location from hue and saturation
-FXbool FXColorWheel::hstoxy(FXint& x,FXint& y,FXfloat h,FXfloat s) const {
+bool FXColorWheel::hstoxy(FXint& x,FXint& y,FXfloat h,FXfloat s) const {
   register FXfloat r=dial->getWidth()*0.5f;
   register FXfloat a=(h-180.0f)*DTOR;
   x=(FXint)(s*r*cosf(a)+r+0.5f);
   y=(FXint)(s*r*sinf(a)+r+0.5f);
-  return TRUE;
+  return true;
   }
 
 
 // Compute hue and saturation from x,y, return FALSE if outside of dial
-FXbool FXColorWheel::xytohs(FXfloat& h,FXfloat& s,FXint x,FXint y) const {
+bool FXColorWheel::xytohs(FXfloat& h,FXfloat& s,FXint x,FXint y) const {
   register FXfloat r=dial->getWidth()*0.5f;
   register FXfloat rx=x-r;
   register FXfloat ry=y-r;
@@ -170,11 +170,11 @@ FXbool FXColorWheel::xytohs(FXfloat& h,FXfloat& s,FXint x,FXint y) const {
     h=atan2f(ry,rx)*RTOD+180.0f;
     if(v<r){
       s=v/r;
-      return TRUE;
+      return true;
       }
     s=1.0f;
     }
-  return FALSE;
+  return false;
   }
 
 

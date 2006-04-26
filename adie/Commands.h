@@ -19,7 +19,7 @@
 * along with this program; if not, write to the Free Software                   *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: Commands.h,v 1.16 2006/01/22 18:01:10 fox Exp $                          *
+* $Id: Commands.h,v 1.17 2006/04/04 05:00:41 fox Exp $                          *
 ********************************************************************************/
 #ifndef COMMANDS_H
 #define COMMANDS_H
@@ -38,7 +38,7 @@ protected:
 public:
   FXTextCommand(FXText* txt,FXint p,FXint nd,FXint ni):text(txt),buffer(NULL),pos(p),ndel(nd),nins(ni){}
   virtual FXuint size() const;
-  virtual ~FXTextCommand(){FXFREE(&buffer);}
+  virtual ~FXTextCommand(){freeElms(buffer);}
   };
 
 

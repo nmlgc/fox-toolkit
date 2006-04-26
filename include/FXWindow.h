@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXWindow.h,v 1.149 2006/01/22 17:58:12 fox Exp $                         *
+* $Id: FXWindow.h,v 1.150 2006/04/02 20:20:37 fox Exp $                         *
 ********************************************************************************/
 #ifndef FXWINDOW_H
 #define FXWINDOW_H
@@ -477,10 +477,10 @@ public:
   FXCursor* getDragCursor() const { return dragCursor; }
 
   /// Return the cursor position and mouse button-state
-  FXint getCursorPosition(FXint& x,FXint& y,FXuint& buttons) const;
+  bool getCursorPosition(FXint& x,FXint& y,FXuint& buttons) const;
 
   /// Warp the cursor to the new position
-  FXint setCursorPosition(FXint x,FXint y);
+  bool setCursorPosition(FXint x,FXint y);
 
   /// Return true if this window is able to receive mouse and keyboard events
   bool isEnabled() const;

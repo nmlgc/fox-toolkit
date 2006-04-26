@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXTabBar.h,v 1.15 2006/01/22 17:58:10 fox Exp $                          *
+* $Id: FXTabBar.h,v 1.16 2006/03/31 07:33:03 fox Exp $                          *
 ********************************************************************************/
 #ifndef FXTABBAR_H
 #define FXTABBAR_H
@@ -112,7 +112,7 @@ public:
   * slightly above the neighboring tab items.  If notify=TRUE then the
   * tab bar will also send a SEL_COMMAND message to its target.
   */
-  virtual void setCurrent(FXint panel,FXbool notify=FALSE);
+  virtual void setCurrent(FXint panel,bool notify=false);
 
   /// Return the currently active tab item
   FXint getCurrent() const { return current; }

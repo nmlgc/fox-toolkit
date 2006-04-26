@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXDirDialog.h,v 1.17 2006/01/22 17:58:00 fox Exp $                       *
+* $Id: FXDirDialog.h,v 1.18 2006/03/31 07:33:01 fox Exp $                       *
 ********************************************************************************/
 #ifndef FXDIRDIALOG_H
 #define FXDIRDIALOG_H
@@ -68,16 +68,16 @@ public:
   FXString getDirectory() const;
 
   /// Return TRUE if showing files as well as directories
-  FXbool showFiles() const;
+  bool showFiles() const;
 
   /// Show or hide normal files
-  void showFiles(FXbool showing);
+  void showFiles(bool showing);
 
   /// Return TRUE if showing hidden files
-  FXbool showHiddenFiles() const;
+  bool showHiddenFiles() const;
 
   /// Show or hide hidden files
-  void showHiddenFiles(FXbool showing);
+  void showHiddenFiles(bool showing);
 
   /// Return wildcard matching mode
   FXuint getMatchMode() const;

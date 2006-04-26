@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXStat.h,v 1.24 2006/01/22 17:58:10 fox Exp $                            *
+* $Id: FXStat.h,v 1.26 2006/04/06 05:42:55 fox Exp $                            *
 ********************************************************************************/
 #ifndef FXSTAT_H
 #define FXSTAT_H
@@ -38,9 +38,9 @@ private:
   FXuint  modeFlags;            /// Mode bits
   FXuint  userNumber;           /// User number
   FXuint  groupNumber;          /// Group number
-  FXTime  createTime;           /// Create time
-  FXTime  accessTime;           /// Access time
-  FXTime  modifyTime;           /// Modify time
+  FXTime  createTime;           /// Create time (ns)
+  FXTime  accessTime;           /// Access time (ns)
+  FXTime  modifyTime;           /// Modify time (ns)
   FXlong  fileSize;             /// File size
 public:
 
@@ -65,17 +65,14 @@ public:
   /// Return group number
   FXuint group() const { return groupNumber; }
 
-  /// Return time when last modified
+  /// Return time when last modified, in nanoseconds
   FXTime modified() const { return modifyTime; }
 
-  /// Return time when last accessed
+  /// Return time when last accessed, in nanoseconds
   FXTime accessed() const { return accessTime; }
 
-  /// Return time when file was created
+  /// Return time when file was created, in nanoseconds
   FXTime created() const { return createTime; }
-
-  /// Return time anything was changed
-  FXTime touched() const;
 
   /// Return true if it is a hidden file (Windows-only)
   bool isHidden() const;
@@ -170,13 +167,13 @@ public:
   /**
   * Return last modified time for this file, on filesystems
   * where this is supported.  This is the time when any data
-  * in the file was last modified.
+  * in the file was last modified, in nanoseconds since Epoch.
   */
   static FXTime modified(const FXString& file);
 
   /**
   * Return last accessed time for this file, on filesystems
-  * where this is supported.
+  * where this is supported, in nanoseconds since Epoch.
   */
   static FXTime accessed(const FXString& file);
 
@@ -184,17 +181,9 @@ public:
   * Return created time for this file, on filesystems
   * where this is supported.  This is also the time when
   * ownership, permissions, links, and other meta-data may
-  * have changed.
+  * have changed, in nanoseconds since Epoch.
   */
   static FXTime created(const FXString& file);
-
-  /**
-  * Return touched time for this file, on filesystems
-  * where this is supported.  This is the time when anything
-  * at all, either contents or meta-data, about the file was
-  * changed.
-  */
-  static FXTime touched(const FXString& file);
 
   /// Return true if file is hidden
   static bool isHidden(const FXString& file);

@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXIconDict.h,v 1.6 2006/02/03 00:33:15 fox Exp $                         *
+* $Id: FXIconDict.h,v 1.7 2006/03/25 18:03:43 fox Exp $                         *
 ********************************************************************************/
 #ifndef FXICONDICT_H
 #define FXICONDICT_H
@@ -54,7 +54,7 @@ private:
   FXString      path;   // Where to search icons
 protected:
   FXIconDict():source(NULL){}
-  virtual void *createData(const void*);
+  virtual void *createData(void*);
   virtual void deleteData(void*);
 private:
   FXIconDict(const FXIconDict&);
@@ -85,7 +85,10 @@ public:
   const FXString& getIconPath() const { return path; }
 
   /// Insert unique icon loaded from filename into dictionary
-  FXIcon* insert(const FXchar* name){ return (FXIcon*)FXDict::insert(name,name); }
+  FXIcon* insert(const FXchar* name){ return (FXIcon*)FXDict::insert(name,(void*)name); }
+
+  /// Replace icon loaded from filename into dictionary
+  FXIcon* replace(const FXchar* name){ return (FXIcon*)FXDict::replace(name,(void*)name); }
 
   /// Remove icon from dictionary
   FXIcon* remove(const FXchar* name){ return (FXIcon*)FXDict::remove(name); }

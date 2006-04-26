@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXToolTip.h,v 1.13 2006/01/22 17:58:11 fox Exp $                         *
+* $Id: FXToolTip.h,v 1.14 2006/03/31 07:33:04 fox Exp $                         *
 ********************************************************************************/
 #ifndef FXTOOLTIP_H
 #define FXTOOLTIP_H
@@ -49,7 +49,7 @@ protected:
   FXString  label;                      // Text in the tip
   FXFont   *font;                       // Font of the tip
   FXColor   textColor;                  // Text color
-  FXbool    popped;                     // Is currently popped up
+  bool      popped;                     // Is currently popped up
 protected:
   FXToolTip();
   virtual bool doesOverrideRedirect() const;

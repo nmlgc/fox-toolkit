@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXStringDict.cpp,v 1.17 2006/02/07 01:17:26 fox Exp $                    *
+* $Id: FXStringDict.cpp,v 1.18 2006/03/25 18:03:44 fox Exp $                    *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -77,7 +77,7 @@ FXStringDict& FXStringDict::operator=(const FXStringDict& orig){
 
 
 // Create string
-void *FXStringDict::createData(const void* ptr){
+void *FXStringDict::createData(void* ptr){
   return strdup((const char*)ptr);
   }
 

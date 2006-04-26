@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXColorDialog.cpp,v 1.32 2006/01/22 17:58:20 fox Exp $                   *
+* $Id: FXColorDialog.cpp,v 1.33 2006/03/31 07:33:04 fox Exp $                   *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -110,13 +110,13 @@ long FXColorDialog::onCmdColor(FXObject*,FXSelector,void* ptr){
 
 
 // Return true if only opaque colors allowed
-FXbool FXColorDialog::isOpaqueOnly() const {
+bool FXColorDialog::isOpaqueOnly() const {
   return colorbox->isOpaqueOnly();
   }
 
 
 // Change opaque only mode
-void FXColorDialog::setOpaqueOnly(FXbool forceopaque){
+void FXColorDialog::setOpaqueOnly(bool forceopaque){
   colorbox->setOpaqueOnly(forceopaque);
   }
 

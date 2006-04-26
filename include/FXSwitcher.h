@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXSwitcher.h,v 1.17 2006/01/22 17:58:10 fox Exp $                        *
+* $Id: FXSwitcher.h,v 1.18 2006/03/31 07:33:03 fox Exp $                        *
 ********************************************************************************/
 #ifndef FXSWITCHER_H
 #define FXSWITCHER_H
@@ -98,7 +98,7 @@ public:
   virtual void layout();
 
   /// Bring the child window at index to the top
-  void setCurrent(FXint index,FXbool notify=FALSE);
+  void setCurrent(FXint index,bool notify=false);
 
   /// Return the index of the child window currently on top
   FXint getCurrent() const { return current; }

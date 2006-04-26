@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXOptionMenu.cpp,v 1.68 2006/02/06 02:04:28 fox Exp $                    *
+* $Id: FXOptionMenu.cpp,v 1.70 2006/03/31 07:33:10 fox Exp $                    *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -118,6 +118,9 @@ FXint FXOption::getDefaultWidth(){
   if(!label.empty()){
     tw=labelWidth(label);
     }
+  if (options&OPTIONMENU_NOGLYPH){
+    iw=0;
+    }
   if(icon){
     iw=icon->getWidth();
     }
@@ -132,6 +135,9 @@ FXint FXOption::getDefaultHeight(){
   FXint th=0,ih=MENUGLYPH_HEIGHT,h;
   if(!label.empty()){
     th=labelHeight(label);
+    }
+  if (options&OPTIONMENU_NOGLYPH){
+    ih=0;
     }
   if(icon){
     ih=icon->getHeight();
@@ -150,6 +156,10 @@ long FXOption::onPaint(FXObject*,FXSelector,void* ptr){
     tw=labelWidth(label);
     th=labelHeight(label);
     }
+  if (options&OPTIONMENU_NOGLYPH){
+    iw=0;
+    ih=0;
+    }
   if(icon){
     iw=icon->getWidth();
     ih=icon->getHeight();
@@ -161,7 +171,7 @@ long FXOption::onPaint(FXObject*,FXSelector,void* ptr){
   if(icon){
     dc.drawIcon(icon,ix,iy);
     }
-  else if(isActive()){
+  else if(isActive() && !(options&OPTIONMENU_NOGLYPH)){
     drawDoubleRaisedRectangle(dc,ix,iy,MENUGLYPH_WIDTH,MENUGLYPH_HEIGHT);
     }
   if(!label.empty()){
@@ -323,6 +333,8 @@ FXDEFMAP(FXOptionMenu) FXOptionMenuMap[]={
   FXMAPFUNC(SEL_MOUSEWHEEL,0,FXOptionMenu::onMouseWheel),
   FXMAPFUNC(SEL_LEFTBUTTONPRESS,0,FXOptionMenu::onLeftBtnPress),
   FXMAPFUNC(SEL_LEFTBUTTONRELEASE,0,FXOptionMenu::onLeftBtnRelease),
+  FXMAPFUNC(SEL_ENTER,0,FXOptionMenu::onEnter),
+  FXMAPFUNC(SEL_LEAVE,0,FXOptionMenu::onLeave),
   FXMAPFUNC(SEL_FOCUSIN,0,FXOptionMenu::onFocusIn),
   FXMAPFUNC(SEL_FOCUSOUT,0,FXOptionMenu::onFocusOut),
   FXMAPFUNC(SEL_MOTION,0,FXOptionMenu::onMotion),
@@ -411,6 +423,26 @@ long FXOptionMenu::onFocusOut(FXObject* sender,FXSelector sel,void* ptr){
   return 1;
   }
 
+// Entered button
+long FXOptionMenu::onEnter(FXObject* sender,FXSelector sel,void* ptr){
+  FXLabel::onEnter(sender,sel,ptr);
+  if(isEnabled() && (options&OPTIONMENU_TOOLBAR)){
+    update();
+    }
+  return 1;
+  }
+
+
+// Left button
+long FXOptionMenu::onLeave(FXObject* sender,FXSelector sel,void* ptr){
+  FXLabel::onLeave(sender,sel,ptr);
+  if(isEnabled() && (options&OPTIONMENU_TOOLBAR)){
+    update();
+    }
+  return 1;
+  }
+
+
 
 // Handle repaint
 long FXOptionMenu::onPaint(FXObject*,FXSelector,void* ptr){
@@ -418,21 +450,45 @@ long FXOptionMenu::onPaint(FXObject*,FXSelector,void* ptr){
   FXEvent *ev=(FXEvent*)ptr;
   FXDCWindow dc(this,ev);
 
-  drawFrame(dc,0,0,width,height);
+  // Toolbar style
+  if(options&OPTIONMENU_TOOLBAR){
+    if(options&(FRAME_RAISED|FRAME_SUNKEN) && isEnabled() && underCursor()) {
+        if(options&FRAME_THICK) drawDoubleRaisedRectangle(dc,0,0,width,height);
+        else drawRaisedRectangle(dc,0,0,width,height);
 
-  // Draw background
-  dc.setForeground(backColor);
-  dc.fillRectangle(border,border,width-border*2,height-border*2);
+        // Draw background
+        dc.setForeground(backColor);
+        dc.fillRectangle(border,border,width-border*2,height-border*2);
+        }
+    else {
+        dc.setForeground(backColor);
+        dc.fillRectangle(0,0,width,height);
+        }
+    }
+  else {
+    drawFrame(dc,0,0,width,height);
+
+    // Draw background
+    dc.setForeground(backColor);
+    dc.fillRectangle(border,border,width-border*2,height-border*2);
+    }
+
 
   // Position text & icon
   if(!label.empty()){
     tw=labelWidth(label);
     th=labelHeight(label);
     }
+  if(options&OPTIONMENU_NOGLYPH){
+    iw=0;
+    ih=0;
+    }
   if(icon){
     iw=icon->getWidth();
     ih=icon->getHeight();
     }
+
+
 
   just_x(tx,ix,tw,iw);
   just_y(ty,iy,th,ih);
@@ -442,7 +498,7 @@ long FXOptionMenu::onPaint(FXObject*,FXSelector,void* ptr){
     if(icon){
       dc.drawIcon(icon,ix,iy);
       }
-    else{
+    else if (!(options&OPTIONMENU_NOGLYPH)){
       drawDoubleRaisedRectangle(dc,ix,iy,MENUGLYPH_WIDTH,MENUGLYPH_HEIGHT);
       }
     if(!label.empty()){
@@ -460,7 +516,7 @@ long FXOptionMenu::onPaint(FXObject*,FXSelector,void* ptr){
     if(icon){
       dc.drawIconSunken(icon,ix,iy);
       }
-    else{
+    else if (!(options&OPTIONMENU_NOGLYPH)){
       drawDoubleRaisedRectangle(dc,ix,iy,MENUGLYPH_WIDTH,MENUGLYPH_HEIGHT);
       }
     if(!label.empty()){
@@ -663,7 +719,7 @@ bool FXOptionMenu::canFocus() const { return true; }
 
 
 // Set current selection
-void FXOptionMenu::setCurrent(FXOption *win,FXbool notify){
+void FXOptionMenu::setCurrent(FXOption *win,bool notify){
   if(current!=win){
     current=win;
     if(win){
@@ -680,7 +736,7 @@ void FXOptionMenu::setCurrent(FXOption *win,FXbool notify){
 
 
 // Set current option
-void FXOptionMenu::setCurrentNo(FXint no,FXbool notify){
+void FXOptionMenu::setCurrentNo(FXint no,bool notify){
   register FXOption *win=NULL;
   if(pane) win=dynamic_cast<FXOption*>(pane->childAtIndex(no));
   setCurrent(win,notify);
@@ -760,7 +816,7 @@ long FXOptionMenu::onQueryHelp(FXObject* sender,FXSelector sel,void* ptr){
 
 
 // True if popped up
-FXbool FXOptionMenu::isPopped() const {
+bool FXOptionMenu::isPopped() const {
   return pane && pane->shown();
   }
 

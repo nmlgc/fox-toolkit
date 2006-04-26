@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXToolBarGrip.h,v 1.20 2006/01/22 17:58:11 fox Exp $                     *
+* $Id: FXToolBarGrip.h,v 1.22 2006/03/31 07:33:04 fox Exp $                     *
 ********************************************************************************/
 #ifndef FXTOOLBARGRIP_H
 #define FXTOOLBARGRIP_H
@@ -77,10 +77,10 @@ public:
   virtual bool canFocus() const;
 
   /// Change toolbar grip to double
-  void setDoubleBar(FXbool dbl=TRUE);
+  void setDoubleBar(bool dbl=true);
 
   /// Return TRUE if toolbar grip is displayed as a double bar
-  FXbool isDoubleBar() const;
+  bool isDoubleBar() const;
 
   /// Set the active color
   void setActiveColor(FXColor clr);

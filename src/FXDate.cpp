@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXDate.cpp,v 1.11 2006/02/03 00:44:32 fox Exp $                          *
+* $Id: FXDate.cpp,v 1.12 2006/03/29 06:48:05 fox Exp $                          *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -201,8 +201,8 @@ FXDate FXDate::localDate(){
   }
 
 
-// Return current UTC (Zulu) date
-FXDate FXDate::zuluDate(){
+// Return current universal (UTC) date
+FXDate FXDate::universalDate(){
   FXDate date;
 #ifndef WIN32
 #if defined(FOX_THREAD_SAFE) && !defined(__FreeBSD__) && !defined(__OpenBSD__)

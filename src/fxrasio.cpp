@@ -19,12 +19,13 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: fxrasio.cpp,v 1.16 2006/01/22 17:58:54 fox Exp $                         *
+* $Id: fxrasio.cpp,v 1.18 2006/03/24 06:05:03 fox Exp $                         *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
 #include "fxdefs.h"
 #include "FXHash.h"
+#include "FXElement.h"
 #include "FXStream.h"
 
 /*
@@ -284,10 +285,10 @@ bool fxloadRAS(FXStream& store,FXColor*& data,FXint& width,FXint& height){
     }
 
   // Allocate pixel data
-  if(!FXMALLOC(&data,FXColor,npixels)) return false;
+  if(!allocElms(data,npixels)) return false;
 
   // Allocate scanline
-  if(!FXMALLOC(&line,FXuchar,linesize)){ FXFREE(&data); return false; }
+  if(!allocElms(line,linesize)){ freeElms(data); return false; }
 
   // Now read the image
   for(y=0,p=(FXuchar*)data,count=c=0; y<height; y++){
@@ -374,7 +375,7 @@ bool fxloadRAS(FXStream& store,FXColor*& data,FXint& width,FXint& height){
     }
 
   // Release temporary stuff
-  FXFREE(&line);
+  freeElms(line);
 
   return true;
   }
