@@ -450,11 +450,11 @@ $(ICONS)
 FXApp.cpp: icons.h
 
 icons.h: $(ICONS)
-	$(RESWRAP) -i -n FX -o icons.h $^
+	$(RESWRAP) -i -n FX -o icons.h $(ICONS)
 
 
 icons.cpp: $(ICONS)
-	$(RESWRAP) -e -n FX -o icons.cpp $^
+	$(RESWRAP) -e -n FX -o icons.cpp $(ICONS)
 
 
 EXTRA_DIST = Makefile.bc \

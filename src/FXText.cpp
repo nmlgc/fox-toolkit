@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXText.cpp,v 1.348 2006/01/22 17:58:46 fox Exp $                         *
+* $Id: FXText.cpp,v 1.348.2.1 2006/05/24 12:08:46 fox Exp $                         *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -2801,15 +2801,16 @@ long FXText::onClipboardRequest(FXObject* sender,FXSelector sel,void* ptr){
 
   // Requested data from clipboard
   if(event->target==stringType || event->target==textType || event->target==utf8Type || event->target==utf16Type){
-    FXString string;
+    FXString string=clipped;
+
+    // Expand newlines to CRLF on Windows
+#ifdef WIN32
+    unixToDos(string);
+#endif
 
     // Return clipped text as as UTF-8
     if(event->target==utf8Type){
       FXTRACE((100,"Request UTF8\n"));
-      string=clipped;
-#ifdef WIN32
-      unixToDos(string);
-#endif
       setDNDData(FROM_CLIPBOARD,event->target,string);
       return 1;
       }
@@ -2818,11 +2819,7 @@ long FXText::onClipboardRequest(FXObject* sender,FXSelector sel,void* ptr){
     if(event->target==stringType || event->target==textType){
       FX88591Codec ascii;
       FXTRACE((100,"Request ASCII\n"));
-      string=ascii.utf2mb(clipped);
-#ifdef WIN32
-      unixToDos(string);
-#endif
-      setDNDData(FROM_CLIPBOARD,event->target,string);
+      setDNDData(FROM_CLIPBOARD,event->target,ascii.utf2mb(string));
       return 1;
       }
 
@@ -2830,11 +2827,7 @@ long FXText::onClipboardRequest(FXObject* sender,FXSelector sel,void* ptr){
     if(event->target==utf16Type){
       FXUTF16LECodec unicode;             // FIXME maybe other endianness for unix
       FXTRACE((100,"Request UTF16\n"));
-      string=unicode.utf2mb(clipped);
-#ifdef WIN32
-      unixToDos(string);
-#endif
-      setDNDData(FROM_CLIPBOARD,event->target,string);
+      setDNDData(FROM_CLIPBOARD,event->target,unicode.utf2mb(string));
       return 1;
       }
     }

@@ -3,7 +3,7 @@
 #                       A d i e   S y n t a x   F i l e                         #
 #                                                                               #
 #################################################################################
-# Copyright (C) 2004 by Jeroen van der Zijp.   All Rights Reserved.             #
+# Copyright (C) 2004,2006 by Jeroen van der Zijp.   All Rights Reserved.        #
 #################################################################################
 # This program is free software; you can redistribute it and/or modify          #
 # it under the terms of the GNU General Public License as published by          #
@@ -19,7 +19,7 @@
 # along with this program; if not, write to the Free Software                   #
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    #
 #################################################################################
-# $Id: Adie.stx,v 1.37 2006/03/09 22:45:20 fox Exp $                            #
+# $Id: Adie.stx,v 1.37.2.2 2006/06/09 00:50:16 fox Exp $                            #
 #################################################################################
 
 #
@@ -39,6 +39,7 @@
 # - A backslash "\" escapes only if followed by '"'; otherwise its
 #   just a backslash.
 #
+# - Put this file in some directory in $PATH and Adie will find it.
 
 
 #################################################################################
@@ -161,6 +162,8 @@ language "C++"
   filesmatch "*.C,*.cpp,*.cc,*.cxx,*.c++,*.H,*.hpp,*.hh,*.hxx,*.h++,*.h"
   contentsmatch "[Cc]\+\+"
 
+  contextlines 100
+
   # Word delimiters
   delimiters "~.,/\`'!@#$%^&*()-=+{}|[]\":;<>?"
 
@@ -271,7 +274,7 @@ language "C++"
 
   # Special macros
   rule "FOXMacro"
-    pattern     "\<(FXAPI|FXDEFMAP|FXMALLOC|FXFREE|FXCALLOC|FXRESIZE|FXMEMDUP|FXTRACE|FXMAPFUNCS|FXMAPFUNC|FXIMPLEMENT|FXIMPLEMENT_ABSTRACT|FXDECLARE|FXDECLARE_ABSTRACT|FXMAPTYPES|FXMAPTYPE|FXMETACLASS|FXRGBA|FXRGB|FXREDVAL|FXGREENVAL|FXBLUEVAL|FXALPHAVAL|FXASSERT|FXSELID|FXSELTYPE|FXSEL|FXMINMAX|FXMIN3|FXMIN4|FXMIN|FXMAX3|FXMAX4|FXMAX|FXSWAP|FXCLAMP|FXABS|FXLERP|ARRAYNUMBER|STRUCTOFFSET|CONTAINER)\>"
+    pattern     "\<(FXAPI|FXDEFMAP|FXMALLOC|FXFREE|FXCALLOC|FXRESIZE|FXMEMDUP|FXTRACE|FXMAPFUNCS|FXMAPFUNC|FXIMPLEMENT|FXIMPLEMENT_ABSTRACT|FXDECLARE|FXDECLARE_ABSTRACT|FXMAPTYPES|FXMAPTYPE|FXMETACLASS|FXRGBA|FXRGB|FXREDVAL|FXGREENVAL|FXBLUEVAL|FXALPHAVAL|FXASSERT|FXSELID|FXSELTYPE|FXSEL|FXMINMAX|FXMIN3|FXMIN4|FXMIN|FXMAX3|FXMAX4|FXMAX|FXSWAP|FXCLAMP|FXABS|FXLERP|ARRAYNUMBER|STRUCTOFFSET|CONTAINER|allocElms|callocElms|dupElms|resizeElms|freeElms)\>"
   end
 
   rule "FOXType"
@@ -305,6 +308,8 @@ language "C"
   # Word delimiters
   delimiters "~.,/\`'!@#$%^&*()-=+{}|[]\":;<>?"
 
+  contextlines 100
+
   # C style comment
   rule "CDocComment"
     openpattern   "/\*\*[ \n]"
@@ -324,6 +329,28 @@ language "C"
   rule "CPPComment"
     openpattern   "//"
     closepattern  "$"
+  end
+
+  # PP blocked
+  rule "PPBlocked"
+    openpattern   "^#if 0"
+    closepattern  "^#endif"
+    rule "PPSubblock"
+      openpattern   "^#if"
+      closepattern  "^#endif"
+      rule "PPSubblock"
+        openpattern   "^#if"
+        closepattern  "^#endif"
+        rule "PPSubblock"
+          openpattern   "^#if"
+          closepattern  "^#endif"
+        end
+      end
+    end
+    rule "PPSubblock"
+      openpattern   "/\*"
+      closepattern  "\*/"
+    end
   end
 
   # String
@@ -473,10 +500,21 @@ language "Python"
     pattern     "\<((0[xX][0-9a-fA-F]+)|((\d+\.?\d*)|(\.\d+))([eE](\+|-)?\d+)?)(L|l|UL|ul|u|U|F|f)?\>"
   end
   rule "String"
-    pattern    "(\".*\")|('.*')"
-  end
+    openpattern    "([^\"{2}]\"[^\"{2}])|([^'{2}]'[^\"{2}])"
+    closepattern   "([^\"{2}]\"[^\"{2}])|([^\"{2}]'[^\"{2}])"    
+    rule "CharEscape"
+      pattern     "\\."
+    end
+  end  
+  rule "TripleString"
+    openpattern    "(\"{3})|('{3})"
+    closepattern   "(\"{3})|('{3})"    
+    rule "CharEscape"
+      pattern     "\\."
+    end
+  end 
   rule "Comment"
-    pattern    "#.*$"
+    pattern    "#.*?$"
   end
   rule "Operator"
     pattern     "\+\+|\+=|\+|--|-=|-|==|=|&&|&=|&|=|^=|^|<<=|<<|<=|<|>>=|>>|>=|>|!=|!=|!|~=|~|\*=|\*|/=|/|%=|%"

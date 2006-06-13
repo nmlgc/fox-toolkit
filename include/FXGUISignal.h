@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXGUISignal.h,v 1.6 2006/01/22 17:58:04 fox Exp $                        *
+* $Id: FXGUISignal.h,v 1.6.2.1 2006/05/24 12:08:45 fox Exp $                        *
 ********************************************************************************/
 #ifndef FXGUISIGNAL_H
 #define FXGUISIGNAL_H
@@ -34,10 +34,25 @@ class FXApp;
 
 
 /**
-* A GUI Signal is an object used by a worker thread to signal the
-* user interface thread of some event; it wakes up the user interface
-* thread from the blocking state and causes it to send the given message
-* to the GUI Signal object's target.
+* An FXGUISignal manages a waitable object which is used to awaken the
+* main user-interface thread from a worker thread.  When a FXGUISignal is
+* constructed, it automatically calls addInput() function to register itself
+* as the message handler for the SEL_IO_READ message from FXApp.  Likewise,
+* when FXGUISignal is destroyed, it calls removeInput() to remove itself as
+* the message handler for the SEL_IO_READ message from FXApp.
+* When a worker thread calls the signal() API, the waitable object managed by
+* FXGUISignal is set to the signaled state, after which the worker thread
+* continues execution immediately.
+* Meanwhile, the main user-interface thread is awakened because one of its
+* inputs has become signaled.  It invokes the onSignal handler of FXGUISignal,
+* which clears the waitable object's state and subsequently dispatches to the
+* target of FXGUISignal through the SEL_IO_READ message.
+* Thus, the SEL_IO_READ handler in FXGUISignal is executed in the context of
+* the user-interface thread, allowing any user-interaction without blocking
+* a worker thread.
+* In a typical scenario, a worker thread updates some common data structure,
+* then notifies the main user-interface thread (via the FXGUISignal) to update
+* the user interface and perform some appropriate action.
 */
 class FXAPI FXGUISignal : public FXObject {
   FXDECLARE(FXGUISignal)

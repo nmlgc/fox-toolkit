@@ -132,7 +132,8 @@ $(ICONS)
 CLEANFILES = icons.h icons.cpp
 
 EXTRA_DIST = $(man_MANS) \
-             Makefile.bc
+             Makefile.bc \
+             Makefile.wc
 
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_CLEAN_FILES = 
