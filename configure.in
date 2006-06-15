@@ -8,7 +8,7 @@ dnl Minor Library release number
 FOX_MINOR_VERSION=6
 
 dnl Increment after every source code change
-FOX_PATCH_LEVEL=5
+FOX_PATCH_LEVEL=6
 
 dnl Binaries compiled with this patchlevel of FOX will need at least
 dnl version MAJOR.MINOR.INTERFACE_VERSION to run. The assertion
@@ -55,7 +55,7 @@ AC_SUBST(LT_REVISION)
 AC_SUBST(LT_AGE)
 
 dnl Prevents setting flags.
-CXXFLAGS=""
+dnl CXXFLAGS=""
 
 dnl Checks for programs.
 AC_PROG_MAKE_SET
@@ -66,7 +66,6 @@ AM_PROG_LIBTOOL
 
 dnl Run tests in C++
 dnl AC_LANG_CPLUSPLUS
-
 
 dnl Checks for header files.
 AC_PATH_X
@@ -183,16 +182,10 @@ AC_MSG_CHECKING(for Xft support)
 AC_ARG_WITH(xft,[  --with-xft              enable Xft support])
 AC_MSG_RESULT([$with_xft])
 if test "x$with_xft" = "xyes"; then
-#FTCFLAGS=`freetype-config --cflags`
-#FTLIBX=`freetype-config --libs`
-#XFTCFLAGS=`xft-config --cflags`
 XFTCFLAGS=`pkg-config --cflags xft`
-#XFTLIBS=`xft-config --libs`
 XFTLIBS=`pkg-config --libs xft`
 saved_cppflags="${CXXFLAGS}"
-#CXXFLAGS="${CXXFLAGS} -DHAVE_XFT_H=1 $FTCFLAGS $XFTCFLAGS"
 CXXFLAGS="${CXXFLAGS} -DHAVE_XFT_H=1 $XFTCFLAGS"
-#X_BASE_LIBS="${X_BASE_LIBS} $FTLIBS $XFTLIBS"
 X_BASE_LIBS="${X_BASE_LIBS} $XFTLIBS"
 fi
 
@@ -425,7 +418,8 @@ pathfinder/Makefile
 calculator/Makefile
 windows/Makefile
 fox.spec
-fox-config)
+fox-config
+fox.pc)
 
 echo ""
 echo "Configure finished!"

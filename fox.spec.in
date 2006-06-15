@@ -123,6 +123,7 @@ rm -rf ${RPM_BUILD_ROOT}/usr/fox
 %{_includedir}/fox-@FOX_MAJOR_VERSION@.@FOX_MINOR_VERSION@
 %{_libdir}/libFOX-@FOX_MAJOR_VERSION@.@FOX_MINOR_VERSION@.la
 %{_libdir}/libCHART-@FOX_MAJOR_VERSION@.@FOX_MINOR_VERSION@.la
+%{_libdir}/pkgconfig/fox.pc
 
 %files static
 %defattr(-,root,root)
