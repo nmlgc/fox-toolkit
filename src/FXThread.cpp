@@ -19,13 +19,17 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXThread.cpp,v 1.53.2.1 2006/03/28 12:56:24 fox Exp $                        *
+* $Id: FXThread.cpp,v 1.53.2.2 2006/06/22 03:58:17 fox Exp $                    *
 ********************************************************************************/
+#ifdef WIN32
+#if _WIN32_WINNT < 0x0400
+#define _WIN32_WINNT 0x0400
+#endif
+#endif
 #include "xincs.h"
 #include "fxver.h"
 #include "fxdefs.h"
 #include "FXThread.h"
-
 #ifndef WIN32
 #ifdef APPLE
 #include <mach/mach_init.h>

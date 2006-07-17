@@ -19,7 +19,7 @@
 # along with this program; if not, write to the Free Software                   #
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    #
 #################################################################################
-# $Id: Adie.stx,v 1.37.2.2 2006/06/09 00:50:16 fox Exp $                            #
+# $Id: Adie.stx,v 1.37.2.3 2006/06/16 19:04:42 fox Exp $                            #
 #################################################################################
 
 #
@@ -286,7 +286,7 @@ language "C++"
   end
 
   rule "Number"
-    pattern     "\<((0[xX][0-9a-fA-F]+)|((\d+\.?\d*)|(\.\d+))([eE](\+|-)?\d+)?)(L|l|UL|ul|u|U|F|f)?\>"
+    pattern     "\<((0[xX][0-9a-fA-F]+)|((\d+\.?\d*)|(\.\d+))([eE](\+|-)?\d+)?)(L|LL|l|ll|UL|ULL|ul|ull|u|U|F|f)?\>"
   end
 
   rule "Type"
@@ -410,7 +410,7 @@ language "C"
   end
 
   rule "Number"
-    pattern     "\<((0[xX][0-9a-fA-F]+)|((\d+\.?\d*)|(\.\d+))([eE](\+|-)?\d+)?)(L|l|UL|ul|u|U|F|f)?\>"
+    pattern     "\<((0[xX][0-9a-fA-F]+)|((\d+\.?\d*)|(\.\d+))([eE](\+|-)?\d+)?)(L|LL|l|ll|UL|ULL|ul|ull|u|U|F|f)?\>"
   end
 
   rule "Type"
@@ -501,18 +501,18 @@ language "Python"
   end
   rule "String"
     openpattern    "([^\"{2}]\"[^\"{2}])|([^'{2}]'[^\"{2}])"
-    closepattern   "([^\"{2}]\"[^\"{2}])|([^\"{2}]'[^\"{2}])"    
+    closepattern   "([^\"{2}]\"[^\"{2}])|([^\"{2}]'[^\"{2}])"
     rule "CharEscape"
       pattern     "\\."
     end
-  end  
+  end
   rule "TripleString"
     openpattern    "(\"{3})|('{3})"
-    closepattern   "(\"{3})|('{3})"    
+    closepattern   "(\"{3})|('{3})"
     rule "CharEscape"
       pattern     "\\."
     end
-  end 
+  end
   rule "Comment"
     pattern    "#.*?$"
   end

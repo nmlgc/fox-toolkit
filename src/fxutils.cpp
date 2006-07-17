@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: fxutils.cpp,v 1.129.2.2 2006/04/02 00:59:57 fox Exp $                        *
+* $Id: fxutils.cpp,v 1.129.2.3 2006/07/08 14:36:56 fox Exp $                        *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -164,14 +164,17 @@ FXbool fxisconsole(const FXchar*){
 void fxassert(const char* expression,const char* filename,unsigned int lineno){
 #ifndef WIN32
   fprintf(stderr,"%s:%d: FXASSERT(%s) failed.\n",filename,lineno,expression);
+  fflush(stderr);
 #else
 #ifdef _WINDOWS
   char msg[MAXMESSAGESIZE];
   sprintf(msg,"%s(%d): FXASSERT(%s) failed.\n",filename,lineno,expression);
   OutputDebugStringA(msg);
   fprintf(stderr,"%s",msg); // if a console is available
+  fflush(stderr);
 #else
   fprintf(stderr,"%s(%d): FXASSERT(%s) failed.\n",filename,lineno,expression);
+  fflush(stderr);
 #endif
 #endif
   }
@@ -183,6 +186,7 @@ void fxmessage(const char* format,...){
   va_list arguments;
   va_start(arguments,format);
   vfprintf(stderr,format,arguments);
+  fflush(stderr);
   va_end(arguments);
 #else
 #ifdef _WINDOWS
@@ -193,10 +197,12 @@ void fxmessage(const char* format,...){
   va_end(arguments);
   OutputDebugStringA(msg);
   fprintf(stderr,"%s",msg); // if a console is available
+  fflush(stderr);
 #else
   va_list arguments;
   va_start(arguments,format);
   vfprintf(stderr,format,arguments);
+  fflush(stderr);
   va_end(arguments);
 #endif
 #endif
@@ -209,6 +215,7 @@ void fxerror(const char* format,...){
   va_list arguments;
   va_start(arguments,format);
   vfprintf(stderr,format,arguments);
+  fflush(stderr);
   va_end(arguments);
   abort();
 #else
@@ -220,12 +227,14 @@ void fxerror(const char* format,...){
   va_end(arguments);
   OutputDebugStringA(msg);
   fprintf(stderr,"%s",msg); // if a console is available
+  fflush(stderr);
   MessageBoxA(NULL,msg,NULL,MB_OK|MB_ICONEXCLAMATION|MB_APPLMODAL);
   DebugBreak();
 #else
   va_list arguments;
   va_start(arguments,format);
   vfprintf(stderr,format,arguments);
+  fflush(stderr);
   va_end(arguments);
   abort();
 #endif
@@ -239,6 +248,7 @@ void fxwarning(const char* format,...){
   va_list arguments;
   va_start(arguments,format);
   vfprintf(stderr,format,arguments);
+  fflush(stderr);
   va_end(arguments);
 #else
 #ifdef _WINDOWS
@@ -249,11 +259,13 @@ void fxwarning(const char* format,...){
   va_end(arguments);
   OutputDebugStringA(msg);
   fprintf(stderr,"%s",msg); // if a console is available
+  fflush(stderr);
   MessageBoxA(NULL,msg,NULL,MB_OK|MB_ICONINFORMATION|MB_APPLMODAL);
 #else
   va_list arguments;
   va_start(arguments,format);
   vfprintf(stderr,format,arguments);
+  fflush(stderr);
   va_end(arguments);
 #endif
 #endif
@@ -267,6 +279,7 @@ void fxtrace(unsigned int level,const char* format,...){
     va_list arguments;
     va_start(arguments,format);
     vfprintf(stderr,format,arguments);
+    fflush(stderr);
     va_end(arguments);
 #else
 #ifdef _WINDOWS
@@ -274,13 +287,15 @@ void fxtrace(unsigned int level,const char* format,...){
     va_list arguments;
     va_start(arguments,format);
     vsnprintf(msg,sizeof(msg),format,arguments);
-    va_end(arguments);
     OutputDebugStringA(msg);
     fprintf(stderr,"%s",msg); // if a console is available
+    fflush(stderr);
+    va_end(arguments);
 #else
     va_list arguments;
     va_start(arguments,format);
     vfprintf(stderr,format,arguments);
+    fflush(stderr);
     va_end(arguments);
 #endif
 #endif
