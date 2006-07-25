@@ -1384,6 +1384,10 @@ SOURCE=..\..\..\include\FXMatrix.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\include\FXMBCSCodec.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\src\FXMDIButton.cpp
 # End Source File
 # Begin Source File
@@ -1841,6 +1845,14 @@ SOURCE=..\..\..\src\FXRuler.cpp
 # Begin Source File
 
 SOURCE=..\..\..\include\FXRuler.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\src\FXRulerView.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\include\FXRulerView.h
 # End Source File
 # Begin Source File
 

@@ -1249,6 +1249,10 @@ SOURCE=..\..\..\include\FXImageFrame.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\src\fximagescale.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\src\FXImageView.cpp
 # End Source File
 # Begin Source File
@@ -1266,6 +1270,10 @@ SOURCE=..\..\..\include\FXInputDialog.h
 # Begin Source File
 
 SOURCE=..\..\..\src\FXIO.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\include\FXIO.h
 # End Source File
 # Begin Source File
 
@@ -1386,6 +1394,10 @@ SOURCE=..\..\..\src\FXMatrix.cpp
 # Begin Source File
 
 SOURCE=..\..\..\include\FXMatrix.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\include\FXMBCSCodec.h
 # End Source File
 # Begin Source File
 
@@ -1846,6 +1858,14 @@ SOURCE=..\..\..\src\FXRuler.cpp
 # Begin Source File
 
 SOURCE=..\..\..\include\FXRuler.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\src\FXRulerView.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\include\FXRulerView.h
 # End Source File
 # Begin Source File
 
