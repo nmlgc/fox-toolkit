@@ -1249,10 +1249,6 @@ SOURCE=..\..\..\include\FXImageFrame.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\src\fximagescale.cpp
-# End Source File
-# Begin Source File
-
 SOURCE=..\..\..\src\FXImageView.cpp
 # End Source File
 # Begin Source File

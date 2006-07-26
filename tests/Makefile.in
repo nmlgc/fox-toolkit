@@ -78,11 +78,8 @@ GCJ = @GCJ@
 GCJFLAGS = @GCJFLAGS@
 GL_LIBS = @GL_LIBS@
 GL_TESTS = @GL_TESTS@
-HAVE_LIB = @HAVE_LIB@
-LIB = @LIB@
 LIBTOOL = @LIBTOOL@
 LN_S = @LN_S@
-LTLIB = @LTLIB@
 LT_AGE = @LT_AGE@
 LT_CURRENT = @LT_CURRENT@
 LT_RELEASE = @LT_RELEASE@
@@ -677,6 +674,7 @@ bitmapviewer.o: bitmapviewer.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXWizard.h ../include/FXMDIButton.h \
 	../include/FXMDIClient.h ../include/FXMDIChild.h \
 	../include/FXDocument.h ../include/FXDockSite.h \
+	../include/FXDockBar.h ../include/FXToolBar.h \
 	../include/FXDockHandler.h ../include/FXDockTitle.h \
 	../include/FXToolBarGrip.h ../include/FXToolBarShell.h \
 	../include/FXToolBarTab.h ../include/FXPrintDialog.h \
@@ -768,6 +766,7 @@ button.o: button.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXWizard.h ../include/FXMDIButton.h \
 	../include/FXMDIClient.h ../include/FXMDIChild.h \
 	../include/FXDocument.h ../include/FXDockSite.h \
+	../include/FXDockBar.h ../include/FXToolBar.h \
 	../include/FXDockHandler.h ../include/FXDockTitle.h \
 	../include/FXToolBarGrip.h ../include/FXToolBarShell.h \
 	../include/FXToolBarTab.h ../include/FXPrintDialog.h \
@@ -859,6 +858,7 @@ codecs.o: codecs.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXWizard.h ../include/FXMDIButton.h \
 	../include/FXMDIClient.h ../include/FXMDIChild.h \
 	../include/FXDocument.h ../include/FXDockSite.h \
+	../include/FXDockBar.h ../include/FXToolBar.h \
 	../include/FXDockHandler.h ../include/FXDockTitle.h \
 	../include/FXToolBarGrip.h ../include/FXToolBarShell.h \
 	../include/FXToolBarTab.h ../include/FXPrintDialog.h \
@@ -954,6 +954,7 @@ ControlPanel.o: ControlPanel.cpp ../include/xincs.h ../include/fx.h \
 	../include/FXWizard.h ../include/FXMDIButton.h \
 	../include/FXMDIClient.h ../include/FXMDIChild.h \
 	../include/FXDocument.h ../include/FXDockSite.h \
+	../include/FXDockBar.h ../include/FXToolBar.h \
 	../include/FXDockHandler.h ../include/FXDockTitle.h \
 	../include/FXToolBarGrip.h ../include/FXToolBarShell.h \
 	../include/FXToolBarTab.h ../include/FXPrintDialog.h \
@@ -1046,6 +1047,7 @@ datatarget.o: datatarget.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXWizard.h ../include/FXMDIButton.h \
 	../include/FXMDIClient.h ../include/FXMDIChild.h \
 	../include/FXDocument.h ../include/FXDockSite.h \
+	../include/FXDockBar.h ../include/FXToolBar.h \
 	../include/FXDockHandler.h ../include/FXDockTitle.h \
 	../include/FXToolBarGrip.h ../include/FXToolBarShell.h \
 	../include/FXToolBarTab.h ../include/FXPrintDialog.h \
@@ -1137,6 +1139,7 @@ dctest.o: dctest.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXWizard.h ../include/FXMDIButton.h \
 	../include/FXMDIClient.h ../include/FXMDIChild.h \
 	../include/FXDocument.h ../include/FXDockSite.h \
+	../include/FXDockBar.h ../include/FXToolBar.h \
 	../include/FXDockHandler.h ../include/FXDockTitle.h \
 	../include/FXToolBarGrip.h ../include/FXToolBarShell.h \
 	../include/FXToolBarTab.h ../include/FXPrintDialog.h \
@@ -1228,6 +1231,7 @@ dialog.o: dialog.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXWizard.h ../include/FXMDIButton.h \
 	../include/FXMDIClient.h ../include/FXMDIChild.h \
 	../include/FXDocument.h ../include/FXDockSite.h \
+	../include/FXDockBar.h ../include/FXToolBar.h \
 	../include/FXDockHandler.h ../include/FXDockTitle.h \
 	../include/FXToolBarGrip.h ../include/FXToolBarShell.h \
 	../include/FXToolBarTab.h ../include/FXPrintDialog.h \
@@ -1319,6 +1323,7 @@ dirlist.o: dirlist.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXWizard.h ../include/FXMDIButton.h \
 	../include/FXMDIClient.h ../include/FXMDIChild.h \
 	../include/FXDocument.h ../include/FXDockSite.h \
+	../include/FXDockBar.h ../include/FXToolBar.h \
 	../include/FXDockHandler.h ../include/FXDockTitle.h \
 	../include/FXToolBarGrip.h ../include/FXToolBarShell.h \
 	../include/FXToolBarTab.h ../include/FXPrintDialog.h \
@@ -1410,6 +1415,7 @@ expression.o: expression.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXWizard.h ../include/FXMDIButton.h \
 	../include/FXMDIClient.h ../include/FXMDIChild.h \
 	../include/FXDocument.h ../include/FXDockSite.h \
+	../include/FXDockBar.h ../include/FXToolBar.h \
 	../include/FXDockHandler.h ../include/FXDockTitle.h \
 	../include/FXToolBarGrip.h ../include/FXToolBarShell.h \
 	../include/FXToolBarTab.h ../include/FXPrintDialog.h \
@@ -1502,6 +1508,7 @@ foursplit.o: foursplit.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXWizard.h ../include/FXMDIButton.h \
 	../include/FXMDIClient.h ../include/FXMDIChild.h \
 	../include/FXDocument.h ../include/FXDockSite.h \
+	../include/FXDockBar.h ../include/FXToolBar.h \
 	../include/FXDockHandler.h ../include/FXDockTitle.h \
 	../include/FXToolBarGrip.h ../include/FXToolBarShell.h \
 	../include/FXToolBarTab.h ../include/FXPrintDialog.h \
@@ -1593,6 +1600,7 @@ gltest.o: gltest.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXWizard.h ../include/FXMDIButton.h \
 	../include/FXMDIClient.h ../include/FXMDIChild.h \
 	../include/FXDocument.h ../include/FXDockSite.h \
+	../include/FXDockBar.h ../include/FXToolBar.h \
 	../include/FXDockHandler.h ../include/FXDockTitle.h \
 	../include/FXToolBarGrip.h ../include/FXToolBarShell.h \
 	../include/FXToolBarTab.h ../include/FXPrintDialog.h \
@@ -1697,6 +1705,7 @@ glviewer.o: glviewer.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXWizard.h ../include/FXMDIButton.h \
 	../include/FXMDIClient.h ../include/FXMDIChild.h \
 	../include/FXDocument.h ../include/FXDockSite.h \
+	../include/FXDockBar.h ../include/FXToolBar.h \
 	../include/FXDockHandler.h ../include/FXDockTitle.h \
 	../include/FXToolBarGrip.h ../include/FXToolBarShell.h \
 	../include/FXToolBarTab.h ../include/FXPrintDialog.h \
@@ -1801,6 +1810,7 @@ groupbox.o: groupbox.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXWizard.h ../include/FXMDIButton.h \
 	../include/FXMDIClient.h ../include/FXMDIChild.h \
 	../include/FXDocument.h ../include/FXDockSite.h \
+	../include/FXDockBar.h ../include/FXToolBar.h \
 	../include/FXDockHandler.h ../include/FXDockTitle.h \
 	../include/FXToolBarGrip.h ../include/FXToolBarShell.h \
 	../include/FXToolBarTab.h ../include/FXPrintDialog.h \
@@ -1893,6 +1903,7 @@ header.o: header.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXWizard.h ../include/FXMDIButton.h \
 	../include/FXMDIClient.h ../include/FXMDIChild.h \
 	../include/FXDocument.h ../include/FXDockSite.h \
+	../include/FXDockBar.h ../include/FXToolBar.h \
 	../include/FXDockHandler.h ../include/FXDockTitle.h \
 	../include/FXToolBarGrip.h ../include/FXToolBarShell.h \
 	../include/FXToolBarTab.h ../include/FXPrintDialog.h \
@@ -1984,6 +1995,7 @@ hello.o: hello.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXWizard.h ../include/FXMDIButton.h \
 	../include/FXMDIClient.h ../include/FXMDIChild.h \
 	../include/FXDocument.h ../include/FXDockSite.h \
+	../include/FXDockBar.h ../include/FXToolBar.h \
 	../include/FXDockHandler.h ../include/FXDockTitle.h \
 	../include/FXToolBarGrip.h ../include/FXToolBarShell.h \
 	../include/FXToolBarTab.h ../include/FXPrintDialog.h \
@@ -2076,6 +2088,7 @@ hello2.o: hello2.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXWizard.h ../include/FXMDIButton.h \
 	../include/FXMDIClient.h ../include/FXMDIChild.h \
 	../include/FXDocument.h ../include/FXDockSite.h \
+	../include/FXDockBar.h ../include/FXToolBar.h \
 	../include/FXDockHandler.h ../include/FXDockTitle.h \
 	../include/FXToolBarGrip.h ../include/FXToolBarShell.h \
 	../include/FXToolBarTab.h ../include/FXPrintDialog.h \
@@ -2167,6 +2180,7 @@ iconlist.o: iconlist.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXWizard.h ../include/FXMDIButton.h \
 	../include/FXMDIClient.h ../include/FXMDIChild.h \
 	../include/FXDocument.h ../include/FXDockSite.h \
+	../include/FXDockBar.h ../include/FXToolBar.h \
 	../include/FXDockHandler.h ../include/FXDockTitle.h \
 	../include/FXToolBarGrip.h ../include/FXToolBarShell.h \
 	../include/FXToolBarTab.h ../include/FXPrintDialog.h \
@@ -2258,14 +2272,13 @@ image.o: image.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXWizard.h ../include/FXMDIButton.h \
 	../include/FXMDIClient.h ../include/FXMDIChild.h \
 	../include/FXDocument.h ../include/FXDockSite.h \
+	../include/FXDockBar.h ../include/FXToolBar.h \
 	../include/FXDockHandler.h ../include/FXDockTitle.h \
 	../include/FXToolBarGrip.h ../include/FXToolBarShell.h \
 	../include/FXToolBarTab.h ../include/FXPrintDialog.h \
 	../include/FXDebugTarget.h ../include/FXSplashWindow.h \
 	../include/FXPNGImage.h ../include/FXJPGImage.h \
-	../include/FXTIFImage.h ../include/FXICOImage.h \
-	../include/FXTGAImage.h ../include/FXRGBImage.h \
-	../include/FXGradientBar.h
+	../include/FXTIFImage.h ../include/FXGradientBar.h
 imageviewer.o: imageviewer.cpp ../include/fx.h ../include/fxver.h \
 	../include/fxdefs.h ../include/fxascii.h ../include/fxunicode.h \
 	../include/FXHash.h ../include/FXException.h \
@@ -2353,14 +2366,13 @@ imageviewer.o: imageviewer.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXWizard.h ../include/FXMDIButton.h \
 	../include/FXMDIClient.h ../include/FXMDIChild.h \
 	../include/FXDocument.h ../include/FXDockSite.h \
+	../include/FXDockBar.h ../include/FXToolBar.h \
 	../include/FXDockHandler.h ../include/FXDockTitle.h \
 	../include/FXToolBarGrip.h ../include/FXToolBarShell.h \
 	../include/FXToolBarTab.h ../include/FXPrintDialog.h \
 	../include/FXDebugTarget.h ../include/FXSplashWindow.h \
 	../include/FXPNGImage.h ../include/FXJPGImage.h \
-	../include/FXTIFImage.h ../include/FXICOImage.h \
-	../include/FXTGAImage.h ../include/FXRGBImage.h \
-	../include/FXPPMImage.h
+	../include/FXTIFImage.h
 layout.o: layout.cpp ../include/fx.h ../include/fxver.h \
 	../include/fxdefs.h ../include/fxascii.h ../include/fxunicode.h \
 	../include/FXHash.h ../include/FXException.h \
@@ -2448,6 +2460,7 @@ layout.o: layout.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXWizard.h ../include/FXMDIButton.h \
 	../include/FXMDIClient.h ../include/FXMDIChild.h \
 	../include/FXDocument.h ../include/FXDockSite.h \
+	../include/FXDockBar.h ../include/FXToolBar.h \
 	../include/FXDockHandler.h ../include/FXDockTitle.h \
 	../include/FXToolBarGrip.h ../include/FXToolBarShell.h \
 	../include/FXToolBarTab.h ../include/FXPrintDialog.h \
@@ -2539,11 +2552,11 @@ mditest.o: mditest.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXWizard.h ../include/FXMDIButton.h \
 	../include/FXMDIClient.h ../include/FXMDIChild.h \
 	../include/FXDocument.h ../include/FXDockSite.h \
+	../include/FXDockBar.h ../include/FXToolBar.h \
 	../include/FXDockHandler.h ../include/FXDockTitle.h \
 	../include/FXToolBarGrip.h ../include/FXToolBarShell.h \
 	../include/FXToolBarTab.h ../include/FXPrintDialog.h \
-	../include/FXDebugTarget.h ../include/FXSplashWindow.h \
-	../include/FXThread.h
+	../include/FXDebugTarget.h ../include/FXSplashWindow.h
 memmap.o: memmap.cpp ../include/fx.h ../include/fxver.h \
 	../include/fxdefs.h ../include/fxascii.h ../include/fxunicode.h \
 	../include/FXHash.h ../include/FXException.h \
@@ -2631,6 +2644,7 @@ memmap.o: memmap.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXWizard.h ../include/FXMDIButton.h \
 	../include/FXMDIClient.h ../include/FXMDIChild.h \
 	../include/FXDocument.h ../include/FXDockSite.h \
+	../include/FXDockBar.h ../include/FXToolBar.h \
 	../include/FXDockHandler.h ../include/FXDockTitle.h \
 	../include/FXToolBarGrip.h ../include/FXToolBarShell.h \
 	../include/FXToolBarTab.h ../include/FXPrintDialog.h \
@@ -2723,6 +2737,7 @@ minheritance.o: minheritance.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXWizard.h ../include/FXMDIButton.h \
 	../include/FXMDIClient.h ../include/FXMDIChild.h \
 	../include/FXDocument.h ../include/FXDockSite.h \
+	../include/FXDockBar.h ../include/FXToolBar.h \
 	../include/FXDockHandler.h ../include/FXDockTitle.h \
 	../include/FXToolBarGrip.h ../include/FXToolBarShell.h \
 	../include/FXToolBarTab.h ../include/FXPrintDialog.h \
@@ -2814,6 +2829,7 @@ ratio.o: ratio.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXWizard.h ../include/FXMDIButton.h \
 	../include/FXMDIClient.h ../include/FXMDIChild.h \
 	../include/FXDocument.h ../include/FXDockSite.h \
+	../include/FXDockBar.h ../include/FXToolBar.h \
 	../include/FXDockHandler.h ../include/FXDockTitle.h \
 	../include/FXToolBarGrip.h ../include/FXToolBarShell.h \
 	../include/FXToolBarTab.h ../include/FXPrintDialog.h \
@@ -2905,11 +2921,11 @@ rex.o: rex.cpp ../include/fx.h ../include/fxver.h ../include/fxdefs.h \
 	../include/FXWizard.h ../include/FXMDIButton.h \
 	../include/FXMDIClient.h ../include/FXMDIChild.h \
 	../include/FXDocument.h ../include/FXDockSite.h \
+	../include/FXDockBar.h ../include/FXToolBar.h \
 	../include/FXDockHandler.h ../include/FXDockTitle.h \
 	../include/FXToolBarGrip.h ../include/FXToolBarShell.h \
 	../include/FXToolBarTab.h ../include/FXPrintDialog.h \
-	../include/FXDebugTarget.h ../include/FXSplashWindow.h \
-	../include/FXRex.h
+	../include/FXDebugTarget.h ../include/FXSplashWindow.h
 scribble.o: scribble.cpp ../include/fx.h ../include/fxver.h \
 	../include/fxdefs.h ../include/fxascii.h ../include/fxunicode.h \
 	../include/FXHash.h ../include/FXException.h \
@@ -2997,6 +3013,7 @@ scribble.o: scribble.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXWizard.h ../include/FXMDIButton.h \
 	../include/FXMDIClient.h ../include/FXMDIChild.h \
 	../include/FXDocument.h ../include/FXDockSite.h \
+	../include/FXDockBar.h ../include/FXToolBar.h \
 	../include/FXDockHandler.h ../include/FXDockTitle.h \
 	../include/FXToolBarGrip.h ../include/FXToolBarShell.h \
 	../include/FXToolBarTab.h ../include/FXPrintDialog.h \
@@ -3088,6 +3105,7 @@ shutter.o: shutter.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXWizard.h ../include/FXMDIButton.h \
 	../include/FXMDIClient.h ../include/FXMDIChild.h \
 	../include/FXDocument.h ../include/FXDockSite.h \
+	../include/FXDockBar.h ../include/FXToolBar.h \
 	../include/FXDockHandler.h ../include/FXDockTitle.h \
 	../include/FXToolBarGrip.h ../include/FXToolBarShell.h \
 	../include/FXToolBarTab.h ../include/FXPrintDialog.h \
@@ -3179,11 +3197,11 @@ splitter.o: splitter.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXWizard.h ../include/FXMDIButton.h \
 	../include/FXMDIClient.h ../include/FXMDIChild.h \
 	../include/FXDocument.h ../include/FXDockSite.h \
+	../include/FXDockBar.h ../include/FXToolBar.h \
 	../include/FXDockHandler.h ../include/FXDockTitle.h \
 	../include/FXToolBarGrip.h ../include/FXToolBarShell.h \
 	../include/FXToolBarTab.h ../include/FXPrintDialog.h \
-	../include/FXDebugTarget.h ../include/FXSplashWindow.h \
-	../include/FXFoldingList.h
+	../include/FXDebugTarget.h ../include/FXSplashWindow.h
 switcher.o: switcher.cpp ../include/fx.h ../include/fxver.h \
 	../include/fxdefs.h ../include/fxascii.h ../include/fxunicode.h \
 	../include/FXHash.h ../include/FXException.h \
@@ -3271,6 +3289,7 @@ switcher.o: switcher.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXWizard.h ../include/FXMDIButton.h \
 	../include/FXMDIClient.h ../include/FXMDIChild.h \
 	../include/FXDocument.h ../include/FXDockSite.h \
+	../include/FXDockBar.h ../include/FXToolBar.h \
 	../include/FXDockHandler.h ../include/FXDockTitle.h \
 	../include/FXToolBarGrip.h ../include/FXToolBarShell.h \
 	../include/FXToolBarTab.h ../include/FXPrintDialog.h \
@@ -3362,6 +3381,7 @@ tabbook.o: tabbook.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXWizard.h ../include/FXMDIButton.h \
 	../include/FXMDIClient.h ../include/FXMDIChild.h \
 	../include/FXDocument.h ../include/FXDockSite.h \
+	../include/FXDockBar.h ../include/FXToolBar.h \
 	../include/FXDockHandler.h ../include/FXDockTitle.h \
 	../include/FXToolBarGrip.h ../include/FXToolBarShell.h \
 	../include/FXToolBarTab.h ../include/FXPrintDialog.h \
@@ -3453,6 +3473,7 @@ table.o: table.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXWizard.h ../include/FXMDIButton.h \
 	../include/FXMDIClient.h ../include/FXMDIChild.h \
 	../include/FXDocument.h ../include/FXDockSite.h \
+	../include/FXDockBar.h ../include/FXToolBar.h \
 	../include/FXDockHandler.h ../include/FXDockTitle.h \
 	../include/FXToolBarGrip.h ../include/FXToolBarShell.h \
 	../include/FXToolBarTab.h ../include/FXPrintDialog.h \
@@ -3544,6 +3565,7 @@ wizard.o: wizard.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXWizard.h ../include/FXMDIButton.h \
 	../include/FXMDIClient.h ../include/FXMDIChild.h \
 	../include/FXDocument.h ../include/FXDockSite.h \
+	../include/FXDockBar.h ../include/FXToolBar.h \
 	../include/FXDockHandler.h ../include/FXDockTitle.h \
 	../include/FXToolBarGrip.h ../include/FXToolBarShell.h \
 	../include/FXToolBarTab.h ../include/FXPrintDialog.h \

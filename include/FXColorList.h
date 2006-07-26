@@ -32,7 +32,7 @@ namespace FX {
 
 
 /// Color item
-class FXColorItem : public FXListItem {
+class FXAPI FXColorItem : public FXListItem {
   FXDECLARE(FXColorItem)
 protected:
   FXColor  color;
