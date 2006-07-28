@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXThread.cpp,v 1.53.2.2 2006/06/22 03:58:17 fox Exp $                    *
+* $Id: FXThread.cpp,v 1.53.2.7 2006/07/28 05:30:49 fox Exp $                    *
 ********************************************************************************/
 #ifdef WIN32
 #if _WIN32_WINNT < 0x0400
@@ -337,8 +337,9 @@ FXbool FXThread::start(unsigned long stacksize){
 
 // Suspend calling thread until thread is done
 FXbool FXThread::join(FXint& code){
+  register pthread_t ttid=(pthread_t)tid;
   void *trc=NULL;
-  if(tid && pthread_join((pthread_t)tid,&trc)==0){
+  if(ttid && pthread_join(ttid,&trc)==0){
     code=(FXint)(FXival)trc;
     tid=0;
     return TRUE;
@@ -349,7 +350,8 @@ FXbool FXThread::join(FXint& code){
 
 // Suspend calling thread until thread is done
 FXbool FXThread::join(){
-  if(tid && pthread_join((pthread_t)tid,NULL)==0){
+  register pthread_t ttid=(pthread_t)tid;
+  if(ttid && pthread_join(ttid,NULL)==0){
     tid=0;
     return TRUE;
     }
@@ -359,8 +361,9 @@ FXbool FXThread::join(){
 
 // Cancel the thread
 FXbool FXThread::cancel(){
-  if(tid && pthread_cancel((pthread_t)tid)==0){
-    pthread_join((pthread_t)tid,NULL);
+  register pthread_t ttid=(pthread_t)tid;
+  if(ttid && pthread_cancel(ttid)==0){
+    pthread_join(ttid,NULL);
     tid=0;
     return TRUE;
     }
@@ -370,7 +373,8 @@ FXbool FXThread::cancel(){
 
 // Detach thread
 FXbool FXThread::detach(){
-  return tid && pthread_detach((pthread_t)tid)==0;
+  register pthread_t ttid=(pthread_t)tid;
+  return ttid && pthread_detach(ttid)==0;
   }
 
 
@@ -467,29 +471,30 @@ FXThreadID FXThread::current(){
 
 // Set thread priority
 void FXThread::priority(FXint prio){
-  sched_param sched={0};
-  int priomin,priomax;
-  if(tid){
-#if defined(SCHED_OTHER)
+  register pthread_t ttid=(pthread_t)tid;
+  if(ttid){
+    sched_param sched={0};
+    int pcy=0;
+    pthread_getschedparam(ttid,&pcy,&sched);
 #if defined(_POSIX_PRIORITY_SCHEDULING)
-     priomax=sched_get_priority_max(SCHED_OTHER);
-     priomin=sched_get_priority_min(SCHED_OTHER);
-     sched.sched_priority=FXCLAMP(priomin,prio,priomax);
+    int priomax=sched_get_priority_max(pcy);
+    int priomin=sched_get_priority_min(pcy);
+    sched.sched_priority=FXCLAMP(priomin,prio,priomax);
 #elif defined(PTHREAD_MINPRIORITY)
-     sched.sched_priority=FXCLAMP(PTHREAD_MIN_PRIORITY,prio,PTHREAD_MAX_PRIORITY);
+    sched.sched_priority=FXCLAMP(PTHREAD_MIN_PRIORITY,prio,PTHREAD_MAX_PRIORITY);
 #endif
-     pthread_setschedparam((pthread_t)tid,SCHED_OTHER,&sched);
-#endif
+    pthread_setschedparam(ttid,pcy,&sched);
     }
   }
 
 
 // Return thread priority
 FXint FXThread::priority(){
-  sched_param sched={0};
-  int policy;
-  if(tid){
-    pthread_getschedparam((pthread_t)tid,&policy,&sched);
+  register pthread_t ttid=(pthread_t)tid;
+  if(ttid){
+    sched_param sched={0};
+    int pcy=0;
+    pthread_getschedparam(ttid,&pcy,&sched);
     return sched.sched_priority;
     }
   return 0;
@@ -498,7 +503,10 @@ FXint FXThread::priority(){
 
 // Destroy; if it was running, stop it
 FXThread::~FXThread(){
-  if(tid){ pthread_cancel((pthread_t)tid); }
+  register pthread_t ttid=(pthread_t)tid;
+  if(ttid){
+    pthread_cancel(ttid);
+    }
   }
 
 
@@ -735,9 +743,10 @@ FXbool FXThread::start(unsigned long stacksize){
 
 // Suspend calling thread until thread is done
 FXbool FXThread::join(FXint& code){
-  if(tid && WaitForSingleObject((HANDLE)tid,INFINITE)==WAIT_OBJECT_0){
-    GetExitCodeThread((HANDLE)tid,(DWORD*)&code);
-    CloseHandle((HANDLE)tid);
+  register HANDLE ttid=(HANDLE)tid;
+  if(ttid && WaitForSingleObject(ttid,INFINITE)==WAIT_OBJECT_0){
+    GetExitCodeThread(ttid,(DWORD*)&code);
+    CloseHandle(ttid);
     tid=0;
     return TRUE;
     }
@@ -747,8 +756,9 @@ FXbool FXThread::join(FXint& code){
 
 // Suspend calling thread until thread is done
 FXbool FXThread::join(){
-  if(tid && WaitForSingleObject((HANDLE)tid,INFINITE)==WAIT_OBJECT_0){
-    CloseHandle((HANDLE)tid);
+  register HANDLE ttid=(HANDLE)tid;
+  if(ttid && WaitForSingleObject(ttid,INFINITE)==WAIT_OBJECT_0){
+    CloseHandle(ttid);
     tid=0;
     return TRUE;
     }
@@ -758,8 +768,9 @@ FXbool FXThread::join(){
 
 // Cancel the thread
 FXbool FXThread::cancel(){
-  if(tid && TerminateThread((HANDLE)tid,0)){
-    CloseHandle((HANDLE)tid);
+  register HANDLE ttid=(HANDLE)tid;
+  if(ttid && TerminateThread(ttid,0)){
+    CloseHandle(ttid);
     tid=0;
     return TRUE;
     }
@@ -826,16 +837,18 @@ FXThread* FXThread::self(){
 
 // Set thread priority
 void FXThread::priority(FXint prio){
-  if(tid){
-    SetThreadPriority((HANDLE)tid,prio);
+  register HANDLE ttid=(HANDLE)tid;
+  if(ttid){
+    SetThreadPriority(ttid,prio);
     }
   }
 
 
 // Return thread priority
 FXint FXThread::priority(){
-  if(tid){
-    return GetThreadPriority((HANDLE)tid);
+  register HANDLE ttid=(HANDLE)tid;
+  if(ttid){
+    return GetThreadPriority(ttid);
     }
   return 0;
   }
@@ -843,7 +856,11 @@ FXint FXThread::priority(){
 
 // Destroy
 FXThread::~FXThread(){
-  if(tid){ TerminateThread((HANDLE)tid,0); CloseHandle((HANDLE)tid); }
+  register HANDLE ttid=(HANDLE)tid;
+  if(ttid){
+    TerminateThread(ttid,0);
+    CloseHandle(ttid);
+    }
   }
 
 

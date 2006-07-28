@@ -15,7 +15,7 @@ Package=<4>
     Project_Dep_Name reswrap
     End Project Dependency
     Begin Project Dependency
-    Project_Dep_Name fox
+    Project_Dep_Name foxdll
     End Project Dependency
 }}}
 

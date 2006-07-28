@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: fxdefs.h,v 1.178 2006/03/21 01:41:43 fox Exp $                           *
+* $Id: fxdefs.h,v 1.178.2.1 2006/07/28 00:56:30 fox Exp $                           *
 ********************************************************************************/
 #ifndef FXDEFS_H
 #define FXDEFS_H
@@ -113,11 +113,14 @@
 #ifdef FOXDLL
 #ifdef FOXDLL_EXPORTS
 #define FXAPI FXEXPORT
+#define FXTEMPLATE_EXTERN
 #else
 #define FXAPI FXIMPORT
+#define FXTEMPLATE_EXTERN extern
 #endif
 #else
 #define FXAPI
+#define FXTEMPLATE_EXTERN
 #endif
 
 // Callback
@@ -131,6 +134,7 @@
 // Templates with DLL linkage
 #ifdef _MSC_VER
 #pragma warning(disable: 4251)
+#pragma warning(disable: 4231)
 #endif
 
 // Checking printf and scanf format strings

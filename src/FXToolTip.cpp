@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXToolTip.cpp,v 1.24 2006/01/22 17:58:48 fox Exp $                       *
+* $Id: FXToolTip.cpp,v 1.24.2.1 2006/07/27 02:18:52 fox Exp $                       *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
