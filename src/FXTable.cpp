@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXTable.cpp,v 1.245.2.3 2006/06/21 04:33:15 fox Exp $                        *
+* $Id: FXTable.cpp,v 1.245.2.4 2006/08/02 01:31:10 fox Exp $                        *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -928,14 +928,14 @@ void FXTable::changeFocus(FXWindow *child){
     FXint r=rowAtY(child->getY());
     FXint c=colAtX(child->getX());
 
-FXTRACE((1,"changeFocus: x=%d y=%d r=%d c=%d\n",child->getX(),child->getY(),r,c));
+FXTRACE((100,"changeFocus: x=%d y=%d r=%d c=%d\n",child->getX(),child->getY(),r,c));
 
     // Item inside one of the cells
     if(0<=r && r<nrows && 0<=c && c<ncols){
       FXTableItem *item;
 
-FXTRACE((1,"changeFocus: yy=%d\n",rowHeader->getY()+rowHeader->getItemOffset(r)));
-FXTRACE((1,"changeFocus: xx=%d\n",colHeader->getX()+colHeader->getItemOffset(c)));
+FXTRACE((100,"changeFocus: yy=%d\n",rowHeader->getY()+rowHeader->getItemOffset(r)));
+FXTRACE((100,"changeFocus: xx=%d\n",colHeader->getX()+colHeader->getItemOffset(c)));
 
       // Deactivate old item
       if(0<=current.row && 0<=current.col){
@@ -2439,7 +2439,7 @@ void FXTable::drawContents(FXDC& dc,FXint x,FXint y,FXint w,FXint h){
   if(lc>=ncols) lc=ncols-1;
   if(lr>=nrows) lr=nrows-1;
 
- // FXTRACE((1,"fc=%d lc=%d fr=%d lr=%d\n",fc,lc,fr,lr));
+ // FXTRACE((100,"fc=%d lc=%d fr=%d lr=%d\n",fc,lc,fr,lr));
 
   FXASSERT(0<=fc && lc<ncols);
   FXASSERT(0<=fr && lr<nrows);

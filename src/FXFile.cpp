@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXFile.cpp,v 1.249 2006/01/22 17:58:25 fox Exp $                         *
+* $Id: FXFile.cpp,v 1.249.2.1 2006/08/01 18:04:31 fox Exp $                         *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -559,14 +559,14 @@ bool FXFile::copyFiles(const FXString& srcfile,const FXString& dstfile,bool over
     FXString name,linkname;
     FXStat srcstat;
     FXStat dststat;
-    FXTRACE((1,"FXFile::copyFiles(%s,%s)\n",srcfile.text(),dstfile.text()));
+    FXTRACE((100,"FXFile::copyFiles(%s,%s)\n",srcfile.text(),dstfile.text()));
     if(FXStat::statLink(srcfile,srcstat)){
 
       // Destination is a directory?
       if(FXStat::statLink(dstfile,dststat)){
         if(!dststat.isDirectory()){
           if(!overwrite) return false;
-          FXTRACE((1,"FXFile::remove(%s)\n",dstfile.text()));
+          //FXTRACE((100,"FXFile::remove(%s)\n",dstfile.text()));
           if(!FXFile::remove(dstfile)) return false;
           }
         }
@@ -576,7 +576,7 @@ bool FXFile::copyFiles(const FXString& srcfile,const FXString& dstfile,bool over
 
         // Make destination directory if needed
         if(!dststat.isDirectory()){
-          FXTRACE((1,"FXDir::create(%s)\n",dstfile.text()));
+          //FXTRACE((100,"FXDir::create(%s)\n",dstfile.text()));
 
           // Make directory
           if(!FXDir::create(dstfile,srcstat.mode()|FXIO::OwnerWrite)) return false;
@@ -604,7 +604,7 @@ bool FXFile::copyFiles(const FXString& srcfile,const FXString& dstfile,bool over
 
       // Source is a file
       if(srcstat.isFile()){
-        FXTRACE((1,"FXFile::copyFile(%s,%s)\n",srcfile.text(),dstfile.text()));
+        //FXTRACE((100,"FXFile::copyFile(%s,%s)\n",srcfile.text(),dstfile.text()));
 
         // Simply copy
         if(!FXFile::copy(srcfile,dstfile,overwrite)) return false;
@@ -616,7 +616,7 @@ bool FXFile::copyFiles(const FXString& srcfile,const FXString& dstfile,bool over
       // Source is symbolic link: make a new one
       if(srcstat.isLink()){
         linkname=FXFile::symlink(srcfile);
-        FXTRACE((100,"symlink(%s,%s)\n",srcfile.text(),dstfile.text()));
+        //FXTRACE((100,"symlink(%s,%s)\n",srcfile.text(),dstfile.text()));
 
         // New symlink to whatever old one referred to
         if(!FXFile::symlink(srcfile,dstfile)) return false;
@@ -627,7 +627,7 @@ bool FXFile::copyFiles(const FXString& srcfile,const FXString& dstfile,bool over
 
       // Source is fifo: make a new one
       if(srcstat.isFifo()){
-        FXTRACE((1,"FXPipe::create(%s)\n",dstfile.text()));
+        //FXTRACE((100,"FXPipe::create(%s)\n",dstfile.text()));
 
         // Make named pipe
         if(!FXPipe::create(dstfile,srcstat.mode())) return false;
@@ -672,7 +672,7 @@ bool FXFile::moveFiles(const FXString& srcfile,const FXString& dstfile,bool over
 // Remove file or directory, recursively if allowed
 bool FXFile::removeFiles(const FXString& path,bool recursive){
   FXStat stat;
-  FXTRACE((1,"removeFiles(%s)\n",path.text()));
+  FXTRACE((100,"removeFiles(%s)\n",path.text()));
   if(FXStat::statLink(path,stat)){
     if(stat.isDirectory()){
       if(recursive){

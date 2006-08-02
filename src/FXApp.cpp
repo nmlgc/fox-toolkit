@@ -21,7 +21,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXApp.cpp,v 1.617.2.1 2006/04/15 14:35:54 fox Exp $                          *
+* $Id: FXApp.cpp,v 1.617.2.2 2006/08/01 18:03:47 fox Exp $                          *
 ********************************************************************************/
 #ifdef WIN32
 #if _WIN32_WINNT < 0x0400
@@ -3154,11 +3154,11 @@ FXint FXApp::runModal(){
 // Run modal for window
 FXint FXApp::runModalFor(FXWindow* window){
   FXInvocation inv(&invocation,MODAL_FOR_WINDOW,window);
-  FXTRACE((1,"Start runModalFor\n"));
+  FXTRACE((100,"Start runModalFor\n"));
   while(!inv.done){
     runOneEvent();
     }
-  FXTRACE((1,"End runModalFor\n"));
+  FXTRACE((100,"End runModalFor\n"));
   return inv.code;
   }
 
