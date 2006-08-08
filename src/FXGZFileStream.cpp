@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXGZFileStream.cpp,v 1.5 2006/01/22 17:58:30 fox Exp $                   *
+* $Id: FXGZFileStream.cpp,v 1.5.2.1 2006/08/03 16:32:11 fox Exp $                   *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -74,7 +74,8 @@ FXuval FXGZFileStream::writeBuffer(FXuval){
     z->stream.next_out=z->buffer;
     z->stream.avail_out=BUFFERSIZE;
     zerror=deflate(&z->stream,f);
-    if(zerror!=Z_OK) break;
+//    if(zerror!=Z_OK) break;
+    if(!(zerror==Z_OK || zerror==Z_STREAM_END)) break;
     m=z->stream.next_out-z->buffer;
     n=file.writeBlock(z->buffer,m);
     if(n<m) break;
@@ -99,13 +100,21 @@ FXuval FXGZFileStream::readBuffer(FXuval){
   rdptr=begptr;
   while(wrptr<endptr){
     n=file.readBlock(z->buffer,BUFFERSIZE);
-    if(n<=0) break;
-    z->stream.next_in=z->buffer;
-    z->stream.avail_in=n;
+//    n=file.readBlock(z->buffer,BUFFERSIZE);
+//    if(n<=0) break;
+//    z->stream.next_in=z->buffer;
+//    z->stream.avail_in=n;
+    if(z->stream.avail_in<=0){  // Get more input if buffer is empty
+      n=file.readBlock(z->buffer,BUFFERSIZE);
+      if(n<=0) break;
+      z->stream.next_in=z->buffer;
+      z->stream.avail_in=n;
+      }
     z->stream.next_out=(Bytef*)wrptr;
     z->stream.avail_out=endptr-wrptr;
     zerror=inflate(&z->stream,Z_NO_FLUSH);
-    if(zerror!=Z_OK) break;
+//    if(zerror!=Z_OK) break;
+    if(!(zerror==Z_OK || zerror==Z_STREAM_END)) break;
     wrptr=(FXuchar*)z->stream.next_out;
     if(zerror==Z_STREAM_END) break;
     }
@@ -118,6 +127,10 @@ bool FXGZFileStream::open(const FXString& filename,FXStreamDirection save_or_loa
   if(FXFileStream::open(filename,save_or_load,size)){
     if(FXCALLOC(&z,ZBlock,1)){
       int zerror;
+      z->stream.next_in=NULL;
+      z->stream.avail_in=0;
+      z->stream.next_out=NULL;
+      z->stream.avail_out=0;
       f=Z_NO_FLUSH;
       if(save_or_load==FXStreamLoad){
         zerror=inflateInit(&z->stream);

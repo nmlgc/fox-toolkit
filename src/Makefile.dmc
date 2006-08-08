@@ -5,7 +5,7 @@
 ##############################################################################
 # Contributed by: Andre Fornacon <afo@zlug.org>                              #
 ##############################################################################
-# $Id: Makefile.dmc,v 1.50 2006/01/27 05:19:39 fox Exp $		     #
+# $Id: Makefile.dmc,v 1.50.2.1 2006/08/08 12:22:33 fox Exp $		     #
 ##############################################################################
 # This library is free software; you can redistribute it and/or 	     #
 # modify it under the terms of the GNU Library General Public		     #
@@ -374,7 +374,7 @@ FXBitmap.obj \
 FXBitmapFrame.obj \
 FXBitmapView.obj \
 FXButton.obj \
-FXBZStream.obj \
+FXBZFileStream.obj \
 FXCURCursor.obj \
 FXCanvas.obj \
 FXCheckButton.obj \
@@ -441,7 +441,7 @@ FXGLVisual.obj \
 FXGradientBar.obj \
 FXGroupBox.obj \
 FXGUISignal.obj \
-FXGZStream.obj \
+FXGZFileStream.obj \
 FXHash.obj \
 FXHeader.obj \
 FXHorizontalFrame.obj \

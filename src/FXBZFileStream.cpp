@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXBZFileStream.cpp,v 1.5 2006/01/22 17:58:18 fox Exp $                   *
+* $Id: FXBZFileStream.cpp,v 1.5.2.1 2006/08/03 16:32:10 fox Exp $                   *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -80,7 +80,8 @@ FXuval FXBZFileStream::writeBuffer(FXuval){
     bz->stream.next_out=bz->buffer;
     bz->stream.avail_out=BUFFERSIZE;
     bzerror=BZ2_bzCompress(&bz->stream,ac);
-    if(bzerror!=BZ_OK) break;
+//    if(bzerror!=BZ_OK) break;
+    if(!(bzerror==BZ_RUN_OK || bzerror==BZ_STREAM_END)) break;
     m=bz->stream.next_out-bz->buffer;
     n=file.writeBlock(bz->buffer,m);
     if(n<m) break;
@@ -104,14 +105,21 @@ FXuval FXBZFileStream::readBuffer(FXuval){
   wrptr=begptr+(wrptr-rdptr);
   rdptr=begptr;
   while(wrptr<endptr){
-    n=file.readBlock(bz->buffer,BUFFERSIZE);
-    if(n<=0) break;
-    bz->stream.next_in=bz->buffer;
-    bz->stream.avail_in=n;
+//    n=file.readBlock(bz->buffer,BUFFERSIZE);
+//    if(n<=0) break;
+//    bz->stream.next_in=bz->buffer;
+//    bz->stream.avail_in=n;
+    if(bz->stream.avail_in<=0){ // get more input if buffer is empty
+      n=file.readBlock(bz->buffer,BUFFERSIZE);
+      if(n<=0) break;
+      bz->stream.next_in=bz->buffer;
+      bz->stream.avail_in=n;
+      }
     bz->stream.next_out=(char*)wrptr;
     bz->stream.avail_out=endptr-wrptr;
     bzerror=BZ2_bzDecompress(&bz->stream);
-    if(bzerror!=BZ_OK) break;
+//    if(bzerror!=BZ_OK) break;
+    if(!(bzerror==BZ_OK || bzerror==BZ_STREAM_END)) break;
     wrptr=(FXuchar*)bz->stream.next_out;
     if(bzerror==BZ_STREAM_END) break;
     }
@@ -124,6 +132,10 @@ bool FXBZFileStream::open(const FXString& filename,FXStreamDirection save_or_loa
   if(FXFileStream::open(filename,save_or_load,size)){
     if(FXCALLOC(&bz,BZBlock,1)){
       int bzerror;
+      bz->stream.next_in=NULL;
+      bz->stream.avail_in=0;
+      bz->stream.next_out=NULL;
+      bz->stream.avail_out=0;
       ac=BZ_RUN;
       if(save_or_load==FXStreamLoad){
         bzerror=BZ2_bzDecompressInit(&bz->stream,VERBOSITY,0);

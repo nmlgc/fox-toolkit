@@ -80,11 +80,8 @@ GCJ = @GCJ@
 GCJFLAGS = @GCJFLAGS@
 GL_LIBS = @GL_LIBS@
 GL_TESTS = @GL_TESTS@
-HAVE_LIB = @HAVE_LIB@
-LIB = @LIB@
 LIBTOOL = @LIBTOOL@
 LN_S = @LN_S@
-LTLIB = @LTLIB@
 LT_AGE = @LT_AGE@
 LT_CURRENT = @LT_CURRENT@
 LT_RELEASE = @LT_RELEASE@
@@ -426,8 +423,6 @@ web: distdir
 drop: dist-all
 	cp $(distdir).tar.gz /net/linky/mnt/ftp/pub
 	cp $(distdir).zip /net/linky/mnt/ftp/pub
-	cd /net/linky/mnt/ftp/pub && ln -sf $(distdir).tar.gz fox-latest.tar.gz
-	cd /net/linky/mnt/ftp/pub && ln -sf $(distdir).zip fox-latest.zip
 
 #diff: distdir
 #	-diff -P -c -r fox-1.1.8 $(distdir) > fox-patch-1.1.8-$(distdir)
