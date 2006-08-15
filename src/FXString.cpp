@@ -166,7 +166,7 @@ FXint wcvalidate(const FXnchar *string,FXint pos){
 
 // Advance to next utf8 character start
 FXint wcinc(const FXchar* string,FXint pos){
-  return (FXISUTF(string[++pos]) || FXISUTF(string[++pos]) || FXISUTF(string[++pos]) || FXISUTF(string[++pos]) || FXISUTF(string[++pos]) || ++pos), pos;
+  return (string[pos++]==0 || FXISUTF(string[pos]) || string[pos++]==0 || FXISUTF(string[pos]) || string[pos++]==0 || FXISUTF(string[pos]) || string[pos++]==0 || FXISUTF(string[pos]) || string[pos++]==0 || FXISUTF(string[pos]) || ++pos), pos;
   }
 
 

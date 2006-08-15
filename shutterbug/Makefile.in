@@ -131,9 +131,11 @@ $(ICONS)
 
 CLEANFILES = icons.h icons.cpp
 
-EXTRA_DIST = $(man_MANS) \
-             Makefile.bc \
-             Makefile.wc
+EXTRA_DIST = \
+$(man_MANS) \
+Makefile.bc \
+Makefile.wc \
+Makefile.dmc
 
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_CLEAN_FILES = 
@@ -438,14 +440,14 @@ ShutterBug.o: ShutterBug.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXWizard.h ../include/FXMDIButton.h \
 	../include/FXMDIClient.h ../include/FXMDIChild.h \
 	../include/FXDocument.h ../include/FXDockSite.h \
+	../include/FXDockBar.h ../include/FXToolBar.h \
 	../include/FXDockHandler.h ../include/FXDockTitle.h \
 	../include/FXToolBarGrip.h ../include/FXToolBarShell.h \
 	../include/FXToolBarTab.h ../include/FXPrintDialog.h \
 	../include/FXDebugTarget.h ../include/FXSplashWindow.h \
 	../include/fxkeys.h ../include/FXPNGImage.h \
-	../include/FXJPGImage.h ../include/FXTIFImage.h \
-	../include/FXICOImage.h ../include/FXTGAImage.h \
-	../include/FXRGBImage.h icons.h ShutterBug.h Snapper.h
+	../include/FXJPGImage.h ../include/FXTIFImage.h icons.h \
+	ShutterBug.h Snapper.h
 Snapper.o: Snapper.cpp ../include/fx.h ../include/fxver.h \
 	../include/fxdefs.h ../include/fxascii.h ../include/fxunicode.h \
 	../include/FXHash.h ../include/FXException.h \
@@ -533,6 +535,7 @@ Snapper.o: Snapper.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXWizard.h ../include/FXMDIButton.h \
 	../include/FXMDIClient.h ../include/FXMDIChild.h \
 	../include/FXDocument.h ../include/FXDockSite.h \
+	../include/FXDockBar.h ../include/FXToolBar.h \
 	../include/FXDockHandler.h ../include/FXDockTitle.h \
 	../include/FXToolBarGrip.h ../include/FXToolBarShell.h \
 	../include/FXToolBarTab.h ../include/FXPrintDialog.h \

@@ -469,6 +469,7 @@ CopyDialog.o: CopyDialog.cpp ../include/xincs.h ../include/fx.h \
 	../include/FXWizard.h ../include/FXMDIButton.h \
 	../include/FXMDIClient.h ../include/FXMDIChild.h \
 	../include/FXDocument.h ../include/FXDockSite.h \
+	../include/FXDockBar.h ../include/FXToolBar.h \
 	../include/FXDockHandler.h ../include/FXDockTitle.h \
 	../include/FXToolBarGrip.h ../include/FXToolBarShell.h \
 	../include/FXToolBarTab.h ../include/FXPrintDialog.h \
@@ -563,15 +564,14 @@ PathFinder.o: PathFinder.cpp ../include/xincs.h ../include/fx.h \
 	../include/FXWizard.h ../include/FXMDIButton.h \
 	../include/FXMDIClient.h ../include/FXMDIChild.h \
 	../include/FXDocument.h ../include/FXDockSite.h \
+	../include/FXDockBar.h ../include/FXToolBar.h \
 	../include/FXDockHandler.h ../include/FXDockTitle.h \
 	../include/FXToolBarGrip.h ../include/FXToolBarShell.h \
 	../include/FXToolBarTab.h ../include/FXPrintDialog.h \
 	../include/FXDebugTarget.h ../include/FXSplashWindow.h \
 	../include/fxkeys.h PathFinder.h PropertyDialog.h Preferences.h \
 	CopyDialog.h icons.h ../include/FXPNGImage.h \
-	../include/FXJPGImage.h ../include/FXTIFImage.h \
-	../include/FXICOImage.h ../include/FXTGAImage.h \
-	../include/FXRGBImage.h ../include/FXPCXImage.h
+	../include/FXJPGImage.h ../include/FXTIFImage.h
 Preferences.o: Preferences.cpp ../include/fx.h ../include/fxver.h \
 	../include/fxdefs.h ../include/fxascii.h ../include/fxunicode.h \
 	../include/FXHash.h ../include/FXException.h \
@@ -659,6 +659,7 @@ Preferences.o: Preferences.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXWizard.h ../include/FXMDIButton.h \
 	../include/FXMDIClient.h ../include/FXMDIChild.h \
 	../include/FXDocument.h ../include/FXDockSite.h \
+	../include/FXDockBar.h ../include/FXToolBar.h \
 	../include/FXDockHandler.h ../include/FXDockTitle.h \
 	../include/FXToolBarGrip.h ../include/FXToolBarShell.h \
 	../include/FXToolBarTab.h ../include/FXPrintDialog.h \
@@ -752,6 +753,7 @@ PropertyDialog.o: PropertyDialog.cpp ../include/xincs.h ../include/fx.h \
 	../include/FXWizard.h ../include/FXMDIButton.h \
 	../include/FXMDIClient.h ../include/FXMDIChild.h \
 	../include/FXDocument.h ../include/FXDockSite.h \
+	../include/FXDockBar.h ../include/FXToolBar.h \
 	../include/FXDockHandler.h ../include/FXDockTitle.h \
 	../include/FXToolBarGrip.h ../include/FXToolBarShell.h \
 	../include/FXToolBarTab.h ../include/FXPrintDialog.h \

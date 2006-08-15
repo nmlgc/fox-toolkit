@@ -1,36 +1,36 @@
 ##############################################################################
-#									     #
-#		   FOX:  A Free C++ Class Library for X 		     #
-#									     #
+#                                                                            #
+#                  FOX:  A Free C++ Class Library for X                      #
+#                                                                            #
 ##############################################################################
-# Contributed by: Andre Fornacon <afo@zlug.org>                              #
+# Contributed by: Andre Fornacon, updates from Jochen Rassler                #
 ##############################################################################
-# $Id: Makefile.dmc,v 1.14 2005/09/22 11:14:47 fox Exp $		             #
+# $Id: Makefile.dmc,v 1.14.2.2 2006/08/08 23:17:35 fox Exp $                 #
 ##############################################################################
-# This library is free software; you can redistribute it and/or 	     #
-# modify it under the terms of the GNU Library General Public		     #
-# License as published by the Free Software Foundation; either		     #
-# version 2 of the License, or (at your option) any later version.	     #
-#									     #
-# This library is distributed in the hope that it will be useful,	     #
-# but WITHOUT ANY WARRANTY; without even the implied warranty of	     #
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	See the GNU	     #
-# Library General Public License for more details.			     #
-#									     #
-# You should have received a copy of the GNU Library General Public	     #
-# License along with this library; if not, write to the Free		     #
-# Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.	     #
+# This library is free software; you can redistribute it and/or              #
+# modify it under the terms of the GNU Library General Public                #
+# License as published by the Free Software Foundation; either               #
+# version 2 of the License, or (at your option) any later version.           #
+#                                                                            #
+# This library is distributed in the hope that it will be useful,            #
+# but WITHOUT ANY WARRANTY; without even the implied warranty of             #
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	See the GNU          #
+# Library General Public License for more details.                           #
+#                                                                            #
+# You should have received a copy of the GNU Library General Public          #
+# License along with this library; if not, write to the Free                 #
+# Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.         #
 ##############################################################################
 
 # Digital Mars C++ Compiler 8.x or later
-CXX	  = sc
-CXXFLAGS  = -mn -5 -a8
+CXX	  = dmc
+CXXFLAGS  = -mn -5 -a8 -Ae -Ar
 RM	  = del
 TOPDIR	  = ..
 DEFINES   = -DNDEBUG -DFOX_BIGENDIAN=0 -DWIN32 -D_WINDOWS
-LD	  = sc
-LDFLAGS   =
-LIBS	  = advapi32.lib+shell32.lib+gdi32.lib+wsock32.lib+winspool.lib
+LD	  = link
+LDFLAGS   = -noignorecase
+LIBS	  = c:\dm\lib\advapi32.lib c:\dm\lib\shell32.lib c:\dm\lib\gdi32.lib c:\dm\lib\wsock32.lib c:\dm\lib\winspool.lib
 GLLIBS	  = opengl32.lib glu32.lib
 INCDIRS   = -I$(TOPDIR)\include
 FOXLIB	  = $(TOPDIR)\src\FOX-1.6.lib
@@ -38,16 +38,29 @@ RESWRAP	  = $(TOPDIR)\utils\reswrap.exe
 
 PROGRAMS  = adie.exe
 
+SOURCES = \
+	Adie.cpp \
+	Commands.cpp \
+	help.cpp \
+	HelpWindow.cpp \
+	Hilite.cpp \
+	icons.cpp \
+	main.cpp \
+	parsesyntax.cpp \
+	Preferences.cpp \
+	TextWindow.cpp
+
 OBJECTS   = \
 	adie.obj \
 	Commands.obj  \
+	help.obj \
 	HelpWindow.obj \
 	TextWindow.obj \
 	Preferences.obj \
 	help.obj \
 	Hilite.obj \
 	icons.obj \
-        parsesyntax.obj \
+	parsesyntax.obj \
 	main.obj
 
 # splitted to avoid 'cmdline too long' errors
@@ -70,7 +83,6 @@ ICONS = $(ICONS_1) $(ICONS_2) $(ICONS_3)
 	$(CXX) -c $(INCDIRS) $(CXXFLAGS) $(DEFINES) $*.cpp
 
 all: $(PROGRAMS)
-
 
 adie.exe: $(OBJECTS) $(FOXLIB)
 	$(LD) $(LDFLAGS) $(OBJECTS) $(FOXLIB) $(LIBS)

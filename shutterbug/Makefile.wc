@@ -11,10 +11,10 @@ LDFLAGS	  = -l=nt_win
 INCDIRS   = -I$(TOPDIR)\include
 FOXLIB    = $(TOPDIR)\src\FOX-1.6.lib &
 		$(%WATCOM)\lib386\nt\comctl32.lib &
-		$(%WATCOM)\lib386\nt\wsock32.lib 
+		$(%WATCOM)\lib386\nt\wsock32.lib
 RESWRAP   = $(TOPDIR)\utils\reswrap.exe
 
-PROGRAMS  = ShutterBug.exe
+PROGRAMS  = shutterbug.exe
 
 OBJECTS	= ShutterBug.obj Snapper.obj icons.obj
 
@@ -27,7 +27,7 @@ ICONS = shutterbug.gif tinyshutterbug.gif &
 
 all: $(PROGRAMS)
 
-ShutterBug.exe: $(OBJECTS) $(FOXLIB)
+shutterbug.exe: $(OBJECTS) $(FOXLIB)
 	$(LD) $(LDFLAGS) $(OBJECTS) $(FOXLIB)
 
 ShutterBug.obj: icons.h icons.cpp

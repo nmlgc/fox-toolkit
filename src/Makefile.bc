@@ -3,9 +3,9 @@
 #                       FOX:  A Free C++ Class Library for X                 #
 #                                                                            #
 ##############################################################################
-# Copyright (C) 1997,2005 by Jeroen van der Zijp.   All Rights Reserved.     #
+# Copyright (C) 1997,2006 by Jeroen van der Zijp.   All Rights Reserved.     #
 ##############################################################################
-# $Id: Makefile.bc,v 1.132 2006/01/27 05:19:39 fox Exp $                     #
+# $Id: Makefile.bc,v 1.132.2.1 2006/08/09 01:55:08 fox Exp $                     #
 ##############################################################################
 # This library is free software; you can redistribute it and/or              #
 # modify it under the terms of the GNU Library General Public                #
@@ -22,6 +22,7 @@
 # Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.         #
 ##############################################################################
 
+# Borland C++
 CXX       = bcc32
 RM        = del
 LIB       = tlib
@@ -40,7 +41,8 @@ RESWRAP   = $(TOPDIR)\utils\reswrap.exe
 
 .SUFFIXES: .cpp .c
 
-SOURCES = FX4Splitter.cpp \
+SOURCES = \
+FX4Splitter.cpp \
 FX7Segment.cpp \
 FX885910Codec.cpp \
 FX885911Codec.cpp \
@@ -352,7 +354,6 @@ OBJECTS = $(SOURCES:.cpp=.obj)
 
 .cpp.obj:
         $(CXX) -c $(INCDIRS) $(CXXFLAGS) $(DEFINES) $<
-
 
 all: $(FOXLIB)
 
