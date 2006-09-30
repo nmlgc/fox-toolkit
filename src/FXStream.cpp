@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXStream.cpp,v 1.66 2006/01/22 17:58:42 fox Exp $                        *
+* $Id: FXStream.cpp,v 1.66.2.3 2006/09/13 18:18:52 fox Exp $                        *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -795,13 +795,6 @@ FXStream& FXStream::load(FXdouble* p,FXuval n){
 
 // Add object without saving or loading
 FXStream& FXStream::addObject(const FXObject* v){
-/*
-  if(!hash.find((void*)v)){
-    hash.insert((void*)v,(void*)(FXuval)seq);
-    hash.insert((void*)(FXuval)seq,(void*)v);
-    seq++;
-    }
-*/
   if(v){
     if(dir==FXStreamSave){
       hash.insert((void*)v,(void*)(FXuval)seq++);
@@ -816,17 +809,6 @@ FXStream& FXStream::addObject(const FXObject* v){
 
 /********************************  Save Object  ********************************/
 
-
-// On Windows, the following code may be of interest:
-
-//  MEMORY_BASIC_INFORMATION mbi;
-//  VirtualQuery(functionptr,&mbi,sizeof(mbi));
-//  hmodule=(HINSTANCE)mbi.AllocationBase;
-//char handlefilename[MAX_PATH];
-//GetModuleFileNameA((HINSTANCE)display,handlefilename,sizeof(handlefilename));
-
-// We can use this to determine the DLL module in which the code is implemented.
-// How to find this on UNIX?
 
 // Save object
 FXStream& FXStream::saveObject(const FXObject* v){
@@ -855,7 +837,7 @@ FXStream& FXStream::saveObject(const FXObject* v){
     *this << tag;                               // Save tag
     *this << zero;
     save(name,tag);
-    FXTRACE((100,"saveObject(%s)\n",v->getClassName()));
+    FXTRACE((100,"%08ld: saveObject(%s)\n",(FXuval)pos,v->getClassName()));
     v->save(*this);
     }
   return *this;
@@ -900,7 +882,7 @@ FXStream& FXStream::loadObject(FXObject*& v){
       }
     v=cls->makeInstance();                      // Build some object!!
     hash.insert((void*)(FXuval)seq++,(void*)v); // Add to table
-    FXTRACE((100,"loadObject(%s)\n",v->getClassName()));
+    FXTRACE((100,"%08ld: loadObject(%s)\n",(FXuval)pos,v->getClassName()));
     v->load(*this);
     }
   return *this;

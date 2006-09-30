@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXString.cpp,v 1.218 2006/01/22 17:58:42 fox Exp $                       *
+* $Id: FXString.cpp,v 1.218.2.1 2006/08/15 05:03:16 fox Exp $                       *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"

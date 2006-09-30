@@ -78,8 +78,11 @@ GCJ = @GCJ@
 GCJFLAGS = @GCJFLAGS@
 GL_LIBS = @GL_LIBS@
 GL_TESTS = @GL_TESTS@
+HAVE_LIB = @HAVE_LIB@
+LIB = @LIB@
 LIBTOOL = @LIBTOOL@
 LN_S = @LN_S@
+LTLIB = @LTLIB@
 LT_AGE = @LT_AGE@
 LT_CURRENT = @LT_CURRENT@
 LT_RELEASE = @LT_RELEASE@
@@ -503,14 +506,13 @@ Adie.o: Adie.cpp ../include/fx.h ../include/fxver.h ../include/fxdefs.h \
 	../include/FXWizard.h ../include/FXMDIButton.h \
 	../include/FXMDIClient.h ../include/FXMDIChild.h \
 	../include/FXDocument.h ../include/FXDockSite.h \
-	../include/FXDockBar.h ../include/FXToolBar.h \
 	../include/FXDockHandler.h ../include/FXDockTitle.h \
 	../include/FXToolBarGrip.h ../include/FXToolBarShell.h \
 	../include/FXToolBarTab.h ../include/FXPrintDialog.h \
 	../include/FXDebugTarget.h ../include/FXSplashWindow.h \
-	../include/fxkeys.h ../include/FXArray.h ../include/FXElement.h \
-	HelpWindow.h Preferences.h Commands.h Hilite.h TextWindow.h \
-	Adie.h icons.h
+	../include/fxkeys.h ../include/FXRex.h ../include/FXArray.h \
+	../include/FXElement.h HelpWindow.h Preferences.h Commands.h \
+	Hilite.h TextWindow.h Adie.h icons.h
 Commands.o: Commands.cpp ../include/fx.h ../include/fxver.h \
 	../include/fxdefs.h ../include/fxascii.h ../include/fxunicode.h \
 	../include/FXHash.h ../include/FXException.h \
@@ -598,13 +600,12 @@ Commands.o: Commands.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXWizard.h ../include/FXMDIButton.h \
 	../include/FXMDIClient.h ../include/FXMDIChild.h \
 	../include/FXDocument.h ../include/FXDockSite.h \
-	../include/FXDockBar.h ../include/FXToolBar.h \
 	../include/FXDockHandler.h ../include/FXDockTitle.h \
 	../include/FXToolBarGrip.h ../include/FXToolBarShell.h \
 	../include/FXToolBarTab.h ../include/FXPrintDialog.h \
 	../include/FXDebugTarget.h ../include/FXSplashWindow.h \
-	Commands.h ../include/FXArray.h ../include/FXElement.h Hilite.h \
-	TextWindow.h Adie.h
+	Commands.h ../include/FXRex.h ../include/FXArray.h \
+	../include/FXElement.h Hilite.h TextWindow.h Adie.h
 help.o: help.cpp help.h
 HelpWindow.o: HelpWindow.cpp ../include/fx.h ../include/fxver.h \
 	../include/fxdefs.h ../include/fxascii.h ../include/fxunicode.h \
@@ -693,14 +694,13 @@ HelpWindow.o: HelpWindow.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXWizard.h ../include/FXMDIButton.h \
 	../include/FXMDIClient.h ../include/FXMDIChild.h \
 	../include/FXDocument.h ../include/FXDockSite.h \
-	../include/FXDockBar.h ../include/FXToolBar.h \
 	../include/FXDockHandler.h ../include/FXDockTitle.h \
 	../include/FXToolBarGrip.h ../include/FXToolBarShell.h \
 	../include/FXToolBarTab.h ../include/FXPrintDialog.h \
 	../include/FXDebugTarget.h ../include/FXSplashWindow.h icons.h \
-	help.h Preferences.h Commands.h ../include/FXArray.h \
-	../include/FXElement.h Hilite.h TextWindow.h Adie.h \
-	HelpWindow.h
+	help.h Preferences.h Commands.h ../include/FXRex.h \
+	../include/FXArray.h ../include/FXElement.h Hilite.h \
+	TextWindow.h Adie.h HelpWindow.h
 Hilite.o: Hilite.cpp ../include/fx.h ../include/fxver.h \
 	../include/fxdefs.h ../include/fxascii.h ../include/fxunicode.h \
 	../include/FXHash.h ../include/FXException.h \
@@ -788,12 +788,12 @@ Hilite.o: Hilite.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXWizard.h ../include/FXMDIButton.h \
 	../include/FXMDIClient.h ../include/FXMDIChild.h \
 	../include/FXDocument.h ../include/FXDockSite.h \
-	../include/FXDockBar.h ../include/FXToolBar.h \
 	../include/FXDockHandler.h ../include/FXDockTitle.h \
 	../include/FXToolBarGrip.h ../include/FXToolBarShell.h \
 	../include/FXToolBarTab.h ../include/FXPrintDialog.h \
 	../include/FXDebugTarget.h ../include/FXSplashWindow.h \
-	../include/FXArray.h ../include/FXElement.h Hilite.h
+	../include/FXRex.h ../include/FXArray.h ../include/FXElement.h \
+	Hilite.h
 icons.o: icons.cpp
 main.o: main.cpp ../include/fx.h ../include/fxver.h ../include/fxdefs.h \
 	../include/fxascii.h ../include/fxunicode.h ../include/FXHash.h \
@@ -882,13 +882,12 @@ main.o: main.cpp ../include/fx.h ../include/fxver.h ../include/fxdefs.h \
 	../include/FXWizard.h ../include/FXMDIButton.h \
 	../include/FXMDIClient.h ../include/FXMDIChild.h \
 	../include/FXDocument.h ../include/FXDockSite.h \
-	../include/FXDockBar.h ../include/FXToolBar.h \
 	../include/FXDockHandler.h ../include/FXDockTitle.h \
 	../include/FXToolBarGrip.h ../include/FXToolBarShell.h \
 	../include/FXToolBarTab.h ../include/FXPrintDialog.h \
 	../include/FXDebugTarget.h ../include/FXSplashWindow.h \
-	../include/FXArray.h ../include/FXElement.h Hilite.h \
-	TextWindow.h Adie.h icons.h
+	../include/FXRex.h ../include/FXArray.h ../include/FXElement.h \
+	Hilite.h TextWindow.h Adie.h icons.h
 parsesyntax.o: parsesyntax.cpp ../include/fx.h ../include/fxver.h \
 	../include/fxdefs.h ../include/fxascii.h ../include/fxunicode.h \
 	../include/FXHash.h ../include/FXException.h \
@@ -976,13 +975,12 @@ parsesyntax.o: parsesyntax.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXWizard.h ../include/FXMDIButton.h \
 	../include/FXMDIClient.h ../include/FXMDIChild.h \
 	../include/FXDocument.h ../include/FXDockSite.h \
-	../include/FXDockBar.h ../include/FXToolBar.h \
 	../include/FXDockHandler.h ../include/FXDockTitle.h \
 	../include/FXToolBarGrip.h ../include/FXToolBarShell.h \
 	../include/FXToolBarTab.h ../include/FXPrintDialog.h \
 	../include/FXDebugTarget.h ../include/FXSplashWindow.h \
-	../include/FXArray.h ../include/FXElement.h Hilite.h Commands.h \
-	TextWindow.h Adie.h
+	../include/FXRex.h ../include/FXArray.h ../include/FXElement.h \
+	Hilite.h Commands.h TextWindow.h Adie.h
 Preferences.o: Preferences.cpp ../include/fx.h ../include/fxver.h \
 	../include/fxdefs.h ../include/fxascii.h ../include/fxunicode.h \
 	../include/FXHash.h ../include/FXException.h \
@@ -1070,13 +1068,13 @@ Preferences.o: Preferences.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXWizard.h ../include/FXMDIButton.h \
 	../include/FXMDIClient.h ../include/FXMDIChild.h \
 	../include/FXDocument.h ../include/FXDockSite.h \
-	../include/FXDockBar.h ../include/FXToolBar.h \
 	../include/FXDockHandler.h ../include/FXDockTitle.h \
 	../include/FXToolBarGrip.h ../include/FXToolBarShell.h \
 	../include/FXToolBarTab.h ../include/FXPrintDialog.h \
 	../include/FXDebugTarget.h ../include/FXSplashWindow.h icons.h \
-	help.h ../include/FXArray.h ../include/FXElement.h \
-	Preferences.h Hilite.h TextWindow.h Adie.h
+	help.h ../include/FXRex.h ../include/FXArray.h \
+	../include/FXElement.h Preferences.h Hilite.h TextWindow.h \
+	Adie.h
 TextWindow.o: TextWindow.cpp ../include/fx.h ../include/fxver.h \
 	../include/fxdefs.h ../include/fxascii.h ../include/fxunicode.h \
 	../include/FXHash.h ../include/FXException.h \
@@ -1164,14 +1162,13 @@ TextWindow.o: TextWindow.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXWizard.h ../include/FXMDIButton.h \
 	../include/FXMDIClient.h ../include/FXMDIChild.h \
 	../include/FXDocument.h ../include/FXDockSite.h \
-	../include/FXDockBar.h ../include/FXToolBar.h \
 	../include/FXDockHandler.h ../include/FXDockTitle.h \
 	../include/FXToolBarGrip.h ../include/FXToolBarShell.h \
 	../include/FXToolBarTab.h ../include/FXPrintDialog.h \
 	../include/FXDebugTarget.h ../include/FXSplashWindow.h \
-	../include/fxkeys.h ../include/FXArray.h ../include/FXElement.h \
-	HelpWindow.h Preferences.h Commands.h Hilite.h TextWindow.h \
-	Adie.h icons.h
+	../include/fxkeys.h ../include/FXRex.h ../include/FXArray.h \
+	../include/FXElement.h HelpWindow.h Preferences.h Commands.h \
+	Hilite.h TextWindow.h Adie.h icons.h
 
 info-am:
 info: info-am

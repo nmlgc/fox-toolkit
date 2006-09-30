@@ -21,7 +21,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXApp.cpp,v 1.617.2.2 2006/08/01 18:03:47 fox Exp $                          *
+* $Id: FXApp.cpp,v 1.617.2.3 2006/09/27 13:13:33 fox Exp $                          *
 ********************************************************************************/
 #ifdef WIN32
 #if _WIN32_WINNT < 0x0400
@@ -2757,11 +2757,7 @@ bool FXApp::dispatchEvent(FXRawEvent& ev){
           xdndFinishSent=FALSE;
           event.type=SEL_DND_DROP;
           event.time=ev.xclient.data.l[2];
-
-          // Perform drop operation on drop window
           if(!dropWindow || !dropWindow->handle(this,FXSEL(SEL_DND_DROP,0),&event)) ansAction=DRAG_REJECT;
-
-          // Didn't sent finish yet
           if(!xdndFinishSent){
             se.xclient.type=ClientMessage;
             se.xclient.display=(Display*)display;
@@ -2779,8 +2775,6 @@ bool FXApp::dispatchEvent(FXRawEvent& ev){
             se.xclient.data.l[4]=0;
             XSendEvent((Display*)display,xdndSource,True,NoEventMask,&se);
             }
-
-          // Clean up
           if(ddeTypeList){FXFREE(&ddeTypeList);ddeNumTypes=0;}
           dropWindow=NULL;
           xdndSource=0;
@@ -4357,20 +4351,17 @@ Alt key seems to repeat.
     case WM_DND_DROP:
       FXTRACE((100,"DNDDrop from remote window %d\n",lParam));
       if(xdndSource!=(FXID)lParam) return 0;
-      if(dropWindow){
-        event.type=SEL_DND_DROP;
-        event.time=GetMessageTime();
-        // Target performs the action last confirmed in the status message
-        if(dropWindow->handle(this,FXSEL(SEL_DND_DROP,0),&event)){
-          PostMessage((HWND)xdndSource,WM_DND_FINISH_REJECT+ansAction,0,(LPARAM)hwnd);
-          refresh();
-          goto dengo;
-          }
+      xdndFinishSent=false;
+      event.type=SEL_DND_DROP;
+      event.time=GetMessageTime();
+      if(!dropWindow || !dropWindow->handle(this,FXSEL(SEL_DND_DROP,0),&event)) ansAction=DRAG_REJECT;
+      if(!xdndFinishSent){
+        PostMessage((HWND)xdndSource,WM_DND_FINISH_REJECT+ansAction,0,(LPARAM)hwnd);
         }
-      PostMessage((HWND)xdndSource,WM_DND_FINISH_REJECT,0,(LPARAM)hwnd);
-dengo:if(ddeTypeList){FXFREE(&ddeTypeList);ddeNumTypes=0;}
+      if(ddeTypeList){FXFREE(&ddeTypeList);ddeNumTypes=0;}
       dropWindow=NULL;
       xdndSource=0;
+      refresh();
       return 0;
 
     case WM_DND_POSITION_REJECT:
