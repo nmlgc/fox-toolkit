@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXFile.cpp,v 1.249.2.1 2006/08/01 18:04:31 fox Exp $                         *
+* $Id: FXFile.cpp,v 1.249.2.2 2006/11/07 15:58:52 fox Exp $                         *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -207,7 +207,10 @@ FXival FXFile::readBlock(void* data,FXival count){
   FXival nread=-1;
   if(isOpen()){
 #ifdef WIN32
-    if(0==::ReadFile(device,data,count,(DWORD*)&nread,NULL)) nread=-1;
+    DWORD nr;
+    if(::ReadFile(device,data,(DWORD)count,&nr,NULL)!=0){
+      nread=(FXival)nr;
+      }
 #else
     do{
       nread=::read(device,data,count);
@@ -224,7 +227,10 @@ FXival FXFile::writeBlock(const void* data,FXival count){
   FXival nwritten=-1;
   if(isOpen()){
 #ifdef WIN32
-    if(0==::WriteFile(device,data,count,(DWORD*)&nwritten,NULL)) nwritten=-1;
+    DWORD nw;
+    if(::WriteFile(device,data,(DWORD)count,&nw,NULL)!=0){
+      nwritten=(FXival)nw;
+      }
 #else
     do{
       nwritten=::write(device,data,count);

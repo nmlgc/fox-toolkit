@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXSocket.cpp,v 1.6 2006/01/22 17:58:41 fox Exp $                         *
+* $Id: FXSocket.cpp,v 1.6.2.1 2006/11/07 15:58:53 fox Exp $                         *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -73,7 +73,10 @@ FXival FXSocket::readBlock(void* data,FXival count){
   FXival nread=-1;
   if(isOpen()){
 #ifdef WIN32
-    if(0==::ReadFile(device,data,count,(DWORD*)&nread,NULL)) nread=-1;
+    DWORD nr;
+    if(::ReadFile(device,data,(DWORD)count,&nr,NULL)!=0){
+      nread=(FXival)nr;
+      }
 #else
     do{
       nread=::read(device,data,count);
@@ -90,7 +93,10 @@ FXival FXSocket::writeBlock(const void* data,FXival count){
   FXival nwritten=-1;
   if(isOpen()){
 #ifdef WIN32
-    if(0==::WriteFile(device,data,count,(DWORD*)&nwritten,NULL)) nwritten=-1;
+    DWORD nw;
+    if(::WriteFile(device,data,(DWORD)count,&nw,NULL)!=0){
+      nwritten=(FXival)nw;
+      }
 #else
     do{
       nwritten=::write(device,data,count);

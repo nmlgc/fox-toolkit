@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXTable.cpp,v 1.245.2.4 2006/08/02 01:31:10 fox Exp $                        *
+* $Id: FXTable.cpp,v 1.245.2.5 2006/10/16 21:10:48 fox Exp $                        *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -3821,7 +3821,7 @@ FXTableItem* FXTable::extractItem(FXint row,FXint col,FXbool notify){
   FXTableRange tablerange;
 
   // Must be in range
-  if(row<0 || col<0 || nrows<=row || ncols<=col){ fxerror("%s::removeItem: index out of range.\n",getClassName()); }
+  if(row<0 || col<0 || nrows<=row || ncols<=col){ fxerror("%s::extractItem: index out of range.\n",getClassName()); }
 
   // Extent of cell
   sr=startRow(row,col); er=endRow(row,col);
@@ -3901,7 +3901,7 @@ void FXTable::removeRange(FXint startrow,FXint endrow,FXint startcol,FXint endco
   register FXint r,c;
 
   // Verify range
-  if(startrow<0 || startcol<0 || nrows<=endrow || ncols<=endcol){ fxerror("%s::clearRange: index out of range.\n",getClassName()); }
+  if(startrow<0 || startcol<0 || nrows<=endrow || ncols<=endcol){ fxerror("%s::removeRange: index out of range.\n",getClassName()); }
 
   // Free all cells
   for(r=startrow; r<=endrow; r++){
