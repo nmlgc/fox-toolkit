@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXMemMap.cpp,v 1.14 2005/01/16 16:06:07 fox Exp $                        *
+* $Id: FXMemMap.cpp,v 1.14.2.1 2005/02/09 06:30:24 fox Exp $                        *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxdefs.h"
@@ -202,7 +202,7 @@ void FXMemMap::sync(){
 #endif
 #else
   if(mapbase){
-    FlushViewOfFile(mapbase,(SIZE_T)maplength);
+    FlushViewOfFile(mapbase,(size_t)maplength);
     }
 #endif
   }

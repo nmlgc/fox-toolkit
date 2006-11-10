@@ -19,7 +19,7 @@
 * along with this program; if not, write to the Free Software                   *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: CopyDialog.h,v 1.2 2005/01/03 16:41:34 fox Exp $                         *
+* $Id: CopyDialog.h,v 1.2.2.1 2005/11/19 20:22:25 fox Exp $                         *
 ********************************************************************************/
 #ifndef COPYDIALOG_H
 #define COPYDIALOG_H
@@ -45,7 +45,7 @@ public:
 
   // Get/set new name
   void setNewName(const FXString& nm){ newname->setText(nm); }
-  FXString getNewName() const { return oldname->getText(); }
+  FXString getNewName() const { return newname->getText(); }
 
   // Destroy
   virtual ~CopyDialog();

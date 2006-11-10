@@ -83,6 +83,7 @@
 +FXIFFIcon.obj &
 +FXIFFImage.obj &
 +FXIcon.obj &
++FXIconDict.obj &
 +FXIconList.obj &
 +FXIconSource.obj &
 +FXId.obj &

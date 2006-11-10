@@ -5,7 +5,7 @@
 ##############################################################################
 # Contributed by: Andre Fornacon <afo@zlug.org>                              #
 ##############################################################################
-# $Id: Makefile.dmc,v 1.34 2005/02/05 20:53:27 fox Exp $		     #
+# $Id: Makefile.dmc,v 1.34.2.2 2005/02/11 13:33:39 fox Exp $		     #
 ##############################################################################
 # This library is free software; you can redistribute it and/or 	     #
 # modify it under the terms of the GNU Library General Public		     #
@@ -23,38 +23,85 @@
 ##############################################################################
 
 # Digital Mars C++ Compiler 8.x or later
-CXX	  = sc
+CXX	  = dmc
 RM	  = del
 LIB	  = lib
 RCC	  = rcc
 TOPDIR	  = ..
-CXXFLAGS  = -mn -WD -5 -a8
-#DEFINES   = -DFOX_BIGENDIAN=0 -DNDEBUG -D_WINDOWS -DWIN32 -DHAVE_OPENGL #-DHAVE_PNG_H -DHAVE_JPEG_H -DHAVE_TIFF_H -DXMD_H -DHAVE_ZLIB_H -DHAVE_BZ2LIB_H
-DEFINES   = -DFOX_BIGENDIAN=0 -DNDEBUG -D_WINDOWS -DWIN32 -DHAVE_OPENGL -DHAVE_PNG_H -DHAVE_JPEG_H -DHAVE_ZLIB_H #-DHAVE_TIFF_H -DXMD_H -DHAVE_BZ2LIB_H
+CXXFLAGS  = -mn -WD -5 -a8 -Ae -Ar -Nc -NS -NV
+DEFINES   = -DFOX_BIGENDIAN=0 -DNDEBUG -D_WINDOWS -DWIN32 -DHAVE_VSSCANF -DHAVE_OPENGL #-DHAVE_PNG_H -DHAVE_JPEG_H -DHAVE_ZLIB_H -DHAVE_TIFF_H -DHAVE_BZ2LIB_H -DXMD_H
 INCDIRS   = -I$(TOPDIR)/include
 FOXLIB	  = $(TOPDIR)\src\FOX-1.4.lib
 RESWRAP	  = $(TOPDIR)\utils\reswrap.exe
 SUFFIXES  = .gif .bmp
 
-
-ICONS_1=arrownext.gif arrowprev.gif bigapp.gif bigcdrom.gif bigcomputer.gif \
-	bigdesktop.gif bigdoc.gif bigfloppy.gif bigfolder.gif bigfolderopen.gif \
-	bignetdrive.gif bignethood.gif bookset.gif bookclr.gif cmymode.gif
-
-ICONS_2=dialmode.gif dirupicon.gif deleteicon.gif entericon.gif erroricon.gif \
-	eyedrop.gif filecopy.gif filemove.gif filehidden.gif filelink.gif \
-	filerename.gif filedelete.gif fileshown.gif foldernew.gif gotohome.gif
-
-ICONS_3 = gotoicon.gif gotowork.gif hsvmode.gif infoicon.gif landscape.gif \
-	listmode.gif miniapp.gif minicdrom.gif minicomputer.gif minidesktop.gif \
-	minidoc.gif minifloppy.gif minifolder.gif minifolderopen.gif
-
-ICONS_4 = miniharddisk.gif mininetdrive.gif mininethood.gif minizipdrive.gif \
-	portrait.gif questionicon.gif rgbmode.gif searchicon.gif showbigicons.gif \
-	showdetails.gif showsmallicons.gif warningicon.gif winclose.gif \
-	winmaximize.gif winminimize.gif winrestore.gif
-
-.SUFFIXES: .cpp .c
+ICONS = \
+arrownext.gif \
+arrowprev.gif \
+bigapp.gif \
+bigcdrom.gif \
+bigcomputer.gif \
+bigdesktop.gif \
+bigdoc.gif \
+bigfloppy.gif \
+bigfolder.gif \
+bigfolderopen.gif \
+bignetdrive.gif \
+bignethood.gif \
+bookset.gif \
+bookclr.gif \
+cmymode.gif \
+dialmode.gif \
+dirupicon.gif \
+deleteicon.gif \
+docktop.gif \
+dockbottom.gif \
+dockleft.gif \
+dockright.gif \
+dockfree.gif \
+dockflip.gif \
+entericon.gif \
+erroricon.gif \
+eyedrop.gif \
+filecopy.gif \
+filemove.gif \
+filehidden.gif \
+filelink.gif \
+filerename.gif \
+filedelete.gif \
+fileshown.gif \
+foldernew.gif \
+gotohome.gif \
+gotoicon.gif \
+gotowork.gif \
+hsvmode.gif \
+infoicon.gif \
+landscape.gif \
+listmode.gif \
+miniapp.gif \
+minicdrom.gif \
+minicomputer.gif \
+minidesktop.gif \
+minidoc.gif \
+minifloppy.gif \
+minifolder.gif \
+minifolderopen.gif \
+miniharddisk.gif \
+mininetdrive.gif \
+mininethood.gif \
+minizipdrive.gif \
+portrait.gif \
+questionicon.gif \
+rgbmode.gif \
+searchicon.gif \
+showbigicons.gif \
+showdetails.gif \
+showsmallicons.gif \
+warningicon.gif \
+winclose.gif \
+winmaximize.gif \
+winminimize.gif \
+winrestore.gif
 
 SOURCES = \
 FX4Splitter.cpp \
@@ -65,6 +112,8 @@ FXArrowButton.cpp \
 FXBMPIcon.cpp \
 FXBMPImage.cpp \
 FXBitmap.cpp \
+FXBitmapFrame.cpp \
+FXBitmapView.cpp \
 FXButton.cpp \
 FXBZStream.cpp \
 FXCURCursor.cpp \
@@ -132,11 +181,15 @@ FXGradientBar.cpp \
 FXGroupBox.cpp \
 FXGUISignal.cpp \
 FXGZStream.cpp \
+FXHash.cpp \
 FXHeader.cpp \
 FXHorizontalFrame.cpp \
 FXICOIcon.cpp \
 FXICOImage.cpp \
+FXIFFIcon.cpp \
+FXIFFImage.cpp \
 FXIcon.cpp \
+FXIconDict.cpp \
 FXIconList.cpp \
 FXIconSource.cpp \
 FXId.cpp \
@@ -158,6 +211,7 @@ FXMat4d.cpp \
 FXMat3f.cpp \
 FXMat4f.cpp \
 FXMatrix.cpp \
+FXMemMap.cpp \
 FXMemoryStream.cpp \
 FXMenuBar.cpp \
 FXMenuButton.cpp \
@@ -193,6 +247,8 @@ FXRGBImage.cpp \
 FXRadioButton.cpp \
 FXRangef.cpp \
 FXRanged.cpp \
+FXRASIcon.cpp \
+FXRASImage.cpp \
 FXRealSlider.cpp \
 FXRealSpinner.cpp \
 FXRecentFiles.cpp \
@@ -206,6 +262,7 @@ FXRuler.cpp \
 FXScrollArea.cpp \
 FXScrollWindow.cpp \
 FXScrollBar.cpp \
+FXScrollPane.cpp \
 FXSearchDialog.cpp \
 FXSeparator.cpp \
 FXSettings.cpp \
@@ -236,6 +293,7 @@ FXTable.cpp \
 FXText.cpp \
 FXTextCodec.cpp \
 FXTextField.cpp \
+FXThread.cpp \
 FXToggleButton.cpp \
 FXToolBar.cpp \
 FXToolBarGrip.cpp \
@@ -266,19 +324,21 @@ FXXBMImage.cpp \
 FXXPMIcon.cpp \
 FXXPMImage.cpp \
 fxbmpio.cpp \
-fxcurio.cpp \
 fxfilematch.cpp \
 fxgifio.cpp \
 fxicoio.cpp \
+fxiffio.cpp \
 fxjpegio.cpp \
 fxparsegeometry.cpp \
 fxpcxio.cpp \
 fxpngio.cpp \
 fxppmio.cpp \
+fxpsio.cpp \
 fxpriv.cpp \
 fxezquantize.cpp \
 fxfsquantize.cpp \
 fxwuquantize.cpp \
+fxrasio.cpp \
 fxrgbio.cpp \
 fxtargaio.cpp \
 fxtifio.cpp \
@@ -290,35 +350,276 @@ icons.cpp \
 strtoll.cpp \
 vsscanf.cpp
 
-OBJECTS = $(SOURCES:.cpp=.obj)
+OBJECTS = \
+FX4Splitter.obj \
+FX7Segment.obj \
+FXAccelTable.obj \
+FXApp.obj \
+FXArrowButton.obj \
+FXBMPIcon.obj \
+FXBMPImage.obj \
+FXBitmap.obj \
+FXBitmapFrame.obj \
+FXBitmapView.obj \
+FXButton.obj \
+FXBZStream.obj \
+FXCURCursor.obj \
+FXCanvas.obj \
+FXCheckButton.obj \
+FXChoiceBox.obj \
+FXColorBar.obj \
+FXColorDialog.obj \
+FXColorNames.obj \
+FXColorSelector.obj \
+FXColorWell.obj \
+FXColorWheel.obj \
+FXComboBox.obj \
+FXComposite.obj \
+FXCursor.obj \
+FXDC.obj \
+FXDCPrint.obj \
+FXDCWindow.obj \
+FXDLL.obj \
+FXDataTarget.obj \
+FXDebugTarget.obj \
+FXDelegator.obj \
+FXDial.obj \
+FXDialogBox.obj \
+FXDict.obj \
+FXDirBox.obj \
+FXDirDialog.obj \
+FXDirList.obj \
+FXDirSelector.obj \
+FXDockBar.obj \
+FXDockHandler.obj \
+FXDockSite.obj \
+FXDockTitle.obj \
+FXDocument.obj \
+FXDragCorner.obj \
+FXDrawable.obj \
+FXDriveBox.obj \
+FXException.obj \
+FXFile.obj \
+FXFileDialog.obj \
+FXFileDict.obj \
+FXFileList.obj \
+FXFileSelector.obj \
+FXFileStream.obj \
+FXFoldingList.obj \
+FXFont.obj \
+FXFontDialog.obj \
+FXFontSelector.obj \
+FXFrame.obj \
+FXGIFCursor.obj \
+FXGIFIcon.obj \
+FXGIFImage.obj \
+FXGLCanvas.obj \
+FXGLCone.obj \
+FXGLContext.obj \
+FXGLCube.obj \
+FXGLCylinder.obj \
+FXGLObject.obj \
+FXGLShape.obj \
+FXGLSphere.obj \
+FXGLTriangleMesh.obj \
+FXGLViewer.obj \
+FXGLVisual.obj \
+FXGradientBar.obj \
+FXGroupBox.obj \
+FXGUISignal.obj \
+FXGZStream.obj \
+FXHash.obj \
+FXHeader.obj \
+FXHorizontalFrame.obj \
+FXICOIcon.obj \
+FXICOImage.obj \
+FXIFFIcon.obj \
+FXIFFImage.obj \
+FXIcon.obj \
+FXIconDict.obj \
+FXIconList.obj \
+FXIconSource.obj \
+FXId.obj \
+FXImage.obj \
+FXImageFrame.obj \
+FXImageView.obj \
+FXInputDialog.obj \
+FXJPGIcon.obj \
+FXJPGImage.obj \
+FXLabel.obj \
+FXList.obj \
+FXListBox.obj \
+FXMDIButton.obj \
+FXMDIChild.obj \
+FXMDIClient.obj \
+FXMainWindow.obj \
+FXMat3d.obj \
+FXMat4d.obj \
+FXMat3f.obj \
+FXMat4f.obj \
+FXMatrix.obj \
+FXMemMap.obj \
+FXMemoryStream.obj \
+FXMenuBar.obj \
+FXMenuButton.obj \
+FXMenuCaption.obj \
+FXMenuCascade.obj \
+FXMenuCheck.obj \
+FXMenuRadio.obj \
+FXMenuCommand.obj \
+FXMenuPane.obj \
+FXMenuSeparator.obj \
+FXMenuTitle.obj \
+FXMessageBox.obj \
+FXObject.obj \
+FXObjectList.obj \
+FXOptionMenu.obj \
+FXPCXIcon.obj \
+FXPCXImage.obj \
+FXPNGIcon.obj \
+FXPNGImage.obj \
+FXPPMIcon.obj \
+FXPPMImage.obj \
+FXPacker.obj \
+FXPicker.obj \
+FXPopup.obj \
+FXPoint.obj \
+FXPrintDialog.obj \
+FXProgressBar.obj \
+FXProgressDialog.obj \
+FXQuatd.obj \
+FXQuatf.obj \
+FXRGBIcon.obj \
+FXRGBImage.obj \
+FXRadioButton.obj \
+FXRangef.obj \
+FXRanged.obj \
+FXRASIcon.obj \
+FXRASImage.obj \
+FXRealSlider.obj \
+FXRealSpinner.obj \
+FXRecentFiles.obj \
+FXRectangle.obj \
+FXRegion.obj \
+FXRegistry.obj \
+FXReplaceDialog.obj \
+FXRex.obj \
+FXRootWindow.obj \
+FXRuler.obj \
+FXScrollArea.obj \
+FXScrollWindow.obj \
+FXScrollBar.obj \
+FXScrollPane.obj \
+FXSearchDialog.obj \
+FXSeparator.obj \
+FXSettings.obj \
+FXShell.obj \
+FXShutter.obj \
+FXSize.obj \
+FXSlider.obj \
+FXSpinner.obj \
+FXSplitter.obj \
+FXSpheref.obj \
+FXSphered.obj \
+FXSplashWindow.obj \
+FXSpring.obj \
+FXStatusBar.obj \
+FXStatusLine.obj \
+FXStream.obj \
+FXString.obj \
+FXStringDict.obj \
+FXSwitcher.obj \
+FXTGAIcon.obj \
+FXTGAImage.obj \
+FXTIFIcon.obj \
+FXTIFImage.obj \
+FXTabBar.obj \
+FXTabBook.obj \
+FXTabItem.obj \
+FXTable.obj \
+FXText.obj \
+FXTextCodec.obj \
+FXTextField.obj \
+FXThread.obj \
+FXToggleButton.obj \
+FXToolBar.obj \
+FXToolBarGrip.obj \
+FXToolBarShell.obj \
+FXToolBarTab.obj \
+FXToolTip.obj \
+FXTopWindow.obj \
+FXTreeList.obj \
+FXTreeListBox.obj \
+FXTriStateButton.obj \
+FXUndoList.obj \
+FXURL.obj \
+FXUTF16Codec.obj \
+FXUTF32Codec.obj \
+FXUTF8Codec.obj \
+FXVec2d.obj \
+FXVec2f.obj \
+FXVec3d.obj \
+FXVec3f.obj \
+FXVec4d.obj \
+FXVec4f.obj \
+FXVerticalFrame.obj \
+FXVisual.obj \
+FXWindow.obj \
+FXWizard.obj \
+FXXBMIcon.obj \
+FXXBMImage.obj \
+FXXPMIcon.obj \
+FXXPMImage.obj \
+fxbmpio.obj \
+fxfilematch.obj \
+fxgifio.obj \
+fxicoio.obj \
+fxiffio.obj \
+fxjpegio.obj \
+fxparsegeometry.obj \
+fxpcxio.obj \
+fxpngio.obj \
+fxppmio.obj \
+fxpsio.obj \
+fxpriv.obj \
+fxezquantize.obj \
+fxfsquantize.obj \
+fxwuquantize.obj \
+fxrasio.obj \
+fxrgbio.obj \
+fxtargaio.obj \
+fxtifio.obj \
+fxutils.obj \
+fxwinkbd.obj \
+fxxbmio.obj \
+fxxpmio.obj \
+icons.obj \
+strtoll.obj \
+vsscanf.obj
 
 .cpp.obj:
 	$(CXX) -c $(INCDIRS) $(CXXFLAGS) $(DEFINES) $<
 
 all: $(FOXLIB)
 
-
 FXApp.cpp: icons.cpp
 
 icons.h: $(ICONS)
-	$(RESWRAP) -i -n FX -o icons.h $^
-
-
-icons.cpp: $(ICONS)
 	$(RM) $@
-	echo ^#include "icons.h" > $@
-	$(RESWRAP) -n FX -oa $@ $(ICONS_1)
-	$(RESWRAP) -n FX -oa $@ $(ICONS_2)
-	$(RESWRAP) -n FX -oa $@ $(ICONS_3)
-	$(RESWRAP) -n FX -oa $@ $(ICONS_4)
+	$(RESWRAP) -i -n FX -o icons.h $(ICONS)
+
+icons.cpp: $(ICONS) icons.h
+	$(RM) $@
+	@echo \#include "icons.h" >$@
+	$(RESWRAP) -n FX -oa $@ $(ICONS)
 
 clean:
 	del $(FOXLIB)
 	del *.obj
 
 # Make the library
-$(FOXLIB): $(OBJECTS) Makefile.dmc.resp
+$(FOXLIB): $(OBJECTS)
 	touch $(FOXLIB)
 	del $(FOXLIB)
 	$(RCC) -32 -oversion.res version.rc
-	$(LIB) $(FOXLIB) /C /P:64 @Makefile.dmc.resp
+	$(LIB) -c -p64 $(FOXLIB) $(OBJECTS)

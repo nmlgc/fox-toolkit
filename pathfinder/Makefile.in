@@ -78,11 +78,8 @@ GCJ = @GCJ@
 GCJFLAGS = @GCJFLAGS@
 GL_LIBS = @GL_LIBS@
 GL_TESTS = @GL_TESTS@
-HAVE_LIB = @HAVE_LIB@
-LIB = @LIB@
 LIBTOOL = @LIBTOOL@
 LN_S = @LN_S@
-LTLIB = @LTLIB@
 LT_AGE = @LT_AGE@
 LT_CURRENT = @LT_CURRENT@
 LT_RELEASE = @LT_RELEASE@
@@ -107,15 +104,65 @@ bin_PROGRAMS = PathFinder
 
 man_MANS = PathFinder.1
 
-ICONS =  bigicons.bmp closepanel.gif clrbook.gif copy.bmp copyit.gif cut.bmp deleteit.bmp desktop.bmp details.bmp dirup.bmp enter.gif file_gif.gif foxbig.gif foxmini.gif goback.bmp goforw.bmp gotodir.bmp home.gif hosts.bmp iconpath.gif linkit.gif location.gif maphost.bmp moveit.gif paste.bmp pattern_gif.gif properties.bmp quit_gif.gif renameit.gif rotateleft.gif rotateright.gif setbook.gif smallicons.bmp unmaphost.bmp work.gif
+ICONS = \
+bigicons.bmp \
+closepanel.gif \
+clrbook.gif \
+copy.bmp \
+copyit.gif \
+cut.bmp \
+deleteit.bmp \
+desktop.bmp \
+details.bmp \
+dirup.bmp \
+enter.gif \
+file_gif.gif \
+foxbig.gif \
+foxmini.gif \
+goback.bmp \
+goforw.bmp \
+gotodir.bmp \
+home.gif \
+hosts.bmp \
+iconpath.gif \
+linkit.gif \
+location.gif \
+maphost.bmp \
+moveit.gif \
+paste.bmp \
+pattern_gif.gif \
+properties.bmp \
+quit_gif.gif \
+renameit.gif \
+rotateleft.gif \
+rotateright.gif \
+setbook.gif \
+smallicons.bmp \
+unmaphost.bmp \
+work.gif
 
 
-PathFinder_SOURCES =  icons.h icons.cpp CopyDialog.h CopyDialog.cpp PathFinder.cpp PathFinder.h Preferences.cpp Preferences.h PropertyDialog.cpp PropertyDialog.h LICENSE $(ICONS)
+PathFinder_SOURCES = \
+icons.h \
+icons.cpp \
+CopyDialog.h \
+CopyDialog.cpp \
+PathFinder.cpp \
+PathFinder.h \
+Preferences.cpp \
+Preferences.h \
+PropertyDialog.cpp \
+PropertyDialog.h \
+LICENSE \
+$(ICONS)
 
 
 CLEANFILES = icons.h icons.cpp
 
-EXTRA_DIST = $(man_MANS)              Makefile.bc              Makefile.wc              Makefile.dmc
+EXTRA_DIST = $(man_MANS) \
+             Makefile.bc \
+             Makefile.wc \
+             Makefile.dmc
 
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_CLEAN_FILES = 
@@ -408,7 +455,7 @@ CopyDialog.o: CopyDialog.cpp ../include/xincs.h ../include/fx.h \
 	../include/FXFileSelector.h ../include/FXFileDialog.h \
 	../include/FXColorSelector.h ../include/FXColorDialog.h \
 	../include/FXFontSelector.h ../include/FXFontDialog.h \
-	../include/FXUndoList.h ../include/FXText.h \
+	../include/FXUndoList.h ../include/FXRex.h ../include/FXText.h \
 	../include/FXDataTarget.h ../include/FXProgressBar.h \
 	../include/FXReplaceDialog.h ../include/FXRuler.h \
 	../include/FXSearchDialog.h ../include/FXInputDialog.h \
@@ -497,7 +544,7 @@ PathFinder.o: PathFinder.cpp ../include/xincs.h ../include/fx.h \
 	../include/FXFileSelector.h ../include/FXFileDialog.h \
 	../include/FXColorSelector.h ../include/FXColorDialog.h \
 	../include/FXFontSelector.h ../include/FXFontDialog.h \
-	../include/FXUndoList.h ../include/FXText.h \
+	../include/FXUndoList.h ../include/FXRex.h ../include/FXText.h \
 	../include/FXDataTarget.h ../include/FXProgressBar.h \
 	../include/FXReplaceDialog.h ../include/FXRuler.h \
 	../include/FXSearchDialog.h ../include/FXInputDialog.h \
@@ -590,7 +637,7 @@ Preferences.o: Preferences.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXFileSelector.h ../include/FXFileDialog.h \
 	../include/FXColorSelector.h ../include/FXColorDialog.h \
 	../include/FXFontSelector.h ../include/FXFontDialog.h \
-	../include/FXUndoList.h ../include/FXText.h \
+	../include/FXUndoList.h ../include/FXRex.h ../include/FXText.h \
 	../include/FXDataTarget.h ../include/FXProgressBar.h \
 	../include/FXReplaceDialog.h ../include/FXRuler.h \
 	../include/FXSearchDialog.h ../include/FXInputDialog.h \
@@ -678,7 +725,7 @@ PropertyDialog.o: PropertyDialog.cpp ../include/xincs.h ../include/fx.h \
 	../include/FXFileSelector.h ../include/FXFileDialog.h \
 	../include/FXColorSelector.h ../include/FXColorDialog.h \
 	../include/FXFontSelector.h ../include/FXFontDialog.h \
-	../include/FXUndoList.h ../include/FXText.h \
+	../include/FXUndoList.h ../include/FXRex.h ../include/FXText.h \
 	../include/FXDataTarget.h ../include/FXProgressBar.h \
 	../include/FXReplaceDialog.h ../include/FXRuler.h \
 	../include/FXSearchDialog.h ../include/FXInputDialog.h \

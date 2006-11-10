@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXFileSelector.h,v 1.55 2005/02/08 06:12:35 fox Exp $                    *
+* $Id: FXFileSelector.h,v 1.55.2.1 2005/02/11 13:33:39 fox Exp $                    *
 ********************************************************************************/
 #ifndef FXFILESELECTOR_H
 #define FXFILESELECTOR_H
@@ -47,8 +47,8 @@ enum {
   SELECTFILE_ANY,             /// A single file, existing or not (to save to)
   SELECTFILE_EXISTING,        /// An existing file (to load)
   SELECTFILE_MULTIPLE,        /// Multiple existing files
-  SELECTFILE_MULTIPLE_ALL,    /// Multiple existing files or directories
-  SELECTFILE_DIRECTORY        /// Existing directory
+  SELECTFILE_MULTIPLE_ALL,    /// Multiple existing files or directories, but not '.' and '..'
+  SELECTFILE_DIRECTORY        /// Existing directory, including '.' or '..'
   };
 
 
@@ -86,6 +86,8 @@ protected:
   FXuint             selectmode;        // Select mode
 protected:
   FXFileSelector(){}
+  FXString *getSelectedFiles() const;
+  FXString *getSelectedFilesOnly() const;
 private:
   FXFileSelector(const FXFileSelector&);
   FXFileSelector &operator=(const FXFileSelector&);

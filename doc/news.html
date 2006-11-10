@@ -18,6 +18,20 @@ News  <A href='news.html' target="_top" align=left><font  size=-2>[Remove Frame]
 <!--- TOPIC TITLE -->
 <p>
 <table width=100% cellpadding=0 cellspacing=2><tr><td width=100% valign=bottom id=HEADLINE><b>
+Febuary 8 - FOX STABLE 1.4.1
+<br><img src='art/line.gif' width=100% height=1></b></td></tr></table>
+<p>
+<!--- TOPIC TITLE -->
+<ul>
+<li>Fixed bug in fxsaveJPG() routine; saving JPEG images didn't work properly.</li>
+<li>Fixed problem with ControlPanel crash.  ControlPanel would crash when registry
+was empty.</li>
+</ul>
+
+
+<!--- TOPIC TITLE -->
+<p>
+<table width=100% cellpadding=0 cellspacing=2><tr><td width=100% valign=bottom id=HEADLINE><b>
 Febuary 7 - FOX STABLE 1.4.0
 <br><img src='art/line.gif' width=100% height=1></b></td></tr></table>
 <p>
@@ -27,9 +41,9 @@ to present the new major stable release, the <b>FOX Toolkit version 1.4</b>!<br>
 This release is going to make a lot of people happy, since we've accomplished quite a bit
 of work since the 1.2 release!<br>
 <ul>
-<li><b>Smooth dragging</b> and <b>side-by-side docking</b> of toolbars and dockable panels 
+<li><b>Smooth dragging</b> and <b>side-by-side docking</b> of toolbars and dockable panels
 has been implemented.</li>
-<li>A new class <b>FXIconSource</b> facilitates loading and scaling of images or icons, 
+<li>A new class <b>FXIconSource</b> facilitates loading and scaling of images or icons,
 from a large variety of image formats.</li>
 <li>The file selection widget now support <b>thumbnail previewing</b> mode.  If a filename is
 recognized as an image, and the thumbnail mode is in effect, the image is loaded and
@@ -47,9 +61,9 @@ to gracefully handle various runtime errors like running out of window handles a
 <li>Added alpha channel support for TGA format.</li>
 <li>New <b>7 Segment Display</b> widget was added.  It is arbitrarily scalable.</li>
 <li><b>Ruler widget</b> was completed.  This is a document ruler widget a-la MS-Word.</li>
-<li>New class added for support of <b>Memory Mapped Files</b>.  This sure helps with 
+<li>New class added for support of <b>Memory Mapped Files</b>.  This sure helps with
 manipulating large blocks of data in a platform-independent way.</li>
-<li>New class <b>FXSplashWindow</b> has been added.  It uses the new shaped window 
+<li>New class <b>FXSplashWindow</b> has been added.  It uses the new shaped window
 facility to present an attractive, arbitrarily shaped introduction window for your
 application.</li>
 </ul>
@@ -66,9 +80,8 @@ Febuary 7 - FOX DEVELOPMENT 1.4.0
 <ul>
 <li>Added thumbnail icon previewing mode to FXFileList, when set in big icon mode.
 This feature uses the new FXIconSource for the loading and scaling.<br>
-Also has blending of PNG images over the current FXFileList background color, which
-looks pretty good.  Other image types are not blended.  It is quite fast for
-loading icons, but a bit tardy for directories with large collections of photographs.</li>
+It is quite fast for loading icons, but a bit tardy for directories with large
+collections of photographs.</li>
 
 <li>Changed setIcon API's in the various list widgets.  An optional owned flag is
 now passed. If the old icon was owned by the list item, it is deleted, and
@@ -80,7 +93,7 @@ to "reposses" or "disown" the icon.</li>
 
 <li>Also added a new class, FXIconSource, which embodies the knowledge
 of various image file formats.  It has three main API's: loading an icon
-from a file, loading an icon from a reswrapped stream, or loading an icon 
+from a file, loading an icon from a reswrapped stream, or loading an icon
 from an already opened FXStream.<br>
 These API's are in turn invoked by three other API's, which can load and
 scale an icon down to a certain size, using either the fast image

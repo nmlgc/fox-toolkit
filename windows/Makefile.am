@@ -19,7 +19,6 @@ vcpp/button/button.dsp \
 vcpp/calculator/calculator.dsp \
 vcpp/chart/chart.dsp \
 vcpp/chartdll/chartdll.dsp \
-vcpp/controlpanel/controlpanel.dsp \
 vcpp/datatarget/datatarget.dsp \
 vcpp/dctest/dctest.dsp \
 vcpp/dialog/dialog.dsp \

@@ -19,7 +19,7 @@
 # along with this program; if not, write to the Free Software                   #
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    #
 #################################################################################
-# $Id: Adie.stx,v 1.27 2004/12/26 21:39:41 fox Exp $                            #
+# $Id: Adie.stx,v 1.27.2.3 2005/09/06 03:46:25 fox Exp $                            #
 #################################################################################
 
 #
@@ -42,6 +42,84 @@
 
 
 #################################################################################
+
+# LaTeX text formatting language
+language "LaTeX"
+  filesmatch "*.tex"
+  delimiters "~.,/\`'!@#$%^&*()_-=+{}|[]\":;<>?"
+
+  rule "Math"
+       openpattern "\$|\\\[|\\\(|\\begin(?=(\{(equation|align)\*?\}))"
+       closepattern "\$|\\\]|\\\)|\\end(?=(\{(equation|align)\*?\}))"
+
+       rule "Comment"
+           openpattern   "%"
+           closepattern  "$"
+	   stoppattern   "$"
+       end
+       rule "CurlyBrace"
+            pattern "\{|\}"
+       end
+       rule "MathCommand"
+       	    openpattern  "\\(?!([^a-zA-Z]|end\{(equation|align)\*?\}))"
+       	    closepattern "(?=[^a-zA-Z])|$"
+	    stoppattern  "(?=\$)|\\((?=\])|(?=\))|(?=end\{(equation|align)\}))"
+  	    rule "Comment"
+      	        openpattern   "%"
+      	        closepattern  "$"
+		stoppattern   "$"
+  	    end
+       	    rule "MathGreek"
+            	 pattern "\<([aA]lpha|[bB]eta|[gG]amma|[eE]psilon|[dD]elta|[eE]ta|[iI]ota|[kK]appa|[lL]ambda|[mM]u|[nN]u|[pP]i|[rR]ho|[sS]igma|[tT]au|[pP]hi|[pP]si|[xX]i|[uU]psilon|[zZ]eta|[tT]heta|[oO]mega)(\>|(?=_))"
+       	    end
+       end
+  end
+
+  rule "Command"
+       openpattern  "\\{1}(?!\\)"
+       closepattern "(?=[^a-zA-Z])|$"
+       stoppattern  "\{|\}| |$"
+       rule "TextFormating"
+            pattern "\<(textbf|texttt|textsl|textit|emph)\>"
+       end
+       rule "Sectioning"
+       	    pattern "\<(section|subsection|subsubsection|paragraph|chapter)\>"
+       end
+       rule "Referance"
+       	    pattern "\<(cite|ref|label)\>"
+       end
+       rule "Includes"
+       	    pattern "\<(usepackage|include|input|includegraphics)\>"
+       end
+       rule "Footnote"
+       	    pattern "\<(footnote)\>"
+       end
+
+       rule "Comment"
+           openpattern   "%"
+           closepattern  "$"
+	   stoppattern   "$"
+       end
+
+       rule "Breaks"
+           pattern "\<(clearpage|newpage)\>"
+       end
+  end
+
+  rule "CurlyBrace"
+       pattern "\{|\}"
+  end
+
+  rule "Comment"
+      openpattern   "%"
+      closepattern  "$"
+      stoppattern   "$"
+  end
+
+  rule "Breaks"
+       pattern "\\{2}"
+  end
+end
 
 # A Syntax coloring pattern for syntax coloring patterns ;-)
 language "Adie Syntax"
@@ -81,6 +159,7 @@ language "C++"
 
   # File patterns for this language mode
   filesmatch "*.C,*.cpp,*.cc,*.cxx,*.c++,*.H,*.hpp,*.hh,*.hxx,*.h++,*.h"
+  contentsmatch "[Cc]\+\+"
 
   # Word delimiters
   delimiters "~.,/\`'!@#$%^&*()-=+{}|[]\":;<>?"
@@ -113,6 +192,28 @@ language "C++"
     closepattern  "\*/"
     rule "FIXME"
       pattern     "FIXME"
+    end
+  end
+
+  # PP blocked
+  rule "PPBlocked"
+    openpattern   "^#if 0"
+    closepattern  "^#endif"
+    rule "PPSubblock"
+      openpattern   "^#if"
+      closepattern  "^#endif$"
+      rule "PPSubblock"
+        openpattern   "^#if"
+        closepattern  "^#endif$"
+        rule "PPSubblock"
+          openpattern   "^#if"
+          closepattern  "^#endif$"
+        end
+      end
+    end
+    rule "PPSubblock"
+      openpattern   "/\*"
+      closepattern  "\*/"
     end
   end
 
@@ -162,11 +263,11 @@ language "C++"
 
   # Special macros
   rule "FOXMacro"
-    pattern     "\<(FXAPI|FXDEFMAP|FXMALLOC|FXFREE|FXCALLOC|FXRESIZE|FXMEMDUP|FXTRACE|FXMAPFUNCS|FXMAPFUNC|FXIMPLEMENT|FXIMPLEMENT_ABSTRACT|FXDECLARE|FXDECLARE_ABSTRACT|FXMAPTYPES|FXMAPTYPE|FXMETACLASS|FXRGBA|FXRGB|FXREDVAL|FXGREENVAL|FXBLUEVAL|FXALPHAVAL|FXASSERT|FXSELID|FXSELTYPE|FXSEL|FXMINMAX|FXMIN3|FXMIN|FXMAX3|FXMAX|FXSWAP|FXCLAMP|FXABS|FXLERP|ARRAYNUMBER|STRUCTOFFSET|CONTAINER)\>"
+    pattern     "\<(FXAPI|FXDEFMAP|FXMALLOC|FXFREE|FXCALLOC|FXRESIZE|FXMEMDUP|FXTRACE|FXMAPFUNCS|FXMAPFUNC|FXIMPLEMENT|FXIMPLEMENT_ABSTRACT|FXDECLARE|FXDECLARE_ABSTRACT|FXMAPTYPES|FXMAPTYPE|FXMETACLASS|FXRGBA|FXRGB|FXREDVAL|FXGREENVAL|FXBLUEVAL|FXALPHAVAL|FXASSERT|FXSELID|FXSELTYPE|FXSEL|FXMINMAX|FXMIN3|FXMIN4|FXMIN|FXMAX3|FXMAX4|FXMAX|FXSWAP|FXCLAMP|FXABS|FXLERP|ARRAYNUMBER|STRUCTOFFSET|CONTAINER)\>"
   end
 
   rule "FOXType"
-    pattern     "\<(FXchar|FXuchar|FXbool|FXushort|FXshort|FXuint|FXwchar|FXint|FXfloat|FXdouble|FXulong|FXlong|FXival|FXuval|FXColor|FXObject|FXString|FXWString)\>"
+    pattern     "\<(FXchar|FXuchar|FXbool|FXushort|FXshort|FXuint|FXwchar|FXnchar|FXint|FXfloat|FXdouble|FXulong|FXlong|FXival|FXuval|FXColor|FXObject|FXString|FXWString)\>"
   end
 
   rule "Keyword"
@@ -762,4 +863,45 @@ language "Make"
   end
 end
 
+language "Perl"
+  filesmatch "*.pl"
+  rule "Comment"
+    openpattern  "#"
+    closepattern "$"
+  end
+  rule "Statement"
+    pattern "\<(if|until|while|elsif|else|unless|for(each)?|continue|last|goto|next|redo|do(?=\s*\{)|BEGIN|END)\>"
+  end
+  rule "Operator"
+    pattern     "\<(lt|gt|le|ge|eq|ne|cmp|not|and|or|xor|sub|x)\>"
+  end
+  rule "String"
+    openpattern   "\""
+    closepattern  "\""
+    stoppattern   "$"
+    rule "OctalEscape"
+      pattern     "\\\d+"
+    end
+    rule "HexEscape"
+      pattern     "\\x\h+"
+    end
+    rule "ControlEscape"
+      pattern     "\\."
+    end
+  end
+  rule "String"
+    openpattern   "'"
+    closepattern  "'"
+    stoppattern   "$"
+    rule "OctalEscape"
+      pattern     "\\\d+"
+    end
+    rule "HexEscape"
+      pattern     "\\x\h+"
+    end
+    rule "ControlEscape"
+      pattern     "\\."
+    end
+  end
+end
 

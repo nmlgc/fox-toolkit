@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXStream.cpp,v 1.55 2005/01/16 16:06:07 fox Exp $                        *
+* $Id: FXStream.cpp,v 1.55.2.1 2005/02/12 06:46:19 fox Exp $                        *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -162,7 +162,7 @@ FXbool FXStream::open(FXStreamDirection save_or_load,unsigned long size,FXuchar*
     if(data){
       begptr=data;
       if(size==ULONG_MAX)
-        endptr=((FXuchar*)NULL)-1;
+        endptr=(FXuchar*)(FXival)-1L;
       else
         endptr=begptr+size;
       wrptr=begptr;

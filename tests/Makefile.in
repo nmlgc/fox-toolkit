@@ -78,11 +78,8 @@ GCJ = @GCJ@
 GCJFLAGS = @GCJFLAGS@
 GL_LIBS = @GL_LIBS@
 GL_TESTS = @GL_TESTS@
-HAVE_LIB = @HAVE_LIB@
-LIB = @LIB@
 LIBTOOL = @LIBTOOL@
 LN_S = @LN_S@
-LTLIB = @LTLIB@
 LT_AGE = @LT_AGE@
 LT_CURRENT = @LT_CURRENT@
 LT_RELEASE = @LT_RELEASE@
@@ -103,10 +100,41 @@ RESWRAP = $(top_builddir)/utils/reswrap
 SUFFIXES = .gif .bmp
 LDADD = ../src/libFOX-1.4.la -lm
 
-EXTRA_PROGRAMS =  gltest glviewer
+EXTRA_PROGRAMS = \
+gltest \
+glviewer
 
 
-noinst_PROGRAMS =  dialog ControlPanel groupbox scribble wizard layout rex table memmap minheritance bitmapviewer imageviewer button datatarget dctest dirlist foursplit header hello hello2 iconlist image mditest shutter splitter switcher tabbook ratio $(GL_TESTS)
+noinst_PROGRAMS = \
+dialog \
+ControlPanel \
+groupbox \
+scribble \
+wizard \
+layout \
+rex \
+table \
+memmap \
+minheritance \
+bitmapviewer \
+imageviewer \
+button \
+datatarget \
+dctest \
+dirlist \
+foursplit \
+header \
+hello \
+hello2 \
+iconlist \
+image \
+mditest \
+shutter \
+splitter \
+switcher \
+tabbook \
+ratio \
+$(GL_TESTS)
 
 
 wizard_SOURCES = wizard.cpp
@@ -140,7 +168,9 @@ button_SOURCES = button.cpp
 dctest_SOURCES = dctest.cpp dippy.h
 ControlPanel_SOURCES = ControlPanel.cpp controlpanelicon.h
 
-EXTRA_DIST = Makefile.bc              Makefile.wc              Makefile.dmc
+EXTRA_DIST = Makefile.bc \
+             Makefile.wc \
+             Makefile.dmc
 
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_CLEAN_FILES = 
@@ -612,7 +642,7 @@ bitmapviewer.o: bitmapviewer.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXFileSelector.h ../include/FXFileDialog.h \
 	../include/FXColorSelector.h ../include/FXColorDialog.h \
 	../include/FXFontSelector.h ../include/FXFontDialog.h \
-	../include/FXUndoList.h ../include/FXText.h \
+	../include/FXUndoList.h ../include/FXRex.h ../include/FXText.h \
 	../include/FXDataTarget.h ../include/FXProgressBar.h \
 	../include/FXReplaceDialog.h ../include/FXRuler.h \
 	../include/FXSearchDialog.h ../include/FXInputDialog.h \
@@ -700,7 +730,7 @@ button.o: button.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXFileSelector.h ../include/FXFileDialog.h \
 	../include/FXColorSelector.h ../include/FXColorDialog.h \
 	../include/FXFontSelector.h ../include/FXFontDialog.h \
-	../include/FXUndoList.h ../include/FXText.h \
+	../include/FXUndoList.h ../include/FXRex.h ../include/FXText.h \
 	../include/FXDataTarget.h ../include/FXProgressBar.h \
 	../include/FXReplaceDialog.h ../include/FXRuler.h \
 	../include/FXSearchDialog.h ../include/FXInputDialog.h \
@@ -788,7 +818,7 @@ ControlPanel.o: ControlPanel.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXFileSelector.h ../include/FXFileDialog.h \
 	../include/FXColorSelector.h ../include/FXColorDialog.h \
 	../include/FXFontSelector.h ../include/FXFontDialog.h \
-	../include/FXUndoList.h ../include/FXText.h \
+	../include/FXUndoList.h ../include/FXRex.h ../include/FXText.h \
 	../include/FXDataTarget.h ../include/FXProgressBar.h \
 	../include/FXReplaceDialog.h ../include/FXRuler.h \
 	../include/FXSearchDialog.h ../include/FXInputDialog.h \
@@ -878,7 +908,7 @@ datatarget.o: datatarget.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXFileSelector.h ../include/FXFileDialog.h \
 	../include/FXColorSelector.h ../include/FXColorDialog.h \
 	../include/FXFontSelector.h ../include/FXFontDialog.h \
-	../include/FXUndoList.h ../include/FXText.h \
+	../include/FXUndoList.h ../include/FXRex.h ../include/FXText.h \
 	../include/FXDataTarget.h ../include/FXProgressBar.h \
 	../include/FXReplaceDialog.h ../include/FXRuler.h \
 	../include/FXSearchDialog.h ../include/FXInputDialog.h \
@@ -966,7 +996,7 @@ dctest.o: dctest.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXFileSelector.h ../include/FXFileDialog.h \
 	../include/FXColorSelector.h ../include/FXColorDialog.h \
 	../include/FXFontSelector.h ../include/FXFontDialog.h \
-	../include/FXUndoList.h ../include/FXText.h \
+	../include/FXUndoList.h ../include/FXRex.h ../include/FXText.h \
 	../include/FXDataTarget.h ../include/FXProgressBar.h \
 	../include/FXReplaceDialog.h ../include/FXRuler.h \
 	../include/FXSearchDialog.h ../include/FXInputDialog.h \
@@ -1054,7 +1084,7 @@ dialog.o: dialog.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXFileSelector.h ../include/FXFileDialog.h \
 	../include/FXColorSelector.h ../include/FXColorDialog.h \
 	../include/FXFontSelector.h ../include/FXFontDialog.h \
-	../include/FXUndoList.h ../include/FXText.h \
+	../include/FXUndoList.h ../include/FXRex.h ../include/FXText.h \
 	../include/FXDataTarget.h ../include/FXProgressBar.h \
 	../include/FXReplaceDialog.h ../include/FXRuler.h \
 	../include/FXSearchDialog.h ../include/FXInputDialog.h \
@@ -1142,7 +1172,7 @@ dirlist.o: dirlist.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXFileSelector.h ../include/FXFileDialog.h \
 	../include/FXColorSelector.h ../include/FXColorDialog.h \
 	../include/FXFontSelector.h ../include/FXFontDialog.h \
-	../include/FXUndoList.h ../include/FXText.h \
+	../include/FXUndoList.h ../include/FXRex.h ../include/FXText.h \
 	../include/FXDataTarget.h ../include/FXProgressBar.h \
 	../include/FXReplaceDialog.h ../include/FXRuler.h \
 	../include/FXSearchDialog.h ../include/FXInputDialog.h \
@@ -1230,7 +1260,7 @@ foursplit.o: foursplit.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXFileSelector.h ../include/FXFileDialog.h \
 	../include/FXColorSelector.h ../include/FXColorDialog.h \
 	../include/FXFontSelector.h ../include/FXFontDialog.h \
-	../include/FXUndoList.h ../include/FXText.h \
+	../include/FXUndoList.h ../include/FXRex.h ../include/FXText.h \
 	../include/FXDataTarget.h ../include/FXProgressBar.h \
 	../include/FXReplaceDialog.h ../include/FXRuler.h \
 	../include/FXSearchDialog.h ../include/FXInputDialog.h \
@@ -1318,7 +1348,7 @@ gltest.o: gltest.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXFileSelector.h ../include/FXFileDialog.h \
 	../include/FXColorSelector.h ../include/FXColorDialog.h \
 	../include/FXFontSelector.h ../include/FXFontDialog.h \
-	../include/FXUndoList.h ../include/FXText.h \
+	../include/FXUndoList.h ../include/FXRex.h ../include/FXText.h \
 	../include/FXDataTarget.h ../include/FXProgressBar.h \
 	../include/FXReplaceDialog.h ../include/FXRuler.h \
 	../include/FXSearchDialog.h ../include/FXInputDialog.h \
@@ -1418,7 +1448,7 @@ glviewer.o: glviewer.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXFileSelector.h ../include/FXFileDialog.h \
 	../include/FXColorSelector.h ../include/FXColorDialog.h \
 	../include/FXFontSelector.h ../include/FXFontDialog.h \
-	../include/FXUndoList.h ../include/FXText.h \
+	../include/FXUndoList.h ../include/FXRex.h ../include/FXText.h \
 	../include/FXDataTarget.h ../include/FXProgressBar.h \
 	../include/FXReplaceDialog.h ../include/FXRuler.h \
 	../include/FXSearchDialog.h ../include/FXInputDialog.h \
@@ -1518,7 +1548,7 @@ groupbox.o: groupbox.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXFileSelector.h ../include/FXFileDialog.h \
 	../include/FXColorSelector.h ../include/FXColorDialog.h \
 	../include/FXFontSelector.h ../include/FXFontDialog.h \
-	../include/FXUndoList.h ../include/FXText.h \
+	../include/FXUndoList.h ../include/FXRex.h ../include/FXText.h \
 	../include/FXDataTarget.h ../include/FXProgressBar.h \
 	../include/FXReplaceDialog.h ../include/FXRuler.h \
 	../include/FXSearchDialog.h ../include/FXInputDialog.h \
@@ -1606,7 +1636,7 @@ header.o: header.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXFileSelector.h ../include/FXFileDialog.h \
 	../include/FXColorSelector.h ../include/FXColorDialog.h \
 	../include/FXFontSelector.h ../include/FXFontDialog.h \
-	../include/FXUndoList.h ../include/FXText.h \
+	../include/FXUndoList.h ../include/FXRex.h ../include/FXText.h \
 	../include/FXDataTarget.h ../include/FXProgressBar.h \
 	../include/FXReplaceDialog.h ../include/FXRuler.h \
 	../include/FXSearchDialog.h ../include/FXInputDialog.h \
@@ -1694,7 +1724,7 @@ hello.o: hello.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXFileSelector.h ../include/FXFileDialog.h \
 	../include/FXColorSelector.h ../include/FXColorDialog.h \
 	../include/FXFontSelector.h ../include/FXFontDialog.h \
-	../include/FXUndoList.h ../include/FXText.h \
+	../include/FXUndoList.h ../include/FXRex.h ../include/FXText.h \
 	../include/FXDataTarget.h ../include/FXProgressBar.h \
 	../include/FXReplaceDialog.h ../include/FXRuler.h \
 	../include/FXSearchDialog.h ../include/FXInputDialog.h \
@@ -1782,7 +1812,7 @@ hello2.o: hello2.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXFileSelector.h ../include/FXFileDialog.h \
 	../include/FXColorSelector.h ../include/FXColorDialog.h \
 	../include/FXFontSelector.h ../include/FXFontDialog.h \
-	../include/FXUndoList.h ../include/FXText.h \
+	../include/FXUndoList.h ../include/FXRex.h ../include/FXText.h \
 	../include/FXDataTarget.h ../include/FXProgressBar.h \
 	../include/FXReplaceDialog.h ../include/FXRuler.h \
 	../include/FXSearchDialog.h ../include/FXInputDialog.h \
@@ -1870,7 +1900,7 @@ iconlist.o: iconlist.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXFileSelector.h ../include/FXFileDialog.h \
 	../include/FXColorSelector.h ../include/FXColorDialog.h \
 	../include/FXFontSelector.h ../include/FXFontDialog.h \
-	../include/FXUndoList.h ../include/FXText.h \
+	../include/FXUndoList.h ../include/FXRex.h ../include/FXText.h \
 	../include/FXDataTarget.h ../include/FXProgressBar.h \
 	../include/FXReplaceDialog.h ../include/FXRuler.h \
 	../include/FXSearchDialog.h ../include/FXInputDialog.h \
@@ -1958,7 +1988,7 @@ image.o: image.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXFileSelector.h ../include/FXFileDialog.h \
 	../include/FXColorSelector.h ../include/FXColorDialog.h \
 	../include/FXFontSelector.h ../include/FXFontDialog.h \
-	../include/FXUndoList.h ../include/FXText.h \
+	../include/FXUndoList.h ../include/FXRex.h ../include/FXText.h \
 	../include/FXDataTarget.h ../include/FXProgressBar.h \
 	../include/FXReplaceDialog.h ../include/FXRuler.h \
 	../include/FXSearchDialog.h ../include/FXInputDialog.h \
@@ -2049,7 +2079,7 @@ imageviewer.o: imageviewer.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXFileSelector.h ../include/FXFileDialog.h \
 	../include/FXColorSelector.h ../include/FXColorDialog.h \
 	../include/FXFontSelector.h ../include/FXFontDialog.h \
-	../include/FXUndoList.h ../include/FXText.h \
+	../include/FXUndoList.h ../include/FXRex.h ../include/FXText.h \
 	../include/FXDataTarget.h ../include/FXProgressBar.h \
 	../include/FXReplaceDialog.h ../include/FXRuler.h \
 	../include/FXSearchDialog.h ../include/FXInputDialog.h \
@@ -2140,7 +2170,7 @@ layout.o: layout.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXFileSelector.h ../include/FXFileDialog.h \
 	../include/FXColorSelector.h ../include/FXColorDialog.h \
 	../include/FXFontSelector.h ../include/FXFontDialog.h \
-	../include/FXUndoList.h ../include/FXText.h \
+	../include/FXUndoList.h ../include/FXRex.h ../include/FXText.h \
 	../include/FXDataTarget.h ../include/FXProgressBar.h \
 	../include/FXReplaceDialog.h ../include/FXRuler.h \
 	../include/FXSearchDialog.h ../include/FXInputDialog.h \
@@ -2228,7 +2258,7 @@ mditest.o: mditest.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXFileSelector.h ../include/FXFileDialog.h \
 	../include/FXColorSelector.h ../include/FXColorDialog.h \
 	../include/FXFontSelector.h ../include/FXFontDialog.h \
-	../include/FXUndoList.h ../include/FXText.h \
+	../include/FXUndoList.h ../include/FXRex.h ../include/FXText.h \
 	../include/FXDataTarget.h ../include/FXProgressBar.h \
 	../include/FXReplaceDialog.h ../include/FXRuler.h \
 	../include/FXSearchDialog.h ../include/FXInputDialog.h \
@@ -2316,7 +2346,7 @@ memmap.o: memmap.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXFileSelector.h ../include/FXFileDialog.h \
 	../include/FXColorSelector.h ../include/FXColorDialog.h \
 	../include/FXFontSelector.h ../include/FXFontDialog.h \
-	../include/FXUndoList.h ../include/FXText.h \
+	../include/FXUndoList.h ../include/FXRex.h ../include/FXText.h \
 	../include/FXDataTarget.h ../include/FXProgressBar.h \
 	../include/FXReplaceDialog.h ../include/FXRuler.h \
 	../include/FXSearchDialog.h ../include/FXInputDialog.h \
@@ -2404,7 +2434,7 @@ minheritance.o: minheritance.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXFileSelector.h ../include/FXFileDialog.h \
 	../include/FXColorSelector.h ../include/FXColorDialog.h \
 	../include/FXFontSelector.h ../include/FXFontDialog.h \
-	../include/FXUndoList.h ../include/FXText.h \
+	../include/FXUndoList.h ../include/FXRex.h ../include/FXText.h \
 	../include/FXDataTarget.h ../include/FXProgressBar.h \
 	../include/FXReplaceDialog.h ../include/FXRuler.h \
 	../include/FXSearchDialog.h ../include/FXInputDialog.h \
@@ -2492,7 +2522,7 @@ ratio.o: ratio.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXFileSelector.h ../include/FXFileDialog.h \
 	../include/FXColorSelector.h ../include/FXColorDialog.h \
 	../include/FXFontSelector.h ../include/FXFontDialog.h \
-	../include/FXUndoList.h ../include/FXText.h \
+	../include/FXUndoList.h ../include/FXRex.h ../include/FXText.h \
 	../include/FXDataTarget.h ../include/FXProgressBar.h \
 	../include/FXReplaceDialog.h ../include/FXRuler.h \
 	../include/FXSearchDialog.h ../include/FXInputDialog.h \
@@ -2579,7 +2609,7 @@ rex.o: rex.cpp ../include/fx.h ../include/fxver.h ../include/fxdefs.h \
 	../include/FXFileSelector.h ../include/FXFileDialog.h \
 	../include/FXColorSelector.h ../include/FXColorDialog.h \
 	../include/FXFontSelector.h ../include/FXFontDialog.h \
-	../include/FXUndoList.h ../include/FXText.h \
+	../include/FXUndoList.h ../include/FXRex.h ../include/FXText.h \
 	../include/FXDataTarget.h ../include/FXProgressBar.h \
 	../include/FXReplaceDialog.h ../include/FXRuler.h \
 	../include/FXSearchDialog.h ../include/FXInputDialog.h \
@@ -2667,7 +2697,7 @@ scribble.o: scribble.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXFileSelector.h ../include/FXFileDialog.h \
 	../include/FXColorSelector.h ../include/FXColorDialog.h \
 	../include/FXFontSelector.h ../include/FXFontDialog.h \
-	../include/FXUndoList.h ../include/FXText.h \
+	../include/FXUndoList.h ../include/FXRex.h ../include/FXText.h \
 	../include/FXDataTarget.h ../include/FXProgressBar.h \
 	../include/FXReplaceDialog.h ../include/FXRuler.h \
 	../include/FXSearchDialog.h ../include/FXInputDialog.h \
@@ -2755,7 +2785,7 @@ shutter.o: shutter.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXFileSelector.h ../include/FXFileDialog.h \
 	../include/FXColorSelector.h ../include/FXColorDialog.h \
 	../include/FXFontSelector.h ../include/FXFontDialog.h \
-	../include/FXUndoList.h ../include/FXText.h \
+	../include/FXUndoList.h ../include/FXRex.h ../include/FXText.h \
 	../include/FXDataTarget.h ../include/FXProgressBar.h \
 	../include/FXReplaceDialog.h ../include/FXRuler.h \
 	../include/FXSearchDialog.h ../include/FXInputDialog.h \
@@ -2843,7 +2873,7 @@ splitter.o: splitter.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXFileSelector.h ../include/FXFileDialog.h \
 	../include/FXColorSelector.h ../include/FXColorDialog.h \
 	../include/FXFontSelector.h ../include/FXFontDialog.h \
-	../include/FXUndoList.h ../include/FXText.h \
+	../include/FXUndoList.h ../include/FXRex.h ../include/FXText.h \
 	../include/FXDataTarget.h ../include/FXProgressBar.h \
 	../include/FXReplaceDialog.h ../include/FXRuler.h \
 	../include/FXSearchDialog.h ../include/FXInputDialog.h \
@@ -2931,7 +2961,7 @@ switcher.o: switcher.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXFileSelector.h ../include/FXFileDialog.h \
 	../include/FXColorSelector.h ../include/FXColorDialog.h \
 	../include/FXFontSelector.h ../include/FXFontDialog.h \
-	../include/FXUndoList.h ../include/FXText.h \
+	../include/FXUndoList.h ../include/FXRex.h ../include/FXText.h \
 	../include/FXDataTarget.h ../include/FXProgressBar.h \
 	../include/FXReplaceDialog.h ../include/FXRuler.h \
 	../include/FXSearchDialog.h ../include/FXInputDialog.h \
@@ -3019,7 +3049,7 @@ tabbook.o: tabbook.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXFileSelector.h ../include/FXFileDialog.h \
 	../include/FXColorSelector.h ../include/FXColorDialog.h \
 	../include/FXFontSelector.h ../include/FXFontDialog.h \
-	../include/FXUndoList.h ../include/FXText.h \
+	../include/FXUndoList.h ../include/FXRex.h ../include/FXText.h \
 	../include/FXDataTarget.h ../include/FXProgressBar.h \
 	../include/FXReplaceDialog.h ../include/FXRuler.h \
 	../include/FXSearchDialog.h ../include/FXInputDialog.h \
@@ -3107,7 +3137,7 @@ table.o: table.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXFileSelector.h ../include/FXFileDialog.h \
 	../include/FXColorSelector.h ../include/FXColorDialog.h \
 	../include/FXFontSelector.h ../include/FXFontDialog.h \
-	../include/FXUndoList.h ../include/FXText.h \
+	../include/FXUndoList.h ../include/FXRex.h ../include/FXText.h \
 	../include/FXDataTarget.h ../include/FXProgressBar.h \
 	../include/FXReplaceDialog.h ../include/FXRuler.h \
 	../include/FXSearchDialog.h ../include/FXInputDialog.h \
@@ -3195,7 +3225,7 @@ wizard.o: wizard.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXFileSelector.h ../include/FXFileDialog.h \
 	../include/FXColorSelector.h ../include/FXColorDialog.h \
 	../include/FXFontSelector.h ../include/FXFontDialog.h \
-	../include/FXUndoList.h ../include/FXText.h \
+	../include/FXUndoList.h ../include/FXRex.h ../include/FXText.h \
 	../include/FXDataTarget.h ../include/FXProgressBar.h \
 	../include/FXReplaceDialog.h ../include/FXRuler.h \
 	../include/FXSearchDialog.h ../include/FXInputDialog.h \

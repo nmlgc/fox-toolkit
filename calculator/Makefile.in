@@ -78,11 +78,8 @@ GCJ = @GCJ@
 GCJFLAGS = @GCJFLAGS@
 GL_LIBS = @GL_LIBS@
 GL_TESTS = @GL_TESTS@
-HAVE_LIB = @HAVE_LIB@
-LIB = @LIB@
 LIBTOOL = @LIBTOOL@
 LN_S = @LN_S@
-LTLIB = @LTLIB@
 LT_AGE = @LT_AGE@
 LT_CURRENT = @LT_CURRENT@
 LT_RELEASE = @LT_RELEASE@
@@ -107,15 +104,36 @@ bin_PROGRAMS = calculator
 
 man_MANS = calculator.1
 
-ICONS =  colors.gif information.gif bigcalc.gif constmem.bmp question.gif tinycalc.gif
+ICONS = \
+colors.gif \
+information.gif \
+bigcalc.gif \
+constmem.bmp \
+question.gif \
+tinycalc.gif
 
 
-calculator_SOURCES =  icons.h icons.cpp Calculator.h Calculator.cpp HelpWindow.h HelpWindow.cpp Preferences.h Preferences.cpp help.cpp main.cpp LICENSE $(ICONS)
+calculator_SOURCES = \
+icons.h \
+icons.cpp \
+Calculator.h \
+Calculator.cpp \
+HelpWindow.h \
+HelpWindow.cpp \
+Preferences.h \
+Preferences.cpp \
+help.cpp \
+main.cpp \
+LICENSE \
+$(ICONS)
 
 
 CLEANFILES = icons.h icons.cpp
 
-EXTRA_DIST = $(man_MANS)              Makefile.bc              Makefile.wc              Makefile.dmc
+EXTRA_DIST = $(man_MANS) \
+             Makefile.bc \
+             Makefile.wc \
+             Makefile.dmc
 
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_CLEAN_FILES = 
@@ -409,7 +427,7 @@ Calculator.o: Calculator.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXFileSelector.h ../include/FXFileDialog.h \
 	../include/FXColorSelector.h ../include/FXColorDialog.h \
 	../include/FXFontSelector.h ../include/FXFontDialog.h \
-	../include/FXUndoList.h ../include/FXText.h \
+	../include/FXUndoList.h ../include/FXRex.h ../include/FXText.h \
 	../include/FXDataTarget.h ../include/FXProgressBar.h \
 	../include/FXReplaceDialog.h ../include/FXRuler.h \
 	../include/FXSearchDialog.h ../include/FXInputDialog.h \
@@ -497,7 +515,7 @@ help.o: help.cpp ../include/fx.h ../include/fxver.h ../include/fxdefs.h \
 	../include/FXFileSelector.h ../include/FXFileDialog.h \
 	../include/FXColorSelector.h ../include/FXColorDialog.h \
 	../include/FXFontSelector.h ../include/FXFontDialog.h \
-	../include/FXUndoList.h ../include/FXText.h \
+	../include/FXUndoList.h ../include/FXRex.h ../include/FXText.h \
 	../include/FXDataTarget.h ../include/FXProgressBar.h \
 	../include/FXReplaceDialog.h ../include/FXRuler.h \
 	../include/FXSearchDialog.h ../include/FXInputDialog.h \
@@ -585,7 +603,7 @@ HelpWindow.o: HelpWindow.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXFileSelector.h ../include/FXFileDialog.h \
 	../include/FXColorSelector.h ../include/FXColorDialog.h \
 	../include/FXFontSelector.h ../include/FXFontDialog.h \
-	../include/FXUndoList.h ../include/FXText.h \
+	../include/FXUndoList.h ../include/FXRex.h ../include/FXText.h \
 	../include/FXDataTarget.h ../include/FXProgressBar.h \
 	../include/FXReplaceDialog.h ../include/FXRuler.h \
 	../include/FXSearchDialog.h ../include/FXInputDialog.h \
@@ -673,7 +691,7 @@ main.o: main.cpp ../include/fx.h ../include/fxver.h ../include/fxdefs.h \
 	../include/FXFileSelector.h ../include/FXFileDialog.h \
 	../include/FXColorSelector.h ../include/FXColorDialog.h \
 	../include/FXFontSelector.h ../include/FXFontDialog.h \
-	../include/FXUndoList.h ../include/FXText.h \
+	../include/FXUndoList.h ../include/FXRex.h ../include/FXText.h \
 	../include/FXDataTarget.h ../include/FXProgressBar.h \
 	../include/FXReplaceDialog.h ../include/FXRuler.h \
 	../include/FXSearchDialog.h ../include/FXInputDialog.h \
@@ -761,7 +779,7 @@ Preferences.o: Preferences.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXFileSelector.h ../include/FXFileDialog.h \
 	../include/FXColorSelector.h ../include/FXColorDialog.h \
 	../include/FXFontSelector.h ../include/FXFontDialog.h \
-	../include/FXUndoList.h ../include/FXText.h \
+	../include/FXUndoList.h ../include/FXRex.h ../include/FXText.h \
 	../include/FXDataTarget.h ../include/FXProgressBar.h \
 	../include/FXReplaceDialog.h ../include/FXRuler.h \
 	../include/FXSearchDialog.h ../include/FXInputDialog.h \

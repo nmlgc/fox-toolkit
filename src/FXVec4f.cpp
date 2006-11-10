@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXVec4f.cpp,v 1.10 2005/01/16 16:06:07 fox Exp $                          *
+* $Id: FXVec4f.cpp,v 1.10.2.1 2005/11/15 02:04:40 fox Exp $                         *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -97,7 +97,7 @@ FXVec4f plane(const FXVec4f& vec){
 
 // Signed distance normalized plane and point
 FXfloat distance(const FXVec4f& plane,const FXVec3f& p){
-  return plane.x*p.x+plane.y*p.y+plane.z*p.z+plane.z;
+  return plane.x*p.x+plane.y*p.y+plane.z*p.z+plane.w;
   }
 
 

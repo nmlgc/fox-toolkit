@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: strtoll.cpp,v 1.4 2005/01/02 05:33:03 fox Exp $                          *
+* $Id: strtoll.cpp,v 1.4.2.1 2006/06/13 02:25:14 fox Exp $                          *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -84,7 +84,7 @@ FXlong strtoll(const char *nptr,char **endptr,int base){
   if(endptr) *endptr=s;
 
   // Skip spaces
-  while((c=*s++)!='\0' && isspace(c)) s++;
+  while(*s!='\0' && isspace(*s)) s++;
 
   // Process sign
   if(*s=='-'){

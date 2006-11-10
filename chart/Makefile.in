@@ -78,11 +78,8 @@ GCJ = @GCJ@
 GCJFLAGS = @GCJFLAGS@
 GL_LIBS = @GL_LIBS@
 GL_TESTS = @GL_TESTS@
-HAVE_LIB = @HAVE_LIB@
-LIB = @LIB@
 LIBTOOL = @LIBTOOL@
 LN_S = @LN_S@
-LTLIB = @LTLIB@
 LT_AGE = @LT_AGE@
 LT_CURRENT = @LT_CURRENT@
 LT_RELEASE = @LT_RELEASE@
@@ -107,15 +104,19 @@ lib_LTLIBRARIES = libCHART-1.4.la
 
 libCHART_1_4_la_LIBADD = $(X_LIBS) $(X_BASE_LIBS) $(X_EXTRA_LIBS)
 
-libCHART_1_4_la_LDFLAGS =          -version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)    	-export-dynamic
+libCHART_1_4_la_LDFLAGS = \
+        -version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)    \
+	-export-dynamic
 
 
 chartincludedir = $(includedir)/fox-1.4/chart
 
-chartinclude_HEADERS =  FXChart.h
+chartinclude_HEADERS = \
+FXChart.h
 
 
-libCHART_1_4_la_SOURCES =  FXChart.cpp
+libCHART_1_4_la_SOURCES = \
+FXChart.cpp
 
 
 noinst_PROGRAMS = chart
@@ -407,7 +408,7 @@ chart.o: chart.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXFileSelector.h ../include/FXFileDialog.h \
 	../include/FXColorSelector.h ../include/FXColorDialog.h \
 	../include/FXFontSelector.h ../include/FXFontDialog.h \
-	../include/FXUndoList.h ../include/FXText.h \
+	../include/FXUndoList.h ../include/FXRex.h ../include/FXText.h \
 	../include/FXDataTarget.h ../include/FXProgressBar.h \
 	../include/FXReplaceDialog.h ../include/FXRuler.h \
 	../include/FXSearchDialog.h ../include/FXInputDialog.h \
@@ -495,7 +496,7 @@ FXChart.lo FXChart.o : FXChart.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXFileSelector.h ../include/FXFileDialog.h \
 	../include/FXColorSelector.h ../include/FXColorDialog.h \
 	../include/FXFontSelector.h ../include/FXFontDialog.h \
-	../include/FXUndoList.h ../include/FXText.h \
+	../include/FXUndoList.h ../include/FXRex.h ../include/FXText.h \
 	../include/FXDataTarget.h ../include/FXProgressBar.h \
 	../include/FXReplaceDialog.h ../include/FXRuler.h \
 	../include/FXSearchDialog.h ../include/FXInputDialog.h \

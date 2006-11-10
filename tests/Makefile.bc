@@ -5,7 +5,7 @@
 ##############################################################################
 # Copyright (C) 1997,2005 by Jeroen van der Zijp.   All Rights Reserved.     #
 ##############################################################################
-# $Id: Makefile.bc,v 1.22 2005/02/04 04:33:19 fox Exp $                      #
+# $Id: Makefile.bc,v 1.22.2.1 2005/02/10 23:44:42 fox Exp $                      #
 ##############################################################################
 # This library is free software; you can redistribute it and/or              #
 # modify it under the terms of the GNU Library General Public                #
@@ -35,7 +35,6 @@ INCDIRS   = -I$(TOPDIR)\include
 FOXLIB    = $(TOPDIR)\src\FOX-1.4.lib
 
 PROGRAMS  = \
-	ControlPanel.exe \
 	rex.exe \
 	minheritance.exe \
 	memmap.exe \
@@ -67,9 +66,6 @@ PROGRAMS  = \
 	$(CXX) -c $(INCDIRS) $(CXXFLAGS) $(DEFINES) $*.cpp
 
 all: $(PROGRAMS)
-
-ControlPanel.exe: $(FOXLIB) ControlPanel.obj
-	$(LD) $(LDFLAGS) ControlPanel.obj $(FOXLIB)
 
 rex.exe: $(FOXLIB) rex.obj
 	$(LD) $(LDFLAGS) rex.obj $(FOXLIB)

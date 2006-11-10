@@ -78,11 +78,8 @@ GCJ = @GCJ@
 GCJFLAGS = @GCJFLAGS@
 GL_LIBS = @GL_LIBS@
 GL_TESTS = @GL_TESTS@
-HAVE_LIB = @HAVE_LIB@
-LIB = @LIB@
 LIBTOOL = @LIBTOOL@
 LN_S = @LN_S@
-LTLIB = @LTLIB@
 LT_AGE = @LT_AGE@
 LT_CURRENT = @LT_CURRENT@
 LT_RELEASE = @LT_RELEASE@
@@ -107,15 +104,35 @@ bin_PROGRAMS = shutterbug
 
 man_MANS = shutterbug.1
 
-ICONS =  line_0.gif line_1.gif line_2.gif line_3.gif line_4.gif line_5.gif line_6.gif line_7.gif line_8.gif shutterbug.gif tinyshutterbug.gif
+ICONS = \
+line_0.gif \
+line_1.gif \
+line_2.gif \
+line_3.gif \
+line_4.gif \
+line_5.gif \
+line_6.gif \
+line_7.gif \
+line_8.gif \
+shutterbug.gif \
+tinyshutterbug.gif
 
 
-shutterbug_SOURCES =  icons.h icons.cpp ShutterBug.h ShutterBug.cpp Snapper.h Snapper.cpp LICENSE $(ICONS)
+shutterbug_SOURCES = \
+icons.h \
+icons.cpp \
+ShutterBug.h \
+ShutterBug.cpp \
+Snapper.h \
+Snapper.cpp \
+LICENSE \
+$(ICONS)
 
 
 CLEANFILES = icons.h icons.cpp
 
-EXTRA_DIST = $(man_MANS)              Makefile.bc
+EXTRA_DIST = $(man_MANS) \
+             Makefile.bc
 
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_CLEAN_FILES = 
@@ -409,7 +426,7 @@ ShutterBug.o: ShutterBug.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXFileSelector.h ../include/FXFileDialog.h \
 	../include/FXColorSelector.h ../include/FXColorDialog.h \
 	../include/FXFontSelector.h ../include/FXFontDialog.h \
-	../include/FXUndoList.h ../include/FXText.h \
+	../include/FXUndoList.h ../include/FXRex.h ../include/FXText.h \
 	../include/FXDataTarget.h ../include/FXProgressBar.h \
 	../include/FXReplaceDialog.h ../include/FXRuler.h \
 	../include/FXSearchDialog.h ../include/FXInputDialog.h \
@@ -501,7 +518,7 @@ Snapper.o: Snapper.cpp ../include/fx.h ../include/fxver.h \
 	../include/FXFileSelector.h ../include/FXFileDialog.h \
 	../include/FXColorSelector.h ../include/FXColorDialog.h \
 	../include/FXFontSelector.h ../include/FXFontDialog.h \
-	../include/FXUndoList.h ../include/FXText.h \
+	../include/FXUndoList.h ../include/FXRex.h ../include/FXText.h \
 	../include/FXDataTarget.h ../include/FXProgressBar.h \
 	../include/FXReplaceDialog.h ../include/FXRuler.h \
 	../include/FXSearchDialog.h ../include/FXInputDialog.h \

@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXThread.cpp,v 1.38 2005/01/16 16:06:07 fox Exp $                        *
+* $Id: FXThread.cpp,v 1.38.2.3 2005/11/09 10:30:46 fox Exp $                        *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -217,7 +217,10 @@ FXCondition::~FXCondition(){
 static pthread_key_t self_key;
 
 // Global initializer for the self_key variable
-struct TLSKEYINIT { TLSKEYINIT(){ pthread_key_create(&self_key,NULL); } };
+struct TLSKEYINIT { 
+  TLSKEYINIT(){ pthread_key_create(&self_key,NULL); } 
+ ~TLSKEYINIT(){ pthread_key_delete(self_key); }
+  };
 
 // Extern declaration prevents overzealous optimizer from noticing we're
 // never using this object, and subsequently eliminating it from the code.
@@ -265,7 +268,6 @@ void* FXThread::execute(void* thread){
 // PTHREAD_STACK_MIN definition.
 FXbool FXThread::start(unsigned long stacksize){
   register FXbool code;
-  if(tid){ fxerror("FXThread::start: already running.\n"); }
   pthread_attr_t attr;
   pthread_attr_init(&attr);
   pthread_attr_setinheritsched(&attr,PTHREAD_INHERIT_SCHED);
@@ -557,7 +559,10 @@ FXCondition::~FXCondition(){
 static DWORD self_key=0xffffffff;
 
 // Global initializer for the self_key variable
-struct TLSKEYINIT { TLSKEYINIT(){ self_key=TlsAlloc(); } };
+struct TLSKEYINIT {
+  TLSKEYINIT(){ self_key=TlsAlloc(); }
+ ~TLSKEYINIT(){ TlsFree(self_key); }
+  };
 
 // Extern declaration prevents overzealous optimizer from noticing we're
 // never using this object, and subsequently eliminating it from the code.
@@ -601,7 +606,6 @@ unsigned int CALLBACK FXThread::execute(void* thread){
 // Start thread
 FXbool FXThread::start(unsigned long stacksize){
   DWORD thd;
-  if(tid){ fxerror("FXThread::start: already running.\n"); }
   tid=(FXThreadID)CreateThread(NULL,stacksize,(LPTHREAD_START_ROUTINE)FXThread::execute,this,0,&thd);
   return tid!=NULL;
   }

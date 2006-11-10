@@ -237,8 +237,8 @@ FXMat4d.cpp \
 FXMat3f.cpp \
 FXMat4f.cpp \
 FXMatrix.cpp \
-FXMemoryStream.cpp \
 FXMemMap.cpp \
+FXMemoryStream.cpp \
 FXMenuBar.cpp \
 FXMenuButton.cpp \
 FXMenuCaption.cpp \

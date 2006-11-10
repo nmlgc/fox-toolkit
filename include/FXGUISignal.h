@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXGUISignal.h,v 1.4 2005/01/28 14:05:36 fox Exp $                        *
+* $Id: FXGUISignal.h,v 1.4.2.1 2005/02/22 19:10:13 fox Exp $                        *
 ********************************************************************************/
 #ifndef FXGUISIGNAL_H
 #define FXGUISIGNAL_H
@@ -39,7 +39,7 @@ class FXApp;
 * thread from the blocking state and causes it to send the given message
 * to the GUI Signal object's target.
 */
-class FXGUISignal : public FXObject {
+class FXAPI FXGUISignal : public FXObject {
   FXDECLARE(FXGUISignal)
 private:
   FXApp     *app;       // Application

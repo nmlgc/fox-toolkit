@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXThread.h,v 1.34 2005/01/23 22:28:42 fox Exp $                          *
+* $Id: FXThread.h,v 1.34.2.1 2005/02/10 15:41:36 fox Exp $                          *
 ********************************************************************************/
 #ifndef FXTHREAD_H
 #define FXTHREAD_H
@@ -45,7 +45,7 @@ class FXCondition;
 class FXAPI FXMutex {
   friend class FXCondition;
 private:
-  FXuval data[13];
+  FXuval data[24];
 private:
   FXMutex(const FXMutex&);
   FXMutex &operator=(const FXMutex&);

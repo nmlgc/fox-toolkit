@@ -43,7 +43,7 @@ const ColorTheme ColorThemes[]={
 //|        Name        |        Base      |       Border     |       Back       |      Fore        |      Selback     |      Selfore     |      Tipback     |     Tipfore      |      Menuback    |      Menufore    |
 //|--------------------+------------------+------------------+------------------+------------------+------------------+------------------+------------------+------------------+------------------+------------------|
   {"FOX"               ,FXRGB(212,208,200),FXRGB(  0,  0,  0),FXRGB(255,255,255),FXRGB(  0,  0,  0),FXRGB( 10, 36,106),FXRGB(255,255,255),FXRGB(255,255,225),FXRGB(  0,  0,  0),FXRGB( 10, 36,106),FXRGB(255,255,255)},
-  {"Gnome"	       ,FXRGB(214,215,214),FXRGB(  0,  0,  0),FXRGB(255,255,255),FXRGB(  0,  0,  0),FXRGB(  0,  0,128),FXRGB(255,255,255),FXRGB(255,255,225),FXRGB(  0,  0,  0),FXRGB(  0,  0,128),FXRGB(255,255,255)},
+  {"Gnome"             ,FXRGB(214,215,214),FXRGB(  0,  0,  0),FXRGB(255,255,255),FXRGB(  0,  0,  0),FXRGB(  0,  0,128),FXRGB(255,255,255),FXRGB(255,255,225),FXRGB(  0,  0,  0),FXRGB(  0,  0,128),FXRGB(255,255,255)},
   {"Atlas Green"       ,FXRGB(175,180,159),FXRGB(  0,  0,  0),FXRGB(255,255,255),FXRGB(  0,  0,  0),FXRGB(111,122, 99),FXRGB(255,255,255),FXRGB(255,255,225),FXRGB(  0,  0,  0),FXRGB(111,122, 99),FXRGB(255,255,255)},
   {"BeOS"              ,FXRGB(217,217,217),FXRGB(  0,  0,  0),FXRGB(255,255,255),FXRGB(  0,  0,  0),FXRGB(168,168,168),FXRGB(  0,  0,  0),FXRGB(255,255,225),FXRGB(  0,  0,  0),FXRGB(168,168,168),FXRGB(  0,  0,  0)},
   {"Blue Slate"        ,FXRGB(239,239,239),FXRGB(  0,  0,  0),FXRGB(255,255,255),FXRGB(  0,  0,  0),FXRGB(103,141,178),FXRGB(255,255,255),FXRGB(255,255,225),FXRGB(  0,  0,  0),FXRGB(103,141,178),FXRGB(255,255,255)},
@@ -268,7 +268,7 @@ FXDEFMAP(FXDesktopSetup) FXDesktopSetupMap[]={
   FXMAPFUNC(SEL_CHANGED,FXDesktopSetup::ID_COLORS,FXDesktopSetup::onColorChanged),
   FXMAPFUNC(SEL_COMMAND,FXDesktopSetup::ID_COLOR_THEME,FXDesktopSetup::onColorTheme),
   FXMAPFUNC(SEL_COMMAND,FXDesktopSetup::ID_CHOOSE_FONT,FXDesktopSetup::onChooseFont),
-  FXMAPFUNC(SEL_SELECTED,FXDesktopSetup::ID_SELECT_FILEBINDING,FXDesktopSetup::onCmdFileBinding),
+  FXMAPFUNC(SEL_CHANGED,FXDesktopSetup::ID_SELECT_FILEBINDING,FXDesktopSetup::onCmdFileBinding),
   FXMAPFUNC(SEL_COMMAND,FXDesktopSetup::ID_SELECT_COMMAND,FXDesktopSetup::onCmdSelectCommand),
   FXMAPFUNC(SEL_COMMAND,FXDesktopSetup::ID_SELECT_MIMETYPE,FXDesktopSetup::onCmdMimeType),
   FXMAPFUNC(SEL_COMMAND,FXDesktopSetup::ID_CREATE_FILEBINDING,FXDesktopSetup::onCmdCreateFileBinding),
@@ -428,7 +428,6 @@ FXDesktopSetup::~FXDesktopSetup(){
 
 void FXDesktopSetup::create(){
   FXMainWindow::create();
-  filebindinglist->setCurrentItem(0,TRUE);
   }
 
 
@@ -655,7 +654,7 @@ void FXDesktopSetup::setup(){
   prefs = desktopsettings.find("FILETYPES");
   if(prefs){
     for(FXint e=prefs->first(); e<prefs->size(); e=prefs->next(e)){
-      filebindinglist->appendItem(prefs->key(e));
+      filebindinglist->appendItem(prefs->key(e),NULL,NULL,TRUE);
       data = prefs->data(e);
       mime = data.section(";",4);
       if (!mime.empty() && (mimetypelist->findItem(mime)==-1)){
@@ -951,6 +950,7 @@ static FXint findItemInList(FXList * list,FXListItem * item){
 
 
 void FXDesktopSetup::saveFileBinding(){
+  ///fxmessage("Saving File Binding: %s\n",filebinding.key.text());
   if (filebinding.key.empty()) return;
 
   FXString entry;
@@ -1160,7 +1160,6 @@ long FXDesktopSetup::onCmdSelectIcon(FXObject*,FXSelector sel,void*){
   opendialog.setSelectMode(SELECTFILE_EXISTING);
   opendialog.setFilename(name);
   opendialog.showImages(TRUE);
-  opendialog.setImageSize(64);
   if(opendialog.execute()){
     selected=opendialog.getFilename();
 //  if(!selected.empty()){
@@ -1212,7 +1211,7 @@ long FXDesktopSetup::onColorChanged(FXObject*,FXSelector,void*){
 
 
 long FXDesktopSetup::onColorTheme(FXObject*,FXSelector,void* ptr){
-  FXint theme=(FXint)ptr;
+  FXint theme=(FXint)(FXival)ptr;
   if(hascurrent){
     if(theme==0){
       base      = currenttheme.base;
@@ -1279,7 +1278,7 @@ long FXDesktopSetup::onChooseFont(FXObject*,FXSelector,void*){
 
 long FXDesktopSetup::onCmdClose(FXObject*,FXSelector,void*){
   FXint result = FXMessageBox::question(this,MBOX_SAVE_CANCEL_DONTSAVE,"Save Changes?","Do you want to save changes to the FOX Registry\nbefore closing?\n\nIf you don't save, your changes will be lost.");
-  if (result==MBOX_CLICKED_YES){
+  if (result==MBOX_CLICKED_SAVE){
     saveFileBinding();
     writeDesktop();
     return 0;
@@ -1350,11 +1349,11 @@ void FXDesktopSetup::setupFont(){
 
 
 void FXDesktopSetup::initColors(){
-  FXint scheme=-1;
+  FXint i,scheme=-1;
   hascurrent = FALSE;
 
   // Find the correct current scheme
-  for(FXint i=0;i<numThemes;i++){
+  for(i=0; i<numThemes; i++){
     if((base==ColorThemes[i].base) &&
        (border==ColorThemes[i].border) &&
        (back==ColorThemes[i].back) &&
@@ -1387,7 +1386,7 @@ void FXDesktopSetup::initColors(){
     scheme=0;
     }
 
-  for(FXint i=0;i<numThemes;i++){
+  for(i=0; i<numThemes; i++){
     list->appendItem(ColorThemes[i].name);
     }
 
