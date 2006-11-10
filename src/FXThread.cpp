@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXThread.cpp,v 1.53.2.7 2006/07/28 05:30:49 fox Exp $                    *
+* $Id: FXThread.cpp,v 1.53.2.8 2006/11/08 22:58:28 fox Exp $                    *
 ********************************************************************************/
 #ifdef WIN32
 #if _WIN32_WINNT < 0x0400
@@ -125,9 +125,11 @@ void FXMutex::unlock(){
 
 // Test if locked
 FXbool FXMutex::locked(){
-  if(pthread_mutex_trylock((pthread_mutex_t*)data)==EBUSY) return TRUE;
-  pthread_mutex_unlock((pthread_mutex_t*)data);
-  return FALSE;
+  if(pthread_mutex_trylock((pthread_mutex_t*)data)==0){
+    pthread_mutex_unlock((pthread_mutex_t*)data);
+    return false;
+    }
+  return true;
   }
 
 
@@ -553,10 +555,12 @@ void FXMutex::unlock(){
 // Test if locked
 FXbool FXMutex::locked(){
 #if(_WIN32_WINNT >= 0x0400)
-  if(TryEnterCriticalSection((CRITICAL_SECTION*)data)==0) return FALSE;
-  LeaveCriticalSection((CRITICAL_SECTION*)data);
+  if(TryEnterCriticalSection((CRITICAL_SECTION*)data)!=0){
+    LeaveCriticalSection((CRITICAL_SECTION*)data);
+    return false;
+    }
 #endif
-  return TRUE;
+  return true;
   }
 
 

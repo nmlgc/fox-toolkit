@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: fxdefs.h,v 1.178.2.1 2006/07/28 00:56:30 fox Exp $                           *
+* $Id: fxdefs.h,v 1.178.2.2 2006/11/09 23:21:43 fox Exp $                           *
 ********************************************************************************/
 #ifndef FXDEFS_H
 #define FXDEFS_H
@@ -131,10 +131,11 @@
 #endif
 
 
-// Templates with DLL linkage
+// Disable some warnings in VC++
 #ifdef _MSC_VER
 #pragma warning(disable: 4251)
 #pragma warning(disable: 4231)
+#pragma warning(disable: 4244)
 #endif
 
 // Checking printf and scanf format strings
