@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXTopWindow.cpp,v 1.175.2.2 2006/09/28 15:18:08 fox Exp $                    *
+* $Id: FXTopWindow.cpp,v 1.175.2.4 2006/12/11 17:27:20 fox Exp $                    *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -432,16 +432,18 @@ void FXTopWindow::place(FXuint placement){
   if((user32=LoadLibraryA("User32")) && (GetMonitorInfoA=reinterpret_cast<PFN_GETMONITORINFOA>(GetProcAddress(user32,"GetMonitorInfoA"))) && (MonitorFromRectA=reinterpret_cast<PFN_MONITORFROMRECTA>(GetProcAddress(user32,"MonitorFromRect")))){
     MONITORINFOEXA minfo;
     HMONITOR hMon;
-    if(placement == PLACEMENT_CURSOR){
-      // Use mouse position to select screen.
+    
+    // Use mouse position to select screen
+    if(placement!=PLACEMENT_OWNER){
       getRoot()->getCursorPosition(x,y,state);
       rect.left=x;
       rect.right=x+1;
       rect.top=y;
       rect.bottom=y+1;
       }
+      
+    // Use owner to select screen
     else{
-      // Use owner to select screen.
       over=getOwner()?getOwner():getRoot();
       over->translateCoordinatesTo(ox,oy,getRoot(),0,0);
       ow=over->getWidth();
@@ -451,6 +453,8 @@ void FXTopWindow::place(FXuint placement){
       rect.top=oy;
       rect.bottom=oy+oh;
       }
+      
+    // Get monitor info
     hMon=MonitorFromRectA(&rect,MONITOR_DEFAULTTOPRIMARY);
     memset(&minfo,0,sizeof(minfo));
     minfo.cbSize=sizeof(minfo);
@@ -511,8 +515,8 @@ void FXTopWindow::place(FXuint placement){
       // Adjust so dialog is fully visible
       if(wx<rx) wx=rx+10;
       if(wy<ry) wy=ry+10;
-      if(wx+ww>rw) wx=rw-ww-10;
-      if(wy+wh>rh) wy=rh-wh-10;
+      if(wx+ww>rx+rw) wx=rx+rw-ww-10;
+      if(wy+wh>ry+rh) wy=ry+rh-wh-10;
       break;
 
     // Place centered over the owner
@@ -535,8 +539,8 @@ void FXTopWindow::place(FXuint placement){
       // Adjust so dialog is fully visible
       if(wx<rx) wx=rx+10;
       if(wy<ry) wy=ry+10;
-      if(wx+ww>rw) wx=rw-ww-10;
-      if(wy+wh>rh) wy=rh-wh-10;
+      if(wx+ww>rx+rw) wx=rx+rw-ww-10;
+      if(wy+wh>ry+rh) wy=ry+rh-wh-10;
       break;
 
     // Place centered on the screen
@@ -553,8 +557,8 @@ void FXTopWindow::place(FXuint placement){
       // Adjust so dialog is fully visible
       if(wx<rx) wx=rx+10;
       if(wy<ry) wy=ry+10;
-      if(wx+ww>rw) wx=rw-ww-10;
-      if(wy+wh>rh) wy=rh-wh-10;
+      if(wx+ww>rx+rw) wx=rx+rw-ww-10;
+      if(wy+wh>ry+rh) wy=ry+rh-wh-10;
       break;
 
     // Place maximized

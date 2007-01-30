@@ -21,7 +21,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXApp.cpp,v 1.617.2.4 2006/10/02 12:36:47 fox Exp $                          *
+* $Id: FXApp.cpp,v 1.617.2.5 2006/11/20 15:55:18 fox Exp $                          *
 ********************************************************************************/
 #ifdef WIN32
 #if _WIN32_WINNT < 0x0400
@@ -1636,9 +1636,11 @@ bool FXApp::removeInput(FXInputHandle fd,FXuint mode){
     inputs[fd].excpt.message=0;
     FD_CLR(fd,(fd_set*)e_fds);
     }
-  while(0<=maxinput){                   // Limit number of fd's to test if possible
-    if(inputs[maxinput].read.target || inputs[maxinput].write.target || inputs[maxinput].excpt.target) break;
-    maxinput--;
+  if(fd==maxinput){
+    while(fd>=0 && !FD_ISSET(fd,(fd_set*)r_fds) && !FD_ISSET(fd,(fd_set*)w_fds) && !FD_ISSET(fd,(fd_set*)e_fds)){
+      --fd;
+      }
+    maxinput=fd;
     }
 #else
   register FXint in;
