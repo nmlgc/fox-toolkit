@@ -2576,8 +2576,8 @@ FXPoint.lo FXPoint.o : FXPoint.cpp ../include/xincs.h ../include/fxver.h \
 	../include/fxdefs.h fxpriv.h ../include/FXHash.h \
 	../include/FXStream.h ../include/FXSize.h ../include/FXPoint.h
 FXPopup.lo FXPopup.o : FXPopup.cpp ../include/xincs.h ../include/fxver.h \
-	../include/fxdefs.h ../include/fxkeys.h ../include/FXHash.h \
-	../include/FXThread.h ../include/FXStream.h \
+	../include/fxdefs.h fxpriv.h ../include/fxkeys.h \
+	../include/FXHash.h ../include/FXThread.h ../include/FXStream.h \
 	../include/FXString.h ../include/FXSize.h ../include/FXPoint.h \
 	../include/FXRectangle.h ../include/FXRegistry.h \
 	../include/FXSettings.h ../include/FXDict.h \
@@ -3292,8 +3292,8 @@ FXToolBarTab.lo FXToolBarTab.o : FXToolBarTab.cpp ../include/xincs.h \
 	../include/FXFrame.h ../include/FXWindow.h \
 	../include/FXDrawable.h
 FXToolTip.lo FXToolTip.o : FXToolTip.cpp ../include/xincs.h \
-	../include/fxver.h ../include/fxdefs.h ../include/FXHash.h \
-	../include/FXThread.h ../include/FXStream.h \
+	../include/fxver.h ../include/fxdefs.h fxpriv.h \
+	../include/FXHash.h ../include/FXThread.h ../include/FXStream.h \
 	../include/FXString.h ../include/FXSize.h ../include/FXPoint.h \
 	../include/FXRectangle.h ../include/FXRegistry.h \
 	../include/FXSettings.h ../include/FXDict.h \

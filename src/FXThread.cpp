@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXThread.cpp,v 1.53.2.10 2007/02/11 16:51:29 fox Exp $                    *
+* $Id: FXThread.cpp,v 1.53.2.11 2007/03/16 14:10:29 fox Exp $                    *
 ********************************************************************************/
 #ifdef WIN32
 #if _WIN32_WINNT < 0x0400
@@ -143,7 +143,7 @@ FXMutex::~FXMutex(){
 /*******************************************************************************/
 
 
-#ifdef APPLE
+#ifdef __APPLE__
 
 
 // Initialize semaphore

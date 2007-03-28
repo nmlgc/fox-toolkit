@@ -21,7 +21,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXApp.cpp,v 1.617.2.5 2006/11/20 15:55:18 fox Exp $                          *
+* $Id: FXApp.cpp,v 1.617.2.6 2007/03/28 16:47:00 fox Exp $                          *
 ********************************************************************************/
 #ifdef WIN32
 #if _WIN32_WINNT < 0x0400
@@ -2653,10 +2653,10 @@ bool FXApp::dispatchEvent(FXRawEvent& ev){
             se.xclient.window=XDefaultRootWindow((Display*)display);
             se.xclient.data.l[0]=ev.xclient.data.l[0];
             se.xclient.data.l[1]=ev.xclient.data.l[1];
-            se.xclient.data.l[2]=0;
+            se.xclient.data.l[2]=ev.xclient.data.l[2];
             se.xclient.data.l[3]=0;
             se.xclient.data.l[4]=0;
-            XSendEvent((Display*)display,se.xclient.window,True,NoEventMask,&se);
+            XSendEvent((Display*)display,se.xclient.window,False,SubstructureRedirectMask|SubstructureNotifyMask,&se);
             }
           }
 
