@@ -696,7 +696,7 @@ void* FXFont::match(const FXString& wantfamily,const FXString& wantforge,FXuint 
 
   // Open font
   font=XftFontOpenPattern(DISPLAY(getApp()),p);
-  xid=(unsigned long)p;
+  xid=(FXID)font;
 
   // Destroy pattern
   FcPatternDestroy(pattern);
@@ -1409,7 +1409,7 @@ void FXFont::create(){
 
       // Remember font id
       if(font){ xid=((XFontStruct*)font)->fid; }
-      
+
       // Uh-oh, we failed
       if(!xid){ throw FXFontException("unable to create font"); }
 

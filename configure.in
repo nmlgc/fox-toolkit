@@ -8,7 +8,7 @@ dnl Minor Library release number
 FOX_MINOR_VERSION=6
 
 dnl Increment after every source code change
-FOX_PATCH_LEVEL=25
+FOX_PATCH_LEVEL=26
 
 dnl Binaries compiled with this patchlevel of FOX will need at least
 dnl version MAJOR.MINOR.INTERFACE_VERSION to run. The assertion
@@ -194,7 +194,7 @@ dnl Check for XShape support
 AC_ARG_ENABLE(shape,[  --with-shape            enable XShape support])
 AC_MSG_RESULT([$with_shape])
 if test "x$with_shape" != "xno"; then
-AC_CHECK_HEADER(X11/extensions/shape.h,CXXFLAGS="${CXXFLAGS} -DHAVE_XSHAPE_H=1")
+AC_CHECK_HEADERS(X11/extensions/shape.h,CXXFLAGS="${CXXFLAGS} -DHAVE_XSHAPE_H=1",, [#include <X11/Xlib.h>])
 fi
 
 
@@ -203,7 +203,7 @@ AC_ARG_ENABLE(xshm,[  --with-xshm             compile with XShm support])
 AC_MSG_RESULT([$with_xshm])
 if test "x$with_xshm" != "xno"; then
 XSHM="-DHAVE_XSHM_H=1"
-AC_CHECK_HEADER(X11/extensions/XShm.h,,XSHM="")
+AC_CHECK_HEADERS(X11/extensions/XShm.h,,XSHM="", [#include <X11/Xlib.h>])
 AC_CHECK_HEADER(sys/ipc.h,,XSHM="")
 AC_CHECK_HEADER(sys/shm.h,,XSHM="")
 CXXFLAGS="${CXXFLAGS} ${XSHM}"
@@ -288,7 +288,7 @@ dnl Check for Xcursor support
 AC_ARG_WITH(xcursor,[  --with-xcursor          compile with Xcursor support])
 AC_MSG_RESULT([$with_xcursor])
 if test "x$with_xcursor" != "xno"; then
-AC_CHECK_HEADER(X11/Xcursor/Xcursor.h,CXXFLAGS="${CXXFLAGS} -DHAVE_XCURSOR_H=1"; X_BASE_LIBS="${X_BASE_LIBS} -lXcursor")
+AC_CHECK_HEADERS(X11/Xcursor/Xcursor.h,CXXFLAGS="${CXXFLAGS} -DHAVE_XCURSOR_H=1"; X_BASE_LIBS="${X_BASE_LIBS} -lXcursor",, [#include <X11/Xlib.h>])
 fi
 
 
@@ -296,7 +296,7 @@ dnl Check for XRandR support
 AC_ARG_WITH(xrandr,[  --with-xrandr           compile with XRandR support])
 AC_MSG_RESULT([$with_xrandr])
 if test "x$with_xrandr" != "xno"; then
-AC_CHECK_HEADER(X11/extensions/Xrandr.h,CXXFLAGS="${CXXFLAGS} -DHAVE_XRANDR_H=1"; X_BASE_LIBS="${X_BASE_LIBS} -lXrandr")
+AC_CHECK_HEADERS(X11/extensions/Xrandr.h,CXXFLAGS="${CXXFLAGS} -DHAVE_XRANDR_H=1"; X_BASE_LIBS="${X_BASE_LIBS} -lXrandr",, [#include <X11/Xlib.h>])
 fi
 
 
