@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXFont.cpp,v 1.184.2.2 2007/02/21 15:58:01 fox Exp $                         *
+* $Id: FXFont.cpp,v 1.184.2.3 2007/04/29 14:31:44 fox Exp $                         *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
