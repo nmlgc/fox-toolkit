@@ -267,7 +267,7 @@ long FX7Segment::onCmdSetRealValue(FXObject*,FXSelector,void* ptr){
 
 // Get value as string
 long FX7Segment::onCmdGetStringValue(FXObject*,FXSelector,void* ptr){
-  *((FXint*)ptr)=FXIntVal(label);
+  *((FXString*)ptr)=label;
   return 1;
   }
 
