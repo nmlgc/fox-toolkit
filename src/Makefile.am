@@ -269,7 +269,6 @@ FXICOIcon.cpp \
 FXICOImage.cpp \
 FXIFFIcon.cpp \
 FXIFFImage.cpp \
-FXIO.cpp \
 FXIcon.cpp \
 FXIconDict.cpp \
 FXIconList.cpp \
@@ -279,6 +278,7 @@ FXImage.cpp \
 FXImageFrame.cpp \
 FXImageView.cpp \
 FXInputDialog.cpp \
+FXIO.cpp \
 FXJPGIcon.cpp \
 FXJPGImage.cpp \
 FXKnob.cpp \

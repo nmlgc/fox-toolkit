@@ -366,7 +366,6 @@ FXICOIcon.cpp \
 FXICOImage.cpp \
 FXIFFIcon.cpp \
 FXIFFImage.cpp \
-FXIO.cpp \
 FXIcon.cpp \
 FXIconDict.cpp \
 FXIconList.cpp \
@@ -376,6 +375,7 @@ FXImage.cpp \
 FXImageFrame.cpp \
 FXImageView.cpp \
 FXInputDialog.cpp \
+FXIO.cpp \
 FXJPGIcon.cpp \
 FXJPGImage.cpp \
 FXKnob.cpp \
@@ -596,10 +596,10 @@ FXGLCube.lo FXGLCylinder.lo FXGLObject.lo FXGLShape.lo FXGLSphere.lo \
 FXGLTriangleMesh.lo FXGLViewer.lo FXGLVisual.lo FXGradientBar.lo \
 FXGroupBox.lo FXGUISignal.lo FXGZFileStream.lo FXHash.lo FXHeader.lo \
 FXHorizontalFrame.lo FXICOIcon.lo FXICOImage.lo FXIFFIcon.lo \
-FXIFFImage.lo FXIO.lo FXIcon.lo FXIconDict.lo FXIconList.lo \
-FXIconSource.lo FXId.lo FXImage.lo FXImageFrame.lo FXImageView.lo \
-FXInputDialog.lo FXJPGIcon.lo FXJPGImage.lo FXKnob.lo FXLabel.lo \
-FXList.lo FXListBox.lo FXMDIButton.lo FXMDIChild.lo FXMDIClient.lo \
+FXIFFImage.lo FXIcon.lo FXIconDict.lo FXIconList.lo FXIconSource.lo \
+FXId.lo FXImage.lo FXImageFrame.lo FXImageView.lo FXInputDialog.lo \
+FXIO.lo FXJPGIcon.lo FXJPGImage.lo FXKnob.lo FXLabel.lo FXList.lo \
+FXListBox.lo FXMDIButton.lo FXMDIChild.lo FXMDIClient.lo \
 FXMainWindow.lo FXMat3d.lo FXMat4d.lo FXMat3f.lo FXMat4f.lo FXMatrix.lo \
 FXMemMap.lo FXMemoryStream.lo FXMenuBar.lo FXMenuButton.lo \
 FXMenuCaption.lo FXMenuCascade.lo FXMenuCheck.lo FXMenuRadio.lo \
@@ -3316,7 +3316,8 @@ FXTopWindow.lo FXTopWindow.o : FXTopWindow.cpp ../include/xincs.h \
 	../include/FXMainWindow.h ../include/FXToolBar.h \
 	../include/FXDockBar.h ../include/FXPacker.h \
 	../include/FXToolBarGrip.h ../include/FXDockHandler.h \
-	../include/FXFrame.h
+	../include/FXFrame.h ../include/FX88591Codec.h \
+	../include/FXTextCodec.h
 FXTranslator.lo FXTranslator.o : FXTranslator.cpp ../include/xincs.h \
 	../include/fxver.h ../include/fxdefs.h ../include/FXHash.h \
 	../include/FXThread.h ../include/FXStream.h \
