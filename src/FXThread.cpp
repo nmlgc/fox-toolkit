@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXThread.cpp,v 1.53.2.11 2007/03/16 14:10:29 fox Exp $                    *
+* $Id: FXThread.cpp,v 1.53.2.12 2008/06/18 20:03:46 fox Exp $                   *
 ********************************************************************************/
 #ifdef WIN32
 #if _WIN32_WINNT < 0x0400
@@ -34,6 +34,9 @@
 #ifdef __APPLE__
 #ifdef Status
 #undef Status
+#endif
+#ifdef KeyClass
+#undef KeyClass
 #endif
 #include <CoreServices/CoreServices.h>
 #include <pthread.h>
