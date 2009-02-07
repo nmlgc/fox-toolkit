@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXWindow.cpp,v 1.341.2.2 2007/05/15 05:23:44 fox Exp $                       *
+* $Id: FXWindow.cpp,v 1.341.2.3 2009/01/14 10:41:48 fox Exp $                       *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -981,6 +981,7 @@ long FXWindow::onFocusSelf(FXObject*,FXSelector,void*){
 void FXWindow::createComposeContext(){
   if(!composeContext){
     composeContext=new FXComposeContext(getApp(),this,0);
+    composeContext->create();
     }
   }
 

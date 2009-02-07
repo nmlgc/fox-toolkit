@@ -19,8 +19,10 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: fxpriv.h,v 1.36.2.2 2007/03/07 14:30:27 fox Exp $                            *
+* $Id: fxpriv.h,v 1.36.2.3 2008/09/22 20:49:44 fox Exp $                            *
 ********************************************************************************/
+#ifndef FXPRIV_H
+#define FXPRIV_H
 
 namespace FX {
 
@@ -132,5 +134,6 @@ extern PFNMONITORFROMRECT fxMonitorFromRect;
 
 }
 
+#endif
 
 

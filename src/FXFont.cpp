@@ -19,7 +19,7 @@
 * License along with this library; if not, write to the Free Software           *
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.    *
 *********************************************************************************
-* $Id: FXFont.cpp,v 1.184.2.3 2007/04/29 14:31:44 fox Exp $                         *
+* $Id: FXFont.cpp,v 1.184.2.4 2009/02/06 03:01:27 fox Exp $                         *
 ********************************************************************************/
 #include "xincs.h"
 #include "fxver.h"
@@ -585,9 +585,9 @@ void* FXFont::match(const FXString& wantfamily,const FXString& wantforge,FXuint 
     FcPatternAddString(pattern,FC_FOUNDRY,(const FcChar8*)wantforge.text());
     }
 
-  // Set point size; work this back to a 75-dpi basis
+  // Set pixel size, based on given screen res and desired point size
   if(wantsize!=0){
-    FcPatternAddDouble(pattern,FC_SIZE,(res*wantsize)/750.0);
+    FcPatternAddDouble(pattern,FC_PIXEL_SIZE,(res*wantsize)/720.0);
     }
 
   // Set font weight
@@ -682,9 +682,9 @@ void* FXFont::match(const FXString& wantfamily,const FXString& wantforge,FXuint 
     flags=sc?(flags|FXFont::Scalable):(flags&~FXFont::Scalable);
     }
 
-  // Get point size; work back to deci-points for FOX
-  if(FcPatternGetDouble(p,FC_SIZE,0,&sz)==FcResultMatch){
-    actualSize=(int)((750.0*sz)/res);
+  // Get pixel size and work it back to deci-points using given screen res
+  if(FcPatternGetDouble(p,FC_PIXEL_SIZE,0,&sz)==FcResultMatch){
+    actualSize=(int)((720.0*sz)/res);
     }
 
   // Get charset
@@ -2194,7 +2194,7 @@ FXbool FXFont::listFonts(FXFontDesc*& fonts,FXuint& numfonts,const FXString& fac
   res=FXApp::instance()->reg().readUnsignedEntry("SETTINGS","screenres",100);
 
   // Build object set
-  objset=FcObjectSetBuild(FC_FAMILY,FC_FOUNDRY,FC_SPACING,FC_SCALABLE,FC_WIDTH,FC_SIZE,FC_WEIGHT,FC_SLANT,NULL);
+  objset=FcObjectSetBuild(FC_FAMILY,FC_FOUNDRY,FC_SPACING,FC_SCALABLE,FC_WIDTH,FC_WEIGHT,FC_SLANT,FC_PIXEL_SIZE,NULL);
   if(objset){
 
     // Create pattern object
@@ -2264,10 +2264,10 @@ FXbool FXFont::listFonts(FXFontDesc*& fonts,FXuint& numfonts,const FXString& fac
               if(pitch==FC_MONO || pitch==FC_CHARCELL) pitch=FXFont::Fixed;
               }
 
-            // Get point size; work back to deci-points for FOX
+            // Pixel size works for both bitmap and scalable fonts
             size=0;
-            if(FcPatternGetDouble(p,FC_SIZE,0,&points)==FcResultMatch){
-              size=(int)((750.0*points)/res);
+            if(FcPatternGetDouble(p,FC_PIXEL_SIZE,0,&points)==FcResultMatch){
+              size=(int)((720.0*points)/res);
               }
 
             // Get scalable flag
