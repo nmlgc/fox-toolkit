@@ -66,6 +66,7 @@ CPP = @CPP@
 CXX = @CXX@
 CXXCPP = @CXXCPP@
 DLLTOOL = @DLLTOOL@
+DSYMUTIL = @DSYMUTIL@
 ECHO = @ECHO@
 EGREP = @EGREP@
 EXEEXT = @EXEEXT@
@@ -78,13 +79,17 @@ GCJ = @GCJ@
 GCJFLAGS = @GCJFLAGS@
 GL_LIBS = @GL_LIBS@
 GL_TESTS = @GL_TESTS@
+HAVE_LIB = @HAVE_LIB@
+LIB = @LIB@
 LIBTOOL = @LIBTOOL@
 LN_S = @LN_S@
+LTLIB = @LTLIB@
 LT_AGE = @LT_AGE@
 LT_CURRENT = @LT_CURRENT@
 LT_RELEASE = @LT_RELEASE@
 LT_REVISION = @LT_REVISION@
 MAKEINFO = @MAKEINFO@
+NMEDIT = @NMEDIT@
 OBJDUMP = @OBJDUMP@
 OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
@@ -101,43 +106,10 @@ RESWRAP = $(top_builddir)/utils/reswrap
 SUFFIXES = .gif .bmp
 LDADD = $(top_builddir)/src/libFOX-1.6.la -lm
 
-EXTRA_PROGRAMS = \
-gltest \
-glviewer
+EXTRA_PROGRAMS =  gltest glviewer
 
 
-noinst_PROGRAMS = \
-expression \
-dctest \
-codecs \
-dialog \
-ControlPanel \
-groupbox \
-scribble \
-wizard \
-layout \
-rex \
-table \
-memmap \
-minheritance \
-bitmapviewer \
-imageviewer \
-button \
-datatarget \
-dirlist \
-foursplit \
-header \
-hello \
-hello2 \
-iconlist \
-image \
-mditest \
-shutter \
-splitter \
-switcher \
-tabbook \
-ratio \
-$(GL_TESTS)
+noinst_PROGRAMS =  expression dctest codecs dialog ControlPanel groupbox scribble wizard layout rex table memmap minheritance bitmapviewer imageviewer button datatarget dirlist foursplit header hello hello2 iconlist image mditest shutter splitter switcher tabbook ratio $(GL_TESTS)
 
 
 expression_SOURCES = expression.cpp
@@ -173,9 +145,7 @@ codecs_SOURCES = codecs.cpp
 dctest_SOURCES = dctest.cpp dippy.h
 ControlPanel_SOURCES = ControlPanel.cpp controlpanelicon.h
 
-EXTRA_DIST = Makefile.bc \
-             Makefile.wc \
-             Makefile.dmc
+EXTRA_DIST = Makefile.bc              Makefile.wc              Makefile.dmc
 
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_CLEAN_FILES = 
@@ -341,7 +311,7 @@ DIST_COMMON =  Makefile.am Makefile.in
 
 DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
 
-TAR = gtar
+TAR = tar
 GZIP_ENV = --best
 SOURCES = $(gltest_SOURCES) $(glviewer_SOURCES) $(expression_SOURCES) $(dctest_SOURCES) $(codecs_SOURCES) $(dialog_SOURCES) $(ControlPanel_SOURCES) $(groupbox_SOURCES) $(scribble_SOURCES) $(wizard_SOURCES) $(layout_SOURCES) $(rex_SOURCES) $(table_SOURCES) $(memmap_SOURCES) $(minheritance_SOURCES) $(bitmapviewer_SOURCES) $(imageviewer_SOURCES) $(button_SOURCES) $(datatarget_SOURCES) $(dirlist_SOURCES) $(foursplit_SOURCES) $(header_SOURCES) $(hello_SOURCES) $(hello2_SOURCES) $(iconlist_SOURCES) $(image_SOURCES) $(mditest_SOURCES) $(shutter_SOURCES) $(splitter_SOURCES) $(switcher_SOURCES) $(tabbook_SOURCES) $(ratio_SOURCES)
 OBJECTS = $(gltest_OBJECTS) $(glviewer_OBJECTS) $(expression_OBJECTS) $(dctest_OBJECTS) $(codecs_OBJECTS) $(dialog_OBJECTS) $(ControlPanel_OBJECTS) $(groupbox_OBJECTS) $(scribble_OBJECTS) $(wizard_OBJECTS) $(layout_OBJECTS) $(rex_OBJECTS) $(table_OBJECTS) $(memmap_OBJECTS) $(minheritance_OBJECTS) $(bitmapviewer_OBJECTS) $(imageviewer_OBJECTS) $(button_OBJECTS) $(datatarget_OBJECTS) $(dirlist_OBJECTS) $(foursplit_OBJECTS) $(header_OBJECTS) $(hello_OBJECTS) $(hello2_OBJECTS) $(iconlist_OBJECTS) $(image_OBJECTS) $(mditest_OBJECTS) $(shutter_OBJECTS) $(splitter_OBJECTS) $(switcher_OBJECTS) $(tabbook_OBJECTS) $(ratio_OBJECTS)
@@ -562,7 +532,7 @@ TAGS:  $(HEADERS) $(SOURCES)  $(TAGS_DEPENDENCIES) $(LISP)
 	  awk '    { files[$$0] = 1; } \
 	       END { for (i in files) print i; }'`; \
 	test -z "$(ETAGS_ARGS)$$unique$(LISP)$$tags" \
-	  || (cd $(srcdir) && etags $(ETAGS_ARGS) $$tags  $$unique $(LISP) -o $$here/TAGS)
+	  || (cd $(srcdir) && etags -o $$here/TAGS $(ETAGS_ARGS) $$tags  $$unique $(LISP))
 
 mostlyclean-tags:
 

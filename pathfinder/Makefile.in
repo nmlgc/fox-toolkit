@@ -66,6 +66,7 @@ CPP = @CPP@
 CXX = @CXX@
 CXXCPP = @CXXCPP@
 DLLTOOL = @DLLTOOL@
+DSYMUTIL = @DSYMUTIL@
 ECHO = @ECHO@
 EGREP = @EGREP@
 EXEEXT = @EXEEXT@
@@ -78,13 +79,17 @@ GCJ = @GCJ@
 GCJFLAGS = @GCJFLAGS@
 GL_LIBS = @GL_LIBS@
 GL_TESTS = @GL_TESTS@
+HAVE_LIB = @HAVE_LIB@
+LIB = @LIB@
 LIBTOOL = @LIBTOOL@
 LN_S = @LN_S@
+LTLIB = @LTLIB@
 LT_AGE = @LT_AGE@
 LT_CURRENT = @LT_CURRENT@
 LT_RELEASE = @LT_RELEASE@
 LT_REVISION = @LT_REVISION@
 MAKEINFO = @MAKEINFO@
+NMEDIT = @NMEDIT@
 OBJDUMP = @OBJDUMP@
 OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
@@ -105,67 +110,15 @@ bin_PROGRAMS = PathFinder
 
 man_MANS = PathFinder.1
 
-ICONS = \
-bigicons.bmp \
-closepanel.gif \
-clrbook.gif \
-copy.bmp \
-copyit.gif \
-cut.bmp \
-deleteit.bmp \
-desktop.bmp \
-details.bmp \
-dirup.bmp \
-enter.gif \
-file_gif.gif \
-foxbig.gif \
-foxmini.gif \
-goback.bmp \
-goforw.bmp \
-gotodir.bmp \
-home.gif \
-hosts.bmp \
-iconpath.gif \
-linkit.gif \
-location.gif \
-maphost.bmp \
-mimetype.gif \
-moveit.gif \
-paste.bmp \
-pattern_gif.gif \
-properties.bmp \
-quit_gif.gif \
-renameit.gif \
-rotateleft.gif \
-rotateright.gif \
-setbook.gif \
-setdir.gif \
-smallicons.bmp \
-unmaphost.bmp \
-work.gif
+ICONS =  bigicons.bmp closepanel.gif clrbook.gif copy.bmp copyit.gif cut.bmp deleteit.bmp desktop.bmp details.bmp dirup.bmp enter.gif file_gif.gif foxbig.gif foxmini.gif goback.bmp goforw.bmp gotodir.bmp home.gif hosts.bmp iconpath.gif linkit.gif location.gif maphost.bmp mimetype.gif moveit.gif paste.bmp pattern_gif.gif properties.bmp quit_gif.gif renameit.gif rotateleft.gif rotateright.gif setbook.gif setdir.gif smallicons.bmp unmaphost.bmp work.gif
 
 
-PathFinder_SOURCES = \
-icons.h \
-icons.cpp \
-CopyDialog.h \
-CopyDialog.cpp \
-PathFinder.cpp \
-PathFinder.h \
-Preferences.cpp \
-Preferences.h \
-PropertyDialog.cpp \
-PropertyDialog.h \
-LICENSE \
-$(ICONS)
+PathFinder_SOURCES =  icons.h icons.cpp CopyDialog.h CopyDialog.cpp PathFinder.cpp PathFinder.h Preferences.cpp Preferences.h PropertyDialog.cpp PropertyDialog.h LICENSE $(ICONS)
 
 
 CLEANFILES = icons.h icons.cpp
 
-EXTRA_DIST = $(man_MANS) \
-             Makefile.bc \
-             Makefile.wc \
-             Makefile.dmc
+EXTRA_DIST = $(man_MANS)              Makefile.bc              Makefile.wc              Makefile.dmc
 
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_CLEAN_FILES = 
@@ -204,7 +157,7 @@ DIST_COMMON =  Makefile.am Makefile.in
 
 DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
 
-TAR = gtar
+TAR = tar
 GZIP_ENV = --best
 SOURCES = $(PathFinder_SOURCES)
 OBJECTS = $(PathFinder_OBJECTS)
@@ -356,7 +309,7 @@ TAGS:  $(HEADERS) $(SOURCES)  $(TAGS_DEPENDENCIES) $(LISP)
 	  awk '    { files[$$0] = 1; } \
 	       END { for (i in files) print i; }'`; \
 	test -z "$(ETAGS_ARGS)$$unique$(LISP)$$tags" \
-	  || (cd $(srcdir) && etags $(ETAGS_ARGS) $$tags  $$unique $(LISP) -o $$here/TAGS)
+	  || (cd $(srcdir) && etags -o $$here/TAGS $(ETAGS_ARGS) $$tags  $$unique $(LISP))
 
 mostlyclean-tags:
 

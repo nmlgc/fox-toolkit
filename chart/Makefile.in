@@ -66,6 +66,7 @@ CPP = @CPP@
 CXX = @CXX@
 CXXCPP = @CXXCPP@
 DLLTOOL = @DLLTOOL@
+DSYMUTIL = @DSYMUTIL@
 ECHO = @ECHO@
 EGREP = @EGREP@
 EXEEXT = @EXEEXT@
@@ -78,13 +79,17 @@ GCJ = @GCJ@
 GCJFLAGS = @GCJFLAGS@
 GL_LIBS = @GL_LIBS@
 GL_TESTS = @GL_TESTS@
+HAVE_LIB = @HAVE_LIB@
+LIB = @LIB@
 LIBTOOL = @LIBTOOL@
 LN_S = @LN_S@
+LTLIB = @LTLIB@
 LT_AGE = @LT_AGE@
 LT_CURRENT = @LT_CURRENT@
 LT_RELEASE = @LT_RELEASE@
 LT_REVISION = @LT_REVISION@
 MAKEINFO = @MAKEINFO@
+NMEDIT = @NMEDIT@
 OBJDUMP = @OBJDUMP@
 OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
@@ -105,19 +110,15 @@ lib_LTLIBRARIES = libCHART-1.6.la
 
 libCHART_1_6_la_LIBADD = $(X_LIBS) $(X_BASE_LIBS) $(X_EXTRA_LIBS)
 
-libCHART_1_6_la_LDFLAGS = \
-        -version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)    \
-	-export-dynamic
+libCHART_1_6_la_LDFLAGS =          -version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)    	-export-dynamic
 
 
 chartincludedir = $(includedir)/fox-1.6/chart
 
-chartinclude_HEADERS = \
-FXChart.h
+chartinclude_HEADERS =  FXChart.h
 
 
-libCHART_1_6_la_SOURCES = \
-FXChart.cpp
+libCHART_1_6_la_SOURCES =  FXChart.cpp
 
 
 noinst_PROGRAMS = chart
@@ -167,7 +168,7 @@ DIST_COMMON =  Makefile.am Makefile.in
 
 DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
 
-TAR = gtar
+TAR = tar
 GZIP_ENV = --best
 SOURCES = $(libCHART_1_6_la_SOURCES) $(chart_SOURCES)
 OBJECTS = $(libCHART_1_6_la_OBJECTS) $(chart_OBJECTS)
@@ -307,7 +308,7 @@ TAGS:  $(HEADERS) $(SOURCES)  $(TAGS_DEPENDENCIES) $(LISP)
 	  awk '    { files[$$0] = 1; } \
 	       END { for (i in files) print i; }'`; \
 	test -z "$(ETAGS_ARGS)$$unique$(LISP)$$tags" \
-	  || (cd $(srcdir) && etags $(ETAGS_ARGS) $$tags  $$unique $(LISP) -o $$here/TAGS)
+	  || (cd $(srcdir) && etags -o $$here/TAGS $(ETAGS_ARGS) $$tags  $$unique $(LISP))
 
 mostlyclean-tags:
 

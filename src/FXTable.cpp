@@ -1880,7 +1880,7 @@ void FXTable::setItemFromControl(FXint r,FXint c,FXWindow *control){
 
 // Start to edit a cell
 void FXTable::startInput(FXint r,FXint c){
-  if(0<r && 0<c && !editor){
+  if(0<=r && 0<=c && !editor){
     editor=getControlForItem(r,c);
     if(editor){
       input.fm.row=startRow(r,c);
