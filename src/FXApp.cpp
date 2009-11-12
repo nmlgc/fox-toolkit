@@ -1392,7 +1392,7 @@ FXuint FXApp::remainingTimeout(FXObject *tgt,FXSelector sel){
       register FXlong now=FXThread::time();
       remaining=0;
       if(now<t->due){
-        remaining=(FXuint)(t->due-now);
+        remaining=(FXuint)((t->due-now)/1000000L);
         }
       break;
       }
