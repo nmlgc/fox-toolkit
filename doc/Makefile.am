@@ -52,7 +52,6 @@ screenshots.html \
 serialization.html \
 styles.css \
 timers.html \
-widgets.html \
 top.html \
 widgets.html \
 win32.html \

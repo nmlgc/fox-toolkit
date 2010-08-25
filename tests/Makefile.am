@@ -6,11 +6,6 @@ RESWRAP  = $(top_builddir)/utils/reswrap
 SUFFIXES = .gif .bmp
 LDADD = $(top_builddir)/src/libFOX-1.6.la -lm
 
-EXTRA_PROGRAMS	= \
-gltest \
-glviewer
-
-
 noinst_PROGRAMS	= \
 expression \
 dctest \
@@ -42,7 +37,8 @@ splitter \
 switcher \
 tabbook \
 ratio \
-$(GL_TESTS)
+gltest \
+glviewer
 
 expression_SOURCES      = expression.cpp
 wizard_SOURCES	        = wizard.cpp
@@ -76,7 +72,6 @@ button_SOURCES		= button.cpp
 codecs_SOURCES		= codecs.cpp
 dctest_SOURCES		= dctest.cpp dippy.h
 ControlPanel_SOURCES    = ControlPanel.cpp controlpanelicon.h
-
 
 
 EXTRA_DIST = Makefile.bc \
