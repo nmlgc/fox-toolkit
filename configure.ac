@@ -1,7 +1,7 @@
 # Version of the code
 m4_define([fox_major], [1])
 m4_define([fox_minor], [6])
-m4_define([fox_level], [40])
+m4_define([fox_level], [41])
 m4_define([fox_version],[fox_major.fox_minor.fox_level])
 
 # Init
@@ -273,8 +273,8 @@ AC_MSG_RESULT([$with_opengl])
 if test "x$with_opengl" != "xno" ; then
 AC_CHECK_HEADER(GL/glu.h,CXXFLAGS="${CXXFLAGS} -DHAVE_GLU_H=1"; LIBS="${LIBS} ${LIBGLU}")
 AC_CHECK_HEADER(GL/gl.h,CXXFLAGS="${CXXFLAGS} -DHAVE_GL_H=1"; LIBS="${LIBS} ${LIBGL}")
-fi
 GL_LIBS="${LIBGL} ${LIBGLU}"
+fi
 
 # Substitute variables in output files
 AC_SUBST(GL_LIBS)
