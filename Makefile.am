@@ -14,8 +14,8 @@ pkgconfig_DATA = fox.pc
 CLEANFILES = fox.tar.gz
 
 snapshot: dist-all
-	cp $(distdir).tar.gz /net/linky/mnt/ftp/pub/fox-snapshot.tar.gz
-	cp $(distdir).zip /net/linky/mnt/ftp/pub/fox-snapshot.zip
+	cp $(distdir).tar.gz /net/linkyftp/pub/fox-snapshot.tar.gz
+	cp $(distdir).zip /net/linkyftp/pub/fox-snapshot.zip
 
 
 
@@ -24,7 +24,7 @@ web: distdir
 	cp -r $(distdir)/doc/* /net/linky/mnt/html
 
 drop: dist-all
-	cp $(distdir).tar.gz /net/linky/
-	cp $(distdir).zip /net/linky/
+	cp $(distdir).tar.gz /net/linkyftp/pub/
+	cp $(distdir).zip /net/linkyftp/pub/
 
 

@@ -814,16 +814,16 @@ uninstall-am: uninstall-binSCRIPTS uninstall-pkgconfigDATA
 
 
 snapshot: dist-all
-	cp $(distdir).tar.gz /net/linky/mnt/ftp/pub/fox-snapshot.tar.gz
-	cp $(distdir).zip /net/linky/mnt/ftp/pub/fox-snapshot.zip
+	cp $(distdir).tar.gz /net/linkyftp/pub/fox-snapshot.tar.gz
+	cp $(distdir).zip /net/linkyftp/pub/fox-snapshot.zip
 
 web: distdir
 	cd $(distdir)/doc && doxygen doxygen.cfg
 	cp -r $(distdir)/doc/* /net/linky/mnt/html
 
 drop: dist-all
-	cp $(distdir).tar.gz /net/linky/
-	cp $(distdir).zip /net/linky/
+	cp $(distdir).tar.gz /net/linkyftp/pub/
+	cp $(distdir).zip /net/linkyftp/pub/
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

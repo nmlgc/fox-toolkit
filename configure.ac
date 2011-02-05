@@ -1,7 +1,7 @@
 # Version of the code
 m4_define([fox_major], [1])
 m4_define([fox_minor], [6])
-m4_define([fox_level], [42])
+m4_define([fox_level], [43])
 m4_define([fox_version],[fox_major.fox_minor.fox_level])
 
 # Init
@@ -84,6 +84,7 @@ AC_PATH_XTRA
 AC_HEADER_TIME
 AC_HEADER_SYS_WAIT
 AC_HEADER_DIRENT
+AC_FUNC_MMAP
 
 if test "$no_x" = yes; then
 X_BASE_LIBS="-lcomctl32 -lwsock32 -lwinspool -lmpr -lgdi32 -limm32"
