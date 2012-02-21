@@ -24,7 +24,7 @@ web: distdir
 	cp -r $(distdir)/doc/* /net/linky/mnt/html
 
 drop: dist-all
-	cp $(distdir).tar.gz /net/linkyftp/pub/
-	cp $(distdir).zip /net/linkyftp/pub/
+	cp $(distdir).tar.gz /net/webby/ftp/pub
+	cp $(distdir).zip /net/webby/ftp/pub
 
 

@@ -2904,7 +2904,7 @@ bool FXWindow::beginDrag(const FXDragType *types,FXuint numtypes){
     getApp()->xdndRect.w=0;
     getApp()->xdndRect.h=0;
 #else
-    getApp()->xdndTypes=CreateFileMappingA((HANDLE)0xFFFFFFFF,NULL,PAGE_READWRITE,0,(numtypes+1)*sizeof(FXDragType),"XdndTypeList");
+    getApp()->xdndTypes=CreateFileMappingA(INVALID_HANDLE_VALUE,NULL,PAGE_READWRITE,0,(numtypes+1)*sizeof(FXDragType),"XdndTypeList");
     if(getApp()->xdndTypes){
       FXDragType *dragtypes=(FXDragType*)MapViewOfFile(getApp()->xdndTypes,FILE_MAP_WRITE,0,0,0);
       if(dragtypes){
