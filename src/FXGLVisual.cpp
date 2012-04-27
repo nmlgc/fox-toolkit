@@ -692,7 +692,7 @@ void FXGLVisual::create(){
           }
 
         // Composition Support would be nice to have
-        if(!glcomposition) dmatch+=1;
+        if(!glcomposition) dmatch+=100;
 
         // Trace
         FXTRACE((150,"Pixel Format (%d) match value = %d\n",i,dmatch));
