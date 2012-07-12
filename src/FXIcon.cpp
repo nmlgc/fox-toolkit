@@ -113,7 +113,7 @@ static FXshort guessthresh(const FXColor *data,FXint width,FXint height){
   for(j=765,cum=0; j>0; --j){
     if((cum+=frequency[j])>=med) break;
     }
-  guess=(i+j+1)>>1;
+  guess=((i+j+1)>>1)+1;               // Fanglin Zhu: raise threshold by one in case of single-color image
   return guess;
   }
 
@@ -240,7 +240,7 @@ void FXIcon::render(){
 
       // Guess threshold
       thresh=guessthresh(data,width,height);
-      
+
       // Get Visual
       vis=(Visual*)visual->visual;
 
