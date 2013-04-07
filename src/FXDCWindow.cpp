@@ -2190,12 +2190,12 @@ void FXDCWindow::updatePen(){
       if(stipple){
         lb.lbStyle=BS_PATTERN;
         lb.lbColor=devfg;
-        lb.lbHatch=(LONG)stipple->id();    // This should be a HBITMAP
+        lb.lbHatch=(FXuval)stipple->id();    // This should be a HBITMAP
         }
       else if(pattern>=STIPPLE_0 && pattern<=STIPPLE_16){
         lb.lbStyle=BS_PATTERN;
         lb.lbColor=devfg;
-        lb.lbHatch=(LONG)getApp()->stipples[pattern];
+        lb.lbHatch=(FXuval)getApp()->stipples[pattern];
         }
       else{
         lb.lbStyle=BS_HATCHED;
@@ -2207,12 +2207,12 @@ void FXDCWindow::updatePen(){
       if(stipple){
         lb.lbStyle=BS_PATTERN;
         lb.lbColor=devfg;
-        lb.lbHatch=(LONG)stipple->id();    // This should be a HBITMAP
+        lb.lbHatch=(FXuval)stipple->id();    // This should be a HBITMAP
         }
       else if(pattern>=STIPPLE_0 && pattern<=STIPPLE_16){
         lb.lbStyle=BS_PATTERN;
         lb.lbColor=devfg;
-        lb.lbHatch=(LONG)getApp()->stipples[pattern];
+        lb.lbHatch=(FXuval)getApp()->stipples[pattern];
         }
       else{
         lb.lbStyle=BS_HATCHED;
@@ -2310,12 +2310,12 @@ void FXDCWindow::updateBrush(){
       if(stipple){
         lb.lbStyle=BS_PATTERN;
         lb.lbColor=devfg;
-        lb.lbHatch=(LONG)stipple->id();     // This should be a HBITMAP
+        lb.lbHatch=(FXuval)stipple->id();     // This should be a HBITMAP
         }
       else if(pattern>=STIPPLE_0 && pattern<=STIPPLE_16){
         lb.lbStyle=BS_PATTERN;
         lb.lbColor=devfg;
-        lb.lbHatch=(LONG)getApp()->stipples[pattern];
+        lb.lbHatch=(FXuval)getApp()->stipples[pattern];
         }
       else{
         lb.lbStyle=BS_HATCHED;
@@ -2328,12 +2328,12 @@ void FXDCWindow::updateBrush(){
       if(stipple){
         lb.lbStyle=BS_PATTERN;
         lb.lbColor=devfg;
-        lb.lbHatch=(LONG)stipple->id();     // This should be a HBITMAP
+        lb.lbHatch=(FXuval)stipple->id();     // This should be a HBITMAP
         }
       else if(pattern>=STIPPLE_0 && pattern<=STIPPLE_16){
         lb.lbStyle=BS_PATTERN;
         lb.lbColor=devfg;
-        lb.lbHatch=(LONG)getApp()->stipples[pattern];
+        lb.lbHatch=(FXuval)getApp()->stipples[pattern];
         }
       else{
         lb.lbStyle=BS_HATCHED;

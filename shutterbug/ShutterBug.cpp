@@ -633,7 +633,7 @@ long ShutterBug::onClipboardLost(FXObject* sender,FXSelector sel,void* ptr){
 // Somebody wants our selection
 long ShutterBug::onClipboardRequest(FXObject* sender,FXSelector sel,void* ptr){
   FXEvent *event=(FXEvent*)ptr;
-  unsigned long size;
+  FXuval size;
   FXuchar *data;
 
   FXTRACE((1,"%s::onClipboardRequest \n",getClassName()));

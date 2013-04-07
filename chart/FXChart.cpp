@@ -359,7 +359,7 @@ long FXChart::onClipboardLost(FXObject*,FXSelector,void*){
 // Request for clipboard data
 long FXChart::onClipboardRequest(FXObject *sender,FXSelector sel,void *ptr){
   FXEvent *event=(FXEvent*)ptr;
-  unsigned long size;
+  FXuval size;
   FXuchar *data;
 
   // Try handling it in base class first

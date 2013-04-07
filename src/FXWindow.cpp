@@ -3060,7 +3060,7 @@ bool FXWindow::handleDrag(FXint x,FXint y,FXDragAction action){
 
 #else
 
-    FXuint version=0;
+    FXuval version=0;
     FXbool forcepos=FALSE;
     POINT point;
     HWND window;
@@ -3070,7 +3070,7 @@ bool FXWindow::handleDrag(FXint x,FXint y,FXDragAction action){
     point.y=y;
     window=WindowFromPoint(point);      // FIXME wrong for disabled windows
     while(window){
-      version=(FXuint)GetProp(window,(LPCTSTR)MAKELONG(getApp()->xdndAware,0));
+      version=(FXuval)GetProp(window,(LPCTSTR)MAKELONG(getApp()->xdndAware,0));
       if(version) break;
       window=GetParent(window);
       }

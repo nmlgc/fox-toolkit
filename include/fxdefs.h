@@ -388,6 +388,9 @@ typedef long long              FXlong;
 #if defined(_MSC_VER) && defined(_WIN64)
 typedef __int64                FXival;
 typedef unsigned __int64       FXuval;
+#elif defined(__GNUC__) && defined(_WIN64)
+typedef long long              FXival;
+typedef unsigned long long     FXuval;
 #else
 typedef long                   FXival;
 typedef unsigned long          FXuval;
