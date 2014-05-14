@@ -31,7 +31,7 @@ DEFINES   = -DFOX_BIGENDIAN=0 -DNDEBUG -D_WINDOWS -DWIN32 -DUNICODE -DHAVE_GL_H 
 LD	  = wcl386
 LDFLAGS   = -l=nt_win -x # -x = case sensitive
 INCDIRS   = -I$(TOPDIR)\include
-FOXLIB    = $(TOPDIR)\src\FOX-1.5.lib $(%WATCOM)\lib386\nt\comctl32.lib $(%WATCOM)\lib386\nt\wsock32.lib
+FOXLIB    = $(TOPDIR)\src\FOX-1.6.lib $(%WATCOM)\lib386\nt\comctl32.lib $(%WATCOM)\lib386\nt\wsock32.lib
 RESWRAP   = $(TOPDIR)\utils\reswrap.exe
 
 PROGRAMS  = PathFinder.exe

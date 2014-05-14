@@ -218,7 +218,8 @@ bool FXStat::statFile(const FXString& file,FXStat& info){
       if(data.dwFileAttributes&FILE_ATTRIBUTE_HIDDEN) info.modeFlags|=FXIO::Hidden;
       if(data.dwFileAttributes&FILE_ATTRIBUTE_READONLY) info.modeFlags&=~(FXIO::OwnerWrite|FXIO::GroupWrite|FXIO::OtherWrite);
       if(data.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY) info.modeFlags|=FXIO::Directory|FXIO::OwnerWrite|FXIO::GroupWrite|FXIO::OtherWrite; else info.modeFlags|=FXIO::File;
-      if(::SHGetFileInfoW(buffer,0,&sfi,sizeof(SHFILEINFO),SHGFI_EXETYPE)==0) info.modeFlags&=~(FXIO::OwnerExec|FXIO::GroupExec|FXIO::OtherExec);
+      //if(::SHGetFileInfoW(buffer,0,&sfi,sizeof(SHFILEINFO),SHGFI_EXETYPE)==0) info.modeFlags&=~(FXIO::OwnerExec|FXIO::GroupExec|FXIO::OtherExec);
+      if(comparecase(&file[file.length()-4],".exe")!=0) info.modeFlags&=~(FXIO::OwnerExec|FXIO::GroupExec|FXIO::OtherExec);
       info.userNumber=0;
       info.groupNumber=0;
       info.accessTime=fxfiletime(data.ftLastAccessTime);
@@ -235,7 +236,8 @@ bool FXStat::statFile(const FXString& file,FXStat& info){
       if(data.dwFileAttributes&FILE_ATTRIBUTE_HIDDEN) info.modeFlags|=FXIO::Hidden;
       if(data.dwFileAttributes&FILE_ATTRIBUTE_READONLY) info.modeFlags&=~(FXIO::OwnerWrite|FXIO::GroupWrite|FXIO::OtherWrite);
       if(data.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY) info.modeFlags|=FXIO::Directory|FXIO::OwnerWrite|FXIO::GroupWrite|FXIO::OtherWrite; else info.modeFlags|=FXIO::File;
-      if(::SHGetFileInfoA(file.text(),0,&sfi,sizeof(SHFILEINFO),SHGFI_EXETYPE)==0) info.modeFlags&=~(FXIO::OwnerExec|FXIO::GroupExec|FXIO::OtherExec);
+      //if(::SHGetFileInfoA(file.text(),0,&sfi,sizeof(SHFILEINFO),SHGFI_EXETYPE)==0) info.modeFlags&=~(FXIO::OwnerExec|FXIO::GroupExec|FXIO::OtherExec);
+      if(comparecase(&file[file.length()-4],".exe")!=0) info.modeFlags&=~(FXIO::OwnerExec|FXIO::GroupExec|FXIO::OtherExec);
       info.userNumber=0;
       info.groupNumber=0;
       info.accessTime=fxfiletime(data.ftLastAccessTime);
@@ -294,7 +296,8 @@ bool FXStat::statLink(const FXString& file,FXStat& info){
       if(data.dwFileAttributes&FILE_ATTRIBUTE_HIDDEN) info.modeFlags|=FXIO::Hidden;
       if(data.dwFileAttributes&FILE_ATTRIBUTE_READONLY) info.modeFlags&=~(FXIO::OwnerWrite|FXIO::GroupWrite|FXIO::OtherWrite);
       if(data.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY) info.modeFlags|=FXIO::Directory|FXIO::OwnerWrite|FXIO::GroupWrite|FXIO::OtherWrite; else info.modeFlags|=FXIO::File;
-      if(::SHGetFileInfoW(buffer,0,&sfi,sizeof(SHFILEINFO),SHGFI_EXETYPE)==0) info.modeFlags&=~(FXIO::OwnerExec|FXIO::GroupExec|FXIO::OtherExec);
+      //if(::SHGetFileInfoW(buffer,0,&sfi,sizeof(SHFILEINFO),SHGFI_EXETYPE)==0) info.modeFlags&=~(FXIO::OwnerExec|FXIO::GroupExec|FXIO::OtherExec);
+      if(comparecase(&file[file.length()-4],".exe")!=0) info.modeFlags&=~(FXIO::OwnerExec|FXIO::GroupExec|FXIO::OtherExec);
       info.userNumber=0;
       info.groupNumber=0;
       info.accessTime=fxfiletime(data.ftLastAccessTime);
@@ -311,7 +314,8 @@ bool FXStat::statLink(const FXString& file,FXStat& info){
       if(data.dwFileAttributes&FILE_ATTRIBUTE_HIDDEN) info.modeFlags|=FXIO::Hidden;
       if(data.dwFileAttributes&FILE_ATTRIBUTE_READONLY) info.modeFlags&=~(FXIO::OwnerWrite|FXIO::GroupWrite|FXIO::OtherWrite);
       if(data.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY) info.modeFlags|=FXIO::Directory|FXIO::OwnerWrite|FXIO::GroupWrite|FXIO::OtherWrite; else info.modeFlags|=FXIO::File;
-      if(::SHGetFileInfoA(file.text(),0,&sfi,sizeof(SHFILEINFO),SHGFI_EXETYPE)==0) info.modeFlags&=~(FXIO::OwnerExec|FXIO::GroupExec|FXIO::OtherExec);
+      //if(::SHGetFileInfoA(file.text(),0,&sfi,sizeof(SHFILEINFO),SHGFI_EXETYPE)==0) info.modeFlags&=~(FXIO::OwnerExec|FXIO::GroupExec|FXIO::OtherExec);
+      if(comparecase(&file[file.length()-4],".exe")!=0) info.modeFlags&=~(FXIO::OwnerExec|FXIO::GroupExec|FXIO::OtherExec);
       info.userNumber=0;
       info.groupNumber=0;
       info.accessTime=fxfiletime(data.ftLastAccessTime);
