@@ -2008,7 +2008,7 @@ bool FXApp::getNextEvent(FXRawEvent& ev,bool blocking){
           if(in.write.target && in.write.target->tryHandle(this,FXSEL(SEL_IO_WRITE,in.write.message),(void*)(FXival)fff)) refresh();
           }
         if(FD_ISSET(fff,&exceptfds)){
-          if(in.excpt.target && in.excpt.target->tryHandle(this,FXSEL(SEL_IO_EXCEPT,in.read.message),(void*)(FXival)fff)) refresh();
+          if(in.excpt.target && in.excpt.target->tryHandle(this,FXSEL(SEL_IO_EXCEPT,in.excpt.message),(void*)(FXival)fff)) refresh();
           }
         }
       }

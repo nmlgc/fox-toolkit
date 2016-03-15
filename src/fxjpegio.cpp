@@ -218,8 +218,21 @@ bool fxloadJPG(FXStream& store,FXColor*& data,FXint& width,FXint& height,FXint&)
   // read the header from the jpg;
   jpeg_read_header(&srcinfo,TRUE);
 
-  // make sure the output is RGB
-  srcinfo.out_color_space=JCS_RGB;
+  // output format supported by libjpeg-9a
+  switch (srcinfo.jpeg_color_space) {
+    case JCS_GRAYSCALE: // 1
+    case JCS_RGB:       // 2
+    case JCS_YCbCr:     // 3
+      srcinfo.out_color_space=JCS_RGB;
+      break;
+    case JCS_CMYK:      // 4
+    case JCS_YCCK:      // 5
+      // jpeglib can't convert to rgb
+      srcinfo.out_color_space=JCS_CMYK;
+      break;
+    default:
+    return false;
+    }
 
   jpeg_start_decompress(&srcinfo);
 
@@ -243,20 +256,48 @@ bool fxloadJPG(FXStream& store,FXColor*& data,FXint& width,FXint& height,FXint&)
 
   // Read the jpeg data
   pp=data;
+  int color = srcinfo.out_color_space;
   while(srcinfo.output_scanline<srcinfo.output_height){
     jpeg_read_scanlines(&srcinfo,buffer,1);
     qq=buffer[0];
-    for(FXint i=0; i<width; i++,pp++){
-      ((FXuchar*)pp)[0]=*qq++;
-      ((FXuchar*)pp)[1]=*qq++;
-      ((FXuchar*)pp)[2]=*qq++;
-      ((FXuchar*)pp)[3]=255;
+//    for(FXint i=0; i<width; i++,pp++){
+//      ((FXuchar*)pp)[0]=*qq++;
+//      ((FXuchar*)pp)[1]=*qq++;
+//      ((FXuchar*)pp)[2]=*qq++;
+//      ((FXuchar*)pp)[3]=255;
+//      }
+    if(color==JCS_RGB){
+      for(FXint i=0; i<width; i++,pp++){
+        ((FXuchar*)pp)[0]=*qq++;
+        ((FXuchar*)pp)[1]=*qq++;
+        ((FXuchar*)pp)[2]=*qq++;
+        ((FXuchar*)pp)[3]=255;
+        }
+      }
+    else{
+      for(FXint i=0; i<width; i++,pp++){
+        if(qq[3]==255){
+          // No black
+          ((FXuchar*)pp)[0] = qq[0];
+          ((FXuchar*)pp)[1] = qq[1];
+          ((FXuchar*)pp)[2] = qq[2];
+          }
+        else{
+          // Approximated CMYK -> RGB
+          ((FXuchar*)pp)[0]=qq[0] * qq[3] / 255;
+          ((FXuchar*)pp)[1]=qq[1] * qq[3] / 255;
+          ((FXuchar*)pp)[2]=qq[2] * qq[3] / 255;
+          }
+        ((FXuchar*)pp)[3]=255;
+        qq+=4;
+        }
       }
     }
 
   // Clean up
   jpeg_finish_decompress(&srcinfo);
   jpeg_destroy_decompress(&srcinfo);
+
   FXFREE(&buffer[0]);
   return true;
   }

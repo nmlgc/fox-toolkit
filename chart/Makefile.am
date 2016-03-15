@@ -8,7 +8,7 @@ LDADD	 =  libCHART-1.6.la $(top_builddir)/src/libFOX-1.6.la -lm
 
 lib_LTLIBRARIES = libCHART-1.6.la
 
-libCHART_1_6_la_LIBADD  = $(X_LIBS) $(X_BASE_LIBS) $(X_EXTRA_LIBS)
+libCHART_1_6_la_LIBADD  = $(X_LIBS) $(X_BASE_LIBS) $(X_EXTRA_LIBS) $(top_builddir)/src/libFOX-1.6.la
 
 libCHART_1_6_la_LDFLAGS = \
         -version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)    \
