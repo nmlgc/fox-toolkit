@@ -2335,31 +2335,48 @@ FXStream& operator>>(FXStream& store,FXString& s){              // Note stream f
   return store;
   }
 
+#ifdef WIN32
+#ifndef va_copy
+#define va_copy(arg,list) ((arg)=(list))
+#endif
+#endif
 
 // Print formatted string a-la vprintf
 FXString& FXString::vformat(const FXchar* fmt,va_list args){
-  register FXint len=0;
+  FXint result=0;
   if(fmt && *fmt){
-    register FXint n=strlen(fmt);       // Result is longer than format string
-#if defined(WIN32) || defined(HAVE_VSNPRINTF)
-//    va_list a;
-//    n+=128;                             // Add a bit of slop
-//x:  length(n);
-//    va_copy(a,args);
-//    len=vsnprintf(str,n+1,fmt,a);
-//    if(len<0){ n<<=1; goto x; }         // Some implementations return -1 if not enough room
-//    if(n<len){ n=len; goto x; }         // Others return how much space would be needed
-    n+=1024;                            // Add a lot of slop
-    length(n);                          // Some implementations return -1 if not enough room
-    len=vsnprintf(str,n+1,fmt,args);    // Others return how much space would be needed
+#if (_MSC_VER > 1300)                   // Have _vscprintf()
+    va_list ag;
+    va_copy(ag,args);
+    result=_vscprintf(fmt,ag);
+    va_end(ag);
+    length(result);
+    vsnprintf(str,length()+1,fmt,args);
+#elif defined(HAVE_VSNPRINTF)           // Have vsnprintf()
+#if (__GLIBC__ > 2) || ((__GLIBC__ == 2) && (__GLIBC_MINOR__ >= 1))
+    va_list ag;
+    va_copy(ag,args);
+    result=vsnprintf(str,length(),fmt,ag);
+    va_end(ag);
+    if(length()<=result){
+      length(result);
+      result=vsnprintf(str,length()+1,fmt,args);
+      }
 #else
-    n+=1024;                            // Add a lot of slop
-    length(n);
-    len=vsprintf(str,fmt,args);
+    va_list ag;
+x:  va_copy(ag,args);
+    result=vsnprintf(str,length()+1,fmt,a);
+    va_end(ag);
+    if(result<0){ length(FXMAX(64,length()*2)); goto x; }
+    if(length()<result){ length(result); goto x; }
 #endif
-    FXASSERT(0<=len && len<=n);
+#else                                   // No vsnprintf()
+    length(strlen(fmt)+1024);
+    result=vsprintf(str,fmt,args);
+    FXASSERT(0<=result && result<=length());
+#endif
     }
-  length(len);
+  length(result);
   return *this;
   }
 

@@ -366,7 +366,7 @@ private:
   static void imcreatecallback(void*,FXApp*,void*);
   static void imdestroycallback(void*,FXApp*,void*);
 #else
-  static FXival CALLBACK wndproc(FXID hwnd,FXuint iMsg,FXuval wParam,FXival lParam); 
+  static FXival CALLBACK wndproc(FXID hwnd,FXuint iMsg,FXuval wParam,FXival lParam);
 protected:
   virtual FXival dispatchEvent(FXID hwnd,FXuint iMsg,FXuval wParam,FXival lParam);
 #endif
@@ -515,12 +515,12 @@ public:
   * of the message handler. If a chore with the same target and message
   * already exists, it will be rescheduled.
   */
-  void addChore(FXObject* tgt,FXSelector sel,void *ptr=NULL);
+  void* addChore(FXObject* tgt,FXSelector sel,void *ptr=NULL);
 
   /**
   * Remove idle processing message identified by tgt and sel.
   */
-  void removeChore(FXObject* tgt,FXSelector sel);
+  void* removeChore(FXObject* tgt,FXSelector sel);
 
   /**
   * Return TRUE if given chore has been set

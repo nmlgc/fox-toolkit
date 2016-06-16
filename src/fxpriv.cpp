@@ -605,7 +605,7 @@ void FXApp::dragdropGetTypes(const FXWindow*,FXDragType*& types,FXuint& numtypes
 static BOOL WINAPI MyGetMonitorInfo(HANDLE monitor,MYMONITORINFO* minfo){
   HINSTANCE hUser32;
   PFNGETMONITORINFO gmi;
-  if((hUser32=GetModuleHandleA("USER32")) && (gmi=(PFNGETMONITORINFO)GetProcAddress(hUser32,"GetMonitorInfoA"))){
+  if((hUser32=GetModuleHandleA("USER32"))!=NULL && (gmi=(PFNGETMONITORINFO)GetProcAddress(hUser32,"GetMonitorInfoA"))!=NULL){
     fxGetMonitorInfo=gmi;
     return fxGetMonitorInfo(monitor,minfo);
     }
@@ -617,7 +617,7 @@ static BOOL WINAPI MyGetMonitorInfo(HANDLE monitor,MYMONITORINFO* minfo){
 static HANDLE WINAPI MyMonitorFromRect(RECT* rect,DWORD flags){
   HINSTANCE hUser32;
   PFNMONITORFROMRECT mfr;
-  if((hUser32=GetModuleHandleA("USER32")) && (mfr=(PFNMONITORFROMRECT)GetProcAddress(hUser32,"MonitorFromRect"))){
+  if((hUser32=GetModuleHandleA("USER32"))!=NULL && (mfr=(PFNMONITORFROMRECT)GetProcAddress(hUser32,"MonitorFromRect"))!=NULL){
     fxMonitorFromRect=mfr;
     return fxMonitorFromRect(rect,flags);
     }

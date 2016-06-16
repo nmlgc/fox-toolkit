@@ -131,13 +131,6 @@
 #endif
 
 
-// Disable some warnings in VC++
-#ifdef _MSC_VER
-#pragma warning(disable: 4251)
-#pragma warning(disable: 4231)
-#pragma warning(disable: 4244)
-#endif
-
 // Checking printf and scanf format strings
 #if defined(_CC_GNU_) || defined(__GNUG__) || defined(__GNUC__)
 #define FX_PRINTF(fmt,arg) __attribute__((format(printf,fmt,arg)))

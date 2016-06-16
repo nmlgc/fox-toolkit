@@ -873,8 +873,8 @@ web: distdir
 	cp -r $(distdir)/doc/* /net/linky/mnt/html
 
 drop: dist-all
-	cp $(distdir).tar.gz /net/webby/ftp/pub
-	cp $(distdir).zip /net/webby/ftp/pub
+	cp $(distdir).tar.gz /home/site/ftp/pub
+	cp $(distdir).zip /home/site/ftp/pub
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

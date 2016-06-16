@@ -669,6 +669,7 @@ void FXOptionMenu::setCurrent(FXOption *win,FXbool notify){
     if(win){
       setText(current->getText());
       setIcon(current->getIcon());
+      setTextColor(current->getTextColor());
       }
     else{
       setText(FXString::null);
@@ -709,6 +710,7 @@ void FXOptionMenu::setMenu(FXPopup *pup){
       if(win){
         setText(win->getText());
         setIcon(win->getIcon());
+        setTextColor(win->getTextColor());
         }
       current=win;
       }

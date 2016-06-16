@@ -1511,10 +1511,11 @@ void FXApp::removeSignal(FXint sig){
 
 
 // Add chore to the END of the list
-void FXApp::addChore(FXObject* tgt,FXSelector sel,void *ptr){
+void* FXApp::addChore(FXObject* tgt,FXSelector sel,void *ptr){
+  register void* result=NULL;
   register FXChore *c,**cc;
   for(cc=&chores; (c=*cc)!=NULL; cc=&c->next){
-    if(c->target==tgt && c->message==sel){ *cc=c->next; goto a; }
+    if(c->target==tgt && c->message==sel){ *cc=c->next; result=c->data; goto a; }
     }
   if(chorerecs){
     c=chorerecs;
@@ -1529,18 +1530,21 @@ a:c->data=ptr;
   for(cc=&chores; *cc; cc=&(*cc)->next);
   c->next=NULL;
   *cc=c;
+  return result;
   }
 
 
 // Remove chore identified by tgt and sel from the list
-void FXApp::removeChore(FXObject* tgt,FXSelector sel){
+void* FXApp::removeChore(FXObject* tgt,FXSelector sel){
+  register void* result=NULL;
   register FXChore *c,**cc;
   for(cc=&chores; (c=*cc)!=NULL; cc=&c->next){
     if(c->target==tgt && c->message==sel){
-      *cc=c->next; c->next=chorerecs; chorerecs=c;
+      *cc=c->next; result=c->data; c->next=chorerecs; chorerecs=c;
       break;
       }
     }
+  return result;
   }
 
 

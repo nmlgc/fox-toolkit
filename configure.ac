@@ -1,7 +1,7 @@
 # Version of the code
 m4_define([fox_major], [1])
 m4_define([fox_minor], [6])
-m4_define([fox_level], [51])
+m4_define([fox_level], [52])
 m4_define([fox_version],[fox_major.fox_minor.fox_level])
 
 # Init
@@ -190,7 +190,7 @@ AC_ARG_WITH(xft,[  --with-xft              enable Xft support])
 AC_MSG_RESULT([$with_xft])
 if test "x$with_xft" != "xno"; then
 XFTCFLAGS="-I/usr/include/freetype2"
-XFTLIBS="-lfreetype -lXft"
+XFTLIBS="-lfreetype -lfontconfig -lXft"
 saved_cppflags="${CXXFLAGS}"
 CXXFLAGS="${CXXFLAGS} -DHAVE_XFT_H=1 $XFTCFLAGS"
 X_BASE_LIBS="${X_BASE_LIBS} $XFTLIBS"
