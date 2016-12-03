@@ -1,9 +1,9 @@
 /********************************************************************************
 *                                                                               *
-*                        O p e n G L   C o n e    O b j e c t                   *
+*                           O p e n G L   O b j e c t                           *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1999,2016 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1998,2016 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or modify          *
 * it under the terms of the GNU Lesser General Public License as published by   *
@@ -18,57 +18,45 @@
 * You should have received a copy of the GNU Lesser General Public License      *
 * along with this program.  If not, see <http://www.gnu.org/licenses/>          *
 ********************************************************************************/
-#ifndef FXGLCONE_H
-#define FXGLCONE_H
-
-#ifndef FXGLSHAPE_H
-#include "FXGLShape.h"
-#endif
-
-namespace FX {
+#ifndef FXGLLINE_H
+#define FXGLLINE_H
 
 
-/// OpenGL Cone Object
-class FXAPI FXGLCone : public FXGLShape {
-  FXDECLARE(FXGLCone)
+/// OpenGL Line Object
+class FXAPI FXGLLine : public FXGLObject {
+  FXDECLARE(FXGLLine)
 public:
-  FXfloat height;
-  FXfloat radius;
-protected:
-  FXGLCone();
-  virtual void drawshape(FXGLViewer* viewer);
+  FXGLPoint fm,to;
 public:
 
-  /// Construct with specified origin, height and radius
-  FXGLCone(FXfloat x,FXfloat y,FXfloat z,FXfloat h=1.0f,FXfloat r=1.0f);
-
-  /// Construct with specified origin, height, radius and material
-  FXGLCone(FXfloat x,FXfloat y,FXfloat z,FXfloat h,FXfloat r,const FXMaterial& mtl);
+  /// Default constructor
+  FXGLLine();
 
   /// Copy constructor
-  FXGLCone(const FXGLCone& orig);
+  FXGLLine(const FXGLLine& orig);
+
+  /// Construct with specified endpoints
+  FXGLLine(FXfloat fx,FXfloat fy,FXfloat fz,FXfloat tx,FXfloat ty,FXfloat tz);
+
+  /// Called by the viewer to get bounds for this object
+  virtual void bounds(FXRangef& box);
+
+  /// Draw this object in a viewer
+  virtual void draw(FXGLViewer* viewer);
 
   /// Copy this object
   virtual FXGLObject* copy();
 
-  /// Change radius
-  virtual void setRadius(FXfloat r);
-  FXfloat getRadius() const { return radius; }
-
-  /// Change height
-  virtual void setHeight(FXfloat h);
-  FXfloat getHeight() const { return height; }
+  /// Draw this object for hit-testing purposes
+  virtual void hit(FXGLViewer* viewer);
 
   /// Save to a stream
   virtual void save(FXStream& store) const;
 
   /// Load from a stream
   virtual void load(FXStream& store);
-
-  /// Destroy
-  virtual ~FXGLCone();
   };
 
-}
 
 #endif
+

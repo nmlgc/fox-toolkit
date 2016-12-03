@@ -1,6 +1,6 @@
 /********************************************************************************
 *                                                                               *
-*                      O p e n G L   C o n e   O b j e c t                      *
+*                      O p e n G L   C y l i n d e r   O b j e c t              *
 *                                                                               *
 *********************************************************************************
 * Copyright (C) 1999,2016 by Jeroen van der Zijp.   All Rights Reserved.        *
@@ -18,34 +18,11 @@
 * You should have received a copy of the GNU Lesser General Public License      *
 * along with this program.  If not, see <http://www.gnu.org/licenses/>          *
 ********************************************************************************/
-#include "xincs.h"
-#include "fxver.h"
-#include "fxdefs.h"
-#include "fxmath.h"
-#include "FXArray.h"
-#include "FXHash.h"
-#include "FXMutex.h"
-#include "FXStream.h"
-#include "FXVec2f.h"
-#include "FXVec3f.h"
-#include "FXVec4f.h"
-#include "FXQuatf.h"
-#include "FXMat4f.h"
-#include "FXRangef.h"
-#include "FXString.h"
-#include "FXSize.h"
-#include "FXPoint.h"
-#include "FXRectangle.h"
-#include "FXStringDictionary.h"
-#include "FXSettings.h"
-#include "FXRegistry.h"
-#include "FXAccelTable.h"
-#include "FXObjectList.h"
-#include "FXEvent.h"
-#include "FXWindow.h"
-#include "FXApp.h"
-#include "FXGLViewer.h"
-#include "FXGLCone.h"
+#include "fx.h"
+#include "fx3d.h"
+#include "FXGLShape.h"
+#include "FXGLCylinder.h"
+
 
 // GLU versions prior to 1.1 have GLUquadric
 #if !defined(GLU_VERSION_1_1) && !defined(GLU_VERSION_1_2) && !defined(GLU_VERSION_1_3)
@@ -53,52 +30,49 @@
 #endif
 
 
-// Cone fidelity
-#define FXGLCONE_SLICES_NUMBER		20
-#define FXGLCONE_STACKS_NUMBER		20
-#define FXGLCONE_LOOPS			4
-
-using namespace FX;
+// Cylinder fidelity
+#define FXGLCYLINDER_SLICES_NUMBER		20
+#define FXGLCYLINDER_STACKS_NUMBER		20
+#define FXGLCYLINDER_LOOPS			4
 
 /*******************************************************************************/
 
-namespace FX {
-
 // Object implementation
-FXIMPLEMENT(FXGLCone,FXGLShape,NULL,0)
+FXIMPLEMENT(FXGLCylinder,FXGLShape,NULL,0)
 
 
-// Create cone
-FXGLCone::FXGLCone():height(1.0f),radius(1.0f){
-  FXTRACE((100,"FXGLCone::FXGLCone\n"));
+// Create cylinder
+FXGLCylinder::FXGLCylinder():height(1.0f),radius(1.0f){
+  FXTRACE((100,"FXGLCylinder::FXGLCylinder\n"));
   range.set(-radius,radius,0.0f,height,-radius,radius);
   }
 
 
-// Create cone
-FXGLCone::FXGLCone(FXfloat x,FXfloat y,FXfloat z,FXfloat h,FXfloat r):FXGLShape(x,y,z,SHADING_SMOOTH|STYLE_SURFACE),height(h),radius(r){
-  FXTRACE((100,"FXGLCone::FXGLCone\n"));
+// Create initialized cylinder
+FXGLCylinder::FXGLCylinder(FXfloat x,FXfloat y,FXfloat z,FXfloat h,FXfloat r):
+  FXGLShape(x,y,z,SHADING_SMOOTH|STYLE_SURFACE),height(h),radius(r){
+  FXTRACE((100,"FXGLCylinder::FXGLCylinder\n"));
   range.set(-radius,radius,0.0f,height,-radius,radius);
   }
 
 
-// Create cone
-FXGLCone::FXGLCone(FXfloat x,FXfloat y,FXfloat z,FXfloat h, FXfloat r,const FXMaterial& mtl):FXGLShape(x,y,z,SHADING_SMOOTH|STYLE_SURFACE,mtl,mtl),height(h),radius(r){
-  FXTRACE((100,"FXGLCone::FXGLCone\n"));
+// Create initialized cylinder
+FXGLCylinder::FXGLCylinder(FXfloat x,FXfloat y,FXfloat z,FXfloat h,FXfloat r,const FXMaterial& mtl):
+  FXGLShape(x,y,z,SHADING_SMOOTH|STYLE_SURFACE,mtl,mtl),height(h),radius(r){
+  FXTRACE((100,"FXGLCylinder::FXGLCylinder\n"));
   range.set(-radius,radius,0.0f,height,-radius,radius);
   }
 
 
 // Copy constructor
-FXGLCone::FXGLCone(const FXGLCone& orig):FXGLShape(orig){
-  FXTRACE((100,"FXGLCone::FXGLCone\n"));
+FXGLCylinder::FXGLCylinder(const FXGLCylinder& orig):FXGLShape(orig){
+  FXTRACE((100,"FXGLCylinder::FXGLCylinder\n"));
   height=orig.height;
   radius=orig.radius;
   }
 
-
 // Change radius
-void FXGLCone::setRadius(FXfloat r){
+void FXGLCylinder::setRadius(FXfloat r){
   if(radius!=r){
     range.lower.x=range.lower.z=-r;
     range.upper.x=range.upper.z= r;
@@ -108,7 +82,7 @@ void FXGLCone::setRadius(FXfloat r){
 
 
 // Change height
-void FXGLCone::setHeight(FXfloat h){
+void FXGLCylinder::setHeight(FXfloat h){
   if(height!=h){
     range.upper.y=h;
     height=h;
@@ -117,48 +91,52 @@ void FXGLCone::setHeight(FXfloat h){
 
 
 // Draw
-void FXGLCone::drawshape(FXGLViewer*){
+void FXGLCylinder::drawshape(FXGLViewer*){
 #ifdef HAVE_GL_H
   GLUquadricObj* quad=gluNewQuadric();
   gluQuadricDrawStyle(quad,(GLenum)GLU_FILL);
   /*
-    gluQuadricNormals(quad,(GLenum)GLU_SMOOTH);
-    gluQuadricOrientation(quad,(GLenum)GLU_OUTSIDE);
+    gluQuadricNormals(quad,GLU_SMOOTH);
+    gluQuadricOrientation(quad,GLU_OUTSIDE);
   */
   glPushMatrix();
   glRotatef(-90.0f,1.0f,0.0f,0.0f);
-  gluCylinder(quad,radius,0,height,FXGLCONE_SLICES_NUMBER,FXGLCONE_STACKS_NUMBER);
+  gluCylinder(quad,radius,radius,height,FXGLCYLINDER_SLICES_NUMBER,FXGLCYLINDER_STACKS_NUMBER);
+
   gluQuadricOrientation(quad,(GLenum)GLU_INSIDE);
-  gluDisk(quad,0,radius,FXGLCONE_SLICES_NUMBER,FXGLCONE_LOOPS);
-  gluDeleteQuadric(quad);
+  gluDisk(quad,0,radius,FXGLCYLINDER_SLICES_NUMBER,FXGLCYLINDER_LOOPS);
+
+  glTranslatef(0.0f,0.0f,height);
+  gluQuadricOrientation(quad,(GLenum)GLU_OUTSIDE);
+  gluDisk(quad,0,radius,FXGLCYLINDER_SLICES_NUMBER,FXGLCYLINDER_LOOPS);
   glPopMatrix();
+  gluDeleteQuadric(quad);
 #endif
   }
 
 
 // Copy this object
-FXGLObject* FXGLCone::copy(){
-  return new FXGLCone(*this);
+FXGLObject* FXGLCylinder::copy(){
+  return new FXGLCylinder(*this);
   }
 
 
 // Save object to stream
-void FXGLCone::save(FXStream& store) const {
+void FXGLCylinder::save(FXStream& store) const {
   FXGLShape::save(store);
   store << height << radius;
   }
 
 
 // Load object from stream
-void FXGLCone::load(FXStream& store){
+void FXGLCylinder::load(FXStream& store){
   FXGLShape::load(store);
   store >> height >> radius;
   }
 
 
 // Destroy
-FXGLCone::~FXGLCone(){
-  FXTRACE((100,"FXGLCone::~FXGLCone\n"));
+FXGLCylinder::~FXGLCylinder(){
+  FXTRACE((100,"FXGLCylinder::~FXGLCylinder\n"));
   }
 
-}

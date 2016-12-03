@@ -1,6 +1,6 @@
 /********************************************************************************
 *                                                                               *
-*                     O p e n G L   C y l i n d e r    O b j e c t              *
+*                        O p e n G L   C u b e    O b j e c t                   *
 *                                                                               *
 *********************************************************************************
 * Copyright (C) 1999,2016 by Jeroen van der Zijp.   All Rights Reserved.        *
@@ -18,46 +18,45 @@
 * You should have received a copy of the GNU Lesser General Public License      *
 * along with this program.  If not, see <http://www.gnu.org/licenses/>          *
 ********************************************************************************/
-#ifndef FXGLCYLINDER_H
-#define FXGLCYLINDER_H
-
-#ifndef FXGLSHAPE_H
-#include "FXGLShape.h"
-#endif
-
-namespace FX {
+#ifndef FXGLCUBE_H
+#define FXGLCUBE_H
 
 
-/// OpenGL Cylinder Object
-class FXAPI FXGLCylinder : public FXGLShape {
-  FXDECLARE(FXGLCylinder)
+/// OpenGL Cube Object
+class FXGLCube : public FXGLShape {
+  FXDECLARE(FXGLCube)
 public:
+  FXfloat width;
   FXfloat height;
-  FXfloat radius;
+  FXfloat depth;
 protected:
-  FXGLCylinder();
+  FXGLCube();
   virtual void drawshape(FXGLViewer* viewer);
 public:
 
-  /// Construct with specified origin, height and radius
-  FXGLCylinder(FXfloat x,FXfloat y,FXfloat z,FXfloat h=1.0f, FXfloat r=1.0f);
+  /// Construct with specified origin, width, height and depth
+  FXGLCube(FXfloat x,FXfloat y,FXfloat z,FXfloat w=1.0f,FXfloat h=1.0f,FXfloat d=1.0f);
 
-  /// Construct with specified origin, height, radius and material
-  FXGLCylinder(FXfloat x,FXfloat y,FXfloat z,FXfloat h,FXfloat r,const FXMaterial& mtl);
+  /// Construct with specified origin, width, height, depth and material
+  FXGLCube(FXfloat x,FXfloat y,FXfloat z,FXfloat w,FXfloat h,FXfloat d,const FXMaterial& mtl);
 
   /// Copy constructor
-  FXGLCylinder(const FXGLCylinder& orig);
+  FXGLCube(const FXGLCube& orig);
 
   /// Copy this object
   virtual FXGLObject* copy();
 
-  /// Change radius
-  virtual void setRadius(FXfloat r);
-  FXfloat getRadius() const { return radius; }
+  /// Change width
+  virtual void setWidth(FXfloat w);
+  FXfloat getWidth() const { return width; }
 
   /// Change height
   virtual void setHeight(FXfloat h);
   FXfloat getHeight() const { return height; }
+
+  /// Change depth
+  virtual void setDepth(FXfloat d);
+  FXfloat getDepth() const { return depth; }
 
   /// Save to a stream
   virtual void save(FXStream& store) const;
@@ -65,9 +64,9 @@ public:
   /// Load from a stream
   virtual void load(FXStream& store);
 
-  virtual ~FXGLCylinder();
+  /// Destroy
+  virtual ~FXGLCube();
   };
 
-}
 
 #endif

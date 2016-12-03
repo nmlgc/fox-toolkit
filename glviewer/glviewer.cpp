@@ -7,7 +7,13 @@
 ********************************************************************************/
 #include "fx.h"
 #include "fx3d.h"
-#include <stdio.h>
+#include "FXGLShape.h"
+#include "FXGLPoint.h"
+#include "FXGLLine.h"
+#include "FXGLCone.h"
+#include "FXGLSphere.h"
+#include "FXGLCube.h"
+#include "FXGLCylinder.h"
 
 
 #ifdef HAVE_GL_H

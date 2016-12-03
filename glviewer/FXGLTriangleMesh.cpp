@@ -18,34 +18,9 @@
 * You should have received a copy of the GNU Lesser General Public License      *
 * along with this program.  If not, see <http://www.gnu.org/licenses/>          *
 ********************************************************************************/
-#include "xincs.h"
-#include "fxver.h"
-#include "fxdefs.h"
-#include "fxmath.h"
-#include "FXArray.h"
-#include "FXHash.h"
-#include "FXMutex.h"
-#include "FXElement.h"
-#include "FXStream.h"
-#include "FXVec2f.h"
-#include "FXVec3f.h"
-#include "FXVec4f.h"
-#include "FXQuatf.h"
-#include "FXMat4f.h"
-#include "FXRangef.h"
-#include "FXString.h"
-#include "FXSize.h"
-#include "FXPoint.h"
-#include "FXRectangle.h"
-#include "FXStringDictionary.h"
-#include "FXSettings.h"
-#include "FXRegistry.h"
-#include "FXAccelTable.h"
-#include "FXObjectList.h"
-#include "FXEvent.h"
-#include "FXWindow.h"
-#include "FXApp.h"
-#include "FXGLViewer.h"
+#include "fx.h"
+#include "fx3d.h"
+#include "FXGLShape.h"
 #include "FXGLTriangleMesh.h"
 
 
@@ -64,11 +39,7 @@
     it spit out smooth normals based on mesh connectivity.
 */
 
-using namespace FX;
-
 /*******************************************************************************/
-
-namespace FX {
 
 // Object implementation
 FXIMPLEMENT(FXGLTriangleMesh,FXGLShape,NULL,0)
@@ -279,4 +250,3 @@ FXGLTriangleMesh::~FXGLTriangleMesh(){
   freeElms(textureBuffer);
   }
 
-}

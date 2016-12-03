@@ -1,9 +1,9 @@
 /********************************************************************************
 *                                                                               *
-*                   O p e n G L   S p h e r e   O b j e c t                     *
+*                        O p e n G L   C o n e    O b j e c t                   *
 *                                                                               *
 *********************************************************************************
-* Copyright (C) 1998,2016 by Jeroen van der Zijp.   All Rights Reserved.        *
+* Copyright (C) 1999,2016 by Jeroen van der Zijp.   All Rights Reserved.        *
 *********************************************************************************
 * This library is free software; you can redistribute it and/or modify          *
 * it under the terms of the GNU Lesser General Public License as published by   *
@@ -18,40 +18,29 @@
 * You should have received a copy of the GNU Lesser General Public License      *
 * along with this program.  If not, see <http://www.gnu.org/licenses/>          *
 ********************************************************************************/
-#ifndef FXGLSPHERE_H
-#define FXGLSPHERE_H
-
-#ifndef FXGLSHAPE_H
-#include "FXGLShape.h"
-#endif
-
-namespace FX {
+#ifndef FXGLCONE_H
+#define FXGLCONE_H
 
 
-/// OpenGL Sphere Object
-class FXAPI FXGLSphere : public FXGLShape {
-  FXDECLARE(FXGLSphere)
+/// OpenGL Cone Object
+class FXGLCone : public FXGLShape {
+  FXDECLARE(FXGLCone)
 public:
-  FXfloat radius;   // Radius of sphere
-  FXint   slices;   // Longitudinal subdivision
-  FXint   stacks;   // Latitudinal subdivision
+  FXfloat height;
+  FXfloat radius;
 protected:
-  FXGLSphere();
+  FXGLCone();
   virtual void drawshape(FXGLViewer* viewer);
 public:
-  enum {
-    ID_LAST=FXGLShape::ID_LAST
-    };
-public:
 
-  /// Construct with specified origin and radius
-  FXGLSphere(FXfloat x,FXfloat y,FXfloat z,FXfloat r=1.0f);
+  /// Construct with specified origin, height and radius
+  FXGLCone(FXfloat x,FXfloat y,FXfloat z,FXfloat h=1.0f,FXfloat r=1.0f);
 
-  /// Construct with specified origin, radius and material
-  FXGLSphere(FXfloat x,FXfloat y,FXfloat z,FXfloat r,const FXMaterial& mtl);
+  /// Construct with specified origin, height, radius and material
+  FXGLCone(FXfloat x,FXfloat y,FXfloat z,FXfloat h,FXfloat r,const FXMaterial& mtl);
 
   /// Copy constructor
-  FXGLSphere(const FXGLSphere& orig);
+  FXGLCone(const FXGLCone& orig);
 
   /// Copy this object
   virtual FXGLObject* copy();
@@ -60,13 +49,9 @@ public:
   virtual void setRadius(FXfloat r);
   FXfloat getRadius() const { return radius; }
 
-  /// Change slices
-  void setSlices(FXint s){ slices=s; }
-  FXint getSlices() const { return slices; }
-
-  /// Change stacks
-  void setStacks(FXint s){ stacks=s; }
-  FXint getStacks() const { return stacks; }
+  /// Change height
+  virtual void setHeight(FXfloat h);
+  FXfloat getHeight() const { return height; }
 
   /// Save to a stream
   virtual void save(FXStream& store) const;
@@ -75,9 +60,8 @@ public:
   virtual void load(FXStream& store);
 
   /// Destroy
-  virtual ~FXGLSphere();
+  virtual ~FXGLCone();
   };
 
-}
 
 #endif

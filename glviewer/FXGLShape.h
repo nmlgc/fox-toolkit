@@ -21,17 +21,6 @@
 #ifndef FXGLSHAPE_H
 #define FXGLSHAPE_H
 
-#ifndef FXGLOBJECT_H
-#include "FXGLObject.h"
-#endif
-
-namespace FX {
-
-
-class FXGLViewer;
-class FXGLObject;
-
-
 // Shape drawing options
 enum {
   SURFACE_SINGLESIDED   = 0,              // Single-sided [both sides same]
@@ -150,8 +139,6 @@ public:
   /// Load shape from a stream
   virtual void load(FXStream& store);
   };
-
-}
 
 #endif
 

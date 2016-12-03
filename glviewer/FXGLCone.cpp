@@ -1,6 +1,6 @@
 /********************************************************************************
 *                                                                               *
-*                      O p e n G L   S p h e r e   O b j e c t                  *
+*                      O p e n G L   C o n e   O b j e c t                      *
 *                                                                               *
 *********************************************************************************
 * Copyright (C) 1999,2016 by Jeroen van der Zijp.   All Rights Reserved.        *
@@ -18,35 +18,10 @@
 * You should have received a copy of the GNU Lesser General Public License      *
 * along with this program.  If not, see <http://www.gnu.org/licenses/>          *
 ********************************************************************************/
-#include "xincs.h"
-#include "fxver.h"
-#include "fxdefs.h"
-#include "fxmath.h"
-#include "FXArray.h"
-#include "FXHash.h"
-#include "FXMutex.h"
-#include "FXStream.h"
-#include "FXVec2f.h"
-#include "FXVec3f.h"
-#include "FXVec4f.h"
-#include "FXQuatf.h"
-#include "FXMat4f.h"
-#include "FXRangef.h"
-#include "FXString.h"
-#include "FXSize.h"
-#include "FXPoint.h"
-#include "FXRectangle.h"
-#include "FXStringDictionary.h"
-#include "FXSettings.h"
-#include "FXRegistry.h"
-#include "FXAccelTable.h"
-#include "FXObjectList.h"
-#include "FXEvent.h"
-#include "FXWindow.h"
-#include "FXApp.h"
-#include "FXGLViewer.h"
-#include "FXGLSphere.h"
-
+#include "fx.h"
+#include "fx3d.h"
+#include "FXGLShape.h"
+#include "FXGLCone.h"
 
 // GLU versions prior to 1.1 have GLUquadric
 #if !defined(GLU_VERSION_1_1) && !defined(GLU_VERSION_1_2) && !defined(GLU_VERSION_1_3)
@@ -54,105 +29,107 @@
 #endif
 
 
-// Sphere fidelity
-#define SPHERE_SLICES  20
-#define SPHERE_STACKS  20
+// Cone fidelity
+#define FXGLCONE_SLICES_NUMBER		20
+#define FXGLCONE_STACKS_NUMBER		20
+#define FXGLCONE_LOOPS			4
 
-using namespace FX;
 
 /*******************************************************************************/
 
-namespace FX {
-
 // Object implementation
-FXIMPLEMENT(FXGLSphere,FXGLShape,NULL,0)
+FXIMPLEMENT(FXGLCone,FXGLShape,NULL,0)
 
 
-// Create sphere
-FXGLSphere::FXGLSphere(void):radius(0.5f),slices(SPHERE_SLICES),stacks(SPHERE_STACKS){
-  FXTRACE((100,"FXGLSphere::FXGLSphere\n"));
-  range.set(-radius,radius,-radius,radius,-radius,radius);
+// Create cone
+FXGLCone::FXGLCone():height(1.0f),radius(1.0f){
+  FXTRACE((100,"FXGLCone::FXGLCone\n"));
+  range.set(-radius,radius,0.0f,height,-radius,radius);
   }
 
 
-// Create initialized sphere
-FXGLSphere::FXGLSphere(FXfloat x,FXfloat y,FXfloat z,FXfloat r):
-  FXGLShape(x,y,z,SHADING_SMOOTH|STYLE_SURFACE),radius(r),slices(SPHERE_SLICES),stacks(SPHERE_STACKS){
-  FXTRACE((100,"FXGLSphere::FXGLSphere\n"));
-  range.set(-radius,radius,-radius,radius,-radius,radius);
+// Create cone
+FXGLCone::FXGLCone(FXfloat x,FXfloat y,FXfloat z,FXfloat h,FXfloat r):FXGLShape(x,y,z,SHADING_SMOOTH|STYLE_SURFACE),height(h),radius(r){
+  FXTRACE((100,"FXGLCone::FXGLCone\n"));
+  range.set(-radius,radius,0.0f,height,-radius,radius);
   }
 
 
-// Create initialized sphere
-FXGLSphere::FXGLSphere(FXfloat x,FXfloat y,FXfloat z,FXfloat r,const FXMaterial& mtl):
-  FXGLShape(x,y,z,SHADING_SMOOTH|STYLE_SURFACE,mtl,mtl),radius(r),slices(SPHERE_SLICES),stacks(SPHERE_STACKS){
-  FXTRACE((100,"FXGLSphere::FXGLSphere\n"));
-  range.set(-radius,radius,-radius,radius,-radius,radius);
+// Create cone
+FXGLCone::FXGLCone(FXfloat x,FXfloat y,FXfloat z,FXfloat h, FXfloat r,const FXMaterial& mtl):FXGLShape(x,y,z,SHADING_SMOOTH|STYLE_SURFACE,mtl,mtl),height(h),radius(r){
+  FXTRACE((100,"FXGLCone::FXGLCone\n"));
+  range.set(-radius,radius,0.0f,height,-radius,radius);
   }
 
 
 // Copy constructor
-FXGLSphere::FXGLSphere(const FXGLSphere& orig):FXGLShape(orig){
-  FXTRACE((100,"FXGLSphere::FXGLSphere\n"));
+FXGLCone::FXGLCone(const FXGLCone& orig):FXGLShape(orig){
+  FXTRACE((100,"FXGLCone::FXGLCone\n"));
+  height=orig.height;
   radius=orig.radius;
-  slices=orig.slices;
-  stacks=orig.stacks;
   }
 
 
 // Change radius
-void FXGLSphere::setRadius(FXfloat r){
+void FXGLCone::setRadius(FXfloat r){
   if(radius!=r){
-    range.set(-r,r,-r,r,-r,r);
+    range.lower.x=range.lower.z=-r;
+    range.upper.x=range.upper.z= r;
     radius=r;
     }
   }
 
 
+// Change height
+void FXGLCone::setHeight(FXfloat h){
+  if(height!=h){
+    range.upper.y=h;
+    height=h;
+    }
+  }
+
+
 // Draw
-void FXGLSphere::drawshape(FXGLViewer*){
+void FXGLCone::drawshape(FXGLViewer*){
 #ifdef HAVE_GL_H
   GLUquadricObj* quad=gluNewQuadric();
   gluQuadricDrawStyle(quad,(GLenum)GLU_FILL);
   /*
-    if (shading==FXGLShape::ID_SHADESMOOTH){
     gluQuadricNormals(quad,(GLenum)GLU_SMOOTH);
     gluQuadricOrientation(quad,(GLenum)GLU_OUTSIDE);
-    }
   */
-  gluSphere(quad,radius,slices,stacks);
+  glPushMatrix();
+  glRotatef(-90.0f,1.0f,0.0f,0.0f);
+  gluCylinder(quad,radius,0,height,FXGLCONE_SLICES_NUMBER,FXGLCONE_STACKS_NUMBER);
+  gluQuadricOrientation(quad,(GLenum)GLU_INSIDE);
+  gluDisk(quad,0,radius,FXGLCONE_SLICES_NUMBER,FXGLCONE_LOOPS);
   gluDeleteQuadric(quad);
+  glPopMatrix();
 #endif
   }
 
 
 // Copy this object
-FXGLObject* FXGLSphere::copy(){
-  return new FXGLSphere(*this);
+FXGLObject* FXGLCone::copy(){
+  return new FXGLCone(*this);
   }
 
 
 // Save object to stream
-void FXGLSphere::save(FXStream& store) const {
+void FXGLCone::save(FXStream& store) const {
   FXGLShape::save(store);
-  store << radius;
-  store << slices;
-  store << stacks;
+  store << height << radius;
   }
 
 
 // Load object from stream
-void FXGLSphere::load(FXStream& store){
+void FXGLCone::load(FXStream& store){
   FXGLShape::load(store);
-  store >> radius;
-  store >> slices;
-  store >> stacks;
+  store >> height >> radius;
   }
 
 
 // Destroy
-FXGLSphere::~FXGLSphere(){
-  FXTRACE((100,"FXGLSphere::~FXGLSphere\n"));
+FXGLCone::~FXGLCone(){
+  FXTRACE((100,"FXGLCone::~FXGLCone\n"));
   }
-
-}

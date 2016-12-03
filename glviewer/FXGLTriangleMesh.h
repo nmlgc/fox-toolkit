@@ -21,25 +21,9 @@
 #ifndef FXGLTRIANGLEMESH_H
 #define FXGLTRIANGLEMESH_H
 
-#ifndef FXGLSHAPE_H
-#include "FXGLShape.h"
-#endif
-
-namespace FX {
-
-
-/*
- * Arrays Formats
- *
- * vertex: x,y,z
- * normal: x,y,z
- * Color: r,g.b,a
- * texture: u,v
- */
-
 
 /// OpenGL Triangle Mesh Object
-class FXAPI FXGLTriangleMesh : public FXGLShape {
+class FXGLTriangleMesh : public FXGLShape {
   FXDECLARE(FXGLTriangleMesh)
 private:
   FXfloat   *vertexBuffer;
@@ -105,7 +89,5 @@ public:
   /// Destructor
   virtual ~FXGLTriangleMesh();
   };
-
-}
 
 #endif
