@@ -956,7 +956,7 @@ void FXDirList::listChildItems(FXDirItem *par,FXbool force,FXbool notify){
   FXDir       dir;
   FXuint      mode;
 
-  FXTRACE((1,"FXDirList::listChildItems(%p = \"%s\",%s)\n",par,par->getText().text(),force?"true":"false"));
+//FXTRACE((1,"FXDirList::listChildItems(%p = \"%s\",%s)\n",par,par->getText().text(),force?"true":"false"));
 
   // Path to parent node
   directory=getItemPathname(par);

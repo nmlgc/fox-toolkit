@@ -25,6 +25,7 @@
 #include "Preferences.h"
 #include "Commands.h"
 #include "Syntax.h"
+#include "Modeline.h"
 #include "TextWindow.h"
 #include "Adie.h"
 #include "FindInFiles.h"
@@ -600,14 +601,14 @@ long FindInFiles::onCmdFolder(FXObject*,FXSelector,void*){
 
 
 // Update arrows
-long FindInFiles::onUpdHistoryUp(FXObject* sender,FXSelector sel,void*){
+long FindInFiles::onUpdHistoryUp(FXObject* sender,FXSelector,void*){
   sender->handle(this,(index<19 && !patternHistory[index+1].empty())?FXSEL(SEL_COMMAND,ID_ENABLE):FXSEL(SEL_COMMAND,ID_DISABLE),NULL);
   return 1;
   }
 
 
 // Update arrows
-long FindInFiles::onUpdHistoryDn(FXObject* sender,FXSelector sel,void*){
+long FindInFiles::onUpdHistoryDn(FXObject* sender,FXSelector,void*){
   sender->handle(this,(-1<index)?FXSEL(SEL_COMMAND,ID_ENABLE):FXSEL(SEL_COMMAND,ID_DISABLE),NULL);
   return 1;
   }
