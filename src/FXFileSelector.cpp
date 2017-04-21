@@ -423,7 +423,7 @@ long FXFileSelector::onCmdAccept(FXObject*,FXSelector,void*){
       getApp()->beep();
       return 1;
       }
-      
+
     // Go up to the lowest directory which still exists
     while(!FXPath::isTopDirectory(dir) && !FXStat::isDirectory(dir)){
       dir=FXPath::upLevel(dir);
@@ -851,10 +851,11 @@ FXString FXFileSelector::getDirectory() const {
 
 // Set file name
 void FXFileSelector::setFilename(const FXString& path){
-  FXString abspath=FXPath::absolute(path);
-  filebox->setCurrentFile(abspath);
-  dirbox->setDirectory(FXPath::directory(abspath));
-  filename->setText(FXPath::name(abspath));
+  FXString fullname(FXPath::absolute(path));
+  FXString name(FXPath::name(fullname));
+  filebox->setCurrentFile(fullname);
+  dirbox->setDirectory(filebox->getDirectory());
+  filename->setText(name);
   }
 
 
