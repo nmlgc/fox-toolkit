@@ -1,6 +1,6 @@
 /********************************************************************************
 *                                                                               *
-*                    M u l t i - L i ne   T e x t   W i d g e t                 *
+*                   M u l t i - L i n e   T e x t   W i d g e t                 *
 *                                                                               *
 *********************************************************************************
 * Copyright (C) 1998,2017 by Jeroen van der Zijp.   All Rights Reserved.        *
@@ -136,7 +136,7 @@ struct FXTextChange {
 * cursor location to be highlighted.  This makes it easier to find the insertion
 * point when scrolling back and forth a large document.
 * The flag TEXT_SHOWMATCH will briefly flash the matching brace, parenthesis, or
-* bracket when the cursor is poisitioned at brace, parenthesis, or bracket.
+* bracket when the cursor is positioned at brace, parenthesis, or bracket.
 */
 class FXAPI FXText : public FXScrollArea {
   FXDECLARE(FXText)
@@ -204,7 +204,7 @@ protected:
   void sizegap(FXint sz);
   void squeezegap();
   FXint charWidth(FXwchar ch,FXint indent) const;
-  FXint lineWidth(FXint pos,FXint n) const;
+  FXint xoffset(FXint start,FXint pos) const;
   FXint indentFromPos(FXint start,FXint pos) const;
   FXint posFromIndent(FXint start,FXint indent) const;
   FXint wrap(FXint start) const;
@@ -797,14 +797,14 @@ public:
   */
   FXbool findText(const FXString& string,FXint* beg=NULL,FXint* end=NULL,FXint start=0,FXuint flags=SEARCH_FORWARD|SEARCH_WRAP|SEARCH_EXACT,FXint npar=1);
 
-  /// Return row and column at given x,y coordinate
-  void getRowAndColumn(FXint x,FXint y,FXint& row,FXint& col) const;
+  /// Return text position at given visible x,y coordinate
+  FXint getPosAt(FXint x,FXint y) const;
 
   /// Return text position containing x, y coordinate
   FXint getPosContaining(FXint x,FXint y) const;
 
-  /// Return text position at given visible x,y coordinate
-  FXint getPosAt(FXint x,FXint y) const;
+  /// Return row and column at given x,y coordinate
+  void getRowAndColumn(FXint x,FXint y,FXint& row,FXint& col) const;
 
   /// Return y coordinate of pos
   FXint getYOfPos(FXint pos) const;
@@ -812,10 +812,16 @@ public:
   /// Return x coordinate of pos
   FXint getXOfPos(FXint pos) const;
 
-  /// Count number of columns; start should be on a row start
+  /**
+  * Count number of columns taken up by some text.
+  * Start should be on a row start.
+  */
   FXint countCols(FXint start,FXint end) const;
 
-  /// Count number of rows; start should be on a row start
+  /**
+  * Count number of rows taken up by some text.
+  * Start should be on a row start.
+  */
   FXint countRows(FXint start,FXint end) const;
 
   /// Count number of newlines
@@ -999,7 +1005,11 @@ public:
 
   /**
   * Change brace and parenthesis match highlighting time, in nanoseconds.
-  * If set to forever, highlighting stays on till cursor moves.
+  * If highlighting for a small interval, only flash if the matching brace
+  * is visible. If the highlighting interval is set to forever, highlighting
+  * stays on till cursor moves, and the brace is highlighted even if not
+  * (yet) visible.  Note that this may be expensive as a large part of the
+  * text buffer could be visited to find the matching brace.
   */
   void setHiliteMatchTime(FXTime t){ matchtime=t; }
 
@@ -1031,7 +1041,6 @@ public:
   /// Destructor
   virtual ~FXText();
   };
-
 
 }
 

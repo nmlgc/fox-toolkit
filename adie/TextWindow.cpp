@@ -576,7 +576,7 @@ void TextWindow::createMenubar(){
   new FXMenuCommand(gotomenu,tr("&Set bookmark\tAlt-B\tSet bookmark at cursor location."),getApp()->bookseticon,this,ID_SET_MARK);
   new FXMenuCommand(gotomenu,tr("&Next bookmark\tAlt-N\tMove cursor to next bookmark."),getApp()->booknexticon,this,ID_NEXT_MARK);
   new FXMenuCommand(gotomenu,tr("&Previous bookmark\tAlt-P\tMove cursor to previous bookmark."),getApp()->bookprevicon,this,ID_PREV_MARK);
-  new FXMenuCommand(gotomenu,tr("&Delete bookmark\t\tDelete bookmark at cursor."),getApp()->bookdelicon,this,ID_DEL_MARK);
+  new FXMenuCommand(gotomenu,tr("&Delete bookmark\tAlt-D\tDelete bookmark at cursor."),getApp()->bookdelicon,this,ID_DEL_MARK);
   new FXMenuCommand(gotomenu,tr("&Clear all bookmarks\tAlt-C\tClear all bookmarks."),getApp()->bookdelicon,this,ID_CLEAR_MARKS);
 
   // Search Menu
@@ -592,10 +592,10 @@ void TextWindow::createMenubar(){
   new FXMenuSeparator(searchmenu);
   new FXMenuCommand(searchmenu,tr("Incremental search\tCtl-I\tSearch for a string."),NULL,this,ID_ISEARCH_START);
   new FXMenuCommand(searchmenu,tr("Search &Files\tShift-Ctl-F\tSearch files for a string."),NULL,this,ID_FINDFILES);
-  new FXMenuCommand(searchmenu,tr("Find next selected\tCtl-H\tSearch next occurrence of selected text."),getApp()->searchnexticon,this,ID_SEARCH_SEL_FORW);
-  new FXMenuCommand(searchmenu,tr("Find previous selected\tShift-Ctl-H\tSearch previous occurrence of selected text."),getApp()->searchprevicon,this,ID_SEARCH_SEL_BACK);
-  new FXMenuCommand(searchmenu,tr("Find next\tCtl-G\tSearch for next occurrence."),getApp()->searchnexticon,this,ID_SEARCH_NXT_FORW);
-  new FXMenuCommand(searchmenu,tr("Find previous\tShift-Ctl-G\tSearch for previous occurrence."),getApp()->searchprevicon,this,ID_SEARCH_NXT_BACK);
+  new FXMenuCommand(searchmenu,tr("Find Backward\tShift-Ctl-G\tSearch backward for another occurrence."),getApp()->searchprevicon,this,ID_SEARCH_NXT_BACK);
+  new FXMenuCommand(searchmenu,tr("Find Forward\tCtl-G\tSearch forward for another occurrence."),getApp()->searchnexticon,this,ID_SEARCH_NXT_FORW);
+  new FXMenuCommand(searchmenu,tr("Find Backward Selected\tShift-Ctl-H\tSearch backward for selected text."),getApp()->searchprevicon,this,ID_SEARCH_SEL_BACK);
+  new FXMenuCommand(searchmenu,tr("Find Forward Selected\tCtl-H\tSearch forward for selected text."),getApp()->searchnexticon,this,ID_SEARCH_SEL_FORW);
 
   new FXMenuCommand(searchmenu,tr("&Search...\tCtl-F\tSearch with a string pattern."),getApp()->searchicon,this,ID_SEARCH);
   new FXMenuCommand(searchmenu,tr("R&eplace...\tCtl-R\tSearch and replace with a string pattern."),getApp()->replaceicon,this,ID_REPLACE);
@@ -3876,12 +3876,10 @@ long TextWindow::onTextRightMouse(FXObject*,FXSelector,void* ptr){
     new FXMenuCommand(&popupmenu,tr("Undo"),getApp()->undoicon,&undolist,FXUndoList::ID_UNDO);
     new FXMenuCommand(&popupmenu,tr("Redo"),getApp()->redoicon,&undolist,FXUndoList::ID_REDO);
     new FXMenuSeparator(&popupmenu);
-
-    new FXMenuCommand(&popupmenu,tr("Find next selected\t\tSearch next occurrence of selected text."),getApp()->searchnexticon,this,ID_SEARCH_SEL_FORW);
-    new FXMenuCommand(&popupmenu,tr("Find previous selected\t\tSearch previous occurrence of selected text."),getApp()->searchprevicon,this,ID_SEARCH_SEL_BACK);
-    new FXMenuCommand(&popupmenu,tr("Find next\t\tSearch for next occurrence."),getApp()->searchnexticon,this,ID_SEARCH_NXT_FORW);
-    new FXMenuCommand(&popupmenu,tr("Find previous\t\tSearch for previous occurrence."),getApp()->searchprevicon,this,ID_SEARCH_NXT_BACK);
-
+    new FXMenuCommand(&popupmenu,tr("Find Backward\t\tSearch backward for another occurrence."),getApp()->searchprevicon,this,ID_SEARCH_NXT_BACK);
+    new FXMenuCommand(&popupmenu,tr("Find Forward\t\tSearch forward for another occurrence."),getApp()->searchnexticon,this,ID_SEARCH_NXT_FORW);
+    new FXMenuCommand(&popupmenu,tr("Find Backward Selected\t\tSearch backward for selected text."),getApp()->searchprevicon,this,ID_SEARCH_SEL_BACK);
+    new FXMenuCommand(&popupmenu,tr("Find Forward Selected\t\tSearch forward for selected text."),getApp()->searchnexticon,this,ID_SEARCH_SEL_FORW);
     new FXMenuSeparator(&popupmenu);
     new FXMenuCommand(&popupmenu,tr("Cut"),getApp()->cuticon,editor,FXText::ID_CUT_SEL);
     new FXMenuCommand(&popupmenu,tr("Copy"),getApp()->copyicon,editor,FXText::ID_COPY_SEL);
@@ -4639,14 +4637,10 @@ FXint TextWindow::backwardByContext(FXint pos) const {
   FXint nchars=syntax->getContextChars();
   FXint r1=pos;
   FXint r2=pos;
-  if(nlines==0){
-    r1=pos-nchars;
+  if(0<nchars){
+    r1=editor->validPos(pos-nchars);
     }
-  else if(nchars==0){
-    r2=editor->prevLine(pos,nlines);
-    }
-  else{
-    r1=pos-nchars;
+  if(0<nlines){
     r2=editor->prevLine(pos,nlines);
     }
   return FXMAX(0,FXMIN(r1,r2));
@@ -4659,14 +4653,10 @@ FXint TextWindow::forwardByContext(FXint pos) const {
   FXint nchars=syntax->getContextChars();
   FXint r1=pos;
   FXint r2=pos;
-  if(nlines==0){
-    r1=pos+nchars;
+  if(0<nchars){
+    r1=editor->validPos(pos+nchars);
     }
-  else if(nchars==0){
-    r2=editor->nextLine(pos,nlines);
-    }
-  else{
-    r1=pos-nchars;
+  if(0<nlines){
     r2=editor->nextLine(pos,nlines);
     }
   return FXMIN(editor->getLength(),FXMAX(r1,r2));
